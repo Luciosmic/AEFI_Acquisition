@@ -1,0 +1,111 @@
+@startuml AEFI_Application_Layer
+
+!define ACQUISITION #E1F5FF
+!define MEASUREMENT #FFF4E1
+!define MOTION #F0E1FF
+!define CONFIG #E1FFE1
+!define PERSISTENCE #FFE1E1
+
+package "Application Layer - AEFI Acquisition System" {
+
+  package "Acquisition Services" ACQUISITION {
+    
+    class StabilityAcquisitionService {
+      +startTimedAcquisition(startTime, endTime?): AcquisitionId
+      +stopAcquisition(acquisitionId): void
+      +acquireForDuration(duration, samplingRate): AcquisitionId
+    }
+    
+    class ManualScanService {
+      +acquireAtCurrentPosition(parameters): MeasurementPoint
+      +moveAndAcquire(position, parameters): MeasurementPoint
+      +updateParametersBeforeNext(parameters): void
+      +finalizeManualScan(scanId): StructuredScanData
+    }
+    
+    class AutomaticScanService {
+      +configureScanPattern(config): ScanPlan
+      +executeSerpentineScan(bounds, stepSize): ScanId
+      +executeCombScan(bounds, stepSize): ScanId
+      +executeStepScan(scanPlan, mode): ScanId
+      +executeFlyScan(scanPlan, speed): ScanId
+    }
+    
+    class CustomScanService {
+      +defineCustomSequence(name): CustomSequenceBuilder
+      +addScanPoint(sequence, point): void
+      +executeCustomScan(sequence): ScanId
+    }
+  }
+
+  package "Measurement Management" MEASUREMENT {
+    
+    class ReferenceMeasurementService {
+      +setAsReference(measurement, context): ReferenceId
+      +getReferenceMeasurement(): ReferenceMeasurement
+      +computeRelativeMeasurement(measurement): RelativeMeasurement
+    }
+    
+    class DataAggregationService {
+      +aggregateMeasurements(measurements, scanType): StructuredScanData
+      +structureAcquisitionData(rawData): AcquisitionDataset
+      +linkMeasurementsToPositions(measurements, positions): SpatialMeasurementMap
+    }
+  }
+
+  package "Motion Control" MOTION {
+    
+    class MotionControlService {
+      +moveToPosition(position, speed?): Promise<void>
+      +getCurrentPosition(): Position2D
+      +calibrateAxes(): Promise<CalibrationResult>
+    }
+  }
+
+  package "Configuration" CONFIG {
+    
+    class ScanConfigurationService {
+      +createScanConfiguration(type, parameters): ScanConfiguration
+      +validateScanPattern(config): ValidationResult
+      +saveScanTemplate(config, name): TemplateId
+    }
+    
+    class ParameterManagementService {
+      +updateFrequency(frequency): void
+      +updateAcquisitionParams(params): void
+      +snapshotParameters(): ParameterSnapshot
+    }
+  }
+
+  package "Persistence" PERSISTENCE {
+    
+    class DataPersistenceService {
+      +persistAcquisition(data): PersistenceId
+      +loadAcquisition(id): StructuredScanData
+      +exportToFormat(data, format): FilePath
+    }
+  }
+}
+
+' Relations
+ManualScanService ..> MotionControlService : uses
+ManualScanService ..> ReferenceMeasurementService : uses
+ManualScanService ..> DataAggregationService : uses
+ManualScanService ..> ParameterManagementService : uses
+
+AutomaticScanService ..> MotionControlService : uses
+AutomaticScanService ..> ScanConfigurationService : uses
+AutomaticScanService ..> ReferenceMeasurementService : uses
+AutomaticScanService ..> DataAggregationService : uses
+
+CustomScanService ..> MotionControlService : uses
+CustomScanService ..> ParameterManagementService : uses
+CustomScanService ..> DataAggregationService : uses
+CustomScanService ..> ReferenceMeasurementService : uses
+
+StabilityAcquisitionService ..> ReferenceMeasurementService : uses
+StabilityAcquisitionService ..> DataAggregationService : uses
+
+DataAggregationService ..> DataPersistenceService : uses
+
+@enduml

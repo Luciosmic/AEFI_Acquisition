@@ -1,0 +1,373 @@
+@startuml AEFI_Domain_Model
+
+!define VALUE_OBJECT #FFEAA7
+!define ENTITY #74B9FF
+!define AGGREGATE_ROOT #FD79A8
+!define SERVICE #DFE6E9
+
+' ============= VALUE OBJECTS =============
+
+package "Value Objects" <<Rectangle>> {
+  
+  class Position2D <<value object>> VALUE_OBJECT {
+    +x: float
+    +y: float
+    --
+    +distanceTo(other: Position2D): float
+    +equals(other: Position2D): boolean
+  }
+  
+  class Vector3D <<value object>> VALUE_OBJECT {
+    +x: float
+    +y: float
+    +z: float
+    --
+    +magnitude(): float
+    +dotProduct(other: Vector3D): float
+    +equals(other: Vector3D): boolean
+  }
+  
+  class Duration <<value object>> VALUE_OBJECT {
+    +milliseconds: long
+    --
+    +toSeconds(): float
+    +add(other: Duration): Duration
+  }
+  
+  class Frequency <<value object>> VALUE_OBJECT {
+    +hertz: float
+    --
+    +toOmega(): float
+    +equals(other: Frequency): boolean
+  }
+  
+  class AcquisitionParameters <<value object>> VALUE_OBJECT {
+    +frequency: Frequency
+    +samplingRate: Frequency
+    +integrationTime: Duration
+    +amplification: float
+    +filterSettings: FilterConfig
+    --
+    +equals(other: AcquisitionParameters): boolean
+    +snapshot(): ParameterSnapshot
+  }
+  
+  class ScanBounds <<value object>> VALUE_OBJECT {
+    +xMin: float
+    +xMax: float
+    +yMin: float
+    +yMax: float
+    --
+    +contains(position: Position2D): boolean
+    +area(): float
+  }
+  
+  class ElectricFieldMeasurement <<value object>> VALUE_OBJECT {
+    +field: Vector3D
+    +timestamp: DateTime
+    +quality: MeasurementQuality
+    --
+    +isValid(): boolean
+  }
+  
+  class RelativeMeasurement <<value object>> VALUE_OBJECT {
+    +totalField: Vector3D
+    +referenceField: Vector3D
+    +scatteredField: Vector3D
+    +relativeChange: Complex
+    --
+    +computeScatteredField(): Vector3D
+    +getComplexContrast(): Complex
+  }
+}
+
+' ============= ENTITIES =============
+
+package "Entities" <<Rectangle>> {
+  
+  class MeasurementPoint <<entity>> ENTITY {
+    +id: MeasurementPointId
+    +position: Position2D
+    +measurement: ElectricFieldMeasurement
+    +parameters: AcquisitionParameters
+    +timestamp: DateTime
+    --
+    +computeRelativeTo(reference: ReferenceMeasurement): RelativeMeasurement
+  }
+  
+  class ReferenceMeasurement <<entity>> ENTITY {
+    +id: ReferenceId
+    +electricField: Vector3D
+    +position: Position2D
+    +acquisitionTime: DateTime
+    +parameters: AcquisitionParameters
+    +metadata: MeasurementMetadata
+    --
+    +isValidFor(parameters: AcquisitionParameters): boolean
+  }
+  
+  class ScanConfiguration <<entity>> ENTITY {
+    +id: ConfigurationId
+    +type: ScanType
+    +bounds: ScanBounds
+    +stepSize: Distance
+    +scanMode: ScanMode
+    +acquisitionParameters: AcquisitionParameters
+    --
+    +validate(): ValidationResult
+    +generateScanPlan(): ScanPlan
+  }
+}
+
+' ============= AGGREGATES =============
+
+package "Aggregate Roots" <<Rectangle>> {
+  
+  class ManualScan <<aggregate root>> AGGREGATE_ROOT {
+    +id: ScanId
+    +scanType: ScanType.MANUAL
+    +reference: ReferenceMeasurement
+    -measurements: List<MeasurementPoint>
+    +startTime: DateTime
+    +endTime: DateTime
+    +status: ScanStatus
+    --
+    +addMeasurementPoint(point: MeasurementPoint): void
+    +updateParameters(params: AcquisitionParameters): void
+    +finalize(): StructuredScanData
+    +getMeasurements(): List<MeasurementPoint>
+  }
+  
+  class AutomaticScan <<aggregate root>> AGGREGATE_ROOT {
+    +id: ScanId
+    +scanType: ScanType
+    +configuration: ScanConfiguration
+    +reference: ReferenceMeasurement
+    -spatialGrid: SpatialGrid
+    -measurements: Map<Position2D, MeasurementPoint>
+    +startTime: DateTime
+    +endTime: DateTime
+    +status: ScanStatus
+    --
+    +addMeasurement(position: Position2D, measurement: ElectricFieldMeasurement): void
+    +getStructuredData(): StructuredScanData
+    +getSpatialGrid(): SpatialGrid
+  }
+  
+  class CustomScan <<aggregate root>> AGGREGATE_ROOT {
+    +id: ScanId
+    +scanType: ScanType.CUSTOM
+    +reference: ReferenceMeasurement
+    -sequence: CustomSequence
+    -measurements: List<MeasurementPoint>
+    +startTime: DateTime
+    +endTime: DateTime
+    +status: ScanStatus
+    --
+    +defineSequence(name: string): void
+    +addScanPoint(point: CustomScanPoint): void
+    +executionCompleted(): void
+    +getSequence(): CustomSequence
+  }
+  
+  class StabilityAcquisition <<aggregate root>> AGGREGATE_ROOT {
+    +id: AcquisitionId
+    +reference: ReferenceMeasurement
+    -timeSeries: List<TimestampedMeasurement>
+    +startTime: DateTime
+    +endTime: DateTime
+    +samplingRate: Frequency
+    +status: AcquisitionStatus
+    --
+    +addMeasurement(measurement: TimestampedMeasurement): void
+    +stop(): void
+    +getTimeSeries(): List<TimestampedMeasurement>
+    +computeStabilityMetrics(): StabilityMetrics
+  }
+}
+
+' ============= DOMAIN TYPES =============
+
+package "Domain Types" <<Rectangle>> {
+  
+  class SpatialGrid <<value object>> VALUE_OBJECT {
+    +dimensions: GridDimensions
+    +spacing: GridSpacing
+    +bounds: ScanBounds
+    --
+    +getTotalPoints(): int
+    +getPositionAt(i: int, j: int): Position2D
+  }
+  
+  class GridDimensions <<value object>> VALUE_OBJECT {
+    +nx: int
+    +ny: int
+  }
+  
+  class GridSpacing <<value object>> VALUE_OBJECT {
+    +dx: float
+    +dy: float
+  }
+  
+  class CustomSequence <<entity>> ENTITY {
+    +id: SequenceId
+    +name: string
+    -points: List<CustomScanPoint>
+    --
+    +addPoint(point: CustomScanPoint): void
+    +getPoints(): List<CustomScanPoint>
+    +validate(): ValidationResult
+  }
+  
+  class CustomScanPoint <<value object>> VALUE_OBJECT {
+    +position: Position2D
+    +acquisitionDuration: Duration
+    +parameters: AcquisitionParameters
+    +preAcquisitionActions: List<Action>
+  }
+  
+  class StructuredScanData <<value object>> VALUE_OBJECT {
+    +scanId: ScanId
+    +scanType: ScanType
+    +reference: ReferenceMeasurement
+    +spatialGrid: SpatialGrid
+    +measurements: Map<Position2D, List<RelativeMeasurement>>
+    +metadata: ScanMetadata
+    --
+    +toInverseProblemInput(): InverseProblemData
+    +getFieldComponent(component: FieldComponent): Matrix2D
+  }
+  
+  class InverseProblemData <<value object>> VALUE_OBJECT {
+    +E_mes: Matrix3D
+    +E_0: Vector3D
+    +spatialGrid: SpatialGrid
+    +frequency: Frequency
+    --
+    +getDimensions(): GridDimensions
+    +getFieldAt(i: int, j: int): Vector3D
+  }
+}
+
+' ============= ENUMERATIONS =============
+
+enum ScanType {
+  MANUAL
+  SERPENTINE
+  COMB
+  CUSTOM
+  STABILITY
+}
+
+enum ScanMode {
+  STEP
+  FLY
+}
+
+enum ScanStatus {
+  INITIALIZED
+  IN_PROGRESS
+  PAUSED
+  COMPLETED
+  FAILED
+}
+
+enum FieldComponent {
+  EX
+  EY
+  EZ
+}
+
+' ============= RELATIONS =============
+
+' Value Object relationships
+AcquisitionParameters *-- Frequency
+AcquisitionParameters *-- Duration
+ElectricFieldMeasurement *-- Vector3D
+RelativeMeasurement *-- Vector3D
+SpatialGrid *-- GridDimensions
+SpatialGrid *-- GridSpacing
+SpatialGrid *-- ScanBounds
+CustomScanPoint *-- Position2D
+CustomScanPoint *-- Duration
+CustomScanPoint *-- AcquisitionParameters
+
+' Entity relationships
+MeasurementPoint *-- Position2D
+MeasurementPoint *-- ElectricFieldMeasurement
+MeasurementPoint *-- AcquisitionParameters
+ReferenceMeasurement *-- Vector3D
+ReferenceMeasurement *-- Position2D
+ReferenceMeasurement *-- AcquisitionParameters
+ScanConfiguration *-- ScanBounds
+ScanConfiguration *-- AcquisitionParameters
+ScanConfiguration -- ScanType
+ScanConfiguration -- ScanMode
+
+' Aggregate relationships
+ManualScan *-- "0..*" MeasurementPoint
+ManualScan *-- ReferenceMeasurement
+ManualScan -- ScanStatus
+
+AutomaticScan *-- ScanConfiguration
+AutomaticScan *-- ReferenceMeasurement
+AutomaticScan *-- SpatialGrid
+AutomaticScan *-- "0..*" MeasurementPoint
+AutomaticScan -- ScanStatus
+
+CustomScan *-- CustomSequence
+CustomScan *-- ReferenceMeasurement
+CustomScan *-- "0..*" MeasurementPoint
+CustomScan -- ScanStatus
+
+CustomSequence *-- "1..*" CustomScanPoint
+
+StabilityAcquisition *-- ReferenceMeasurement
+StabilityAcquisition *-- "0..*" MeasurementPoint
+
+StructuredScanData *-- ReferenceMeasurement
+StructuredScanData *-- SpatialGrid
+StructuredScanData -- ScanType
+
+InverseProblemData *-- SpatialGrid
+InverseProblemData *-- Frequency
+InverseProblemData *-- Vector3D
+
+' Link to inverse problem
+StructuredScanData ..> InverseProblemData : transforms to
+
+note right of StructuredScanData
+  Output format for persistence
+  and input for CSI-AEFI algorithm
+  
+  Structure:
+  - E_mes(r_i, ω): N_x × N_y × 3
+  - E_0(r_i, ω): reference field
+  - Spatial grid metadata
+end note
+
+note left of InverseProblemData
+  Ready for CSI-AEFI inverse solver
+  
+  Corresponds to:
+  vec{E}_mes(vec{r}_i, ω)
+  from your formulation
+end note
+
+note bottom of ManualScan
+  Aggregate Root
+  Encapsulates manual scan workflow
+  Maintains invariants:
+  - All measurements use same reference
+  - Parameters can change between points
+end note
+
+note bottom of AutomaticScan
+  Aggregate Root
+  Encapsulates automated scan patterns
+  Maintains invariants:
+  - Complete spatial grid coverage
+  - Consistent parameters across scan
+end note
+
+@enduml
