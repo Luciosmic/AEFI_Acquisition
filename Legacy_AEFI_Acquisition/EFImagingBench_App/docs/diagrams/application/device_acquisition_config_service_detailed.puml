@@ -1,4 +1,4 @@
-@startuml Device Acquisition Configuration Service - Détaillé
+@startuml Device Acquisition Configuration Service - Détaillé (Remplace MetaManager)
 
 !define RECTANGLE class
 
@@ -6,18 +6,19 @@ skinparam classAttributeIconSize 0
 skinparam backgroundColor #FEFEFE
 
 class DeviceAcquisitionConfigService {
-  - _meta_manager: MetaManager
+  - _acquisition_manager: AcquisitionManager
+  - _csv_exporter: CSVExporter
   - _current_mode: AcquisitionMode
   - _config_listeners: List[Callable]
   - _export_active: bool
   
-  ' === Gestion Modes Acquisition ===
+  ' === Gestion Modes Acquisition (ex-MetaManager) ===
   + start_exploration_mode(config: AcquisitionConfig) -> bool
   + start_export_mode(config: AcquisitionConfig) -> bool
   + stop_acquisition() -> bool
   + get_current_mode() -> AcquisitionMode
   
-  ' === Configuration ADC ===
+  ' === Configuration ADC (ex-MetaManager.update_configuration) ===
   + set_adc_gain(channel: int, gain: int) -> bool
   + set_all_adc_gains(gain: int) -> bool
   + set_adc_timing(timing_config: ADCTimingConfig) -> bool
@@ -29,34 +30,23 @@ class DeviceAcquisitionConfigService {
   + set_sampling_rate(rate_hz: float) -> bool
   + get_acquisition_parameters() -> AcquisitionParams
   
-  ' === Post-Processing ===
-  + enable_post_processing(enabled: bool) -> bool
-  + is_post_processing_enabled() -> bool
-  + configure_post_processing(config: PostProcessConfig) -> bool
-  + get_post_processing_status() -> PostProcessStatus
-  
-  ' === Export CSV ===
+  ' === Export CSV (ex-MetaManager) ===
   + start_csv_export(export_config: ExportConfig) -> bool
   + stop_csv_export() -> bool
   + is_exporting() -> bool
   + get_export_status() -> ExportStatus
-  
-  ' === Calibration ===
-  + request_calibration(calib_type: CalibrationType) -> bool
-  + get_calibration_status() -> CalibrationStatus
-  + apply_calibration_result(result: CalibrationResult) -> bool
   
   ' === Validation ===
   + validate_acquisition_config(config: AcquisitionConfig) -> ValidationResult
   + get_valid_gain_range() -> Tuple[int, int]
   + get_valid_averaging_range() -> Tuple[int, int]
   
-  ' === Synchronisation ===
+  ' === Synchronisation (ex-MetaManager.sync_ui_with_hardware) ===
   + sync_from_hardware() -> AcquisitionConfig
   + apply_configuration_batch(config: FullAcquisitionConfig) -> bool
   + reset_to_default_configuration() -> bool
   
-  ' === Observateurs ===
+  ' === Observateurs (remplace signaux Qt MetaManager) ===
   + subscribe_mode_changes(callback: Callable) -> None
   + subscribe_config_changes(callback: Callable) -> None
   + subscribe_data_updates(callback: Callable) -> None
@@ -68,6 +58,7 @@ class DeviceAcquisitionConfigService {
   - _on_mode_changed(mode: str) -> None
   - _on_config_changed(config: dict) -> None
   - _on_data_ready(sample) -> None
+  - _on_acquisition_data_ready(sample) -> None
 }
 
 enum AcquisitionMode {
@@ -80,7 +71,6 @@ class AcquisitionConfig {
   + mode: AcquisitionMode
   + n_avg: int
   + adc_config: ADCConfig
-  + post_processing_enabled: bool
 }
 
 class ADCConfig {
@@ -102,32 +92,6 @@ class ADCReferenceConfig {
   + ref_selection: int
 }
 
-class AcquisitionParams {
-  + n_avg: int
-  + sampling_rate_hz: float
-  + buffer_size: int
-  + channels_active: List[int]
-}
-
-class PostProcessConfig {
-  + offset_compensation: bool
-  + phase_correction: bool
-  + frame_rotation: bool
-  + rotation_angles: RotationAngles
-}
-
-class PostProcessStatus {
-  + enabled: bool
-  + active_operations: List[str]
-  + correction_values: Dict[str, Any]
-}
-
-class RotationAngles {
-  + theta_x: float
-  + theta_y: float
-  + theta_z: float
-}
-
 class ExportConfig {
   + output_dir: str
   + filename_base: str
@@ -142,29 +106,8 @@ class ExportStatus {
   + file_size_bytes: int
 }
 
-enum CalibrationType {
-  OFFSET_EXC_OFF
-  PHASE_CORRECTION
-  OFFSET_EXC_ON
-  FRAME_ROTATION
-}
-
-class CalibrationStatus {
-  + in_progress: bool
-  + current_type: Optional[CalibrationType]
-  + progress_percentage: float
-}
-
-class CalibrationResult {
-  + calibration_type: CalibrationType
-  + success: bool
-  + correction_values: Dict[str, float]
-  + timestamp: datetime
-}
-
 class FullAcquisitionConfig {
   + acquisition: AcquisitionConfig
-  + post_process: PostProcessConfig
   + export: Optional[ExportConfig]
 }
 
@@ -179,7 +122,6 @@ class "EFImagingBench_GUI" as GUI {
   + _on_user_config_changed(config)
   + _start_export_csv(export_config)
   + _stop_export_csv()
-  + _on_post_processing_toggled(enabled)
 }
 
 class "MainParametersConfigWidget" as MainParamsWidget {
@@ -189,25 +131,7 @@ class "MainParametersConfigWidget" as MainParamsWidget {
   <<signal>> configuration_changed
 }
 
-class "AdvancedSettingsWidget" as AdvancedWidget {
-  + set_enabled(enabled: bool)
-}
-
-' === Relations avec Domain ===
-class MetaManager {
-  + start_acquisition(mode, config)
-  + stop_acquisition()
-  + update_configuration(config)
-  + start_export_csv(export_config)
-  + stop_export_csv()
-  + set_post_processing_enabled(enabled)
-  --
-  <<signal>> mode_changed
-  <<signal>> configuration_changed
-  <<signal>> data_ready
-  <<signal>> post_processed_data_ready
-}
-
+' === Relations avec Domain (DIRECT) ===
 class AcquisitionManager {
   + start_acquisition(mode, config)
   + stop_acquisition()
@@ -219,78 +143,103 @@ class AcquisitionManager {
   <<signal>> data_ready
 }
 
-class PostProcessingManager {
-  + set_enabled(enabled: bool)
-  + configure(config: dict)
-  + process_samples(samples) -> List[Sample]
-  + get_status() -> dict
-}
-
-class EFImagingBenchCSVExporter {
+class CSVExporter {
   + start_export(config)
   + stop_export()
   + get_status()
+  + is_exporting() -> bool
+}
+
+' === Legacy (À supprimer) ===
+class MetaManager <<deprecated>> {
+  + start_acquisition(mode, config)
+  + stop_acquisition()
+  + update_configuration(config)
+  + start_export_csv(export_config)
+  + stop_export_csv()
+  + sync_ui_with_hardware()
+  --
+  <<À REMPLACER par DeviceAcquisitionConfigService>>
 }
 
 ' === Relations ===
-GUI ..> DeviceAcquisitionConfigService : "utilise"
-MainParamsWidget ..> DeviceAcquisitionConfigService : "utilise"
-AdvancedWidget ..> DeviceAcquisitionConfigService : "utilise"
+GUI --> DeviceAcquisitionConfigService : "utilise (nouveau)"
+MainParamsWidget --> DeviceAcquisitionConfigService : "utilise (nouveau)"
+GUI ..> MetaManager : "<<legacy>> à migrer"
 
-DeviceAcquisitionConfigService --> MetaManager : "délègue à"
-MetaManager --> AcquisitionManager : "coordonne"
-MetaManager --> PostProcessingManager : "coordonne"
-MetaManager --> EFImagingBenchCSVExporter : "utilise"
+DeviceAcquisitionConfigService --> AcquisitionManager : "communication directe"
+DeviceAcquisitionConfigService --> CSVExporter : "communication directe"
+MetaManager ..> AcquisitionManager : "<<legacy>>"
+MetaManager ..> CSVExporter : "<<legacy>>"
 
 DeviceAcquisitionConfigService ..> AcquisitionConfig : "manipule"
 DeviceAcquisitionConfigService ..> ADCConfig : "configure"
-DeviceAcquisitionConfigService ..> PostProcessConfig : "configure"
 DeviceAcquisitionConfigService ..> ExportConfig : "utilise"
-DeviceAcquisitionConfigService ..> CalibrationStatus : "retourne"
 DeviceAcquisitionConfigService ..> ValidationResult : "retourne"
 
 AcquisitionConfig *-- ADCConfig
 AcquisitionConfig *-- AcquisitionMode
 ADCConfig *-- ADCTimingConfig
 ADCConfig *-- ADCReferenceConfig
-PostProcessConfig *-- RotationAngles
 FullAcquisitionConfig *-- AcquisitionConfig
-FullAcquisitionConfig *-- PostProcessConfig
 FullAcquisitionConfig *-- ExportConfig
 
+AcquisitionManager --> DeviceAcquisitionConfigService : "<<signal>> mode_changed, data_ready"
+
 note right of DeviceAcquisitionConfigService
+  **Remplace MetaManager pour l'acquisition**
+  
   **Responsabilités:**
   - Gestion modes acquisition
   - Configuration ADC (4 canaux)
-  - Configuration post-processing
   - Gestion export CSV
-  - Orchestration calibrations
   - Validation paramètres
   - Synchronisation hardware
   
+  **Migration depuis MetaManager:**
+  - start_acquisition() → start_exploration/export_mode()
+  - stop_acquisition() → stop_acquisition()
+  - update_configuration() ADC → set_adc_gain/timing/reference()
+  - start_export_csv() → start_csv_export()
+  - stop_export_csv() → stop_csv_export()
+  - sync_ui_with_hardware() → sync_from_hardware()
+  
   **Principe:**
-  - Façade unifiée acquisition
-  - Coordination mode + config + export
-  - Validation avant application
-  - Gestion observateurs
+  - Communication DIRECTE avec managers
+  - Orchestration use case complet
+  - Responsabilité unique (SRP)
+  
+  **Note:** Post-processing retiré pour simplification
+end note
+
+note bottom of AcquisitionManager
+  **AcquisitionManager (inchangé)**
+  - Gestion ADC/DDS hardware
+  - Thread acquisition
+  - Buffer de données
+  - Signaux Qt
+  
+  Maintenant utilisé DIRECTEMENT
+  par DeviceAcquisitionConfigService
 end note
 
 note bottom of MetaManager
-  MetaManager coordonne:
-  - AcquisitionManager (ADC + DDS)
-  - PostProcessingManager (corrections)
-  - CSVExporter (export données)
-  - Synchronisation threads
+  **MetaManager (deprecated)**
   
-  Service = orchestrateur use case
-end note
-
-note bottom of AcquisitionMode
-  **Modes:**
-  - EXPLORATION: UI active, temps réel
-  - EXPORT: UI bloquée, mesures précises
-  - STOPPED: Acquisition arrêtée
+  Code à migrer vers DeviceAcquisitionConfigService:
+  - start_acquisition()
+  - stop_acquisition()
+  - update_configuration() pour ADC
+  - start_export_csv()
+  - stop_export_csv()
+  - sync_ui_with_hardware()
+  - Relais signaux data_ready
+  - Relais signaux mode_changed
+  - _on_acquisition_data_ready()
+  
+  À supprimer après migration GUI
+  
+  **Note:** Post-processing retiré
 end note
 
 @enduml
-

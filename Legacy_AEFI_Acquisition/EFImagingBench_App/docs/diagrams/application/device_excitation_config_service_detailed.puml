@@ -1,4 +1,4 @@
-@startuml Device Excitation Configuration Service - Détaillé
+@startuml Device Excitation Configuration Service - Détaillé (Remplace MetaManager)
 
 !define RECTANGLE class
 
@@ -6,17 +6,17 @@ skinparam classAttributeIconSize 0
 skinparam backgroundColor #FEFEFE
 
 class DeviceExcitationConfigService {
-  - _meta_manager: MetaManager
+  - _acquisition_manager: AcquisitionManager
   - _excitation_config: ExcitationConfig
   - _current_direction: ExcitationDirection
   - _config_listeners: List[Callable]
   
-  ' === Configuration Direction Excitation ===
+  ' === Configuration Direction Excitation (ex-MetaManager) ===
   + set_excitation_direction(direction: ExcitationDirection) -> bool
   + get_excitation_direction() -> ExcitationDirection
   + set_excitation_off() -> bool
   
-  ' === Configuration DDS (Générateurs de signaux) ===
+  ' === Configuration DDS (ex-MetaManager.update_configuration) ===
   + set_dds_frequency(freq_hz: float) -> bool
   + set_dds_gain(dds_num: int, gain: int) -> bool
   + set_dds_phase(dds_num: int, phase: int) -> bool
@@ -35,11 +35,11 @@ class DeviceExcitationConfigService {
   + get_valid_gain_range() -> Tuple[int, int]
   + get_valid_phase_range() -> Tuple[int, int]
   
-  ' === Synchronisation ===
+  ' === Synchronisation (ex-MetaManager.sync_ui_with_hardware) ===
   + sync_from_hardware() -> DDSConfig
   + apply_configuration_batch(config: ExcitationFullConfig) -> bool
   
-  ' === Observateurs ===
+  ' === Observateurs (remplace signaux Qt MetaManager) ===
   + subscribe_config_changes(callback: Callable) -> None
   + unsubscribe_config_changes(callback: Callable) -> None
   
@@ -84,7 +84,6 @@ class ValidationResult {
   + warnings: List[str]
 }
 
-' === Configurations prédéfinies ===
 class ExcitationPresets {
   + {static} XDIR_PHASES: Dict[int, int]
   + {static} YDIR_PHASES: Dict[int, int]
@@ -108,14 +107,7 @@ class "ExcitationDirectionWidget" as ExcitationWidget {
   <<signal>> excitation_changed
 }
 
-' === Relations avec Domain ===
-class MetaManager {
-  + update_configuration(config: dict)
-  + sync_ui_with_hardware()
-  --
-  <<signal>> configuration_changed
-}
-
+' === Relations avec Domain (DIRECT) ===
 class AcquisitionManager {
   + update_configuration(config: dict)
   + get_configuration() -> dict
@@ -129,12 +121,23 @@ class ExcitationConfig {
   + validate_phases(phases: dict) -> bool
 }
 
+' === Legacy (À supprimer) ===
+class MetaManager <<deprecated>> {
+  + update_configuration(config: dict)
+  + sync_ui_with_hardware()
+  --
+  <<À REMPLACER par DeviceExcitationConfigService>>
+}
+
 ' === Relations ===
-GUI ..> DeviceExcitationConfigService : "utilise"
-ExcitationWidget ..> DeviceExcitationConfigService : "utilise"
-DeviceExcitationConfigService --> MetaManager : "délègue à"
-MetaManager --> AcquisitionManager : "coordonne"
-MetaManager --> ExcitationConfig : "utilise"
+GUI --> DeviceExcitationConfigService : "utilise (nouveau)"
+ExcitationWidget --> DeviceExcitationConfigService : "utilise (nouveau)"
+GUI ..> MetaManager : "<<legacy>> à migrer"
+
+DeviceExcitationConfigService --> AcquisitionManager : "communication directe"
+DeviceExcitationConfigService --> ExcitationConfig : "utilise"
+MetaManager ..> AcquisitionManager : "<<legacy>>"
+MetaManager ..> ExcitationConfig : "<<legacy>>"
 
 DeviceExcitationConfigService ..> DDSConfig : "manipule"
 DeviceExcitationConfigService ..> ExcitationFullConfig : "applique"
@@ -145,7 +148,11 @@ DeviceExcitationConfigService ..> ExcitationPresets : "utilise"
 ExcitationFullConfig *-- DDSConfig
 ExcitationFullConfig *-- ExcitationDirection
 
+AcquisitionManager --> DeviceExcitationConfigService : "<<signal>> configuration_changed"
+
 note right of DeviceExcitationConfigService
+  **Remplace MetaManager pour l'excitation**
+  
   **Responsabilités:**
   - Configuration direction excitation
   - Gestion paramètres DDS (4 canaux)
@@ -154,11 +161,40 @@ note right of DeviceExcitationConfigService
   - Application configurations prédéfinies
   - Synchronisation avec hardware
   
+  **Migration depuis MetaManager:**
+  - update_configuration({phase_dds*}) 
+    → set_excitation_direction()
+  - update_configuration({freq_hz, gain_dds*}) 
+    → set_dds_frequency(), set_dds_gain()
+  - sync_ui_with_hardware() 
+    → sync_from_hardware()
+  
   **Principe:**
+  - Communication DIRECTE avec AcquisitionManager
   - Abstraction configuration DDS
   - Validation avant application
-  - Presets pour directions standard
-  - Détection automatique direction
+  - Responsabilité unique (SRP)
+end note
+
+note bottom of AcquisitionManager
+  **AcquisitionManager (inchangé)**
+  - Gestion DDS hardware
+  - Configuration phases/gains/fréquence
+  - Signal configuration_changed
+  
+  Maintenant utilisé DIRECTEMENT
+  par DeviceExcitationConfigService
+end note
+
+note bottom of MetaManager
+  **MetaManager (deprecated)**
+  
+  Code à migrer vers DeviceExcitationConfigService:
+  - update_configuration() pour DDS
+  - sync_ui_with_hardware()
+  - Relais signaux configuration_changed
+  
+  À supprimer après migration GUI
 end note
 
 note bottom of ExcitationPresets
@@ -168,18 +204,6 @@ note bottom of ExcitationPresets
   - CIRC+: [0, 16384, 32768, 49152]
   - CIRC-: [0, 49152, 32768, 16384]
   - OFF: [0, 0, 0, 0]
-  
-  Phases sur 16 bits (0-65535)
-end note
-
-note bottom of MetaManager
-  MetaManager coordonne:
-  - AcquisitionManager (config DDS)
-  - ExcitationConfig (validation)
-  - Synchronisation hardware
-  
-  Service = façade métier
 end note
 
 @enduml
-

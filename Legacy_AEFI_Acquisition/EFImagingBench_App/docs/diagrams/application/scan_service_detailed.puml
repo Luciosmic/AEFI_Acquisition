@@ -1,4 +1,4 @@
-@startuml Scan Service - Détaillé
+@startuml Scan Service - Détaillé (Remplace MetaManager)
 
 !define RECTANGLE class
 
@@ -6,25 +6,26 @@ skinparam classAttributeIconSize 0
 skinparam backgroundColor #FEFEFE
 
 class ScanService {
-  - _meta_manager: MetaManager
+  - _stage_manager: StageManager
+  - _csv_exporter: CSVExporter
   - _motion_service: MotionService
   - _scan_listeners: List[Callable]
   - _current_scan: Optional[ScanExecution]
   - _scan_history: List[ScanResult]
   
-  ' === Configuration Scan ===
+  ' === Configuration Scan (ex-MetaManager) ===
   + configure_scan_2d(config: Scan2DConfig) -> ScanPlan
   + validate_scan_zone(zone: ScanZone) -> ValidationResult
   + preview_scan_trajectory(config: Scan2DConfig) -> List[Position]
   
-  ' === Exécution Scan ===
+  ' === Exécution Scan (ex-MetaManager.inject_scan_batch) ===
   + execute_scan_2d(config: Scan2DConfig, export_config: ExportConfig) -> bool
   + execute_scan_batch(scan_plan: ScanPlan) -> bool
   + pause_scan() -> bool
   + resume_scan() -> bool
   + cancel_scan() -> bool
   
-  ' === Export intégré ===
+  ' === Export intégré (ex-MetaManager.start_export_csv) ===
   + start_export_with_scan(export_config: ExportConfig) -> bool
   + stop_export() -> bool
   + get_export_status() -> ExportStatus
@@ -34,7 +35,7 @@ class ScanService {
   + is_scan_running() -> bool
   + get_scan_statistics() -> ScanStats
   
-  ' === Observateurs ===
+  ' === Observateurs (remplace signaux Qt MetaManager) ===
   + subscribe_scan_events(callback: Callable) -> None
   + unsubscribe_scan_events(callback: Callable) -> None
   
@@ -64,13 +65,6 @@ enum ScanMode {
   SERPENTINE
 }
 
-class ScanZone {
-  + x_min: float
-  + x_max: float
-  + y_min: float
-  + y_max: float
-}
-
 class ScanPlan {
   + config: Scan2DConfig
   + trajectory: List[ScanPoint]
@@ -87,25 +81,6 @@ class ScanPoint {
   + segment_type: str
 }
 
-class ScanProgress {
-  + current_point: int
-  + total_points: int
-  + current_line: int
-  + total_lines: int
-  + elapsed_time: float
-  + estimated_remaining: float
-  + percentage: float
-}
-
-class ScanResult {
-  + config: Scan2DConfig
-  + start_time: datetime
-  + end_time: datetime
-  + points_acquired: int
-  + export_path: Optional[str]
-  + success: bool
-}
-
 class ExportConfig {
   + output_dir: str
   + filename_base: str
@@ -120,12 +95,6 @@ class ExportStatus {
   + file_size_bytes: int
 }
 
-class ValidationResult {
-  + is_valid: bool
-  + errors: List[str]
-  + warnings: List[str]
-}
-
 ' === Relations avec GUI ===
 class "EFImagingBench_GUI" as GUI {
   + _execute_scan2d_from_ui_main()
@@ -133,52 +102,62 @@ class "EFImagingBench_GUI" as GUI {
   + _stop_export_main()
 }
 
-' === Relations avec Domain ===
-class MetaManager {
+' === Relations avec Domain (DIRECT) ===
+class StageManager {
+  + inject_scan_batch(commands)
+  + get_current_position()
+  --
+  <<signal>> scan_segment_changed
+  <<signal>> scan_line_started
+  <<signal>> scan_line_ended
+}
+
+class CSVExporter {
+  + start_export(config)
+  + stop_export()
+  + get_status()
+  + is_exporting() -> bool
+}
+
+class MotionService {
+  + get_current_position() -> Position
+  + is_axis_homed(axis: str) -> bool
+  + get_axis_limits() -> AxisLimits
+}
+
+' === Legacy (À supprimer) ===
+class MetaManager <<deprecated>> {
   + generate_scan_config(...)
   + inject_scan_batch(scan_config)
   + start_export_csv(export_config)
   + stop_export_csv()
   --
-  <<signal>> scan_segment_changed
-  <<signal>> scan_line_started
-  <<signal>> scan_line_ended
-}
-
-class StageManager {
-  + inject_scan_batch(commands)
-  --
-  <<signal>> scan_segment_changed
-  <<signal>> scan_line_started
-  <<signal>> scan_line_ended
-}
-
-class EFImagingBenchCSVExporter {
-  + start_export(config)
-  + stop_export()
-  + get_status()
+  <<À REMPLACER par ScanService>>
 }
 
 ' === Relations ===
-GUI ..> ScanService : "utilise"
-ScanService --> MetaManager : "délègue à"
-ScanService --> MotionService : "utilise pour validation"
-MetaManager --> StageManager : "coordonne"
-MetaManager --> EFImagingBenchCSVExporter : "utilise"
+GUI --> ScanService : "utilise (nouveau)"
+GUI ..> MetaManager : "<<legacy>> à migrer"
+
+ScanService --> StageManager : "communication directe"
+ScanService --> CSVExporter : "communication directe"
+ScanService --> MotionService : "validation positions"
+MetaManager ..> StageManager : "<<legacy>>"
+MetaManager ..> CSVExporter : "<<legacy>>"
 
 ScanService ..> Scan2DConfig : "configure"
 ScanService ..> ScanPlan : "génère"
-ScanService ..> ScanProgress : "retourne"
-ScanService ..> ScanResult : "enregistre"
 ScanService ..> ExportConfig : "utilise"
 ScanService ..> ExportStatus : "retourne"
-ScanService ..> ValidationResult : "retourne"
 
 ScanPlan *-- ScanPoint : "contient"
 Scan2DConfig ..> ScanMode : "utilise"
-Scan2DConfig ..> ScanZone : "définit"
+
+StageManager --> ScanService : "<<signal>> scan events"
 
 note right of ScanService
+  **Remplace MetaManager pour les scans**
+  
   **Responsabilités:**
   - Validation zone de scan
   - Génération trajectoire
@@ -187,21 +166,40 @@ note right of ScanService
   - Suivi progression
   - Gestion historique scans
   
+  **Migration depuis MetaManager:**
+  - generate_scan_config() → ScanService.configure_scan_2d()
+  - inject_scan_batch() → ScanService.execute_scan_batch()
+  - start_export_csv() → ScanService.start_export_with_scan()
+  - stop_export_csv() → ScanService.stop_export()
+  
   **Principe:**
+  - Communication DIRECTE avec StageManager
+  - Communication DIRECTE avec CSVExporter
   - Orchestration use case complet
-  - Validation avant exécution
-  - Gestion des observateurs
-  - Pas de gestion threads directe
+  - Responsabilité unique (SRP)
+end note
+
+note bottom of StageManager
+  **StageManager (inchangé)**
+  - Gestion scan batch
+  - Signaux scan_segment_changed
+  - Signaux scan_line_started/ended
+  
+  Maintenant utilisé DIRECTEMENT
+  par ScanService (plus de MetaManager)
 end note
 
 note bottom of MetaManager
-  MetaManager coordonne:
-  - StageManager (mouvement)
-  - CSVExporter (export données)
-  - Synchronisation scan + acquisition
+  **MetaManager (deprecated)**
   
-  ScanService = orchestrateur use case
+  Code à migrer vers ScanService:
+  - generate_scan_config()
+  - inject_scan_batch()
+  - start_export_csv()
+  - stop_export_csv()
+  - is_exporting_csv
+  
+  À supprimer après migration GUI
 end note
 
 @enduml
-

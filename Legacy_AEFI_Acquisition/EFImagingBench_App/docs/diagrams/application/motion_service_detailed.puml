@@ -1,4 +1,4 @@
-@startuml Motion Service - Détaillé
+@startuml Motion Service - Détaillé (Remplace MetaManager)
 
 !define RECTANGLE class
 
@@ -6,11 +6,11 @@ skinparam classAttributeIconSize 0
 skinparam backgroundColor #FEFEFE
 
 class MotionService {
-  - _meta_manager: MetaManager
+  - _stage_manager: StageManager
   - _position_listeners: List[Callable]
   - _homing_status: Dict[str, bool]
   
-  ' === Commandes de mouvement ===
+  ' === Commandes de mouvement (ex-MetaManager) ===
   + move_to(axis: str, target_cm: float) -> bool
   + move_to_position(x_cm: float, y_cm: float) -> bool
   + home_axis(axis: str) -> bool
@@ -19,7 +19,7 @@ class MotionService {
   + stop_axis(axis: str, immediate: bool) -> bool
   + emergency_stop_all() -> bool
   
-  ' === Configuration vitesse ===
+  ' === Configuration vitesse (ex-MetaManager) ===
   + set_axis_speed_params(axis: str, params: SpeedParams) -> bool
   + get_axis_speed_params(axis: str) -> SpeedParams
   + apply_speed_configuration(config: SpeedConfig) -> bool
@@ -30,7 +30,7 @@ class MotionService {
   + is_moving() -> bool
   + get_axis_limits() -> AxisLimits
   
-  ' === Observateurs ===
+  ' === Observateurs (remplace signaux Qt MetaManager) ===
   + subscribe_position_updates(callback: Callable) -> None
   + unsubscribe_position_updates(callback: Callable) -> None
   
@@ -75,60 +75,91 @@ class "EFImagingBench_GUI" as GUI {
   + apply_speed_parameters()
 }
 
-' === Relations avec Domain ===
-class MetaManager {
+' === Relations avec Domain (DIRECT) ===
+class StageManager {
+  + add_command_to_queue(cmd)
+  + get_current_position()
+  + get_axis_homed_status(axis)
+  + set_axis_params(axis, params)
+  + get_axis_params(axis) -> dict
+  --
+  <<signal>> position_changed
+  <<signal>> status_changed
+  <<signal>> error_occurred
+}
+
+' === Legacy (À supprimer) ===
+class MetaManager <<deprecated>> {
   + move_to(axis, target_inc)
   + home_lock(axis)
   + home_both_lock()
   + stop(axis, immediate)
   + set_axis_params(axis, params)
-  + get_axis_params(axis, callback)
   --
-  <<signal>> position_changed
-  <<signal>> status_changed
-}
-
-class StageManager {
-  + add_command_to_queue(cmd)
-  + get_current_position()
-  + get_axis_homed_status(axis)
-  --
-  <<signal>> position_changed
-  <<signal>> status_changed
+  <<À REMPLACER par MotionService>>
 }
 
 ' === Relations ===
-GUI ..> MotionService : "utilise"
-MotionService --> MetaManager : "délègue à"
-MetaManager --> StageManager : "coordonne"
+GUI --> MotionService : "utilise (nouveau)"
+GUI ..> MetaManager : "<<legacy>> à migrer"
+
+MotionService --> StageManager : "communication directe"
+MetaManager ..> StageManager : "<<legacy>>"
 
 MotionService ..> Position : "retourne"
 MotionService ..> SpeedParams : "utilise"
 MotionService ..> SpeedConfig : "utilise"
 MotionService ..> AxisLimits : "retourne"
 
+StageManager --> MotionService : "<<signal>> position_changed"
+
 note right of MotionService
+  **Remplace MetaManager pour le mouvement**
+  
   **Responsabilités:**
   - Validation des positions (limites)
   - Conversion cm ↔ inc
   - Gestion observateurs position
-  - Simplification API mouvement
+  - API mouvement simplifiée
   - Vérification homing avant move
   
+  **Migration depuis MetaManager:**
+  - move_to() → MotionService.move_to()
+  - home_lock() → MotionService.home_axis()
+  - home_both_lock() → MotionService.home_both_axes_blocking()
+  - stop() → MotionService.stop_axis()
+  - set_axis_params() → MotionService.set_axis_speed_params()
+  
   **Principe:**
-  - Pas de logique métier complexe
-  - Pas de gestion de threads
-  - Délègue tout au MetaManager
-  - Fournit API synchrone simple
+  - Communication DIRECTE avec StageManager
+  - Pas de couche intermédiaire
+  - Responsabilité unique (SRP)
+end note
+
+note bottom of StageManager
+  **StageManager (inchangé)**
+  - Gestion threads/queues
+  - Communication série
+  - Buffer de positions
+  - Signaux Qt
+  
+  Maintenant utilisé DIRECTEMENT
+  par MotionService (plus de MetaManager)
 end note
 
 note bottom of MetaManager
-  Le MetaManager reste le coordinateur
-  central avec gestion des threads,
-  signaux Qt, et orchestration.
+  **MetaManager (deprecated)**
   
-  MotionService = façade simplifiée
+  Code à migrer vers MotionService:
+  - move_to(axis, target_inc)
+  - home_lock(axis)
+  - home_both_lock()
+  - stop(axis, immediate)
+  - set_axis_params()
+  - get_axis_params()
+  - sync_ui_with_hardware()
+  
+  À supprimer après migration GUI
 end note
 
 @enduml
-
