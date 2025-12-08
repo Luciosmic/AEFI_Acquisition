@@ -20,7 +20,7 @@ package "Application Layer (Services)" as APP {
   end note
   
   [MotionService]
-  [ScanService]
+  [ScanApplicationService]
   [DeviceExcitationConfigService]
   [DeviceAcquisitionConfigService]
   [DataAcquisitionService]
@@ -33,7 +33,7 @@ package "Legacy (À supprimer)" as LEGACY {
 
 ' === RELATIONS GUI -> APPLICATION (Nouveau) ===
 GUI --> MotionService : "Mouvement axes"
-GUI --> ScanService : "Scans 2D"
+GUI --> ScanApplicationService : "Scans 2D"
 GUI --> DeviceExcitationConfigService : "Config DDS"
 GUI --> DeviceAcquisitionConfigService : "Config ADC + Export"
 GUI --> DataAcquisitionService : "Acquisition données"
@@ -49,10 +49,10 @@ note right of APP
   - Configuration vitesse axes
   - Validation positions
   
-  **ScanService**
-  - execute_scan_2d()
-  - Génération trajectoires
-  - Coordination scan + export
+  **ScanApplicationService**
+  - Orchestration complète (Hardware + Export)
+  - Délègue calculs au Domaine (ScanTrajectoryService)
+  - Gère la boucle de scan
   
   **DeviceExcitationConfigService**
   - Configuration DDS (4 canaux)
@@ -82,7 +82,7 @@ note bottom of LEGACY
   
   À découper en 5 services :
   - move_to/home/stop → MotionService
-  - inject_scan_batch → ScanService
+  - inject_scan_batch → ScanApplicationService
   - update_configuration DDS → DeviceExcitationConfigService
   - update_configuration ADC/export → DeviceAcquisitionConfigService
   - start/stop acquisition, data flow → DataAcquisitionService

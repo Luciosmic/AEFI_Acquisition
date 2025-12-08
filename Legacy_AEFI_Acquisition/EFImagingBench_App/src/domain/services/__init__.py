@@ -1,5 +1,5 @@
 """Domain services package."""
 
-from .automatic_step_scan_service import AutomaticStepScanService
+from .scan_trajectory_factory import ScanTrajectoryFactory
 
-__all__ = ['AutomaticStepScanService']
+__all__ = ['ScanTrajectoryFactory']
