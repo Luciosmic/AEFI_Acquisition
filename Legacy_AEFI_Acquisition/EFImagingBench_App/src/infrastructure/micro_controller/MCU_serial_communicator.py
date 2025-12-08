@@ -10,7 +10,7 @@ class MCU_SerialCommunicator:
         if cls._instance is None:
             with cls._lock:
                 if cls._instance is None:
-                    cls._instance = super(SerialCommunicator, cls).__new__(cls)
+                    cls._instance = super(MCU_SerialCommunicator, cls).__new__(cls)
                     cls._instance.ser = None
                     cls._instance.port = None
                     cls._instance.baudrate = 9600

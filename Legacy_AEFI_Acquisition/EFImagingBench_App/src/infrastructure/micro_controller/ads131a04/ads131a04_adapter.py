@@ -180,13 +180,18 @@ class ADS131A04Adapter(IAcquisitionPort):
         if not success:
             raise RuntimeError(f"Acquisition failed: {response}")
         
+        # Debug: print raw response
+        print(f"[DEBUG] Raw MCU response: '{response}' (len={len(response)})")
+        print(f"[DEBUG] Response repr: {repr(response)}")
+        
         # Parse response: tab-separated raw ADC codes (6 channels)
         try:
             raw_codes = [int(x) for x in response.split('\t') if x.strip()]
+            print(f"[DEBUG] Parsed codes: {raw_codes}")
             if len(raw_codes) != 6:
                 raise ValueError(f"Expected 6 channels, got {len(raw_codes)}")
         except ValueError as e:
-            raise RuntimeError(f"Failed to parse ADC data: {e}, response: {response}")
+            raise RuntimeError(f"Failed to parse ADC data: {e}, response: '{response}'")
         
         # Convert raw codes to voltages
         return VoltageMeasurement(
