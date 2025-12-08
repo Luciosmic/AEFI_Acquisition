@@ -1,0 +1,230 @@
+@startuml Domain Model - Complete Scan Architecture
+
+!define RECTANGLE class
+
+skinparam classAttributeIconSize 0
+skinparam backgroundColor #FEFEFE
+skinparam linetype ortho
+
+package "Domain Layer" {
+
+    ' ==========================================
+    ' AGGREGATE ROOT
+    ' ==========================================
+    class StepScan <<Aggregate Root>> {
+        + id: UUID
+        + status: ScanStatus
+        + start_time: datetime
+        + end_time: datetime
+        - _points: List[ScanPointResult]
+        - _expected_points: int
+        - _domain_events: List[DomainEvent]
+        
+        + start(config: StepScanConfig)
+        + add_point_result(result: ScanPointResult)
+        + complete()
+        + fail(reason: str)
+        + cancel()
+        + domain_events: List[DomainEvent]
+        + points: List[ScanPointResult]
+        + expected_points: int
+        
+        --Auto-Completion Logic--
+        {method} if len(_points) >= _expected_points:
+        {method}     self.complete()
+    }
+
+    ' ==========================================
+    ' VALUE OBJECTS - Scan
+    ' ==========================================
+    class ScanPointResult <<Value Object>> {
+        + position: Position2D
+        + measurement: VoltageMeasurement
+        + point_index: int
+    }
+    
+    class Position2D <<Value Object>> {
+        + x: float
+        + y: float
+    }
+
+    ' ==========================================
+    ' VALUE OBJECTS - Measurement
+    ' ==========================================
+    class VoltageMeasurement <<Value Object>> {
+        + voltage_x_in_phase: float
+        + voltage_x_quadrature: float
+        + voltage_y_in_phase: float
+        + voltage_y_quadrature: float
+        + voltage_z_in_phase: float
+        + voltage_z_quadrature: float
+        + timestamp: datetime
+        + uncertainty_estimate_volts: Optional[float]
+        
+        --Statistical Metadata (Optional)--
+        + std_dev_x_in_phase: Optional[float]
+        + std_dev_x_quadrature: Optional[float]
+        + std_dev_y_in_phase: Optional[float]
+        + std_dev_y_quadrature: Optional[float]
+        + std_dev_z_in_phase: Optional[float]
+        + std_dev_z_quadrature: Optional[float]
+        
+        {method} None when N=1 raw measurement
+        {method} 0.0 when N=1 averaged
+        {method} >0.0 when N>1 averaged
+    }
+
+    ' ==========================================
+    ' DOMAIN SERVICES
+    ' ==========================================
+    class MeasurementStatisticsService <<Domain Service>> {
+        + {static} calculate_statistics(measurements: List[VoltageMeasurement]): VoltageMeasurement
+        
+        --Logic--
+        {method} if N=1: return measurement with std_dev=0.0
+        {method} if N>1: calculate mean and std_dev
+    }
+    
+    class ScanTrajectoryFactory <<Factory>> {
+        + {static} create_trajectory(config: StepScanConfig): ScanTrajectory
+        
+        --Patterns--
+        {method} SERPENTINE: alternating direction
+        {method} RASTER: always left-to-right
+        {method} COMB: column-by-column
+    }
+
+    class ScanTrajectory <<Value Object>> {
+        + points: List[Position2D]
+        + total_points: int
+    }
+
+    ' ==========================================
+    ' CONFIGURATION
+    ' ==========================================
+    class StepScanConfig <<Value Object>> {
+        + scan_zone: ScanZone
+        + x_nb_points: int
+        + y_nb_points: int
+        + scan_pattern: ScanPattern
+        + stabilization_delay_ms: int
+        + averaging_per_position: int
+        + measurement_uncertainty: MeasurementUncertainty
+        
+        + validate(): ValidationResult
+        + total_points(): int
+    }
+
+    class ScanZone <<Value Object>> {
+        + x_min: float
+        + x_max: float
+        + y_min: float
+        + y_max: float
+    }
+
+    enum ScanPattern <<Value Object>> {
+        SERPENTINE
+        RASTER
+        COMB
+    }
+    
+    class MeasurementUncertainty <<Value Object>> {
+        + max_uncertainty_volts: float
+    }
+
+    ' ==========================================
+    ' DOMAIN EVENTS
+    ' ==========================================
+    interface DomainEvent {
+        + occurred_on: datetime
+    }
+
+    class ScanStarted <<Domain Event>> {
+        + scan_id: UUID
+        + config: StepScanConfig
+    }
+
+    class ScanPointAcquired <<Domain Event>> {
+        + scan_id: UUID
+        + point_index: int
+        + position: Position2D
+        + measurement: VoltageMeasurement
+    }
+
+    class ScanCompleted <<Domain Event>> {
+        + scan_id: UUID
+        + total_points: int
+    }
+
+    class ScanFailed <<Domain Event>> {
+        + scan_id: UUID
+        + reason: str
+    }
+
+    class ScanCancelled <<Domain Event>> {
+        + scan_id: UUID
+    }
+    
+    enum ScanStatus <<Value Object>> {
+        PENDING
+        RUNNING
+        COMPLETED
+        FAILED
+        CANCELLED
+    }
+}
+
+' ==========================================
+' RELATIONS
+' ==========================================
+
+' Aggregate composition
+StepScan "1" *-- "0..*" ScanPointResult : contains
+StepScan ..> ScanStatus : uses
+
+' Value Object composition
+ScanPointResult *-- Position2D
+ScanPointResult *-- VoltageMeasurement
+StepScanConfig *-- ScanZone
+StepScanConfig *-- ScanPattern
+StepScanConfig *-- MeasurementUncertainty
+
+' Factory
+ScanTrajectoryFactory ..> ScanTrajectory : creates
+ScanTrajectoryFactory ..> StepScanConfig : uses
+ScanTrajectory *-- Position2D
+
+' Domain Service
+MeasurementStatisticsService ..> VoltageMeasurement : processes
+
+' Events
+StepScan ..> ScanStarted : emits
+StepScan ..> ScanPointAcquired : emits
+StepScan ..> ScanCompleted : emits
+StepScan ..> ScanFailed : emits
+StepScan ..> ScanCancelled : emits
+
+ScanStarted --|> DomainEvent
+ScanPointAcquired --|> DomainEvent
+ScanCompleted --|> DomainEvent
+ScanFailed --|> DomainEvent
+ScanCancelled --|> DomainEvent
+
+note right of VoltageMeasurement
+  **Statistical Fields Usage:**
+  - Raw measurement (N=1): std_dev = None
+  - Single averaged (N=1): std_dev = 0.0
+  - Multiple averaged (N>1): std_dev > 0.0
+  
+  Handled by MeasurementStatisticsService
+end note
+
+note right of StepScan
+  **Auto-Completion:**
+  Domain manages its own state.
+  When len(_points) >= _expected_points,
+  automatically calls complete() and
+  emits ScanCompleted event.
+end note
+
+@enduml

@@ -1,0 +1,211 @@
+@startuml Export Architecture - Event-Driven Pattern
+
+!define RECTANGLE class
+
+skinparam classAttributeIconSize 0
+skinparam backgroundColor #FEFEFE
+skinparam linetype ortho
+
+package "Application Layer" {
+    
+    class ScanApplicationService {
+        - _motion_port: IMotionPort
+        - _acquisition_port: IAcquisitionPort
+        - _subscribers: List[Callable]
+        - _current_scan: Optional[StepScan]
+        
+        + execute_scan(dto: Scan2DConfigDTO): bool
+        + subscribe(callback: Callable): void
+        - _dispatch_events(events: List[DomainEvent]): void
+        
+        --Event Dispatching--
+        {method} for event in events:
+        {method}     for subscriber in _subscribers:
+        {method}         subscriber.on_event(event)
+    }
+    
+    package "Subscribers" {
+        
+        class ExportEventSubscriber {
+            - _export_port: IExportPort
+            - _export_config: ExportConfigDTO
+            
+            + on_event(event: DomainEvent): void
+            - _extract_metadata(config): dict
+            
+            --Event Handling--
+            {method} ScanStarted → configure() + start()
+            {method} ScanPointAcquired → write_point()
+            {method} ScanCompleted → stop()
+            {method} ScanFailed/Cancelled → stop()
+        }
+        
+        class UIEventSubscriber {
+            + on_event(event: DomainEvent): void
+            
+            --Event Handling--
+            {method} ScanStarted → show "Starting..."
+            {method} ScanPointAcquired → update progress
+            {method} ScanCompleted → show "Done"
+        }
+    }
+    
+    package "DTOs" {
+        class ExportConfigDTO {
+            + enabled: bool
+            + output_directory: str
+            + filename_base: str
+            + format: str
+            + include_metadata: bool
+            + compression: bool
+        }
+        
+        class Scan2DConfigDTO {
+            + x_min, x_max, y_min, y_max: float
+            + x_nb_points, y_nb_points: int
+            + scan_pattern: str
+            + stabilization_delay_ms: int
+            + averaging_per_position: int
+            + uncertainty_volts: float
+        }
+    }
+    
+    package "Ports" {
+        interface IExportPort {
+            + configure(directory: str, filename: str, metadata: dict): void
+            + start(): void
+            + write_point(data: dict): void
+            + stop(): void
+        }
+        
+        interface IMotionPort {
+            + move_to(position: Position2D): void
+        }
+        
+        interface IAcquisitionPort {
+            + acquire_sample(): VoltageMeasurement
+        }
+    }
+}
+
+package "Domain Layer" {
+    interface DomainEvent {
+        + occurred_on: datetime
+    }
+    
+    class ScanStarted {
+        + scan_id: UUID
+        + config: StepScanConfig
+    }
+    
+    class ScanPointAcquired {
+        + scan_id: UUID
+        + point_index: int
+        + position: Position2D
+        + measurement: VoltageMeasurement
+    }
+    
+    class ScanCompleted {
+        + scan_id: UUID
+        + total_points: int
+    }
+    
+    class StepScan <<Aggregate>> {
+        + domain_events: List[DomainEvent]
+    }
+}
+
+package "Infrastructure Layer" {
+    
+    class HDF5Exporter {
+        - _file: h5py.File
+        - _directory: str
+        - _filename: str
+        - _metadata: dict
+        - _point_count: int
+        
+        + configure(directory, filename, metadata): void
+        + start(): void
+        + write_point(data: dict): void
+        + stop(): void
+        
+        --HDF5 Structure--
+        {method} /metadata (attributes)
+        {method} /scan_data/positions (Nx2 dataset)
+        {method} /scan_data/measurements (NxM dataset)
+        {method} /scan_data/std_dev (NxM dataset)
+    }
+    
+    class CSVExporter {
+        - _file: TextIO
+        - _writer: csv.DictWriter
+        - _directory: str
+        - _filename: str
+        
+        + configure(directory, filename, metadata): void
+        + start(): void
+        + write_point(data: dict): void
+        + stop(): void
+        
+        --CSV Format--
+        {method} Header: point_index, x, y, voltage_x_i, ...
+        {method} One row per scan point
+    }
+}
+
+' ==========================================
+' RELATIONS
+' ==========================================
+
+' Application → Ports
+ScanApplicationService --> IMotionPort : uses
+ScanApplicationService --> IAcquisitionPort : uses
+ScanApplicationService --> ExportEventSubscriber : subscribes
+ScanApplicationService --> UIEventSubscriber : subscribes
+
+' Subscribers → Ports
+ExportEventSubscriber --> IExportPort : orchestrates
+ExportEventSubscriber --> ExportConfigDTO : uses
+UIEventSubscriber ..> DomainEvent : listens
+
+' Infrastructure → Ports
+HDF5Exporter ..|> IExportPort : implements
+CSVExporter ..|> IExportPort : implements
+
+' Domain Events
+ScanStarted --|> DomainEvent
+ScanPointAcquired --|> DomainEvent
+ScanCompleted --|> DomainEvent
+
+StepScan ..> DomainEvent : emits
+
+' Event Flow
+ExportEventSubscriber ..> ScanStarted : listens
+ExportEventSubscriber ..> ScanPointAcquired : listens
+ExportEventSubscriber ..> ScanCompleted : listens
+
+note right of ExportEventSubscriber
+  **Decoupling via Events:**
+  - Subscriber reacts to domain events
+  - No direct coupling between scan and export
+  - Easy to add more subscribers (logging, etc.)
+  - UI and Export share same event bus
+end note
+
+note bottom of HDF5Exporter
+  **HDF5 Implementation:**
+  - Uses h5py library
+  - Resizable datasets for dynamic writing
+  - Compression optional
+  - Stores metadata as attributes
+end note
+
+note as N1
+  **Event Flow:**
+  1. Domain emits events (ScanStarted, ScanPointAcquired, etc.)
+  2. Application dispatches to all subscribers
+  3. ExportEventSubscriber orchestrates IExportPort
+  4. Infrastructure writes to file (HDF5/CSV)
+end note
+
+@enduml
