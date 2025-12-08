@@ -1,0 +1,32 @@
+# Virtual environment
+.venv_efi_imaging_bench/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Ignore everything by default
+/*
+
+# Track only these directories
+!/src/
+/src/*
+!/src/application/
+!/src/domain/
+!/src/interface/
+!/src/infrastructure/
+
+# Track documentation and config
+!/docs/
+!/requirements.txt
+!/README.md
+!/.gitignore
