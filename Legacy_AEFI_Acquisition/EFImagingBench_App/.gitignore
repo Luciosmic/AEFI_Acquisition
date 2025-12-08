@@ -33,3 +33,16 @@ __pycache__/
 
 # Legacy
 /src/infrastructure/legacy_ArcusPerfomax4EXStage/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Dropbox
+.dropbox
+.dropbox.attr
+*conflicted copy*
