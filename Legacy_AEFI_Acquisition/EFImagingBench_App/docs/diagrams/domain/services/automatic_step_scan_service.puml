@@ -39,7 +39,7 @@ class AutomaticStepScanService <<Domain Service>> {
   - _execute_scan_point(position: Position2D, config: StepScanConfig) -> MeasurementResult
   - _move_to_position(position: Position2D) -> None
   - _wait_for_stabilization(delay_ms: int) -> None
-  - _acquire_measurements(n_avg: int) -> List[VoltageMeasurement]
+  - _acquire_measurements(averaging_per_scan_point: int) -> List[VoltageMeasurement]
   - _average_measurements(measurements: List[VoltageMeasurement]) -> VoltageMeasurement
   - _check_scan_should_continue() -> bool
 }
@@ -54,7 +54,7 @@ class StepScanConfig <<Value Object>> {
   + y_nb_points: int
   + scan_mode: ScanMode
   + stabilization_delay_ms: int
-  + n_avg_per_point: int
+  + averaging_per_scan_point: int
   + acquisition_params: AcquisitionParameters
   
   + validate() -> ValidationResult
@@ -190,7 +190,7 @@ class VoltageMeasurement <<Value Object>> {
 }
 
 class AcquisitionParameters <<Value Object>> {
-  + n_avg: int
+  + averaging_adc: int
   + adc_gains: Dict[int, int]
   + sampling_rate: float
 }
@@ -252,8 +252,8 @@ note right of AutomaticStepScanService
   3. Pour chaque point:
      - Déplacer axes
      - Attendre stabilisation
-     - Acquérir N mesures
-     - Moyenner
+     - Acquérir averaging_per_scan_point mesures
+     - Moyenner (chaque mesure déjà moyennée par ADC)
      - Stocker résultat
   4. Gérer lifecycle (pause/resume/cancel)
   
@@ -295,7 +295,7 @@ note bottom of StepScanConfig
   - Zone valide (x_min < x_max, etc.)
   - Nombre de points > 0
   - Délai stabilisation >= 0
-  - N_avg >= 1
+  - averaging_per_scan_point >= 1
   
   Calculs dérivés:
   - total_points = x_nb * y_nb
@@ -305,6 +305,11 @@ note bottom of StepScanConfig
   - 0 <= x_min < x_max <= 120 cm
   - 0 <= y_min < y_max <= 120 cm
   (hardcodé pour MVP, injecté depuis TestBench plus tard)
+  
+  **Deux niveaux de moyennage:**
+  - averaging_adc (device-level, hardware/firmware)
+  - averaging_per_scan_point (scan-level, domain logic)
+  Total échantillons = averaging_adc × averaging_per_scan_point
 end note
 
 note bottom of SpatialScan
