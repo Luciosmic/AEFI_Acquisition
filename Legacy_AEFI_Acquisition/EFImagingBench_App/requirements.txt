@@ -4,6 +4,7 @@
 PyQt5>=5.15.0
 numpy>=1.21.0
 matplotlib>=3.5.0
+pylablib>=1.4.2
 
 ## Testing
 pytest>=7.0.0

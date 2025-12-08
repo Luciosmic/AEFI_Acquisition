@@ -30,3 +30,6 @@ __pycache__/
 !/requirements.txt
 !/README.md
 !/.gitignore
+
+# Legacy
+/src/infrastructure/legacy_ArcusPerfomax4EXStage/
