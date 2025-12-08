@@ -17,7 +17,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from uuid import UUID, uuid4
 from typing import List, Optional, Dict, Any
-from ..value_objects.scan_status import ScanStatus
+from ..value_objects.scan.scan_status import ScanStatus
 
 @dataclass
 class SpatialScan:

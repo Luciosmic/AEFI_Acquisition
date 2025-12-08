@@ -16,7 +16,7 @@ Design:
 from dataclasses import dataclass
 from .scan_zone import ScanZone
 from .scan_mode import ScanMode
-from ..acquisition.acquisition_parameters import AcquisitionParameters
+from ..measurement_uncertainty import MeasurementUncertainty
 
 @dataclass(frozen=True)
 class StepScanConfig:
@@ -27,7 +27,7 @@ class StepScanConfig:
     - Number of points in each direction
     - Scan trajectory pattern
     - Timing parameters
-    - Acquisition parameters
+    - Measurement uncertainty requirements
     """
     
     # Spatial configuration
@@ -44,8 +44,8 @@ class StepScanConfig:
     # Averaging (scan-level, domain logic)
     averaging_per_scan_point: int  # Number of measurements to average per point
     
-    # Device configuration
-    acquisition_params: AcquisitionParameters
+    # Measurement quality requirement
+    measurement_uncertainty: MeasurementUncertainty
     
     def __post_init__(self):
         """Validate configuration parameters."""
@@ -65,24 +65,35 @@ class StepScanConfig:
         """Calculate total number of scan points."""
         return self.x_nb_points * self.y_nb_points
     
+    def validate(self):
+        """Validate configuration and return ValidationResult.
+        
+        Returns:
+            ValidationResult with validation status
+        """
+        from ..validation_result import ValidationResult
+        
+        # Validation is done in __post_init__, so if we got here, it's valid
+        return ValidationResult(is_valid=True, errors=[], warnings=[])
+    
     def estimated_duration_seconds(self) -> float:
         """Estimate total scan duration.
         
         Rough estimation based on:
         - Number of points
         - Stabilization delay
-        - Acquisition time per point
+        - Acquisition time per point (estimated)
         
         Note: Does not account for movement time (depends on distance and speed).
         """
         # Time per point (stabilization + acquisition)
         stabilization_s = self.stabilization_delay_ms / 1000.0
         
-        # Acquisition time per point (rough estimate)
-        # averaging_per_scan_point measurements at sampling_rate
-        acquisition_s = self.averaging_per_scan_point / self.acquisition_params.sampling_rate
+        # Acquisition time per point (rough estimate: 100ms per averaged sample)
+        acquisition_s = self.averaging_per_scan_point * 0.1
         
         time_per_point = stabilization_s + acquisition_s
         
         return self.total_points() * time_per_point
+
 
