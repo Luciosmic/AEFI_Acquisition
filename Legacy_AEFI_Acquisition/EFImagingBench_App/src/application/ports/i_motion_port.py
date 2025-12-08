@@ -17,7 +17,7 @@ Design:
 """
 
 from abc import ABC, abstractmethod
-from src.domain.value_objects.geometric.position_2d import Position2D
+from domain.value_objects.geometric.position_2d import Position2D
 
 
 class IMotionPort(ABC):

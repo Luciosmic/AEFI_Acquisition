@@ -15,7 +15,7 @@ Design:
 """
 from dataclasses import dataclass
 from .scan_zone import ScanZone
-from .scan_mode import ScanMode
+from .scan_pattern import ScanPattern
 from ..measurement_uncertainty import MeasurementUncertainty
 
 @dataclass(frozen=True)
@@ -36,13 +36,13 @@ class StepScanConfig:
     y_nb_points: int  # Number of points along Y
     
     # Scan pattern
-    scan_mode: ScanMode
+    scan_pattern: ScanPattern
     
     # Timing
     stabilization_delay_ms: int  # Wait time after movement
     
     # Averaging (scan-level, domain logic)
-    averaging_per_scan_point: int  # Number of measurements to average per point
+    averaging_per_position: int  # Number of measurements to average per position
     
     # Measurement quality requirement
     measurement_uncertainty: MeasurementUncertainty
@@ -58,8 +58,8 @@ class StepScanConfig:
         if self.stabilization_delay_ms < 0:
             raise ValueError(f"stabilization_delay_ms must be >= 0, got {self.stabilization_delay_ms}")
         
-        if self.averaging_per_scan_point < 1:
-            raise ValueError(f"averaging_per_scan_point must be >= 1, got {self.averaging_per_scan_point}")
+        if self.averaging_per_position < 1:
+            raise ValueError(f"averaging_per_position must be >= 1, got {self.averaging_per_position}")
     
     def total_points(self) -> int:
         """Calculate total number of scan points."""
@@ -90,7 +90,7 @@ class StepScanConfig:
         stabilization_s = self.stabilization_delay_ms / 1000.0
         
         # Acquisition time per point (rough estimate: 100ms per averaged sample)
-        acquisition_s = self.averaging_per_scan_point * 0.1
+        acquisition_s = self.averaging_per_position * 0.1
         
         time_per_point = stabilization_s + acquisition_s
         

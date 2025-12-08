@@ -53,6 +53,14 @@ class VoltageMeasurement:
     # Quality metric (optional)
     uncertainty_estimate_volts: Optional[float] = None  # Estimated measurement uncertainty (±V)
     
+    # Statistical Metadata (optional, for averaged measurements)
+    std_dev_x_in_phase: Optional[float] = None
+    std_dev_x_quadrature: Optional[float] = None
+    std_dev_y_in_phase: Optional[float] = None
+    std_dev_y_quadrature: Optional[float] = None
+    std_dev_z_in_phase: Optional[float] = None
+    std_dev_z_quadrature: Optional[float] = None
+    
     def __post_init__(self):
         """Validate voltage values are finite."""
         import math

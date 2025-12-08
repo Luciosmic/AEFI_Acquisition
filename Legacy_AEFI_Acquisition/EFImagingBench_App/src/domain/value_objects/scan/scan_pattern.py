@@ -1,12 +1,12 @@
 """
-Domain: Scan Mode
+Domain: Scan Pattern
 
 Responsibility:
     Enumeration of scan trajectory patterns.
 
 Rationale:
     Defines how the scan moves through the scan zone.
-    Different modes optimize for different objectives (speed, coverage, etc.).
+    Different patterns optimize for different objectives (speed, coverage, etc.).
 
 Design:
     - Standard Python Enum
@@ -14,7 +14,7 @@ Design:
 """
 from enum import Enum, auto
 
-class ScanMode(Enum):
+class ScanPattern(Enum):
     """Scan trajectory patterns.
     
     Defines the path taken through the scan zone:
@@ -26,4 +26,3 @@ class ScanMode(Enum):
     SERPENTINE = auto()  # Zigzag: →→→ ←←← →→→
     RASTER = auto()      # Always same direction: →→→ →→→ →→→
     COMB = auto()        # Independent lines: →→→ (return) →→→
-

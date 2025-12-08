@@ -14,7 +14,7 @@ Rationale:
 from typing import List
 from ..value_objects.geometric.position_2d import Position2D
 from ..value_objects.scan.step_scan_config import StepScanConfig
-from ..value_objects.scan.scan_mode import ScanMode
+from ..value_objects.scan.scan_pattern import ScanPattern
 from ..value_objects.validation_result import ValidationResult
 
 from ..value_objects.scan.scan_trajectory import ScanTrajectory
@@ -38,7 +38,7 @@ class ScanTrajectoryFactory:
         x_step = (zone.x_max - zone.x_min) / (config.x_nb_points - 1) if config.x_nb_points > 1 else 0
         y_step = (zone.y_max - zone.y_min) / (config.y_nb_points - 1) if config.y_nb_points > 1 else 0
         
-        if config.scan_mode == ScanMode.SERPENTINE:
+        if config.scan_pattern == ScanPattern.SERPENTINE:
             # Serpentine: alternating direction on each line
             for j in range(config.y_nb_points):
                 y = zone.y_min + j * y_step
@@ -53,7 +53,7 @@ class ScanTrajectoryFactory:
                         x = zone.x_min + i * x_step
                         positions.append(Position2D(x=x, y=y))
         
-        elif config.scan_mode == ScanMode.RASTER:
+        elif config.scan_pattern == ScanPattern.RASTER:
             # Raster: always left to right
             for j in range(config.y_nb_points):
                 y = zone.y_min + j * y_step
@@ -61,7 +61,7 @@ class ScanTrajectoryFactory:
                     x = zone.x_min + i * x_step
                     positions.append(Position2D(x=x, y=y))
         
-        elif config.scan_mode == ScanMode.COMB:
+        elif config.scan_pattern == ScanPattern.COMB:
             # Comb: scan each column completely before moving to next
             for i in range(config.x_nb_points):
                 x = zone.x_min + i * x_step

@@ -17,9 +17,9 @@ class Scan2DConfigDTO:
     y_max: float
     x_nb_points: int
     y_nb_points: int
-    scan_mode: str  # 'SERPENTINE', 'RASTER', 'COMB'
+    scan_pattern: str  # 'SERPENTINE', 'RASTER', 'COMB'
     stabilization_delay_ms: int
-    averaging_per_point: int
+    averaging_per_position: int
     uncertainty_volts: float
 
 @dataclass

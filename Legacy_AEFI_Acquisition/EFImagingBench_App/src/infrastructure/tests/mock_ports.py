@@ -1,11 +1,11 @@
 from typing import List, Dict, Any
 from datetime import datetime
-from ...application.ports.i_motion_port import IMotionPort
-from ...application.ports.i_acquisition_port import IAcquisitionPort
-from ...application.ports.i_export_port import IExportPort
-from ...domain.value_objects.geometric.position_2d import Position2D
-from ...domain.value_objects.acquisition.voltage_measurement import VoltageMeasurement
-from ...domain.value_objects.measurement_uncertainty import MeasurementUncertainty
+from application.ports.i_motion_port import IMotionPort
+from application.ports.i_acquisition_port import IAcquisitionPort
+from application.ports.i_export_port import IExportPort
+from domain.value_objects.geometric.position_2d import Position2D
+from domain.value_objects.acquisition.voltage_measurement import VoltageMeasurement
+from domain.value_objects.measurement_uncertainty import MeasurementUncertainty
 
 class MockMotionPort(IMotionPort):
     def __init__(self):
