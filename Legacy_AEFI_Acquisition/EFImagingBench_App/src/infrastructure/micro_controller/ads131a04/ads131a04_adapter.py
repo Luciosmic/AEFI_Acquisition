@@ -19,11 +19,12 @@ Design:
 """
 
 from dataclasses import dataclass
-from typing import Dict
+from typing import Dict, Optional
 import math
 
-from ...domain.value_objects.measurement_uncertainty import MeasurementUncertainty
-from ...domain.value_objects.acquisition.voltage_measurement import VoltageMeasurement
+from ....domain.ports.i_acquisition_port import IAcquisitionPort
+from ....domain.value_objects.measurement_uncertainty import MeasurementUncertainty
+from ....domain.value_objects.acquisition.voltage_measurement import VoltageMeasurement
 
 
 @dataclass
@@ -38,10 +39,11 @@ class ADCHardwareConfig:
     sampling_rate_hz: float  # Output data rate after decimation
 
 
-class ADS131A04Adapter:
+class ADS131A04Adapter(IAcquisitionPort):
     """
     Infrastructure adapter for ADS131A04 ADC.
-    Translates domain concepts to hardware configuration.
+    Implements IAcquisitionPort interface.
+    Translates domain concepts to hardware configuration via MCU serial communication.
     """
     
     # ADS131A04 specifications
@@ -51,13 +53,13 @@ class ADS131A04Adapter:
     AVAILABLE_OSR = [128, 256, 512, 1024, 2048, 4096, 8192, 16384]
     MAX_DATA_RATE_HZ = 128000  # Maximum output data rate
     
-    def __init__(self, communicator):
+    def __init__(self, serial_communicator):
         """
         Args:
-            communicator: AD9106_ADS131A04_SerialCommunicator instance
+            serial_communicator: MCU_serial_communicator (singleton)
         """
-        self._communicator = communicator
-        self._current_config: ADCHardwareConfig | None = None
+        self._serial = serial_communicator
+        self._current_config: Optional[ADCHardwareConfig] = None
     
     def configure_for_uncertainty(self, uncertainty: MeasurementUncertainty) -> None:
         """
@@ -143,70 +145,90 @@ class ADS131A04Adapter:
     
     def _apply_hardware_config(self, config: ADCHardwareConfig) -> None:
         """
-        Apply hardware configuration to ADC.
+        Apply hardware configuration to ADC via MCU serial commands.
         
         Args:
             config: Hardware configuration to apply
         """
-        # Set gains for all channels
-        for channel, gain in config.channel_gains.items():
-            self._communicator.set_adc_gain(channel, gain)
+        # TODO: Implement MCU commands for:
+        # - set_iclk_divider_and_oversampling (via a14/d commands)
+        # - set_reference_config (via a11/d commands)
+        # - per-channel gain configuration
         
-        # Set OSR (this affects sampling rate)
-        self._communicator.set_adc_oversampling(config.oversampling_ratio)
-        
-        # Set reference voltage if configurable
-        # (ADS131A04 has fixed internal reference, but keeping for completeness)
-        # self._communicator.set_adc_reference(config.reference_voltage)
+        # For now, configuration is placeholder
+        # MCU firmware needs to expose these configuration commands
+        pass
     
     def acquire_sample(self) -> VoltageMeasurement:
         """
-        Acquire one voltage measurement sample.
+        Acquire one voltage measurement sample via MCU.
         
         The ADC has already performed hardware averaging (OSR).
         This returns one averaged sample.
         
         Returns:
             VoltageMeasurement in domain language
+            
+        Raises:
+            RuntimeError: If acquisition or parsing fails
         """
         from datetime import datetime
         
-        # Read raw ADC values (already averaged by hardware OSR)
-        raw_channels = self._communicator.read_all_adc_channels()
+        # Acquire via MCU: command 'm1' (1 sample averaged)
+        success, response = self._serial.send_command('m1')
         
-        # Convert raw values to voltages
-        # This is where the mapping ADC channels → domain concepts happens
+        if not success:
+            raise RuntimeError(f"Acquisition failed: {response}")
+        
+        # Parse response: tab-separated raw ADC codes (6 channels)
+        try:
+            raw_codes = [int(x) for x in response.split('\t') if x.strip()]
+            if len(raw_codes) != 6:
+                raise ValueError(f"Expected 6 channels, got {len(raw_codes)}")
+        except ValueError as e:
+            raise RuntimeError(f"Failed to parse ADC data: {e}, response: {response}")
+        
+        # Convert raw codes to voltages
         return VoltageMeasurement(
-            voltage_x_in_phase=self._convert_raw_to_volts(raw_channels[0], channel=1),
-            voltage_x_quadrature=self._convert_raw_to_volts(raw_channels[1], channel=2),
-            voltage_y_in_phase=self._convert_raw_to_volts(raw_channels[2], channel=3),
-            voltage_y_quadrature=self._convert_raw_to_volts(raw_channels[3], channel=4),
-            voltage_z_in_phase=self._convert_raw_to_volts(raw_channels[4], channel=5),
-            voltage_z_quadrature=self._convert_raw_to_volts(raw_channels[5], channel=6),
+            voltage_x_in_phase=self._convert_raw_to_volts(raw_codes[0], channel=1),
+            voltage_x_quadrature=self._convert_raw_to_volts(raw_codes[1], channel=2),
+            voltage_y_in_phase=self._convert_raw_to_volts(raw_codes[2], channel=3),
+            voltage_y_quadrature=self._convert_raw_to_volts(raw_codes[3], channel=4),
+            voltage_z_in_phase=self._convert_raw_to_volts(raw_codes[4], channel=5),
+            voltage_z_quadrature=self._convert_raw_to_volts(raw_codes[5], channel=6),
             timestamp=datetime.now(),
             uncertainty_estimate_volts=self._estimate_uncertainty()
         )
     
-    def _convert_raw_to_volts(self, raw_value: int, channel: int) -> float:
+    def _convert_raw_to_volts(self, raw_code: int, channel: int) -> float:
         """
-        Convert raw ADC value to volts.
+        Convert raw 24-bit signed ADC code to volts.
         
         Args:
-            raw_value: Raw ADC reading (24-bit signed integer)
+            raw_code: Raw ADC reading (24-bit signed integer [-8388608, 8388607])
             channel: Channel number (1-6)
         
         Returns:
             Voltage in volts
+            
+        Raises:
+            ValueError: If raw_code out of valid 24-bit range
+            RuntimeError: If ADC not configured
         """
+        # Validate 24-bit signed range
+        if not (-8388608 <= raw_code <= 8388607):
+            raise ValueError(f"Invalid 24-bit ADC code: {raw_code}")
+        
         if self._current_config is None:
             raise RuntimeError("ADC not configured")
         
         gain = self._current_config.channel_gains[channel]
         vref = self._current_config.reference_voltage
         
-        # ADS131A04: V = (raw / 2^23) * (Vref / Gain)
-        # 2^23 because it's 24-bit signed (one bit for sign)
-        voltage = (raw_value / (2**23)) * (vref / gain)
+        # ADS131A04 conversion formula (datasheet)
+        # V = (raw / 2^23) * (Vref / Gain)
+        # 2^23 because 24-bit signed (one bit for sign)
+        voltage = (raw_code / (2**23)) * (vref / gain)
         
         return voltage
     

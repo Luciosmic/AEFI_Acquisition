@@ -2,7 +2,7 @@ import serial
 import threading
 import time
 
-class SerialCommunicator:
+class MCU_SerialCommunicator:
     _instance = None
     _lock = threading.Lock()
 
