@@ -1,10 +1,10 @@
 import unittest
 from typing import List
-from ..scan_application_service import ScanApplicationService
-from ..dtos.scan_dtos import Scan2DConfigDTO
-from ...infrastructure.tests.mock_ports import MockMotionPort, MockAcquisitionPort
-from ...domain.events.domain_event import DomainEvent
-from ...domain.events.scan_events import ScanStarted, ScanPointAcquired, ScanCompleted
+from application.scan_application_service.scan_application_service import ScanApplicationService
+from application.dtos.scan_dtos import Scan2DConfigDTO
+from infrastructure.tests.mock_ports import MockMotionPort, MockAcquisitionPort
+from domain.events.domain_event import DomainEvent
+from domain.events.scan_events import ScanStarted, ScanPointAcquired, ScanCompleted
 
 class TestScanApplicationService(unittest.TestCase):
     def setUp(self):
@@ -31,9 +31,9 @@ class TestScanApplicationService(unittest.TestCase):
         scan_dto = Scan2DConfigDTO(
             x_min=0, x_max=1, x_nb_points=2,
             y_min=0, y_max=1, y_nb_points=2,
-            scan_mode="RASTER",
+            scan_pattern="RASTER",
             stabilization_delay_ms=0,
-            averaging_per_point=1,
+            averaging_per_position=1,
             uncertainty_volts=1e-6
         )
         

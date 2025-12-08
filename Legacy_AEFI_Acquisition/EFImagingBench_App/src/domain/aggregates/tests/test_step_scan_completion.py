@@ -3,7 +3,7 @@ from datetime import datetime
 from ...aggregates.step_scan import StepScan
 from ...value_objects.scan.step_scan_config import StepScanConfig
 from ...value_objects.scan.scan_zone import ScanZone
-from ...value_objects.scan.scan_mode import ScanMode
+from ...value_objects.scan.scan_pattern import ScanPattern
 from ...value_objects.measurement_uncertainty import MeasurementUncertainty
 from ...value_objects.scan.scan_point_result import ScanPointResult
 from ...value_objects.geometric.position_2d import Position2D
@@ -26,12 +26,12 @@ class TestStepScanCompletion(unittest.TestCase):
             scan_zone=ScanZone(x_min=0, x_max=1, y_min=0, y_max=1),
             x_nb_points=3,
             y_nb_points=3,
-            scan_mode=ScanMode.RASTER,
+            scan_pattern=ScanPattern.RASTER,
             stabilization_delay_ms=0,
-            averaging_per_scan_point=1,
+            averaging_per_position=1,
             measurement_uncertainty=MeasurementUncertainty(max_uncertainty_volts=1e-6)
         )
-        print(f"    • [StepScanConfig] Mode: {config.scan_mode.name}")
+        print(f"    • [StepScanConfig] Mode: {config.scan_pattern.name}")
         print(f"    • [StepScanConfig] Zone: X[{config.scan_zone.x_min}, {config.scan_zone.x_max}], Y[{config.scan_zone.y_min}, {config.scan_zone.y_max}]")
         print(f"    • [StepScanConfig] Grid: {config.x_nb_points}x{config.y_nb_points}")
         print(f"    • [StepScanConfig] Expected Points: {config.x_nb_points * config.y_nb_points}")
@@ -122,7 +122,7 @@ class TestStepScanCompletion(unittest.TestCase):
             plt.figure(figsize=(8, 6))
             sc = plt.scatter(x_coords, y_coords, c=values, cmap='viridis', s=100)
             plt.colorbar(sc, label='Voltage X (V)')
-            plt.title(f'Scan Result: {config.scan_mode.name} ({len(scan.points)} points)')
+            plt.title(f'Scan Result: {config.scan_pattern.name} ({len(scan.points)} points)')
             plt.xlabel('X Position')
             plt.ylabel('Y Position')
             plt.grid(True)

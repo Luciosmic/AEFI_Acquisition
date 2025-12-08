@@ -1,9 +1,9 @@
 import unittest
-from ..value_objects.scan.step_scan_config import StepScanConfig
-from ..value_objects.scan.scan_zone import ScanZone
-from ..value_objects.scan.scan_mode import ScanMode
-from ..value_objects.measurement_uncertainty import MeasurementUncertainty
-from .scan_trajectory_factory import ScanTrajectoryFactory
+from ...value_objects.scan.step_scan_config import StepScanConfig
+from ...value_objects.scan.scan_zone import ScanZone
+from ...value_objects.scan.scan_pattern import ScanPattern
+from ...value_objects.measurement_uncertainty import MeasurementUncertainty
+from ..scan_trajectory_factory import ScanTrajectoryFactory
 
 class TestScanTrajectoryFactory(unittest.TestCase):
     
@@ -12,9 +12,9 @@ class TestScanTrajectoryFactory(unittest.TestCase):
             scan_zone=ScanZone(x_min=0.0, x_max=10.0, y_min=0.0, y_max=10.0),
             x_nb_points=3,
             y_nb_points=3,
-            scan_mode=ScanMode.RASTER,
+            scan_pattern=ScanPattern.RASTER,
             stabilization_delay_ms=100,
-            averaging_per_scan_point=1,
+            averaging_per_position=1,
             measurement_uncertainty=MeasurementUncertainty(max_uncertainty_volts=1e-6)
         )
 
@@ -22,7 +22,7 @@ class TestScanTrajectoryFactory(unittest.TestCase):
         """Test Raster scan mode generation."""
         print("\n=== Testing Raster Trajectory ===")
         config = self.base_config  # Already Raster
-        print(f"Config: Mode={config.scan_mode.name}, Size={config.x_nb_points}x{config.y_nb_points}")
+        print(f"Config: Mode={config.scan_pattern.name}, Size={config.x_nb_points}x{config.y_nb_points}")
         
         trajectory = ScanTrajectoryFactory.create_trajectory(config)
         print(f"Generated {len(trajectory)} points:")
@@ -54,12 +54,12 @@ class TestScanTrajectoryFactory(unittest.TestCase):
             scan_zone=self.base_config.scan_zone,
             x_nb_points=self.base_config.x_nb_points,
             y_nb_points=self.base_config.y_nb_points,
-            scan_mode=ScanMode.SERPENTINE,
+            scan_pattern=ScanPattern.SERPENTINE,
             stabilization_delay_ms=self.base_config.stabilization_delay_ms,
-            averaging_per_scan_point=self.base_config.averaging_per_scan_point,
+            averaging_per_position=self.base_config.averaging_per_position,
             measurement_uncertainty=self.base_config.measurement_uncertainty
         )
-        print(f"Config: Mode={config.scan_mode.name}, Size={config.x_nb_points}x{config.y_nb_points}")
+        print(f"Config: Mode={config.scan_pattern.name}, Size={config.x_nb_points}x{config.y_nb_points}")
         
         trajectory = ScanTrajectoryFactory.create_trajectory(config)
         print(f"Generated {len(trajectory)} points:")
@@ -88,12 +88,12 @@ class TestScanTrajectoryFactory(unittest.TestCase):
             scan_zone=self.base_config.scan_zone,
             x_nb_points=self.base_config.x_nb_points,
             y_nb_points=self.base_config.y_nb_points,
-            scan_mode=ScanMode.COMB,
+            scan_pattern=ScanPattern.COMB,
             stabilization_delay_ms=self.base_config.stabilization_delay_ms,
-            averaging_per_scan_point=self.base_config.averaging_per_scan_point,
+            averaging_per_position=self.base_config.averaging_per_position,
             measurement_uncertainty=self.base_config.measurement_uncertainty
         )
-        print(f"Config: Mode={config.scan_mode.name}, Size={config.x_nb_points}x{config.y_nb_points}")
+        print(f"Config: Mode={config.scan_pattern.name}, Size={config.x_nb_points}x{config.y_nb_points}")
         
         trajectory = ScanTrajectoryFactory.create_trajectory(config)
         print(f"Generated {len(trajectory)} points:")
