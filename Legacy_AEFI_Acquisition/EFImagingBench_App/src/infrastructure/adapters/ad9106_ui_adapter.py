@@ -60,10 +60,10 @@ class AD9106UIAdapter:
             ParameterSpec(
                 name='gain_dds1',
                 label='DDS1 Gain',
-                type='combo',
-                default='8192',
-                options=['0', '1024', '2048', '4096', '8192', '12288', '16383'],
-                tooltip='Gain for DDS channel 1'
+                type='spinbox',
+                default=8192,
+                range=(0, 16383),
+                tooltip='Gain for DDS channel 1 (0-16383)'
             ),
             ParameterSpec(
                 name='phase_dds1',
@@ -78,9 +78,9 @@ class AD9106UIAdapter:
             ParameterSpec(
                 name='gain_dds2',
                 label='DDS2 Gain',
-                type='combo',
-                default='8192',
-                options=['0', '1024', '2048', '4096', '8192', '12288', '16383'],
+                type='spinbox',
+                default=8192,
+                range=(0, 16383),
                 tooltip='Gain for DDS channel 2'
             ),
             ParameterSpec(
@@ -96,9 +96,9 @@ class AD9106UIAdapter:
             ParameterSpec(
                 name='gain_dds3',
                 label='DDS3 Gain',
-                type='combo',
-                default='8192',
-                options=['0', '1024', '2048', '4096', '8192', '12288', '16383'],
+                type='spinbox',
+                default=8192,
+                range=(0, 16383),
                 tooltip='Gain for DDS channel 3'
             ),
             ParameterSpec(
@@ -114,9 +114,9 @@ class AD9106UIAdapter:
             ParameterSpec(
                 name='gain_dds4',
                 label='DDS4 Gain',
-                type='combo',
-                default='8192',
-                options=['0', '1024', '2048', '4096', '8192', '12288', '16383'],
+                type='spinbox',
+                default=8192,
+                range=(0, 16383),
                 tooltip='Gain for DDS channel 4'
             ),
             ParameterSpec(
