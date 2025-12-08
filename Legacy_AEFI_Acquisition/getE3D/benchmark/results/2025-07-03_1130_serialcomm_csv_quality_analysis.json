@@ -1,0 +1,18 @@
+{
+  "total_rows": 145,
+  "valid_rows": 145,
+  "invalid_rows": 0,
+  "validity_rate": 100.0,
+  "csv_path": "c:\\Users\\manip\\Dropbox\\Luis\\1 PROJETS\\1 - THESE\\Ressources\\ExperimentalData_ASSOCE\\Dev\\getE3D\\benchmark\\results\\20250703_m12z_writingDataTest.csv",
+  "file_size": 14920,
+  "anomalies": [
+    "Valeurs cons\u00e9cutives identiques en adc1_ch1: 144",
+    "Valeurs cons\u00e9cutives identiques en adc1_ch2: 144",
+    "Valeurs cons\u00e9cutives identiques en adc1_ch3: 144",
+    "Valeurs cons\u00e9cutives identiques en adc1_ch4: 144",
+    "Valeurs cons\u00e9cutives identiques en adc2_ch1: 144",
+    "Valeurs cons\u00e9cutives identiques en adc2_ch2: 144",
+    "Valeurs cons\u00e9cutives identiques en adc2_ch3: 144",
+    "Valeurs cons\u00e9cutives identiques en adc2_ch4: 144"
+  ]
+}

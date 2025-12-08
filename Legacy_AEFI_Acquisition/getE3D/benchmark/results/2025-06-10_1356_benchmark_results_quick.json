@@ -1,0 +1,23 @@
+{
+  "timestamp": "20250610_135646",
+  "mode": "quick",
+  "port": "COM10",
+  "baudrate": 1500000,
+  "latency": {
+    "values": [],
+    "mean": 15.95,
+    "min": 13.69,
+    "max": null,
+    "std": 0.30
+  },
+  "throughput": {
+    "values": [62.64],
+    "mean": 62.64
+  },
+  "stability": {
+    "values": [],
+    "mean": 10.04,
+    "std": 2.71,
+    "count": 536
+  }
+} 

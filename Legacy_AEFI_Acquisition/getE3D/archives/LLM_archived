@@ -1,0 +1,51 @@
+# Archivage des grandes étapes du projet
+
+## Situation actuelle (2025-05-15)
+- Objectif : Automatiser le pilotage des moteurs et l'acquisition de données sur le banc de test.
+- Les moteurs sont déjà pilotés avec succès via Python.
+- Prochaine étape : Automatiser l'acquisition de données (remplacement de LabVIEW par Python).
+- Synchronisation à mettre en place entre le pilotage moteur et l'acquisition.
+- Organisation des fichiers d'archivage :
+    - LLM_bufferMemory : bloc-notes temporaire
+    - LLM_log : journal détaillé, questions/réponses
+    - LLM_archived : grandes étapes et jalons 
+
+# Utilisation des moteurs avec arcusdevice.py
+
+## Exemple de script Python pour piloter les moteurs
+
+```python
+from arcusdevice import ArcusDevice
+
+device = ArcusDevice(port='COM3')  # Adapter le port si besoin
+device.connect()
+
+# Activer l'axe X
+response_x = device.send_command('EO1')  # Enable Output 1 (axe X)
+print('Activation X:', response_x)
+
+# Activer l'axe Y
+response_y = device.send_command('EO2')  # Enable Output 2 (axe Y)
+print('Activation Y:', response_y)
+
+# Exemple de déplacement absolu sur X et Y
+# Mettre en mode absolu
+print(device.send_command('ABS'))
+# Déplacer X à la position 1000
+print(device.send_command('X1000'))
+# Déplacer Y à la position 2000
+print(device.send_command('Y2000'))
+
+# Arrêter les moteurs
+print(device.send_command('STOP'))
+
+device.disconnect()
+```
+
+**Commandes de base :**
+- `EO1` : Active l'axe X
+- `EO2` : Active l'axe Y
+- `ABS` : Mode déplacement absolu
+- `X[valeur]` : Déplacement axe X
+- `Y[valeur]` : Déplacement axe Y
+- `STOP` : Arrêt des moteurs 

@@ -1,0 +1,18 @@
+{
+  "total_rows": 1827,
+  "valid_rows": 1827,
+  "invalid_rows": 0,
+  "validity_rate": 100.0,
+  "csv_path": "c:\\Users\\manip\\Dropbox\\Luis\\1 PROJETS\\1 - THESE\\Ressources\\ExperimentalData_ASSOCE\\Dev\\getE3D\\benchmark\\results\\20250703_m127_test",
+  "file_size": 182971,
+  "anomalies": [
+    "Valeurs cons\u00e9cutives identiques en adc1_ch1: 1826",
+    "Valeurs cons\u00e9cutives identiques en adc1_ch2: 1826",
+    "Valeurs cons\u00e9cutives identiques en adc1_ch3: 1826",
+    "Valeurs cons\u00e9cutives identiques en adc1_ch4: 1826",
+    "Valeurs cons\u00e9cutives identiques en adc2_ch1: 1826",
+    "Valeurs cons\u00e9cutives identiques en adc2_ch2: 1826",
+    "Valeurs cons\u00e9cutives identiques en adc2_ch3: 1826",
+    "Valeurs cons\u00e9cutives identiques en adc2_ch4: 1826"
+  ]
+}

@@ -1,0 +1,63 @@
+@startuml AEFI_MVP_Sprint_Dashboard_Model
+
+title AEFI MVP - Sprint Dashboard - Domain Model
+
+left to right direction
+
+' ============= MVP - COLUMN =============
+
+rectangle "MVP" #F0F0F0 {
+  
+  package "Value Objects" {
+    [Position2D] as p2d #E0E0E0
+    [Vector3D] as v3d #E0E0E0
+    [Duration] as dur #E0E0E0
+    [Frequency] as freq #E0E0E0
+    [AcquisitionParameters] as acqp #E0E0E0
+    [VoltageMeasurement] as vm #E0E0E0
+    [RelativeMeasurement] as rm #E0E0E0
+  }
+  
+  package "Entities" {
+    [MeasurementPoint] as mp #E0E0E0
+    [ReferenceMeasurement] as refm #E0E0E0
+  }
+  
+  package "Aggregates" {
+    [ManualScan] as ms #E0E0E0
+  }
+  
+  package "Domain Types" {
+    [StructuredScanData] as ssd #E0E0E0
+  }
+  
+  package "Enumerations" {
+    [ScanType] as st #E0E0E0
+    [ScanStatus] as ss #E0E0E0
+  }
+}
+
+' ============= FUTURE - COLUMN =============
+
+rectangle "Future" #F8F8F8 {
+  
+  package "Aggregates (Phase 2+)" {
+    [AutomaticScan] as as #D3D3D3
+    [CustomScan] as cs #D3D3D3
+    [StabilityAcquisition] as sa #D3D3D3
+  }
+  
+  package "Domain Types (Phase 2+)" {
+    [SpatialGrid] as sg #D3D3D3
+    [CustomSequence] as cseq #D3D3D3
+    [ScanConfiguration] as sc #D3D3D3
+  }
+}
+
+legend bottom
+  |= Status |= Color |
+  | <#E0E0E0> Not Started ○ | MVP |
+  | <#D3D3D3> Future |
+end legend
+
+@enduml

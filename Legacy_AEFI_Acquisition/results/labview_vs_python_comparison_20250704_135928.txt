@@ -1,0 +1,32 @@
+================================================================================
+RAPPORT DE COMPARAISON : LABVIEW vs PYTHON
+================================================================================
+Date: 2025-07-04 13:59:28
+
+RÉSULTATS PYTHON (acquisition réelle):
+--------------------------------------------------
+
+RÉSULTATS LABVIEW (extrapolation par blocs):
+--------------------------------------------------
+  240709_114601_cylindre_enfoui_publi_conference_10000Hz_ydir.json:
+    - Moyennage: 10
+    - Débit: 32.3 ± 0.3 Hz
+    - Blocs valides: 3/3
+  240709_141421_parallelepipede_enfoui_publi_conference_10000Hz_ydir.json:
+    - Moyennage: 10
+    - Débit: 31.0 ± 1.8 Hz
+    - Blocs valides: 3/3
+  250424_144048_20240424_xdir_10kHz_5000Vdds_50Navg.json:
+    - Moyennage: 50
+    - Débit: 14.5 ± 1.4 Hz
+    - Blocs valides: 3/3
+  250505_130516_Scan_Noise_Conditionnementv4_NoExcitation_avg50_1.json:
+    - Moyennage: 50
+    - Débit: 15.6 ± 0.3 Hz
+    - Blocs valides: 3/3
+
+COMPARAISON DIRECTE:
+--------------------------------------------------
+CONCLUSION:
+--------------------------------------------------
+  Aucune comparaison possible (moyennages différents)

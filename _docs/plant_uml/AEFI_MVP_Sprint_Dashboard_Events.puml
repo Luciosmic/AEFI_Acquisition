@@ -1,0 +1,61 @@
+@startuml AEFI_MVP_Sprint_Dashboard_Events
+
+title AEFI MVP - Sprint Dashboard - Domain Events
+
+left to right direction
+
+' ============= MVP - COLUMN =============
+
+rectangle "MVP" #F0F0F0 {
+  
+  package "Domain Events" {
+    [StudyCreated] as stc #E0E0E0
+    [ScanStarted] as scs #E0E0E0
+    [ScanCompleted] as scc #E0E0E0
+    [ScanFailed] as scf #E0E0E0
+    [MeasurementAcquired] as ma #E0E0E0
+    [ReferenceMeasurementAcquired] as rma #E0E0E0
+  }
+  
+  package "Event Handlers" {
+    [MeasurementHandler] as mh #E0E0E0
+    [ScanProgressHandler] as sph #E0E0E0
+    [PersistenceHandler] as ph #E0E0E0
+  }
+  
+  package "Infrastructure" {
+    [EventBus] as eb #E0E0E0
+  }
+}
+
+' ============= FUTURE - COLUMN =============
+
+rectangle "Future" #F8F8F8 {
+  
+  package "Domain Events (Phase 2+)" {
+    [PositionReached] as pr #D3D3D3
+    [BufferFilled] as bf #D3D3D3
+    [ExcitationConfigured] as ec #D3D3D3
+    [FrameRotationUpdated] as fru #D3D3D3
+  }
+  
+  package "Event Handlers (Phase 2+)" {
+    [CalibrationHandler] as ch #D3D3D3
+  }
+  
+  package "Infrastructure (Phase 2+)" {
+    [EventStore] as es #D3D3D3
+  }
+  
+  package "Process Managers" {
+    [FrequencySequenceSaga] as fss #D3D3D3
+  }
+}
+
+legend bottom
+  |= Status |= Color |
+  | <#E0E0E0> Not Started ○ | MVP |
+  | <#D3D3D3> Future |
+end legend
+
+@enduml

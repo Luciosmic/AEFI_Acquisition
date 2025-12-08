@@ -16,7 +16,7 @@ Legacy_AEFI_Acquisition/
 ├── ArcusPerformaxPythonController/  # Contrôleur moteur rotatif
 ├── LSM9D/                      # Contrôleur IMU
 ├── narda_probe/                # Contrôleur sonde Narda
-├── getE3D/                     # Logique métier E-field
+├── getE3D/                     # Logique métier E-field avec Contrôleur E-Sensor et E-generator
 ├── EFImagingBench_App/         # Application principale
 │   └── src/                    # Interface + orchestration
 └── matlab_scripts/             # Algorithmes de calcul
@@ -752,5 +752,4 @@ class AEFI_EFieldAnalysis:
 - Facilité de maintenance
 - Réutilisabilité du code
 - Testabilité accrue
-
 

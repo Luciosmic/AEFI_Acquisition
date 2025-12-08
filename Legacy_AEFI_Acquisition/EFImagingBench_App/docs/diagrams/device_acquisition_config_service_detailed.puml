@@ -1,0 +1,296 @@
+@startuml Device Acquisition Configuration Service - Détaillé
+
+!define RECTANGLE class
+
+skinparam classAttributeIconSize 0
+skinparam backgroundColor #FEFEFE
+
+class DeviceAcquisitionConfigService {
+  - _meta_manager: MetaManager
+  - _current_mode: AcquisitionMode
+  - _config_listeners: List[Callable]
+  - _export_active: bool
+  
+  ' === Gestion Modes Acquisition ===
+  + start_exploration_mode(config: AcquisitionConfig) -> bool
+  + start_export_mode(config: AcquisitionConfig) -> bool
+  + stop_acquisition() -> bool
+  + get_current_mode() -> AcquisitionMode
+  
+  ' === Configuration ADC ===
+  + set_adc_gain(channel: int, gain: int) -> bool
+  + set_all_adc_gains(gain: int) -> bool
+  + set_adc_timing(timing_config: ADCTimingConfig) -> bool
+  + set_adc_reference(ref_config: ADCReferenceConfig) -> bool
+  + get_adc_configuration() -> ADCConfig
+  
+  ' === Configuration Acquisition ===
+  + set_averaging(n_avg: int) -> bool
+  + set_sampling_rate(rate_hz: float) -> bool
+  + get_acquisition_parameters() -> AcquisitionParams
+  
+  ' === Post-Processing ===
+  + enable_post_processing(enabled: bool) -> bool
+  + is_post_processing_enabled() -> bool
+  + configure_post_processing(config: PostProcessConfig) -> bool
+  + get_post_processing_status() -> PostProcessStatus
+  
+  ' === Export CSV ===
+  + start_csv_export(export_config: ExportConfig) -> bool
+  + stop_csv_export() -> bool
+  + is_exporting() -> bool
+  + get_export_status() -> ExportStatus
+  
+  ' === Calibration ===
+  + request_calibration(calib_type: CalibrationType) -> bool
+  + get_calibration_status() -> CalibrationStatus
+  + apply_calibration_result(result: CalibrationResult) -> bool
+  
+  ' === Validation ===
+  + validate_acquisition_config(config: AcquisitionConfig) -> ValidationResult
+  + get_valid_gain_range() -> Tuple[int, int]
+  + get_valid_averaging_range() -> Tuple[int, int]
+  
+  ' === Synchronisation ===
+  + sync_from_hardware() -> AcquisitionConfig
+  + apply_configuration_batch(config: FullAcquisitionConfig) -> bool
+  + reset_to_default_configuration() -> bool
+  
+  ' === Observateurs ===
+  + subscribe_mode_changes(callback: Callable) -> None
+  + subscribe_config_changes(callback: Callable) -> None
+  + subscribe_data_updates(callback: Callable) -> None
+  + unsubscribe_all(callback: Callable) -> None
+  
+  ' === Méthodes internes ===
+  - _validate_adc_gain(gain: int) -> bool
+  - _validate_averaging(n_avg: int) -> bool
+  - _on_mode_changed(mode: str) -> None
+  - _on_config_changed(config: dict) -> None
+  - _on_data_ready(sample) -> None
+}
+
+enum AcquisitionMode {
+  EXPLORATION
+  EXPORT
+  STOPPED
+}
+
+class AcquisitionConfig {
+  + mode: AcquisitionMode
+  + n_avg: int
+  + adc_config: ADCConfig
+  + post_processing_enabled: bool
+}
+
+class ADCConfig {
+  + channel_gains: Dict[int, int]
+  + timing: ADCTimingConfig
+  + reference: ADCReferenceConfig
+}
+
+class ADCTimingConfig {
+  + clkin: int
+  + iclk: int
+  + oversampling: int
+}
+
+class ADCReferenceConfig {
+  + negative_ref: bool
+  + high_res: bool
+  + ref_voltage: float
+  + ref_selection: int
+}
+
+class AcquisitionParams {
+  + n_avg: int
+  + sampling_rate_hz: float
+  + buffer_size: int
+  + channels_active: List[int]
+}
+
+class PostProcessConfig {
+  + offset_compensation: bool
+  + phase_correction: bool
+  + frame_rotation: bool
+  + rotation_angles: RotationAngles
+}
+
+class PostProcessStatus {
+  + enabled: bool
+  + active_operations: List[str]
+  + correction_values: Dict[str, Any]
+}
+
+class RotationAngles {
+  + theta_x: float
+  + theta_y: float
+  + theta_z: float
+}
+
+class ExportConfig {
+  + output_dir: str
+  + filename_base: str
+  + filter_active_lines_only: bool
+  + include_metadata: bool
+}
+
+class ExportStatus {
+  + is_exporting: bool
+  + current_file: Optional[str]
+  + points_exported: int
+  + file_size_bytes: int
+}
+
+enum CalibrationType {
+  OFFSET_EXC_OFF
+  PHASE_CORRECTION
+  OFFSET_EXC_ON
+  FRAME_ROTATION
+}
+
+class CalibrationStatus {
+  + in_progress: bool
+  + current_type: Optional[CalibrationType]
+  + progress_percentage: float
+}
+
+class CalibrationResult {
+  + calibration_type: CalibrationType
+  + success: bool
+  + correction_values: Dict[str, float]
+  + timestamp: datetime
+}
+
+class FullAcquisitionConfig {
+  + acquisition: AcquisitionConfig
+  + post_process: PostProcessConfig
+  + export: Optional[ExportConfig]
+}
+
+class ValidationResult {
+  + is_valid: bool
+  + errors: List[str]
+  + warnings: List[str]
+}
+
+' === Relations avec GUI ===
+class "EFImagingBench_GUI" as GUI {
+  + _on_user_config_changed(config)
+  + _start_export_csv(export_config)
+  + _stop_export_csv()
+  + _on_post_processing_toggled(enabled)
+}
+
+class "MainParametersConfigWidget" as MainParamsWidget {
+  + get_configuration() -> dict
+  + set_configuration(config: dict)
+  --
+  <<signal>> configuration_changed
+}
+
+class "AdvancedSettingsWidget" as AdvancedWidget {
+  + set_enabled(enabled: bool)
+}
+
+' === Relations avec Domain ===
+class MetaManager {
+  + start_acquisition(mode, config)
+  + stop_acquisition()
+  + update_configuration(config)
+  + start_export_csv(export_config)
+  + stop_export_csv()
+  + set_post_processing_enabled(enabled)
+  --
+  <<signal>> mode_changed
+  <<signal>> configuration_changed
+  <<signal>> data_ready
+  <<signal>> post_processed_data_ready
+}
+
+class AcquisitionManager {
+  + start_acquisition(mode, config)
+  + stop_acquisition()
+  + update_configuration(config)
+  + get_configuration() -> dict
+  --
+  <<signal>> mode_changed
+  <<signal>> configuration_changed
+  <<signal>> data_ready
+}
+
+class PostProcessingManager {
+  + set_enabled(enabled: bool)
+  + configure(config: dict)
+  + process_samples(samples) -> List[Sample]
+  + get_status() -> dict
+}
+
+class EFImagingBenchCSVExporter {
+  + start_export(config)
+  + stop_export()
+  + get_status()
+}
+
+' === Relations ===
+GUI ..> DeviceAcquisitionConfigService : "utilise"
+MainParamsWidget ..> DeviceAcquisitionConfigService : "utilise"
+AdvancedWidget ..> DeviceAcquisitionConfigService : "utilise"
+
+DeviceAcquisitionConfigService --> MetaManager : "délègue à"
+MetaManager --> AcquisitionManager : "coordonne"
+MetaManager --> PostProcessingManager : "coordonne"
+MetaManager --> EFImagingBenchCSVExporter : "utilise"
+
+DeviceAcquisitionConfigService ..> AcquisitionConfig : "manipule"
+DeviceAcquisitionConfigService ..> ADCConfig : "configure"
+DeviceAcquisitionConfigService ..> PostProcessConfig : "configure"
+DeviceAcquisitionConfigService ..> ExportConfig : "utilise"
+DeviceAcquisitionConfigService ..> CalibrationStatus : "retourne"
+DeviceAcquisitionConfigService ..> ValidationResult : "retourne"
+
+AcquisitionConfig *-- ADCConfig
+AcquisitionConfig *-- AcquisitionMode
+ADCConfig *-- ADCTimingConfig
+ADCConfig *-- ADCReferenceConfig
+PostProcessConfig *-- RotationAngles
+FullAcquisitionConfig *-- AcquisitionConfig
+FullAcquisitionConfig *-- PostProcessConfig
+FullAcquisitionConfig *-- ExportConfig
+
+note right of DeviceAcquisitionConfigService
+  **Responsabilités:**
+  - Gestion modes acquisition
+  - Configuration ADC (4 canaux)
+  - Configuration post-processing
+  - Gestion export CSV
+  - Orchestration calibrations
+  - Validation paramètres
+  - Synchronisation hardware
+  
+  **Principe:**
+  - Façade unifiée acquisition
+  - Coordination mode + config + export
+  - Validation avant application
+  - Gestion observateurs
+end note
+
+note bottom of MetaManager
+  MetaManager coordonne:
+  - AcquisitionManager (ADC + DDS)
+  - PostProcessingManager (corrections)
+  - CSVExporter (export données)
+  - Synchronisation threads
+  
+  Service = orchestrateur use case
+end note
+
+note bottom of AcquisitionMode
+  **Modes:**
+  - EXPLORATION: UI active, temps réel
+  - EXPORT: UI bloquée, mesures précises
+  - STOPPED: Acquisition arrêtée
+end note
+
+@enduml
+

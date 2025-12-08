@@ -1,0 +1,48 @@
+================================================================================
+RAPPORT DE COMPARAISON : LABVIEW vs PYTHON
+================================================================================
+Date: 2025-07-04 14:12:25
+
+RÉSULTATS PYTHON (acquisition réelle):
+--------------------------------------------------
+  2025-07-04_133854_benchmark_navg10_vsTime.csv:
+    - Moyennage: 10
+    - Débit: 67.5 ± 6.6 Hz
+    - Blocs valides: 3/3
+  2025-07-04_133911_benchmark_navg50_vsTime.csv:
+    - Moyennage: 50
+    - Débit: 45.2 ± 1.9 Hz
+    - Blocs valides: 3/3
+
+RÉSULTATS LABVIEW (extrapolation par blocs):
+--------------------------------------------------
+  240709_141421_parallelepipede_enfoui_publi_conference_10000Hz_ydir.json:
+    - Moyennage: 10
+    - Débit: 35.7 ± 1.0 Hz
+    - Blocs valides: 3/3
+  250505_130516_Scan_Noise_Conditionnementv4_NoExcitation_avg50_1.json:
+    - Moyennage: 50
+    - Débit: 16.8 ± 0.9 Hz
+    - Blocs valides: 3/3
+
+COMPARAISON DIRECTE:
+--------------------------------------------------
+  Moyennage 10:
+    - LabVIEW: 35.7 Hz
+    - Python:  67.5 Hz
+    - Ratio:   0.53x
+    - Différence: -31.8 Hz
+    - Fichier: 240709_141421_parallelepipede_enfoui_publi_conference_10000Hz_ydir.json
+
+  Moyennage 50:
+    - LabVIEW: 16.8 Hz
+    - Python:  45.2 Hz
+    - Ratio:   0.37x
+    - Différence: -28.3 Hz
+    - Fichier: 250505_130516_Scan_Noise_Conditionnementv4_NoExcitation_avg50_1.json
+
+
+CONCLUSION:
+--------------------------------------------------
+  Ratio moyen LabVIEW/Python: 0.45x
+  → Python semble plus rapide que LabVIEW

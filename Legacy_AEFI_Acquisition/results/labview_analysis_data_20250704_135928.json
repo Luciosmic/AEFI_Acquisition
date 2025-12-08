@@ -1,0 +1,57 @@
+{
+  "labview_results": {
+    "240709_114601_cylindre_enfoui_publi_conference_10000Hz_ydir": {
+      "averaging": 10,
+      "csv_file": "240709_114601_cylindre_enfoui_publi_conference_10000Hz_ydir_E_all.csv",
+      "json_file": "240709_114601_cylindre_enfoui_publi_conference_10000Hz_ydir.json",
+      "stats": {
+        "mean_throughput_hz": 32.27493594156726,
+        "std_throughput_hz": 0.2733702661674981,
+        "valid_blocks_count": 3,
+        "total_blocks": 3
+      }
+    },
+    "240709_141421_parallelepipede_enfoui_publi_conference_10000Hz_ydir": {
+      "averaging": 10,
+      "csv_file": "240709_141421_parallelepipede_enfoui_publi_conference_10000Hz_ydir_E_all.csv",
+      "json_file": "240709_141421_parallelepipede_enfoui_publi_conference_10000Hz_ydir.json",
+      "stats": {
+        "mean_throughput_hz": 31.04374314442401,
+        "std_throughput_hz": 1.831077766593949,
+        "valid_blocks_count": 3,
+        "total_blocks": 3
+      }
+    },
+    "250424_144048_20240424_xdir_10kHz_5000Vdds_50Navg": {
+      "averaging": 50,
+      "csv_file": "250424_144048_20240424_xdir_10kHz_5000Vdds_50Navg_E_all.csv",
+      "json_file": "250424_144048_20240424_xdir_10kHz_5000Vdds_50Navg.json",
+      "stats": {
+        "mean_throughput_hz": 14.53756615519918,
+        "std_throughput_hz": 1.362676346321259,
+        "valid_blocks_count": 3,
+        "total_blocks": 3
+      }
+    },
+    "250505_130516_Scan_Noise_Conditionnementv4_NoExcitation_avg50_1": {
+      "averaging": 50,
+      "csv_file": "250505_130516_Scan_Noise_Conditionnementv4_NoExcitation_avg50_1_E_all.csv",
+      "json_file": "250505_130516_Scan_Noise_Conditionnementv4_NoExcitation_avg50_1.json",
+      "stats": {
+        "mean_throughput_hz": 15.603462163856777,
+        "std_throughput_hz": 0.28701241525543975,
+        "valid_blocks_count": 3,
+        "total_blocks": 3
+      }
+    }
+  },
+  "comparison": {
+    "python_results": {},
+    "labview_results": {
+      "10": 31.04374314442401,
+      "50": 15.603462163856777
+    },
+    "comparison": {}
+  },
+  "analysis_timestamp": "2025-07-04T13:59:28.523309"
+}

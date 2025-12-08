@@ -1,0 +1,82 @@
+{
+  "standard": {
+    "throughput": 0.0,
+    "successful_acq": 0,
+    "total_acq": 21193905,
+    "success_rate": 0.0,
+    "elapsed_time": 10.000001668930054,
+    "latencies": [],
+    "mean_latency": 0,
+    "m_value": 127,
+    "first_errors": [
+      {
+        "attempt": 1,
+        "success": false,
+        "response": "Port s\u00e9rie non connect\u00e9"
+      },
+      {
+        "attempt": 2,
+        "success": false,
+        "response": "Port s\u00e9rie non connect\u00e9"
+      },
+      {
+        "attempt": 3,
+        "success": false,
+        "response": "Port s\u00e9rie non connect\u00e9"
+      },
+      {
+        "attempt": 4,
+        "success": false,
+        "response": "Port s\u00e9rie non connect\u00e9"
+      },
+      {
+        "attempt": 5,
+        "success": false,
+        "response": "Port s\u00e9rie non connect\u00e9"
+      }
+    ]
+  },
+  "fast": {
+    "throughput": 0.0,
+    "successful_acq": 0,
+    "total_acq": 29207384,
+    "success_rate": 0.0,
+    "elapsed_time": 10.000001907348633,
+    "latencies": [],
+    "mean_latency": 0,
+    "m_value": 127,
+    "method": "fast_acquisition_m127",
+    "first_errors": [
+      {
+        "attempt": 1,
+        "success": false,
+        "response": "None"
+      },
+      {
+        "attempt": 2,
+        "success": false,
+        "response": "None"
+      },
+      {
+        "attempt": 3,
+        "success": false,
+        "response": "None"
+      },
+      {
+        "attempt": 4,
+        "success": false,
+        "response": "None"
+      },
+      {
+        "attempt": 5,
+        "success": false,
+        "response": "None"
+      }
+    ]
+  },
+  "error": "Aucune acquisition r\u00e9ussie",
+  "diagnostics": {
+    "standard_success_rate": 0.0,
+    "fast_success_rate": 0.0
+  }
+}

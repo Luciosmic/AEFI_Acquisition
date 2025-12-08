@@ -1,0 +1,16 @@
+{
+  "total_rows": 677,
+  "valid_rows": 677,
+  "invalid_rows": 0,
+  "validity_rate": 100.0,
+  "csv_path": "c:\\Users\\manip\\Dropbox\\Luis\\1 PROJETS\\1 - THESE\\Ressources\\ExperimentalData_ASSOCE\\Dev\\getE3D\\benchmark\\results\\2025-07-03_m1_writingDataTest.csv",
+  "file_size": 85725,
+  "anomalies": [
+    "Valeurs aberrantes en adc1_ch2: 4",
+    "Valeurs aberrantes en adc1_ch4: 5",
+    "Valeurs aberrantes en adc2_ch1: 4",
+    "Valeurs aberrantes en adc2_ch2: 14",
+    "Valeurs aberrantes en adc2_ch3: 1",
+    "Valeurs aberrantes en adc2_ch4: 1"
+  ]
+}

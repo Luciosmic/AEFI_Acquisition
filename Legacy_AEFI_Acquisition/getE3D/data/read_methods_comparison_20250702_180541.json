@@ -1,0 +1,45 @@
+{
+  "test_params": {
+    "n_tests": 50,
+    "m_value": 127,
+    "port": "COM10",
+    "baudrate": 1500000,
+    "timestamp": "20250702_180541"
+  },
+  "results": {
+    "readline": {
+      "avg_time_ms": 138.157,
+      "min_time_ms": 132.438,
+      "max_time_ms": 140.7,
+      "acquisition_rate": 7.2,
+      "success_rate": 100.0,
+      "avg_data_length": 56.0,
+      "total_time_s": 6.91
+    },
+    "fixed_size": {
+      "avg_time_ms": 1143.684,
+      "min_time_ms": 1132.063,
+      "max_time_ms": 1157.43,
+      "acquisition_rate": 0.9,
+      "success_rate": 100.0,
+      "avg_data_length": 55.0,
+      "total_time_s": 57.18
+    },
+    "hybrid": {
+      "avg_time_ms": 1010.301,
+      "min_time_ms": 1001.232,
+      "max_time_ms": 1015.883,
+      "acquisition_rate": 1.0,
+      "success_rate": 100.0,
+      "avg_data_length": 56.0,
+      "total_time_s": 50.52
+    }
+  },
+  "analysis": {
+    "best_method": "readline",
+    "improvements": {
+      "fixed_size": -727.8147325144581,
+      "hybrid": -631.27022155953
+    }
+  }
+}

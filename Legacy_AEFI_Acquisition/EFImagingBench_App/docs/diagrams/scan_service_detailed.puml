@@ -1,0 +1,207 @@
+@startuml Scan Service - Détaillé
+
+!define RECTANGLE class
+
+skinparam classAttributeIconSize 0
+skinparam backgroundColor #FEFEFE
+
+class ScanService {
+  - _meta_manager: MetaManager
+  - _motion_service: MotionService
+  - _scan_listeners: List[Callable]
+  - _current_scan: Optional[ScanExecution]
+  - _scan_history: List[ScanResult]
+  
+  ' === Configuration Scan ===
+  + configure_scan_2d(config: Scan2DConfig) -> ScanPlan
+  + validate_scan_zone(zone: ScanZone) -> ValidationResult
+  + preview_scan_trajectory(config: Scan2DConfig) -> List[Position]
+  
+  ' === Exécution Scan ===
+  + execute_scan_2d(config: Scan2DConfig, export_config: ExportConfig) -> bool
+  + execute_scan_batch(scan_plan: ScanPlan) -> bool
+  + pause_scan() -> bool
+  + resume_scan() -> bool
+  + cancel_scan() -> bool
+  
+  ' === Export intégré ===
+  + start_export_with_scan(export_config: ExportConfig) -> bool
+  + stop_export() -> bool
+  + get_export_status() -> ExportStatus
+  
+  ' === Requêtes d'état ===
+  + get_current_scan_progress() -> ScanProgress
+  + is_scan_running() -> bool
+  + get_scan_statistics() -> ScanStats
+  
+  ' === Observateurs ===
+  + subscribe_scan_events(callback: Callable) -> None
+  + unsubscribe_scan_events(callback: Callable) -> None
+  
+  ' === Méthodes internes ===
+  - _generate_scan_trajectory(config: Scan2DConfig) -> List[ScanPoint]
+  - _validate_scan_parameters(config: Scan2DConfig) -> bool
+  - _on_scan_segment_changed(segment_id, segment_type, is_active) -> None
+  - _on_scan_line_started(segment_id: str) -> None
+  - _on_scan_line_ended(segment_id: str) -> None
+  - _calculate_scan_duration(config: Scan2DConfig) -> float
+}
+
+class Scan2DConfig {
+  + x_min_cm: float
+  + x_max_cm: float
+  + y_min_cm: float
+  + y_max_cm: float
+  + x_nb_lines: int
+  + y_nb_points: int
+  + mode: ScanMode
+  + timer_ms: int
+  + filter_active_lines_only: bool
+}
+
+enum ScanMode {
+  EXPLORATION
+  SERPENTINE
+}
+
+class ScanZone {
+  + x_min: float
+  + x_max: float
+  + y_min: float
+  + y_max: float
+}
+
+class ScanPlan {
+  + config: Scan2DConfig
+  + trajectory: List[ScanPoint]
+  + estimated_duration: float
+  + total_points: int
+}
+
+class ScanPoint {
+  + x_cm: float
+  + y_cm: float
+  + point_index: int
+  + line_index: int
+  + is_active_line: bool
+  + segment_type: str
+}
+
+class ScanProgress {
+  + current_point: int
+  + total_points: int
+  + current_line: int
+  + total_lines: int
+  + elapsed_time: float
+  + estimated_remaining: float
+  + percentage: float
+}
+
+class ScanResult {
+  + config: Scan2DConfig
+  + start_time: datetime
+  + end_time: datetime
+  + points_acquired: int
+  + export_path: Optional[str]
+  + success: bool
+}
+
+class ExportConfig {
+  + output_dir: str
+  + filename_base: str
+  + filter_active_lines_only: bool
+  + include_metadata: bool
+}
+
+class ExportStatus {
+  + is_exporting: bool
+  + current_file: Optional[str]
+  + points_exported: int
+  + file_size_bytes: int
+}
+
+class ValidationResult {
+  + is_valid: bool
+  + errors: List[str]
+  + warnings: List[str]
+}
+
+' === Relations avec GUI ===
+class "EFImagingBench_GUI" as GUI {
+  + _execute_scan2d_from_ui_main()
+  + _update_subrect_from_ui_main()
+  + _stop_export_main()
+}
+
+' === Relations avec Domain ===
+class MetaManager {
+  + generate_scan_config(...)
+  + inject_scan_batch(scan_config)
+  + start_export_csv(export_config)
+  + stop_export_csv()
+  --
+  <<signal>> scan_segment_changed
+  <<signal>> scan_line_started
+  <<signal>> scan_line_ended
+}
+
+class StageManager {
+  + inject_scan_batch(commands)
+  --
+  <<signal>> scan_segment_changed
+  <<signal>> scan_line_started
+  <<signal>> scan_line_ended
+}
+
+class EFImagingBenchCSVExporter {
+  + start_export(config)
+  + stop_export()
+  + get_status()
+}
+
+' === Relations ===
+GUI ..> ScanService : "utilise"
+ScanService --> MetaManager : "délègue à"
+ScanService --> MotionService : "utilise pour validation"
+MetaManager --> StageManager : "coordonne"
+MetaManager --> EFImagingBenchCSVExporter : "utilise"
+
+ScanService ..> Scan2DConfig : "configure"
+ScanService ..> ScanPlan : "génère"
+ScanService ..> ScanProgress : "retourne"
+ScanService ..> ScanResult : "enregistre"
+ScanService ..> ExportConfig : "utilise"
+ScanService ..> ExportStatus : "retourne"
+ScanService ..> ValidationResult : "retourne"
+
+ScanPlan *-- ScanPoint : "contient"
+Scan2DConfig ..> ScanMode : "utilise"
+Scan2DConfig ..> ScanZone : "définit"
+
+note right of ScanService
+  **Responsabilités:**
+  - Validation zone de scan
+  - Génération trajectoire
+  - Calcul durée estimée
+  - Coordination scan + export
+  - Suivi progression
+  - Gestion historique scans
+  
+  **Principe:**
+  - Orchestration use case complet
+  - Validation avant exécution
+  - Gestion des observateurs
+  - Pas de gestion threads directe
+end note
+
+note bottom of MetaManager
+  MetaManager coordonne:
+  - StageManager (mouvement)
+  - CSVExporter (export données)
+  - Synchronisation scan + acquisition
+  
+  ScanService = orchestrateur use case
+end note
+
+@enduml
+

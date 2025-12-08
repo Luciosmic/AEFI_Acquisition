@@ -1,0 +1,70 @@
+@startuml Application Layer - Vue Générale
+
+!define RECTANGLE class
+
+skinparam packageStyle rectangle
+skinparam backgroundColor #FEFEFE
+skinparam componentStyle rectangle
+
+' === COUCHES ===
+package "Presentation Layer (GUI)" as GUI {
+  [EFImagingBench_GUI]
+}
+
+package "Application Layer (Services)" as APP {
+  [MotionService]
+  [ScanService]
+  [DeviceExcitationConfigService]
+  [DeviceAcquisitionConfigService]
+}
+
+package "Domain Layer (Managers)" as DOMAIN {
+  [MetaManager] <<Orchestrator>>
+  [StageManager]
+  [AcquisitionManager]
+  [PostProcessingManager]
+}
+
+package "Infrastructure Layer (Controllers)" as INFRA {
+  [ArcusPerfomax4EXController]
+  [AD9106_ADS131A04_Controller]
+}
+
+' === RELATIONS GUI -> APPLICATION ===
+GUI --> MotionService : "move_to()\nhome()\nstop()"
+GUI --> ScanService : "execute_scan_2d()\nvisualize_zone()"
+GUI --> DeviceExcitationConfigService : "set_excitation_direction()\nset_dds_params()"
+GUI --> DeviceAcquisitionConfigService : "set_acquisition_params()\nstart/stop_export()"
+
+' === RELATIONS APPLICATION -> DOMAIN ===
+MotionService --> MetaManager : "move_to()\nhome_lock()\nstop()"
+ScanService --> MetaManager : "inject_scan_batch()\ngenerate_scan_config()"
+DeviceExcitationConfigService --> MetaManager : "update_configuration()\nset_excitation_mode()"
+DeviceAcquisitionConfigService --> MetaManager : "update_configuration()\nstart_acquisition()\nstart_export_csv()"
+
+' === RELATIONS DOMAIN -> INFRASTRUCTURE ===
+MetaManager --> StageManager
+MetaManager --> AcquisitionManager
+MetaManager --> PostProcessingManager
+
+StageManager --> ArcusPerfomax4EXController
+AcquisitionManager --> AD9106_ADS131A04_Controller
+
+note right of APP
+  **Application Layer**
+  - Découple GUI des Managers
+  - Orchestre use cases métier
+  - Validation des entrées
+  - Gestion des transactions
+end note
+
+note right of DOMAIN
+  **Domain Layer**
+  - Logique métier
+  - État du système
+  - Signaux Qt
+  - Thread management
+end note
+
+@enduml
+

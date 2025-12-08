@@ -1,0 +1,28 @@
+============================================================
+RAPPORT D'ANALYSE - CALIBRATION DDS
+============================================================
+Date : 2025-08-21 11:41:43
+Fichier source : balayage_frequence.csv
+
+📊 RÉSUMÉ DES MESURES
+------------------------------
+Nombre total de mesures : 1000
+Plage de fréquences : 100.0 Hz - 1000000.0 Hz
+Date de la première mesure : 2025-06-26 19:53:36
+Date de la dernière mesure : 2025-06-27 00:30:57
+
+📈 STATISTIQUES DÉTAILLÉES
+------------------------------
+Déphasage (CH4 par rapport à CH3) :
+  Moyenne : -115.73°
+  Écart-type : 2.10°
+  Min/Max : -121.00° / -107.60°
+
+Fonction de transfert (VPP_CH4/VPP_CH3) :
+  Moyenne : 0.9977
+  Écart-type : 0.0132
+  Min/Max : 0.9702 / 1.0290
+
+⚠️ PROBLÈMES DÉTECTÉS
+------------------------------
+Problèmes de déphasage (> 5.0°) : 1000

@@ -1,0 +1,43 @@
+Projet : [[PROJET ASSOCE]]
+tags : #llmLog
+
+# Journal de bord et Q/R importantes
+
+## 2025-05-15
+- Décision d'automatiser l'acquisition de données en Python (remplacement de LabVIEW).
+- Discussion sur les fichiers .vi présents dans le projet LabVIEW :
+    - Identification des modules d'acquisition, de traitement et de sauvegarde des données.
+    - Nécessité de comprendre le protocole de communication utilisé par la carte d'acquisition.
+- Organisation des fichiers d'archivage :
+    - LLM_bufferMemory : bloc-notes temporaire
+    - LLM_log : journal détaillé, questions/réponses
+    - LLM_archived : grandes étapes et jalons
+- Prochaine étape : Identifier le modèle de la carte d'acquisition et le protocole utilisé pour proposer une solution Python adaptée.
+
+## 2025-05-16
+- Les DLLs 64 bits PerformaxCom.dll et SiUSBXp.dll ont été placées dans le dossier DLL64 et le chemin a été précisé dans le script Python avec :
+  pll.par["devices/dlls/arcus_performax"] = r"C:\Users\manip\Dropbox\Luis\1 PROJETS\1 - THESE\Ressources\ExperimentalData_ASSOCE\Dev\DLL64"
+- Test de détection du contrôleur avec Arcus.list_usb_performax_devices() : succès, le contrôleur 4EX00 est bien détecté (affichage de la liste des devices USB).
+- Prochaine étape : tester les commandes de contrôle moteur (move_to, home, get_position) via pylablib.
+
+## 2025-05-17
+- Résolution du problème de différence de comportement entre les axes X et Y : 
+  * Découverte clé : l'utilisation des paramètres globaux (LS, HS, ACC, DEC) permet un comportement cohérent pour les deux axes.
+  * Création d'un script de test interactif (`ArcusPylablibTest.py`) permettant de configurer et tester les paramètres facilement.
+- Mise en place d'une architecture logicielle propre :
+  * Séparation claire contrôleur/interface graphique dans le dossier `ArcusPerformaxPythonController`.
+  * Classe `ArcusController` améliorée avec :
+    - Gestion des paramètres globaux (LS, HS, ACC, DEC)
+    - Application automatique des paramètres avant chaque mouvement
+    - Méthodes simplifiées (get_speed_params, set_speed_params, etc.)
+  * Interface graphique (`arcus_gui.py`) modernisée :
+    - Style proche de LabVIEW (pour faciliter la transition)
+    - Utilisation des paramètres globaux pour contrôler la vitesse des deux axes
+    - Affichage en temps réel des positions
+- Paramètres optimaux identifiés :
+  * LS=10, HS=800, ACC=300, DEC=300
+- Validation des fonctionnalités :
+  * Contrôle précis de la vitesse et de l'accélération
+  * Boutons d'arrêt d'urgence (immédiat) et d'arrêt contrôlé
+  * Home fonctionnel avec détection des butées
+- Prochaine étape : intégration de l'acquisition de données et développement d'une solution de synchronisation moteurs/acquisition.

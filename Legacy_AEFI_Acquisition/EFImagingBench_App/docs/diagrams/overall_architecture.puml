@@ -1,0 +1,151 @@
+@startuml EFImagingBench_Overall_Architecture
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+
+' Title
+title EFImagingBench - Overall Architecture\nController → Manager → MetaManager ↔ UI
+
+' Define colors for different layers
+skinparam component {
+    BackgroundColor<<UI>> #E3F2FD
+    BorderColor<<UI>> #1976D2
+    BackgroundColor<<MetaManager>> #FFF3E0
+    BorderColor<<MetaManager>> #F57C00
+    BackgroundColor<<Manager>> #E8F5E9
+    BorderColor<<Manager>> #388E3C
+    BackgroundColor<<Controller>> #FCE4EC
+    BorderColor<<Controller>> #C2185B
+    BackgroundColor<<Module>> #F3E5F5
+    BorderColor<<Module>> #7B1FA2
+}
+
+package "Presentation Layer" {
+    component "EFImagingBench_GUI" <<UI>> as GUI {
+        [Axes Control Tab]
+        [Motor Params Tab]
+        [Acquisition Tab]
+        [Advanced Settings Tab]
+        [Main Tab (Experimental)]
+    }
+}
+
+package "Coordination Layer" {
+    component "MetaManager" <<MetaManager>> as META {
+        portin "Public API"
+        portout "Signals"
+        note right of META
+            **Responsibilities:**
+            • Central coordinator
+            • Manages sub-managers
+            • Relays signals to UI
+            • Provides unified API
+            • Coordinates scan & acquisition
+        end note
+    }
+}
+
+package "Domain Management Layer" {
+    component "StageManager" <<Manager>> as STAGE_MGR {
+        portin "Stage API"
+        portout "Stage Signals"
+        note right of STAGE_MGR
+            **Responsibilities:**
+            • Motion control
+            • Scan generation
+            • Position buffering
+            • Homing management
+            • Command queue
+        end note
+    }
+    
+    component "AcquisitionManager" <<Manager>> as ACQ_MGR {
+        portin "Acquisition API"
+        portout "Acquisition Signals"
+        note right of ACQ_MGR
+            **Responsibilities:**
+            • Data acquisition
+            • Mode management (exploration/export)
+            • Configuration updates
+            • CSV export
+            • Data buffering
+        end note
+    }
+}
+
+package "Hardware Control Layer" {
+    component "ArcusPerformax4EXStage\nController" <<Controller>> as STAGE_CTRL {
+        note right of STAGE_CTRL
+            **Hardware:**
+            • Arcus Performax 4EX
+            • X/Y motion stages
+            • Uses pylablib
+        end note
+    }
+    
+    component "AD9106_ADS131A04\nSerialCommunicator" <<Controller>> as ACQ_CTRL {
+        note right of ACQ_CTRL
+            **Hardware:**
+            • AD9106 (DDS/DAC)
+            • ADS131A04 (ADC)
+            • Serial communication
+        end note
+    }
+}
+
+package "Support Modules" {
+    component "DataBuffer Module" <<Module>> as BUFFER
+    component "Scan2D Module" <<Module>> as SCAN2D
+    component "ADC Converter" <<Module>> as ADC_CONV
+    component "CSV Exporter" <<Module>> as CSV_EXP
+    component "Homing Service" <<Module>> as HOMING
+    component "Geometrical\nParameters Module" <<Module>> as GEO_PARAMS
+}
+
+' Main architectural flow: UI ↔ MetaManager ↔ Managers → Controllers
+GUI -down-> META : "Commands &\nConfiguration"
+META -up-> GUI : "Status Updates\n& Signals"
+
+META -down-> STAGE_MGR : "Stage Commands"
+META -down-> ACQ_MGR : "Acquisition Commands"
+
+STAGE_MGR -up-> META : "Position Updates\n& Events"
+ACQ_MGR -up-> META : "Data Samples\n& Status"
+
+STAGE_MGR -down-> STAGE_CTRL : "Low-level\nMotion Commands"
+ACQ_MGR -down-> ACQ_CTRL : "Serial Commands\n& Configuration"
+
+STAGE_CTRL -up-> STAGE_MGR : "Position &\nStatus Feedback"
+ACQ_CTRL -up-> ACQ_MGR : "Raw Data\n& Responses"
+
+' Module dependencies
+STAGE_MGR ..> BUFFER : "uses (position)"
+STAGE_MGR ..> SCAN2D : "uses"
+STAGE_MGR ..> GEO_PARAMS : "uses"
+STAGE_CTRL ..> HOMING : "uses"
+
+ACQ_MGR ..> BUFFER : "uses (acquisition)"
+ACQ_MGR ..> ADC_CONV : "uses"
+ACQ_MGR ..> CSV_EXP : "uses"
+
+' Legend
+legend right
+    |= Layer |= Responsibility |
+    | UI | User interaction & visualization |
+    | MetaManager | Coordination & orchestration |
+    | Manager | Domain-specific logic |
+    | Controller | Hardware abstraction |
+    | Module | Reusable components |
+    
+    **Architecture Pattern:**
+    Controller → Manager → MetaManager ↔ UI
+    
+    **Key Features:**
+    • Separation of concerns
+    • Signal-based communication (PyQt5)
+    • Thread-safe operations
+    • Mode-based behavior (exploration/export)
+endlegend
+
+@enduml

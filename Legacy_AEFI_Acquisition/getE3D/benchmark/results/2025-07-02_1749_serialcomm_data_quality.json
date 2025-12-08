@@ -1,0 +1,36 @@
+{
+  "valid_data": 0,
+  "invalid_data": 1000,
+  "total_attempts": 1000,
+  "quality_rate": 0.0,
+  "validation_errors": [
+    {
+      "sample": 1,
+      "response": "m=  127",
+      "error": "Nombre de valeurs incorrect: 1 au lieu de 8"
+    },
+    {
+      "sample": 2,
+      "response": "m=  127",
+      "error": "Nombre de valeurs incorrect: 1 au lieu de 8"
+    },
+    {
+      "sample": 3,
+      "response": "m=  127",
+      "error": "Nombre de valeurs incorrect: 1 au lieu de 8"
+    },
+    {
+      "sample": 4,
+      "response": "m=  127",
+      "error": "Nombre de valeurs incorrect: 1 au lieu de 8"
+    },
+    {
+      "sample": 5,
+      "response": "m=  127",
+      "error": "Nombre de valeurs incorrect: 1 au lieu de 8"
+    }
+  ],
+  "sample_responses": [],
+  "m_value": 127,
+  "num_samples": 1000
+}

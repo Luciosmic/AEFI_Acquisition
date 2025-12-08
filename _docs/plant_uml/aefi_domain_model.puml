@@ -9,75 +9,324 @@
 
 package "Value Objects" <<Rectangle>> {
   
-  class Position2D <<value object>> VALUE_OBJECT {
-    +x: float
-    +y: float
-    --
-    +distanceTo(other: Position2D): float
-    +equals(other: Position2D): boolean
+  ' --- Spatial Value Objects ---
+  package "Spatial" <<Folder>> {
+    
+    class Position1D <<value object>> VALUE_OBJECT {
+      +value: float
+      +axis: AxisDirection
+      --
+      +equals(other: Position1D): boolean
+      +toPosition2D(otherAxis: float): Position2D
+      +toPosition3D(y: float, z: float): Position3D
+    }
+    
+    class Position2D <<value object>> VALUE_OBJECT {
+      +x: float
+      +y: float
+      --
+      +distanceTo(other: Position2D): float
+      +equals(other: Position2D): boolean
+    }
+    
+    class Position3D <<value object>> VALUE_OBJECT {
+      +x: float
+      +y: float
+      +z: float
+      --
+      +distanceTo(other: Position3D): float
+      +toPosition2D(): Position2D
+      +equals(other: Position3D): boolean
+    }
+    
+    class Vector3D <<value object>> VALUE_OBJECT {
+      +x: float
+      +y: float
+      +z: float
+      --
+      +magnitude(): float
+      +normalize(): Vector3D
+      +dotProduct(other: Vector3D): float
+      +crossProduct(other: Vector3D): Vector3D
+      +equals(other: Vector3D): boolean
+    }
+    
+    class FrameRotation <<value object>> VALUE_OBJECT {
+      +quaternion: Quaternion
+      +eulerAngles: EulerAngles
+      --
+      +rotate(vector: Vector3D): Vector3D
+      +inverse(): FrameRotation
+      +compose(other: FrameRotation): FrameRotation
+    }
+    
+    class SpatialRange <<value object>> VALUE_OBJECT {
+      +min: float
+      +max: float
+      +step: float
+      --
+      +numberOfPoints(): int
+      +contains(value: float): boolean
+      +validate(): ValidationResult
+    }
+    
+    class ScanBounds <<value object>> VALUE_OBJECT {
+      +xRange: SpatialRange
+      +yRange: SpatialRange
+      --
+      +contains(position: Position2D): boolean
+      +area(): float
+      +totalPoints(): int
+    }
+    
+    class ScanAxis <<value object>> VALUE_OBJECT {
+      +direction: AxisDirection
+      +range: SpatialRange
+      --
+      +getPositions(): List<float>
+    }
+
+    class Vector2D <<value object>> VALUE_OBJECT {
+      +x: float
+      +y: float
+      --
+      +magnitude(): float
+      +normalize(): Vector2D
+    }
+
+    class TestBench <<value object>> VALUE_OBJECT {
+      +dimensions: Dimensions2D
+      +homePosition: Position2D
+      +origin: Position2D
+      --
+      +getQuadrant(position: Position2D): Quadrant
+    }
+    
+    class SensorFrame <<value object>> VALUE_OBJECT {
+      +origin: Position3D
+      +orientation: FrameRotation
+      --
+      +toGlobal(localPos: Position3D): Position3D
+      +toLocal(globalPos: Position3D): Position3D
+    }
   }
   
-  class Vector3D <<value object>> VALUE_OBJECT {
-    +x: float
-    +y: float
-    +z: float
-    --
-    +magnitude(): float
-    +dotProduct(other: Vector3D): float
-    +equals(other: Vector3D): boolean
+  ' --- Acquisition Value Objects ---
+  package "Acquisition" <<Folder>> {
+    
+    class ExcitationSignal <<value object>> VALUE_OBJECT {
+      +modulationFrequency: Frequency
+      +amplitudePercent: float
+      --
+      +equals(other: ExcitationSignal): boolean
+    }
+    
+    class ExcitationConfig <<value object>> VALUE_OBJECT {
+      +mode: ExcitationMode
+      +signal: ExcitationSignal
+      +phaseDDS1Rad: float
+      +phaseDDS2Rad: float
+      --
+      +getPhasesDegrees(): Tuple<float, float>
+      +equals(other: ExcitationConfig): boolean
+    }
+    
+    class Frequency <<value object>> VALUE_OBJECT {
+      +hertz: float
+      --
+      +toOmega(): float
+      +toMegahertz(): float
+      +equals(other: Frequency): boolean
+    }
+    
+    class Duration <<value object>> VALUE_OBJECT {
+      +milliseconds: long
+      --
+      +toSeconds(): float
+      +toMicroseconds(): long
+      +add(other: Duration): Duration
+    }
+    
+    class Measurement <<value object>> VALUE_OBJECT {
+      +value: Complex
+      +unit: string
+      +timestamp: DateTime
+      --
+      +isValid(): boolean
+      +equals(other: Measurement): boolean
+    }
+    
+    class VoltageMeasurement <<value object>> VALUE_OBJECT {
+      +voltage: Complex
+      --
+      +toElectricField(calibration: CalibrationData): Vector3D
+    }
+    
+    class RelativeMeasurement <<value object>> VALUE_OBJECT {
+      +totalField: Vector3D
+      +referenceField: Vector3D
+      +scatteredField: Vector3D
+      +relativeChange: Complex
+      --
+      +computeScatteredField(): Vector3D
+      +getComplexContrast(): Complex
+    }
+    
+    class AcquisitionParameters <<value object>> VALUE_OBJECT {
+      +frequency: Frequency
+      +excitation: ExcitationConfig
+      +samplingRate: Frequency
+      +integrationTime: Duration
+      +amplification: float
+      --
+      +equals(other: AcquisitionParameters): boolean
+      +validate(): ValidationResult
+    }
   }
   
-  class Duration <<value object>> VALUE_OBJECT {
-    +milliseconds: long
-    --
-    +toSeconds(): float
-    +add(other: Duration): Duration
+  ' --- Identifiers (Lazy Wrappers) ---
+  package "Identifiers" <<Folder>> {
+    
+    class ScanId <<value object>> VALUE_OBJECT {
+      +value: UUID
+      --
+      +toString(): string
+      +equals(other: ScanId): boolean
+    }
+    
+    class StudyId <<value object>> VALUE_OBJECT {
+      +value: UUID
+      --
+      +toString(): string
+      +equals(other: StudyId): boolean
+    }
+    
+    class MeasurementId <<value object>> VALUE_OBJECT {
+      +value: UUID
+      --
+      +toString(): string
+      +equals(other: MeasurementId): boolean
+    }
+    
+    class ReferenceId <<value object>> VALUE_OBJECT {
+      +value: UUID
+      --
+      +toString(): string
+      +equals(other: ReferenceId): boolean
+    }
+    
+    class CalibrationId <<value object>> VALUE_OBJECT {
+      +value: UUID
+      --
+      +toString(): string
+      +equals(other: CalibrationId): boolean
+    }
+    
+    class SourceId <<value object>> VALUE_OBJECT {
+      +value: string
+      --
+      +toString(): string
+      +equals(other: SourceId): boolean
+    }
+    
+    class SensorId <<value object>> VALUE_OBJECT {
+      +value: string
+      --
+      +toString(): string
+      +equals(other: SensorId): boolean
+    }
+    
+    class ColumnId <<value object>> VALUE_OBJECT {
+      +value: string
+      --
+      +toString(): string
+      +equals(other: ColumnId): boolean
+    }
+    
+    class TestBenchId <<value object>> VALUE_OBJECT {
+      +value: string
+      --
+      +toString(): string
+      +equals(other: TestBenchId): boolean
+    }
   }
   
-  class Frequency <<value object>> VALUE_OBJECT {
-    +hertz: float
-    --
-    +toOmega(): float
-    +equals(other: Frequency): boolean
+  ' --- Status Enums (State, not event metadata) ---
+  package "Status" <<Folder>> {
+    
+    enum ScanStatus {
+      PENDING
+      RUNNING
+      PAUSED
+      COMPLETED
+      FAILED
+      CANCELLED
+    }
+    
+    enum StudyStatus {
+      CREATED
+      CONFIGURED
+      IN_PROGRESS
+      COMPLETED
+      ARCHIVED
+    }
+    
+    enum ExcitationMode {
+      OFF
+      X_DIR
+      Y_DIR
+      CIRCULAR_PLUS
+      CIRCULAR_MINUS
+      CUSTOM
+    }
+    
+    enum AxisDirection {
+      X_AXIS
+      Y_AXIS
+      Z_AXIS
+    }
+
+    enum Quadrant {
+      X_POS_Y_POS
+      X_NEG_Y_POS
+      X_NEG_Y_NEG
+      X_POS_Y_NEG
+    }
   }
   
-  class AcquisitionParameters <<value object>> VALUE_OBJECT {
-    +frequency: Frequency
-    +samplingRate: Frequency
-    +integrationTime: Duration
-    +amplification: float
-    +filterSettings: FilterConfig
-    --
-    +equals(other: AcquisitionParameters): boolean
-    +snapshot(): ParameterSnapshot
-  }
-  
-  class ScanBounds <<value object>> VALUE_OBJECT {
-    +xMin: float
-    +xMax: float
-    +yMin: float
-    +yMax: float
-    --
-    +contains(position: Position2D): boolean
-    +area(): float
-  }
-  
-  class ElectricFieldMeasurement <<value object>> VALUE_OBJECT {
-    +field: Vector3D
-    +timestamp: DateTime
-    +quality: MeasurementQuality
-    --
-    +isValid(): boolean
-  }
-  
-  class RelativeMeasurement <<value object>> VALUE_OBJECT {
-    +totalField: Vector3D
-    +referenceField: Vector3D
-    +scatteredField: Vector3D
-    +relativeChange: Complex
-    --
-    +computeScatteredField(): Vector3D
-    +getComplexContrast(): Complex
+  ' --- Complex Types (Wrappers) ---
+  package "Complex Types" <<Folder>> {
+    
+    class Complex <<value object>> VALUE_OBJECT {
+      +real: float
+      +imaginary: float
+      --
+      +magnitude(): float
+      +phase(): float
+      +conjugate(): Complex
+      +add(other: Complex): Complex
+      +multiply(other: Complex): Complex
+    }
+    
+    class Quaternion <<value object>> VALUE_OBJECT {
+      +w: float
+      +x: float
+      +y: float
+      +z: float
+      --
+      +normalize(): Quaternion
+      +conjugate(): Quaternion
+      +multiply(other: Quaternion): Quaternion
+    }
+    
+    class EulerAngles <<value object>> VALUE_OBJECT {
+      +roll: float
+      +pitch: float
+      +yaw: float
+      --
+      +toQuaternion(): Quaternion
+      +toRadians(): EulerAngles
+    }
   }
 }
 
@@ -85,10 +334,50 @@ package "Value Objects" <<Rectangle>> {
 
 package "Entities" <<Rectangle>> {
   
+  class SphericalSource <<entity>> ENTITY {
+    +id: SourceId
+    +quadrant: Quadrant
+    +positionOnColumn: Position3D
+    --
+    +getExcitationField(target: Position3D): Vector3D
+  }
+
+  class CubicSensor3D <<entity>> ENTITY {
+    +id: SensorId
+    +dimensions: Dimensions3D
+    +frame: SensorFrame
+    +bandwidth: Frequency
+    +gain: float
+    --
+    +getMeasurementPoint(): Position3D
+  }
+
+  class Column <<entity>> ENTITY {
+    +id: ColumnId
+    +dimensions: Dimensions2D
+    +position: Position2D
+    +sources: List<SphericalSource>
+    --
+    +moveTo(position: Position2D): void
+    +moveRelative(delta: Vector2D): void
+    +home(): void
+    +stop(): void
+    +setVelocity(speed: float): void
+    +getSourcePosition(sourceId: SourceId): Position3D
+  }
+
+  class SourceSensorAssociation <<entity>> ENTITY {
+    +source: SphericalSource
+    +sensor: CubicSensor3D
+    +relativePosition: Vector3D
+    --
+    +isValid(): boolean
+  }
+
   class MeasurementPoint <<entity>> ENTITY {
     +id: MeasurementPointId
     +position: Position2D
-    +measurement: ElectricFieldMeasurement
+    +voltage: VoltageMeasurement
     +parameters: AcquisitionParameters
     +timestamp: DateTime
     --
@@ -97,7 +386,7 @@ package "Entities" <<Rectangle>> {
   
   class ReferenceMeasurement <<entity>> ENTITY {
     +id: ReferenceId
-    +electricField: Vector3D
+    +voltage: VoltageMeasurement
     +position: Position2D
     +acquisitionTime: DateTime
     +parameters: AcquisitionParameters
@@ -122,6 +411,20 @@ package "Entities" <<Rectangle>> {
 ' ============= AGGREGATES =============
 
 package "Aggregate Roots" <<Rectangle>> {
+
+  class TestBench <<aggregate root>> AGGREGATE_ROOT {
+    +id: TestBenchId
+    +dimensions: Dimensions2D
+    +homePosition: Position2D
+    +origin: Position2D
+    +column: Column
+    +associations: List<SourceSensorAssociation>
+    --
+    +getQuadrant(position: Position2D): Quadrant
+    +configureAssociation(sourceId: SourceId, sensorId: SensorId): void
+  }
+
+
   
   class ManualScan <<aggregate root>> AGGREGATE_ROOT {
     +id: ScanId
@@ -149,7 +452,7 @@ package "Aggregate Roots" <<Rectangle>> {
     +endTime: DateTime
     +status: ScanStatus
     --
-    +addMeasurement(position: Position2D, measurement: ElectricFieldMeasurement): void
+    +addMeasurement(position: Position2D, measurement: VoltageMeasurement): void
     +getStructuredData(): StructuredScanData
     +getSpatialGrid(): SpatialGrid
   }
@@ -234,19 +537,10 @@ package "Domain Types" <<Rectangle>> {
     +measurements: Map<Position2D, List<RelativeMeasurement>>
     +metadata: ScanMetadata
     --
-    +toInverseProblemInput(): InverseProblemData
     +getFieldComponent(component: FieldComponent): Matrix2D
   }
   
-  class InverseProblemData <<value object>> VALUE_OBJECT {
-    +E_mes: Matrix3D
-    +E_0: Vector3D
-    +spatialGrid: SpatialGrid
-    +frequency: Frequency
-    --
-    +getDimensions(): GridDimensions
-    +getFieldAt(i: int, j: int): Vector3D
-  }
+
 }
 
 ' ============= ENUMERATIONS =============
@@ -283,7 +577,7 @@ enum FieldComponent {
 ' Value Object relationships
 AcquisitionParameters *-- Frequency
 AcquisitionParameters *-- Duration
-ElectricFieldMeasurement *-- Vector3D
+VoltageMeasurement *-- Complex
 RelativeMeasurement *-- Vector3D
 SpatialGrid *-- GridDimensions
 SpatialGrid *-- GridSpacing
@@ -294,9 +588,9 @@ CustomScanPoint *-- AcquisitionParameters
 
 ' Entity relationships
 MeasurementPoint *-- Position2D
-MeasurementPoint *-- ElectricFieldMeasurement
+MeasurementPoint *-- VoltageMeasurement
 MeasurementPoint *-- AcquisitionParameters
-ReferenceMeasurement *-- Vector3D
+ReferenceMeasurement *-- VoltageMeasurement
 ReferenceMeasurement *-- Position2D
 ReferenceMeasurement *-- AcquisitionParameters
 ScanConfiguration *-- ScanBounds
@@ -329,16 +623,13 @@ StructuredScanData *-- ReferenceMeasurement
 StructuredScanData *-- SpatialGrid
 StructuredScanData -- ScanType
 
-InverseProblemData *-- SpatialGrid
-InverseProblemData *-- Frequency
-InverseProblemData *-- Vector3D
+
 
 ' Link to inverse problem
-StructuredScanData ..> InverseProblemData : transforms to
+
 
 note right of StructuredScanData
   Output format for persistence
-  and input for CSI-AEFI algorithm
   
   Structure:
   - E_mes(r_i, ω): N_x × N_y × 3
@@ -346,13 +637,7 @@ note right of StructuredScanData
   - Spatial grid metadata
 end note
 
-note left of InverseProblemData
-  Ready for CSI-AEFI inverse solver
-  
-  Corresponds to:
-  vec{E}_mes(vec{r}_i, ω)
-  from your formulation
-end note
+
 
 note bottom of ManualScan
   Aggregate Root

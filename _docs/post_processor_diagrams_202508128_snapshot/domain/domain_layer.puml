@@ -1,0 +1,440 @@
+@startuml Domain Layer
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Courier
+
+' ═══════════════════════════════════════════════════════════
+' IMPLEMENTATION STATUS STYLING
+' ═══════════════════════════════════════════════════════════
+skinparam class {
+  BackgroundColor<<IMPLEMENTED>> #D5F5E3
+  BorderColor<<IMPLEMENTED>> #27AE60
+  BackgroundColor<<NOT_IMPLEMENTED>> #FADBD8
+  BorderColor<<NOT_IMPLEMENTED>> #E74C3C
+}
+
+title Domain Aggregate: SimulationCollection\n(Status: ✅ = implémenté, ⚠️ = à créer)
+
+' ═══════════════════════════════════════════════════════════
+' DOMAIN-DRIVEN DESIGN: 
+' - Seules les grandeurs physiquement significatives (U)
+' - Indépendant de la technologie de persistence (HDF5 = infrastructure)
+' - Les tensions brutes viennent de simulation_provider adapter
+' ═══════════════════════════════════════════════════════════
+
+
+package "SimulationCollection (Aggregate Root)" #LightYellow {
+
+  ' ─────────────────────────────────────────────────────────
+  ' AGGREGATE ROOT: SimulationCollection
+  ' ─────────────────────────────────────────────────────────
+  class SimulationCollection <<Aggregate Root>> <<IMPLEMENTED>> {
+    - object_type: ObjectType
+    - simulations: Map[SimulationId, Simulation]
+    --
+    + add_simulation(sim: Simulation): Result
+    + remove_simulation(id: SimulationId): Result
+    + get_simulation(id: SimulationId): Simulation
+    + query(criteria: QueryCriteria): List[Simulation]
+    + compare_simulations(ids: List[SimulationId])
+    --
+    - check_invariants(): bool
+  }
+  
+  note right of SimulationCollection
+    **Aggregate Root (seul point d'accès)**
+    
+    **Invariants maintenus:**
+    - object_type identique pour toutes simulations
+    - simulation_id unique (pas de doublons)
+    - Simulations ne peuvent être accédées que via Root
+    
+    **Règles de traversal (RAG DDD):**
+    - Objets externes peuvent référencer le Root
+    - Objets internes (Simulation) inaccessibles directement
+    - Toute modification passe par add_simulation()
+    
+    **Boundary transactionnelle:**
+    - 1 transaction = 1 agrégat modifié
+    - Cohérence garantie à la fin de chaque opération
+    
+    Exemple: SimulationCollection pour "Parallelepiped"
+  end note
+
+  ' ─────────────────────────────────────────────────────────
+  ' ENTITY: Simulation
+  ' ─────────────────────────────────────────────────────────
+  package "Simulation <<Entity>>" #Wheat {
+    class Simulation <<Entity>> <<IMPLEMENTED>> {
+      - id: SimulationId
+      - timestamp: DateTime
+      - metadata: SimulationMetadata
+      - measurements: SpatialScanSimulationResults
+      --
+      + get_id(): SimulationId
+      + get_U_at_sensor_position(pos: SensorPosition): ComplexValue
+      + get_field_component(component: str): Array
+      + has_sensor_position(pos: SensorPosition): bool
+      --
+      + equals(other: Simulation): bool
+    }
+    
+    note right of Simulation
+      **Entity: Identité conceptuelle**
+      
+      **Identité:**
+      - SimulationId (value object) définit l'identité
+      - L'identité persiste dans le temps
+      - 2 simulations avec même id = même entité
+        même si données différentes
+      
+      **Distinction identité vs égalité (RAG DDD):**
+      - Identité technique (pointeur mémoire) ≠ identité domaine
+      - equals() compare par SimulationId, pas par attributs
+      - Une simulation peut être rechargée depuis
+        persistence → même identité, nouvelle instance
+      
+      **Lifecycle:**
+      - Création via simulation_provider adapter
+      - Immutable après création (value objects internes)
+      - Suppression via SimulationCollection.remove()
+      end note
+      
+      ' ───────────────────────────────────────
+    ' VALUE OBJECT: SimulationMetadata
+      ' ───────────────────────────────────────
+    class SimulationMetadata <<Value Object>> <<IMPLEMENTED>> {
+      + title: str
+      + report_date: DateTime
+      + simulator_info: SimulatorInfo  ' ⚠️ NOT_IMPLEMENTED
+      + configuration: SimulationConfiguration
+      + computation_time: ComputationTime  ' ⚠️ NOT_IMPLEMENTED
+      + geometry_images: List[ImageReference]  ' ⚠️ NOT_IMPLEMENTED
+      + mesh_images: List[ImageReference]  ' ⚠️ NOT_IMPLEMENTED
+      --
+      + equals(other: SimulationMetadata): bool
+      + with_updated_title(new_title: str): SimulationMetadata
+    }
+    
+    class SimulationConfiguration <<Value Object>> <<IMPLEMENTED>> {
+      + testbench_frame: ReferenceFrame
+      + object_parameters: ObjectParameters
+      + environment_parameters: EnvironmentParameters
+      + background_parameters: BackgroundParameters
+      + device_parameters: DeviceParameters
+      + study_parameters: StudyParameters
+      + swept_parameters: SweptParameters
+      --
+      + get_parameter_value(category: str, name: str): Any
+      + has_swept_parameter(name: str): bool
+    }
+    
+    class ObjectParameters <<Value Object>> <<IMPLEMENTED>> {
+      + object_type: str
+      + dimensions: Dict[str, float]
+      + object_position: ObjectPosition
+      + material_properties: Dict[str, float]
+    }
+    
+    class ObjectPosition <<Value Object>> <<IMPLEMENTED>> {
+      + x: float [cm]
+      + y: float [cm]
+      + z: float [cm]
+      --
+      + distance_to_origin(): float
+      + equals(other: ObjectPosition): bool
+    }
+    
+    note right of ObjectPosition
+      **Position FIXE de l'objet testé**
+      
+      L'objet ne bouge pas pendant le scan.
+      C'est un paramètre de configuration.
+        end note
+        
+    class StudyParameters <<Value Object>> <<IMPLEMENTED>> {
+      + frequency: float [Hz]
+      + study_type: str
+      + solver_config: Dict[str, Any]
+    }
+    
+    class DeviceParameters <<Value Object>> <<IMPLEMENTED>> {
+      + electrode_positions: List[Position]
+      + current_amplitude: float [A]
+      + electrode_configuration: Dict[str, Any]
+      --
+      + get_excitation_configuration(): ExcitationConfig
+    }
+    
+    class BackgroundParameters <<Value Object>> <<IMPLEMENTED>> {
+      + background_type: str
+      + outer_radius: float [cm]
+      + background_properties: Dict[str, float]
+      --
+      + get_distance_to_background_interface(): float
+    }
+    
+    class SweptParameters <<Value Object>> <<IMPLEMENTED>> {
+      + parameter_definitions: Dict[str, ParameterSweep]
+      + current_values: Dict[str, Any]
+      --
+      + get_sweep_range(param_name: str): List[Any]
+    }
+    
+    note right of SimulationMetadata
+      **Value Object: Pas d'identité conceptuelle**
+      
+      **Caractéristiques (RAG DDD):**
+      - Immutable (attributs en lecture seule)
+      - Égalité par valeur (pas par référence)
+      - Interchangeable si valeurs identiques
+      - Peut être partagé entre entities sans problème
+      
+      **Pourquoi immutable?**
+      - Évite effets de bord (side effects)
+      - Thread-safe par conception
+      - Simplifie raisonnement sur état
+      - Si modification nécessaire → créer nouveau VO
+        (méthode with_updated_title retourne nouveau objet)
+      
+      **Contenu:**
+      Décrit contexte physique de la simulation
+      Fourni par simulation_provider adapter
+        end note
+      
+      ' ───────────────────────────────────────
+    ' VALUE OBJECT: SpatialScanSimulationResults
+      ' ───────────────────────────────────────
+    class SpatialScanSimulationResults <<Value Object>> <<IMPLEMENTED>> {
+      + sensor_positions: List[SensorPosition]
+      + sensor_frame: ReferenceFrame
+      + U_fields: VoltageFields
+      --
+      + get_field_at_position(pos: SensorPosition, component: str): ComplexValue
+      + interpolate_field(pos: SensorPosition): VoltageFields
+      + get_positions_count(): int
+      --
+      + equals(other: SpatialScanSimulationResults): bool
+    }
+    
+    class SensorPosition <<Value Object>> <<IMPLEMENTED>> {
+      + x: float [cm]
+      + y: float [cm]
+      + z: float [cm]
+      --
+      + distance_to(other: SensorPosition): float
+      + equals(other: SensorPosition): bool
+    }
+    
+    class ReferenceFrame <<Value Object>> <<IMPLEMENTED>> {
+      + name: str
+      + parent: Optional[ReferenceFrame]
+      + origin: Position
+      + orientation: Orientation
+      --
+      + transform_position_to(target: ReferenceFrame, pos: Position): Position
+      + is_root(): bool
+      + get_transformation_chain(): List[ReferenceFrame]
+    }
+    
+    class Orientation <<Value Object>> <<IMPLEMENTED>> {
+      + theta_x: float [deg]
+      + theta_y: float [deg]
+      + theta_z: float [deg]
+      --
+      + to_rotation_matrix(): Matrix3x3
+      + equals(other: Orientation): bool
+    }
+    
+    note right of ReferenceFrame
+      **Référentiel (frame) dans l'espace**
+      
+      Hiérarchie:
+      - TestBenchFrame (root, parent=null)
+        └─ SensorFrame (parent=TestBenchFrame)
+      
+      **Utilisations:**
+      - sensor_positions définies dans sensor_frame
+      - object_position définie dans testbench_frame
+      
+      Transformation via parent chain.
+    end note
+    
+    note right of SensorPosition
+      **Position dans sensor_frame**
+      
+      Le capteur se déplace (scan spatial).
+      Positions exprimées dans sensor_frame.
+      
+      Distinction:
+      - SensorPosition: variable (scan)
+      - ObjectPosition: fixe (config)
+    end note
+
+    class VoltageFields <<Value Object>> <<IMPLEMENTED>> {
+      + U_x: ComplexArray
+      + U_y: ComplexArray
+      + U_z: ComplexArray
+      --
+      + magnitude(): Array
+      + phase(): Array
+      + real(): Array
+      + imag(): Array
+      + equals(other: VoltageFields): bool
+    }
+    
+    note right of SpatialScanSimulationResults
+      **Value Object: Résultats scan spatial**
+      
+      **Une Simulation = 1 scan spatial complet**
+      avec paramètres FIXES définis dans SimulationMetadata
+      
+      **Contenu:**
+      ✅ U = V_pos - V_neg (différence de potentiel)
+      ✅ SensorPositions: positions du capteur (scan spatial)
+      ✅ Paramètres fixes dans metadata (fréquence, etc.)
+      
+      **Langage ubiquitaire:**
+      - sensor_positions: là où le capteur mesure
+      - object_position: où l'objet est placé (fixe)
+      
+      **Granularité:**
+      - Fréquence = paramètre d'étude (dans metadata)
+      - Si sweep fréquentiel → N Simulations distinctes
+      - Si sweep spatial (x, y) → 1 Simulation, N positions
+      
+      **Immutabilité:**
+      - Données mesurées ne changent jamais après création
+      - Représente snapshot d'une expérience numérique
+    end note
+  }
+  
+  SimulationCollection "1" *-- "N" Simulation : contains
+  Simulation *-- "1" SimulationMetadata
+  Simulation *-- "1" SpatialScanSimulationResults
+  SimulationMetadata *-- "1" SimulationConfiguration
+  SimulationConfiguration *-- "1" ReferenceFrame : testbench_frame
+  SimulationConfiguration *-- "1" ObjectParameters
+  SimulationConfiguration *-- "1" StudyParameters
+  SimulationConfiguration *-- "1" DeviceParameters
+  SimulationConfiguration *-- "1" BackgroundParameters
+  SimulationConfiguration *-- "1" SweptParameters
+  ObjectParameters *-- "1" ObjectPosition
+  SpatialScanSimulationResults *-- "1" ReferenceFrame : sensor_frame
+  SpatialScanSimulationResults *-- "N" SensorPosition
+  SpatialScanSimulationResults *-- "1" VoltageFields
+  ReferenceFrame *-- "1" Orientation
+  ReferenceFrame o-- "0..1" ReferenceFrame : parent
+}
+
+' ═══════════════════════════════════════════════════════════
+' DOMAIN SERVICES (Stateless)
+' ═══════════════════════════════════════════════════════════
+package "Domain Services" #LightCyan {
+  
+  class SpatialDerivationService <<Domain Service>> <<NOT_IMPLEMENTED>> {
+    + compute_spatial_gradient(results: SpatialScanSimulationResults, component: str): GradientField
+    + get_gradient_at_position(gradient: GradientField, pos: SensorPosition): Vector
+    + compute_laplacian(results: SpatialScanSimulationResults, component: str): LaplacianField
+    + get_laplacian_at_position(laplacian: LaplacianField, pos: SensorPosition): float
+    + compute_directional_derivative(results: SpatialScanSimulationResults, direction: Vector, component: str): float
+    + get_variation_between_points(pos1: SensorPosition, pos2: SensorPosition, results: SpatialScanSimulationResults): float
+  }
+  
+  class ScanOptimizationService <<Domain Service>> <<NOT_IMPLEMENTED>> {
+    + compute_optimal_sampling_density(results: SpatialScanSimulationResults, gradients: GradientField): SamplingDensityMap
+    + get_sampling_density_at_position(density_map: SamplingDensityMap, pos: SensorPosition): float
+    + compute_high_variation_regions(results: SpatialScanSimulationResults, gradients: GradientField, threshold: float): List[Region]
+    + get_recommended_simulation_points(collection: SimulationCollection, target_accuracy: float): List[SensorPosition]
+    + compute_sampling_quality(results: SpatialScanSimulationResults, gradients: GradientField): QualityScore
+  }
+  
+  class ResultsInterpolationService <<Domain Service>> <<NOT_IMPLEMENTED>> {
+    + compute_interpolated_field(results: SpatialScanSimulationResults, method: str): InterpolatedField
+    + get_field_at_position(interpolated: InterpolatedField, pos: SensorPosition): VoltageFields
+    + compute_regular_grid(results: SpatialScanSimulationResults, grid_spec: GridSpecification): RegularGridField
+    + get_interpolation_quality_metrics(results: SpatialScanSimulationResults, interpolated: InterpolatedField): QualityMetrics
+  }
+  
+  class CoordinateTransformationService <<Domain Service>> <<IMPLEMENTED>> {
+    + transform_position(pos: Position, from_frame: ReferenceFrame, to_frame: ReferenceFrame): Position
+    + transform_voltage_fields(fields: VoltageFields, from_frame: ReferenceFrame, to_frame: ReferenceFrame): VoltageFields
+    + get_transformation_matrix(from_frame: ReferenceFrame, to_frame: ReferenceFrame): Matrix
+  }
+  
+  ' Relations avec agrégat
+  SpatialDerivationService ..> SpatialScanSimulationResults
+  SpatialDerivationService ..> VoltageFields
+  SpatialDerivationService ..> SensorPosition
+  
+  ScanOptimizationService ..> SpatialScanSimulationResults
+  ScanOptimizationService ..> SimulationCollection
+  ScanOptimizationService ..> SpatialDerivationService
+  
+  ResultsInterpolationService ..> SpatialScanSimulationResults
+  ResultsInterpolationService ..> VoltageFields
+  ResultsInterpolationService ..> SensorPosition
+  ResultsInterpolationService ..> SpatialDerivationService
+  
+  CoordinateTransformationService ..> ReferenceFrame
+  CoordinateTransformationService ..> VoltageFields
+
+  
+
+' ═══════════════════════════════════════════════════════════
+' NOTES SUR DOMAIN SERVICES
+' ═══════════════════════════════════════════════════════════
+note as domain_services_note
+  **Domain Services Pattern (Stateless, QUERY-ONLY)**
+  
+  **Méthodes compute_xxx / get_xxx:**
+  - compute_xxx: calcule un champ/structure complète
+  - get_xxx: extrait une valeur spécifique d'un résultat
+  
+  **SpatialDerivationService:**
+  Calcule dérivées spatiales (∇U, ∇²U)
+  Pure mathématique du domaine
+  
+  **ScanOptimizationService:**
+  Optimise échantillonnage futur
+  Zones fort gradient = plus de points
+  
+  **ResultsInterpolationService:**
+  Reconstruit champs continus
+  Méthodes: linear, cubic, RBF, kriging
+  
+  **CoordinateTransformationService:**
+  Transformations entre référentiels
+end note
+
+domain_services_note .. SpatialDerivationService
+domain_services_note .. ScanOptimizationService
+
+' ═══════════════════════════════════════════════════════════
+' LÉGENDE DES PATTERNS DDD
+' ═══════════════════════════════════════════════════════════
+legend bottom
+  |= Pattern DDD |= Caractéristiques |= Règles |
+  | <color:Gold>■</color> Aggregate Root | Identité + Mutabilité contrôlée | Seul point d'accès externe |
+  | <color:CornflowerBlue>■</color> Entity | Identité conceptuelle | Égalité par ID, pas par valeur |
+  | <color:MediumSeaGreen>■</color> Value Object | Pas d'identité | Immutable, égalité par valeur |
+  | <color:LightCyan>■</color> Domain Service | Stateless | Opération sans état naturel |
+  --
+  |= Statut Implémentation |= Couleur |= Fichier |
+  | <color:#27AE60>✅</color> IMPLEMENTED | <back:#D5F5E3>Vert</back> | Fichier .py existe |
+  | <color:#E74C3C>⚠️</color> NOT_IMPLEMENTED | <back:#FADBD8>Rouge</back> | À créer |
+endlegend
+
+note as external_notes_ref
+  **Notes de conception détaillées:**
+  Voir aefi_4sphere_post_processor_domain_layer_notes.md
+  
+  Contenu:
+  - Principes DDD (Identity vs Equality, Aggregates, etc.)
+  - Anticorruption Layer (Adapter)
+  - Infrastructure HDF5
+  - Exemples d'utilisation
+end note
+
+@enduml
+
+
