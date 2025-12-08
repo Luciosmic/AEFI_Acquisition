@@ -16,16 +16,51 @@ from infrastructure.arcus_performax_4EX.adapter_arcus_performax4EX import ArcusA
 from domain.value_objects.geometric.position_2d import Position2D
 
 
+def find_arcus_port():
+    """Auto-detect Arcus serial port."""
+    try:
+        import serial.tools.list_ports
+        
+        ports = serial.tools.list_ports.comports()
+        
+        # Look for USB/FTDI devices (typical for Arcus)
+        for port in ports:
+            if any(keyword in port.description.upper() for keyword in ['USB', 'FTDI', 'SERIAL']):
+                print(f"  Found potential Arcus device: {port.device} ({port.description})")
+                return port.device
+        
+        # If no match, return first available port
+        if ports:
+            print(f"  No USB/FTDI device found, using first available: {ports[0].device}")
+            return ports[0].device
+        
+        return None
+    except:
+        return None
+
+
 def test_connection():
-    """Test 1: Connection to Arcus"""
+    """Test 1: Connection to Arcus via Adapter"""
     print("\n=== Test 1: Connection ===")
     
-    adapter = ArcusAdapter()
+    # DLL path (relative to this file)
+    dll_path = Path(__file__).parent / "DLL64"
+    print(f"  DLL path: {dll_path}")
     
-    # TODO: Update with your COM port or leave None for auto-detect
-    port = input("Enter COM port (or press Enter for auto-detect): ").strip()
-    adapter._port = port if port else None
+    # Auto-detect port
+    print("  Auto-detecting Arcus port...")
+    port = find_arcus_port()
     
+    if port:
+        print(f"  Using port: {port}")
+    else:
+        print("  No port found, trying auto-detect by pylablib...")
+        port = None
+    
+    # Create adapter with DLL path
+    adapter = ArcusAdapter(port=port, dll_path=str(dll_path))
+    
+    # Connect
     success = adapter.connect()
     
     if success:
