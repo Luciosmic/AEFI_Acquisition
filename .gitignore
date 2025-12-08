@@ -10,6 +10,10 @@
 # Un-ignore .gitignore itself
 !.gitignore
 
+# Un-ignore Legacy_AEFI_Acquisition
+!Legacy_AEFI_Acquisition/
+!Legacy_AEFI_Acquisition/**
+
 # Re-ignore common temporary/build files that might be inside the whitelisted directories
 __pycache__/
 *.pyc
