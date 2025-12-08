@@ -28,11 +28,9 @@ class AcquisitionParameters:
     averaging_adc: int
     
     # Gain settings per ADC channel
-    # TODO: Replace with voltage_range for better domain language
     adc_gains: Dict[int, int]  # {channel_id: gain_value}
     
     # Sampling rate
-    # TODO: Validate against available rates from IAcquisitionPort
     sampling_rate: float  # Hz
     
     def __post_init__(self):

@@ -17,7 +17,10 @@ class CubicSensor3D:
     id: SensorId
     dimensions: Dimensions3D
     frame: SensorFrame
+    gain: float # from V to V/m
+    bandwidth: float
 
     def get_measurement_point(self) -> Vector3D:
         # Placeholder
         return self.frame.origin
+
