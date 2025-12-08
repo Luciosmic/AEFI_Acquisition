@@ -1,0 +1,194 @@
+@startuml Post-Processor Architecture Strategy
+skinparam componentStyle rectangle
+skinparam packageStyle rectangle
+
+title Architecture Post-Processor (DDD Layered Architecture)
+
+' ═══════════════════════════════════════════════════════════
+' DOMAIN LAYER (TOP - Core Business Logic)
+' ═══════════════════════════════════════════════════════════
+
+package "DOMAIN LAYER" #LightYellow {
+  package "Aggregates" {
+    component "SimulationCollection\n<<Aggregate Root>>" as collection
+    component "Simulation\n<<Entity>>" as simulation
+  }
+  
+  package "Value Objects" {
+    component "SpatialScanSimulationResults" as results
+    component "SimulationConfiguration" as config
+    component "ReferenceFrame" as frame
+    component "VoltageFields" as voltage
+  }
+  
+  package "Domain Services (QUERY-ONLY)" {
+    component "CoordinateTransformationService" as coord_service
+    component "SpatialDerivationService" as spatial_deriv
+    component "ResultsInterpolationService" as interpolation
+    component "ScanOptimizationService" as optimization
+  }
+  
+  note right of collection
+    **CQS Applied:**
+    COMMANDS: add_simulation(), remove_simulation()
+    QUERIES: get_simulation(), query(), count()
+    
+    Concepts physiques purs:
+    - U (différences potentiel)
+    - SensorPosition, ObjectPosition
+    - ReferenceFrame
+  end note
+  
+  note bottom of coord_service
+    **QUERY Services (CQS)**
+    All Domain Services = QUERIES
+    - No state mutation
+    - Pure functions
+    - Return computed data
+  end note
+}
+
+' ═══════════════════════════════════════════════════════════
+' APPLICATION LAYER (CENTER - Orchestration)
+' ═══════════════════════════════════════════════════════════
+
+package "APPLICATION LAYER" #LightGreen {
+  component "SimulationIngestionService" as ingestion
+  component "DataQueryService" as query_service
+  component "VisualizationService" as viz_service
+  
+  note right of ingestion
+    Orchestrates:
+    - Adapter selection
+    - Domain object creation
+    - Persistence
+  end note
+}
+
+' ═══════════════════════════════════════════════════════════
+' INTERFACE LAYER (LEFT - User Interaction)
+' ═══════════════════════════════════════════════════════════
+
+package "INTERFACE LAYER" #LightBlue {
+  component "CLI" as cli
+  component "Notebook API" as notebook
+  component "Web UI" as ui
+  
+  note left of cli
+    $ post-processor ingest comsol data/
+    $ post-processor query --freq 10000
+    $ post-processor viz sim_123 --U_y
+  end note
+}
+
+' ═══════════════════════════════════════════════════════════
+' INFRASTRUCTURE LAYER (BOTTOM - Technical Details)
+' ═══════════════════════════════════════════════════════════
+
+package "INFRASTRUCTURE LAYER" #LightCoral {
+  package "Adapters IN (Anticorruption)" {
+    component "COMSOLAdapter" as comsol_adapter
+    component "FiredrakeAdapter" as firedrake_adapter
+    component "ExperimentalAdapter" as exp_adapter
+  }
+  
+  package "Adapters OUT (Persistence)" {
+    component "HDF5Repository" as repo
+  }
+  
+  package "External Sources" {
+    file "COMSOL\n(CSV+HTML)" as comsol
+    file "Firedrake\n(VTU)" as firedrake
+    file "Experimental\n(CSV)" as experimental
+  }
+  
+  package "Storage" {
+    database "Parallelepiped.h5" as hdf5_para
+    database "Edge_metallic.h5" as hdf5_edge
+    database "Cylinder.h5" as hdf5_cyl
+  }
+  
+  note right of comsol_adapter
+    Parse V_pos, V_neg
+    → U = V_pos - V_neg
+    → Domain objects
+  end note
+  
+  note right of repo
+    Domain ↔ HDF5
+    /simulations/
+    /catalog/
+  end note
+}
+
+' ═══════════════════════════════════════════════════════════
+' RELATIONS (Flow: Interface → Application → Domain → Infrastructure)
+' ═══════════════════════════════════════════════════════════
+
+' Interface → Application
+cli -right-> ingestion
+cli -right-> query_service
+cli -right-> viz_service
+
+notebook -right-> query_service
+notebook -right-> viz_service
+
+ui -right-> ingestion
+ui -right-> query_service
+ui -right-> viz_service
+
+' Application → Domain
+ingestion -up-> collection : adds to
+query_service -up-> collection : queries
+query_service -up-> spatial_deriv : uses
+query_service -up-> interpolation : uses
+query_service -up-> optimization : uses
+
+viz_service -up-> collection : reads
+viz_service -up-> coord_service : uses
+viz_service -up-> spatial_deriv : uses
+viz_service -up-> interpolation : uses
+
+' Application → Infrastructure
+ingestion -down-> comsol_adapter : uses
+ingestion -down-> firedrake_adapter : uses
+ingestion -down-> exp_adapter : uses
+ingestion -down-> repo : persists via
+
+query_service -down-> repo : loads from
+
+' Infrastructure Adapters → Domain
+comsol_adapter -up-> simulation : creates
+firedrake_adapter -up-> simulation : creates
+exp_adapter -up-> simulation : creates
+
+' Infrastructure Sources → Adapters
+comsol -up-> comsol_adapter
+firedrake -up-> firedrake_adapter
+experimental -up-> exp_adapter
+
+' Infrastructure Persistence → Storage
+repo -down-> hdf5_para
+repo -down-> hdf5_edge
+repo -down-> hdf5_cyl
+
+' Domain internal
+collection *-- simulation
+simulation *-- results
+simulation *-- config
+results *-- frame : sensor_frame
+config *-- frame : testbench_frame
+results *-- voltage
+
+' Domain Services → Domain Objects (READ-ONLY per CQS)
+coord_service ..> results : reads (query)
+spatial_deriv ..> results : reads (query)
+spatial_deriv ..> voltage : reads (query)
+interpolation ..> results : reads (query)
+interpolation ..> voltage : reads (query)
+interpolation ..> spatial_deriv : uses (query)
+optimization ..> results : reads (query)
+optimization ..> spatial_deriv : uses (query)
+optimization ..> collection : reads (query)
+
+@enduml

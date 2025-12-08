@@ -1,0 +1,219 @@
+@startuml AEFI_Domain_Events
+
+!define EVENT #A29BFE
+!define SERVICE #DFE6E9
+!define HANDLER #FDCB6E
+!define SAGA #FAB1A0
+
+title AEFI Domain Events Architecture
+
+' ============= DOMAIN EVENTS =============
+
+package "Domain Events" <<Rectangle>> {
+  
+  abstract class DomainEvent <<event>> EVENT {
+    +eventId: EventId
+    +timestamp: DateTime
+    +aggregateId: AggregateId
+    +correlationId: CorrelationId
+  }
+
+  ' --- Study Events ---
+  class StudyCreated <<event>> EVENT {
+    +studyId: StudyId
+    +objectName: string
+    +description: string
+    +timestamp: DateTime
+  }
+
+  ' --- Configuration Events ---
+  class ExcitationConfigured <<event>> EVENT {
+    +studyId: StudyId
+    +config: ExcitationConfig
+    +frequency: double
+    +timestamp: DateTime
+  }
+
+  class FrameRotationUpdated <<event>> EVENT {
+    +rotation: Quaternion
+    +calibrationId: CalibrationId
+    +timestamp: DateTime
+  }
+
+  ' --- Scan Events ---
+  class ScanStarted <<event>> EVENT {
+    +scanId: ScanId
+    +studyId: StudyId
+    +pattern: ScanPattern
+    +mode: ScanMode
+    +startTime: DateTime
+  }
+  
+  class ScanCompleted <<event>> EVENT {
+    +scanId: ScanId
+    +studyId: StudyId
+    +totalPoints: int
+    +duration: Duration
+    +completionTime: DateTime
+  }
+
+  class ScanFailed <<event>> EVENT {
+    +scanId: ScanId
+    +studyId: StudyId
+    +reason: string
+    +failureTime: DateTime
+  }
+
+  ' --- Measurement Events ---
+  class MeasurementAcquired <<event>> EVENT {
+    +measurementId: MeasurementId
+    +scanId: ScanId
+    +position: Position3D
+    +electricField: Vector3D
+    +timestamp: DateTime
+  }
+
+  class ReferenceMeasurementAcquired <<event>> EVENT {
+    +referenceId: ReferenceId
+    +position: Position3D
+    +electricField: Vector3D
+    +timestamp: DateTime
+  }
+
+  ' --- Low Level Control Events ---
+  class PositionReached <<event>> EVENT {
+    +position: Position3D
+    +timestamp: DateTime
+  }
+
+  class BufferFilled <<event>> EVENT {
+    +bufferSize: int
+    +timestamp: DateTime
+  }
+}
+
+DomainEvent <|-- StudyCreated
+DomainEvent <|-- ExcitationConfigured
+DomainEvent <|-- FrameRotationUpdated
+DomainEvent <|-- ScanStarted
+DomainEvent <|-- ScanCompleted
+DomainEvent <|-- ScanFailed
+DomainEvent <|-- MeasurementAcquired
+DomainEvent <|-- ReferenceMeasurementAcquired
+DomainEvent <|-- PositionReached
+DomainEvent <|-- BufferFilled
+
+' ============= EVENT HANDLERS =============
+
+package "Event Handlers" <<Rectangle>> {
+  
+  class MeasurementHandler <<handler>> HANDLER {
+    +onMeasurementAcquired(event: MeasurementAcquired): void
+    +onReferenceMeasurementAcquired(event: ReferenceMeasurementAcquired): void
+    --
+    Responsibilities:
+    - Update UI (Real-time plot)
+    - Log measurement quality
+  }
+  
+  class ScanProgressHandler <<handler>> HANDLER {
+    +onScanStarted(event: ScanStarted): void
+    +onScanCompleted(event: ScanCompleted): void
+    +onScanFailed(event: ScanFailed): void
+    +onPositionReached(event: PositionReached): void
+    --
+    Responsibilities:
+    - Update progress bar
+    - Estimate remaining time
+    - Handle errors/notifications
+  }
+  
+  class PersistenceHandler <<handler>> HANDLER {
+    +onStudyCreated(event: StudyCreated): void
+    +onScanCompleted(event: ScanCompleted): void
+    +onMeasurementAcquired(event: MeasurementAcquired): void
+    --
+    Responsibilities:
+    - Save Study metadata
+    - Save Scan results (HDF5)
+    - Auto-save measurements (if needed)
+  }
+  
+  class CalibrationHandler <<handler>> HANDLER {
+    +onFrameRotationUpdated(event: FrameRotationUpdated): void
+    --
+    Responsibilities:
+    - Update global coordinate transform
+    - Persist calibration data
+  }
+}
+
+' ============= PROCESS MANAGERS (SAGAS) =============
+
+package "Process Managers" <<Rectangle>> {
+    class FrequencySequenceSaga <<saga>> SAGA {
+        +handle(StartFrequencySequence): void
+        --
+        Flow:
+        1. Move to Ref Position
+        2. Change Frequency
+        3. Acquire Reference
+        4. Move to Measure Position
+        5. Acquire Measurement
+    }
+}
+
+' ============= EVENT BUS =============
+
+class EventBus <<service>> SERVICE {
+  -subscribers: Map<EventType, List<EventHandler>>
+  --
+  +publish(event: DomainEvent): void
+  +subscribe(eventType: EventType, handler: EventHandler): void
+}
+
+' ============= RELATIONS =============
+
+EventBus --> DomainEvent : publishes
+EventBus --> MeasurementHandler : notifies
+EventBus --> ScanProgressHandler : notifies
+EventBus --> PersistenceHandler : notifies
+EventBus --> CalibrationHandler : notifies
+
+MeasurementAcquired --> MeasurementHandler
+MeasurementAcquired --> PersistenceHandler
+ScanStarted --> ScanProgressHandler
+ScanCompleted --> ScanProgressHandler
+ScanCompleted --> PersistenceHandler
+ScanFailed --> ScanProgressHandler
+StudyCreated --> PersistenceHandler
+FrameRotationUpdated --> CalibrationHandler
+
+' ============= AGGREGATE INTERACTIONS =============
+
+package "Aggregate Event Publishing" <<Rectangle>> {
+  
+  note as AggNote
+  **Aggregates publish events when:**
+  
+  Study (Root):
+  - create() → StudyCreated
+  - configureExcitation() → ExcitationConfigured
+  
+  Scan:
+  - start() → ScanStarted
+  - addMeasurement() → MeasurementAcquired
+  - complete() → ScanCompleted
+  - fail() → ScanFailed
+  
+  Calibration:
+  - updateRotation() → FrameRotationUpdated
+  
+  FlyScan (specific mode):
+  - bufferReady() → BufferFilled
+  
+  StepScan (specific mode):
+  - move() → PositionReached
+  end note
+}
+@enduml

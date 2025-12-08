@@ -1,0 +1,95 @@
+@startuml
+title AEFI Acquisition - General Architecture (Hexagonal)
+
+' Enable mixing of components and classes (Required for older PlantUML versions)
+allow_mixing
+
+skinparam componentStyle uml2
+skinparam packageStyle rectangle
+skinparam linetype ortho
+
+' --- Infrastructure Layer (External) ---
+package "External Systems" {
+    component [PyMoDAQ Dashboard] as Dashboard
+    component [Arcus Motor] as Motor
+    component [Sensors (Scope/Narda)] as Sensors
+    component [Rust Scan Engine] as Rust
+    database "HDF5 Files" as HDF5
+    database "Object DB" as ObjectDB
+}
+
+' --- Infrastructure Layer (Adapters) ---
+package "Infrastructure Adapters" {
+    class PyMoDAQView <<Adapter>>
+    class RustScanAdapter <<Adapter>>
+    class Hdf5StudyRepository <<Adapter>>
+    class ExternalObjectRepository <<Adapter>>
+}
+
+' --- Application Layer ---
+package "Application Layer" {
+    class StudyService {
+        + create_study()
+        + run_scan()
+        + export_results()
+    }
+    
+    interface ScanExecutor <<Port>> {
+        + execute(scan: Scan)
+    }
+    
+    interface ResultRepository <<Port>> {
+        + save(study: Study)
+    }
+    
+    interface ObjectRepository <<Port>> {
+        + get(id: ObjectId) : ExperimentObject
+    }
+}
+
+' --- Domain Layer ---
+package "Domain Layer Core" {
+    class Study {
+        + id: StudyId
+        + add_scan()
+    }
+    class Scan {
+        + status: ScanStatus
+    }
+    class ExperimentObject
+    class ScanConfig
+    
+    note right of Study : Pure Business Logic\nNo Hardware Dependencies
+}
+
+' --- Relationships ---
+
+' UI to App
+Dashboard --> PyMoDAQView : interacts
+PyMoDAQView --> StudyService : calls
+
+' App to Domain
+StudyService --> Study : orchestrates
+Study *-- Scan
+Scan *-- ScanConfig
+Study o-- ExperimentObject
+
+' App to Ports
+StudyService --> ScanExecutor : uses
+StudyService --> ResultRepository : uses
+StudyService --> ObjectRepository : uses
+
+' Adapters implementation
+RustScanAdapter .up.|> ScanExecutor
+Hdf5StudyRepository .up.|> ResultRepository
+ExternalObjectRepository .up.|> ObjectRepository
+
+' Adapters to External
+RustScanAdapter --> Rust : delegates
+Rust --> Motor : controls (Flyscan)
+Rust --> Sensors : triggers
+
+Hdf5StudyRepository --> HDF5 : writes
+ExternalObjectRepository --> ObjectDB : reads
+
+@enduml

@@ -1,0 +1,250 @@
+• 2 Phasen Hybridmotor (bipolar) 
+• hohe Schutzart  
+• Motoranschluss durch metrischen Stecker oder Litz en 
+• Optional mit Encoder / Bremse Schrittmotoren 
+www.igus.de MOT-AN-S_DE_201411#1 Schrittmotoren MOT-AN-S . . . 
+Typenschlüssel 
+MOT – AN – S – 060 – 020 – 056 – M – A – AAAA 
+AAAA Standard 
+AAAC Encoder 
+AAAD Encoder & Bremse 
+A ohne 
+C Inkremental Geber 
+D Inkremental Geber & Bremse 
+M metrischer Stecker 
+L Litzen 
+028 28mm (NEMA11) 
+042 42mm (NEMA17) 
+056 56mm (NEMA23) 
+060 60mm (NEMA23XL) 
+086 86mm (NEMA34) 
+001 0,1Nm 
+005 0,5Nm 
+020 2,0Nm 
+035 3,5Nm 
+059 5,9Nm 
+060 60VDC 
+S Schrittmotor 
+AN Ausführung 
+MOT Motor Typ 
+Produkttyp Haltemoment 
+Maximalspannung Flanschmaß 
+Motortyp Spezifikationen 
+Optionen 
+Motoranschluss 
+www.igus.de MOT-AN-S_DE_201411#1 Schrittmotoren MOT-AN-S . . . 
+Technische Daten 
+Flanschmaß 28(NEMA11) 42(NEMA17) 56(NEMA23) 60(NEMA23XL) 86(NEMA34 ) 
+Motor 
+Maximalspannung [VDC] 60 60 60 60 60 
+Nennspannung [VDC] 24-48 24-48 24-48 24-48 24-48 
+Nennstrom [A] 1,0 1,8 4,2 4,2 6,4 
+Haltemoment [Nm] 0,12 0,5 2,0 3,5 5,9 
+Rastmoment [Nm] 0,004 0,022 0,068 0,075 0,210 
+Schrittwinkel [° ] 1,8 ±5% 1,8 ±5% 1,8 ±5% 1,8 ±5% 1,8 ±5 % 
+Widerstand/Phase [ Ω] 2,30 ±10% 1,75 ±10% 0,50 ±10% 0,65 ±10% 0,33 ±10% 
+Induktivität/Phase [mH] 1,80 ±20% 3,30 ±20% 2,20 ±20% 3, 20 ±20% 3,00 ±20% 
+Massenträgheitsmoment Rotor [kgcm²] 0,018 0,082 0,48 0,8 4 2,70 
+Wellenbelastung, axial [N] 7 7 15 15 65 
+Wellenbelastung, radial [N] 20 20 52 63 200 
+Encoder 
+Betriebsspannung [VDC] 5
+Impulse/Umdrehung [1/min] 500 
+Nullimpuls/Index ja 
+Line Treiber RS422 Protokoll
+Signalverlauf 
+(Motordrehrichtung im Uhrzeigersin) CW 
+Haltebremse 
+Betriebsspannung [VDC] - 24 ±10% 24 ±10% 24 ±10% 24 ±10%
+Leistung [W] - 8 10 10 11 
+Haltemoment [Nm] - 0,4 1,0 1,0 2,0 
+Massenträgheitsmoment [kgcm²] - 0,01 0,02 0,02 0,07 
+Betriebsbedingung 
+Gewicht Motor 
+Litzen [kg] 0,20 0,38 1,04 1,45 -
+Stecker [kg] 0,25 0,43 1,12 1,56 3,20 
+Encoder [kg] 0,27 0,45 1,14 1,58 3,30 
+Encoder und Bremse [kg] - 0,58 1,36 1,82 3,60 
+Betriebsdaten 
+Umgebungstemperatur [°C] -10 …+50 
+Temperaturanstieg max. zulässig [°C] 80 
+Isolationsklasse B
+Luftfeuchtigkeit (nicht kondensierend) [%] 85 
+Schutzklasse Motorgehäuse IP65 ( Wellenabdichtung IP52), Litzenmotor IP40 
+CE Erklärung EMV Richtlinie Die Bremse darf erst im Stillstand des Motors schli essen. 
+www.igus.de MOT-AN-S_DE_201411#1 Schrittmotoren MOT-AN-S . . . 
+Steckerbelegung Motoren 
+Flanschmaß 28(NEMA11) Flanschmaß 42,56,60(NEMA17,23, 23XL) 
+Motor bipolar Motor bipolar Motorleitung 
+JST XHP-4 Litzen M12 5-polig Litzen M12 5-polig 
+PIN Signal Phase Farbe PIN Signal Phase Farbe Farbe 
+1 A weiß 1 A/ braun braun 
+2 A/ braun 2 A weis weis 
+3 B blau 3 B blau blau 
+4 B/ schwarz 4 B/ schwarz schwarz 
+5 PE - grün/gelb 
+Gehäuse Schirmung - -
+Steckerbelegung Motor 
+Flanschmaß 86(NEMA34) 
+Motor bipolar Motorleitung 
+M17 7-polig M17 7-polig 
+PIN Signal Phase Nummer 
+1 A/ 1
+2 A 2
+3 B 3
+4 B/ 4
+5 Bremse 24V 5
+6 Bremse 0V 6
+7 PE grün/gelb 
+Gehäuse Schirmung Schirmung 
+Steckerbelegung Bremse/Initiator 
+Flanschmaß 42,56,60(NEMA17,23,23XL) Flanschmaß 86(NEMA34) 
+Bremse Bremsenleitung Initiator Initiatorleitung 
+M8 3-polig M8 3-polig M8 3-polig M8 3-polig 
+PIN Signal Farbe PIN Signal Farbe 
+1 Bremse (24V) braun 1 VDC braun 
+3 0V blau 3 0V blau 
+4 - schwarz 4 Schaltsignal schwarz 1
+2
+1
+21
+2
+14
+www.igus.de MOT-AN-S_DE_201411#1 Schrittmotoren MOT-AN-S . . . 
+Steckerbelegung Encoder 
+Flanschmaß 28(NEMA11) Flanschmaß 42,56,60(NEMA17,23, 23XL) 
+Encoderbuchse Encoderstecker Encoder Encoderleitung 
+JST / GHR-10V-S M12 8-polig M12 8-polig 
+PIN Signal Farbe PIN Signal Farbe 
+1 Schirmung - 1 A weis 
+2 A - 2 A/ braun 
+3 A/ - 3 B grün 
+4 B/ - 4 B/ gelb 
+5 B - 5 0V grau 
+6 N/ - 6 N/ rosa 
+7 N - 7 N blau 
+8 GND - 8 5V DC rot 
+9 5V DC - Gehäuse Schirmung Schirmung 
+10 Schirmung -
+Steckerbelegung Encoder 
+Flanschmaß 86(NEMA34) 
+Encoder Encoderleitung 
+M17 12-polig M17 12-polig 
+PIN Signal Farbe 
+1 A braun 
+2 A/ grün 
+3 B blau 
+4 B/ violett 
+5 0V weiß 0,5 □
+6 N/ grau 
+7 N rosa 
+8 5V DC braun 0,5 □
+9 - -
+10 - -
+11 - -
+12 - -
+Gehäuse Schirmung Schirmung JST / SM10B-GHS-TB 
+110 
+1
+10 
+www.igus.de MOT-AN-S_DE_201411#1 Schrittmotoren MOT-AN-S . . . 
+Kennlinien                                         
+Flanschmaß 28 (NEMA11)                                           Flanschmaß 42 (NEMA17)                  
+MOT-AN-S-060-001-028-... MOT-AN-S-060-005-042-... 
+Flanschmaß 56 (NEMA23) Flanschmaß 60 (NEMA23XL) 
+MOT-AN-S-060-020-056-… MOT-AN-S-060-035-060-… 
+Flanschmaß 86 (NEMA34) 
+MOT-AN-S-060-059-086-… 
+- - - - - 24VDC ––––––– 48 VDC Die Kennlinien wurden im Viertelschrittmodus ermittelt. 
+0,0 0,3 0,5 0,8 1,0 1,3 1,5 1,8 
+10 100 1.000 10.000 n[1/min] M[Nm] 
+0,0 0,5 1,0 1,5 2,0 2,5 3,0 3,5 
+10 100 1.000 10.000 n[1/min] M[Nm] 
+0,0 1,0 2,0 3,0 4,0 5,0 6,0 
+10 100 1.000 10.000 n[1/min] M[Nm] 0,00 0,02 0,04 0,06 0,08 0,10 0,12 0,14 
+10 100 1.000 10.000 n[1/min] M[Nm] 
+0,0 0,1 0,2 0,3 0,4 0,5 0,6 
+10 100 1.000 10.000 n[1/min] [Nm] 
+www.igus.de MOT-AN-S_DE_201411#1 Schrittmotoren MOT-AN-S . . . 
+Maße 
+MOT-AN-S-060-…-L-A-AAAA / MOT-AN-S-060-…-M-A-AAAA 
+MOT-AN-S-060-...-M-C-AAAC 
+MOT-AN-S-060-...-M-D-AAAD 
+Typ B1 
+[mm] B2 
+[mm] 
+±0,2 B3 
+[mm] D1 
+Ø [mm] 
+-0,013 D2 
+Ø [mm] 
+±0,025 D3 
+Ø [mm] L1 
+[mm] 
+±1 L2 
+[mm] 
+±1 L3 
+[mm] L4 
+[mm] 
+MOT-AN-S-060-001-028-L-A-AAAA 28,0 23,00 - 5,00 22,00 M2, 5 20,0 50 2,0 -
+MOT-AN-S-060-001-028-L-C-AAAC 28,0 23,00 - 5,00 22,00 M2, 5 20,0 60 2,0 -
+MOT-AN-S-060-005-042-L-A-AAAA 42,3 31,00 - 5,00 22,00 M3 2 4,0 49 2,0 -
+MOT-AN-S-060-005-042-M-A-AAAA 42,3 31,00 13 5,00 22,00 M3 24,0 70 2,0 -
+MOT-AN-S-060-005-042-M-C-AAAC 42,3 31,00 13 5,00 22,00 M3 24,0 70 2,0 -
+MOT-AN-S-060-005-042-M-D-AAAD 42,3 31,00 13 5,00 22,00 M3 24,0 115 2,0 -
+MOT-AN-S-060-020-056-L-A-AAAA 56,4 47,14 - 6,35 38,10 5,0 20,6 76 1,6 5
+MOT-AN-S-060-020-056-M-A-AAAA 56,4 47,14 13 6,35 38,10 5, 0 20,6 98 1,6 5
+MOT-AN-S-060-020-056-M-C-AAAC 56,4 47,14 13 6,35 38,10 5, 0 20,6 98 1,6 5
+MOT-AN-S-060-020-056-M-D-AAAD 56,4 47,14 13 6,35 38,10 5, 0 20,6 138 1,6 5
+MOT-AN-S-060-035-060-L-A-AAAA 60,0 47,14 9 8,00 38,10 4,5 20,6 88 1,6 7
+MOT-AN-S-060-035-060-M-A-AAAA 60,0 47,14 13 8,00 38,10 4, 5 20,6 110 1,6 7
+MOT-AN-S-060-035-060-M-C-AAAC 60,0 47,14 13 8,00 38,10 4, 5 20,6 110 1,6 7
+MOT-AN-S-060-035-060-M-D-AAAD 60,0 47,14 13 8,00 38,10 4, 5 20,6 150 1,6 7
+MOT-AN-S-060-059-086-M-A-AAAA 85,8 69,50 37 14,00 73,02 6 ,6 37,0 118 2,0 8
+MOT-AN-S-060-059-086-M-C-AAAC 85,8 69,50 37 14,00 73,02 6 ,6 37,0 118 2,0 8
+MOT-AN-S-060-059-086-M-D-AAAD 85,8 69,50 37 14,00 73,02 6 ,6 37,0 188 2,0 8
+www.igus.de MOT-AN-S_DE_201411#1 Schrittmotoren MOT-AN-S . . . 
+Leitungen 
+Bestellnummer Mantel Typ Leitungslänge Stecker 
+Flanschmaß 42(NEMA17), 56(NEMA23), 60(NEMA23XL) 
+Motor 
+MAT9043737 TPE CF9-CF.INI 3 gerade 
+MAT9043738 TPE CF9-CF.INI 5 gerade 
+MAT9043740 TPE CF9-CF.INI 10 gerade 
+MAT9043742 TPE CF9-CF.INI 3 gewinkelt 
+MAT9043743 TPE CF9-CF.INI 5 gewinkelt 
+MAT9043745 TPE CF9-CF.INI 10 gewinkelt 
+Encoder 
+MAT90432594-3 PVC CF240 3 gerade 
+MAT90432594-5 PVC CF240 5 gerade 
+MAT90432594-10 PVC CF240 10 gerade 
+MAT90436430-3 PVC CF240 3 gewinkelt 
+MAT90436430-5 PVC CF240 5 gewinkelt 
+MAT90436430-10 PVC CF240 10 gewinkelt 
+Flanschmaß 86(NEMA34) 
+Motor 
+MAT90439520-3 PUR CF78.UL 3 gerade 
+MAT90439520-5 PUR CF78.UL 5 gerade 
+MAT90439520-10 PUR CF78.UL 10 gerade 
+Encoder 
+MAT90439519-3 PVC CF211 3 gerade 
+MAT90439519-5 PVC CF211 5 gerade 
+MAT90439519-10 PVC CF211 10 gerade 
+Flanschmaß 42(NEMA17), 56(NEMA23), 60(NEMA23XL) 
+Bremse / Initiator 
+MAT9043716 TPE CF9-CF.INI 3 gerade 
+MAT9043717 TPE CF9-CF.INI 5 gerade 
+MAT9043719 TPE CF9-CF.INI 10 gerade 
+MAT9043724 TPE CF9-CF.INI 3 gewinkelt 
+MAT9043725 TPE CF9-CF.INI 5 gewinkelt 
+MAT9043727 TPE CF9-CF.INI 10 gewinkelt 
+Stecker gerade Stecker gewinkelt - Leitung Ø: 8 mm / Biegeradius bewegt < 10m Verfah rweg: min. 5 x d - Leitung Ø: 8 mm / Biegeradius bewegt < 10m Verfah rweg: min. 10 x d - Leitung Ø: 10,5 mm / Biegeradius bewegt < 10m Ver fahrweg: min. 6,8 x d - Leitung Ø: 5,5 mm / Biegeradius bewegt < 10m Verf ahrweg: min. 5 x d 
+- Leitung Ø: 7 mm / Biegeradius bewegt < 10m Verfah rweg: min. 10 x d 
+www.igus.de MOT-AN-S_DE_201411#1 Schrittmotoren MOT-AN-S . . . 
+Zubehör 
+Motorflansche 
+Spacer 
+Kupplungen 
+Initiatoren / Initiatorhalter Mehr Informationen zum umfangreichen Zubehör finden  Sie auf unsere Internetseite 
+www.igus.de/drylinE-Datenblaetter 
+www.igus.de MOT-AN-S_DE_201411#1 

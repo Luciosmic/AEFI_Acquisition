@@ -1,0 +1,35 @@
+---
+description: Note or Report redactions
+globs: 
+alwaysApply: false
+---
+# Règles pour la rédaction de notes ou rapports
+
+- Les notes seront intégrées dans un coffre obsidian, au format markdown
+
+- une note commence par la structure de métadonnées et doit suivre le template suivant :
+
+```
+MOC : 
+Source : [[Luis Saluden]]
+Projets : [[PROJET ASSOCE]] [[PROJET Banc de Test Python]]
+Simulation : 
+Tags : #NoteAtomique 
+Date : 2025-07-04
+***
+
+# Problème/Contexte
+
+# Pistes/Réponse
+
+# Références
+
+# Liens
+[[lien vers autre note]] - explication du lien, contexte
+```
+
+- N'inventes pas de nouveau tags
+- Si tu veux suggérer des liens, n'en fais pas plus de 5 et à chauque fois justifie rigoureusement pourquoi faire un lien
+- La créativité fougueuse ne sera pas récompensée, prudence et méthode seront privilégiées.
+
+- pas de YAML !
