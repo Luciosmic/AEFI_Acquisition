@@ -112,16 +112,6 @@ class ADS131A04UIAdapter:
                 options=['1.2V', '2.442V', '4.096V'],
                 tooltip='Reference voltage level'
             ),
-            
-            # Digital Filter
-            ParameterSpec(
-                name='filter_type',
-                label='Digital Filter',
-                type='combo',
-                default='Sinc3',
-                options=['Sinc1', 'Sinc2', 'Sinc3', 'Sinc4'],
-                tooltip='Digital filter type for noise reduction'
-            ),
         ]
     
     def validate_config(self, config: Dict[str, Any]) -> Tuple[bool, str]:
