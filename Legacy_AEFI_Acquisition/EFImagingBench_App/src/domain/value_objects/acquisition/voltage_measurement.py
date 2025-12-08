@@ -16,6 +16,7 @@ Design:
 """
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Optional
 
 @dataclass(frozen=True)
 class VoltageMeasurement:
@@ -50,7 +51,7 @@ class VoltageMeasurement:
     timestamp: datetime
     
     # Quality metric (optional)
-    uncertainty_estimate_volts: float | None = None  # Estimated measurement uncertainty (±V)
+    uncertainty_estimate_volts: Optional[float] = None  # Estimated measurement uncertainty (±V)
     
     def __post_init__(self):
         """Validate voltage values are finite."""
