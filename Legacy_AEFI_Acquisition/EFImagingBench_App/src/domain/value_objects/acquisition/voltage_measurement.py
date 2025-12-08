@@ -49,6 +49,9 @@ class VoltageMeasurement:
     # Metadata
     timestamp: datetime
     
+    # Quality metric (optional)
+    uncertainty_estimate_volts: float | None = None  # Estimated measurement uncertainty (±V)
+    
     def __post_init__(self):
         """Validate voltage values are finite."""
         import math
