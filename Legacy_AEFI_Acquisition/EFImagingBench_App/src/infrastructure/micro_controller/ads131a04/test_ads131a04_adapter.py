@@ -26,7 +26,8 @@ def test_connection():
     # TODO: Update with your COM port
     port = input("Enter COM port (e.g., COM3): ").strip()
     
-    success = serial.connect(port, baudrate=9600)
+    # Use correct baudrate for MCU (1.5 Mbaud)
+    success = serial.connect(port, baudrate=1500000)
     
     if success:
         print("[OK] Connected successfully")
@@ -142,7 +143,7 @@ def test_multiple_acquisitions(adapter, n=5):
         except Exception as e:
             print(f"  Sample {i+1}/{n}: Failed - {e}")
     
-    print(f"✓ Success rate: {success_count}/{n}")
+    print(f"[OK] Success rate: {success_count}/{n}")
     return success_count == n
 
 
@@ -155,7 +156,7 @@ def main():
     # Test 1: Connection
     serial = test_connection()
     if not serial:
-        print("\n✗ Tests aborted: No connection")
+        print("\n[FAIL] Tests aborted: No connection")
         return
     
     # Test 2: MCU initialization
@@ -167,7 +168,7 @@ def main():
     # Test 4: Configuration
     config_ok = test_configuration(adapter)
     if not config_ok:
-        print("\n⚠ Warning: Configuration failed, but continuing tests...")
+        print("\n[WARN] Configuration failed, but continuing tests...")
     
     # Test 5: Single acquisition
     single_ok = test_single_acquisition(adapter)
@@ -179,7 +180,7 @@ def main():
     # Cleanup
     print("\n=== Cleanup ===")
     serial.disconnect()
-    print("✓ Disconnected")
+    print("[OK] Disconnected")
     
     print("\n" + "=" * 60)
     print("Tests completed")

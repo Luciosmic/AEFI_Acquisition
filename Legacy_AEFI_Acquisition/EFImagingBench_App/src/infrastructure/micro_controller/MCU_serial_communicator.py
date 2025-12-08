@@ -64,8 +64,11 @@ class MCU_SerialCommunicator:
                 # Special handling for acquisition command 'm'
                 if command.startswith('m') and command[1:].replace('*', '').isdigit():
                     confirmation = self.ser.readline() # Read confirmation
+                    print(f"[DEBUG MCU] Confirmation: {repr(confirmation)}")
                     data_response = self.ser.readline() # Read data
+                    print(f"[DEBUG MCU] Data response: {repr(data_response)}")
                     response_str = data_response.decode('ascii', errors='ignore').rstrip('\r\n')
+                    print(f"[DEBUG MCU] Decoded: '{response_str}'")
                     return True, response_str
                 else:
                     response = self.ser.readline()
