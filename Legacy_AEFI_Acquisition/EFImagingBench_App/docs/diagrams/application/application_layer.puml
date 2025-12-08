@@ -23,6 +23,7 @@ package "Application Layer (Services)" as APP {
   [ScanService]
   [DeviceExcitationConfigService]
   [DeviceAcquisitionConfigService]
+  [DataAcquisitionService]
 }
 
 ' === Phase de transition ===
@@ -35,12 +36,13 @@ GUI --> MotionService : "Mouvement axes"
 GUI --> ScanService : "Scans 2D"
 GUI --> DeviceExcitationConfigService : "Config DDS"
 GUI --> DeviceAcquisitionConfigService : "Config ADC + Export"
+GUI --> DataAcquisitionService : "Acquisition données"
 
 ' === RELATIONS GUI -> LEGACY (Temporaire) ===
 GUI ..> MetaManager : "<<legacy>>\nà migrer"
 
 note right of APP
-  **4 Services de la couche Application:**
+  **5 Services de la couche Application:**
   
   **MotionService**
   - move_to(), home(), stop()
@@ -58,9 +60,15 @@ note right of APP
   - Validation paramètres
   
   **DeviceAcquisitionConfigService**
-  - Modes acquisition (exploration/export)
   - Configuration ADC (4 canaux)
-  - Gestion export CSV
+  - Configuration export CSV
+  - Validation paramètres ADC
+  
+  **DataAcquisitionService** (NOUVEAU)
+  - Contrôle acquisition (start/stop)
+  - Flux de données temps réel
+  - Moyennage échantillons
+  - Statistiques acquisition
   
   **Stratégie de migration:**
   1. Créer services vides
@@ -72,11 +80,12 @@ end note
 note bottom of LEGACY
   **MetaManager (deprecated)**
   
-  À découper en 4 services :
+  À découper en 5 services :
   - move_to/home/stop → MotionService
   - inject_scan_batch → ScanService
   - update_configuration DDS → DeviceExcitationConfigService
-  - start_acquisition/export → DeviceAcquisitionConfigService
+  - update_configuration ADC/export → DeviceAcquisitionConfigService
+  - start/stop acquisition, data flow → DataAcquisitionService
   
   À supprimer après migration complète
 end note
