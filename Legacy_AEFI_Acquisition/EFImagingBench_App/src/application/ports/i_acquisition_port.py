@@ -17,8 +17,8 @@ Design:
 """
 
 from abc import ABC, abstractmethod
-from domain.value_objects.acquisition.voltage_measurement import VoltageMeasurement
-from domain.value_objects.measurement_uncertainty import MeasurementUncertainty
+from src.domain.value_objects.acquisition.voltage_measurement import VoltageMeasurement
+from src.domain.value_objects.measurement_uncertainty import MeasurementUncertainty
 
 
 class IAcquisitionPort(ABC):

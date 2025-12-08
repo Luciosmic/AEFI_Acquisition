@@ -1,0 +1,94 @@
+@startuml Scan Application Service Sequence
+title Scan Application Service - Execution Flow
+skinparam style strictuml
+skinparam sequenceMessageAlign center
+
+actor "Client (UI/Test)" as Client
+participant "ScanApplicationService" as Service
+participant "ScanTrajectoryFactory" as Factory
+participant "StepScan" as Scan
+participant "IMotionPort" as Motion
+participant "IAcquisitionPort" as Acquisition
+participant "Subscriber" as Subscriber
+
+Client -> Service: execute_scan(configDTO)
+activate Service
+
+group [1] Initialization
+    Service -> Service: _to_domain_config(dto)
+    Service -> Service: validate config
+    
+    Service -> Scan: new StepScan()
+    activate Scan
+    Scan --> Service: scan
+    deactivate Scan
+    
+    Service -> Scan: start(config)
+    activate Scan
+    Scan -> Scan: emit ScanStarted
+    deactivate Scan
+    
+    Service -> Service: _dispatch_events(scan.events)
+    activate Service
+    Service -> Subscriber: on_event(ScanStarted)
+    deactivate Service
+end
+
+group [2] Trajectory Generation
+    Service -> Factory: create_trajectory(config)
+    activate Factory
+    Factory --> Service: trajectory (List[Position])
+    deactivate Factory
+end
+
+group [3] Execution Loop
+    loop for each position in trajectory
+        
+        Service -> Service: check_pause_cancel()
+        
+        ' A. Move
+        Service -> Motion: move_to(position)
+        activate Motion
+        Motion --> Service
+        deactivate Motion
+        
+        ' B. Stabilize
+        Service -> Service: sleep(stabilization_delay)
+        
+        ' C. Acquire
+        Service -> Acquisition: acquire_sample()
+        activate Acquisition
+        Acquisition --> Service: measurement
+        deactivate Acquisition
+        
+        ' D. Domain Update
+        Service -> Scan: add_point_result(pos, meas)
+        activate Scan
+        Scan -> Scan: emit ScanPointAcquired
+        Scan -> Scan: check_completion()
+        deactivate Scan
+        
+        ' E. Dispatch Events
+        Service -> Service: _dispatch_events(scan.events)
+        activate Service
+        Service -> Subscriber: on_event(ScanPointAcquired)
+        deactivate Service
+    end
+end
+
+group [4] Finalization
+    Service -> Scan: complete() (if not already)
+    activate Scan
+    Scan -> Scan: emit ScanCompleted
+    deactivate Scan
+    
+    Service -> Service: _dispatch_events(scan.events)
+    activate Service
+    Service -> Subscriber: on_event(ScanCompleted)
+    deactivate Service
+    
+    Service --> Client: True (Success)
+end
+deactivate Service
+
+@enduml

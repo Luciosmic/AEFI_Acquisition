@@ -6,16 +6,17 @@ skinparam backgroundColor #FEFEFE
 
 package "Application Layer" {
     class ScanApplicationService {
-      - _trajectory_service: ScanTrajectoryService
       - _motion_port: IMotionPort
       - _acquisition_port: IAcquisitionPort
-      - _export_port: IExportPort
+      - _subscribers: List[Callable]
+      - _current_scan: StepScan
       
       ' === Use Cases (Orchestration) ===
-      + execute_scan(config: Scan2DConfigDTO, export: ExportConfigDTO) -> bool
-      + pause_scan() -> void
-      + resume_scan() -> void
-      + cancel_scan() -> void
+      + execute_scan(config: Scan2DConfigDTO) -> bool
+      + subscribe(callback: Callable[[DomainEvent], None])
+      + pause_scan()
+      + resume_scan()
+      + cancel_scan()
       
       ' === Queries ===
       + get_status() -> ScanStatusDTO
@@ -23,10 +24,16 @@ package "Application Layer" {
 }
 
 package "Domain Layer" {
-    class ScanTrajectoryService {
-      ' === Pure Logic ===
-      + validate_config(config: StepScanConfig) -> ValidationResult
-      + generate_trajectory(config: StepScanConfig) -> List[Position2D]
+    class ScanTrajectoryFactory {
+      ' === Pure Logic (Static) ===
+      + {static} create_trajectory(config: StepScanConfig) -> ScanTrajectory
+    }
+    
+    class StepScan {
+        + start(config)
+        + add_point_result(result)
+        + complete()
+        + domain_events: List[DomainEvent]
     }
     
     class StepScanConfig {
@@ -36,47 +43,43 @@ package "Domain Layer" {
 }
 
 package "Infrastructure Layer" {
-    class CSVExporter {
-        + write_point(data)
-    }
-    class MotionAdapter {
+    interface IMotionPort {
         + move_to(position)
     }
-    class AcquisitionAdapter {
+    interface IAcquisitionPort {
         + acquire_sample()
     }
 }
 
 ' === Relations ===
-ScanApplicationService --> ScanTrajectoryService : "uses for logic"
-ScanApplicationService --> MotionAdapter : "orchestrates"
-ScanApplicationService --> AcquisitionAdapter : "orchestrates"
-ScanApplicationService --> CSVExporter : "orchestrates"
+ScanApplicationService ..> ScanTrajectoryFactory : "uses (static)"
+ScanApplicationService --> StepScan : "manages aggregate"
+ScanApplicationService --> IMotionPort : "orchestrates"
+ScanApplicationService --> IAcquisitionPort : "orchestrates"
 
 note right of ScanApplicationService
   **Application Service**
   
   **Responsabilités:**
   - Orchestration complète (Boucle de scan)
-  - Gestion des ports (Motion, Acquisition, Export)
+  - Gestion des ports (Motion, Acquisition)
   - Gestion du cycle de vie (Pause/Resume)
-  - Conversion DTOs
+  - **Dispatch des Domain Events** (via subscribe)
   
   **Orchestration:**
-  1. Récupère trajectoire (Domain)
-  2. Boucle sur les points:
+  1. Crée StepScan (Aggregate)
+  2. Récupère trajectoire (Factory)
+  3. Boucle sur les points:
      - Move (Motion Port)
      - Acquire (Acquisition Port)
-     - Export (Export Port)
+     - Add Result (StepScan)
+     - **Dispatch Events**
 end note
 
-note bottom of ScanTrajectoryService
-  **Domain Service (Pure)**
-  
-  - Calcul pur de trajectoire
-  - Validation de configuration
-  - AUCUN accès hardware/IO
-  - Totalement déterministe
+note bottom of ScanTrajectoryFactory
+  **Domain Factory (Pure)**
+  - Création statique de trajectoire
+  - Découplé de l'état
 end note
 
 @enduml

@@ -39,6 +39,10 @@ class StepScan(SpatialScan):
         self._domain_events.clear()
         return events
         
+    @property
+    def expected_points(self) -> int:
+        return self._expected_points
+
     _expected_points: int = 0
     
     def start(self, config) -> None: # Added config for event
