@@ -10,6 +10,7 @@ participant "StepScan" as Scan
 participant "IMotionPort" as Motion
 participant "IAcquisitionPort" as Acquisition
 participant "Subscriber" as Subscriber
+participant "EventBus" as Bus
 
 Client -> Service: execute_scan(configDTO)
 activate Service
@@ -28,10 +29,10 @@ group [1] Initialization
     Scan -> Scan: emit ScanStarted
     deactivate Scan
     
-    Service -> Service: _dispatch_events(scan.events)
-    activate Service
-    Service -> Subscriber: on_event(ScanStarted)
-    deactivate Service
+    Service -> Bus: publish(ScanStarted)
+    activate Bus
+    Bus -> Subscriber: on_event(ScanStarted)
+    deactivate Bus
 end
 
 group [2] Trajectory Generation
@@ -68,11 +69,10 @@ group [3] Execution Loop
         Scan -> Scan: check_completion()
         deactivate Scan
         
-        ' E. Dispatch Events
-        Service -> Service: _dispatch_events(scan.events)
-        activate Service
-        Service -> Subscriber: on_event(ScanPointAcquired)
-        deactivate Service
+        Service -> Bus: publish(ScanPointAcquired)
+        activate Bus
+        Bus -> Subscriber: on_event(ScanPointAcquired)
+        deactivate Bus
     end
 end
 
@@ -82,10 +82,10 @@ group [4] Finalization
     Scan -> Scan: emit ScanCompleted
     deactivate Scan
     
-    Service -> Service: _dispatch_events(scan.events)
-    activate Service
-    Service -> Subscriber: on_event(ScanCompleted)
-    deactivate Service
+    Service -> Bus: publish(ScanCompleted)
+    activate Bus
+    Bus -> Subscriber: on_event(ScanCompleted)
+    deactivate Bus
     
     Service --> Client: True (Success)
 end
