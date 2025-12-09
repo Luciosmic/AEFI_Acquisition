@@ -1,0 +1,36 @@
+@startuml
+title Sequence Diagram: test_continuous_acquisition_short_burst
+autonumber
+skinparam responseMessageBelowArrow true
+"Test" -> "ContinuousAcquisitionService" : **CREATE** Setup service, executor, ports and event bus
+"Test" -> "EventBus" : **SUBSCRIBE** Subscribe to continuousacquisitionsampleacquired
+"Test" -> "ContinuousAcquisitionService" : **CALL** start_acquisition(sample_rate=20Hz, max_duration=0.1s)
+note right
+Data: {
+  "sample_rate_hz": 20.0,
+  "max_duration_s": 0.1
+}
+end note
+"EventBus" -> "Test" : **RECEIVE** Received ContinuousAcquisitionSampleAcquired
+note right
+Data: {
+  "acquisition_id": "3cfbe038-889a-494b-9445-e3295eee7a55",
+  "index": 0,
+  "vx": 0.1
+}
+end note
+"EventBus" -> "Test" : **RECEIVE** Received ContinuousAcquisitionSampleAcquired
+note right
+Data: {
+  "acquisition_id": "3cfbe038-889a-494b-9445-e3295eee7a55",
+  "index": 1,
+  "vx": 0.2
+}
+end note
+"Test" -> "ContinuousAcquisitionService" : **CALL** stop_acquisition()
+"Test" -> "ContinuousAcquisitionService" : **ASSERT** Verify that at least 1 sample was acquired
+note right
+Expect: >=1
+Got: 2
+end note
+@enduml
