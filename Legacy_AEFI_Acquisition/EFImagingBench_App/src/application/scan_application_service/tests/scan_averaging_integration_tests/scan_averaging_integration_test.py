@@ -196,7 +196,7 @@ class TestScanAveragingIntegration(unittest.TestCase):
         ax2.set_ylabel('Y')
         ax2.grid(True)
         
-        output_path = os.path.join(os.path.dirname(__file__), f"scan_averaging_results_{pattern_name}.png")
+        output_path = os.path.join(os.path.dirname(__file__), f"scan_averaging_integration_test_result_{pattern_name}.png")
         plt.tight_layout()
         plt.savefig(output_path)
         plt.close()

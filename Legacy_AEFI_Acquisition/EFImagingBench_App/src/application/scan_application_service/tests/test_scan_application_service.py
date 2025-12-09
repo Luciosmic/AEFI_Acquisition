@@ -5,29 +5,40 @@ from application.dtos.scan_dtos import Scan2DConfigDTO
 from infrastructure.tests.mock_ports import MockMotionPort, MockAcquisitionPort
 from domain.events.domain_event import DomainEvent
 from domain.events.scan_events import ScanStarted, ScanPointAcquired, ScanCompleted
+from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.tests.diagram_friendly_test import DiagramFriendlyTest
 
-class TestScanApplicationService(unittest.TestCase):
+class TestScanApplicationService(DiagramFriendlyTest):
     def setUp(self):
-        print("[TEST] Setting up service and ports...")
+        super().setUp()
+        self.log_interaction("Test", "CREATE", "ScanApplicationService", "Setup service and ports")
+        
         self.motion_port = MockMotionPort()
         self.acquisition_port = MockAcquisitionPort()
-        self.service = ScanApplicationService(
-            self.motion_port, self.acquisition_port
-        )
+        self.event_bus = InMemoryEventBus()
         self.events: List[DomainEvent] = []
-        self.service.subscribe(self.on_event)
+        
+        # Subscribe to relevant events via EventBus
+        self.log_interaction("Test", "SUBSCRIBE", "EventBus", "Subscribe to scan events")
+        self.event_bus.subscribe('scanstarted', self.on_event)
+        self.event_bus.subscribe('scanpointacquired', self.on_event)
+        self.event_bus.subscribe('scancompleted', self.on_event)
+        
+        self.service = ScanApplicationService(
+            self.motion_port,
+            self.acquisition_port,
+            self.event_bus
+        )
         
     def on_event(self, event: DomainEvent):
+        event_name = type(event).__name__
+        self.log_interaction("EventBus", "RECEIVE", "Test", f"Received {event_name}", {"event": event_name})
         self.events.append(event)
-        print(f"[TEST] Event received: {type(event).__name__}")
         
     def test_full_scan_execution(self):
-        print("\n" + "="*60)
-        print("🧪 [TEST] ScanApplicationService Execution")
-        print("="*60)
+        self.log_interaction("Test", "START", "ScanApplicationService", "Start full scan execution test")
         
         # Config
-        print("[TEST] Configuring scan parameters...")
         scan_dto = Scan2DConfigDTO(
             x_min=0, x_max=1, x_nb_points=2,
             y_min=0, y_max=1, y_nb_points=2,
@@ -36,31 +47,30 @@ class TestScanApplicationService(unittest.TestCase):
             averaging_per_position=1,
             uncertainty_volts=1e-6
         )
+        self.log_interaction("Test", "CREATE", "Scan2DConfigDTO", "Create scan config", {"pattern": scan_dto.scan_pattern})
         
         # Execute
-        print("[TEST] Calling execute_scan...")
-        
+        self.log_interaction("Test", "COMMAND", "ScanApplicationService", "Execute scan")
         success = self.service.execute_scan(scan_dto)
         
         # Verify Success
-        print("[TEST] Verifying execution success...")
+        self.log_interaction("Test", "ASSERT", "ScanApplicationService", "Verify execution success", expect=True, got=success)
         self.assertTrue(success)
-        print("✅ [TEST] Scan returned True")
         
         # Verify Events
-        print(f"[TEST] Verifying events (Total: {len(self.events)})...")
+        self.log_interaction("Test", "ASSERT", "EventBus", "Verify ScanStarted event")
         self.assertTrue(any(isinstance(e, ScanStarted) for e in self.events))
+        
+        self.log_interaction("Test", "ASSERT", "EventBus", "Verify ScanCompleted event")
         self.assertTrue(any(isinstance(e, ScanCompleted) for e in self.events))
         
         points_acquired = [e for e in self.events if isinstance(e, ScanPointAcquired)]
+        self.log_interaction("Test", "ASSERT", "EventBus", "Verify points acquired", expect=4, got=len(points_acquired))
         self.assertEqual(len(points_acquired), 4) # 2x2 grid
-        print(f"✅ [TEST] Acquired {len(points_acquired)} points (Expected 4)")
         
         # Verify Ports
-        print(f"[TEST] Verifying motion history (Total: {len(self.motion_port.move_history)})...")
+        self.log_interaction("Test", "ASSERT", "MotionPort", "Verify move history", expect=4, got=len(self.motion_port.move_history))
         self.assertEqual(len(self.motion_port.move_history), 4)
-        
-        print("="*60 + "\n")
 
 if __name__ == '__main__':
     unittest.main()

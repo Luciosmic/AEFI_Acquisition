@@ -38,8 +38,7 @@ from domain.aggregates.step_scan import StepScan
 from domain.value_objects.scan.scan_point_result import ScanPointResult
 from domain.events.domain_event import DomainEvent
 from domain.services.measurement_statistics_service import MeasurementStatisticsService
-
-# ... imports ...
+from domain.events.i_domain_event_bus import IDomainEventBus
 
 class ScanApplicationService:
     """
@@ -56,11 +55,12 @@ class ScanApplicationService:
     def __init__(
         self,
         motion_port: IMotionPort,
-        acquisition_port: IAcquisitionPort
+        acquisition_port: IAcquisitionPort,
+        event_bus: IDomainEventBus
     ):
         self._motion_port = motion_port
         self._acquisition_port = acquisition_port
-        self._subscribers: List[Callable[[DomainEvent], None]] = []
+        self._event_bus = event_bus
         self._current_scan: Optional[StepScan] = None
         self._status = ScanStatus.PENDING
         self._paused = False
@@ -93,7 +93,7 @@ class ScanApplicationService:
             scan = StepScan()
             scan.start(config)
             self._current_scan = scan
-            self._dispatch_events(scan.domain_events)
+            self._publish_events(scan.domain_events)
             
             # 3. Generate Trajectory (Domain - Pure Calculation)
             print(f"[ScanApplicationService] Generating trajectory...")
@@ -109,7 +109,7 @@ class ScanApplicationService:
                     print(f"[ScanApplicationService] Scan cancelled by user.")
                     scan.cancel()
                     self._status = ScanStatus.CANCELLED
-                    self._dispatch_events(scan.domain_events)
+                    self._publish_events(scan.domain_events)
                     break
                     
                 # Check Pause
@@ -145,7 +145,7 @@ class ScanApplicationService:
                 scan.add_point_result(point_result)
                 
                 # F. Dispatch Events (Application Logic)
-                self._dispatch_events(scan.domain_events)
+                self._publish_events(scan.domain_events)
             
             # Finalize
             if self._status != ScanStatus.CANCELLED:
@@ -153,7 +153,7 @@ class ScanApplicationService:
                      scan.complete()
                 self._status = ScanStatus.COMPLETED
                 print(f"[ScanApplicationService] Scan completed successfully.")
-                self._dispatch_events(scan.domain_events)
+                self._publish_events(scan.domain_events)
             
             return True
             
@@ -162,7 +162,7 @@ class ScanApplicationService:
             print(f"[ScanApplicationService] Scan failed: {e}")
             if self._current_scan:
                 self._current_scan.fail(str(e))
-                self._dispatch_events(self._current_scan.domain_events)
+                self._publish_events(self._current_scan.domain_events)
             self._status = ScanStatus.FAILED
             return False
 
@@ -174,10 +174,6 @@ class ScanApplicationService:
         
     def cancel_scan(self) -> None:
         self._cancelled = True
-
-    def subscribe(self, callback: Callable[[DomainEvent], None]) -> None:
-        """Subscribe to domain events."""
-        self._subscribers.append(callback)
 
     # ==================================================================================
     # QUERIES (Read-Only)
@@ -205,14 +201,11 @@ class ScanApplicationService:
     # HELPERS (Internal)
     # ==================================================================================
 
-    def _dispatch_events(self, events: List[DomainEvent]) -> None:
-        """Dispatch events to all subscribers."""
+    def _publish_events(self, events: List[DomainEvent]) -> None:
+        """Publish domain events to EventBus."""
         for event in events:
-            for subscriber in self._subscribers:
-                try:
-                    subscriber(event)
-                except Exception as e:
-                    logger.error(f"Error in event subscriber: {e}")
+            event_type = type(event).__name__.lower()  # e.g., 'scanstarted'
+            self._event_bus.publish(event_type, event)
 
 
     def _to_domain_config(self, dto: Scan2DConfigDTO) -> StepScanConfig:
