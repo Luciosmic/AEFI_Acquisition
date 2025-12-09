@@ -1,0 +1,60 @@
+@startuml
+title Sequence Diagram: test_continuous_acquisition_presenter_flow
+autonumber
+skinparam responseMessageBelowArrow true
+"Test" -> "ContinuousAcquisitionPresenter" : **CREATE** Setup presenter, service, executor, event bus and mock acquisition port
+"Test" -> "ContinuousAcquisitionPresenter" : **CALL** start_acquisition
+note right
+Data: {
+  "sample_rate_hz": 20.0,
+  "max_duration_s": 0.1
+}
+end note
+"Test" -> "QtEventLoop" : **WAIT** Process events during continuous acquisition
+"View" -> "Presenter" : **SIGNAL** acquisition_started
+note right
+Data: {
+  "acquisition_id": "80678590-66ae-4d65-92fe-ab264fd162a7"
+}
+end note
+"View" -> "Presenter" : **SIGNAL** sample_acquired
+note right
+Data: {
+  "acquisition_id": "80678590-66ae-4d65-92fe-ab264fd162a7",
+  "index": 0,
+  "vx": 0.1,
+  "timestamp": "2025-12-09T05:20:26.401254"
+}
+end note
+"View" -> "Presenter" : **SIGNAL** sample_acquired
+note right
+Data: {
+  "acquisition_id": "80678590-66ae-4d65-92fe-ab264fd162a7",
+  "index": 1,
+  "vx": 0.2,
+  "timestamp": "2025-12-09T05:20:26.457389"
+}
+end note
+"Test" -> "ContinuousAcquisitionPresenter" : **CALL** stop_acquisition
+"View" -> "Presenter" : **SIGNAL** acquisition_stopped
+note right
+Data: {
+  "acquisition_id": "80678590-66ae-4d65-92fe-ab264fd162a7"
+}
+end note
+"Test" -> "ContinuousAcquisitionPresenter" : **ASSERT** Verify at least one sample acquired via presenter
+note right
+Expect: >=1
+Got: 2
+end note
+"Test" -> "ContinuousAcquisitionPresenter" : **ASSERT** Verify acquisition_started signal emitted
+note right
+Expect: >=1
+Got: 1
+end note
+"Test" -> "ContinuousAcquisitionPresenter" : **ASSERT** Verify acquisition_stopped signal emitted
+note right
+Expect: >=1
+Got: 1
+end note
+@enduml
