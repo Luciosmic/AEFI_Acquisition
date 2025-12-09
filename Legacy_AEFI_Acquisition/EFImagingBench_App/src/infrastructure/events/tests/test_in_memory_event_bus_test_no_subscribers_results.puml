@@ -1,0 +1,17 @@
+@startuml
+title Sequence Diagram: test_no_subscribers
+autonumber
+skinparam responseMessageBelowArrow true
+"Test" -> "InMemoryEventBus" : **CREATE** Initialize fresh bus
+"Test" -> "InMemoryEventBus" : **PUBLISH** Publish to no subscribers
+note right
+Data: {
+  "event": "nonexistent_event"
+}
+end note
+"Test" -> "InMemoryEventBus" : **ASSERT** Verify no crash
+note right
+Expect: Success
+Got: Success
+end note
+@enduml
