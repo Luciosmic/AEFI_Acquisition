@@ -1,0 +1,227 @@
+{
+  "test_name": "test_full_scan_execution",
+  "timestamp": "2025-12-09T03:56:38.673770",
+  "status": "PASSED",
+  "interactions": [
+    {
+      "timestamp": "2025-12-09T03:56:38.673775",
+      "actor": "Test",
+      "action": "CREATE",
+      "target": "ScanApplicationService",
+      "message": "Setup service and ports",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T03:56:38.673824",
+      "actor": "Test",
+      "action": "SUBSCRIBE",
+      "target": "EventBus",
+      "message": "Subscribe to scan events",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T03:56:38.673845",
+      "actor": "Test",
+      "action": "START",
+      "target": "ScanApplicationService",
+      "message": "Start full scan execution test",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T03:56:38.673855",
+      "actor": "Test",
+      "action": "CREATE",
+      "target": "Scan2DConfigDTO",
+      "message": "Create scan config",
+      "data": {
+        "pattern": "RASTER"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T03:56:38.673867",
+      "actor": "Test",
+      "action": "COMMAND",
+      "target": "ScanApplicationService",
+      "message": "Execute scan",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T03:56:38.673933",
+      "actor": "EventBus",
+      "action": "RECEIVE",
+      "target": "Test",
+      "message": "Received ScanStarted",
+      "data": {
+        "event": "ScanStarted",
+        "scan_id": "4369312a-a915-47c1-b170-7968ec8028b0",
+        "pattern": "RASTER"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T03:56:38.674005",
+      "actor": "EventBus",
+      "action": "RECEIVE",
+      "target": "Test",
+      "message": "Received ScanPointAcquired",
+      "data": {
+        "event": "ScanPointAcquired",
+        "point_index": 0,
+        "position": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "measurement": {
+          "x_in_phase": 0.1,
+          "x_quad": 0.0
+        }
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T03:56:38.674050",
+      "actor": "EventBus",
+      "action": "RECEIVE",
+      "target": "Test",
+      "message": "Received ScanPointAcquired",
+      "data": {
+        "event": "ScanPointAcquired",
+        "point_index": 1,
+        "position": {
+          "x": 1.0,
+          "y": 0.0
+        },
+        "measurement": {
+          "x_in_phase": 0.2,
+          "x_quad": 0.0
+        }
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T03:56:38.674089",
+      "actor": "EventBus",
+      "action": "RECEIVE",
+      "target": "Test",
+      "message": "Received ScanPointAcquired",
+      "data": {
+        "event": "ScanPointAcquired",
+        "point_index": 2,
+        "position": {
+          "x": 0.0,
+          "y": 1.0
+        },
+        "measurement": {
+          "x_in_phase": 0.30000000000000004,
+          "x_quad": 0.0
+        }
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T03:56:38.674128",
+      "actor": "EventBus",
+      "action": "RECEIVE",
+      "target": "Test",
+      "message": "Received ScanPointAcquired",
+      "data": {
+        "event": "ScanPointAcquired",
+        "point_index": 3,
+        "position": {
+          "x": 1.0,
+          "y": 1.0
+        },
+        "measurement": {
+          "x_in_phase": 0.4,
+          "x_quad": 0.0
+        }
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T03:56:38.674143",
+      "actor": "EventBus",
+      "action": "RECEIVE",
+      "target": "Test",
+      "message": "Received ScanCompleted",
+      "data": {
+        "event": "ScanCompleted",
+        "scan_id": "4369312a-a915-47c1-b170-7968ec8028b0",
+        "total_points": 4
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T03:56:38.674158",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "ScanApplicationService",
+      "message": "Verify execution success",
+      "data": null,
+      "expect": "True",
+      "got": "True"
+    },
+    {
+      "timestamp": "2025-12-09T03:56:38.674169",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "EventBus",
+      "message": "Verify ScanStarted event",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T03:56:38.674175",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "EventBus",
+      "message": "Verify ScanCompleted event",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T03:56:38.674181",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "EventBus",
+      "message": "Verify points acquired",
+      "data": null,
+      "expect": "4",
+      "got": "4"
+    },
+    {
+      "timestamp": "2025-12-09T03:56:38.674193",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "MotionPort",
+      "message": "Verify move history",
+      "data": null,
+      "expect": "4",
+      "got": "4"
+    }
+  ],
+  "summary": {
+    "total_interactions": 16,
+    "subscriptions": 1,
+    "publications": 0,
+    "assertions": 5
+  }
+}

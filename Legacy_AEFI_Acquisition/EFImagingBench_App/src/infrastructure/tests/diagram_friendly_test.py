@@ -74,7 +74,11 @@ class DiagramFriendlyTest(unittest.TestCase):
         except Exception:
             filename_stem = "unknown_test"
             
-        result_file = module_path / f"{filename_stem}_{test_name}_results.json"
+        # Clean up filename to avoid double "test"
+        clean_stem = filename_stem.replace("test_", "").replace("_test", "")
+        clean_method = test_name.replace("test_", "")
+        
+        result_file = module_path / f"{clean_stem}_{clean_method}_results.json"
         
         status = "PASSED"
         # Check if test failed using _outcome (Python 3.4+)

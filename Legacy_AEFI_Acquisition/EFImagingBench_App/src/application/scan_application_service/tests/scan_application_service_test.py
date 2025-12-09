@@ -1,49 +1,25 @@
 import unittest
 from typing import List
-import datetime
-import sys
-from pathlib import Path
 from application.scan_application_service.scan_application_service import ScanApplicationService
 from application.dtos.scan_dtos import Scan2DConfigDTO
 from infrastructure.tests.mock_ports import MockMotionPort, MockAcquisitionPort
 from domain.events.domain_event import DomainEvent
 from domain.events.scan_events import ScanStarted, ScanPointAcquired, ScanCompleted
-from application.event_bus import EventBus
+from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.tests.diagram_friendly_test import DiagramFriendlyTest
 
-class TestScanApplicationService(unittest.TestCase):
+class TestScanApplicationService(DiagramFriendlyTest):
     def setUp(self):
-        # Setup log file for this test
-        test_name = self._testMethodName
-        test_file_path = Path(__file__)
-        log_file_path = test_file_path.parent / f"{test_file_path.stem}_log.txt"
+        super().setUp()
+        self.log_interaction("Test", "CREATE", "ScanApplicationService", "Setup service and ports")
         
-        self.log_file = open(log_file_path, 'a', encoding='utf-8')
-        self._original_stdout = sys.stdout
-        
-        # Tee output to both console and file
-        class TeeOutput:
-            def __init__(self, *files):
-                self.files = files
-            def write(self, obj):
-                for f in self.files:
-                    f.write(obj)
-                    f.flush()
-            def flush(self):
-                for f in self.files:
-                    f.flush()
-        
-        sys.stdout = TeeOutput(sys.stdout, self.log_file)
-        
-        ts = datetime.datetime.now().isoformat()
-        print(f"\n{'='*80}")
-        print(f"[{ts}] [TestScanApplicationService] SETUP | init service and ports")
         self.motion_port = MockMotionPort()
         self.acquisition_port = MockAcquisitionPort()
-        self.event_bus = EventBus()
+        self.event_bus = InMemoryEventBus()
         self.events: List[DomainEvent] = []
         
         # Subscribe to relevant events via EventBus
-        print(f"[{ts}] [TestScanApplicationService] SUBSCRIBE -> [EventBus] : on 'scanstarted', 'scanpointacquired', 'scancompleted' | expect registered")
+        self.log_interaction("Test", "SUBSCRIBE", "EventBus", "Subscribe to scan events")
         self.event_bus.subscribe('scanstarted', self.on_event)
         self.event_bus.subscribe('scanpointacquired', self.on_event)
         self.event_bus.subscribe('scancompleted', self.on_event)
@@ -53,25 +29,36 @@ class TestScanApplicationService(unittest.TestCase):
             self.acquisition_port,
             self.event_bus
         )
-        self.events: List[DomainEvent] = []
-    
-    def tearDown(self):
-        """Restore stdout and close log file."""
-        sys.stdout = self._original_stdout
-        if hasattr(self, 'log_file'):
-            self.log_file.close()
         
     def on_event(self, event: DomainEvent):
-        ts = datetime.datetime.now().isoformat()
+        event_name = type(event).__name__
+        data = {"event": event_name}
+        
+        if isinstance(event, ScanStarted):
+            data["scan_id"] = str(event.scan_id)
+            # Add config details if needed, e.g. pattern
+            data["pattern"] = event.config.scan_pattern.name
+            
+        elif isinstance(event, ScanPointAcquired):
+            data["point_index"] = event.point_index
+            data["position"] = {"x": event.position.x, "y": event.position.y}
+            # Flatten measurement for better readability in diagram
+            data["measurement"] = {
+                "x_in_phase": event.measurement.voltage_x_in_phase,
+                "x_quad": event.measurement.voltage_x_quadrature
+            }
+            
+        elif isinstance(event, ScanCompleted):
+            data["scan_id"] = str(event.scan_id)
+            data["total_points"] = event.total_points
+
+        self.log_interaction("EventBus", "RECEIVE", "Test", f"Received {event_name}", data)
         self.events.append(event)
-        print(f"[{ts}] [TestScanApplicationService] RECEIVE from [EventBus] : event={type(event).__name__}")
         
     def test_full_scan_execution(self):
-        ts = lambda: datetime.datetime.now().isoformat()
-        print(f"\n[{ts()}] [TestScanApplicationService] START test_full_scan_execution | Full scan 2x2 RASTER")
+        self.log_interaction("Test", "START", "ScanApplicationService", "Start full scan execution test")
         
         # Config
-        print(f"[{ts()}] [TestScanApplicationService] CREATE -> [Scan2DConfigDTO] | pattern=RASTER grid=2x2")
         scan_dto = Scan2DConfigDTO(
             x_min=0, x_max=1, x_nb_points=2,
             y_min=0, y_max=1, y_nb_points=2,
@@ -80,34 +67,68 @@ class TestScanApplicationService(unittest.TestCase):
             averaging_per_position=1,
             uncertainty_volts=1e-6
         )
+        self.log_interaction("Test", "CREATE", "Scan2DConfigDTO", "Create scan config", {"pattern": scan_dto.scan_pattern})
         
         # Execute
-        print(f"[{ts()}] [TestScanApplicationService] CALL -> [ScanApplicationService] : execute_scan | data={scan_dto.scan_pattern} | expect success=True")
+        self.log_interaction("Test", "COMMAND", "ScanApplicationService", "Execute scan")
         success = self.service.execute_scan(scan_dto)
         
         # Verify Success
-        print(f"[{ts()}] [TestScanApplicationService] ASSERT success | expect=True | got={success}")
+        self.log_interaction("Test", "ASSERT", "ScanApplicationService", "Verify execution success", expect=True, got=success)
         self.assertTrue(success)
         
         # Verify Events
-        has_started = any(isinstance(e, ScanStarted) for e in self.events)
-        has_completed = any(isinstance(e, ScanCompleted) for e in self.events)
-        print(f"[{ts()}] [TestScanApplicationService] ASSERT events | expect=ScanStarted | got={has_started}")
-        print(f"[{ts()}] [TestScanApplicationService] ASSERT events | expect=ScanCompleted | got={has_completed}")
-        self.assertTrue(has_started)
-        self.assertTrue(has_completed)
+        self.log_interaction("Test", "ASSERT", "EventBus", "Verify ScanStarted event")
+        self.assertTrue(any(isinstance(e, ScanStarted) for e in self.events))
+        
+        self.log_interaction("Test", "ASSERT", "EventBus", "Verify ScanCompleted event")
+        self.assertTrue(any(isinstance(e, ScanCompleted) for e in self.events))
         
         points_acquired = [e for e in self.events if isinstance(e, ScanPointAcquired)]
-        expected_points = 4
-        print(f"[{ts()}] [TestScanApplicationService] ASSERT points_acquired | expect={expected_points} | got={len(points_acquired)}")
-        self.assertEqual(len(points_acquired), expected_points)
+        self.log_interaction("Test", "ASSERT", "EventBus", "Verify points acquired", expect=4, got=len(points_acquired))
+        self.assertEqual(len(points_acquired), 4) # 2x2 grid
         
         # Verify Ports
-        expected_moves = 4
-        print(f"[{ts()}] [TestScanApplicationService] ASSERT motion_history | expect={expected_moves} moves | got={len(self.motion_port.move_history)}")
-        self.assertEqual(len(self.motion_port.move_history), expected_moves)
+        self.log_interaction("Test", "ASSERT", "MotionPort", "Verify move history", expect=4, got=len(self.motion_port.move_history))
+        self.assertEqual(len(self.motion_port.move_history), 4)
+
+    def test_subscriptions(self):
+        """Test the new subscription methods."""
+        self.log_interaction("Test", "START", "ScanApplicationService", "Start subscription test")
         
-        print(f"[{ts()}] [TestScanApplicationService] PASSED test_full_scan_execution ✓ | Summary: {expected_points} points, {expected_moves} moves")
+        received_updates = []
+        received_completion = []
+        
+        def on_update(event):
+            received_updates.append(event)
+            
+        def on_completion(event):
+            received_completion.append(event)
+            
+        # Subscribe
+        self.log_interaction("Test", "CALL", "ScanApplicationService", "Subscribe to updates")
+        self.service.subscribe_to_scan_updates(on_update)
+        
+        self.log_interaction("Test", "CALL", "ScanApplicationService", "Subscribe to completion")
+        self.service.subscribe_to_scan_completion(on_completion)
+        
+        # Execute Scan
+        scan_dto = Scan2DConfigDTO(
+            x_min=0, x_max=1, x_nb_points=2,
+            y_min=0, y_max=1, y_nb_points=2,
+            scan_pattern="RASTER",
+            stabilization_delay_ms=0,
+            averaging_per_position=1,
+            uncertainty_volts=1e-6
+        )
+        self.service.execute_scan(scan_dto)
+        
+        # Verify
+        self.log_interaction("Test", "ASSERT", "ScanApplicationService", "Verify updates received", expect=4, got=len(received_updates))
+        self.assertEqual(len(received_updates), 4)
+        
+        self.log_interaction("Test", "ASSERT", "ScanApplicationService", "Verify completion received", expect=1, got=len(received_completion))
+        self.assertEqual(len(received_completion), 1)
 
 if __name__ == '__main__':
     unittest.main()
