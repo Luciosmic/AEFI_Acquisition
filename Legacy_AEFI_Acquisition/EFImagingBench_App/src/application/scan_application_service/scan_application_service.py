@@ -31,6 +31,7 @@ from domain.value_objects.acquisition.voltage_measurement import VoltageMeasurem
 from application.ports.i_motion_port import IMotionPort
 from application.ports.i_acquisition_port import IAcquisitionPort
 from application.ports.i_export_port import IExportPort
+from application.ports.i_scan_executor import IScanExecutor
 
 logger = logging.getLogger(__name__)
 
@@ -56,11 +57,13 @@ class ScanApplicationService:
         self,
         motion_port: IMotionPort,
         acquisition_port: IAcquisitionPort,
-        event_bus: IDomainEventBus
+        event_bus: IDomainEventBus,
+        scan_executor: IScanExecutor,
     ):
         self._motion_port = motion_port
         self._acquisition_port = acquisition_port
         self._event_bus = event_bus
+        self._scan_executor = scan_executor
         self._current_scan: Optional[StepScan] = None
         self._status = ScanStatus.PENDING
         self._paused = False
@@ -101,59 +104,15 @@ class ScanApplicationService:
             total_points = len(trajectory)
             print(f"[ScanApplicationService] Trajectory generated with {total_points} points.")
             
-            # 4. Execution Loop
-            for i, position in enumerate(trajectory):
-                print(f"[ScanApplicationService] Processing point {i+1}/{total_points} at {position}...")
-                # Check Cancellation
-                if self._cancelled:
-                    print(f"[ScanApplicationService] Scan cancelled by user.")
-                    scan.cancel()
-                    self._status = ScanStatus.CANCELLED
-                    self._publish_events(scan.domain_events)
-                    break
-                    
-                # Check Pause
-                while self._paused:
-                    print(f"[ScanApplicationService] Scan paused...")
-                    time.sleep(0.1)
-                    if self._cancelled: 
-                        break
-                
-                # A. Move (Infrastructure)
-                self._motion_port.move_to(position)
-                
-                # B. Stabilize
-                if config.stabilization_delay_ms > 0:
-                    time.sleep(config.stabilization_delay_ms / 1000.0)
-                
-                # C. Acquire (Infrastructure)
-                measurements = []
-                for _ in range(config.averaging_per_position):
-                    measurements.append(self._acquisition_port.acquire_sample())
-                
-                # D. Average (Domain Service)
-                averaged_measurement = MeasurementStatisticsService.calculate_statistics(measurements)
-                
-                # Create Value Object
-                point_result = ScanPointResult(
-                    position=position,
-                    measurement=averaged_measurement,
-                    point_index=i
-                )
-                
-                # E. Add to Aggregate (Domain Logic)
-                scan.add_point_result(point_result)
-                
-                # F. Dispatch Events (Application Logic)
-                self._publish_events(scan.domain_events)
+            # 4. Delegate execution to ScanExecutor (Infrastructure)
+            print(f"[ScanApplicationService] Delegating execution to ScanExecutor...")
+            success = self._scan_executor.execute(scan, trajectory, config)
+            if not success:
+                raise RuntimeError("Scan execution failed in ScanExecutor")
             
-            # Finalize
-            if self._status != ScanStatus.CANCELLED:
-                if scan.status != ScanStatus.COMPLETED:
-                     scan.complete()
-                self._status = ScanStatus.COMPLETED
-                print(f"[ScanApplicationService] Scan completed successfully.")
-                self._publish_events(scan.domain_events)
+            # Status will be COMPLETED if executor reached the end
+            self._status = ScanStatus.COMPLETED
+            print(f"[ScanApplicationService] Scan completed successfully.")
             
             return True
             

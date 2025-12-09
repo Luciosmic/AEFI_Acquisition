@@ -1,10 +1,10 @@
 {
   "test_name": "test_full_scan_execution",
-  "timestamp": "2025-12-09T03:56:38.673770",
+  "timestamp": "2025-12-09T04:46:59.669202",
   "status": "PASSED",
   "interactions": [
     {
-      "timestamp": "2025-12-09T03:56:38.673775",
+      "timestamp": "2025-12-09T04:46:59.669461",
       "actor": "Test",
       "action": "CREATE",
       "target": "ScanApplicationService",
@@ -14,7 +14,7 @@
       "got": null
     },
     {
-      "timestamp": "2025-12-09T03:56:38.673824",
+      "timestamp": "2025-12-09T04:46:59.669690",
       "actor": "Test",
       "action": "SUBSCRIBE",
       "target": "EventBus",
@@ -24,7 +24,7 @@
       "got": null
     },
     {
-      "timestamp": "2025-12-09T03:56:38.673845",
+      "timestamp": "2025-12-09T04:46:59.669911",
       "actor": "Test",
       "action": "START",
       "target": "ScanApplicationService",
@@ -34,7 +34,7 @@
       "got": null
     },
     {
-      "timestamp": "2025-12-09T03:56:38.673855",
+      "timestamp": "2025-12-09T04:46:59.670105",
       "actor": "Test",
       "action": "CREATE",
       "target": "Scan2DConfigDTO",
@@ -46,7 +46,7 @@
       "got": null
     },
     {
-      "timestamp": "2025-12-09T03:56:38.673867",
+      "timestamp": "2025-12-09T04:46:59.670300",
       "actor": "Test",
       "action": "COMMAND",
       "target": "ScanApplicationService",
@@ -56,21 +56,21 @@
       "got": null
     },
     {
-      "timestamp": "2025-12-09T03:56:38.673933",
+      "timestamp": "2025-12-09T04:46:59.670968",
       "actor": "EventBus",
       "action": "RECEIVE",
       "target": "Test",
       "message": "Received ScanStarted",
       "data": {
         "event": "ScanStarted",
-        "scan_id": "4369312a-a915-47c1-b170-7968ec8028b0",
+        "scan_id": "46cec8bb-b79f-4404-ba93-4b088381d7bc",
         "pattern": "RASTER"
       },
       "expect": null,
       "got": null
     },
     {
-      "timestamp": "2025-12-09T03:56:38.674005",
+      "timestamp": "2025-12-09T04:46:59.671649",
       "actor": "EventBus",
       "action": "RECEIVE",
       "target": "Test",
@@ -91,7 +91,7 @@
       "got": null
     },
     {
-      "timestamp": "2025-12-09T03:56:38.674050",
+      "timestamp": "2025-12-09T04:46:59.672413",
       "actor": "EventBus",
       "action": "RECEIVE",
       "target": "Test",
@@ -112,7 +112,7 @@
       "got": null
     },
     {
-      "timestamp": "2025-12-09T03:56:38.674089",
+      "timestamp": "2025-12-09T04:46:59.673091",
       "actor": "EventBus",
       "action": "RECEIVE",
       "target": "Test",
@@ -133,7 +133,7 @@
       "got": null
     },
     {
-      "timestamp": "2025-12-09T03:56:38.674128",
+      "timestamp": "2025-12-09T04:46:59.674124",
       "actor": "EventBus",
       "action": "RECEIVE",
       "target": "Test",
@@ -154,21 +154,21 @@
       "got": null
     },
     {
-      "timestamp": "2025-12-09T03:56:38.674143",
+      "timestamp": "2025-12-09T04:46:59.674329",
       "actor": "EventBus",
       "action": "RECEIVE",
       "target": "Test",
       "message": "Received ScanCompleted",
       "data": {
         "event": "ScanCompleted",
-        "scan_id": "4369312a-a915-47c1-b170-7968ec8028b0",
+        "scan_id": "46cec8bb-b79f-4404-ba93-4b088381d7bc",
         "total_points": 4
       },
       "expect": null,
       "got": null
     },
     {
-      "timestamp": "2025-12-09T03:56:38.674158",
+      "timestamp": "2025-12-09T04:46:59.674530",
       "actor": "Test",
       "action": "ASSERT",
       "target": "ScanApplicationService",
@@ -178,7 +178,7 @@
       "got": "True"
     },
     {
-      "timestamp": "2025-12-09T03:56:38.674169",
+      "timestamp": "2025-12-09T04:46:59.674729",
       "actor": "Test",
       "action": "ASSERT",
       "target": "EventBus",
@@ -188,7 +188,7 @@
       "got": null
     },
     {
-      "timestamp": "2025-12-09T03:56:38.674175",
+      "timestamp": "2025-12-09T04:46:59.674927",
       "actor": "Test",
       "action": "ASSERT",
       "target": "EventBus",
@@ -198,7 +198,7 @@
       "got": null
     },
     {
-      "timestamp": "2025-12-09T03:56:38.674181",
+      "timestamp": "2025-12-09T04:46:59.675247",
       "actor": "Test",
       "action": "ASSERT",
       "target": "EventBus",
@@ -208,7 +208,7 @@
       "got": "4"
     },
     {
-      "timestamp": "2025-12-09T03:56:38.674193",
+      "timestamp": "2025-12-09T04:46:59.675460",
       "actor": "Test",
       "action": "ASSERT",
       "target": "MotionPort",

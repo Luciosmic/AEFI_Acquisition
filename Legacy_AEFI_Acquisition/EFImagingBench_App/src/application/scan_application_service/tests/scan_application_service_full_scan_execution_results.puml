@@ -16,7 +16,7 @@ end note
 note right
 Data: {
   "event": "ScanStarted",
-  "scan_id": "4369312a-a915-47c1-b170-7968ec8028b0",
+  "scan_id": "46cec8bb-b79f-4404-ba93-4b088381d7bc",
   "pattern": "RASTER"
 }
 end note
@@ -84,7 +84,7 @@ end note
 note right
 Data: {
   "event": "ScanCompleted",
-  "scan_id": "4369312a-a915-47c1-b170-7968ec8028b0",
+  "scan_id": "46cec8bb-b79f-4404-ba93-4b088381d7bc",
   "total_points": 4
 }
 end note

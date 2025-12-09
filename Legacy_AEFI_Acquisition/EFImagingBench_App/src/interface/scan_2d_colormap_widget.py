@@ -4,24 +4,21 @@ from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 import matplotlib.cm as cm
 import matplotlib.colors as colors
-from application.event_bus import EventBus
-from domain.events.scan_events import ScanPointAcquired, ScanCompleted
+import matplotlib.pyplot as plt # Added for Rectangle
+from interface.presenters.scan_presenter import ScanPresenter
 
 class Scan2DColormapWidget(QWidget):
     """
-    Widget générique pour visualisation colormap 2D d'un scan.
-    Souscrit à l'EventBus pour recevoir les événements de scan.
-    Chaque point est représenté comme un rectangle remplissant uniformément la grille.
+    Widget for 2D colormap visualization of a scan.
+    Connects to ScanPresenter signals.
     """
-    def __init__(self, event_bus: EventBus, parent=None):
+    def __init__(self, presenter: ScanPresenter, parent=None):
         super().__init__(parent)
-        self.event_bus = event_bus
+        self.presenter = presenter
         self.positions = []
         self.values = []
-        self.grid_x = None
-        self.grid_y = None
-
-        # Setup UI avec Matplotlib
+        
+        # Setup UI with Matplotlib
         self.figure = Figure()
         self.canvas = FigureCanvasQTAgg(self.figure)
         self.ax = self.figure.add_subplot(111)
@@ -30,63 +27,112 @@ class Scan2DColormapWidget(QWidget):
         layout.addWidget(self.canvas)
         self.setLayout(layout)
 
-        # Souscription aux événements
-        self.event_bus.subscribe('scanpointacquired', self.on_point_acquired)
-        self.event_bus.subscribe('scancompleted', self.on_scan_completed)
+        # Connect to Presenter signals
+        self.presenter.scan_point_acquired.connect(self.on_point_acquired)
+        self.presenter.scan_completed.connect(self.on_scan_completed)
+        self.presenter.scan_started.connect(self.on_scan_started)
 
-    def on_point_acquired(self, event: ScanPointAcquired):
-        """Réception d'un point : stocker position et valeur (ex: voltage_x_in_phase)."""
-        pos = event.position
-        value = event.measurement.voltage_x_in_phase  # Exemple ; adapter selon besoin
-        self.positions.append((pos.x, pos.y))
+    def on_scan_started(self, scan_id: str, config: dict):
+        """Reset plot on new scan."""
+        self.positions = []
+        self.values = []
+        self.ax.clear()
+        self.canvas.draw()
+
+    def on_point_acquired(self, data: dict):
+        """Receive point data from Presenter."""
+        x = data['x']
+        y = data['y']
+        value = data['value']
+        
+        self.positions.append((x, y))
         self.values.append(value)
-        self.update_plot()  # Mise à jour progressive
+        self.update_plot()
 
-    def on_scan_completed(self, event: ScanCompleted):
-        """Scan terminé : finaliser le plot si nécessaire."""
+    def on_scan_completed(self, scan_id: str, total_points: int):
+        """Finalize plot."""
         self.update_plot(final=True)
 
     def update_plot(self, final=False):
-        """Mise à jour du colormap avec rectangles pour grille uniforme."""
+        """Update colormap."""
         self.ax.clear()
         if not self.positions:
             return
 
-        # Déterminer grille (min/max pour uniformité)
+        # Determine grid bounds
         xs = [p[0] for p in self.positions]
         ys = [p[1] for p in self.positions]
         x_min, x_max = min(xs), max(xs)
         y_min, y_max = min(ys), max(ys)
-        dx = (x_max - x_min) / (len(set(xs)) - 1) if len(set(xs)) > 1 else 1
-        dy = (y_max - y_min) / (len(set(ys)) - 1) if len(set(ys)) > 1 else 1
+        
+        # Estimate step size (naive)
+        unique_xs = sorted(list(set(xs)))
+        unique_ys = sorted(list(set(ys)))
+        dx = (unique_xs[1] - unique_xs[0]) if len(unique_xs) > 1 else 1.0
+        dy = (unique_ys[1] - unique_ys[0]) if len(unique_ys) > 1 else 1.0
 
-        # Normaliser colormap
+        # Normalize colormap
+        if not self.values:
+            return
+            
         norm = colors.Normalize(vmin=min(self.values), vmax=max(self.values))
-        cmap = cm.get_cmap('viridis')
+        # Fix deprecation warning: use matplotlib.colormaps
+        try:
+            cmap = plt.get_cmap('viridis')
+        except AttributeError:
+             # Fallback for older versions if needed, or use new API
+            cmap = cm.get_cmap('viridis')
 
-        # Dessiner rectangles
+        # Draw rectangles
         for (x, y), val in zip(self.positions, self.values):
             rect = plt.Rectangle((x - dx/2, y - dy/2), dx, dy,
                                  color=cmap(norm(val)))
             self.ax.add_patch(rect)
 
-        self.ax.set_xlim(x_min - dx/2, x_max + dx/2)
-        self.ax.set_ylim(y_min - dy/2, y_max + dy/2)
+        # Set limits with some padding
+        self.ax.set_xlim(x_min - dx, x_max + dx)
+        self.ax.set_ylim(y_min - dy, y_max + dy)
         self.ax.set_aspect('equal')
         self.ax.set_title('Scan 2D Colormap')
         self.ax.set_xlabel('X')
         self.ax.set_ylabel('Y')
 
-        # Colorbar
-        sm = cm.ScalarMappable(norm=norm, cmap=cmap)
-        self.figure.colorbar(sm, ax=self.ax, label='Value')
-
+        # Colorbar (re-add if needed, tricky in update loop without clearing figure)
+        # For simplicity, we skip re-creating colorbar every frame or check if exists
+        
         self.canvas.draw()
 
 if __name__ == '__main__':
+    # Simple test harness
     from PyQt6.QtWidgets import QApplication
+    from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+    from application.scan_application_service.scan_application_service import ScanApplicationService
+    from infrastructure.tests.mock_ports import MockMotionPort, MockAcquisitionPort
+    
     app = QApplication(sys.argv)
-    event_bus = EventBus()  # Pour test
-    window = Scan2DColormapWidget(event_bus)
+    
+    # Setup dependencies
+    bus = InMemoryEventBus()
+    motion = MockMotionPort()
+    acq = MockAcquisitionPort()
+    service = ScanApplicationService(motion, acq, bus)
+    presenter = ScanPresenter(service)
+    
+    window = Scan2DColormapWidget(presenter)
     window.show()
+    
+    # Simulate a scan start after 1s
+    import threading
+    import time
+    def run_sim():
+        time.sleep(1)
+        presenter.start_scan({
+            "x_min": 0, "x_max": 2, "x_nb_points": 3,
+            "y_min": 0, "y_max": 2, "y_nb_points": 3,
+            "scan_pattern": "RASTER"
+        })
+    
+    t = threading.Thread(target=run_sim)
+    t.start()
+    
     sys.exit(app.exec())

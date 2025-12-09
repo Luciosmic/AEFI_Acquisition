@@ -2,7 +2,7 @@
 title Sequence Diagram: test_scan_export_flow
 autonumber
 skinparam responseMessageBelowArrow true
-"Test" -> "HDF5Repository" : **CREATE** Init at tests/test_data
+"Test" -> "HDF5Repository" : **CREATE** Init at tests/scan_export_with_event_bus_integration_tests
 note right
 Data: {
   "path": "/Users/luis/Library/CloudStorage/Dropbox/Luis/1 PROJETS/1 - THESE/Ressources/ExperimentalData_ASSOCE/AEFI_Acquisition/Legacy_AEFI_Acquisition/EFImagingBench_App/src/application/scan_appli...
@@ -33,7 +33,7 @@ end note
 "Test" -> "HDF5Repository" : **QUERY** Load data from file
 note right
 Data: {
-  "scan_id": "c0191f62-2fde-478c-8046-4a1ef04aceff"
+  "scan_id": "4150a302-a3f0-4138-b7f1-50e3190d4a3d"
 }
 end note
 "Test" -> "HDF5Repository" : **ASSERT** Check sample count

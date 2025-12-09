@@ -6,6 +6,7 @@ from infrastructure.tests.mock_ports import MockMotionPort, MockAcquisitionPort
 from domain.events.domain_event import DomainEvent
 from domain.events.scan_events import ScanStarted, ScanPointAcquired, ScanCompleted
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.execution.step_scan_executor import StepScanExecutor
 from infrastructure.tests.diagram_friendly_test import DiagramFriendlyTest
 
 class TestScanApplicationService(DiagramFriendlyTest):
@@ -24,10 +25,18 @@ class TestScanApplicationService(DiagramFriendlyTest):
         self.event_bus.subscribe('scanpointacquired', self.on_event)
         self.event_bus.subscribe('scancompleted', self.on_event)
         
+        # Use real StepScanExecutor with mock ports and in‑memory bus
+        self.scan_executor = StepScanExecutor(
+            motion_port=self.motion_port,
+            acquisition_port=self.acquisition_port,
+            event_bus=self.event_bus,
+        )
+        
         self.service = ScanApplicationService(
             self.motion_port,
             self.acquisition_port,
-            self.event_bus
+            self.event_bus,
+            self.scan_executor,
         )
         
     def on_event(self, event: DomainEvent):
