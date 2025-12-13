@@ -74,6 +74,8 @@ class ScanApplicationService:
         self._event_bus.subscribe("scanpointacquired", self._on_domain_event)
         self._event_bus.subscribe("scancompleted", self._on_domain_event)
         self._event_bus.subscribe("scanfailed", self._on_domain_event)
+        self._event_bus.subscribe("scanpaused", self._on_domain_event)
+        self._event_bus.subscribe("scanresumed", self._on_domain_event)
 
 
     def set_output_port(self, output_port: IScanOutputPort) -> None:
@@ -147,13 +149,22 @@ class ScanApplicationService:
             return False
 
     def pause_scan(self) -> None:
-        self._paused = True
+        """Request pause of the current scan."""
+        if self._current_scan:
+            self._paused = True
+            self._scan_executor.pause(self._current_scan)
         
     def resume_scan(self) -> None:
-        self._paused = False
+        """Request resume of the current scan."""
+        if self._current_scan:
+            self._paused = False
+            self._scan_executor.resume(self._current_scan)
         
     def cancel_scan(self) -> None:
+        """Request cancellation of the current scan."""
         self._cancelled = True
+        if self._current_scan:
+            self._scan_executor.cancel(self._current_scan)
 
     # ==================================================================================
     # QUERIES (Read-Only)

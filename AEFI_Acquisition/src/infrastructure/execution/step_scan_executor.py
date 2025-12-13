@@ -71,6 +71,20 @@ class StepScanExecutor(IScanExecutor):
         scan.cancel()
         self._publish_events(scan.domain_events)
 
+    def pause(self, scan: StepScan) -> None:
+        """
+        Mark scan as paused. Actual handling happens in _worker loop.
+        """
+        scan.pause()
+        self._publish_events(scan.domain_events)
+
+    def resume(self, scan: StepScan) -> None:
+        """
+        Mark scan as resumed. Actual handling happens in _worker loop.
+        """
+        scan.resume()
+        self._publish_events(scan.domain_events)
+
     # ------------------------------------------------------------------ #
     # Event Handlers
     # ------------------------------------------------------------------ #
@@ -121,6 +135,13 @@ class StepScanExecutor(IScanExecutor):
                 if scan.status == ScanStatus.CANCELLED:
                     return False
 
+                # Check for pause - block until resumed or cancelled
+                while scan.status == ScanStatus.PAUSED:
+                    time.sleep(0.1)  # Wait for resume
+                    # Check if cancelled during pause
+                    if scan.status == ScanStatus.CANCELLED:
+                        return False
+
                 # A. Move (Event-Based)
                 self._motion_error = None
                 self._motion_completed_event.clear()
@@ -140,6 +161,12 @@ class StepScanExecutor(IScanExecutor):
                         self._motion_port.stop(immediate=True)
                         return False
                     
+                    # Check pause during wait
+                    if scan.status == ScanStatus.PAUSED:
+                        # Motion is already started, we should wait for it to complete
+                        # but we can pause after motion completes
+                        pass
+                    
                     # Check timeout
                     if time.time() - start_wait > timeout:
                         raise RuntimeError(f"Motion timeout after {timeout}s")
@@ -150,10 +177,24 @@ class StepScanExecutor(IScanExecutor):
                 if self._motion_error:
                      raise RuntimeError(f"Motion failed: {self._motion_error}")
 
+                # Check for pause AFTER motion completes (safe point)
+                while scan.status == ScanStatus.PAUSED:
+                    time.sleep(0.1)
+                    if scan.status == ScanStatus.CANCELLED:
+                        return False
+
                 # B. Stabilize
                 if config.stabilization_delay_ms > 0:
                     # print(f"[StepScanExecutor] Stabilizing for {config.stabilization_delay_ms}ms...")
                     time.sleep(config.stabilization_delay_ms / 1000.0)
+                
+                # Check for pause/cancel after stabilization (safe point)
+                if scan.status == ScanStatus.CANCELLED:
+                    return False
+                while scan.status == ScanStatus.PAUSED:
+                    time.sleep(0.1)
+                    if scan.status == ScanStatus.CANCELLED:
+                        return False
 
                 # C. Acquire (Infrastructure)
                 measurements = []

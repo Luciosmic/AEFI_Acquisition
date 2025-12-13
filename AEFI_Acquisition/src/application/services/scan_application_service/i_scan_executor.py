@@ -57,4 +57,11 @@ class IScanExecutor(ABC):
     def cancel(self, scan: StepScan) -> None:
         """Request cancellation of an active scan (if supported by executor)."""
 
+    @abstractmethod
+    def pause(self, scan: StepScan) -> None:
+        """Request pause of an active scan."""
+
+    @abstractmethod
+    def resume(self, scan: StepScan) -> None:
+        """Request resume of a paused scan."""
 

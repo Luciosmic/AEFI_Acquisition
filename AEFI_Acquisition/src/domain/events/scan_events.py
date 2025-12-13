@@ -43,3 +43,15 @@ class ScanFailed(DomainEvent):
 class ScanCancelled(DomainEvent):
     """Event emitted when a scan is cancelled."""
     scan_id: UUID
+
+@dataclass(frozen=True)
+class ScanPaused(DomainEvent):
+    """Event emitted when a scan is paused."""
+    scan_id: UUID
+    current_point_index: int
+
+@dataclass(frozen=True)
+class ScanResumed(DomainEvent):
+    """Event emitted when a scan is resumed."""
+    scan_id: UUID
+    resume_from_point_index: int

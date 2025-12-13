@@ -13,7 +13,7 @@ from ..entities.spatial_scan import SpatialScan
 from ..value_objects.scan.scan_point_result import ScanPointResult
 from ..value_objects.scan.scan_status import ScanStatus
 from ..events.domain_event import DomainEvent
-from ..events.scan_events import ScanStarted, ScanPointAcquired, ScanCompleted, ScanFailed, ScanCancelled
+from ..events.scan_events import ScanStarted, ScanPointAcquired, ScanCompleted, ScanFailed, ScanCancelled, ScanPaused, ScanResumed
 
 @dataclass
 class StepScan(SpatialScan):
@@ -81,9 +81,28 @@ class StepScan(SpatialScan):
         self._domain_events.append(ScanCompleted(scan_id=self.id, total_points=len(self._points)))
         
     def fail(self, reason: str) -> None:
+        # Allow failing from RUNNING or PAUSED states
+        if self.status not in (ScanStatus.RUNNING, ScanStatus.PAUSED):
+            raise ValueError(f"Cannot fail scan in status {self.status}")
         super().fail(reason)
         self._domain_events.append(ScanFailed(scan_id=self.id, reason=reason))
         
     def cancel(self) -> None:
         super().cancel()
         self._domain_events.append(ScanCancelled(scan_id=self.id))
+        
+    def pause(self) -> None:
+        """Pause the scan execution."""
+        if self.status != ScanStatus.RUNNING:
+            raise ValueError(f"Cannot pause scan when status is {self.status}")
+        super().pause()
+        current_index = len(self._points)
+        self._domain_events.append(ScanPaused(scan_id=self.id, current_point_index=current_index))
+        
+    def resume(self) -> None:
+        """Resume the scan execution after pause."""
+        if self.status != ScanStatus.PAUSED:
+            raise ValueError(f"Cannot resume scan when status is {self.status}")
+        super().resume()
+        resume_index = len(self._points)
+        self._domain_events.append(ScanResumed(scan_id=self.id, resume_from_point_index=resume_index))

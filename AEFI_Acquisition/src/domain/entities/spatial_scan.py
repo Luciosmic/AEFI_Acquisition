@@ -54,7 +54,7 @@ class SpatialScan:
     
     def fail(self, reason: str) -> None:
         """Mark scan as failed."""
-        if self.status != ScanStatus.RUNNING:
+        if self.status not in (ScanStatus.RUNNING, ScanStatus.PAUSED):
             raise ValueError(f"Cannot fail scan in status {self.status}")
         self.status = ScanStatus.FAILED
         self.end_time = datetime.now()
@@ -65,6 +65,18 @@ class SpatialScan:
             raise ValueError(f"Cannot cancel scan in final status {self.status}")
         self.status = ScanStatus.CANCELLED
         self.end_time = datetime.now()
+    
+    def pause(self) -> None:
+        """Pause the scan."""
+        if self.status != ScanStatus.RUNNING:
+            raise ValueError(f"Cannot pause scan in status {self.status}")
+        self.status = ScanStatus.PAUSED
+    
+    def resume(self) -> None:
+        """Resume the scan after pause."""
+        if self.status != ScanStatus.PAUSED:
+            raise ValueError(f"Cannot resume scan in status {self.status}")
+        self.status = ScanStatus.RUNNING
     
     def add_result(self, result: Dict[str, Any]) -> None:
         """Add a measurement result."""

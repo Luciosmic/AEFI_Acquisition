@@ -3,11 +3,11 @@ Domain: Scan status enumeration.
 
 Responsibility:
     Define the lifecycle states of a scan.
-    Universal concept applicable to all scan types (spatial, frequency, etc.).
+    Universal concept applicable to all scan types (spatial, frequency, etc.)
 
 Rationale:
     Using an enum makes state transitions explicit and prevents invalid
-    states. The lifecycle is: PENDING → RUNNING → (COMPLETED | FAILED | CANCELLED)
+    states. The lifecycle is: PENDING -> RUNNING -> (COMPLETED | FAILED | CANCELLED)
 
 Design:
     - Enum for type safety
@@ -32,6 +32,8 @@ class ScanStatus(Enum):
         Scan is created but not yet started.
     RUNNING : str
         Scan execution is in progress.
+    PAUSED : str
+        Scan execution is temporarily paused, can be resumed.
     COMPLETED : str
         Scan finished successfully with results.
     FAILED : str
@@ -42,19 +44,23 @@ class ScanStatus(Enum):
     State Transitions
     -----------------
     Valid transitions:
-    - PENDING → RUNNING (scan starts)
-    - RUNNING → COMPLETED (scan succeeds)
-    - RUNNING → FAILED (scan fails)
-    - PENDING → CANCELLED (user cancels before start)
-    - RUNNING → CANCELLED (user cancels during execution)
+    - PENDING -> RUNNING (scan starts)
+    - RUNNING -> PAUSED (user pauses execution)
+    - PAUSED -> RUNNING (user resumes execution)
+    - RUNNING -> COMPLETED (scan succeeds)
+    - RUNNING -> FAILED (scan fails)
+    - PENDING -> CANCELLED (user cancels before start)
+    - RUNNING -> CANCELLED (user cancels during execution)
+    - PAUSED -> CANCELLED (user cancels while paused)
 
     Invalid transitions:
-    - COMPLETED → * (final state)
-    - FAILED → * (final state, except retry would create new scan)
+    - COMPLETED -> * (final state)
+    - FAILED -> * (final state, except retry would create new scan)
     """
 
     PENDING = "pending"
     RUNNING = "running"
+    PAUSED = "paused"
     COMPLETED = "completed"
     FAILED = "failed"
     CANCELLED = "cancelled"
@@ -75,6 +81,6 @@ class ScanStatus(Enum):
         Returns
         -------
         bool
-            True if status is PENDING or RUNNING.
+            True if status is PENDING, RUNNING, or PAUSED.
         """
-        return self in (ScanStatus.PENDING, ScanStatus.RUNNING)
+        return self in (ScanStatus.PENDING, ScanStatus.RUNNING, ScanStatus.PAUSED)
