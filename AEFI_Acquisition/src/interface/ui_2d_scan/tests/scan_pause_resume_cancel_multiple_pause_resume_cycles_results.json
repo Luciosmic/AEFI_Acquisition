@@ -1,0 +1,258 @@
+{
+  "test_name": "test_multiple_pause_resume_cycles",
+  "timestamp": "2025-12-13T21:07:03.933100",
+  "status": "PASSED",
+  "interactions": [
+    {
+      "timestamp": "2025-12-13T21:07:03.933131",
+      "actor": "Test",
+      "action": "CREATE",
+      "target": "ScanPresenter",
+      "message": "Initialize Presenter",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-13T21:07:03.933228",
+      "actor": "Test",
+      "action": "START",
+      "target": "ScanPresenter",
+      "message": "Start multiple pause/resume test",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-13T21:07:03.933236",
+      "actor": "UI",
+      "action": "CALL",
+      "target": "ScanPresenter",
+      "message": "start_scan",
+      "data": {
+        "x_min": 0,
+        "x_max": 1,
+        "x_nb_points": 10,
+        "y_min": 0,
+        "y_max": 1,
+        "y_nb_points": 1,
+        "scan_pattern": "RASTER",
+        "stabilization_delay_ms": 0,
+        "averaging_per_position": 1
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-13T21:07:03.933419",
+      "actor": "ScanPresenter",
+      "action": "EMIT",
+      "target": "UI",
+      "message": "Signal scan_started",
+      "data": {
+        "args": [
+          "8183cf03-d313-4477-ac81-1d8ab0ef454f",
+          "{'pattern': 'RASTER', 'points': 10, 'x_min': 0.0, 'x_max': 1.0, 'x_nb_points': 10, 'y_min': 0.0, 'y_max': 1.0, 'y_nb_points': 1}"
+        ]
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-13T21:07:03.989972",
+      "actor": "ScanPresenter",
+      "action": "EMIT",
+      "target": "UI",
+      "message": "Signal scan_point_acquired",
+      "data": {
+        "args": [
+          "{'x': 0.0, 'y': 0.0, 'value': {'x_in_phase': 0.0, 'x_quadrature': 0.0, 'y_in_phase': 0.0, 'y_quadrature': 0.0, 'z_in_phase': 0.0, 'z_quadrature': 0.0}, 'index': 0}"
+        ]
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-13T21:07:03.990018",
+      "actor": "ScanPresenter",
+      "action": "EMIT",
+      "target": "UI",
+      "message": "Signal scan_progress",
+      "data": {
+        "args": [
+          "0.0"
+        ]
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-13T21:07:04.040249",
+      "actor": "ScanPresenter",
+      "action": "EMIT",
+      "target": "UI",
+      "message": "Signal scan_point_acquired",
+      "data": {
+        "args": [
+          "{'x': 0.1111111111111111, 'y': 0.0, 'value': {'x_in_phase': 1.0, 'x_quadrature': 0.0, 'y_in_phase': 0.0, 'y_quadrature': 0.0, 'z_in_phase': 0.0, 'z_quadrature': 0.0}, 'index': 1}"
+        ]
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-13T21:07:04.040966",
+      "actor": "ScanPresenter",
+      "action": "EMIT",
+      "target": "UI",
+      "message": "Signal scan_progress",
+      "data": {
+        "args": [
+          "10.0"
+        ]
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-13T21:07:04.087829",
+      "actor": "UI",
+      "action": "CALL",
+      "target": "ScanPresenter",
+      "message": "pause_scan (cycle 1)",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-13T21:07:04.189175",
+      "actor": "UI",
+      "action": "CALL",
+      "target": "ScanPresenter",
+      "message": "resume_scan (cycle 1)",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-13T21:07:04.197908",
+      "actor": "ScanPresenter",
+      "action": "EMIT",
+      "target": "UI",
+      "message": "Signal scan_point_acquired",
+      "data": {
+        "args": [
+          "{'x': 0.2222222222222222, 'y': 0.0, 'value': {'x_in_phase': 2.0, 'x_quadrature': 0.0, 'y_in_phase': 0.0, 'y_quadrature': 0.0, 'z_in_phase': 0.0, 'z_quadrature': 0.0}, 'index': 2}"
+        ]
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-13T21:07:04.197942",
+      "actor": "ScanPresenter",
+      "action": "EMIT",
+      "target": "UI",
+      "message": "Signal scan_progress",
+      "data": {
+        "args": [
+          "20.0"
+        ]
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-13T21:07:04.249652",
+      "actor": "ScanPresenter",
+      "action": "EMIT",
+      "target": "UI",
+      "message": "Signal scan_point_acquired",
+      "data": {
+        "args": [
+          "{'x': 0.3333333333333333, 'y': 0.0, 'value': {'x_in_phase': 3.0, 'x_quadrature': 0.0, 'y_in_phase': 0.0, 'y_quadrature': 0.0, 'z_in_phase': 0.0, 'z_quadrature': 0.0}, 'index': 3}"
+        ]
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-13T21:07:04.249708",
+      "actor": "ScanPresenter",
+      "action": "EMIT",
+      "target": "UI",
+      "message": "Signal scan_progress",
+      "data": {
+        "args": [
+          "30.0"
+        ]
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-13T21:07:04.300358",
+      "actor": "ScanPresenter",
+      "action": "EMIT",
+      "target": "UI",
+      "message": "Signal scan_point_acquired",
+      "data": {
+        "args": [
+          "{'x': 0.4444444444444444, 'y': 0.0, 'value': {'x_in_phase': 4.0, 'x_quadrature': 0.0, 'y_in_phase': 0.0, 'y_quadrature': 0.0, 'z_in_phase': 0.0, 'z_quadrature': 0.0}, 'index': 4}"
+        ]
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-13T21:07:04.300397",
+      "actor": "ScanPresenter",
+      "action": "EMIT",
+      "target": "UI",
+      "message": "Signal scan_progress",
+      "data": {
+        "args": [
+          "40.0"
+        ]
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-13T21:07:04.344319",
+      "actor": "UI",
+      "action": "CALL",
+      "target": "ScanPresenter",
+      "message": "pause_scan (cycle 2)",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-13T21:07:04.448469",
+      "actor": "UI",
+      "action": "CALL",
+      "target": "ScanPresenter",
+      "message": "resume_scan (cycle 2)",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-13T21:07:04.448623",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "ScanPresenter",
+      "message": "Check all points acquired",
+      "data": null,
+      "expect": "10 points",
+      "got": "5 points"
+    }
+  ],
+  "summary": {
+    "total_interactions": 19,
+    "subscriptions": 0,
+    "publications": 0,
+    "assertions": 1
+  }
+}

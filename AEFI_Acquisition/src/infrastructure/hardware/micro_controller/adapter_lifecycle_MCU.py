@@ -61,19 +61,48 @@ class MCULifecycleAdapter(IHardwareInitializationPort):
             
     def _configure_adc(self, adc_config: dict) -> None:
         """Configure ADC registers."""
+        # 0. A_SYS_CFG register (Address 11) - Reference configuration
+        # Bit 7: VNCPEN (negative_ref), Bit 6: HRM (high_res), Bit 4: VREF_4V (ref_voltage), Bit 3: INT_REFEN (ref_selection)
+        if any(key in adc_config for key in ["negative_ref", "high_res", "ref_voltage", "ref_selection"]):
+            a_sys_cfg_val = 0
+            
+            # Bit 7: VNCPEN (Negative charge pump enable)
+            if adc_config.get("negative_ref", False):
+                a_sys_cfg_val += 128
+            
+            # Bit 6: HRM (High-resolution mode)
+            if adc_config.get("high_res", True):  # Default True
+                a_sys_cfg_val += 64
+            
+            # Bit 5: Reserved - always write 1
+            a_sys_cfg_val += 32
+            
+            # Bit 4: VREF_4V (Reference voltage level: 0=2.442V, 1=4.0V)
+            if adc_config.get("ref_voltage", 0) == 1:  # 1 = 4.0V
+                a_sys_cfg_val += 16
+            
+            # Bit 3: INT_REFEN (Internal reference enable: 0=External, 1=Internal)
+            if adc_config.get("ref_selection", 1) == 1:  # 1 = Internal
+                a_sys_cfg_val += 8
+            
+            self._write_register(11, a_sys_cfg_val)
+            print(f"[MCULifecycle] A_SYS_CFG register (11) = {a_sys_cfg_val} (neg_ref={adc_config.get('negative_ref', False)}, high_res={adc_config.get('high_res', True)}, ref_voltage={adc_config.get('ref_voltage', 0)}, ref_selection={adc_config.get('ref_selection', 1)})")
+        
         # 1. CLKIN divider (Address 13)
         if "clkin_divider" in adc_config:
             self._write_register(13, adc_config["clkin_divider"])
             
         # 2. ICLK divider + OSR (Address 14)
-        # Register 14: Bits[7:5]=ICLK_DIV, Bits[4:2]=OSR
+        # Register 14: Bits[7:5]=ICLK_DIV, Bits[4:1] or [3:0]=OSR (check datasheet register map)
         # We assume ICLK_DIV=2 (001 -> 32) for now as per legacy default.
-        # OSR Mapping: 128->000, 256->001, 512->010, 1024->011, 2048->100, 4096->101, 8192->110, 16384->111
+        # OSR Mapping from datasheet Table 30. Data Rate Settings (OSR[3:0] codes 0-15):
+        # Code 0->4096, 1->2048, 2->1024, 3->800, 4->768, 5->512, 6->400, 7->384,
+        # 8->256, 9->200, 10->192, 11->128, 12->96, 13->64, 14->48, 15->32
         if "oversampling_ratio" in adc_config:
             osr_val = int(adc_config["oversampling_ratio"])
             osr_map = {
-                128: 0, 256: 1, 512: 2, 1024: 3, 
-                2048: 4, 4096: 5, 8192: 6, 16384: 7
+                4096: 0, 2048: 1, 1024: 2, 800: 3, 768: 4, 512: 5, 400: 6, 384: 7,
+                256: 8, 200: 9, 192: 10, 128: 11, 96: 12, 64: 13, 48: 14, 32: 15
             }
             
             if osr_val in osr_map:

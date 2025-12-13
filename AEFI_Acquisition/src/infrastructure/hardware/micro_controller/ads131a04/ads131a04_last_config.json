@@ -2,7 +2,7 @@
     "reference_voltage": 2.5,
     "clkin_divider": 2,
     "iclk_divider": 2,
-    "oversampling_ratio": 128,
+    "oversampling_ratio": 4096,
     "channels": {
         "1": {
             "gain": 1,

@@ -1,0 +1,126 @@
+{
+  "test_name": "test_resume_after_pause",
+  "timestamp": "2025-12-13T21:07:05.065758",
+  "status": "PASSED",
+  "interactions": [
+    {
+      "timestamp": "2025-12-13T21:07:05.065776",
+      "actor": "Test",
+      "action": "CREATE",
+      "target": "ScanPresenter",
+      "message": "Initialize Presenter",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-13T21:07:05.065848",
+      "actor": "Test",
+      "action": "START",
+      "target": "ScanPresenter",
+      "message": "Start resume test",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-13T21:07:05.065855",
+      "actor": "UI",
+      "action": "CALL",
+      "target": "ScanPresenter",
+      "message": "start_scan",
+      "data": {
+        "x_min": 0,
+        "x_max": 1,
+        "x_nb_points": 6,
+        "y_min": 0,
+        "y_max": 1,
+        "y_nb_points": 1,
+        "scan_pattern": "RASTER",
+        "stabilization_delay_ms": 0,
+        "averaging_per_position": 1
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-13T21:07:05.066034",
+      "actor": "ScanPresenter",
+      "action": "EMIT",
+      "target": "UI",
+      "message": "Signal scan_started",
+      "data": {
+        "args": [
+          "8c148198-4572-4b5b-b88b-f287d08935c3",
+          "{'pattern': 'RASTER', 'points': 6, 'x_min': 0.0, 'x_max': 1.0, 'x_nb_points': 6, 'y_min': 0.0, 'y_max': 1.0, 'y_nb_points': 1}"
+        ]
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-13T21:07:05.121116",
+      "actor": "ScanPresenter",
+      "action": "EMIT",
+      "target": "UI",
+      "message": "Signal scan_point_acquired",
+      "data": {
+        "args": [
+          "{'x': 0.0, 'y': 0.0, 'value': {'x_in_phase': 0.0, 'x_quadrature': 0.0, 'y_in_phase': 0.0, 'y_quadrature': 0.0, 'z_in_phase': 0.0, 'z_quadrature': 0.0}, 'index': 0}"
+        ]
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-13T21:07:05.121133",
+      "actor": "ScanPresenter",
+      "action": "EMIT",
+      "target": "UI",
+      "message": "Signal scan_progress",
+      "data": {
+        "args": [
+          "0.0"
+        ]
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-13T21:07:05.170941",
+      "actor": "UI",
+      "action": "CALL",
+      "target": "ScanPresenter",
+      "message": "pause_scan",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-13T21:07:05.372321",
+      "actor": "UI",
+      "action": "CALL",
+      "target": "ScanPresenter",
+      "message": "resume_scan",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-13T21:07:05.372404",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "ScanPresenter",
+      "message": "Check scan completed after resume",
+      "data": null,
+      "expect": "6 points",
+      "got": "1 points"
+    }
+  ],
+  "summary": {
+    "total_interactions": 9,
+    "subscriptions": 0,
+    "publications": 0,
+    "assertions": 1
+  }
+}

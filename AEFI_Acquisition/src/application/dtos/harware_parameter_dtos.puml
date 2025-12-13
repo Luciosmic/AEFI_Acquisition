@@ -1,0 +1,33 @@
+@startuml
+title hardware_parameter_dtos
+
+enum HardwareParameterKind {
+  RANGE
+  DICT
+  ACTION
+}
+
+enum HardwareParameterConfirmMode {
+  IMMEDIATE
+  REQUIRE_CONFIRM_BUTTON
+}
+
+class ActionableHardwareParametersSpec {
+  +name: str
+  +label: str
+  +kind: HardwareParameterKind
+  --
+  +default: Any
+  +value_range: (float, float)
+  +choices: List
+  +unit: str
+  +tooltip: str
+  +confirm_mode: HardwareParameterConfirmMode
+  +required: bool
+  +group: str
+  +metadata: Dict
+}
+
+ActionableHardwareParametersSpec --> HardwareParameterKind
+ActionableHardwareParametersSpec --> HardwareParameterConfirmMode
+@enduml

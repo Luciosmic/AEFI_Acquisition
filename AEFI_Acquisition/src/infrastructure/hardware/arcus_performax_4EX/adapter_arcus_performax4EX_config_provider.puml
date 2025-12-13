@@ -1,0 +1,21 @@
+@startuml
+title arcus_performax4EX_config_provider
+
+interface IHardwareConfigProvider {
+  +hardware_id: str
+  +display_name: str
+  +get_parameter_specs(): List<ActionableHardwareParametersSpec>
+}
+
+class ArcusPerformax4EXConfigProvider {
+  +hardware_id: str
+  +display_name: str
+  --
+  +get_parameter_specs(): List<ActionableHardwareParametersSpec>
+}
+
+class ActionableHardwareParametersSpec
+
+ArcusPerformax4EXConfigProvider ..|> IHardwareConfigProvider
+ArcusPerformax4EXConfigProvider --> ActionableHardwareParametersSpec : returns many
+@enduml

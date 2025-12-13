@@ -51,7 +51,8 @@ class ADS131A04Adapter(IAcquisitionPort):
     ADC_RESOLUTION_BITS = 24
     DEFAULT_VREF = 2.5  # Volts
     AVAILABLE_GAINS = [1, 2, 4, 8, 16, 32, 64, 128]
-    AVAILABLE_OSR = [128, 256, 512, 1024, 2048, 4096, 8192, 16384]
+    # OSR values from datasheet Table 30. Data Rate Settings
+    AVAILABLE_OSR = [4096, 2048, 1024, 800, 768, 512, 400, 384, 256, 200, 192, 128, 96, 64, 48, 32]
     MAX_DATA_RATE_HZ = 128000  # Maximum output data rate
     
     def __init__(self, serial_communicator):
@@ -101,6 +102,7 @@ class ADS131A04Adapter(IAcquisitionPort):
         Acquire one voltage measurement sample via MCU.
         
         The ADC has already performed hardware averaging (OSR).
+        The MCU performs additional software averaging (n_avg) before returning data.
         This returns one averaged sample.
         
         Returns:
@@ -110,11 +112,27 @@ class ADS131A04Adapter(IAcquisitionPort):
             RuntimeError: If acquisition or parsing fails
         """
         from datetime import datetime
+        import json
+        import os
         
-        # Acquire via MCU: command 'm1' (1 sample averaged)
+        # Get n_avg from MCU config (default: 1)
+        n_avg = 1
+        try:
+            mcu_config_path = os.path.join(
+                os.path.dirname(os.path.dirname(__file__)), 
+                "mcu_last_config.json"
+            )
+            if os.path.exists(mcu_config_path):
+                with open(mcu_config_path, 'r') as f:
+                    mcu_config = json.load(f)
+                    n_avg = int(mcu_config.get("n_avg", 1))
+        except Exception as e:
+            print(f"[ADS131Adapter] Failed to read MCU config, using default n_avg=1: {e}")
+        
+        # Acquire via MCU: command 'm{n_avg}' (n_avg samples averaged by MCU)
         # DEBUG: Trace acquisition start
-        # print("[ADS131Adapter] Requesting sample 'm1'")
-        success, response = self._serial.send_command('m1')
+        # print(f"[ADS131Adapter] Requesting sample 'm{n_avg}'")
+        success, response = self._serial.send_command(f'm{n_avg}')
         
         if not success:
             print(f"[ADS131Adapter] Acquisition failed. Response: {response}")

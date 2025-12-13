@@ -13,6 +13,7 @@
 # Un-ignore Legacy_AEFI_Acquisition
 !AEFI_Acquisition/
 !AEFI_Acquisition/src/**
+!AEFI_Acquisition/src/interface_v2/
 
 # Re-ignore common temporary/build files that might be inside the whitelisted directories
 __pycache__/
