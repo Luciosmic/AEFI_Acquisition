@@ -1,0 +1,97 @@
+{
+  "test_name": "test_noise_subtraction",
+  "timestamp": "2025-12-13T23:28:32.389173",
+  "status": "PASSED",
+  "interactions": [
+    {
+      "timestamp": "2025-12-13T23:28:32.389175",
+      "actor": "Test",
+      "action": "CREATE",
+      "target": "SignalPostProcessor",
+      "message": "Initialized processor instance",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-13T23:28:32.389182",
+      "actor": "System",
+      "action": "DIVIDER",
+      "target": "System",
+      "message": "Noise Subtraction Test",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-13T23:28:32.389187",
+      "actor": "Test",
+      "action": "CALIBRATE",
+      "target": "SignalPostProcessor",
+      "message": "Calibrate Noise Offset",
+      "data": {
+        "Ux In-Phase": 0.1,
+        "Ux Quadrature": 0.2,
+        "Uy In-Phase": 0.0,
+        "Uy Quadrature": 0.0,
+        "Uz In-Phase": 0.0,
+        "Uz Quadrature": 0.0
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-13T23:28:32.389195",
+      "actor": "Test",
+      "action": "PROCESS",
+      "target": "SignalPostProcessor",
+      "message": "Process Sample",
+      "data": {
+        "Ux In-Phase": 1.1,
+        "Ux Quadrature": 1.2,
+        "Uy In-Phase": 5.0,
+        "Uy Quadrature": 5.0,
+        "Uz In-Phase": 0.0,
+        "Uz Quadrature": 0.0
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-13T23:28:32.389202",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "Result",
+      "message": "Check Ux In-Phase",
+      "data": null,
+      "expect": "1.0",
+      "got": "1.0"
+    },
+    {
+      "timestamp": "2025-12-13T23:28:32.389206",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "Result",
+      "message": "Check Ux Quadrature",
+      "data": null,
+      "expect": "1.0",
+      "got": "1.0"
+    },
+    {
+      "timestamp": "2025-12-13T23:28:32.389210",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "Result",
+      "message": "Check Uy In-Phase",
+      "data": null,
+      "expect": "5.0",
+      "got": "5.0"
+    }
+  ],
+  "summary": {
+    "total_interactions": 7,
+    "subscriptions": 0,
+    "publications": 0,
+    "assertions": 3
+  }
+}

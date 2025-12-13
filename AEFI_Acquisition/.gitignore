@@ -27,7 +27,7 @@ __pycache__/
 !/src/tool/
 !/src/presentation/
 !/src/end_to_end_tests/
-
+!/src/interface_v2/
 
 # Track documentation and config
 !/docs/
@@ -35,6 +35,7 @@ __pycache__/
 !/README.md
 !/.gitignore
 !/main.py
+!/main_v2.py
 !/main_exploratory.py
 !/.cursor/
 !/tests/

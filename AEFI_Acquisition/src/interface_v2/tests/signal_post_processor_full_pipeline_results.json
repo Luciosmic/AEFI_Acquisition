@@ -1,0 +1,111 @@
+{
+  "test_name": "test_full_pipeline",
+  "timestamp": "2025-12-13T23:28:32.388718",
+  "status": "PASSED",
+  "interactions": [
+    {
+      "timestamp": "2025-12-13T23:28:32.388729",
+      "actor": "Test",
+      "action": "CREATE",
+      "target": "SignalPostProcessor",
+      "message": "Initialized processor instance",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-13T23:28:32.388763",
+      "actor": "System",
+      "action": "DIVIDER",
+      "target": "System",
+      "message": "Full Processing Pipeline Test",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-13T23:28:32.388769",
+      "actor": "Test",
+      "action": "CALIBRATE",
+      "target": "SignalPostProcessor",
+      "message": "1. Zero Noise",
+      "data": {
+        "Ux In-Phase": 1.0,
+        "Ux Quadrature": 1.0,
+        "Uy In-Phase": 0,
+        "Uy Quadrature": 0,
+        "Uz In-Phase": 0,
+        "Uz Quadrature": 0
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-13T23:28:32.388782",
+      "actor": "Test",
+      "action": "CALIBRATE",
+      "target": "SignalPostProcessor",
+      "message": "2. Align Phase (using pre-phase sample)",
+      "data": {
+        "Ux In-Phase": 1.0,
+        "Ux Quadrature": 1.0,
+        "Uy In-Phase": 0,
+        "Uy Quadrature": 0,
+        "Uz In-Phase": 0,
+        "Uz Quadrature": 0
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-13T23:28:32.388797",
+      "actor": "Test",
+      "action": "CALIBRATE",
+      "target": "SignalPostProcessor",
+      "message": "3. Null Primary (using fully processed ref)",
+      "data": {
+        "Ux In-Phase": 1.4142135623730951,
+        "Ux Quadrature": 0.0,
+        "Uy In-Phase": 0,
+        "Uy Quadrature": 0,
+        "Uz In-Phase": 0,
+        "Uz Quadrature": 0
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-13T23:28:32.388807",
+      "actor": "Test",
+      "action": "PROCESS",
+      "target": "SignalPostProcessor",
+      "message": "Process New Sample (3,3)",
+      "data": {
+        "Ux In-Phase": 3.0,
+        "Ux Quadrature": 3.0,
+        "Uy In-Phase": 0,
+        "Uy Quadrature": 0,
+        "Uz In-Phase": 0,
+        "Uz Quadrature": 0
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-13T23:28:32.388824",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "Result",
+      "message": "Check Final Result",
+      "data": null,
+      "expect": "1.4142135623730951",
+      "got": "1.4142135623730947"
+    }
+  ],
+  "summary": {
+    "total_interactions": 7,
+    "subscriptions": 0,
+    "publications": 0,
+    "assertions": 1
+  }
+}
