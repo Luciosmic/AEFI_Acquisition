@@ -1,0 +1,83 @@
+{
+  "test_name": "test_start_scan_flow",
+  "timestamp": "2025-12-09T04:37:26.526970",
+  "status": "PASSED",
+  "interactions": [
+    {
+      "timestamp": "2025-12-09T04:37:26.526975",
+      "actor": "Test",
+      "action": "CREATE",
+      "target": "MainWindow",
+      "message": "Setup UI",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T04:37:26.602282",
+      "actor": "Test",
+      "action": "START",
+      "target": "UI",
+      "message": "Start scan flow test",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T04:37:26.602335",
+      "actor": "Test",
+      "action": "ACTION",
+      "target": "ScanControlWidget",
+      "message": "Set scan parameters",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T04:37:26.602462",
+      "actor": "Test",
+      "action": "CLICK",
+      "target": "ScanControlWidget",
+      "message": "Click Start Button",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T04:37:26.602608",
+      "actor": "Test",
+      "action": "WAIT",
+      "target": "ScanApplicationService",
+      "message": "Waiting for scan completion",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T04:37:26.763127",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "ScanControlWidget",
+      "message": "Check status text",
+      "data": null,
+      "expect": "Completed",
+      "got": "Status: Completed (4 points)"
+    },
+    {
+      "timestamp": "2025-12-09T04:37:26.763177",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "Scan2DColormapWidget",
+      "message": "Check plotted points",
+      "data": null,
+      "expect": "4",
+      "got": "4"
+    }
+  ],
+  "summary": {
+    "total_interactions": 7,
+    "subscriptions": 0,
+    "publications": 0,
+    "assertions": 2
+  }
+}

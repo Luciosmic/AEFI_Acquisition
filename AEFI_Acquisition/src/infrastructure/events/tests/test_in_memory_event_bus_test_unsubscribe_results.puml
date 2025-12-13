@@ -1,0 +1,43 @@
+@startuml
+title Sequence Diagram: test_unsubscribe
+autonumber
+skinparam responseMessageBelowArrow true
+"Test" -> "InMemoryEventBus" : **CREATE** Initialize fresh bus
+"Test" -> "InMemoryEventBus" : **SUBSCRIBE** Subscribe handler
+note right
+Data: {
+  "event": "test_event"
+}
+end note
+"Test" -> "InMemoryEventBus" : **PUBLISH** Publish 1
+note right
+Data: {
+  "event": "test_event",
+  "data": 1
+}
+end note
+"Handler" -> "Test" : **RECEIVE** Handler called
+note right
+Data: {
+  "data": 1
+}
+end note
+"Test" -> "InMemoryEventBus" : **UNSUBSCRIBE** Unsubscribe handler
+note right
+Data: {
+  "event": "test_event"
+}
+end note
+"Test" -> "InMemoryEventBus" : **PUBLISH** Publish 2
+note right
+Data: {
+  "event": "test_event",
+  "data": 2
+}
+end note
+"Test" -> "InMemoryEventBus" : **ASSERT** Verify calls
+note right
+Expect: [1]
+Got: [1]
+end note
+@enduml

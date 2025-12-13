@@ -1,0 +1,140 @@
+{
+  "test_name": "test_continuous_acquisition_presenter_flow",
+  "timestamp": "2025-12-09T05:20:26.400024",
+  "status": "PASSED",
+  "interactions": [
+    {
+      "timestamp": "2025-12-09T05:20:26.400322",
+      "actor": "Test",
+      "action": "CREATE",
+      "target": "ContinuousAcquisitionPresenter",
+      "message": "Setup presenter, service, executor, event bus and mock acquisition port",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T05:20:26.400937",
+      "actor": "Test",
+      "action": "CALL",
+      "target": "ContinuousAcquisitionPresenter",
+      "message": "start_acquisition",
+      "data": {
+        "sample_rate_hz": 20.0,
+        "max_duration_s": 0.1
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T05:20:26.402030",
+      "actor": "Test",
+      "action": "WAIT",
+      "target": "QtEventLoop",
+      "message": "Process events during continuous acquisition",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T05:20:26.429688",
+      "actor": "View",
+      "action": "SIGNAL",
+      "target": "Presenter",
+      "message": "acquisition_started",
+      "data": {
+        "acquisition_id": "80678590-66ae-4d65-92fe-ab264fd162a7"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T05:20:26.429993",
+      "actor": "View",
+      "action": "SIGNAL",
+      "target": "Presenter",
+      "message": "sample_acquired",
+      "data": {
+        "acquisition_id": "80678590-66ae-4d65-92fe-ab264fd162a7",
+        "index": 0,
+        "vx": 0.1,
+        "timestamp": "2025-12-09T05:20:26.401254"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T05:20:26.466887",
+      "actor": "View",
+      "action": "SIGNAL",
+      "target": "Presenter",
+      "message": "sample_acquired",
+      "data": {
+        "acquisition_id": "80678590-66ae-4d65-92fe-ab264fd162a7",
+        "index": 1,
+        "vx": 0.2,
+        "timestamp": "2025-12-09T05:20:26.457389"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T05:20:26.655307",
+      "actor": "Test",
+      "action": "CALL",
+      "target": "ContinuousAcquisitionPresenter",
+      "message": "stop_acquisition",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T05:20:26.655686",
+      "actor": "View",
+      "action": "SIGNAL",
+      "target": "Presenter",
+      "message": "acquisition_stopped",
+      "data": {
+        "acquisition_id": "80678590-66ae-4d65-92fe-ab264fd162a7"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T05:20:26.655974",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "ContinuousAcquisitionPresenter",
+      "message": "Verify at least one sample acquired via presenter",
+      "data": null,
+      "expect": ">=1",
+      "got": "2"
+    },
+    {
+      "timestamp": "2025-12-09T05:20:26.656203",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "ContinuousAcquisitionPresenter",
+      "message": "Verify acquisition_started signal emitted",
+      "data": null,
+      "expect": ">=1",
+      "got": "1"
+    },
+    {
+      "timestamp": "2025-12-09T05:20:26.656397",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "ContinuousAcquisitionPresenter",
+      "message": "Verify acquisition_stopped signal emitted",
+      "data": null,
+      "expect": ">=1",
+      "got": "1"
+    }
+  ],
+  "summary": {
+    "total_interactions": 11,
+    "subscriptions": 0,
+    "publications": 0,
+    "assertions": 3
+  }
+}

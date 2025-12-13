@@ -1,0 +1,122 @@
+@startuml
+title Sequence Diagram: test_execute_nominal_case
+autonumber
+skinparam responseMessageBelowArrow true
+"Test" -> "StepScanExecutor" : **CREATE** Initialize Executor
+"Test" -> "StepScanExecutor" : **START** Start nominal execution test
+"Test" -> "StepScanExecutor" : **CALL** execute
+"StepScanExecutor" -> "MotionPort" : **CALL** Call move_to
+note right
+Data: {
+  "args": [
+    "Position2D(x=0, y=0)"
+  ],
+  "kwargs": {}
+}
+end note
+"MotionPort" --> "StepScanExecutor" : **RETURN** Return from move_to
+note right
+Data: {
+  "result": "<MagicMock name='mock.move_to()' id='4394448416'>"
+}
+end note
+"StepScanExecutor" -> "AcquisitionPort" : **CALL** Call acquire_sample
+note right
+Data: {
+  "args": [],
+  "kwargs": {}
+}
+end note
+"AcquisitionPort" --> "StepScanExecutor" : **RETURN** Return from acquire_sample
+note right
+Data: {
+  "result": "VoltageMeasurement(voltage_x_in_phase=1.0, voltage_x_quadrature=0.0, voltage_y_in_phase=0.0, voltage_y_quadrature=0.0, voltage_z_in_phase=0.0, voltage_z_quadrature=0.0, timestamp=0.0, u...
+end note
+"StepScanExecutor" -> "EventBus" : **CALL** Call publish
+note right
+Data: {
+  "args": [
+    "scanstarted",
+    "ScanStarted(occurred_on=datetime.datetime(2025, 12, 9, 5, 9, 15, 339843), scan_id=UUID('828e84d3-9aee-46e4-b64c-b1ab00e3d7fb'), config=StepScanConfig(scan_zone=Sc...
+end note
+"EventBus" --> "StepScanExecutor" : **RETURN** Return from publish
+note right
+Data: {
+  "result": "<MagicMock name='mock.publish()' id='4394450096'>"
+}
+end note
+"StepScanExecutor" -> "EventBus" : **CALL** Call publish
+note right
+Data: {
+  "args": [
+    "scanpointacquired",
+    "ScanPointAcquired(occurred_on=datetime.datetime(2025, 12, 9, 5, 9, 15, 340088), scan_id=UUID('828e84d3-9aee-46e4-b64c-b1ab00e3d7fb'), point_index=0, positio...
+end note
+"EventBus" --> "StepScanExecutor" : **RETURN** Return from publish
+note right
+Data: {
+  "result": "<MagicMock name='mock.publish()' id='4394450096'>"
+}
+end note
+"StepScanExecutor" -> "MotionPort" : **CALL** Call move_to
+note right
+Data: {
+  "args": [
+    "Position2D(x=1, y=0)"
+  ],
+  "kwargs": {}
+}
+end note
+"MotionPort" --> "StepScanExecutor" : **RETURN** Return from move_to
+note right
+Data: {
+  "result": "<MagicMock name='mock.move_to()' id='4394448416'>"
+}
+end note
+"StepScanExecutor" -> "AcquisitionPort" : **CALL** Call acquire_sample
+note right
+Data: {
+  "args": [],
+  "kwargs": {}
+}
+end note
+"AcquisitionPort" --> "StepScanExecutor" : **RETURN** Return from acquire_sample
+note right
+Data: {
+  "result": "VoltageMeasurement(voltage_x_in_phase=1.0, voltage_x_quadrature=0.0, voltage_y_in_phase=0.0, voltage_y_quadrature=0.0, voltage_z_in_phase=0.0, voltage_z_quadrature=0.0, timestamp=0.0, u...
+end note
+"StepScanExecutor" -> "EventBus" : **CALL** Call publish
+note right
+Data: {
+  "args": [
+    "scanpointacquired",
+    "ScanPointAcquired(occurred_on=datetime.datetime(2025, 12, 9, 5, 9, 15, 340382), scan_id=UUID('828e84d3-9aee-46e4-b64c-b1ab00e3d7fb'), point_index=1, positio...
+end note
+"EventBus" --> "StepScanExecutor" : **RETURN** Return from publish
+note right
+Data: {
+  "result": "<MagicMock name='mock.publish()' id='4394450096'>"
+}
+end note
+"StepScanExecutor" -> "EventBus" : **CALL** Call publish
+note right
+Data: {
+  "args": [
+    "scancompleted",
+    "ScanCompleted(occurred_on=datetime.datetime(2025, 12, 9, 5, 9, 15, 340386), scan_id=UUID('828e84d3-9aee-46e4-b64c-b1ab00e3d7fb'), total_points=2)"
+  ],
+  "kwarg...
+end note
+"EventBus" --> "StepScanExecutor" : **RETURN** Return from publish
+note right
+Data: {
+  "result": "<MagicMock name='mock.publish()' id='4394450096'>"
+}
+end note
+"Test" -> "StepScanExecutor" : **ASSERT** Check success
+note right
+Expect: True
+Got: True
+end note
+"Test" -> "EventBus" : **ASSERT** Check publish calls
+@enduml

@@ -1,0 +1,69 @@
+{
+  "test_name": "test_save_and_find",
+  "timestamp": "2025-12-12T01:53:06.774107",
+  "status": "PASSED",
+  "interactions": [
+    {
+      "timestamp": "2025-12-12T01:53:06.774141",
+      "actor": "Test",
+      "action": "CREATE",
+      "target": "HDF5Repository",
+      "message": "Initialize repository at persistence/tests/test_data",
+      "data": {
+        "path": "/Users/luis/Library/CloudStorage/Dropbox/Luis/1 PROJETS/1 - THESE/Ressources/ExperimentalData_ASSOCE/AEFI_Acquisition/AEFI_Acquisition/src/infrastructure/persistence/tests/test_data"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T01:53:06.774267",
+      "actor": "Test",
+      "action": "CALL",
+      "target": "HDF5Repository",
+      "message": "Save sample",
+      "data": {
+        "scan_id": "scan_test_123"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T01:53:06.775272",
+      "actor": "Test",
+      "action": "QUERY",
+      "target": "HDF5Repository",
+      "message": "Find by scan",
+      "data": {
+        "scan_id": "scan_test_123"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T01:53:06.775586",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "HDF5Repository",
+      "message": "Verify retrieved count",
+      "data": null,
+      "expect": "1",
+      "got": "1"
+    },
+    {
+      "timestamp": "2025-12-12T01:53:06.775602",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "HDF5Repository",
+      "message": "Verify X in-phase",
+      "data": null,
+      "expect": "1.0",
+      "got": "1.0"
+    }
+  ],
+  "summary": {
+    "total_interactions": 5,
+    "subscriptions": 0,
+    "publications": 0,
+    "assertions": 2
+  }
+}

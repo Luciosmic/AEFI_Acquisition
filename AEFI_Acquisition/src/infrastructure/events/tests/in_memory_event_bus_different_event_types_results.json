@@ -1,0 +1,117 @@
+{
+  "test_name": "test_different_event_types",
+  "timestamp": "2025-12-12T01:53:06.765212",
+  "status": "PASSED",
+  "interactions": [
+    {
+      "timestamp": "2025-12-12T01:53:06.765213",
+      "actor": "Test",
+      "action": "CREATE",
+      "target": "InMemoryEventBus",
+      "message": "Initialize fresh bus",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T01:53:06.765229",
+      "actor": "Test",
+      "action": "SUBSCRIBE",
+      "target": "InMemoryEventBus",
+      "message": "Subscribe HandlerA",
+      "data": {
+        "event": "event_a"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T01:53:06.765239",
+      "actor": "Test",
+      "action": "SUBSCRIBE",
+      "target": "InMemoryEventBus",
+      "message": "Subscribe HandlerB",
+      "data": {
+        "event": "event_b"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T01:53:06.765246",
+      "actor": "Test",
+      "action": "PUBLISH",
+      "target": "InMemoryEventBus",
+      "message": "Publish event_a",
+      "data": {
+        "event": "event_a",
+        "data": "A"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T01:53:06.765254",
+      "actor": "HandlerA",
+      "action": "RECEIVE",
+      "target": "Test",
+      "message": "HandlerA called",
+      "data": {
+        "data": "A"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T01:53:06.765260",
+      "actor": "Test",
+      "action": "PUBLISH",
+      "target": "InMemoryEventBus",
+      "message": "Publish event_b",
+      "data": {
+        "event": "event_b",
+        "data": "B"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T01:53:06.765266",
+      "actor": "HandlerB",
+      "action": "RECEIVE",
+      "target": "Test",
+      "message": "HandlerB called",
+      "data": {
+        "data": "B"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T01:53:06.765273",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "InMemoryEventBus",
+      "message": "Verify calls_a",
+      "data": null,
+      "expect": "['A']",
+      "got": "['A']"
+    },
+    {
+      "timestamp": "2025-12-12T01:53:06.765284",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "InMemoryEventBus",
+      "message": "Verify calls_b",
+      "data": null,
+      "expect": "['B']",
+      "got": "['B']"
+    }
+  ],
+  "summary": {
+    "total_interactions": 9,
+    "subscriptions": 2,
+    "publications": 2,
+    "assertions": 2
+  }
+}

@@ -1,0 +1,50 @@
+@startuml
+skinparam componentStyle uml2
+title Hardware Initialization Structure
+package "Application Layer" {
+    component [SystemStartupApplicationService] as StartupService
+    note right of StartupService
+       Orchestrates startup.
+       Calls initialize_all() on its dependency
+    end note
+}
+package "Application Ports" {
+    interface "IHardwareInitializationPort" as IInitPort
+    note bottom of IInitPort
+        Methods:
+        - initialize_all()
+        - verify_all()
+        - close_all()
+    end note
+}
+package "Infrastructure Layer (Plumbing)" {
+    component [CompositeHardwareInitializationPort] as Composite
+    
+    component [ArcusPerformaxLifecycleAdapter] as ArcusLifecycle
+    component [MCULifecycleAdapter] as MCULifecycle
+    
+    component [ArcusAdapter] as ArcusDriver
+    component [MCU_SerialCommunicator] as MCUDriver
+    component [ADS131A04Adapter] as ADSDriver
+}
+' Relations
+StartupService --> IInitPort : depends on
+Composite .up.|> IInitPort : implements
+ArcusLifecycle .up.|> IInitPort : implements
+MCULifecycle .up.|> IInitPort : implements
+' Composition
+Composite o-- ArcusLifecycle : contains
+Composite o-- MCULifecycle : contains
+' Injection & Wiring
+Composite -[hidden]-> ArcusLifecycle
+ArcusLifecycle --> ArcusDriver : manages lifecycle of
+MCULifecycle --> MCUDriver : manages lifecycle of
+ADSDriver --> MCUDriver : uses (via param)
+note bottom of Composite
+    <b>The Composite Pattern</b>
+    Aggregates multiple children.
+    When StartupService calls initialize_all(),
+    Composite iterates and calls regular
+    initialize_all() on Arcus & MCU lifecycles.
+end note
+@enduml

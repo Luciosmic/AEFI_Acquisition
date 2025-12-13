@@ -1,0 +1,95 @@
+{
+  "test_name": "test_unsubscribe",
+  "timestamp": "2025-12-09T02:35:49.520934",
+  "status": "PASSED",
+  "interactions": [
+    {
+      "timestamp": "2025-12-09T02:35:49.520934",
+      "actor": "Test",
+      "action": "CREATE",
+      "target": "InMemoryEventBus",
+      "message": "Initialize fresh bus",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T02:35:49.520946",
+      "actor": "Test",
+      "action": "SUBSCRIBE",
+      "target": "InMemoryEventBus",
+      "message": "Subscribe handler",
+      "data": {
+        "event": "test_event"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T02:35:49.520954",
+      "actor": "Test",
+      "action": "PUBLISH",
+      "target": "InMemoryEventBus",
+      "message": "Publish 1",
+      "data": {
+        "event": "test_event",
+        "data": 1
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T02:35:49.520961",
+      "actor": "Handler",
+      "action": "RECEIVE",
+      "target": "Test",
+      "message": "Handler called",
+      "data": {
+        "data": 1
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T02:35:49.520967",
+      "actor": "Test",
+      "action": "UNSUBSCRIBE",
+      "target": "InMemoryEventBus",
+      "message": "Unsubscribe handler",
+      "data": {
+        "event": "test_event"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T02:35:49.520974",
+      "actor": "Test",
+      "action": "PUBLISH",
+      "target": "InMemoryEventBus",
+      "message": "Publish 2",
+      "data": {
+        "event": "test_event",
+        "data": 2
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T02:35:49.520998",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "InMemoryEventBus",
+      "message": "Verify calls",
+      "data": null,
+      "expect": "[1]",
+      "got": "[1]"
+    }
+  ],
+  "summary": {
+    "total_interactions": 7,
+    "subscriptions": 1,
+    "publications": 2,
+    "assertions": 1
+  }
+}

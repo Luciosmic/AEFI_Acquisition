@@ -1,0 +1,197 @@
+{
+  "test_name": "test_lifecycle_initialization",
+  "timestamp": "2025-12-12T16:07:40.257617",
+  "status": "PASSED",
+  "interactions": [
+    {
+      "timestamp": "2025-12-12T16:07:40.257617",
+      "actor": "System",
+      "action": "DIVIDER",
+      "target": "System",
+      "message": "Setup Phase",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T16:07:40.260081",
+      "actor": "TestLifecycle",
+      "action": "CREATE",
+      "target": "ArcusAdapter",
+      "message": "Create ArcusAdapter instance (disconnected)",
+      "data": {
+        "port": "auto-detect",
+        "dll_path": "C:\\Users\\manip\\Dropbox\\Luis\\1 PROJETS\\1 - THESE\\Ressources\\ExperimentalData_ASSOCE\\AEFI_Acquisition\\AEFI_Acquisition\\src\\infrastructure\\hardware\\arcus_performax_4EX\\DLL64"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T16:07:40.260081",
+      "actor": "TestLifecycle",
+      "action": "CREATE",
+      "target": "ArcusPerformaxLifecycleAdapter",
+      "message": "Create lifecycle adapter wrapping ArcusAdapter",
+      "data": {
+        "adapter_type": "ArcusAdapter"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T16:07:40.262094",
+      "actor": "System",
+      "action": "DIVIDER",
+      "target": "System",
+      "message": "Execution Phase - Initialize",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T16:07:40.262094",
+      "actor": "TestLifecycle",
+      "action": "CALL",
+      "target": "ArcusPerformaxLifecycleAdapter",
+      "message": "initialize_all() - Connect to hardware",
+      "data": {},
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T16:07:42.700120",
+      "actor": "ArcusPerformaxLifecycleAdapter",
+      "action": "RETURN",
+      "target": "TestLifecycle",
+      "message": "initialize_all() completed successfully",
+      "data": {
+        "status": "connected"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T16:07:42.701195",
+      "actor": "System",
+      "action": "DIVIDER",
+      "target": "System",
+      "message": "Execution Phase - Verify",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T16:07:42.701195",
+      "actor": "TestLifecycle",
+      "action": "CALL",
+      "target": "ArcusPerformaxLifecycleAdapter",
+      "message": "verify_all() - Verify hardware connection",
+      "data": {},
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T16:07:42.724911",
+      "actor": "ArcusPerformaxLifecycleAdapter",
+      "action": "RETURN",
+      "target": "TestLifecycle",
+      "message": "verify_all() completed successfully",
+      "data": {
+        "status": "verified"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T16:07:42.724911",
+      "actor": "System",
+      "action": "DIVIDER",
+      "target": "System",
+      "message": "Verification Phase",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T16:07:42.724911",
+      "actor": "TestLifecycle",
+      "action": "CALL",
+      "target": "ArcusAdapter",
+      "message": "get_current_position() - Verify connection works",
+      "data": {},
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T16:07:42.749089",
+      "actor": "ArcusAdapter",
+      "action": "RETURN",
+      "target": "TestLifecycle",
+      "message": "Position retrieved successfully",
+      "data": {
+        "x": 0,
+        "y": 0
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T16:07:42.749089",
+      "actor": "TestLifecycle",
+      "action": "ASSERT",
+      "target": "ArcusAdapter",
+      "message": "Position X is numeric",
+      "data": null,
+      "expect": "numeric value",
+      "got": "0 (type: int)"
+    },
+    {
+      "timestamp": "2025-12-12T16:07:42.750099",
+      "actor": "TestLifecycle",
+      "action": "ASSERT",
+      "target": "ArcusAdapter",
+      "message": "Position Y is numeric",
+      "data": null,
+      "expect": "numeric value",
+      "got": "0 (type: int)"
+    },
+    {
+      "timestamp": "2025-12-12T16:07:42.750099",
+      "actor": "System",
+      "action": "DIVIDER",
+      "target": "System",
+      "message": "Cleanup Phase",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T16:07:42.750099",
+      "actor": "TestLifecycle",
+      "action": "CALL",
+      "target": "ArcusPerformaxLifecycleAdapter",
+      "message": "close_all() - Disconnect hardware",
+      "data": {},
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T16:07:42.755299",
+      "actor": "ArcusPerformaxLifecycleAdapter",
+      "action": "RETURN",
+      "target": "TestLifecycle",
+      "message": "close_all() completed successfully",
+      "data": {
+        "status": "disconnected"
+      },
+      "expect": null,
+      "got": null
+    }
+  ],
+  "summary": {
+    "total_interactions": 17,
+    "subscriptions": 0,
+    "publications": 0,
+    "assertions": 2
+  }
+}

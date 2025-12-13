@@ -1,0 +1,94 @@
+{
+  "test_name": "test_handler_error_isolation",
+  "timestamp": "2025-12-12T01:53:06.766994",
+  "status": "PASSED",
+  "interactions": [
+    {
+      "timestamp": "2025-12-12T01:53:06.766996",
+      "actor": "Test",
+      "action": "CREATE",
+      "target": "InMemoryEventBus",
+      "message": "Initialize fresh bus",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T01:53:06.767170",
+      "actor": "Test",
+      "action": "SUBSCRIBE",
+      "target": "InMemoryEventBus",
+      "message": "Subscribe FailingHandler",
+      "data": {
+        "event": "test_event"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T01:53:06.767189",
+      "actor": "Test",
+      "action": "SUBSCRIBE",
+      "target": "InMemoryEventBus",
+      "message": "Subscribe WorkingHandler",
+      "data": {
+        "event": "test_event"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T01:53:06.767200",
+      "actor": "Test",
+      "action": "PUBLISH",
+      "target": "InMemoryEventBus",
+      "message": "Publish event",
+      "data": {
+        "event": "test_event",
+        "data": "test"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T01:53:06.767211",
+      "actor": "FailingHandler",
+      "action": "ERROR",
+      "target": "Test",
+      "message": "Handler raising error",
+      "data": {
+        "data": "test"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T01:53:06.767668",
+      "actor": "WorkingHandler",
+      "action": "RECEIVE",
+      "target": "Test",
+      "message": "Handler called",
+      "data": {
+        "data": "test"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T01:53:06.767680",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "InMemoryEventBus",
+      "message": "Verify calls",
+      "data": null,
+      "expect": "['test']",
+      "got": "['test']"
+    }
+  ],
+  "summary": {
+    "total_interactions": 7,
+    "subscriptions": 2,
+    "publications": 1,
+    "assertions": 1
+  }
+}

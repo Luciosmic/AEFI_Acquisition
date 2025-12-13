@@ -1,0 +1,94 @@
+{
+  "test_name": "test_continuous_acquisition_short_burst",
+  "timestamp": "2025-12-09T05:06:19.700698",
+  "status": "PASSED",
+  "interactions": [
+    {
+      "timestamp": "2025-12-09T05:06:19.700965",
+      "actor": "Test",
+      "action": "CREATE",
+      "target": "ContinuousAcquisitionService",
+      "message": "Setup service, executor, ports and event bus",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T05:06:19.701216",
+      "actor": "Test",
+      "action": "SUBSCRIBE",
+      "target": "EventBus",
+      "message": "Subscribe to continuousacquisitionsampleacquired",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T05:06:19.701482",
+      "actor": "Test",
+      "action": "CALL",
+      "target": "ContinuousAcquisitionService",
+      "message": "start_acquisition(sample_rate=20Hz, max_duration=0.1s)",
+      "data": {
+        "sample_rate_hz": 20.0,
+        "max_duration_s": 0.1
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T05:06:19.702460",
+      "actor": "EventBus",
+      "action": "RECEIVE",
+      "target": "Test",
+      "message": "Received ContinuousAcquisitionSampleAcquired",
+      "data": {
+        "acquisition_id": "3cfbe038-889a-494b-9445-e3295eee7a55",
+        "index": 0,
+        "vx": 0.1
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T05:06:19.758522",
+      "actor": "EventBus",
+      "action": "RECEIVE",
+      "target": "Test",
+      "message": "Received ContinuousAcquisitionSampleAcquired",
+      "data": {
+        "acquisition_id": "3cfbe038-889a-494b-9445-e3295eee7a55",
+        "index": 1,
+        "vx": 0.2
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T05:06:19.904803",
+      "actor": "Test",
+      "action": "CALL",
+      "target": "ContinuousAcquisitionService",
+      "message": "stop_acquisition()",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T05:06:19.905226",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "ContinuousAcquisitionService",
+      "message": "Verify that at least 1 sample was acquired",
+      "data": null,
+      "expect": ">=1",
+      "got": "2"
+    }
+  ],
+  "summary": {
+    "total_interactions": 7,
+    "subscriptions": 1,
+    "publications": 0,
+    "assertions": 1
+  }
+}

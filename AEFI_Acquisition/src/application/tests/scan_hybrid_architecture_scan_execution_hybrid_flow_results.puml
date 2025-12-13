@@ -1,0 +1,42 @@
+@startuml
+title Sequence Diagram: test_scan_execution_hybrid_flow
+autonumber
+skinparam responseMessageBelowArrow true
+
+== Setup Phase ==
+
+"TestAgent" -> "Infrastructure" : **CREATE** Setup EventBus & Mocks
+"TestAgent" -> "ScanApplicationService" : **CREATE** Initialize Service
+"TestAgent" -> "ScanApplicationService" : **CALL** set_output_port
+note right
+Data: {
+  "port": "MockOutputPort"
+}
+end note
+
+== Execution Phase ==
+
+"TestAgent" -> "ScanApplicationService" : **COMMAND** execute_scan
+note right
+Data: {
+  "pattern": "RASTER"
+}
+end note
+"ScanApplicationService" -> "ScanExecutor" : **CALL** execute
+note right
+Data: {
+  "points": 25
+}
+end note
+"ScanExecutor" -> "EventBus" : **PUBLISH** ScanCompleted
+
+== Verification Phase ==
+
+"TestAgent" -> "MockOutputPort" : **ASSERT** Verify present_scan_started called
+"TestAgent" -> "MockOutputPort" : **ASSERT** Verify present_scan_completed called
+"TestAgent" -> "ScanApplicationService" : **ASSERT** Verify return value
+note right
+Expect: True
+Got: True
+end note
+@enduml

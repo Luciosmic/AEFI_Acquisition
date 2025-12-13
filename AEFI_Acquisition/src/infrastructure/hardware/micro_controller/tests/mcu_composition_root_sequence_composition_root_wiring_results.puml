@@ -1,0 +1,22 @@
+@startuml
+title Sequence Diagram: test_composition_root_wiring
+autonumber
+skinparam responseMessageBelowArrow true
+
+== Composition Root Initialization ==
+
+"Test" -> "EventBus" : **CREATE** Initialize EventBus
+"Test" -> "MCUCompositionRoot" : **CREATE** Initialize Root
+"Test" -> "MCUCompositionRoot" : **VERIFY** Check Exposed Ports
+"MCUCompositionRoot" -> "IAcquisitionPort" : **EXPOSE** root.acquisition
+"MCUCompositionRoot" -> "IHardwareInitializationPort" : **EXPOSE** root.lifecycle
+"MCUCompositionRoot" -> "IContinuousAcquisitionExecutor" : **EXPOSE** root.continuous
+
+== Internal Wiring Verification ==
+
+"Test" -> "MCUCompositionRoot" : **INSPECT** Check Shared Driver
+"MCUCompositionRoot" -> "ADS131A04Adapter" : **WIRE** Injected Shared Driver
+"MCUCompositionRoot" -> "MCULifecycleAdapter" : **WIRE** Injected Shared Driver
+"Test" -> "AdapterIContinuousAcquisitionAds131a04" : **INSPECT** Check EventBus
+"MCUCompositionRoot" -> "ContinuousAdapter" : **WIRE** Injected EventBus
+@enduml

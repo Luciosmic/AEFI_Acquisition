@@ -1,0 +1,47 @@
+@startuml
+title Sequence Diagram: test_multiple_subscribers
+autonumber
+skinparam responseMessageBelowArrow true
+"Test" -> "InMemoryEventBus" : **CREATE** Initialize fresh bus
+"Test" -> "InMemoryEventBus" : **SUBSCRIBE** Subscribe Handler1
+note right
+Data: {
+  "event": "test_event"
+}
+end note
+"Test" -> "InMemoryEventBus" : **SUBSCRIBE** Subscribe Handler2
+note right
+Data: {
+  "event": "test_event"
+}
+end note
+"Test" -> "InMemoryEventBus" : **PUBLISH** Publish event
+note right
+Data: {
+  "event": "test_event",
+  "data": "hello"
+}
+end note
+"Handler1" -> "Test" : **RECEIVE** Handler1 called
+note right
+Data: {
+  "data": "hello"
+}
+end note
+"Handler2" -> "Test" : **RECEIVE** Handler2 called
+note right
+Data: {
+  "data": "hello"
+}
+end note
+"Test" -> "InMemoryEventBus" : **ASSERT** Verify calls1
+note right
+Expect: ['hello']
+Got: ['hello']
+end note
+"Test" -> "InMemoryEventBus" : **ASSERT** Verify calls2
+note right
+Expect: ['hello']
+Got: ['hello']
+end note
+@enduml

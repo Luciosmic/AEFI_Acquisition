@@ -1,0 +1,158 @@
+{
+  "test_name": "test_full_acquisition_cycle",
+  "timestamp": "2025-12-12T17:27:57.677943",
+  "status": "PASSED",
+  "interactions": [
+    {
+      "timestamp": "2025-12-12T17:27:57.677943",
+      "actor": "Test",
+      "action": "CREATE",
+      "target": "EventBus",
+      "message": "Initialize EventBus",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T17:27:57.677943",
+      "actor": "Test",
+      "action": "CREATE",
+      "target": "AcquisitionPort",
+      "message": "Initialize Mock Port",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T17:27:57.677943",
+      "actor": "Test",
+      "action": "CREATE",
+      "target": "AdapterIContinuousAcquisitionAds131a04",
+      "message": "Initialize Adapter",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T17:27:57.677943",
+      "actor": "Test",
+      "action": "CREATE",
+      "target": "Service",
+      "message": "Initialize Service",
+      "data": {
+        "dependency": "AdapterIContinuousAcquisitionAds131a04",
+        "port": "AcquisitionPort"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T17:27:57.677943",
+      "actor": "TestSubscriber",
+      "action": "SUBSCRIBE",
+      "target": "EventBus",
+      "message": "continuousacquisitionsampleacquired",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T17:27:57.677943",
+      "actor": "Test",
+      "action": "COMMAND",
+      "target": "Service",
+      "message": "start_acquisition",
+      "data": {
+        "rate": 10.0
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T17:27:57.680618",
+      "actor": "EventBus",
+      "action": "RECEIVE",
+      "target": "TestSubscriber",
+      "message": "Sample Acquired",
+      "data": {
+        "index": 0
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T17:27:57.783248",
+      "actor": "EventBus",
+      "action": "RECEIVE",
+      "target": "TestSubscriber",
+      "message": "Sample Acquired",
+      "data": {
+        "index": 1
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T17:27:57.883817",
+      "actor": "EventBus",
+      "action": "RECEIVE",
+      "target": "TestSubscriber",
+      "message": "Sample Acquired",
+      "data": {
+        "index": 2
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T17:27:57.985907",
+      "actor": "EventBus",
+      "action": "RECEIVE",
+      "target": "TestSubscriber",
+      "message": "Sample Acquired",
+      "data": {
+        "index": 3
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T17:27:58.105086",
+      "actor": "EventBus",
+      "action": "RECEIVE",
+      "target": "TestSubscriber",
+      "message": "Sample Acquired",
+      "data": {
+        "index": 4
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T17:27:58.182885",
+      "actor": "Test",
+      "action": "COMMAND",
+      "target": "Service",
+      "message": "stop_acquisition",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T17:27:58.233715",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "TestSubscriber",
+      "message": "Verify samples received",
+      "data": null,
+      "expect": "> 0 samples",
+      "got": "5 samples"
+    }
+  ],
+  "summary": {
+    "total_interactions": 13,
+    "subscriptions": 1,
+    "publications": 0,
+    "assertions": 1
+  }
+}

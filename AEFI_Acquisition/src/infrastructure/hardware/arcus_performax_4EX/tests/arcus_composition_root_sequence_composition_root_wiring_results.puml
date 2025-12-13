@@ -1,0 +1,19 @@
+@startuml
+title Sequence Diagram: test_composition_root_wiring
+autonumber
+skinparam responseMessageBelowArrow true
+
+== Composition Root Initialization ==
+
+"Test" -> "ArcusCompositionRoot" : **CREATE** Initialize Root
+"Test" -> "ArcusCompositionRoot" : **VERIFY** Check Exposed Ports
+"ArcusCompositionRoot" -> "IMotionPort" : **EXPOSE** root.motion
+"ArcusCompositionRoot" -> "IHardwareInitializationPort" : **EXPOSE** root.lifecycle
+"ArcusCompositionRoot" -> "IHardwareAdvancedConfigurator" : **EXPOSE** root.config
+
+== Internal Wiring Verification ==
+
+"Test" -> "ArcusCompositionRoot" : **INSPECT** Check Shared Driver
+"ArcusCompositionRoot" -> "ArcusAdapter" : **WIRE** Injected Shared Driver
+"ArcusCompositionRoot" -> "ArcusConfigurator" : **WIRE** Injected Shared Driver
+@enduml

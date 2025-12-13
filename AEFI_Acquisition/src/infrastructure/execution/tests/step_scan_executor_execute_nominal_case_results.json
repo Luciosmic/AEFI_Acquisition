@@ -1,0 +1,279 @@
+{
+  "test_name": "test_execute_nominal_case",
+  "timestamp": "2025-12-12T01:53:06.771439",
+  "status": "PASSED",
+  "interactions": [
+    {
+      "timestamp": "2025-12-12T01:53:06.771696",
+      "actor": "Test",
+      "action": "CREATE",
+      "target": "StepScanExecutor",
+      "message": "Initialize Executor",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T01:53:06.771714",
+      "actor": "Test",
+      "action": "START",
+      "target": "StepScanExecutor",
+      "message": "Start nominal execution test",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T01:53:06.771758",
+      "actor": "Test",
+      "action": "CALL",
+      "target": "StepScanExecutor",
+      "message": "execute",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T01:53:06.771773",
+      "actor": "StepScanExecutor",
+      "action": "CALL",
+      "target": "MotionPort",
+      "message": "Call move_to",
+      "data": {
+        "args": [
+          "Position2D(x=0, y=0)"
+        ],
+        "kwargs": {}
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T01:53:06.772156",
+      "actor": "MotionPort",
+      "action": "RETURN",
+      "target": "StepScanExecutor",
+      "message": "Return from move_to",
+      "data": {
+        "result": "<MagicMock name='mock.move_to()' id='4644340128'>"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T01:53:06.772171",
+      "actor": "StepScanExecutor",
+      "action": "CALL",
+      "target": "AcquisitionPort",
+      "message": "Call acquire_sample",
+      "data": {
+        "args": [],
+        "kwargs": {}
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T01:53:06.772197",
+      "actor": "AcquisitionPort",
+      "action": "RETURN",
+      "target": "StepScanExecutor",
+      "message": "Return from acquire_sample",
+      "data": {
+        "result": "VoltageMeasurement(voltage_x_in_phase=1.0, voltage_x_quadrature=0.0, voltage_y_in_phase=0.0, voltage_y_quadrature=0.0, voltage_z_in_phase=0.0, voltage_z_quadrature=0.0, timestamp=0.0, uncertainty_estimate_volts=None, std_dev_x_in_phase=None, std_dev_x_quadrature=None, std_dev_y_in_phase=None, std_dev_y_quadrature=None, std_dev_z_in_phase=None, std_dev_z_quadrature=None)"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T01:53:06.772240",
+      "actor": "StepScanExecutor",
+      "action": "CALL",
+      "target": "EventBus",
+      "message": "Call publish",
+      "data": {
+        "args": [
+          "scanstarted",
+          "ScanStarted(occurred_on=datetime.datetime(2025, 12, 12, 1, 53, 6, 771757), scan_id=UUID('821c47d1-3061-4415-923f-7c7644c7bbda'), config=StepScanConfig(scan_zone=ScanZone(x_min=0, x_max=1, y_min=0, y_max=1), x_nb_points=2, y_nb_points=1, scan_pattern=<ScanPattern.RASTER: 2>, stabilization_delay_ms=0, averaging_per_position=1, measurement_uncertainty=MeasurementUncertainty(max_uncertainty_volts=1e-06)))"
+        ],
+        "kwargs": {}
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T01:53:06.772387",
+      "actor": "EventBus",
+      "action": "RETURN",
+      "target": "StepScanExecutor",
+      "message": "Return from publish",
+      "data": {
+        "result": "<MagicMock name='mock.publish()' id='4644341808'>"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T01:53:06.772409",
+      "actor": "StepScanExecutor",
+      "action": "CALL",
+      "target": "EventBus",
+      "message": "Call publish",
+      "data": {
+        "args": [
+          "scanpointacquired",
+          "ScanPointAcquired(occurred_on=datetime.datetime(2025, 12, 12, 1, 53, 6, 772218), scan_id=UUID('821c47d1-3061-4415-923f-7c7644c7bbda'), point_index=0, position=Position2D(x=0, y=0), measurement=VoltageMeasurement(voltage_x_in_phase=1.0, voltage_x_quadrature=0.0, voltage_y_in_phase=0.0, voltage_y_quadrature=0.0, voltage_z_in_phase=0.0, voltage_z_quadrature=0.0, timestamp=0.0, uncertainty_estimate_volts=None, std_dev_x_in_phase=0.0, std_dev_x_quadrature=0.0, std_dev_y_in_phase=0.0, std_dev_y_quadrature=0.0, std_dev_z_in_phase=0.0, std_dev_z_quadrature=0.0))"
+        ],
+        "kwargs": {}
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T01:53:06.772434",
+      "actor": "EventBus",
+      "action": "RETURN",
+      "target": "StepScanExecutor",
+      "message": "Return from publish",
+      "data": {
+        "result": "<MagicMock name='mock.publish()' id='4644341808'>"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T01:53:06.772445",
+      "actor": "StepScanExecutor",
+      "action": "CALL",
+      "target": "MotionPort",
+      "message": "Call move_to",
+      "data": {
+        "args": [
+          "Position2D(x=1, y=0)"
+        ],
+        "kwargs": {}
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T01:53:06.772466",
+      "actor": "MotionPort",
+      "action": "RETURN",
+      "target": "StepScanExecutor",
+      "message": "Return from move_to",
+      "data": {
+        "result": "<MagicMock name='mock.move_to()' id='4644340128'>"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T01:53:06.772476",
+      "actor": "StepScanExecutor",
+      "action": "CALL",
+      "target": "AcquisitionPort",
+      "message": "Call acquire_sample",
+      "data": {
+        "args": [],
+        "kwargs": {}
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T01:53:06.772492",
+      "actor": "AcquisitionPort",
+      "action": "RETURN",
+      "target": "StepScanExecutor",
+      "message": "Return from acquire_sample",
+      "data": {
+        "result": "VoltageMeasurement(voltage_x_in_phase=1.0, voltage_x_quadrature=0.0, voltage_y_in_phase=0.0, voltage_y_quadrature=0.0, voltage_z_in_phase=0.0, voltage_z_quadrature=0.0, timestamp=0.0, uncertainty_estimate_volts=None, std_dev_x_in_phase=None, std_dev_x_quadrature=None, std_dev_y_in_phase=None, std_dev_y_quadrature=None, std_dev_z_in_phase=None, std_dev_z_quadrature=None)"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T01:53:06.772519",
+      "actor": "StepScanExecutor",
+      "action": "CALL",
+      "target": "EventBus",
+      "message": "Call publish",
+      "data": {
+        "args": [
+          "scanpointacquired",
+          "ScanPointAcquired(occurred_on=datetime.datetime(2025, 12, 12, 1, 53, 6, 772507), scan_id=UUID('821c47d1-3061-4415-923f-7c7644c7bbda'), point_index=1, position=Position2D(x=1, y=0), measurement=VoltageMeasurement(voltage_x_in_phase=1.0, voltage_x_quadrature=0.0, voltage_y_in_phase=0.0, voltage_y_quadrature=0.0, voltage_z_in_phase=0.0, voltage_z_quadrature=0.0, timestamp=0.0, uncertainty_estimate_volts=None, std_dev_x_in_phase=0.0, std_dev_x_quadrature=0.0, std_dev_y_in_phase=0.0, std_dev_y_quadrature=0.0, std_dev_z_in_phase=0.0, std_dev_z_quadrature=0.0))"
+        ],
+        "kwargs": {}
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T01:53:06.772542",
+      "actor": "EventBus",
+      "action": "RETURN",
+      "target": "StepScanExecutor",
+      "message": "Return from publish",
+      "data": {
+        "result": "<MagicMock name='mock.publish()' id='4644341808'>"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T01:53:06.772554",
+      "actor": "StepScanExecutor",
+      "action": "CALL",
+      "target": "EventBus",
+      "message": "Call publish",
+      "data": {
+        "args": [
+          "scancompleted",
+          "ScanCompleted(occurred_on=datetime.datetime(2025, 12, 12, 1, 53, 6, 772511), scan_id=UUID('821c47d1-3061-4415-923f-7c7644c7bbda'), total_points=2)"
+        ],
+        "kwargs": {}
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T01:53:06.772580",
+      "actor": "EventBus",
+      "action": "RETURN",
+      "target": "StepScanExecutor",
+      "message": "Return from publish",
+      "data": {
+        "result": "<MagicMock name='mock.publish()' id='4644341808'>"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T01:53:06.772590",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "StepScanExecutor",
+      "message": "Check success",
+      "data": null,
+      "expect": "True",
+      "got": "True"
+    },
+    {
+      "timestamp": "2025-12-12T01:53:06.772598",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "EventBus",
+      "message": "Check publish calls",
+      "data": null,
+      "expect": null,
+      "got": null
+    }
+  ],
+  "summary": {
+    "total_interactions": 21,
+    "subscriptions": 0,
+    "publications": 0,
+    "assertions": 2
+  }
+}

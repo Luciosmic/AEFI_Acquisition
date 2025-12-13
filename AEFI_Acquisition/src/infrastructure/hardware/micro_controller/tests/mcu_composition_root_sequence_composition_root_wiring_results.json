@@ -1,0 +1,143 @@
+{
+  "test_name": "test_composition_root_wiring",
+  "timestamp": "2025-12-12T18:02:01.830689",
+  "status": "PASSED",
+  "interactions": [
+    {
+      "timestamp": "2025-12-12T18:02:01.831691",
+      "actor": "System",
+      "action": "DIVIDER",
+      "target": "System",
+      "message": "Composition Root Initialization",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T18:02:01.831691",
+      "actor": "Test",
+      "action": "CREATE",
+      "target": "EventBus",
+      "message": "Initialize EventBus",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T18:02:01.832197",
+      "actor": "Test",
+      "action": "CREATE",
+      "target": "MCUCompositionRoot",
+      "message": "Initialize Root",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T18:02:01.832197",
+      "actor": "Test",
+      "action": "VERIFY",
+      "target": "MCUCompositionRoot",
+      "message": "Check Exposed Ports",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T18:02:01.832197",
+      "actor": "MCUCompositionRoot",
+      "action": "EXPOSE",
+      "target": "IAcquisitionPort",
+      "message": "root.acquisition",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T18:02:01.832197",
+      "actor": "MCUCompositionRoot",
+      "action": "EXPOSE",
+      "target": "IHardwareInitializationPort",
+      "message": "root.lifecycle",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T18:02:01.832197",
+      "actor": "MCUCompositionRoot",
+      "action": "EXPOSE",
+      "target": "IContinuousAcquisitionExecutor",
+      "message": "root.continuous",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T18:02:01.832197",
+      "actor": "System",
+      "action": "DIVIDER",
+      "target": "System",
+      "message": "Internal Wiring Verification",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T18:02:01.832197",
+      "actor": "Test",
+      "action": "INSPECT",
+      "target": "MCUCompositionRoot",
+      "message": "Check Shared Driver",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T18:02:01.832197",
+      "actor": "MCUCompositionRoot",
+      "action": "WIRE",
+      "target": "ADS131A04Adapter",
+      "message": "Injected Shared Driver",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T18:02:01.832197",
+      "actor": "MCUCompositionRoot",
+      "action": "WIRE",
+      "target": "MCULifecycleAdapter",
+      "message": "Injected Shared Driver",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T18:02:01.832197",
+      "actor": "Test",
+      "action": "INSPECT",
+      "target": "AdapterIContinuousAcquisitionAds131a04",
+      "message": "Check EventBus",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T18:02:01.833568",
+      "actor": "MCUCompositionRoot",
+      "action": "WIRE",
+      "target": "ContinuousAdapter",
+      "message": "Injected EventBus",
+      "data": null,
+      "expect": null,
+      "got": null
+    }
+  ],
+  "summary": {
+    "total_interactions": 13,
+    "subscriptions": 0,
+    "publications": 0,
+    "assertions": 0
+  }
+}

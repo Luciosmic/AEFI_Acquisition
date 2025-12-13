@@ -1,0 +1,106 @@
+{
+  "tests": [
+    {
+      "test_name": "test_start_scan_flow",
+      "timestamp": "2025-12-11T16:45:36.548427",
+      "status": "PASSED",
+      "interactions": [
+        {
+          "timestamp": "2025-12-11T16:45:36.548437",
+          "actor": "TestRunner",
+          "action": "CREATE",
+          "target": "ScanApplicationService",
+          "message": "Mocking Service"
+        },
+        {
+          "timestamp": "2025-12-11T16:45:36.548508",
+          "actor": "TestRunner",
+          "action": "CREATE",
+          "target": "HardwareConfigurationService",
+          "message": "Mocking Config Service"
+        },
+        {
+          "timestamp": "2025-12-11T16:45:36.548553",
+          "actor": "TestRunner",
+          "action": "CREATE",
+          "target": "ScanPresenter",
+          "message": "Instantiating Presenter"
+        },
+        {
+          "timestamp": "2025-12-11T16:45:36.548816",
+          "actor": "ScanPresenter",
+          "action": "SUBSCRIBE",
+          "target": "ScanApplicationService",
+          "message": "Subscribing to Domain Events"
+        },
+        {
+          "timestamp": "2025-12-11T16:45:36.548823",
+          "actor": "User",
+          "action": "CALL",
+          "target": "ScanPresenter",
+          "message": "start_scan",
+          "data": {
+            "x_min": "0",
+            "x_max": "10",
+            "y_min": "0",
+            "y_max": "10",
+            "motion_speed_cm_s": "5.0"
+          }
+        },
+        {
+          "timestamp": "2025-12-11T16:45:36.549412",
+          "actor": "ScanPresenter",
+          "action": "CALL",
+          "target": "HardwareConfigurationService",
+          "message": "apply_config",
+          "data": {
+            "hardware": "arcus_performax_4ex",
+            "config": {
+              "hs": 5.0
+            }
+          }
+        },
+        {
+          "timestamp": "2025-12-11T16:45:36.549416",
+          "actor": "ScanPresenter",
+          "action": "CALL",
+          "target": "ScanApplicationService",
+          "message": "execute_scan"
+        },
+        {
+          "timestamp": "2025-12-11T16:45:36.549580",
+          "actor": "ScanApplicationService",
+          "action": "PUBLISH",
+          "target": "ScanPresenter",
+          "message": "ScanStarted Event",
+          "data": {
+            "scan_id": "scan_123"
+          }
+        },
+        {
+          "timestamp": "2025-12-11T16:45:36.549614",
+          "actor": "ScanPresenter",
+          "action": "PUBLISH",
+          "target": "UI",
+          "message": "scan_started signal",
+          "data": {
+            "scan_id": "scan_123"
+          }
+        },
+        {
+          "timestamp": "2025-12-11T16:45:36.549616",
+          "actor": "TestRunner",
+          "action": "ASSERT",
+          "target": "ScanPresenter",
+          "message": "Verify scan_started emitted"
+        }
+      ],
+      "summary": {
+        "total_interactions": 10,
+        "subscriptions": 1,
+        "publications": 2,
+        "assertions": 1
+      }
+    }
+  ]
+}

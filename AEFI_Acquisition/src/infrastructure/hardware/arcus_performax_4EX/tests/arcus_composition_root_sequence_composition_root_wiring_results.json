@@ -1,0 +1,113 @@
+{
+  "test_name": "test_composition_root_wiring",
+  "timestamp": "2025-12-12T17:49:43.666185",
+  "status": "PASSED",
+  "interactions": [
+    {
+      "timestamp": "2025-12-12T17:49:43.666185",
+      "actor": "System",
+      "action": "DIVIDER",
+      "target": "System",
+      "message": "Composition Root Initialization",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T17:49:43.666699",
+      "actor": "Test",
+      "action": "CREATE",
+      "target": "ArcusCompositionRoot",
+      "message": "Initialize Root",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T17:49:43.667204",
+      "actor": "Test",
+      "action": "VERIFY",
+      "target": "ArcusCompositionRoot",
+      "message": "Check Exposed Ports",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T17:49:43.674335",
+      "actor": "ArcusCompositionRoot",
+      "action": "EXPOSE",
+      "target": "IMotionPort",
+      "message": "root.motion",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T17:49:43.675342",
+      "actor": "ArcusCompositionRoot",
+      "action": "EXPOSE",
+      "target": "IHardwareInitializationPort",
+      "message": "root.lifecycle",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T17:49:43.675852",
+      "actor": "ArcusCompositionRoot",
+      "action": "EXPOSE",
+      "target": "IHardwareAdvancedConfigurator",
+      "message": "root.config",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T17:49:43.676369",
+      "actor": "System",
+      "action": "DIVIDER",
+      "target": "System",
+      "message": "Internal Wiring Verification",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T17:49:43.678932",
+      "actor": "Test",
+      "action": "INSPECT",
+      "target": "ArcusCompositionRoot",
+      "message": "Check Shared Driver",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T17:49:43.678932",
+      "actor": "ArcusCompositionRoot",
+      "action": "WIRE",
+      "target": "ArcusAdapter",
+      "message": "Injected Shared Driver",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T17:49:43.678932",
+      "actor": "ArcusCompositionRoot",
+      "action": "WIRE",
+      "target": "ArcusConfigurator",
+      "message": "Injected Shared Driver",
+      "data": null,
+      "expect": null,
+      "got": null
+    }
+  ],
+  "summary": {
+    "total_interactions": 10,
+    "subscriptions": 0,
+    "publications": 0,
+    "assertions": 0
+  }
+}

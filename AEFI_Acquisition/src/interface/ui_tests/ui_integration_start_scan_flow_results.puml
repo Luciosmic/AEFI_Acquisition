@@ -1,0 +1,20 @@
+@startuml
+title Sequence Diagram: test_start_scan_flow
+autonumber
+skinparam responseMessageBelowArrow true
+"Test" -> "MainWindow" : **CREATE** Setup UI
+"Test" -> "UI" : **START** Start scan flow test
+"Test" -> "ScanControlWidget" : **ACTION** Set scan parameters
+"Test" -> "ScanControlWidget" : **CLICK** Click Start Button
+"Test" -> "ScanApplicationService" : **WAIT** Waiting for scan completion
+"Test" -> "ScanControlWidget" : **ASSERT** Check status text
+note right
+Expect: Completed
+Got: Status: Completed (4 points)
+end note
+"Test" -> "Scan2DColormapWidget" : **ASSERT** Check plotted points
+note right
+Expect: 4
+Got: 4
+end note
+@enduml

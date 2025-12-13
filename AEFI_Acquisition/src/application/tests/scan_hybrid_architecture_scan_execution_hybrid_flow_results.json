@@ -1,0 +1,139 @@
+{
+  "test_name": "test_scan_execution_hybrid_flow",
+  "timestamp": "2025-12-11T18:14:39.791277",
+  "status": "PASSED",
+  "interactions": [
+    {
+      "timestamp": "2025-12-11T18:14:39.791287",
+      "actor": "System",
+      "action": "DIVIDER",
+      "target": "System",
+      "message": "Setup Phase",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-11T18:14:39.791309",
+      "actor": "TestAgent",
+      "action": "CREATE",
+      "target": "Infrastructure",
+      "message": "Setup EventBus & Mocks",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-11T18:14:39.791757",
+      "actor": "TestAgent",
+      "action": "CREATE",
+      "target": "ScanApplicationService",
+      "message": "Initialize Service",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-11T18:14:39.791779",
+      "actor": "TestAgent",
+      "action": "CALL",
+      "target": "ScanApplicationService",
+      "message": "set_output_port",
+      "data": {
+        "port": "MockOutputPort"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-11T18:14:39.791837",
+      "actor": "System",
+      "action": "DIVIDER",
+      "target": "System",
+      "message": "Execution Phase",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-11T18:14:39.791844",
+      "actor": "TestAgent",
+      "action": "COMMAND",
+      "target": "ScanApplicationService",
+      "message": "execute_scan",
+      "data": {
+        "pattern": "RASTER"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-11T18:14:39.792058",
+      "actor": "ScanApplicationService",
+      "action": "CALL",
+      "target": "ScanExecutor",
+      "message": "execute",
+      "data": {
+        "points": 25
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-11T18:14:39.792066",
+      "actor": "ScanExecutor",
+      "action": "PUBLISH",
+      "target": "EventBus",
+      "message": "ScanCompleted",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-11T18:14:39.792159",
+      "actor": "System",
+      "action": "DIVIDER",
+      "target": "System",
+      "message": "Verification Phase",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-11T18:14:39.792163",
+      "actor": "TestAgent",
+      "action": "ASSERT",
+      "target": "MockOutputPort",
+      "message": "Verify present_scan_started called",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-11T18:14:39.792168",
+      "actor": "TestAgent",
+      "action": "ASSERT",
+      "target": "MockOutputPort",
+      "message": "Verify present_scan_completed called",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-11T18:14:39.792172",
+      "actor": "TestAgent",
+      "action": "ASSERT",
+      "target": "ScanApplicationService",
+      "message": "Verify return value",
+      "data": null,
+      "expect": "True",
+      "got": "True"
+    }
+  ],
+  "summary": {
+    "total_interactions": 12,
+    "subscriptions": 0,
+    "publications": 1,
+    "assertions": 3
+  }
+}

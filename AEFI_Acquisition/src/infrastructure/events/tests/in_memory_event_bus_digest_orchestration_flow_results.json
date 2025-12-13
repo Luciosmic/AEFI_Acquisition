@@ -1,0 +1,102 @@
+{
+  "test_name": "test_digest_orchestration_flow",
+  "timestamp": "2025-12-12T01:53:06.765776",
+  "status": "PASSED",
+  "interactions": [
+    {
+      "timestamp": "2025-12-12T01:53:06.765777",
+      "actor": "Test",
+      "action": "CREATE",
+      "target": "InMemoryEventBus",
+      "message": "Initialize fresh bus",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T01:53:06.766008",
+      "actor": "Test",
+      "action": "SUBSCRIBE",
+      "target": "InMemoryEventBus",
+      "message": "Subscribe A",
+      "data": {
+        "event": "scan.started"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T01:53:06.766026",
+      "actor": "Test",
+      "action": "SUBSCRIBE",
+      "target": "InMemoryEventBus",
+      "message": "Subscribe B",
+      "data": {
+        "event": "scan.started"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T01:53:06.766036",
+      "actor": "Test",
+      "action": "PUBLISH",
+      "target": "InMemoryEventBus",
+      "message": "Publish scan.started",
+      "data": {
+        "payload": {
+          "scan_id": "demo-123",
+          "status": "started"
+        }
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T01:53:06.766047",
+      "actor": "SubscriberA",
+      "action": "RECEIVE",
+      "target": "InMemoryEventBus",
+      "message": "Received event",
+      "data": {
+        "data": {
+          "scan_id": "demo-123",
+          "status": "started"
+        }
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T01:53:06.766059",
+      "actor": "SubscriberB",
+      "action": "RECEIVE",
+      "target": "InMemoryEventBus",
+      "message": "Received event",
+      "data": {
+        "data": {
+          "scan_id": "demo-123",
+          "status": "started"
+        }
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T01:53:06.766103",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "InMemoryEventBus",
+      "message": "Verify orchestration",
+      "data": null,
+      "expect": "[('A', {'scan_id': 'demo-123', 'status': 'started'}), ('B', {'scan_id': 'demo-123', 'status': 'started'})]",
+      "got": "[('A', {'scan_id': 'demo-123', 'status': 'started'}), ('B', {'scan_id': 'demo-123', 'status': 'started'})]"
+    }
+  ],
+  "summary": {
+    "total_interactions": 7,
+    "subscriptions": 2,
+    "publications": 1,
+    "assertions": 1
+  }
+}

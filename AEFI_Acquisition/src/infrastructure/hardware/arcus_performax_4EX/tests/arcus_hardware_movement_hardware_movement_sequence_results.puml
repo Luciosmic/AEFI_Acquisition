@@ -1,0 +1,33 @@
+@startuml
+title Sequence Diagram: test_hardware_movement_sequence
+autonumber
+skinparam responseMessageBelowArrow true
+
+== Arcus Hardware Movement Test ==
+
+"Test" -> "ArcusCompositionRoot" : **CREATE** Initialize Hardware
+"Test" -> "ArcusLifecycle" : **CALL** initialize_all()
+"ArcusLifecycle" -> "ArcusController" : **CONNECT** Connect to Hardware
+
+== Homing Sequence ==
+
+"Test" -> "ArcusAdapter" : **CALL** home()
+"Test" -> "ArcusAdapter" : **WAIT** wait_until_stopped()
+"ArcusAdapter" --> "Test" : **RETURN** Position: Position2D(x=-50.9684, y=0.7412)
+
+== Move to 200mm ==
+
+"Test" -> "ArcusAdapter" : **CALL** move_to(Position2D(x=200.0, y=200.0))
+"Test" -> "ArcusAdapter" : **WAIT** wait_until_stopped()
+"ArcusAdapter" --> "Test" : **RETURN** Position: Position2D(x=199.9932, y=199.9932)
+
+== Return to Home ==
+
+"Test" -> "ArcusAdapter" : **CALL** move_to(Position2D(x=0.0, y=0.0))
+"Test" -> "ArcusAdapter" : **WAIT** wait_until_stopped()
+"ArcusAdapter" --> "Test" : **RETURN** Final Position: Position2D(x=0.0, y=0.7412)
+
+== Cleanup ==
+
+"Test" -> "ArcusLifecycle" : **CALL** close_all()
+@enduml

@@ -1,0 +1,57 @@
+@startuml
+title Sequence Diagram: test_hardware_config_discovery_flow
+autonumber
+skinparam responseMessageBelowArrow true
+"Test" -> "ArcusPerformax4EXConfigProvider" : **CREATE** Instantiate Arcus hardware config provider
+"Test" -> "HardwareConfigurationService" : **CREATE** Create service with Arcus provider
+note right
+Data: {
+  "providers": [
+    "arcus_performax_4ex"
+  ]
+}
+end note
+"Test" -> "HardwareConfigurationService" : **CALL** list_hardware_ids()
+"HardwareConfigurationService" --> "Test" : **RETURN** Hardware ids discovered
+note right
+Data: {
+  "hardware_ids": [
+    "arcus_performax_4ex"
+  ]
+}
+end note
+"Test" -> "HardwareConfigurationService" : **ASSERT** Verify Arcus hardware id present
+note right
+Expect: arcus_performax_4ex
+Got: arcus_performax_4ex
+end note
+"Test" -> "HardwareConfigurationService" : **CALL** get_hardware_display_name('arcus_performax_4ex')
+"HardwareConfigurationService" --> "Test" : **RETURN** Display name resolved
+note right
+Data: {
+  "display_name": "Arcus Performax 4EX Motor Controller"
+}
+end note
+"Test" -> "HardwareConfigurationService" : **ASSERT** Verify display name non-empty
+note right
+Expect: non-empty string
+Got: Arcus Performax 4EX Motor Controller
+end note
+"Test" -> "HardwareConfigurationService" : **CALL** get_parameter_specs('arcus_performax_4ex')
+"HardwareConfigurationService" --> "Test" : **RETURN** Parameter specs resolved
+note right
+Data: {
+  "count": 12
+}
+end note
+"Test" -> "HardwareConfigurationService" : **ASSERT** Verify at least one parameter spec
+note right
+Expect: >= 1
+Got: 12
+end note
+"Test" -> "HardwareConfigurationService" : **ASSERT** Verify first spec has name and label
+note right
+Expect: non-empty name/label
+Got: {'name': 'max_velocity', 'label': 'Max Velocity'}
+end note
+@enduml

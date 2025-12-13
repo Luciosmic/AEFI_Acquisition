@@ -1,0 +1,145 @@
+{
+  "test_name": "test_hardware_config_discovery_flow",
+  "timestamp": "2025-12-09T18:57:01.989967",
+  "status": "PASSED",
+  "interactions": [
+    {
+      "timestamp": "2025-12-09T18:57:01.989971",
+      "actor": "Test",
+      "action": "CREATE",
+      "target": "ArcusPerformax4EXConfigProvider",
+      "message": "Instantiate Arcus hardware config provider",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T18:57:01.989983",
+      "actor": "Test",
+      "action": "CREATE",
+      "target": "HardwareConfigurationService",
+      "message": "Create service with Arcus provider",
+      "data": {
+        "providers": [
+          "arcus_performax_4ex"
+        ]
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T18:57:01.989997",
+      "actor": "Test",
+      "action": "CALL",
+      "target": "HardwareConfigurationService",
+      "message": "list_hardware_ids()",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T18:57:01.990002",
+      "actor": "HardwareConfigurationService",
+      "action": "RETURN",
+      "target": "Test",
+      "message": "Hardware ids discovered",
+      "data": {
+        "hardware_ids": [
+          "arcus_performax_4ex"
+        ]
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T18:57:01.990008",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "HardwareConfigurationService",
+      "message": "Verify Arcus hardware id present",
+      "data": null,
+      "expect": "arcus_performax_4ex",
+      "got": "arcus_performax_4ex"
+    },
+    {
+      "timestamp": "2025-12-09T18:57:01.990013",
+      "actor": "Test",
+      "action": "CALL",
+      "target": "HardwareConfigurationService",
+      "message": "get_hardware_display_name('arcus_performax_4ex')",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T18:57:01.990016",
+      "actor": "HardwareConfigurationService",
+      "action": "RETURN",
+      "target": "Test",
+      "message": "Display name resolved",
+      "data": {
+        "display_name": "Arcus Performax 4EX Motor Controller"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T18:57:01.990021",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "HardwareConfigurationService",
+      "message": "Verify display name non-empty",
+      "data": null,
+      "expect": "non-empty string",
+      "got": "Arcus Performax 4EX Motor Controller"
+    },
+    {
+      "timestamp": "2025-12-09T18:57:01.990026",
+      "actor": "Test",
+      "action": "CALL",
+      "target": "HardwareConfigurationService",
+      "message": "get_parameter_specs('arcus_performax_4ex')",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T18:57:01.990040",
+      "actor": "HardwareConfigurationService",
+      "action": "RETURN",
+      "target": "Test",
+      "message": "Parameter specs resolved",
+      "data": {
+        "count": 12
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T18:57:01.990044",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "HardwareConfigurationService",
+      "message": "Verify at least one parameter spec",
+      "data": null,
+      "expect": ">= 1",
+      "got": "12"
+    },
+    {
+      "timestamp": "2025-12-09T18:57:01.990048",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "HardwareConfigurationService",
+      "message": "Verify first spec has name and label",
+      "data": null,
+      "expect": "non-empty name/label",
+      "got": "{'name': 'max_velocity', 'label': 'Max Velocity'}"
+    }
+  ],
+  "summary": {
+    "total_interactions": 12,
+    "subscriptions": 0,
+    "publications": 0,
+    "assertions": 4
+  }
+}

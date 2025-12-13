@@ -1,0 +1,143 @@
+{
+  "test_name": "test_full_acquisition_flow",
+  "timestamp": "2025-12-12T16:55:19.552500",
+  "status": "PASSED",
+  "interactions": [
+    {
+      "timestamp": "2025-12-12T16:55:19.552500",
+      "actor": "System",
+      "action": "DIVIDER",
+      "target": "System",
+      "message": "Setup Phase",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T16:55:19.552500",
+      "actor": "TestAcquisition",
+      "action": "CREATE",
+      "target": "MCULifecycleAdapter",
+      "message": "Initialize MCU Lifecycle Adapter",
+      "data": {
+        "port": "COM10",
+        "baudrate": 1500000
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T16:55:19.552500",
+      "actor": "MCULifecycleAdapter",
+      "action": "CALL",
+      "target": "MCU_SerialCommunicator",
+      "message": "connect",
+      "data": {
+        "port": "COM10"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T16:55:19.565249",
+      "actor": "TestAcquisition",
+      "action": "CREATE",
+      "target": "ADS131A04Adapter",
+      "message": "Initialize Acquisition Adapter",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T16:55:19.565249",
+      "actor": "System",
+      "action": "DIVIDER",
+      "target": "System",
+      "message": "Execution Phase",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T16:55:19.566247",
+      "actor": "TestAcquisition",
+      "action": "CALL",
+      "target": "ADS131A04Adapter",
+      "message": "configure_for_uncertainty",
+      "data": {
+        "max_uncertainty": 0.001
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T16:55:19.566247",
+      "actor": "TestAcquisition",
+      "action": "CALL",
+      "target": "ADS131A04Adapter",
+      "message": "acquire_sample",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T16:55:19.566247",
+      "actor": "ADS131A04Adapter",
+      "action": "CALL",
+      "target": "MCU_SerialCommunicator",
+      "message": "send_command('m1')",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T16:55:19.580734",
+      "actor": "ADS131A04Adapter",
+      "action": "RETURN",
+      "target": "TestAcquisition",
+      "message": "VoltageMeasurement",
+      "data": {
+        "ch1": "0.010368",
+        "timestamp": "2025-12-12T16:55:19.580734"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T16:55:19.580734",
+      "actor": "System",
+      "action": "DIVIDER",
+      "target": "System",
+      "message": "Verification Phase",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T16:55:19.580734",
+      "actor": "TestAcquisition",
+      "action": "ASSERT",
+      "target": "Measurement",
+      "message": "Verify measurement is not None",
+      "data": null,
+      "expect": "VoltageMeasurement object",
+      "got": "VoltageMeasurement object"
+    },
+    {
+      "timestamp": "2025-12-12T16:55:19.580734",
+      "actor": "TestAcquisition",
+      "action": "CALL",
+      "target": "MCULifecycleAdapter",
+      "message": "close_all",
+      "data": null,
+      "expect": null,
+      "got": null
+    }
+  ],
+  "summary": {
+    "total_interactions": 12,
+    "subscriptions": 0,
+    "publications": 0,
+    "assertions": 1
+  }
+}

@@ -1,0 +1,193 @@
+{
+  "test_name": "test_hardware_movement_sequence",
+  "timestamp": "2025-12-12T18:25:11.036165",
+  "status": "PASSED",
+  "interactions": [
+    {
+      "timestamp": "2025-12-12T18:25:11.037162",
+      "actor": "System",
+      "action": "DIVIDER",
+      "target": "System",
+      "message": "Arcus Hardware Movement Test",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T18:25:11.037162",
+      "actor": "Test",
+      "action": "CREATE",
+      "target": "ArcusCompositionRoot",
+      "message": "Initialize Hardware",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T18:25:11.037162",
+      "actor": "Test",
+      "action": "CALL",
+      "target": "ArcusLifecycle",
+      "message": "initialize_all()",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T18:25:13.253024",
+      "actor": "ArcusLifecycle",
+      "action": "CONNECT",
+      "target": "ArcusController",
+      "message": "Connect to Hardware",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T18:25:13.253024",
+      "actor": "System",
+      "action": "DIVIDER",
+      "target": "System",
+      "message": "Homing Sequence",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T18:25:13.253024",
+      "actor": "Test",
+      "action": "CALL",
+      "target": "ArcusAdapter",
+      "message": "home()",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T18:25:13.283155",
+      "actor": "Test",
+      "action": "WAIT",
+      "target": "ArcusAdapter",
+      "message": "wait_until_stopped()",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T18:25:14.161704",
+      "actor": "ArcusAdapter",
+      "action": "RETURN",
+      "target": "Test",
+      "message": "Position: Position2D(x=-50.9684, y=0.7412)",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T18:25:14.161704",
+      "actor": "System",
+      "action": "DIVIDER",
+      "target": "System",
+      "message": "Move to 200mm",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T18:25:14.161704",
+      "actor": "Test",
+      "action": "CALL",
+      "target": "ArcusAdapter",
+      "message": "move_to(Position2D(x=200.0, y=200.0))",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T18:25:14.192037",
+      "actor": "Test",
+      "action": "WAIT",
+      "target": "ArcusAdapter",
+      "message": "wait_until_stopped()",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T18:25:18.237073",
+      "actor": "ArcusAdapter",
+      "action": "RETURN",
+      "target": "Test",
+      "message": "Position: Position2D(x=199.9932, y=199.9932)",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T18:25:19.238301",
+      "actor": "System",
+      "action": "DIVIDER",
+      "target": "System",
+      "message": "Return to Home",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T18:25:19.238301",
+      "actor": "Test",
+      "action": "CALL",
+      "target": "ArcusAdapter",
+      "message": "move_to(Position2D(x=0.0, y=0.0))",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T18:25:19.266133",
+      "actor": "Test",
+      "action": "WAIT",
+      "target": "ArcusAdapter",
+      "message": "wait_until_stopped()",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T18:25:22.490944",
+      "actor": "ArcusAdapter",
+      "action": "RETURN",
+      "target": "Test",
+      "message": "Final Position: Position2D(x=0.0, y=0.7412)",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T18:25:22.491953",
+      "actor": "System",
+      "action": "DIVIDER",
+      "target": "System",
+      "message": "Cleanup",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T18:25:22.491953",
+      "actor": "Test",
+      "action": "CALL",
+      "target": "ArcusLifecycle",
+      "message": "close_all()",
+      "data": null,
+      "expect": null,
+      "got": null
+    }
+  ],
+  "summary": {
+    "total_interactions": 18,
+    "subscriptions": 0,
+    "publications": 0,
+    "assertions": 0
+  }
+}

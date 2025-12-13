@@ -1,0 +1,104 @@
+{
+  "test_name": "test_multiple_subscribers",
+  "timestamp": "2025-12-09T02:35:49.519487",
+  "status": "PASSED",
+  "interactions": [
+    {
+      "timestamp": "2025-12-09T02:35:49.519490",
+      "actor": "Test",
+      "action": "CREATE",
+      "target": "InMemoryEventBus",
+      "message": "Initialize fresh bus",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T02:35:49.519511",
+      "actor": "Test",
+      "action": "SUBSCRIBE",
+      "target": "InMemoryEventBus",
+      "message": "Subscribe Handler1",
+      "data": {
+        "event": "test_event"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T02:35:49.519523",
+      "actor": "Test",
+      "action": "SUBSCRIBE",
+      "target": "InMemoryEventBus",
+      "message": "Subscribe Handler2",
+      "data": {
+        "event": "test_event"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T02:35:49.519533",
+      "actor": "Test",
+      "action": "PUBLISH",
+      "target": "InMemoryEventBus",
+      "message": "Publish event",
+      "data": {
+        "event": "test_event",
+        "data": "hello"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T02:35:49.519542",
+      "actor": "Handler1",
+      "action": "RECEIVE",
+      "target": "Test",
+      "message": "Handler1 called",
+      "data": {
+        "data": "hello"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T02:35:49.519550",
+      "actor": "Handler2",
+      "action": "RECEIVE",
+      "target": "Test",
+      "message": "Handler2 called",
+      "data": {
+        "data": "hello"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T02:35:49.519556",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "InMemoryEventBus",
+      "message": "Verify calls1",
+      "data": null,
+      "expect": "['hello']",
+      "got": "['hello']"
+    },
+    {
+      "timestamp": "2025-12-09T02:35:49.519566",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "InMemoryEventBus",
+      "message": "Verify calls2",
+      "data": null,
+      "expect": "['hello']",
+      "got": "['hello']"
+    }
+  ],
+  "summary": {
+    "total_interactions": 8,
+    "subscriptions": 2,
+    "publications": 1,
+    "assertions": 2
+  }
+}

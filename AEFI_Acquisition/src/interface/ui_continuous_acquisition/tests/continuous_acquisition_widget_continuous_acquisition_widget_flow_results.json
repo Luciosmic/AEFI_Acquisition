@@ -1,0 +1,86 @@
+{
+  "test_name": "test_continuous_acquisition_widget_flow",
+  "timestamp": "2025-12-09T05:48:55.050573",
+  "status": "PASSED",
+  "interactions": [
+    {
+      "timestamp": "2025-12-09T05:48:55.050577",
+      "actor": "Test",
+      "action": "CREATE",
+      "target": "ContinuousAcquisitionWidget",
+      "message": "Setup widget, presenter, service, executor, event bus and mock acquisition port",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T05:48:55.164083",
+      "actor": "Test",
+      "action": "ACTION",
+      "target": "ContinuousAcquisitionWidget",
+      "message": "Set sample_rate=20Hz, max_duration=None (controlled by Stop button)",
+      "data": {
+        "sample_rate_hz": 20.0,
+        "max_duration_s": null
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T05:48:55.164164",
+      "actor": "Test",
+      "action": "CLICK",
+      "target": "ContinuousAcquisitionWidget",
+      "message": "Click Start button",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T05:48:55.164394",
+      "actor": "Test",
+      "action": "WAIT",
+      "target": "QtEventLoop",
+      "message": "Process events during continuous acquisition (widget)",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T05:48:55.422130",
+      "actor": "Test",
+      "action": "CLICK",
+      "target": "ContinuousAcquisitionWidget",
+      "message": "Click Stop button",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T05:48:55.441053",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "ContinuousAcquisitionWidget",
+      "message": "Verify at least one time sample recorded",
+      "data": null,
+      "expect": ">=1",
+      "got": "5"
+    },
+    {
+      "timestamp": "2025-12-09T05:48:55.441084",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "ContinuousAcquisitionWidget",
+      "message": "Verify at least one channel has data",
+      "data": null,
+      "expect": ">=1",
+      "got": "5"
+    }
+  ],
+  "summary": {
+    "total_interactions": 7,
+    "subscriptions": 0,
+    "publications": 0,
+    "assertions": 2
+  }
+}

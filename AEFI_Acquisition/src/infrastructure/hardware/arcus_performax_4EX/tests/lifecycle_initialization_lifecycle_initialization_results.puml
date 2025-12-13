@@ -1,0 +1,71 @@
+@startuml
+title Sequence Diagram: test_lifecycle_initialization
+autonumber
+skinparam responseMessageBelowArrow true
+
+== Setup Phase ==
+
+"TestLifecycle" -> "ArcusAdapter" : **CREATE** Create ArcusAdapter instance (disconnected)
+note right
+Data: {
+  "port": "auto-detect",
+  "dll_path": "C:\\Users\\manip\\Dropbox\\Luis\\1 PROJETS\\1 - THESE\\Ressources\\ExperimentalData_ASSOCE\\AEFI_Acquisition\\AEFI_Acquisition\\src\\infrastructure\\hardware\...
+end note
+"TestLifecycle" -> "ArcusPerformaxLifecycleAdapter" : **CREATE** Create lifecycle adapter wrapping ArcusAdapter
+note right
+Data: {
+  "adapter_type": "ArcusAdapter"
+}
+end note
+
+== Execution Phase - Initialize ==
+
+"TestLifecycle" -> "ArcusPerformaxLifecycleAdapter" : **CALL** initialize_all() - Connect to hardware
+"ArcusPerformaxLifecycleAdapter" --> "TestLifecycle" : **RETURN** initialize_all() completed successfully
+note right
+Data: {
+  "status": "connected"
+}
+end note
+
+== Execution Phase - Verify ==
+
+"TestLifecycle" -> "ArcusPerformaxLifecycleAdapter" : **CALL** verify_all() - Verify hardware connection
+"ArcusPerformaxLifecycleAdapter" --> "TestLifecycle" : **RETURN** verify_all() completed successfully
+note right
+Data: {
+  "status": "verified"
+}
+end note
+
+== Verification Phase ==
+
+"TestLifecycle" -> "ArcusAdapter" : **CALL** get_current_position() - Verify connection works
+"ArcusAdapter" --> "TestLifecycle" : **RETURN** Position retrieved successfully
+note right
+Data: {
+  "x": 0,
+  "y": 0
+}
+end note
+"TestLifecycle" -> "ArcusAdapter" : **ASSERT** Position X is numeric
+note right
+Expect: numeric value
+Got: 0 (type: int)
+end note
+"TestLifecycle" -> "ArcusAdapter" : **ASSERT** Position Y is numeric
+note right
+Expect: numeric value
+Got: 0 (type: int)
+end note
+
+== Cleanup Phase ==
+
+"TestLifecycle" -> "ArcusPerformaxLifecycleAdapter" : **CALL** close_all() - Disconnect hardware
+"ArcusPerformaxLifecycleAdapter" --> "TestLifecycle" : **RETURN** close_all() completed successfully
+note right
+Data: {
+  "status": "disconnected"
+}
+end note
+@enduml

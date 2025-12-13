@@ -1,0 +1,58 @@
+@startuml
+title Sequence Diagram: test_full_acquisition_cycle
+autonumber
+skinparam responseMessageBelowArrow true
+"Test" -> "EventBus" : **CREATE** Initialize EventBus
+"Test" -> "AcquisitionPort" : **CREATE** Initialize Mock Port
+"Test" -> "AdapterIContinuousAcquisitionAds131a04" : **CREATE** Initialize Adapter
+"Test" -> "Service" : **CREATE** Initialize Service
+note right
+Data: {
+  "dependency": "AdapterIContinuousAcquisitionAds131a04",
+  "port": "AcquisitionPort"
+}
+end note
+"TestSubscriber" -> "EventBus" : **SUBSCRIBE** continuousacquisitionsampleacquired
+"Test" -> "Service" : **COMMAND** start_acquisition
+note right
+Data: {
+  "rate": 10.0
+}
+end note
+"EventBus" -> "TestSubscriber" : **RECEIVE** Sample Acquired
+note right
+Data: {
+  "index": 0
+}
+end note
+"EventBus" -> "TestSubscriber" : **RECEIVE** Sample Acquired
+note right
+Data: {
+  "index": 1
+}
+end note
+"EventBus" -> "TestSubscriber" : **RECEIVE** Sample Acquired
+note right
+Data: {
+  "index": 2
+}
+end note
+"EventBus" -> "TestSubscriber" : **RECEIVE** Sample Acquired
+note right
+Data: {
+  "index": 3
+}
+end note
+"EventBus" -> "TestSubscriber" : **RECEIVE** Sample Acquired
+note right
+Data: {
+  "index": 4
+}
+end note
+"Test" -> "Service" : **COMMAND** stop_acquisition
+"Test" -> "TestSubscriber" : **ASSERT** Verify samples received
+note right
+Expect: > 0 samples
+Got: 5 samples
+end note
+@enduml

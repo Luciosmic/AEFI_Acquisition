@@ -1,0 +1,70 @@
+{
+  "test_name": "test_clear_subscribers",
+  "timestamp": "2025-12-12T01:53:06.764324",
+  "status": "PASSED",
+  "interactions": [
+    {
+      "timestamp": "2025-12-12T01:53:06.764332",
+      "actor": "Test",
+      "action": "CREATE",
+      "target": "InMemoryEventBus",
+      "message": "Initialize fresh bus",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T01:53:06.764420",
+      "actor": "Test",
+      "action": "SUBSCRIBE",
+      "target": "InMemoryEventBus",
+      "message": "Subscribe handler",
+      "data": {
+        "event": "test_event"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T01:53:06.764447",
+      "actor": "Test",
+      "action": "CLEAR",
+      "target": "InMemoryEventBus",
+      "message": "Clear subscribers",
+      "data": {
+        "event": "test_event"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T01:53:06.764465",
+      "actor": "Test",
+      "action": "PUBLISH",
+      "target": "InMemoryEventBus",
+      "message": "Publish event",
+      "data": {
+        "event": "test_event",
+        "data": "data"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T01:53:06.764550",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "InMemoryEventBus",
+      "message": "Verify calls",
+      "data": null,
+      "expect": "[]",
+      "got": "[]"
+    }
+  ],
+  "summary": {
+    "total_interactions": 5,
+    "subscriptions": 1,
+    "publications": 1,
+    "assertions": 1
+  }
+}

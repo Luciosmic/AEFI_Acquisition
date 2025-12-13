@@ -1,0 +1,77 @@
+{
+  "test_name": "test_handle_scan_point_acquired",
+  "timestamp": "2025-12-09T02:48:57.825439",
+  "status": "PASSED",
+  "interactions": [
+    {
+      "timestamp": "2025-12-09T02:48:57.825515",
+      "actor": "Test",
+      "action": "CREATE",
+      "target": "AcquisitionDataHandler",
+      "message": "Initialize handler with mock repo",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T02:48:57.825560",
+      "actor": "Test",
+      "action": "PUBLISH",
+      "target": "EventBus",
+      "message": "Simulate ScanPointAcquired event",
+      "data": {
+        "scan_id": "067ae38c-8725-4256-a8f3-41a6f4605e7d"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T02:48:57.825572",
+      "actor": "EventBus",
+      "action": "RECEIVE",
+      "target": "AcquisitionDataHandler",
+      "message": "Handle event",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T02:48:57.825708",
+      "actor": "AcquisitionDataHandler",
+      "action": "CALL",
+      "target": "Repository",
+      "message": "Save data",
+      "data": {
+        "scan_id": "067ae38c-8725-4256-a8f3-41a6f4605e7d"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-09T02:48:57.825726",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "Repository",
+      "message": "Verify save called with correct scan_id",
+      "data": null,
+      "expect": "067ae38c-8725-4256-a8f3-41a6f4605e7d",
+      "got": "067ae38c-8725-4256-a8f3-41a6f4605e7d"
+    },
+    {
+      "timestamp": "2025-12-09T02:48:57.825738",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "Repository",
+      "message": "Verify save called with correct data",
+      "data": null,
+      "expect": "1",
+      "got": "1"
+    }
+  ],
+  "summary": {
+    "total_interactions": 6,
+    "subscriptions": 0,
+    "publications": 1,
+    "assertions": 2
+  }
+}

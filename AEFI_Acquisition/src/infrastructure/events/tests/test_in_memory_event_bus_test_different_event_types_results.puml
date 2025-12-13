@@ -1,0 +1,54 @@
+@startuml
+title Sequence Diagram: test_different_event_types
+autonumber
+skinparam responseMessageBelowArrow true
+"Test" -> "InMemoryEventBus" : **CREATE** Initialize fresh bus
+"Test" -> "InMemoryEventBus" : **SUBSCRIBE** Subscribe HandlerA
+note right
+Data: {
+  "event": "event_a"
+}
+end note
+"Test" -> "InMemoryEventBus" : **SUBSCRIBE** Subscribe HandlerB
+note right
+Data: {
+  "event": "event_b"
+}
+end note
+"Test" -> "InMemoryEventBus" : **PUBLISH** Publish event_a
+note right
+Data: {
+  "event": "event_a",
+  "data": "A"
+}
+end note
+"HandlerA" -> "Test" : **RECEIVE** HandlerA called
+note right
+Data: {
+  "data": "A"
+}
+end note
+"Test" -> "InMemoryEventBus" : **PUBLISH** Publish event_b
+note right
+Data: {
+  "event": "event_b",
+  "data": "B"
+}
+end note
+"HandlerB" -> "Test" : **RECEIVE** HandlerB called
+note right
+Data: {
+  "data": "B"
+}
+end note
+"Test" -> "InMemoryEventBus" : **ASSERT** Verify calls_a
+note right
+Expect: ['A']
+Got: ['A']
+end note
+"Test" -> "InMemoryEventBus" : **ASSERT** Verify calls_b
+note right
+Expect: ['B']
+Got: ['B']
+end note
+@enduml

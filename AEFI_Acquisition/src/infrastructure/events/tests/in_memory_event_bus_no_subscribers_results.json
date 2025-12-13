@@ -1,0 +1,45 @@
+{
+  "test_name": "test_no_subscribers",
+  "timestamp": "2025-12-12T01:53:06.769514",
+  "status": "PASSED",
+  "interactions": [
+    {
+      "timestamp": "2025-12-12T01:53:06.769515",
+      "actor": "Test",
+      "action": "CREATE",
+      "target": "InMemoryEventBus",
+      "message": "Initialize fresh bus",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T01:53:06.769531",
+      "actor": "Test",
+      "action": "PUBLISH",
+      "target": "InMemoryEventBus",
+      "message": "Publish to no subscribers",
+      "data": {
+        "event": "nonexistent_event"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-12T01:53:06.769570",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "InMemoryEventBus",
+      "message": "Verify no crash",
+      "data": null,
+      "expect": "Success",
+      "got": "Success"
+    }
+  ],
+  "summary": {
+    "total_interactions": 3,
+    "subscriptions": 0,
+    "publications": 1,
+    "assertions": 1
+  }
+}

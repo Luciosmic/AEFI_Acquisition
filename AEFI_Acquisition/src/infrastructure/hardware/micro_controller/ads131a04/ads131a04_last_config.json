@@ -1,0 +1,32 @@
+{
+    "reference_voltage": 2.5,
+    "clkin_divider": 2,
+    "iclk_divider": 2,
+    "oversampling_ratio": 128,
+    "channels": {
+        "1": {
+            "gain": 1,
+            "enabled": true
+        },
+        "2": {
+            "gain": 1,
+            "enabled": true
+        },
+        "3": {
+            "gain": 1,
+            "enabled": true
+        },
+        "4": {
+            "gain": 1,
+            "enabled": true
+        },
+        "5": {
+            "gain": 1,
+            "enabled": true
+        },
+        "6": {
+            "gain": 1,
+            "enabled": true
+        }
+    }
+}
