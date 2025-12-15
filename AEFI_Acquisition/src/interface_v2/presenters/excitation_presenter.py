@@ -48,6 +48,7 @@ class ExcitationPresenter(QObject):
             
         except Exception as e:
             error_msg = f"Failed to set excitation: {str(e)}"
+            print(f"[ExcitationPresenter] ERROR: {error_msg}")
             self.excitation_error.emit(error_msg)
 
     def get_current_parameters(self) -> ExcitationParameters:
@@ -57,10 +58,10 @@ class ExcitationPresenter(QObject):
     def _code_to_mode(self, code: str) -> ExcitationMode:
         """Convert mode code string to ExcitationMode enum."""
         mapping = {
-            "X_DIR": ExcitationMode.X_DIRECTION,
-            "Y_DIR": ExcitationMode.Y_DIRECTION,
+            "X_DIR": ExcitationMode.X_DIR,
+            "Y_DIR": ExcitationMode.Y_DIR,
             "CIRCULAR_PLUS": ExcitationMode.CIRCULAR_PLUS,
             "CIRCULAR_MINUS": ExcitationMode.CIRCULAR_MINUS,
             "CUSTOM": ExcitationMode.CUSTOM
         }
-        return mapping.get(code, ExcitationMode.X_DIRECTION)
+        return mapping.get(code, ExcitationMode.X_DIR)

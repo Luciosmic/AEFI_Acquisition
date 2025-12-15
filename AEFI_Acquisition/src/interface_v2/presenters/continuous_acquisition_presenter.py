@@ -19,6 +19,7 @@ from domain.events.i_domain_event_bus import IDomainEventBus
 
 
 from interface_v2.presenters.signal_processor import SignalPostProcessor
+from application.services.transformation_service.transformation_service import TransformationService
 
 class ContinuousAcquisitionPresenter(QObject):
     """
@@ -26,6 +27,7 @@ class ContinuousAcquisitionPresenter(QObject):
     - Translates UI interactions to service calls
     - Subscribes to domain events and emits Qt signals
     - Handles post-processing (Noise, Phase, Primary) via SignalPostProcessor
+    - Handles Coordinate Transformation via TransformationService
     """
 
     # Signals emitted to the UI
@@ -33,11 +35,13 @@ class ContinuousAcquisitionPresenter(QObject):
     acquisition_stopped = Signal(str)  # acquisition_id
     acquisition_failed = Signal(str)  # reason
     sample_acquired = Signal(dict)  # {acquisition_id, index, measurement:{...}, timestamp}
+    angles_updated = Signal(tuple) # For updating the read-only display
 
-    def __init__(self, service: ContinuousAcquisitionService, event_bus: IDomainEventBus):
+    def __init__(self, service: ContinuousAcquisitionService, event_bus: IDomainEventBus, transformation_service: TransformationService):
         super().__init__()
         self._service = service
         self._event_bus = event_bus
+        self._transformation_service = transformation_service
         self._current_acquisition_id: str | None = None
         
         # Signal Processor
@@ -123,11 +127,18 @@ class ContinuousAcquisitionPresenter(QObject):
             target_uncertainty=None,
         )
         self._service.update_acquisition_parameters(config)
+    
+    @Slot(bool)
+    def on_rotation_toggled(self, enabled: bool):
+        """Enable/Disable rotation in the service."""
+        self._transformation_service.set_enabled(enabled)
+        # Also update the read-only display with current angles
+        self.angles_updated.emit(self._transformation_service.get_rotation_angles())
 
-    # ------------------------------------------------------------------ #
-    # Domain Event Handlers
-    # ------------------------------------------------------------------ #
+    # ... (UI Commands remain same) ...
 
+
+    
     def _on_failed_event(self, event: ContinuousAcquisitionFailed):
         """Handle acquisition failure."""
         self.acquisition_failed.emit(str(event.reason))
@@ -166,24 +177,46 @@ class ContinuousAcquisitionPresenter(QObject):
 
         # 3. Process (Noise -> Phase -> Primary)
         processed_measurement = self._processor.process_sample(raw_measurement)
+        
+        # 4. Apply Coordinate Transformation (Sensor -> Source)
+        # Transform In-Phase vector
+        v_in_phase = (
+            processed_measurement["Ux In-Phase"], 
+            processed_measurement["Uy In-Phase"], 
+            processed_measurement["Uz In-Phase"]
+        )
+        v_rot_in_phase = self._transformation_service.transform_sensor_to_source(v_in_phase)
+        
+        # Transform Quadrature vector
+        v_quadrature = (
+            processed_measurement["Ux Quadrature"], 
+            processed_measurement["Uy Quadrature"], 
+            processed_measurement["Uz Quadrature"]
+        )
+        v_rot_quadrature = self._transformation_service.transform_sensor_to_source(v_quadrature)
 
-        # 4. Prepare data for UI (using processed values)
+        # 5. Prepare data for UI (using transformed values)
         data = {
             "acquisition_id": acquisition_id_str,
             "index": event.sample_index,
             "measurement": {
-                "Ux In-Phase": processed_measurement["Ux In-Phase"],
-                "Ux Quadrature": processed_measurement["Ux Quadrature"],
+                "Ux In-Phase": v_rot_in_phase[0],
+                "Ux Quadrature": v_rot_quadrature[0],
                 
-                "Uy In-Phase": processed_measurement["Uy In-Phase"],
-                "Uy Quadrature": processed_measurement["Uy Quadrature"],
+                "Uy In-Phase": v_rot_in_phase[1],
+                "Uy Quadrature": v_rot_quadrature[1],
                 
-                "Uz In-Phase": processed_measurement["Uz In-Phase"],
-                "Uz Quadrature": processed_measurement["Uz Quadrature"],
+                "Uz In-Phase": v_rot_in_phase[2],
+                "Uz Quadrature": v_rot_quadrature[2],
             },
             "timestamp": event.sample.timestamp.isoformat(),
         }
+        
         self.sample_acquired.emit(data)
+        
+        # Periodically enable UI update of angles? 
+        # Or just do it when enabling. The loop is fast, we don't want to emit angles every sample.
+
 
     def shutdown(self):
         """Cleanup resources."""

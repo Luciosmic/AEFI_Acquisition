@@ -128,6 +128,7 @@ class ExcitationPanel(QWidget):
         super().__init__(parent)
         self._build_ui()
         self._connect_signals()
+        self._connect_signals()
 
     def _build_ui(self):
         layout = QVBoxLayout(self)

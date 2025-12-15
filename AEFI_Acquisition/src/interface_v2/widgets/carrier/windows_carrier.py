@@ -18,6 +18,7 @@ class WindowsCarrier(QWidget):
     - Modern UI (VS Code-like)
     """
     panel_focused = Signal(str)  # panel_id
+    panel_visibility_changed = Signal(str, bool)  # panel_id, visible
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -98,6 +99,7 @@ class WindowsCarrier(QWidget):
     
     def _on_panel_visibility_changed(self, panel_id: str, visible: bool):
         """Handle panel visibility changes."""
+        self.panel_visibility_changed.emit(panel_id, visible)
         if visible:
             self.panel_focused.emit(panel_id)
     

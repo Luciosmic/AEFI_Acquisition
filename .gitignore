@@ -14,6 +14,10 @@
 !AEFI_Acquisition/
 !AEFI_Acquisition/src/**
 !AEFI_Acquisition/src/interface_v2/
+!visualize_cube/
+!visualize_cube/**
+!Quaternions/
+!Quaternions/**
 
 # Re-ignore common temporary/build files that might be inside the whitelisted directories
 __pycache__/

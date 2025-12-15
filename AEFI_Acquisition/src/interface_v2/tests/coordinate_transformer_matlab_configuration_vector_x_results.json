@@ -1,0 +1,79 @@
+{
+  "test_name": "test_matlab_configuration_vector_x",
+  "timestamp": "2025-12-13T23:48:21.866533",
+  "status": "PASSED",
+  "interactions": [
+    {
+      "timestamp": "2025-12-13T23:48:21.866629",
+      "actor": "Test",
+      "action": "CREATE",
+      "target": "CoordinateTransformer",
+      "message": "Init transformer",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-13T23:48:21.866658",
+      "actor": "System",
+      "action": "DIVIDER",
+      "target": "System",
+      "message": "MATLAB Configuration Test",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-13T23:48:21.866698",
+      "actor": "Test",
+      "action": "SET_ANGLES",
+      "target": "Transformer",
+      "message": "Angles: -45.0, 35.264389682754654, 0.0",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-13T23:48:21.866833",
+      "actor": "Test",
+      "action": "TRANSFORM",
+      "target": "Transformer",
+      "message": "Sensor -> Source",
+      "data": {
+        "v_in": [
+          1.0,
+          0.0,
+          0.0
+        ]
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-13T23:48:21.866938",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "Result",
+      "message": "Check Magnitude Preserved",
+      "data": null,
+      "expect": "1.0",
+      "got": "0.9999999999999999"
+    },
+    {
+      "timestamp": "2025-12-13T23:48:21.866988",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "Result",
+      "message": "Check Inverse Identity",
+      "data": null,
+      "expect": "(1.0, 0.0, 0.0)",
+      "got": "(np.float64(0.9999999999999998), np.float64(5.551115123125783e-17), np.float64(0.0))"
+    }
+  ],
+  "summary": {
+    "total_interactions": 6,
+    "subscriptions": 0,
+    "publications": 0,
+    "assertions": 2
+  }
+}

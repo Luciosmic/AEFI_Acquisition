@@ -104,10 +104,10 @@ def main():
     # 2. Configuration: Hardware Adapter Registry
     # Simple dict-based configuration: port_name -> adapter_type ("mock" | "real")
     HARDWARE_CONFIG = {
-        "motion": "real",        # "mock" | "real"
-        "acquisition": "real",   # "mock" | "real"
-        "excitation": "real",    # "mock" | "real"
-        "continuous": "real",    # "mock" | "real"
+        "motion": "mock",        # "mock" | "real"
+        "acquisition": "mock",   # "mock" | "real"
+        "excitation": "mock",    # "mock" | "real"
+        "continuous": "mock",    # "mock" | "real"
     }
     
     print(f"--- Starting Application ---")

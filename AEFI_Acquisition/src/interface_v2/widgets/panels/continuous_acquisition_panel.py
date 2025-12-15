@@ -180,8 +180,35 @@ class ContinuousAcquisitionPanel(QWidget):
         l_calib.addWidget(self.btn_calib_primary)
         l_calib.addWidget(self.btn_reset_calib)
         
+        l_calib.addWidget(self.btn_reset_calib)
+        
         controls_layout.addWidget(grp_calib)
 
+        # 5. Coordinate Transform Controls
+        grp_trans = QGroupBox("Coordinate Transform")
+        l_trans = QVBoxLayout(grp_trans)
+        l_trans.setContentsMargins(5, 5, 5, 5)
+        
+        self.btn_apply_rotation = QPushButton("Apply Rotation")
+        self.btn_apply_rotation.setCheckable(True)
+        self.btn_apply_rotation.setStyleSheet("""
+            QPushButton:checked {
+                background-color: #8E44AD; 
+                color: white; 
+                font-weight: bold;
+            }
+        """)
+        self.btn_apply_rotation.toggled.connect(self._on_rotation_toggled)
+        self.btn_apply_rotation.setToolTip("Transform Sensor Frame -> Source Frame using angles from 'Ref. Transform' panel.")
+        
+        self.lbl_angles_info = QLabel("Angles: [0, 0, 0]")
+        self.lbl_angles_info.setStyleSheet("color: #AAA;")
+        
+        l_trans.addWidget(self.btn_apply_rotation)
+        l_trans.addWidget(self.lbl_angles_info)
+        
+        controls_layout.addWidget(grp_trans)
+        
         controls_layout.addStretch() # Add stretch to push groups to left
         vlayout.addLayout(controls_layout)
 
@@ -234,8 +261,20 @@ class ContinuousAcquisitionPanel(QWidget):
     def _on_calib_primary_clicked(self):
         self.calibrate_primary_requested.emit()
         
+    
     def _on_reset_calib_clicked(self):
         self.reset_calibration_requested.emit()
+
+    # Signals for Rotation
+    apply_rotation_toggled = Signal(bool)
+
+    def _on_rotation_toggled(self, checked: bool):
+        self.apply_rotation_toggled.emit(checked)
+        
+    def update_angles_display(self, angles: tuple):
+        """Update the read-only angles label."""
+        self.lbl_angles_info.setText(f"Angles: [{angles[0]:.1f}, {angles[1]:.1f}, {angles[2]:.1f}]")
+
 
     def _on_parameter_changed(self):
         """Called when user modifies rate while running."""
