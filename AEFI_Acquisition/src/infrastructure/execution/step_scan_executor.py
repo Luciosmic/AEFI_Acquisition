@@ -16,7 +16,7 @@ from domain.value_objects.scan.scan_trajectory import ScanTrajectory
 from domain.value_objects.scan.step_scan_config import StepScanConfig
 from domain.value_objects.scan.scan_point_result import ScanPointResult
 from domain.value_objects.scan.scan_status import ScanStatus
-from domain.events.motion_events import MotionCompleted, MotionFailed
+from domain.events.motion_events import MotionCompleted, MotionFailed, MotionStopped
 
 
 class StepScanExecutor(IScanExecutor):
@@ -59,10 +59,17 @@ class StepScanExecutor(IScanExecutor):
         Synchronous execution loop.
         """
         self._current_scan = scan
-        try:
-            return self._worker(scan, trajectory, config)
-        finally:
-            self._current_scan = None
+        
+        # Run worker in a separate thread to avoid blocking the caller (UI)
+        thread = threading.Thread(
+            target=self._worker,
+            args=(scan, trajectory, config),
+            daemon=True
+        )
+        thread.start()
+        
+        # Return True immediately to indicate "Started"
+        return True
 
     def cancel(self, scan: StepScan) -> None:
         """
@@ -111,6 +118,13 @@ class StepScanExecutor(IScanExecutor):
             
         self._motion_completed_event.set()
 
+    def _on_motion_stopped(self, event: MotionStopped) -> None:
+        """Handler for regular motion stop event."""
+        # Similar to emergency stop but less severe
+        self._motion_error = f"Motion stopped: {event.reason}"
+        # Wake up the wait loop
+        self._motion_completed_event.set()
+
     # ------------------------------------------------------------------ #
     # Internal worker
     # ------------------------------------------------------------------ #
@@ -127,6 +141,7 @@ class StepScanExecutor(IScanExecutor):
         # Subscribe to motion events
         self._event_bus.subscribe("motioncompleted", self._on_motion_completed)
         self._event_bus.subscribe("motionfailed", self._on_motion_failed)
+        self._event_bus.subscribe("motionstopped", self._on_motion_stopped)
         self._event_bus.subscribe("emergencystoptriggered", self._on_emergency_stop_triggered)
 
         try:
@@ -158,7 +173,7 @@ class StepScanExecutor(IScanExecutor):
                 while not self._motion_completed_event.is_set():
                     # Check cancellation during wait
                     if scan.status == ScanStatus.CANCELLED:
-                        self._motion_port.stop(immediate=True)
+                        self._motion_port.stop()  # Regular stop with deceleration
                         return False
                     
                     # Check pause during wait
@@ -231,9 +246,11 @@ class StepScanExecutor(IScanExecutor):
             self._publish_events(scan.domain_events)
             return False
         finally:
+            self._current_scan = None
             # Unsubscribe to avoid leaks
             self._event_bus.unsubscribe("motioncompleted", self._on_motion_completed)
             self._event_bus.unsubscribe("motionfailed", self._on_motion_failed)
+            self._event_bus.unsubscribe("motionstopped", self._on_motion_stopped)
             self._event_bus.unsubscribe("emergencystoptriggered", self._on_emergency_stop_triggered)
 
     # ------------------------------------------------------------------ #

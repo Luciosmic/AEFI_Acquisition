@@ -38,7 +38,7 @@ logger = logging.getLogger(__name__)
 from domain.aggregates.step_scan import StepScan
 from domain.value_objects.scan.scan_point_result import ScanPointResult
 from .i_scan_output_port import IScanOutputPort
-from domain.events.scan_events import ScanStarted, ScanPointAcquired, ScanCompleted, ScanFailed
+from domain.events.scan_events import ScanStarted, ScanPointAcquired, ScanCompleted, ScanFailed, ScanCancelled, ScanPaused, ScanResumed
 from domain.events.domain_event import DomainEvent
 from domain.events.i_domain_event_bus import IDomainEventBus
 
@@ -74,6 +74,7 @@ class ScanApplicationService:
         self._event_bus.subscribe("scanpointacquired", self._on_domain_event)
         self._event_bus.subscribe("scancompleted", self._on_domain_event)
         self._event_bus.subscribe("scanfailed", self._on_domain_event)
+        self._event_bus.subscribe("scancancelled", self._on_domain_event)
         self._event_bus.subscribe("scanpaused", self._on_domain_event)
         self._event_bus.subscribe("scanresumed", self._on_domain_event)
 
@@ -126,23 +127,23 @@ class ScanApplicationService:
             print(f"[ScanApplicationService] Trajectory generated with {total_points} points.")
             
             # 4. Delegate execution to ScanExecutor (Infrastructure)
+            # The executor is responsible for running this asynchronously (if needed)
             print(f"[ScanApplicationService] Delegating execution to ScanExecutor...")
             success = self._scan_executor.execute(scan, trajectory, config)
+            
             if not success:
-                raise RuntimeError("Scan execution failed in ScanExecutor")
+                # If it failed to start
+                self._status = ScanStatus.FAILED
+                return False
             
-            # Status will be COMPLETED if executor reached the end
-            self._status = ScanStatus.COMPLETED
-            print(f"[ScanApplicationService] Scan completed successfully.")
-            
+            # Scan started successfully (RUNNING)
+            # Completion will be handled via events
             return True
             
         except Exception as e:
             logger.error(f"Scan failed: {e}")
             print(f"[ScanApplicationService] Scan failed: {e}")
             if self._current_scan and self._current_scan.status == ScanStatus.RUNNING:
-                # Ne marquer comme failed que si le scan est encore en cours
-                # (évite double appel si l'executor a déjà géré l'erreur)
                 self._current_scan.fail(str(e))
                 self._publish_events(self._current_scan.domain_events)
             self._status = ScanStatus.FAILED
@@ -204,8 +205,19 @@ class ScanApplicationService:
     def _on_domain_event(self, event: DomainEvent):
         """
         Forward events from the EventBus to the OutputPort.
-        This provides the Strict Contract on top of the Loose Events.
+        Also update internal service state.
         """
+        # Update internal state based on events
+        if isinstance(event, ScanCompleted):
+            self._status = ScanStatus.COMPLETED
+            self._paused = False
+        elif isinstance(event, ScanFailed):
+            self._status = ScanStatus.FAILED
+            self._paused = False
+        elif isinstance(event, ScanCancelled):
+            self._status = ScanStatus.CANCELLED
+            self._paused = False
+            
         if not self._output_port:
             return
 
@@ -245,6 +257,15 @@ class ScanApplicationService:
 
         elif isinstance(event, ScanFailed):
             self._output_port.present_scan_failed(str(event.scan_id), event.reason)
+
+        elif isinstance(event, ScanCancelled):
+            self._output_port.present_scan_cancelled(str(event.scan_id))
+
+        elif isinstance(event, ScanPaused):
+            self._output_port.present_scan_paused(str(event.scan_id), event.current_point_index)
+
+        elif isinstance(event, ScanResumed):
+            self._output_port.present_scan_resumed(str(event.scan_id), event.resume_from_point_index)
     
     # ... rest of methods ...
 

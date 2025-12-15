@@ -29,7 +29,7 @@ venv/
 .idea/
 .vscode/
 _legacy_src
-_docs
+
 data_repository
 examples
 *.swp

@@ -15,10 +15,10 @@ class TransformationService:
     def set_rotation_angles(self, theta_x: float, theta_y: float, theta_z: float):
         """
         Set rotation angles in DEGREES.
-        Rotation order is 'xyz' (extrinsic).
+        Rotation order is 'XYZ' (extrinsic - rotations around FIXED axes).
         """
         self._angles = np.array([theta_x, theta_y, theta_z])
-        self._rotation = R.from_euler('xyz', self._angles, degrees=True)
+        self._rotation = R.from_euler('XYZ', self._angles, degrees=True)
 
     def get_rotation_angles(self) -> Tuple[float, float, float]:
         """Return current rotation angles (x, y, z) in degrees."""

@@ -215,6 +215,27 @@ class ScanControlPanel(QWidget):
         self.lbl_status.setText(f"Status: Failed ({reason})")
         self._reset_buttons()
 
+    def on_scan_cancelled(self, scan_id: str):
+        """Called when scan is cancelled/stopped."""
+        self.lbl_status.setText(f"Status: Cancelled")
+        self._reset_buttons()
+
+    def on_scan_paused(self, scan_id: str, current_point: int):
+        """Called when scan is paused."""
+        self.lbl_status.setText(f"Status: Paused (at point {current_point})")
+        self.btn_start.setEnabled(False)
+        self.btn_stop.setEnabled(True)
+        self.btn_pause.setEnabled(False)
+        self.btn_resume.setEnabled(True)
+
+    def on_scan_resumed(self, scan_id: str, resume_point: int):
+        """Called when scan is resumed."""
+        self.lbl_status.setText(f"Status: Running (resumed from point {resume_point})")
+        self.btn_start.setEnabled(False)
+        self.btn_stop.setEnabled(True)
+        self.btn_pause.setEnabled(True)
+        self.btn_resume.setEnabled(False)
+
     def _reset_buttons(self):
         self.btn_start.setEnabled(True)
         self.btn_stop.setEnabled(False)

@@ -48,10 +48,10 @@ class ContinuousAcquisitionPresenter(QObject):
         self._processor = SignalPostProcessor()
         self._last_raw_sample: Dict[str, float] = {}
 
-        # Subscribe to domain events - USE EXACT CLASS NAMES (case-sensitive)
-        self._event_bus.subscribe("ContinuousAcquisitionSampleAcquired", self._on_sample_event)
-        self._event_bus.subscribe("ContinuousAcquisitionFailed", self._on_failed_event)
-        self._event_bus.subscribe("ContinuousAcquisitionStopped", self._on_stopped_event)
+        # Subscribe to domain events - USE LOWERCASE EVENT NAMES (matching publish calls)
+        self._event_bus.subscribe("continuousacquisitionsampleacquired", self._on_sample_event)
+        self._event_bus.subscribe("continuousacquisitionfailed", self._on_failed_event)
+        self._event_bus.subscribe("continuousacquisitionstopped", self._on_stopped_event)
 
     # ------------------------------------------------------------------ #
     # Calibration Commands (Logic)

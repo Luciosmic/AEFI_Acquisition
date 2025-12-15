@@ -27,3 +27,15 @@ class IScanOutputPort:
     def present_scan_failed(self, scan_id: str, reason: str) -> None:
         """Called when the scan fails."""
         pass
+
+    def present_scan_cancelled(self, scan_id: str) -> None:
+        """Called when the scan is cancelled/stopped."""
+        pass
+
+    def present_scan_paused(self, scan_id: str, current_point_index: int) -> None:
+        """Called when the scan is paused."""
+        pass
+
+    def present_scan_resumed(self, scan_id: str, resume_from_point_index: int) -> None:
+        """Called when the scan is resumed after pause."""
+        pass

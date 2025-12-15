@@ -5,7 +5,7 @@ from uuid import uuid4
 from domain.value_objects.geometric.position_2d import Position2D
 from application.services.motion_control_service.i_motion_port import IMotionPort
 from domain.events.i_domain_event_bus import IDomainEventBus
-from domain.events.motion_events import MotionStarted, MotionCompleted, PositionUpdated
+from domain.events.motion_events import MotionStarted, MotionCompleted, PositionUpdated, MotionStopped, EmergencyStopTriggered
 
 class MockMotionPort(IMotionPort):
     """
@@ -103,16 +103,25 @@ class MockMotionPort(IMotionPort):
         self.last_speed = speed
         print(f"[MockMotionPort] set_speed: Speed set to {speed} cm/s")
 
-    def stop(self, immediate: bool = False) -> None:
-        """Mock normal stop."""
+    def stop(self) -> None:
+        """Regular stop with deceleration."""
         self._is_moving = False
-        stop_type = "EMERGENCY" if immediate else "Normal"
-        print(f"[MockMotionPort] stop: {stop_type} Stop triggered (decelerating...)")
+        print(f"[MockMotionPort] stop: Normal Stop triggered (decelerating...)")
+        
+        # Publish MotionStopped event
+        if self._event_bus:
+            self._event_bus.publish("motionstopped", MotionStopped(
+                reason="user_requested"
+            ))
 
     def emergency_stop(self) -> None:
-        """Mock emergency stop."""
+        """Emergency stop - immediate halt."""
         self._is_moving = False
         print("[MockMotionPort] emergency_stop: EMERGENCY STOP triggered! (Immediate Halt)")
+        
+        # Publish EmergencyStopTriggered event
+        if self._event_bus:
+            self._event_bus.publish("emergencystoptriggered", EmergencyStopTriggered())
 
     def home(self, axis: str | None = None) -> None:
         axis_print = axis if axis else 'BOTH'

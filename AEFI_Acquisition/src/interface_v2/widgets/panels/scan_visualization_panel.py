@@ -104,6 +104,35 @@ class ScanVisualizationPanel(QWidget):
         
         self._refresh_visualization()
 
+    def update_data_point_from_position(self, x, y, measurements: dict):
+        """Update data point by calculating indices from physical coordinates."""
+        # Calculate indices based on extent and grid size
+        x_min, x_max, y_min, y_max = self.extent
+        
+        # Get grid dimensions from one of the grids
+        if not self.data_grids:
+            return
+            
+        first_grid = next(iter(self.data_grids.values()))
+        y_nb, x_nb = first_grid.shape
+        
+        # Avoid division by zero
+        if x_nb > 1:
+            x_step = (x_max - x_min) / (x_nb - 1)
+            x_idx = int(round((x - x_min) / x_step))
+        else:
+            x_idx = 0
+            
+        if y_nb > 1:
+            y_step = (y_max - y_min) / (y_nb - 1)
+            y_idx = int(round((y - y_min) / y_step))
+        else:
+            y_idx = 0
+            
+        # Bounds check
+        if 0 <= x_idx < x_nb and 0 <= y_idx < y_nb:
+            self.update_data_point(x_idx, y_idx, measurements)
+
     def _on_view_mode_changed(self, mode: str):
         if mode == "Single View":
             self.combo_channel.setVisible(True)

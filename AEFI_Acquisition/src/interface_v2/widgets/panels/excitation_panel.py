@@ -128,7 +128,10 @@ class ExcitationPanel(QWidget):
         super().__init__(parent)
         self._build_ui()
         self._connect_signals()
-        self._connect_signals()
+        
+        # Initialize sphere visualization with default mode
+        default_mode = self._text_to_mode_code(self.mode_combo.currentText())
+        self.sphere_widget.set_excitation_mode(default_mode)
 
     def _build_ui(self):
         layout = QVBoxLayout(self)

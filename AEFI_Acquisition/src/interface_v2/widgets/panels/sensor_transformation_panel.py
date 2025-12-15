@@ -22,8 +22,8 @@ class SensorTransformationPanel(QWidget):
         grp_angles = QGroupBox("Rotation Angles (Sensor -> Source)")
         l_angles = QFormLayout(grp_angles)
         
-        self.spin_theta_x = self._create_angle_spinbox("-45.0")
-        self.spin_theta_y = self._create_angle_spinbox("35.26")
+        self.spin_theta_x = self._create_angle_spinbox("35.26")
+        self.spin_theta_y = self._create_angle_spinbox("45.0")
         self.spin_theta_z = self._create_angle_spinbox("0.0")
         
         l_angles.addRow("Theta X (deg):", self.spin_theta_x)

@@ -88,11 +88,21 @@ class StepScan(SpatialScan):
         self._domain_events.append(ScanFailed(scan_id=self.id, reason=reason))
         
     def cancel(self) -> None:
+        """Cancel the scan (idempotent)."""
+        # Idempotent: if already cancelled, do nothing
+        if self.status == ScanStatus.CANCELLED:
+            return
         super().cancel()
         self._domain_events.append(ScanCancelled(scan_id=self.id))
         
     def pause(self) -> None:
-        """Pause the scan execution."""
+        """Pause the scan (idempotent)."""
+        # Idempotent: if already paused, do nothing
+        if self.status == ScanStatus.PAUSED:
+            return
+        # Cannot pause if already in final state
+        if self.status.is_final():
+            return  # Silently ignore instead of raising
         if self.status != ScanStatus.RUNNING:
             raise ValueError(f"Cannot pause scan when status is {self.status}")
         super().pause()

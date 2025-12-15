@@ -228,6 +228,9 @@ class ContinuousAcquisitionPanel(QWidget):
             self.curves[ch["name"]] = curve
 
         vlayout.addWidget(self.plot)
+        
+        # Initialize time slot visibility based on default window mode
+        self._update_time_slot_visibility(self.window_mode_combo.currentText())
 
 
     def _on_start_clicked(self):
@@ -369,5 +372,5 @@ class ContinuousAcquisitionPanel(QWidget):
     def _update_time_slot_visibility(self, mode_text: str):
         """Show/hide Time Slot controls based on window mode."""
         is_sliding = mode_text.startswith("Sliding")
-        self.time_slot_label.setVisible(is_sliding)
+        self.lbl_time_slot.setVisible(is_sliding)
         self.window_length_spin.setVisible(is_sliding)

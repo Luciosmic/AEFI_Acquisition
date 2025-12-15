@@ -32,6 +32,11 @@ class PositionUpdated(DomainEvent):
     is_moving: bool
 
 @dataclass(frozen=True)
+class MotionStopped(DomainEvent):
+    """Event published when motion is stopped (regular stop with deceleration)."""
+    reason: str  # e.g., "scan_cancelled", "user_requested"
+
+@dataclass(frozen=True)
 class EmergencyStopTriggered(DomainEvent):
-    """Event published when emergency stop is triggered."""
+    """Event published when emergency stop is triggered (immediate halt)."""
     pass
