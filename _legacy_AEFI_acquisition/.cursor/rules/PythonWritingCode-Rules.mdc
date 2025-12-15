@@ -1,0 +1,71 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+Ta tâche est d’assister l’utilisateur dans l’écriture ou la modification de code Python
+Sois concis, propose du code prêt à l’emploi, et fonde-toi sur les conventions suivantes :
+### Organisation des exports de résultats
+
+- **Données numériques** (Excel, MAT, CSV, etc.) :
+  - Exporter dans le dossier `simulation/data/`
+  - Exemple :
+    ```python
+
+    if ~exist('simulation/data', 'dir'), mkdir('simulation/data'); end
+    writetable(T, 'simulation/data/2024-06-13_nom_script_data.xlsx');
+    save('simulation/data/2024-06-13_nom_script_workspace.mat', 'results');
+    ```
+
+- **Figures et visualisations** (PNG, FIG, etc.) :
+  - Exporter dans le dossier `simulation/visualization/`
+  - Exemple :
+    ```python
+
+    if ~exist('simulation/visualization', 'dir'), mkdir('simulation/visualization'); end
+    savefig(fig, 'simulation/visualization/2024-06-13_nom_script_plots.fig');
+    print(fig, 'simulation/visualization/2024-06-13_nom_script_plots.png', '-dpng', '-r300');
+    ```
+
+- **Rapports, notes et documents texte** (TXT, MD, etc.) :
+  - Exporter dans le dossier `simulation/notes/`
+  - Exemple :
+    ```python
+
+    if ~exist('simulation/notes', 'dir'), mkdir('simulation/notes'); end
+    fid = fopen('simulation/notes/2024-06-13_nom_script_report.txt', 'w');
+    % ... écriture du rapport ...
+    fclose(fid);
+    ```
+
+- **Format de nommage** :
+  - Toujours utiliser : `YYYY-MM-DD_nom_script_type.extension`
+  - Où `type` est : `data`, `plots`, `workspace`, `report`, etc.
+
+### Utilisation de la fonction utilitaire d'export
+
+- Place la fonction `exportResult` dans le fichier `simulation/utils/exportResult.m`.
+- Utilise systématiquement cette fonction pour tous les exports de résultats (données, figures, rapports, etc.) dans tes scripts python
+.
+- Cette fonction gère automatiquement :
+  - Le choix du dossier cible selon le type d'export (`data`, `visualization`, `notes`)
+  - La création du dossier si besoin
+  - Le nommage standardisé des fichiers (date, nom du script, type)
+- Exemples d'utilisation :
+  ```python
+
+  exportResult('data', T, 'meshConvergenceStudy_UniformSphere2D', 'xlsx');
+  exportResult('plots', fig, 'meshConvergenceStudy_UniformSphere2D', 'fig');
+  exportResult('plots', fig, 'meshConvergenceStudy_UniformSphere2D', 'png', '-dpng', '-r300');
+  exportResult('report', txt, 'meshConvergenceStudy_UniformSphere2D', 'txt');
+  ```
+- Adapte le nom du script (`scriptName`) selon le contexte de ton fichier principal.
+- Pour toute évolution ou besoin spécifique, modifie la fonction dans `simulation/utils/exportResult.m`.
+
+---
+
+
+
+
+
+**Quand tu es prêt, demande à l’utilisateur : "Comment puis-je vous aider ?"**

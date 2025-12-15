@@ -1,0 +1,13 @@
+{
+  "type": "simple_acquisition_test",
+  "description": "Test basique d'acquisition de l'accéléromètre",
+  "duration": 10.0,
+  "port": "COM5",
+  "mode": "ALL_SENSORS",
+  "timestamp_start": "2025-06-07T15:22:00.283667",
+  "target_sampling_rate": 20,
+  "actual_duration": 10.051545858383179,
+  "actual_sampling_rate": 28.15487328886558,
+  "actual_data_points": 283,
+  "timestamp_end": "2025-06-07T15:22:10.382331"
+}
