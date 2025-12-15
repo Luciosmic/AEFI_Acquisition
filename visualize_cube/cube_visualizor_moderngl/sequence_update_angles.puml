@@ -1,0 +1,79 @@
+@startuml Cube Visualizer - Update Angles Sequence (CQRS)
+
+actor User
+participant "CubeSensorUI\n(View)" as UI
+participant "CommandBus" as CB
+participant "CubeVisualizerPresenter\n(Business Logic)" as Presenter
+participant "EventBus" as EB
+participant "CubeVisualizerAdapter\n(PyVista)" as Adapter
+
+== User Changes Angle ==
+
+User -> UI: Change spin_x value
+activate UI
+
+UI -> UI: _on_angle_changed()
+note right
+  Démarre un QTimer
+  pour éviter trop
+  de rafraîchissements
+end note
+
+UI -> UI: _do_update() (après 150ms)
+
+UI -> CB: send(UpdateAnglesCommand)
+note right: **COMMAND** (Write)
+activate CB
+
+CB -> Presenter: _handle_update_angles_command(cmd)
+activate Presenter
+
+Presenter -> Presenter: _update_angles_internal(x, y, z)
+note right
+  Modifie SensorOrientation
+  (Single Source of Truth)
+end note
+
+Presenter -> EB: publish(ANGLES_CHANGED event)
+note right: **EVENT** (Read)
+activate EB
+
+deactivate Presenter
+deactivate CB
+
+== Event Propagation (Thread-Safe) ==
+
+EB -> UI: _on_angles_changed_from_event(event)
+activate UI
+UI -> UI: Update spin boxes\n(avoid loop with flag)
+deactivate UI
+
+EB -> Adapter: _on_angles_changed_event(event)
+activate Adapter
+
+Adapter -> Adapter: QTimer.singleShot(0, update_view)
+note right
+  Garantit exécution
+  sur thread principal Qt
+end note
+
+Adapter -> Presenter: get_rotation() (Query)
+activate Presenter
+Presenter --> Adapter: Rotation object
+deactivate Presenter
+
+Adapter -> Adapter: update_view()
+note right
+  - Remove old actors
+  - Create rotated cube
+  - Add to plotter
+  - Render
+end note
+
+Adapter -> Adapter: plotter.render()
+
+deactivate Adapter
+deactivate EB
+deactivate UI
+
+@enduml

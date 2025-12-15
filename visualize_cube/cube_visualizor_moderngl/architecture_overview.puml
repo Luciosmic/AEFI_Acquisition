@@ -1,0 +1,80 @@
+@startuml Cube Visualizer - Architecture Overview (CQRS Pattern)
+
+!define COMMAND_COLOR #FFE6CC
+!define EVENT_COLOR #E6F3FF
+!define QUERY_COLOR #E6FFE6
+
+skinparam component {
+    BackgroundColor<<command>> COMMAND_COLOR
+    BackgroundColor<<event>> EVENT_COLOR
+    BackgroundColor<<query>> QUERY_COLOR
+}
+
+package "Qt UI Layer" {
+    [CubeSensorUI\n(QMainWindow)] as UI
+    [Control Panel\n(QDoubleSpinBox)] as Controls
+    [Visualization Panel\n(QtAds Dock)] as VizPanel
+}
+
+package "CQRS Infrastructure" {
+    [CommandBus] <<command>>
+    [EventBus] <<event>>
+}
+
+package "Business Logic" {
+    [CubeVisualizerPresenter] as Presenter
+    database "SensorOrientation\n(State)" as State
+}
+
+package "Visualization Adapter" {
+    [CubeVisualizerAdapter] as Adapter
+    [PyVista QtInteractor] as PyVista
+}
+
+' Command Flow (Write)
+UI -down-> CommandBus : **1. Send Command**\n(UpdateAngles,\nResetToDefault)
+CommandBus -down-> Presenter : **2. Handle Command**
+Presenter -right-> State : **3. Modify State**
+
+' Event Flow (Read)
+Presenter -down-> EventBus : **4. Publish Event**\n(ANGLES_CHANGED)
+EventBus -up-> UI : **5. Notify UI**\n(update spinboxes)
+EventBus -down-> Adapter : **5. Notify Adapter**\n(update view)
+
+' Query Flow (Read-Only)
+Adapter -up-> Presenter : **6. Query State**\n(get_rotation,\nget_angles)
+
+' Rendering
+Adapter -down-> PyVista : **7. Render**\n(update cube mesh)
+PyVista -up-> VizPanel : **Display**
+
+Controls -up-> UI
+VizPanel -up-> UI
+
+note right of CommandBus
+  **Commands (Write)**
+  - Modifient l'état
+  - Pas de retour
+  - Asynchrones
+end note
+
+note right of EventBus
+  **Events (Read)**
+  - Notifications
+  - Thread-safe (Qt Signals)
+  - Pub/Sub pattern
+end note
+
+note right of Presenter
+  **Queries (Read)**
+  - get_rotation()
+  - get_angles()
+  - Pas de side-effects
+end note
+
+note bottom of State
+  **Single Source of Truth**
+  theta_x, theta_y, theta_z
+end note
+
+@enduml

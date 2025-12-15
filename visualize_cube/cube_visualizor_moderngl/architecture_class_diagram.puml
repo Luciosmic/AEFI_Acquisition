@@ -1,0 +1,156 @@
+@startuml Cube Visualizer - Class Diagram (CQRS)
+
+!define COMMAND_COLOR #FFE6CC
+!define EVENT_COLOR #E6F3FF
+!define PRESENTER_COLOR #E6FFE6
+!define VIEW_COLOR #FFE6F0
+!define ADAPTER_COLOR #F0E6FF
+
+' ===== CQRS Infrastructure =====
+package "CQRS Infrastructure" {
+    class CommandBus {
+        - _handlers: Dict[CommandType, Callable]
+        + register_handler(type, handler)
+        + send(command: Command)
+    }
+    
+    class EventBus <<QObject>> {
+        - _subscribers: Dict[EventType, List[Callable]]
+        + event_published: Signal
+        + subscribe(type, handler)
+        + unsubscribe(type, handler)
+        + publish(event: Event)
+        - _dispatch_event(event)
+    }
+    
+    enum CommandType {
+        UPDATE_ANGLES
+        RESET_TO_DEFAULT
+    }
+    
+    enum EventType {
+        ANGLES_CHANGED
+        CAMERA_VIEW_CHANGED
+        RESET_REQUESTED
+    }
+    
+    class Command <<dataclass>> {
+        + command_type: CommandType
+        + data: Dict
+    }
+    
+    class Event <<dataclass>> {
+        + event_type: EventType
+        + data: Dict
+    }
+}
+
+' ===== Domain Model =====
+package "Domain Model" {
+    class SensorOrientation <<dataclass>> {
+        + theta_x: float
+        + theta_y: float
+        + theta_z: float
+        + {static} default(): SensorOrientation
+    }
+}
+
+' ===== Presenter (Business Logic) =====
+package "Presenter Layer" <<PRESENTER_COLOR>> {
+    class CubeVisualizerPresenter {
+        - command_bus: CommandBus
+        - event_bus: EventBus
+        - orientation: SensorOrientation
+        + __init__(command_bus, event_bus)
+        - _handle_update_angles_command(cmd)
+        - _handle_reset_to_default_command(cmd)
+        - _update_angles_internal(x, y, z)
+        - _reset_to_default_internal()
+        - _publish_angles_changed_event()
+        + get_rotation(): Rotation
+        + get_angles(): tuple
+    }
+}
+
+' ===== View Layer (Qt UI) =====
+package "View Layer" <<VIEW_COLOR>> {
+    class CubeSensorUI <<QMainWindow>> {
+        - command_bus: CommandBus
+        - event_bus: EventBus
+        - presenter: CubeVisualizerPresenter
+        - adapter: CubeVisualizerAdapter
+        - spin_x, spin_y, spin_z: QDoubleSpinBox
+        + __init__()
+        - _setup_with_qtads()
+        - _setup_control_panel(layout)
+        - _setup_visualization_panel(layout, panel)
+        - _on_angle_changed()
+        - _do_update()
+        - _on_angles_changed_from_event(event)
+        - _reset_camera_view(view_name)
+        - _on_reset()
+    }
+}
+
+' ===== Adapter Layer (PyVista Integration) =====
+package "Adapter Layer" <<ADAPTER_COLOR>> {
+    class CubeVisualizerAdapter {
+        - presenter: CubeVisualizerPresenter
+        - event_bus: EventBus
+        - plotter: QtInteractor
+        - plotter_widget: QWidget
+        - current_view: str
+        + __init__(presenter, event_bus, parent_widget)
+        - _create_plotter_qt()
+        - _initialize_plotter()
+        - _on_angles_changed_event(event)
+        - _on_camera_view_changed_event(event)
+        + update_view(x, y, z)
+        + reset_camera_view(view_name)
+        + get_widget(): QWidget
+    }
+}
+
+' ===== Relationships =====
+
+' CQRS Infrastructure
+CommandBus "1" *-- "*" Command
+EventBus "1" *-- "*" Event
+Command --> CommandType
+Event --> EventType
+
+' Presenter
+CubeVisualizerPresenter --> CommandBus : receives commands
+CubeVisualizerPresenter --> EventBus : publishes events
+CubeVisualizerPresenter *-- "1" SensorOrientation : manages
+
+' View
+CubeSensorUI *-- "1" CommandBus : sends commands
+CubeSensorUI *-- "1" EventBus : subscribes to events
+CubeSensorUI *-- "1" CubeVisualizerPresenter : uses
+CubeSensorUI *-- "1" CubeVisualizerAdapter : uses
+
+' Adapter
+CubeVisualizerAdapter --> CubeVisualizerPresenter : queries state
+CubeVisualizerAdapter --> EventBus : subscribes to events
+
+note right of CommandBus
+  **Command Side (Write)**
+  Modifie l'état du système
+  Pas de valeur de retour
+end note
+
+note right of EventBus
+  **Event Side (Read)**
+  Notifie les changements d'état
+  Thread-safe via Qt Signals
+end note
+
+note bottom of CubeVisualizerPresenter
+  **Single Source of Truth**
+  - Reçoit les commandes via CommandBus
+  - Modifie SensorOrientation
+  - Publie les événements via EventBus
+end note
+
+@enduml
