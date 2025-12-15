@@ -65,7 +65,7 @@ class MockContinuousAcquisitionExecutor(IContinuousAcquisitionExecutor):
                         sample_index=sample_index,
                         sample=sample
                     )
-                    self._event_bus.publish(type(event).__name__, event)
+                    self._event_bus.publish(type(event).__name__.lower(), event)
                     sample_index += 1
                 
                 time.sleep(self._current_interval)
@@ -73,7 +73,7 @@ class MockContinuousAcquisitionExecutor(IContinuousAcquisitionExecutor):
             self._is_running = False
             print("[MockContinuousAcquisitionExecutor] Stopped.")
             event = ContinuousAcquisitionStopped(acquisition_id=self._current_acquisition_id)
-            self._event_bus.publish(type(event).__name__, event)
+            self._event_bus.publish(type(event).__name__.lower(), event)
 
         self._thread = threading.Thread(target=_worker, daemon=True)
         self._thread.start()

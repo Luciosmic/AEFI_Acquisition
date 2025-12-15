@@ -1,0 +1,105 @@
+{
+  "test_name": "test_apply_excitation_x_dir",
+  "timestamp": "2025-12-15T18:21:33.767256",
+  "status": "PASSED",
+  "interactions": [
+    {
+      "timestamp": "2025-12-15T18:21:33.767256",
+      "actor": "System",
+      "action": "DIVIDER",
+      "target": "System",
+      "message": "Setup Phase",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-15T18:21:33.767256",
+      "actor": "TestAD9106Adapter",
+      "action": "CREATE",
+      "target": "MCU_SerialCommunicator",
+      "message": "Create MCU communicator",
+      "data": {},
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-15T18:21:33.767256",
+      "actor": "TestAD9106Adapter",
+      "action": "CREATE",
+      "target": "AD9106Controller",
+      "message": "Create AD9106Controller",
+      "data": {},
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-15T18:21:33.767256",
+      "actor": "TestAD9106Adapter",
+      "action": "CREATE",
+      "target": "AdapterExcitationConfigurationAD9106",
+      "message": "Create AdapterExcitationConfigurationAD9106 with controller",
+      "data": {
+        "controller_type": "AD9106Controller"
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-15T18:21:33.767256",
+      "actor": "System",
+      "action": "DIVIDER",
+      "target": "System",
+      "message": "Execution Phase - Apply X_DIR Excitation",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-15T18:21:33.767256",
+      "actor": "TestAD9106Adapter",
+      "action": "CREATE",
+      "target": "ExcitationParameters",
+      "message": "Create excitation parameters",
+      "data": {
+        "mode": "X_DIR",
+        "level": 50.0,
+        "frequency": 1000.0
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-15T18:21:33.767256",
+      "actor": "TestAD9106Adapter",
+      "action": "CALL",
+      "target": "AD9106Adapter",
+      "message": "apply_excitation() - Apply X_DIR excitation",
+      "data": {
+        "mode": "X_DIR",
+        "level": 50.0,
+        "frequency": 1000.0
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-15T18:21:33.768256",
+      "actor": "AD9106Adapter",
+      "action": "ERROR",
+      "target": "TestAD9106Adapter",
+      "message": "Excitation application failed",
+      "data": {
+        "error": "Failed to set DDS frequency: Failed to select MSB address: Not connected"
+      },
+      "expect": null,
+      "got": null
+    }
+  ],
+  "summary": {
+    "total_interactions": 8,
+    "subscriptions": 0,
+    "publications": 0,
+    "assertions": 0
+  }
+}

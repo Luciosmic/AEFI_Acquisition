@@ -1,0 +1,59 @@
+{
+  "test_name": "test_apply_excitation_y_dir",
+  "timestamp": "2025-12-15T18:21:33.770251",
+  "status": "PASSED",
+  "interactions": [
+    {
+      "timestamp": "2025-12-15T18:21:33.770251",
+      "actor": "System",
+      "action": "DIVIDER",
+      "target": "System",
+      "message": "Setup Phase",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-15T18:21:33.770251",
+      "actor": "System",
+      "action": "DIVIDER",
+      "target": "System",
+      "message": "Execution Phase - Apply Y_DIR Excitation",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-15T18:21:33.770251",
+      "actor": "TestAD9106Adapter",
+      "action": "CALL",
+      "target": "AD9106Adapter",
+      "message": "apply_excitation() - Apply Y_DIR excitation",
+      "data": {
+        "mode": "Y_DIR",
+        "level": 75.0,
+        "frequency": 2000.0
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-15T18:21:33.771249",
+      "actor": "AD9106Adapter",
+      "action": "ERROR",
+      "target": "TestAD9106Adapter",
+      "message": "Excitation application failed",
+      "data": {
+        "error": "Failed to set DDS frequency: Failed to select MSB address: Not connected"
+      },
+      "expect": null,
+      "got": null
+    }
+  ],
+  "summary": {
+    "total_interactions": 4,
+    "subscriptions": 0,
+    "publications": 0,
+    "assertions": 0
+  }
+}

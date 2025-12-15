@@ -1,5 +1,5 @@
 {
-    "reference_voltage": 2.5,
+    "reference_voltage": 2.442,
     "clkin_divider": 2,
     "iclk_divider": 2,
     "oversampling_ratio": 4096,
@@ -17,6 +17,22 @@
             "enabled": true
         },
         "4": {
+            "gain": 1,
+            "enabled": true
+        },
+        "5": {
+            "gain": 1,
+            "enabled": true
+        },
+        "6": {
+            "gain": 1,
+            "enabled": true
+        },
+        "7": {
+            "gain": 1,
+            "enabled": true
+        },
+        "8": {
             "gain": 1,
             "enabled": true
         }

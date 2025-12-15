@@ -7,7 +7,8 @@ from pathlib import Path
 src_path = Path(__file__).parent.parent.parent.parent.parent.parent.parent / "src"
 sys.path.insert(0, str(src_path))
 
-from infrastructure.hardware.micro_controller.ad9106.adapter_excitation_configuration_ad9106 import AD9106Adapter
+from infrastructure.hardware.micro_controller.ad9106.ad9106_advanced_configurator import AD9106AdvancedConfigurator
+from infrastructure.hardware.micro_controller.ad9106.ad9106_controller import AD9106Controller
 from application.services.hardware_configuration_service.hardware_configuration_service import HardwareConfigurationService
 from domain.value_objects.hardware_configuration.hardware_advanced_parameter_schema import (
     NumberParameterSchema, EnumParameterSchema
@@ -15,9 +16,16 @@ from domain.value_objects.hardware_configuration.hardware_advanced_parameter_sch
 
 print("=== Test AD9106 Conversion Logic (Presenter logic without PyQt6) ===\n")
 
-# Setup: Create service with AD9106 adapter
-adapter = AD9106Adapter(None, None)
-service = HardwareConfigurationService([adapter])
+# Setup: Create service with AD9106 configurator
+# We need a controller for the configurator
+controller = AD9106Controller(None) # Mock communicator inside if needed, or None if acceptable by controller?
+# Controller needs a communicator, let's pass None and hope it handles it or mock it.
+# Actually AD9106Controller creates one if None. That's fine for this test as we don't call hardware methods, just get specs.
+# Wait, get_parameter_specs is static, so we don't even need an instance for that part, 
+# but HardwareConfigurationService expects instances.
+
+configurator = AD9106AdvancedConfigurator(controller)
+service = HardwareConfigurationService([configurator])
 
 # Test 1: Get domain specs
 print("1. Get domain specs from service:")

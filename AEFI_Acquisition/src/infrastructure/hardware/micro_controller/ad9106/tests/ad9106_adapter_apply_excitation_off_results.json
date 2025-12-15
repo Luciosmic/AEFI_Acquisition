@@ -1,0 +1,58 @@
+{
+  "test_name": "test_apply_excitation_off",
+  "timestamp": "2025-12-15T18:21:33.757540",
+  "status": "PASSED",
+  "interactions": [
+    {
+      "timestamp": "2025-12-15T18:21:33.757540",
+      "actor": "System",
+      "action": "DIVIDER",
+      "target": "System",
+      "message": "Setup Phase",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-15T18:21:33.759047",
+      "actor": "System",
+      "action": "DIVIDER",
+      "target": "System",
+      "message": "Execution Phase - Apply OFF Excitation",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-15T18:21:33.759047",
+      "actor": "TestAD9106Adapter",
+      "action": "CALL",
+      "target": "AD9106Adapter",
+      "message": "apply_excitation() - Apply OFF excitation (level=0)",
+      "data": {
+        "mode": "X_DIR",
+        "level": 0.0
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-15T18:21:33.759047",
+      "actor": "AD9106Adapter",
+      "action": "ERROR",
+      "target": "TestAD9106Adapter",
+      "message": "OFF excitation failed",
+      "data": {
+        "error": "Failed to set DDS1 gain to 0: Failed to select Gain address: Not connected"
+      },
+      "expect": null,
+      "got": null
+    }
+  ],
+  "summary": {
+    "total_interactions": 4,
+    "subscriptions": 0,
+    "publications": 0,
+    "assertions": 0
+  }
+}

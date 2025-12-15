@@ -25,7 +25,8 @@ from infrastructure.hardware.micro_controller.ads131a04.adapter_i_acquistion_por
 from infrastructure.hardware.micro_controller.adapter_lifecycle_MCU import MCULifecycleAdapter
 from infrastructure.hardware.micro_controller.ads131a04.adapter_i_continuous_acquisition_ads131a04 import AdapterIContinuousAcquisitionAds131a04
 from infrastructure.hardware.micro_controller.ad9106.ad9106_controller import AD9106Controller
-from infrastructure.hardware.micro_controller.ad9106.adapter_excitation_configuration_ad9106 import AD9106Adapter
+from infrastructure.hardware.micro_controller.ad9106.adapter_excitation_configuration_ad9106 import AdapterExcitationConfigurationAD9106
+from infrastructure.hardware.micro_controller.ad9106.ad9106_advanced_configurator import AD9106AdvancedConfigurator
 from application.services.hardware_configuration_service.i_hardware_advanced_configurator import IHardwareAdvancedConfigurator
 
 
@@ -39,7 +40,7 @@ class MCUCompositionRoot:
     - Driver: MCU_SerialCommunicator (shared by all adapters)
     - Adapters: 
       - ADS131A04Adapter (acquisition)
-      - AD9106Adapter (excitation)
+      - AdapterExcitationConfigurationAD9106 (excitation)
       - MCULifecycleAdapter (lifecycle)
       - AdapterIContinuousAcquisitionAds131a04 (continuous acquisition)
     """
@@ -62,13 +63,20 @@ class MCUCompositionRoot:
         # Injects the driver
         self.acquisition: IAcquisitionPort = ADS131A04Adapter(self._driver)
         
-        # 2b. Instantiate Acquisition Configurator (Decoupled)
-        self._acquisition_configurator = ADS131A04AdvancedConfigurator(self.acquisition)
+        # 2b. Instantiate Acquisition Controller (for low-level config)
+        from infrastructure.hardware.micro_controller.ads131a04.ads131_controller import ADS131Controller
+        self._ads131_controller = ADS131Controller(self._driver)
+        
+        # 2c. Instantiate Acquisition Configurator (Decoupled)
+        self._acquisition_configurator = ADS131A04AdvancedConfigurator(self.acquisition, self._ads131_controller)
         
         # 3. Instantiate AD9106 Controller and Adapter (Excitation)
         # Controller uses the shared driver
         self._ad9106_controller = AD9106Controller(self._driver)
-        self.excitation: IExcitationPort = AD9106Adapter(self._ad9106_controller, self._driver)
+        self.excitation: IExcitationPort = AdapterExcitationConfigurationAD9106(self._ad9106_controller, self._driver)
+        
+        # 3b. Instantiate AD9106 Configurator (Decoupled)
+        self._ad9106_configurator = AD9106AdvancedConfigurator(self._ad9106_controller)
         
         # 4. Instantiate Lifecycle Adapter
         # Injects the driver to manage connection
@@ -156,7 +164,5 @@ class MCUCompositionRoot:
         configs = []
         # Use the decoupled configurator for acquisition
         configs.append(self._acquisition_configurator)
-        
-        if isinstance(self.excitation, IHardwareAdvancedConfigurator):
-            configs.append(self.excitation)
+        configs.append(self._ad9106_configurator)
         return configs

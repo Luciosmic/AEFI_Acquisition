@@ -1,11 +1,17 @@
-from .serial_communicator import SerialCommunicator
+import math
+from infrastructure.hardware.micro_controller.MCU_serial_communicator import MCU_SerialCommunicator
 
 class ADS131Controller:
     """
     Controller for ADS131A04 Acquisition Device.
     """
-    def __init__(self):
-        self.communicator = SerialCommunicator()
+    def __init__(self, serial_communicator=None):
+        # Allow injection of existing communicator, or create new
+        if serial_communicator:
+            self.communicator = serial_communicator
+        else:
+            self.communicator = MCU_SerialCommunicator()
+            
         self.memory_state = {
             "ICLK_divider_ratio": 2,
             "Oversampling_ratio": 32
@@ -77,6 +83,49 @@ class ADS131Controller:
         if not success: return False, response
         
         return True, f"Références configurées (valeur: {val_combinee})"
+
+    def set_channel_gain(self, channel_index: int, gain: int) -> tuple[bool, str]:
+        """
+        Set the Digital Gain for a specific channel register (ADCx).
+        Based on Datasheet Section 9.6.2 (Addresses 11h to 14h).
+        
+        Args:
+            channel_index: 1-4 (Corresponds to ADCx register)
+            gain: Gain value (1, 2, 4, 8, 16)
+            
+        Returns:
+            (success, message)
+        """
+        if channel_index not in [1, 2, 3, 4]:
+            return False, f"Invalid channel index: {channel_index}"
+            
+        # Per datasheet 9.6.2: Gains 1, 2, 4, 8, 16 supported.
+        available_gains = [1, 2, 4, 8, 16]
+        if gain not in available_gains:
+            return False, f"Invalid gain: {gain}. Supported: {available_gains}"
+            
+        # Map gain to bits [2:0]
+        # 1->000, 2->001, 4->010, 8->011, 16->100
+        gain_code = int(math.log2(gain))
+        
+        # Addresses:
+        # ADC1: 11h (17d)
+        # ADC2: 12h (18d)
+        # ADC3: 13h (19d)
+        # ADC4: 14h (20d)
+        address = 16 + channel_index
+        
+        # 1. Set Address
+        success_a, resp_a = self.communicator.send_command(f"a{address}")
+        if not success_a:
+            return False, f"Failed to set address {address}: {resp_a}"
+            
+        # 2. Set Data
+        success_d, resp_d = self.communicator.send_command(f"d{gain_code}")
+        if not success_d:
+            return False, f"Failed to write gain {gain} to address {address}: {resp_d}"
+            
+        return True, f"Set Digital Gain {gain} (Code {gain_code}) for Register ADC{channel_index} (Addr {address})"
 
     def acquisition(self, n_avg=127):
         """

@@ -10,24 +10,27 @@ import unittest
 from pathlib import Path
 
 # Add src to path
-src_dir = Path(__file__).resolve().parents[4]
-sys.path.insert(0, str(src_dir))
+# Add src to path
+# tests -> ad9106 -> micro_controller -> hardware -> infrastructure -> src -> AEFI_Acquisition
+root_dir = Path(__file__).resolve().parents[6]
+sys.path.insert(0, str(root_dir / "src"))
 
 # Add .cursor/skills to path for diagram_friendly_test
-cursor_skills_dir = Path(__file__).resolve().parents[5] / ".cursor" / "skills"
+cursor_skills_dir = root_dir / ".cursor" / "skills"
 sys.path.insert(0, str(cursor_skills_dir / "diagram_friendly_test"))
 
 from diagram_friendly_test import DiagramFriendlyTest
 from infrastructure.hardware.micro_controller.MCU_serial_communicator import MCU_SerialCommunicator
 from infrastructure.hardware.micro_controller.ad9106.ad9106_controller import AD9106Controller
-from infrastructure.hardware.micro_controller.ad9106.adapter_excitation_configuration_ad9106 import AD9106Adapter
+from infrastructure.hardware.micro_controller.ad9106.ad9106_controller import AD9106Controller
+from infrastructure.hardware.micro_controller.ad9106.adapter_excitation_configuration_ad9106 import AdapterExcitationConfigurationAD9106
 from domain.value_objects.excitation.excitation_parameters import ExcitationParameters
 from domain.value_objects.excitation.excitation_mode import ExcitationMode
 from domain.value_objects.excitation.excitation_level import ExcitationLevel
 
 
 class TestAD9106Adapter(DiagramFriendlyTest):
-    """Test AD9106Adapter with diagram-friendly logging."""
+    """Test AdapterExcitationConfigurationAD9106 with diagram-friendly logging."""
     
     def setUp(self):
         super().setUp()
@@ -60,11 +63,11 @@ class TestAD9106Adapter(DiagramFriendlyTest):
         self.log_interaction(
             actor="TestAD9106Adapter",
             action="CREATE",
-            target="AD9106Adapter",
-            message="Create AD9106Adapter with controller",
+            target="AdapterExcitationConfigurationAD9106",
+            message="Create AdapterExcitationConfigurationAD9106 with controller",
             data={"controller_type": type(self.controller).__name__}
         )
-        self.adapter = AD9106Adapter(self.controller, self.communicator)
+        self.adapter = AdapterExcitationConfigurationAD9106(self.controller, self.communicator)
         
         self.log_divider("Execution Phase - Apply X_DIR Excitation")
         
@@ -125,12 +128,12 @@ class TestAD9106Adapter(DiagramFriendlyTest):
             actor="TestAD9106Adapter",
             action="ASSERT",
             target="AD9106Adapter",
-            message="Verify X_DIR phases (DDS1=0°, DDS2=180°)",
-            expect={"phase_dds1": 0, "phase_dds2": 32768},
+            message="Verify X_DIR phases (DDS1=0°, DDS2=180)",
+            expect={"phase_dds1": 0, "phase_dds2": 180},
             got={"phase_dds1": memory_state["DDS"]["Phase"][1], "phase_dds2": memory_state["DDS"]["Phase"][2]}
         )
         self.assertEqual(memory_state["DDS"]["Phase"][1], 0)  # DDS1: 0°
-        self.assertEqual(memory_state["DDS"]["Phase"][2], 32768)  # DDS2: 180°
+        self.assertEqual(memory_state["DDS"]["Phase"][2], 180)  # DDS2: 180 (User defined)
         
         # Verify gains (50% of MAX_EXCITATION_GAIN = 5500)
         expected_gain = int((50.0 / 100.0) * 5500)
@@ -162,7 +165,7 @@ class TestAD9106Adapter(DiagramFriendlyTest):
         
         self.communicator = MCU_SerialCommunicator()
         self.controller = AD9106Controller(self.communicator)
-        self.adapter = AD9106Adapter(self.controller, self.communicator)
+        self.adapter = AdapterExcitationConfigurationAD9106(self.controller, self.communicator)
         
         self.log_divider("Execution Phase - Apply Y_DIR Excitation")
         
@@ -207,12 +210,12 @@ class TestAD9106Adapter(DiagramFriendlyTest):
             actor="TestAD9106Adapter",
             action="ASSERT",
             target="AD9106Adapter",
-            message="Verify Y_DIR phases (DDS1=0°, DDS2=0° - in phase)",
+            message="Verify Y_DIR phases (DDS1=0°, DDS2=0)",
             expect={"phase_dds1": 0, "phase_dds2": 0},
             got={"phase_dds1": memory_state["DDS"]["Phase"][1], "phase_dds2": memory_state["DDS"]["Phase"][2]}
         )
         self.assertEqual(memory_state["DDS"]["Phase"][1], 0)  # DDS1: 0°
-        self.assertEqual(memory_state["DDS"]["Phase"][2], 0)  # DDS2: 0° (in phase)
+        self.assertEqual(memory_state["DDS"]["Phase"][2], 0)  # DDS2: 0 (User defined)
     
     def test_apply_excitation_off(self):
         """Test applying OFF excitation (level=0)."""
@@ -220,7 +223,7 @@ class TestAD9106Adapter(DiagramFriendlyTest):
         
         self.communicator = MCU_SerialCommunicator()
         self.controller = AD9106Controller(self.communicator)
-        self.adapter = AD9106Adapter(self.controller, self.communicator)
+        self.adapter = AdapterExcitationConfigurationAD9106(self.controller, self.communicator)
         
         self.log_divider("Execution Phase - Apply OFF Excitation")
         

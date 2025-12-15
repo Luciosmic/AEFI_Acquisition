@@ -19,9 +19,9 @@ class ADS131A04AdvancedConfigurator(IHardwareAdvancedConfigurator):
     """
     
     # ADS131A04 specifications (from datasheet)
-    # PGA Gain values: Register CHx_CFG bits [2:0] map to gains 1, 2, 4, 8, 16, 32, 64, 128
-    # See datasheet section 9.6 Register Maps, CHx_CFG register
-    AVAILABLE_GAINS = [1, 2, 4, 8, 16, 32, 64, 128]
+    # Digital Gain values: Register ADCx bits [2:0] map to gains 1, 2, 4, 8, 16
+    # See datasheet section 9.6.2 ADCx: ADC Channel Digital Gain Configuration Registers
+    AVAILABLE_GAINS = [1, 2, 4, 8, 16]
     
     # OSR (Oversampling Ratio) values: Register MODE bits OSR[3:0] map to OSR values
     # See datasheet Table 30. Data Rate Settings (section 9.4 Device Functional Modes)
@@ -139,8 +139,9 @@ class ADS131A04AdvancedConfigurator(IHardwareAdvancedConfigurator):
         
         return fdata_hz
 
-    def __init__(self, adapter: ADS131A04Adapter):
+    def __init__(self, adapter: ADS131A04Adapter, controller: Any):
         self._adapter = adapter
+        self._controller = controller
 
     @property
     def hardware_id(self) -> str:
@@ -201,22 +202,18 @@ class ADS131A04AdvancedConfigurator(IHardwareAdvancedConfigurator):
         ))
         
         # Channel Settings
-        # System has 2 ADS131A04 ADCs (4 channels each = 8 total), but we use 6 channels
-        for ch in range(1, 7):
+        # System has 2 ADS131A04 ADCs (4 channels each = 8 total)
+        # Gains are configured per register (1-4), which affects the corresponding channel on BOTH ADCs.
+        # So we have 4 Gain Groups (Pairs).
+        
+        for pair_idx in range(1, 5):
             specs.append(EnumParameterSchema(
-                key=f"ch{ch}_gain",
-                display_name=f"Channel {ch} Gain",
-                description=f"PGA Gain for Channel {ch}",
+                key=f"gain_pair_{pair_idx}",
+                display_name=f"Gain Pair {pair_idx}",
+                description=f"Gain for Channel {pair_idx} (ADC1) and Channel {pair_idx} (ADC2)",
                 default_value="1",
                 choices=tuple(str(x) for x in ADS131A04AdvancedConfigurator.AVAILABLE_GAINS),
-                group=f"Channel {ch}"
-            ))
-            specs.append(BooleanParameterSchema(
-                key=f"ch{ch}_enabled",
-                display_name=f"Channel {ch} Enabled",
-                description=f"Enable/Disable Channel {ch}",
-                default_value=True,
-                group=f"Channel {ch}"
+                group=f"Gain Configuration"
             ))
             
         return specs
@@ -254,14 +251,43 @@ class ADS131A04AdvancedConfigurator(IHardwareAdvancedConfigurator):
             "channels": {}
         }
         
-        # System has 2 ADS131A04 ADCs (4 channels each = 8 total), but we use 6 channels
-        for ch in range(1, 7):
+        # Map 4 Gain Pairs to 8 logical channels
+        # Pair 1 -> Ch 1 & 5
+        # Pair 2 -> Ch 2 & 6
+        # Pair 3 -> Ch 3 & 7
+        # Pair 4 -> Ch 4 & 8
+        
+        gain_map = {}
+        for pair_idx in range(1, 5):
+            gain_val = int(config.get(f"gain_pair_{pair_idx}", 1))
+            gain_map[pair_idx] = gain_val
+            
+            # Apply to hardware immediately via Controller
+            success, msg = self._controller.set_channel_gain(pair_idx, gain_val)
+            if not success:
+                print(f"[ADS131Configurator] Failed to set gain for pair {pair_idx}: {msg}")
+            
+        # Populate JSON config for Adapter (used for conversion)
+        # We assume standard mapping:
+        # Ch1 (ADC1) = Logical 1
+        # Ch2 (ADC1) = Logical 2
+        # Ch3 (ADC1) = Logical 3
+        # Ch4 (ADC1) = Logical 4
+        # Ch1 (ADC2) = Logical 5
+        # Ch2 (ADC2) = Logical 6
+        # ...
+        
+        for ch in range(1, 9): # 1 to 8
+            # Determine which pair controls this channel
+            # 1->1, 2->2, 3->3, 4->4, 5->1, 6->2, 7->3, 8->4
+            pair_idx = ch if ch <= 4 else ch - 4
+            
             json_config["channels"][str(ch)] = {
-                "gain": int(config.get(f"ch{ch}_gain", 1)),
-                "enabled": bool(config.get(f"ch{ch}_enabled", True))
+                "gain": gain_map[pair_idx],
+                "enabled": True # Always enable for now
             }
             
-        # 2. Apply to adapter
+        # 2. Apply to adapter (for internal state / conversion)
         self._adapter.load_config(json_config)
         
         # 3. Persist to JSON file

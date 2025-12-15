@@ -35,20 +35,14 @@ class AD9106Controller:
     # Hardware register addresses (AD9106 datasheet)
     DDS_ADDRESSES = {
         "Frequency": [62, 63],   # 62: MSB, 63: LSB
-        "Mode": 39,              # Mode combiné pour DDS1 et DDS2
-        "Mode_3_4": 38,          # Mode pour DDS3 et DDS4 (adresse 38)
+        # Mode registers are shared between pairs of channels:
+        # - Channels 1 & 2 share register 39
+        # - Channels 3 & 4 share register 38
+        "Mode": {1: 39, 2: 39, 3: 38, 4: 38},
         "Gain": {1: 53, 2: 52, 3: 51, 4: 50},  # Gain DDS1-4
         "Offset": {1: 37, 2: 36, 3: 35, 4: 34},  # Offset DDS1-4 (DAC1-4DOF: 37=DAC1, 36=DAC2, 35=DAC3, 34=DAC4)
         "Phase": {1: 67, 2: 66, 3: 65, 4: 64},    # Phase DDS1-4
         "Const": {1: 49, 2: 48, 3: 47, 4: 46}     # Constante DDS1-4
-    }
-    
-    # Mode values for AC/DC configuration
-    DDS_MODES = {
-        1: {"AC": 49, "DC": 1},          # DDS1: AC = 49, DC = 1
-        2: {"AC": 12544, "DC": 256},     # DDS2: AC = 12544, DC = 256
-        3: {"AC": 49, "DC": 1},          # DDS3: AC = 49, DC = 1
-        4: {"AC": 12544, "DC": 256}      # DDS4: AC = 12544, DC = 256
     }
     
     # Clock frequency for frequency calculation (16 MHz)
@@ -202,31 +196,51 @@ class AD9106Controller:
             OperationResult indicating success or failure
         """
         try:
-            # DDS1 and DDS2 share register 39
-            mode1_val = self.DDS_MODES[1]["AC"] if dds1_ac else self.DDS_MODES[1]["DC"]
-            mode2_val = self.DDS_MODES[2]["AC"] if dds2_ac else self.DDS_MODES[2]["DC"]
-            valeur_dds12 = mode1_val + mode2_val
+            # --- Configure DDS1 & DDS2 (Register 39) ---
+            # Register 39 controls both DDS1 and DDS2.
+            # - Lower 8 bits (0-7): Controls DDS1
+            # - Upper 8 bits (8-15): Controls DDS2
             
-            success, response = self._communicator.send_command(f"a{self.DDS_ADDRESSES['Mode']}")
+            # 1. Determine value for each channel (AC=0x31, DC=0x01)
+            MODE_AC = 0x31
+            MODE_DC = 0x01
+            
+            val_1 = MODE_AC if dds1_ac else MODE_DC
+            val_2 = MODE_AC if dds2_ac else MODE_DC
+            
+            # 2. Combine values into a single 16-bit integer
+            # val_1 is placed in the lower byte (no shift)
+            # val_2 is shifted 8 bits to the left to occupy the upper byte
+            # |  DDS2 (8 bits)  |  DDS1 (8 bits)  |
+            valeur_dds12 = val_1 | (val_2 << 8)
+            
+            # 3. Send command to Register 39
+            success, response = self._communicator.send_command(f"a{self.DDS_ADDRESSES['Mode'][1]}")
             if not success:
-                return OperationResult.fail(f"Failed to select Mode register: {response}")
+                return OperationResult.fail(f"Failed to select Mode register for DDS1/2: {response}")
             
             success, response = self._communicator.send_command(f"d{valeur_dds12}")
             if not success:
-                return OperationResult.fail(f"Failed to write Mode value: {response}")
+                return OperationResult.fail(f"Failed to write Mode value for DDS1/2: {response}")
             
-            # DDS3 and DDS4 share register 38
-            mode3_val = self.DDS_MODES[3]["AC"] if dds3_ac else self.DDS_MODES[3]["DC"]
-            mode4_val = self.DDS_MODES[4]["AC"] if dds4_ac else self.DDS_MODES[4]["DC"]
-            valeur_dds34 = mode3_val + mode4_val
+            # --- Configure DDS3 & DDS4 (Register 38) ---
+            # Register 38 controls both DDS3 and DDS4.
+            # - Lower 8 bits (0-7): Controls DDS3
+            # - Upper 8 bits (8-15): Controls DDS4
             
-            success, response = self._communicator.send_command(f"a{self.DDS_ADDRESSES['Mode_3_4']}")
+            val_3 = MODE_AC if dds3_ac else MODE_DC
+            val_4 = MODE_AC if dds4_ac else MODE_DC
+            
+            # Combine: DDS4 (upper) | DDS3 (lower)
+            valeur_dds34 = val_3 | (val_4 << 8)
+            
+            success, response = self._communicator.send_command(f"a{self.DDS_ADDRESSES['Mode'][3]}")
             if not success:
-                return OperationResult.fail(f"Failed to select Mode_3_4 register: {response}")
+                return OperationResult.fail(f"Failed to select Mode register for DDS3/4: {response}")
             
             success, response = self._communicator.send_command(f"d{valeur_dds34}")
             if not success:
-                return OperationResult.fail(f"Failed to write Mode_3_4 value: {response}")
+                return OperationResult.fail(f"Failed to write Mode value for DDS3/4: {response}")
             
             # Update memory state
             self._memory_state["DDS"]["Mode"] = {
@@ -290,12 +304,14 @@ class AD9106Controller:
         
         try:
             addr = self.DDS_ADDRESSES["Phase"][channel]
-            
             success, response = self._communicator.send_command(f"a{addr}")
+            print(f"[AD9106 Controller] Selected Phase address: {addr}")
+            print(f"[AD9106 Controller] Sent to MCU")
             if not success:
                 return OperationResult.fail(f"Failed to select Phase address: {response}")
             
             success, response = self._communicator.send_command(f"d{value}")
+            print(f"[AD9106 Controller] Sent to MCU Phase value: {value}")
             if not success:
                 return OperationResult.fail(f"Failed to write Phase value: {response}")
             
@@ -390,39 +406,39 @@ class AD9106Controller:
             return OperationResult.fail(f"Invalid parameters: channel={channel}, mode={mode}")
         
         try:
+            MODE_AC = 0x31
+            MODE_DC = 0x01
+            
+            target_val = MODE_AC if mode == "AC" else MODE_DC
+            
+            # Determine partner channel (1<->2, 3<->4)
             if channel in [1, 2]:
-                # DDS1 and DDS2 share register 39
                 other_channel = 2 if channel == 1 else 1
-                other_mode = self._memory_state["DDS"]["Mode"][other_channel]
-                
-                val_current = self.DDS_MODES[channel]["AC"] if mode == "AC" else self.DDS_MODES[channel]["DC"]
-                val_other = self.DDS_MODES[other_channel]["AC"] if other_mode == "AC" else self.DDS_MODES[other_channel]["DC"]
-                valeur = val_current + val_other
-                
-                success, response = self._communicator.send_command(f"a{self.DDS_ADDRESSES['Mode']}")
-                if not success:
-                    return OperationResult.fail(f"Failed to select Mode register: {response}")
-                
-                success, response = self._communicator.send_command(f"d{valeur}")
-                if not success:
-                    return OperationResult.fail(f"Failed to write Mode value: {response}")
-                
-            else:  # channel in [3, 4]
-                # DDS3 and DDS4 share register 38
+            else:
                 other_channel = 4 if channel == 3 else 3
-                other_mode = self._memory_state["DDS"]["Mode"][other_channel]
-                
-                val_current = self.DDS_MODES[channel]["AC"] if mode == "AC" else self.DDS_MODES[channel]["DC"]
-                val_other = self.DDS_MODES[other_channel]["AC"] if other_mode == "AC" else self.DDS_MODES[other_channel]["DC"]
-                valeur = val_current + val_other
-                
-                success, response = self._communicator.send_command(f"a{self.DDS_ADDRESSES['Mode_3_4']}")
-                if not success:
-                    return OperationResult.fail(f"Failed to select Mode_3_4 register: {response}")
-                
-                success, response = self._communicator.send_command(f"d{valeur}")
-                if not success:
-                    return OperationResult.fail(f"Failed to write Mode_3_4 value: {response}")
+            
+            # Get current mode of the partner channel from memory state
+            other_mode_str = self._memory_state["DDS"]["Mode"][other_channel]
+            other_val = MODE_AC if other_mode_str == "AC" else MODE_DC
+            
+            # Combine values based on channel position
+            # Odd channels (1, 3) are Lower Byte (no shift)
+            # Even channels (2, 4) are Upper Byte (shift << 8)
+            if channel % 2 != 0: # Odd channel (1 or 3) -> Lower Byte
+                valeur = target_val | (other_val << 8)
+            else: # Even channel (2 or 4) -> Upper Byte
+                valeur = other_val | (target_val << 8)
+            
+            # Get address from dictionary
+            addr = self.DDS_ADDRESSES['Mode'][channel]
+            
+            success, response = self._communicator.send_command(f"a{addr}")
+            if not success:
+                return OperationResult.fail(f"Failed to select Mode register: {response}")
+            
+            success, response = self._communicator.send_command(f"d{valeur}")
+            if not success:
+                return OperationResult.fail(f"Failed to write Mode value: {response}")
             
             # Update memory state
             self._memory_state["DDS"]["Mode"][channel] = mode
@@ -524,14 +540,19 @@ class AD9106Controller:
                 self._memory_state["DDS"]["Frequence"] = int(round(self._uint32_to_freq(freq_uint32)))
         
         # Modes
-        elif address == 38:  # Mode DDS3+DDS4
-            mode_dds3 = "AC" if (value & 0xFF) == (12593 & 0xFF) else "DC"
-            mode_dds4 = "AC" if ((value >> 8) & 0xFF) == ((12593 >> 8) & 0xFF) else "DC"
+        # Modes
+        elif address == 38:  # Mode DDS3+DDS4 (Mode_3_4)
+            # Lower 8 bits: DDS3, Upper 8 bits: DDS4
+            MODE_AC = 0x31
+            mode_dds3 = "AC" if (value & 0xFF) == MODE_AC else "DC"
+            mode_dds4 = "AC" if ((value >> 8) & 0xFF) == MODE_AC else "DC"
             self._memory_state["DDS"]["Mode"][3] = mode_dds3
             self._memory_state["DDS"]["Mode"][4] = mode_dds4
-        elif address == 39:  # Mode DDS1+DDS2
-            mode_dds1 = "AC" if (value & 0xFF) == (12593 & 0xFF) else "DC"
-            mode_dds2 = "AC" if ((value >> 8) & 0xFF) == ((12593 >> 8) & 0xFF) else "DC"
+        elif address == 39:  # Mode DDS1+DDS2 (Mode_1_2)
+            # Lower 8 bits: DDS1, Upper 8 bits: DDS2
+            MODE_AC = 0x31
+            mode_dds1 = "AC" if (value & 0xFF) == MODE_AC else "DC"
+            mode_dds2 = "AC" if ((value >> 8) & 0xFF) == MODE_AC else "DC"
             self._memory_state["DDS"]["Mode"][1] = mode_dds1
             self._memory_state["DDS"]["Mode"][2] = mode_dds2
         
