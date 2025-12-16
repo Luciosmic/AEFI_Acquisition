@@ -143,3 +143,6 @@ class MockMotionPort(IMotionPort):
         elif axis.lower() == 'y':
             self._current_pos = Position2D(self._current_pos.x, position)
         print(f"[MockMotionPort] set_reference: {axis.upper()} axis set to {position}")
+
+    def get_axis_limits(self) -> tuple[float, float]:
+        return (1000.0, 1000.0)

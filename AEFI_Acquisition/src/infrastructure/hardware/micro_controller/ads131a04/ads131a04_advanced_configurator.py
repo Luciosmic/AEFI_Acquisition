@@ -1,6 +1,7 @@
 from typing import List, Dict, Any
 import json
 import os
+from dataclasses import replace
 
 from application.services.hardware_configuration_service.i_hardware_advanced_configurator import IHardwareAdvancedConfigurator
 from domain.value_objects.hardware_configuration.hardware_advanced_parameter_schema import (
@@ -43,101 +44,6 @@ class ADS131A04AdvancedConfigurator(IHardwareAdvancedConfigurator):
         ("low_power", False): [0.1e6, 1.024e6, 1.05e6],  # VNCPEN=0
         ("low_power", True): [0.512e6, 1.024e6, 1.05e6],  # VNCPEN=1
     }
-
-    @staticmethod
-    def calculate_adc_output_data_frequency(
-        fclkin_hz: float,
-        clk_div: int,
-        iclk_div: int,
-        osr: int
-    ) -> float:
-        """
-        Calculate ADC output data frequency (fDATA) from clock configuration.
-        
-        Formula from datasheet:
-        - fICLK = fCLKIN / CLK_DIV
-        - fMOD = fICLK / ICLK_DIV
-        - fDATA = fMOD / OSR
-        
-        Therefore: fDATA = fCLKIN / (CLK_DIV × ICLK_DIV × OSR)
-        
-        Args:
-            fclkin_hz: Input clock frequency (fCLKIN) in Hz
-            clk_div: CLK_DIV divider ratio (2, 4, 6, 8, 10, 12, or 14)
-            iclk_div: ICLK_DIV divider ratio (2, 4, 6, 8, 10, 12, or 14)
-            osr: Oversampling ratio (one of AVAILABLE_OSR values)
-        
-        Returns:
-            ADC output data frequency (fDATA) in Hz
-        
-        Raises:
-            ValueError: If invalid divider or OSR values are provided
-        """
-        if clk_div not in ADS131A04AdvancedConfigurator.AVAILABLE_CLK_DIV:
-            raise ValueError(f"Invalid CLK_DIV: {clk_div}. Must be one of {ADS131A04AdvancedConfigurator.AVAILABLE_CLK_DIV}")
-        
-        if iclk_div not in ADS131A04AdvancedConfigurator.AVAILABLE_ICLK_DIV:
-            raise ValueError(f"Invalid ICLK_DIV: {iclk_div}. Must be one of {ADS131A04AdvancedConfigurator.AVAILABLE_ICLK_DIV}")
-        
-        if osr not in ADS131A04AdvancedConfigurator.AVAILABLE_OSR:
-            raise ValueError(f"Invalid OSR: {osr}. Must be one of {ADS131A04AdvancedConfigurator.AVAILABLE_OSR}")
-        
-        if fclkin_hz <= 0:
-            raise ValueError(f"Invalid fCLKIN: {fclkin_hz} Hz. Must be positive")
-        
-        # fDATA = fCLKIN / (CLK_DIV × ICLK_DIV × OSR)
-        fdata_hz = fclkin_hz / (clk_div * iclk_div * osr)
-        
-        return fdata_hz
-
-    @staticmethod
-    def calculate_adc_output_data_frequency_from_resolution_mode(
-        resolution_mode: str,  # "high_resolution" or "low_power"
-        osr: int,
-        vncpen: bool = False,  # VNCPEN bit state (default False)
-        fmod_index: int = 1  # Which fMOD value to use (0, 1, or 2) - default 1 (middle value)
-    ) -> float:
-        """
-        Calculate ADC output data frequency based on resolution mode.
-        
-        Uses fMOD values from datasheet table based on:
-        - Resolution mode (High-resolution or Low-power)
-        - VNCPEN bit state
-        
-        Args:
-            resolution_mode: "high_resolution" or "low_power"
-            osr: Oversampling ratio (one of AVAILABLE_OSR values)
-            vncpen: VNCPEN bit state (default False)
-            fmod_index: Index of fMOD value to use (0, 1, or 2). Default 1 (middle value)
-                       0 = lowest fMOD, 1 = middle fMOD, 2 = highest fMOD
-        
-        Returns:
-            ADC output data frequency (fDATA) in Hz
-        
-        Raises:
-            ValueError: If invalid parameters
-        """
-        if resolution_mode not in ["high_resolution", "low_power"]:
-            raise ValueError(f"Invalid resolution_mode: {resolution_mode}. Must be 'high_resolution' or 'low_power'")
-        
-        if osr not in ADS131A04AdvancedConfigurator.AVAILABLE_OSR:
-            raise ValueError(f"Invalid OSR: {osr}. Must be one of {ADS131A04AdvancedConfigurator.AVAILABLE_OSR}")
-        
-        if fmod_index not in [0, 1, 2]:
-            raise ValueError(f"Invalid fmod_index: {fmod_index}. Must be 0, 1, or 2")
-        
-        # Get fMOD values for this configuration
-        fmod_values = ADS131A04AdvancedConfigurator.FMOD_VALUES.get((resolution_mode, vncpen))
-        if fmod_values is None:
-            raise ValueError(f"Invalid configuration: resolution_mode={resolution_mode}, vncpen={vncpen}")
-        
-        # Use the selected fMOD value
-        fmod_hz = fmod_values[fmod_index]
-        
-        # fDATA = fMOD / OSR
-        fdata_hz = fmod_hz / osr
-        
-        return fdata_hz
 
     def __init__(self, adapter: ADS131A04Adapter, controller: Any):
         self._adapter = adapter
@@ -209,14 +115,60 @@ class ADS131A04AdvancedConfigurator(IHardwareAdvancedConfigurator):
         for pair_idx in range(1, 5):
             specs.append(EnumParameterSchema(
                 key=f"gain_pair_{pair_idx}",
-                display_name=f"Gain Pair {pair_idx}",
+                display_name=f"Gain ADC {pair_idx}",
                 description=f"Gain for Channel {pair_idx} (ADC1) and Channel {pair_idx} (ADC2)",
                 default_value="1",
                 choices=tuple(str(x) for x in ADS131A04AdvancedConfigurator.AVAILABLE_GAINS),
                 group=f"Gain Configuration"
             ))
             
-        return specs
+
+
+        # Load default config if exists
+        updated_specs = []
+        try:
+            config_path = os.path.join(os.path.dirname(__file__), "ads131a04_default_config.json")
+            default_config = {}
+            if os.path.exists(config_path):
+                with open(config_path, 'r') as f:
+                    default_config = json.load(f)
+            
+            for spec in specs:
+                new_default = spec.default_value
+                
+                # Direct mapping for global settings
+                if spec.key in default_config:
+                    val = default_config[spec.key]
+                    # Handle Enum/Boolean conversions if necessary
+                    if spec.key == "ref_voltage":
+                        new_default = "4.0V" if val == 1 else "2.442V"
+                    elif spec.key == "ref_selection":
+                        new_default = "Internal" if val == 1 else "External"
+                    elif spec.key == "oversampling_ratio":
+                        new_default = str(val)
+                    else:
+                        new_default = val
+                        
+                # Special mapping for Gain Pairs
+                if spec.key.startswith("gain_pair_"):
+                    pair_idx = int(spec.key.split("_")[-1])
+                    # Map pair to channel 1, 2, 3, 4
+                    # Pair 1 -> Ch 1
+                    ch_key = str(pair_idx)
+                    if "channels" in default_config and ch_key in default_config["channels"]:
+                        gain = default_config["channels"][ch_key].get("gain", 1)
+                        new_default = str(gain)
+                
+                if new_default != spec.default_value:
+                    updated_specs.append(replace(spec, default_value=new_default))
+                else:
+                    updated_specs.append(spec)
+                            
+        except Exception as e:
+            print(f"[ADS131Configurator] Failed to load default config: {e}")
+            return specs
+            
+        return updated_specs
 
     def apply_config(self, config: Dict[str, Any]) -> None:
         """
@@ -298,11 +250,62 @@ class ADS131A04AdvancedConfigurator(IHardwareAdvancedConfigurator):
             print(f"[ADS131Configurator] Config saved to {config_path}")
         except Exception as e:
             print(f"[ADS131Configurator] Failed to save config: {e}")
+
+    def save_config_as_default(self, config: Dict[str, Any]) -> None:
+        """
+        Save configuration as default.
+        """
+        # 1. Reconstruct nested JSON structure (Same logic as apply_config)
+        negative_ref = bool(config.get("negative_ref", False))
+        high_res = bool(config.get("high_res", True))
+        ref_voltage_str = config.get("ref_voltage", "2.442V")
+        ref_voltage = 1 if ref_voltage_str == "4.0V" else 0
+        ref_selection_str = config.get("ref_selection", "Internal")
+        ref_selection = 1 if ref_selection_str == "Internal" else 0
+        
+        resolution_mode = "high_resolution" if high_res else "low_power"
+        
+        json_config = {
+            "clkin_divider": 2,
+            "iclk_divider": 2,
+            "oversampling_ratio": int(config.get("oversampling_ratio", 4096)),
+            "resolution_mode": resolution_mode,
+            "vncpen": negative_ref,
+            "negative_ref": negative_ref,
+            "high_res": high_res,
+            "ref_voltage": ref_voltage,
+            "ref_selection": ref_selection,
+            "channels": {}
+        }
+        
+        gain_map = {}
+        for pair_idx in range(1, 5):
+            gain_val = int(config.get(f"gain_pair_{pair_idx}", 1))
+            gain_map[pair_idx] = gain_val
+            
+        for ch in range(1, 9):
+            pair_idx = ch if ch <= 4 else ch - 4
+            json_config["channels"][str(ch)] = {
+                "gain": gain_map[pair_idx],
+                "enabled": True
+            }
+            
+        # 2. Persist to DEFAULT JSON file
+        try:
+            config_path = os.path.join(os.path.dirname(__file__), "ads131a04_default_config.json")
+            with open(config_path, 'w') as f:
+                json.dump(json_config, f, indent=4)
+            print(f"[ADS131Configurator] Default config saved to {config_path}")
+        except Exception as e:
+            print(f"[ADS131Configurator] Failed to save default config: {e}")
+            raise e
     
     def get_adc_output_data_frequency(self) -> float:
         """
         Calculate ADC output data frequency from current configuration.
         Uses resolution mode to determine fMOD values.
+        
+        WARNING: Method To Test - Not yet validated in production.
         
         Returns:
             ADC output data frequency (fDATA) in Hz
@@ -337,3 +340,52 @@ class ADS131A04AdvancedConfigurator(IHardwareAdvancedConfigurator):
         return self.calculate_adc_output_data_frequency_from_resolution_mode(
             "high_resolution", 4096, False, fmod_index=1
         )
+
+    @staticmethod
+    def calculate_adc_output_data_frequency_from_resolution_mode(
+        resolution_mode: str,  # "high_resolution" or "low_power"
+        osr: int,
+        vncpen: bool = False,  # VNCPEN bit state (default False)
+        fmod_index: int = 1  # Which fMOD value to use (0, 1, or 2) - default 1 (middle value)
+    ) -> float:
+        """
+        Calculate ADC output data frequency based on resolution mode.
+        
+        Uses fMOD values from datasheet table based on:
+        - Resolution mode (High-resolution or Low-power)
+        - VNCPEN bit state
+        
+        Args:
+            resolution_mode: "high_resolution" or "low_power"
+            osr: Oversampling ratio (one of AVAILABLE_OSR values)
+            vncpen: VNCPEN bit state (default False)
+            fmod_index: Index of fMOD value to use (0, 1, or 2). Default 1 (middle value)
+                       0 = lowest fMOD, 1 = middle fMOD, 2 = highest fMOD
+        
+        Returns:
+            ADC output data frequency (fDATA) in Hz
+        
+        Raises:
+            ValueError: If invalid parameters
+        """
+        if resolution_mode not in ["high_resolution", "low_power"]:
+            raise ValueError(f"Invalid resolution_mode: {resolution_mode}. Must be 'high_resolution' or 'low_power'")
+        
+        if osr not in ADS131A04AdvancedConfigurator.AVAILABLE_OSR:
+            raise ValueError(f"Invalid OSR: {osr}. Must be one of {ADS131A04AdvancedConfigurator.AVAILABLE_OSR}")
+        
+        if fmod_index not in [0, 1, 2]:
+            raise ValueError(f"Invalid fmod_index: {fmod_index}. Must be 0, 1, or 2")
+        
+        # Get fMOD values for this configuration
+        fmod_values = ADS131A04AdvancedConfigurator.FMOD_VALUES.get((resolution_mode, vncpen))
+        if fmod_values is None:
+            raise ValueError(f"Invalid configuration: resolution_mode={resolution_mode}, vncpen={vncpen}")
+        
+        # Use the selected fMOD value
+        fmod_hz = fmod_values[fmod_index]
+        
+        # fDATA = fMOD / OSR
+        fdata_hz = fmod_hz / osr
+        
+        return fdata_hz

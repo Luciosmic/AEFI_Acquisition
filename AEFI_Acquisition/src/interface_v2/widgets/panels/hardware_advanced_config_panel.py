@@ -45,6 +45,7 @@ class HardwareAdvancedConfigPanel(QWidget):
     hardware_selected = Signal(str)  # hardware_id
     config_changed = Signal(dict)  # {param_key: value}
     apply_requested = Signal(dict)  # full config dict
+    save_default_requested = Signal(dict) # full config dict
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -88,11 +89,22 @@ class HardwareAdvancedConfigPanel(QWidget):
         self._status_label.setStyleSheet("color: gray; font-size: 10px;")
         main_layout.addWidget(self._status_label)
         
+        # Buttons layout
+        btn_layout = QHBoxLayout()
+        
         # Apply button
         self._apply_btn = QPushButton("Apply Configuration")
         self._apply_btn.setEnabled(False)
         self._apply_btn.clicked.connect(self._on_apply_clicked)
-        main_layout.addWidget(self._apply_btn)
+        btn_layout.addWidget(self._apply_btn)
+        
+        # Save Default button
+        self._save_default_btn = QPushButton("Save as Default")
+        self._save_default_btn.setEnabled(False)
+        self._save_default_btn.clicked.connect(self._on_save_default_clicked)
+        btn_layout.addWidget(self._save_default_btn)
+        
+        main_layout.addLayout(btn_layout)
     
     def set_hardware_list(self, hardware_ids: List[str]):
         """Update hardware selection dropdown."""
@@ -148,6 +160,7 @@ class HardwareAdvancedConfigPanel(QWidget):
         
         self._content_layout.addStretch()
         self._apply_btn.setEnabled(True)
+        self._save_default_btn.setEnabled(True)
     
     def _create_widget(self, spec: HardwareAdvancedParameterSchema) -> QWidget:
         """Create appropriate widget based on spec type."""
@@ -203,6 +216,11 @@ class HardwareAdvancedConfigPanel(QWidget):
         """Handle apply button click."""
         config = self._get_current_config()
         self.apply_requested.emit(config)
+
+    def _on_save_default_clicked(self):
+        """Handle save default button click."""
+        config = self._get_current_config()
+        self.save_default_requested.emit(config)
     
     def _get_current_config(self) -> Dict[str, Any]:
         """Get current configuration from widgets."""
@@ -230,5 +248,7 @@ class HardwareAdvancedConfigPanel(QWidget):
             if child.widget():
                 child.widget().deleteLater()
         self._apply_btn.setEnabled(False)
+        self._save_default_btn.setEnabled(False)
+
 
 

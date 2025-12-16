@@ -5,3 +5,4 @@ cd "$(dirname "$0")/.."
 python -m tests.test_interactive_rendering
 
 
+

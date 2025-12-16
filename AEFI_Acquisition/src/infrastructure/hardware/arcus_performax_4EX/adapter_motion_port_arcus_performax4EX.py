@@ -17,6 +17,8 @@ Design (QCS):
 
 from typing import Optional, List, Dict, Any
 import time
+import json
+import os
 import threading
 import queue
 from uuid import uuid4
@@ -70,7 +72,32 @@ class ArcusAdapter(IMotionPort):
         # Async Worker Infrastructure
         self._command_queue = queue.Queue()
         self._worker_thread: Optional[threading.Thread] = None
+        self._monitor_thread: Optional[threading.Thread] = None
         self._running = False
+        self._last_position: Optional[Position2D] = None
+        self._last_moving: bool = False
+        
+        # Initialize calibration with defaults
+        self.MICRONS_PER_STEP = ArcusAdapter.MICRONS_PER_STEP
+        self.MM_PER_STEP = ArcusAdapter.MM_PER_STEP
+        self.STEPS_PER_MM = ArcusAdapter.STEPS_PER_MM
+        
+        self._load_calibration()
+
+    def _load_calibration(self):
+        """Load calibration from config file."""
+        try:
+            config_path = Path(__file__).parent / "arcus_default_config.json"
+            if config_path.exists():
+                with open(config_path, 'r') as f:
+                    config = json.load(f)
+                    if "microns_per_step" in config:
+                        self.MICRONS_PER_STEP = float(config["microns_per_step"])
+                        self.MM_PER_STEP = self.MICRONS_PER_STEP / 1000.0
+                        self.STEPS_PER_MM = 1.0 / self.MM_PER_STEP
+                        print(f"[ArcusAdapter] Loaded calibration: {self.MICRONS_PER_STEP} microns/step ({self.STEPS_PER_MM:.2f} steps/mm)")
+        except Exception as e:
+            print(f"[ArcusAdapter] Failed to load calibration: {e}")
 
     def set_controller(self, controller: ArcusPerformax4EXController) -> None:
         """Inject controller."""
@@ -96,24 +123,39 @@ class ArcusAdapter(IMotionPort):
         self._stop_worker()
 
     def _start_worker(self):
-        """Start the background worker thread."""
+        """Start the background worker and monitor threads."""
         if self._worker_thread is not None and self._worker_thread.is_alive():
             return
 
         self._running = True
+        
+        # Command Worker
         self._worker_thread = threading.Thread(target=self._worker_loop, daemon=True)
         self._worker_thread.start()
-        print("[ArcusAdapter] Worker thread started")
+        
+        # Monitor Worker
+        self._monitor_thread = threading.Thread(target=self._monitor_loop, daemon=True)
+        self._monitor_thread.start()
+        
+        print("[ArcusAdapter] Worker and Monitor threads started")
 
     def _stop_worker(self):
-        """Stop the background worker thread."""
+        """Stop the background threads."""
         self._running = False
+        
+        # Stop Command Worker
         if self._worker_thread:
             # Unblock queue get if waiting
             self._command_queue.put(("STOP_WORKER", None))
             self._worker_thread.join(timeout=2.0)
             self._worker_thread = None
-            print("[ArcusAdapter] Worker thread stopped")
+            
+        # Stop Monitor Worker
+        if self._monitor_thread:
+            self._monitor_thread.join(timeout=2.0)
+            self._monitor_thread = None
+            
+        print("[ArcusAdapter] Threads stopped")
 
     def _worker_loop(self):
         """
@@ -125,12 +167,14 @@ class ArcusAdapter(IMotionPort):
             try:
                 # Block until a command is available
                 cmd_type, args = self._command_queue.get(timeout=0.5)
+                print(f"[ArcusAdapter] DEBUG: Worker popped command: {cmd_type}, Args: {args}")
                 
                 if cmd_type == "STOP_WORKER":
                     break
                 
                 if cmd_type == "MOVE_TO":
                     motion_id, position = args
+                    print(f"[ArcusAdapter] DEBUG: Processing MOVE_TO {motion_id} -> {position}")
                     start_time = time.time()
                     try:
                         self._internal_move_to(position)
@@ -148,11 +192,7 @@ class ArcusAdapter(IMotionPort):
                                 final_position=final_pos,
                                 duration_ms=duration
                             ))
-                            # Publish position update
-                            self._event_bus.publish("positionupdated", PositionUpdated(
-                                position=final_pos,
-                                is_moving=False
-                            ))
+                            # Note: PositionUpdated is handled by _monitor_loop
                     except Exception as e:
                         print(f"[ArcusAdapter] Motion failed: {e}")
                         if self._event_bus:
@@ -179,8 +219,56 @@ class ArcusAdapter(IMotionPort):
             except Exception as e:
                 print(f"[ArcusAdapter] Worker error: {e}")
 
+    def _monitor_loop(self):
+        """
+        Background loop to monitor position and status.
+        Publishes PositionUpdated events when changes are detected.
+        """
+        POLL_INTERVAL = 0.15  # 150ms
+        
+        while self._running:
+            try:
+                if not self._controller or not self._controller.is_connected():
+                    time.sleep(1.0)
+                    continue
+                
+                # Get current state
+                current_pos = self.get_current_position()
+                is_moving = self.is_moving()
+                
+                # Check for changes
+                pos_changed = False
+                if self._last_position is None:
+                    pos_changed = True
+                else:
+                    # Epsilon check for float comparison (0.001 mm)
+                    if (abs(current_pos.x - self._last_position.x) > 0.001 or 
+                        abs(current_pos.y - self._last_position.y) > 0.001):
+                        pos_changed = True
+                
+                status_changed = (is_moving != self._last_moving)
+                
+                # Publish if changed
+                if pos_changed or status_changed:
+                    if self._event_bus:
+                        self._event_bus.publish("positionupdated", PositionUpdated(
+                            position=current_pos,
+                            is_moving=is_moving
+                        ))
+                    
+                    self._last_position = current_pos
+                    self._last_moving = is_moving
+                
+                time.sleep(POLL_INTERVAL)
+                
+            except Exception as e:
+                # Don't crash the monitor thread on transient errors
+                # print(f"[ArcusAdapter] Monitor error: {e}")
+                time.sleep(1.0)
+
     def _internal_move_to(self, position: Position2D):
         """Internal synchronous move execution."""
+        print(f"[ArcusAdapter] DEBUG: _internal_move_to calling controller with {position}")
         try:
             # Convert mm to steps
             steps_x = int(position.x * self.STEPS_PER_MM)
@@ -213,6 +301,7 @@ class ArcusAdapter(IMotionPort):
 
     def _internal_wait_until_stopped(self, timeout: float = 30.0, poll_interval: float = 0.1):
         """Internal synchronous wait."""
+        print(f"[ArcusAdapter] DEBUG: _internal_wait_until_stopped started (timeout={timeout})")
         start_time = time.time()
         while self.is_moving():
             if not self._running: # Abort if worker stopped
@@ -221,6 +310,7 @@ class ArcusAdapter(IMotionPort):
                 print(f"[ArcusAdapter] Motion timeout after {timeout}s")
                 break
             time.sleep(poll_interval)
+        print(f"[ArcusAdapter] DEBUG: _internal_wait_until_stopped finished. Duration: {time.time() - start_time:.3f}s")
 
     # ==========================================================================
     # COMMANDS
@@ -259,6 +349,7 @@ class ArcusAdapter(IMotionPort):
             ))
 
         # Push to queue
+        print(f"[ArcusAdapter] DEBUG: Enqueuing MOVE_TO command: {motion_id}, Pos: {position}")
         self._command_queue.put(("MOVE_TO", (motion_id, position)))
         
         return motion_id
@@ -409,4 +500,13 @@ class ArcusAdapter(IMotionPort):
             return self._controller.is_moving(self._axis_x) or self._controller.is_moving(self._axis_y)
         except Exception as e:
             raise RuntimeError(f"Failed to check motion status: {e}")
+
+    def get_axis_limits(self) -> tuple[float, float]:
+        """
+        QUERY: Get the maximum travel limits for X and Y axes.
+        
+        Returns:
+            tuple (max_x_mm, max_y_mm)
+        """
+        return (1270.0, 1270.0)
 

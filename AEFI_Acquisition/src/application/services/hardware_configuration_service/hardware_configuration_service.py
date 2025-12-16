@@ -83,4 +83,18 @@ class HardwareConfigurationService:
         provider = self._providers_by_id[hardware_id]
         provider.apply_config(config)
 
+    def save_config_as_default(self, hardware_id: str, config: Dict[str, Any]) -> None:
+        """
+        Save the provided configuration as the new default for the specific hardware.
+
+        Args:
+            hardware_id: Identifier of the target hardware
+            config: Dictionary of parameter values keyed by spec.name
+
+        Raises:
+            KeyError: if hardware_id is unknown
+        """
+        provider = self._providers_by_id[hardware_id]
+        provider.save_config_as_default(config)
+
 

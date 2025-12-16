@@ -2,6 +2,8 @@ from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QPalette, QColor
 from PySide6.QtCore import Qt
 
+from .stylesheets import APP_STYLESHEET
+
 def apply_dark_theme(app: QApplication):
     """
     Applies a modern dark theme to the QApplication using Fusion style.
@@ -41,23 +43,5 @@ def apply_dark_theme(app: QApplication):
     
     app.setPalette(dark_palette)
     
-    # Set a common stylesheet for specific widgets adjustments if needed
-    app.setStyleSheet("""
-        QToolTip { 
-            color: #ffffff; 
-            background-color: #2a82da; 
-            border: 1px solid white; 
-        }
-        QGroupBox {
-            border: 1px solid #555;
-            border-radius: 5px;
-            margin-top: 10px;
-            font-weight: bold;
-        }
-        QGroupBox::title {
-            subcontrol-origin: margin;
-            subcontrol-position: top left;
-            padding: 0 3px;
-            color: #aaa;
-        }
-    """)
+    # Apply centralized stylesheet
+    app.setStyleSheet(APP_STYLESHEET)

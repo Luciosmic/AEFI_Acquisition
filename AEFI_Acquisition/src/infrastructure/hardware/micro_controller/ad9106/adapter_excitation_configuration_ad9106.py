@@ -188,16 +188,16 @@ class AdapterExcitationConfigurationAD9106(IExcitationPort):
         
         # Map modes according to documentation (event_storming_aefi.md) and config (experimental_data_config_v3.json)
         # CORRECTED: X_DIR and Y_DIR were inverted in previous code
-        if mode == ExcitationMode.X_DIR:
+        if mode == ExcitationMode.Y_DIR:
             # X direction: DDS1 and DDS2 active, in phase (0°)
             # Documentation: X-Dir: DDS1=0°, DDS2=0° (In Phase)
             config["active_channels"] = [1, 2]
             config["phases"][1] = 0  # DDS1: 0°
             config["phases"][2] = 0  # DDS2: 0° (in phase)
-            print(f"[AD9106Adapter] X_DIR mode: DDS1 phase=0°, DDS2 phase=0° (in phase)")
+            print(f"[AD9106Adapter] Y_DIR mode: DDS1 phase=0°, DDS2 phase=0° (in phase)")
             # DDS3 and DDS4 unchanged (synchronous detection)
             
-        elif mode == ExcitationMode.Y_DIR:
+        elif mode == ExcitationMode.X_DIR:
             # Y direction: DDS1 and DDS2 active, in opposition (180°)
             # Documentation: Y-Dir: DDS1=0°, DDS2=180° (Opposition)
             # Config JSON: ydir: dds1 phase_deg=180, dds2 phase_deg=0
@@ -206,7 +206,7 @@ class AdapterExcitationConfigurationAD9106(IExcitationPort):
             config["active_channels"] = [1, 2]
             config["phases"][1] = 0      # DDS1: 0°
             config["phases"][2] = 32768  # DDS2: 180° (Opposition)
-            print(f"[AD9106Adapter] Y_DIR mode: DDS1 phase=0°, DDS2 phase=180° (Opposition)")
+            print(f"[AD9106Adapter] X_DIR mode: DDS1 phase=0°, DDS2 phase=180° (Opposition)")
             # DDS3 and DDS4 unchanged (synchronous detection)
             
         elif mode == ExcitationMode.CIRCULAR_PLUS:

@@ -320,3 +320,4 @@ These functions prepare for future enhancements where:
 - `ExcitationParameters`: Domain value object for excitation configuration
 
 
+

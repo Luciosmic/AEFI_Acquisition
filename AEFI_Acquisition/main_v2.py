@@ -72,10 +72,10 @@ def main():
     # 2. Configuration: Hardware Adapter Registry
     # Simple dict-based configuration: port_name -> adapter_type ("mock" | "real")
     HARDWARE_CONFIG = {
-        "motion": "mock",        # "mock" | "real"
-        "acquisition": "mock",   # "mock" | "real"
-        "excitation": "mock",    # "mock" | "real"
-        "continuous": "mock",    # "mock" | "real"
+        "motion": "real",        # "mock" | "real"
+        "acquisition": "real",   # "mock" | "real"
+        "excitation": "real",    # "mock" | "real"
+        "continuous": "real",    # "mock" | "real"
     }
     print("--- Starting Interface V2 ---")
     print(f"Hardware Config: {HARDWARE_CONFIG}")
@@ -207,7 +207,7 @@ def main():
     motion_control_service = MotionControlService(motion_port, event_bus)
     
     # Transformation Service (Shared State)
-    transformation_service = TransformationService()
+    transformation_service = TransformationService(event_bus)
     
     # Hardware Configuration Service
     print("\n--- Creating Hardware Configuration Service ---")
@@ -284,12 +284,19 @@ def main():
     motion_panel = dashboard.panels["motion"]
     motion_panel.jog_requested.connect(motion_presenter.on_jog_requested)
     motion_panel.move_to_requested.connect(motion_presenter.on_move_to_requested)
+    motion_panel.move_both_requested.connect(motion_presenter.on_move_both_requested)
+    motion_panel.move_to_center_requested.connect(motion_presenter.on_move_to_center_requested)
     motion_panel.home_requested.connect(motion_presenter.on_home_requested)
     motion_panel.stop_requested.connect(motion_presenter.on_stop_requested)
     motion_panel.estop_requested.connect(motion_presenter.on_estop_requested)
     
     motion_presenter.position_updated.connect(motion_panel.update_position)
     motion_presenter.status_updated.connect(motion_panel.update_status)
+    motion_presenter.jog_enabled_changed.connect(motion_panel.set_jog_enabled)
+    motion_presenter.limits_updated.connect(motion_panel.set_axis_limits)
+    
+    # Initialize presenter to fetch limits
+    motion_presenter.initialize()
     print("  [motion] wired")
     
     # Excitation Panel
@@ -368,6 +375,7 @@ def main():
     # Panel -> Presenter
     hardware_config_panel.hardware_selected.connect(hardware_config_presenter.select_hardware)
     hardware_config_panel.apply_requested.connect(hardware_config_presenter.apply_configuration)
+    hardware_config_panel.save_default_requested.connect(hardware_config_presenter.save_configuration_as_default)
     
     # Initialize: refresh hardware list on startup
     hardware_config_presenter.refresh_hardware_list()

@@ -1,6 +1,7 @@
 from typing import List, Dict, Any
 import json
 import os
+from dataclasses import replace
 
 from application.services.hardware_configuration_service.i_hardware_advanced_configurator import IHardwareAdvancedConfigurator
 from domain.value_objects.hardware_configuration.hardware_advanced_parameter_schema import (
@@ -59,7 +60,28 @@ class MCUAdvancedConfigurator(IHardwareAdvancedConfigurator):
             group="Acquisition"
         ))
         
-        return specs
+
+
+        # Load default config if exists
+        updated_specs = []
+        try:
+            config_path = os.path.join(os.path.dirname(__file__), "mcu_default_config.json")
+            default_config = {}
+            if os.path.exists(config_path):
+                with open(config_path, 'r') as f:
+                    default_config = json.load(f)
+            
+            for spec in specs:
+                if spec.key == "n_avg" and "n_avg" in default_config:
+                    updated_specs.append(replace(spec, default_value=default_config["n_avg"]))
+                else:
+                    updated_specs.append(spec)
+                        
+        except Exception as e:
+            print(f"[MCUConfigurator] Failed to load default config: {e}")
+            return specs
+            
+        return updated_specs
 
     def apply_config(self, config: Dict[str, Any]) -> None:
         """
@@ -88,6 +110,28 @@ class MCUAdvancedConfigurator(IHardwareAdvancedConfigurator):
         except Exception as e:
             print(f"[MCUConfigurator] Failed to save config: {e}")
             raise
+
+    def save_config_as_default(self, config: Dict[str, Any]) -> None:
+        """
+        Save configuration as default.
+        """
+        n_avg = int(config.get("n_avg", 1))
+        
+        if not (self.NAVG_MIN <= n_avg <= self.NAVG_MAX):
+            raise ValueError(f"n_avg must be between {self.NAVG_MIN} and {self.NAVG_MAX}, got {n_avg}")
+        
+        json_config = {
+            "n_avg": n_avg
+        }
+        
+        try:
+            config_path = os.path.join(os.path.dirname(__file__), "mcu_default_config.json")
+            with open(config_path, 'w') as f:
+                json.dump(json_config, f, indent=4)
+            print(f"[MCUConfigurator] Default config saved to {config_path}: n_avg={n_avg}")
+        except Exception as e:
+            print(f"[MCUConfigurator] Failed to save default config: {e}")
+            raise e
     
     def get_n_avg(self) -> int:
         """
@@ -107,5 +151,6 @@ class MCUAdvancedConfigurator(IHardwareAdvancedConfigurator):
         
         # Fallback to default
         return 1
+
 
 

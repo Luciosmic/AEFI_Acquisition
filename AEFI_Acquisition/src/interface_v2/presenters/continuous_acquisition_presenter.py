@@ -13,13 +13,12 @@ from application.services.continuous_acquisition_service.i_continuous_acquisitio
 from domain.events.continuous_acquisition_events import (
     ContinuousAcquisitionSampleAcquired,
     ContinuousAcquisitionFailed,
-    ContinuousAcquisitionStopped,
+    ContinuousAcquisitionStopped
 )
+from domain.events.transformation_events import SensorTransformationAnglesUpdated
 from domain.events.i_domain_event_bus import IDomainEventBus
-
-
-from interface_v2.presenters.signal_processor import SignalPostProcessor
 from application.services.transformation_service.transformation_service import TransformationService
+from interface_v2.presenters.signal_processor import SignalPostProcessor
 
 class ContinuousAcquisitionPresenter(QObject):
     """
@@ -52,8 +51,21 @@ class ContinuousAcquisitionPresenter(QObject):
         self._event_bus.subscribe("continuousacquisitionsampleacquired", self._on_sample_event)
         self._event_bus.subscribe("continuousacquisitionfailed", self._on_failed_event)
         self._event_bus.subscribe("continuousacquisitionstopped", self._on_stopped_event)
+        self._event_bus.subscribe("sensortransformationanglesupdated", self._on_angles_updated_event)
 
-    # ------------------------------------------------------------------ #
+    def _on_angles_updated_event(self, event: SensorTransformationAnglesUpdated):
+        """Handle rotation angles update event."""
+        self.angles_updated.emit((event.theta_x, event.theta_y, event.theta_z))
+
+
+    def shutdown(self):
+        """Cleanup resources."""
+        # Unsubscribe from events
+        if self._event_bus:
+            self._event_bus.unsubscribe("ContinuousAcquisitionSampleAcquired", self._on_sample_event)
+            self._event_bus.unsubscribe("ContinuousAcquisitionFailed", self._on_failed_event)
+            self._event_bus.unsubscribe("ContinuousAcquisitionStopped", self._on_stopped_event)
+            self._event_bus.unsubscribe("SensorTransformationAnglesUpdated", self._on_angles_updated_event)
     # Calibration Commands (Logic)
     # ------------------------------------------------------------------ #
     

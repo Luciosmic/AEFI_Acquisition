@@ -83,3 +83,16 @@ class IHardwareAdvancedConfigurator(ABC):
             config: Dictionary of parameter values keyed by spec.name
         """
         raise NotImplementedError
+
+    @abstractmethod
+    def save_config_as_default(self, config: Dict[str, Any]) -> None:
+        """
+        Save the provided configuration as the new default configuration.
+
+        Responsibility:
+        - Persist the configuration to a storage (e.g., JSON file) so it is loaded on next startup.
+
+        Args:
+            config: Dictionary of parameter values keyed by spec.name
+        """
+        raise NotImplementedError

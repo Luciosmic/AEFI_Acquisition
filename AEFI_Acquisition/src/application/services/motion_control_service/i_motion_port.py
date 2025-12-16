@@ -129,3 +129,13 @@ class IMotionPort(ABC):
             position: The value to set the current position to (default 0.0).
         """
         pass
+
+    @abstractmethod
+    def get_axis_limits(self) -> tuple[float, float]:
+        """
+        Get the maximum travel limits for X and Y axes.
+        
+        Returns:
+            tuple (max_x_mm, max_y_mm)
+        """
+        pass

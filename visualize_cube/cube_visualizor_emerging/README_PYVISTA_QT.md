@@ -44,3 +44,4 @@ Si l'intégration Qt est nécessaire, considérer :
 - [VTK Qt macOS Rendering](https://discourse.vtk.org/t/vtk-9-pyqt-macos-no-rendering/3358)
 
 
+

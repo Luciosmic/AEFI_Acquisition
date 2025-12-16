@@ -14,6 +14,9 @@ Rationale:
 
 from typing import Dict, Any, List, Optional
 from pathlib import Path
+from dataclasses import replace
+import json
+import os
 
 from domain.value_objects.hardware_configuration.hardware_advanced_parameter_schema import (
     HardwareAdvancedParameterSchema,
@@ -52,8 +55,8 @@ class ArcusAdvancedConfigurationSpecs:
             # === X Axis Speed Parameters (LSX / HSX / ACCX / DECX) ===
             NumberParameterSchema(
                 key="x_ls",
-                display_name="X Low Speed (LSX)",
-                description="X axis low speed (LSX, in Hz)",
+                display_name="Low Speed",
+                description="X axis low speed",
                 default_value=10,
                 min_value=1,
                 max_value=5000,  # TODO: refine from Arcus datasheet
@@ -62,8 +65,8 @@ class ArcusAdvancedConfigurationSpecs:
             ),
             NumberParameterSchema(
                 key="x_hs",
-                display_name="X High Speed (HSX)",
-                description="X axis high speed (HSX, in Hz). Default: 1500 Hz (~6.54 cm/s)",
+                display_name="High Speed",
+                description="X axis high speed",
                 default_value=6000,
                 min_value=10,
                 max_value=10000,  # TODO: refine from Arcus datasheet
@@ -72,8 +75,8 @@ class ArcusAdvancedConfigurationSpecs:
             ),
             NumberParameterSchema(
                 key="x_acc",
-                display_name="X Acceleration (ACCX)",
-                description="X axis acceleration time (ACCX, in ms)",
+                display_name="From Low to High Speed Duration",
+                description="X axis acceleration duration",
                 default_value=1000,
                 min_value=10,
                 max_value=10000,
@@ -82,8 +85,8 @@ class ArcusAdvancedConfigurationSpecs:
             ),
             NumberParameterSchema(
                 key="x_dec",
-                display_name="X Deceleration (DECX)",
-                description="X axis deceleration time (DECX, in ms). Higher value = softer stop. Default: 600ms",
+                display_name="From High to Low Speed Duration",
+                description="X axis deceleration duration.",
                 default_value=1000,
                 min_value=10,
                 max_value=10000,
@@ -94,8 +97,8 @@ class ArcusAdvancedConfigurationSpecs:
             # === Y Axis Speed Parameters (LSY / HSY / ACCY / DECY) ===
             NumberParameterSchema(
                 key="y_ls",
-                display_name="Y Low Speed (LSY)",
-                description="Y axis low speed (LSY, in Hz)",
+                display_name="Low Speed",
+                description="Y axis low speed",
                 default_value=10,
                 min_value=1,
                 max_value=5000,  # TODO: refine from Arcus datasheet
@@ -104,8 +107,8 @@ class ArcusAdvancedConfigurationSpecs:
             ),
             NumberParameterSchema(
                 key="y_hs",
-                display_name="Y High Speed (HSY)",
-                description="Y axis high speed (HSY, in Hz). Default: 1500 Hz (~6.54 cm/s)",
+                display_name="High Speed",
+                description="Y axis high speed",
                 default_value=6000,
                 min_value=10,
                 max_value=10000,  # TODO: refine from Arcus datasheet
@@ -114,8 +117,8 @@ class ArcusAdvancedConfigurationSpecs:
             ),
             NumberParameterSchema(
                 key="y_acc",
-                display_name="Y Acceleration (ACCY)",
-                description="Y axis acceleration time (ACCY, in ms)",
+                display_name="From Low to High Speed Duration",
+                description="Y axis acceleration duration",
                 default_value=1000,
                 min_value=10,
                 max_value=10000,
@@ -124,24 +127,26 @@ class ArcusAdvancedConfigurationSpecs:
             ),
             NumberParameterSchema(
                 key="y_dec",
-                display_name="Y Deceleration (DECY)",
-                description="Y axis deceleration time (DECY, in ms). Higher value = softer stop. Default: 600ms",
+                display_name="From High to Low Speed Duration",
+                description="Y axis deceleration duration.",
                 default_value=1000,
                 min_value=10,
                 max_value=10000,
                 unit="ms",
                 group="Y Axis Speed",
             ),
-
-            # === Homing Action ===
-            # Represented as BooleanParameterSchema (checked = trigger homing)
-            BooleanParameterSchema(
-                key="home_both_axes",
-                display_name="Home X and Y",
-                description="Home both X and Y axes (negative direction, home inputs)",
-                default_value=False,
-                group="Homing",
-            ),
+            
+            # === Calibration ===
+            NumberParameterSchema(
+                key="microns_per_step",
+                display_name="Microns Per Step",
+                description="Calibration factor: Distance per motor step in microns.",
+                default_value=43.6,
+                min_value=0.001,
+                max_value=1000.0,
+                unit="µm/step",
+                group="Calibration",
+            )
         ]
 
 
@@ -234,14 +239,39 @@ class ArcusPerformax4EXAdvancedConfigurator(IHardwareAdvancedConfigurator):
     def display_name(self) -> str:
         return "Arcus Performax 4EX (Advanced)"
 
+
+
+
+
     @staticmethod
     def get_parameter_specs() -> List[HardwareAdvancedParameterSchema]:
         """
         Get actionable parameter specifications for Arcus Performax 4EX.
         
-        Delegates to centralized specs definition.
+        Delegates to centralized specs definition and loads defaults from file.
         """
-        return ArcusAdvancedConfigurationSpecs.get_all_specs()
+        specs = ArcusAdvancedConfigurationSpecs.get_all_specs()
+        updated_specs = []
+        
+        try:
+            config_path = os.path.join(os.path.dirname(__file__), "arcus_default_config.json")
+            default_config = {}
+            if os.path.exists(config_path):
+                with open(config_path, 'r') as f:
+                    default_config = json.load(f)
+            
+            for spec in specs:
+                if spec.key in default_config:
+                    # Use replace because dataclass is frozen
+                    updated_specs.append(replace(spec, default_value=default_config[spec.key]))
+                else:
+                    updated_specs.append(spec)
+                        
+        except Exception as e:
+            print(f"[ArcusConfigurator] Failed to load default config: {e}")
+            return specs
+            
+        return updated_specs
 
     def apply_config(self, config: Dict[str, Any]) -> None:
         """
@@ -269,4 +299,25 @@ class ArcusPerformax4EXAdvancedConfigurator(IHardwareAdvancedConfigurator):
         finally:
             if owns_controller:
                 controller.disconnect()
+
+    def save_config_as_default(self, config: Dict[str, Any]) -> None:
+        """
+        Save configuration as default.
+        """
+        # For now, Arcus doesn't have a JSON config file loaded at startup.
+        # We can implement it if needed, but for now we'll just log it.
+        # Or better, let's save it to a file so we can potentially load it later.
+        
+        import json
+        import os
+        
+        try:
+            config_path = os.path.join(os.path.dirname(__file__), "arcus_default_config.json")
+            with open(config_path, 'w') as f:
+                json.dump(config, f, indent=4)
+            print(f"[ArcusConfigurator] Default config saved to {config_path}")
+        except Exception as e:
+            print(f"[ArcusConfigurator] Failed to save default config: {e}")
+            # Don't raise, as it's not critical for now
+
 

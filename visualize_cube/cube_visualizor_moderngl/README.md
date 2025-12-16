@@ -27,3 +27,4 @@ Le code est organisé en DDD pour référence future :
 Les tests unitaires passent, mais le rendu dans Qt ne fonctionne pas.
 
 
+

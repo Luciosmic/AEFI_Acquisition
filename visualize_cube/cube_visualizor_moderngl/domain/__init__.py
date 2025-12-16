@@ -5,3 +5,4 @@ Pure business logic with zero external dependencies (no PyVista, no Qt, no rende
 """
 
 
+

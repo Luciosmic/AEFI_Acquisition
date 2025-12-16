@@ -31,3 +31,4 @@ Le triangle ne s'affiche pas malgré que :
 Relancer le test avec les corrections pour voir si le triangle apparaît maintenant.
 
 
+

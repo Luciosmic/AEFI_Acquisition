@@ -307,7 +307,7 @@ class ArcusPerformax4EXController:
             if not self._is_homed[axis_lower]:
                 raise RuntimeError(f"Axis {axis.upper()} must be homed before movement")
             
-            print(f"[ArcusController] Moving {axis.upper()} to position {position}")
+            print(f"[ArcusController] DEBUG: Moving {axis.upper()} to position {position}")
             self._stage.move_to(axis_lower, position)
     
     def move_by(self, axis: str, displacement: float) -> None:

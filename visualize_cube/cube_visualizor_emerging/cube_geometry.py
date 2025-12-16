@@ -96,3 +96,4 @@ def get_default_theta_y():
     """Retourne l'angle Y par défaut (45°)."""
     return 45.0
 
+

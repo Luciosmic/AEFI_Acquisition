@@ -31,6 +31,7 @@ from application.services.hardware_configuration_service.i_hardware_advanced_con
 
 
 from infrastructure.hardware.micro_controller.ads131a04.ads131a04_advanced_configurator import ADS131A04AdvancedConfigurator
+from infrastructure.hardware.micro_controller.mcu_advanced_configurator import MCUAdvancedConfigurator
 
 class MCUCompositionRoot:
     """
@@ -77,6 +78,9 @@ class MCUCompositionRoot:
         
         # 3b. Instantiate AD9106 Configurator (Decoupled)
         self._ad9106_configurator = AD9106AdvancedConfigurator(self._ad9106_controller)
+        
+        # 3c. Instantiate MCU General Configurator
+        self._mcu_configurator = MCUAdvancedConfigurator(self._driver)
         
         # 4. Instantiate Lifecycle Adapter
         # Injects the driver to manage connection
@@ -165,4 +169,5 @@ class MCUCompositionRoot:
         # Use the decoupled configurator for acquisition
         configs.append(self._acquisition_configurator)
         configs.append(self._ad9106_configurator)
+        configs.append(self._mcu_configurator)
         return configs

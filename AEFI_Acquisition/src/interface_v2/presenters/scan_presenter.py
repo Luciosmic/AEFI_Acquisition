@@ -82,16 +82,16 @@ class ScanPresenter(QObject, IScanOutputPort):
         try:
             # Parse parameters
             dto = Scan2DConfigDTO(
-                x_min=float(params.get("x_min", 0)),
-                x_max=float(params.get("x_max", 10)),
-                x_nb_points=int(params.get("x_nb_points", 10)),
-                y_min=float(params.get("y_min", 0)),
-                y_max=float(params.get("y_max", 10)),
-                y_nb_points=int(params.get("y_nb_points", 10)),
-                scan_pattern=params.get("scan_pattern", "RASTER"),
+                x_min=float(params.get("x_min", 600)),
+                x_max=float(params.get("x_max", 800)),
+                x_nb_points=int(params.get("x_nb_points", 41)),
+                y_min=float(params.get("y_min", 600)),
+                y_max=float(params.get("y_max", 800)),
+                y_nb_points=int(params.get("y_nb_points", 41)),
+                scan_pattern=params.get("scan_pattern", "SERPENTINE"),
                 motion_speed_mm_s=float(params.get("motion_speed_mm_s", 10.0)),
-                stabilization_delay_ms=100, # Default or from UI if added
-                averaging_per_position=1,   # Default or from UI if added
+                stabilization_delay_ms=int(params.get("stabilization_delay_ms", 300)),
+                averaging_per_position=int(params.get("averaging_per_position", 10)),
                 uncertainty_volts=0.001     # Default
             )
             

@@ -11,6 +11,7 @@ Rationale:
 
 from __future__ import annotations
 
+import os
 import csv
 import logging
 from dataclasses import dataclass, field
@@ -81,6 +82,9 @@ class CsvScanExportPort(IScanExportPort):
         final_name = f"{timestamp}_{safe_base}.csv"
 
         self._configured_path = dir_path / final_name
+        print(f"[CsvScanExportPort] CWD: {os.getcwd()}")
+        print(f"[CsvScanExportPort] Configured export path (rel): {self._configured_path}")
+        print(f"[CsvScanExportPort] Configured export path (abs): {self._configured_path.resolve()}")
         logger.debug("CSV export configured at %s", self._configured_path)
 
     def start(self) -> None:
@@ -96,7 +100,8 @@ class CsvScanExportPort(IScanExportPort):
         if self._file is not None:
             # Already started; nothing to do.
             return
-
+        
+        print(f"[CsvScanExportPort] Opening file for writing: {self._configured_path}")
         self._file = self._configured_path.open(mode="w", newline="", encoding="utf-8")
         # We initialise DictWriter without fieldnames; they will be set on first write.
         self._writer = csv.DictWriter(self._file, fieldnames=[])
@@ -121,6 +126,8 @@ class CsvScanExportPort(IScanExportPort):
         # Only keep known keys to avoid mismatches.
         row = {k: data.get(k, "") for k in self._fieldnames}
         self._writer.writerow(row)
+        self._file.flush()
+        # print(f"[CsvScanExportPort] Wrote point: {row.get('point_index', '?')}")
 
     def stop(self) -> None:
         """Close the CSV file if it is open."""

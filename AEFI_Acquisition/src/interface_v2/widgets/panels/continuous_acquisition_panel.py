@@ -87,6 +87,7 @@ class ContinuousAcquisitionPanel(QWidget):
         self.window_mode_combo.currentTextChanged.connect(self._on_window_mode_changed)
         l_params.addRow("Display:", self.window_mode_combo)
 
+
         self.lbl_time_slot = QLabel("Sliding duration (s)") # Stored so we can hide it
         self.window_length_spin = QDoubleSpinBox()
         self.window_length_spin.setRange(1.0, 600.0)
@@ -94,6 +95,13 @@ class ContinuousAcquisitionPanel(QWidget):
         self.window_length_spin.setSuffix(" s")
         self.window_length_spin.valueChanged.connect(self._update_plot) # Only updates view
         l_params.addRow(self.lbl_time_slot, self.window_length_spin)
+
+        # Scale Control
+        self.cbo_scale = QComboBox()
+        self.cbo_scale.addItems(["V", "mV", "uV"])
+        self.cbo_scale.currentTextChanged.connect(self._on_scale_changed)
+        l_params.addRow("Scale:", self.cbo_scale)
+        self._scale_factor = 1.0  # Default V
 
         controls_layout.addWidget(grp_params)
 
@@ -144,6 +152,7 @@ class ContinuousAcquisitionPanel(QWidget):
             cb.setFixedWidth(130)  # Compact width for labels (X In-Phase etc.)
             cb.clicked.connect(self._on_channel_toggled)
             self.channel_checkboxes[ch["name"]] = cb
+
             
             # Logic: Even index = In-Phase (Row 0), Odd index = Quadrature (Row 1)
             # Col = i // 2 (0, 1, 2)
@@ -340,22 +349,28 @@ class ContinuousAcquisitionPanel(QWidget):
                 curve.setData([], [])
                 continue
 
+            t_plot = []
+            y_plot = []
+
             # No window or "From start" mode: show all
             if window <= 0.0 or mode_text == "From start":
-                curve.setData(t, ys_full)
-                continue
-
+                t_plot = t
+                y_plot = ys_full
+            
             # Sliding window mode
-            if mode_text.startswith("Sliding"):
+            elif mode_text.startswith("Sliding"):
                 t_min = t[-1] - window
                 idx_start = 0
                 for i, ti in enumerate(t):
                     if ti >= t_min:
                         idx_start = i
                         break
-                t_sub = t[idx_start:]
-                y_sub = ys_full[idx_start:]
-                curve.setData(t_sub, y_sub)
+                t_plot = t[idx_start:]
+                y_plot = ys_full[idx_start:]
+            
+            # Apply Scale
+            y_scaled = [val * self._scale_factor for val in y_plot]
+            curve.setData(t_plot, y_scaled)
 
     def _on_channel_toggled(self):
         """Show/hide curves based on button states."""
@@ -367,6 +382,18 @@ class ContinuousAcquisitionPanel(QWidget):
     def _on_window_mode_changed(self, mode_text: str):
         """Handle window mode changes and update plot."""
         self._update_time_slot_visibility(mode_text)
+        self._update_plot()
+
+    def _on_scale_changed(self, unit: str):
+        """Update scale factor and Y-axis label."""
+        if unit == "mV":
+            self._scale_factor = 1000.0
+        elif unit == "uV":
+            self._scale_factor = 1e6
+        else:
+            self._scale_factor = 1.0
+            
+        self.plot.setLabel("left", f"Voltage ({unit})")
         self._update_plot()
     
     def _update_time_slot_visibility(self, mode_text: str):

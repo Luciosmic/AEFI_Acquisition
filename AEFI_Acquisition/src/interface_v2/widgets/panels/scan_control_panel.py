@@ -88,15 +88,18 @@ class ScanControlPanel(QWidget):
         form_layout.setSpacing(8)
         form_layout.setContentsMargins(15, 20, 15, 15)
         
-        self.input_x_min = QLineEdit("0.0")
-        self.input_x_max = QLineEdit("10.0")
-        self.input_x_nb = QLineEdit("10")
+        self.input_x_min = QLineEdit("600.0")
+        self.input_x_max = QLineEdit("800.0")
+        self.input_x_nb = QLineEdit("81")
         
-        self.input_y_min = QLineEdit("0.0")
-        self.input_y_max = QLineEdit("10.0")
-        self.input_y_nb = QLineEdit("10")
+        self.input_y_min = QLineEdit("600.0")
+        self.input_y_max = QLineEdit("800.0")
+        self.input_y_nb = QLineEdit("81")
         
-        self.input_speed = QLineEdit("46.0")
+        self.input_speed = QLineEdit("100.0")
+        
+        self.input_stabilization = QLineEdit("300") # ms
+        self.input_averaging = QLineEdit("10") # samples
         
         self.combo_pattern = QComboBox()
         self.combo_pattern.addItems(["RASTER", "SERPENTINE", "SPIRAL"])
@@ -108,6 +111,8 @@ class ScanControlPanel(QWidget):
         form_layout.addRow("Y Max (mm):", self.input_y_max)
         form_layout.addRow("Y Points:", self.input_y_nb)
         form_layout.addRow("Speed (mm/s):", self.input_speed)
+        form_layout.addRow("Stabilization (ms):", self.input_stabilization)
+        form_layout.addRow("Averaging (samples):", self.input_averaging)
         form_layout.addRow("Pattern:", self.combo_pattern)
         
         config_group.setLayout(form_layout)
@@ -127,7 +132,7 @@ class ScanControlPanel(QWidget):
         self.input_export_directory.setPlaceholderText("data_repository/")
 
         self.combo_export_format = QComboBox()
-        self.combo_export_format.addItems(["HDF5", "CSV"])
+        self.combo_export_format.addItems(["CSV", "HDF5"])
 
         export_layout.addRow(self.checkbox_export_enabled)
         export_layout.addRow("Filename base:", self.input_export_filename)
@@ -185,6 +190,8 @@ class ScanControlPanel(QWidget):
             "y_max": self.input_y_max.text(),
             "y_nb_points": self.input_y_nb.text(),
             "motion_speed_mm_s": self.input_speed.text(),
+            "stabilization_delay_ms": self.input_stabilization.text(),
+            "averaging_per_position": self.input_averaging.text(),
             "scan_pattern": self.combo_pattern.currentText(),
             "export_enabled": self.checkbox_export_enabled.isChecked(),
             "export_output_directory": self.input_export_directory.text(),

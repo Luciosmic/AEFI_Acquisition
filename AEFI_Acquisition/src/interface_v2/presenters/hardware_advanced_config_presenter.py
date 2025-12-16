@@ -94,4 +94,20 @@ class HardwareAdvancedConfigPresenter(QObject):
         except Exception as e:
             self.status_message.emit(f"Error applying config: {e}")
 
+    @Slot(dict)
+    def save_configuration_as_default(self, config: Dict[str, Any]):
+        """
+        Save configuration as default for the currently selected hardware.
+        """
+        if not self._current_hardware_id:
+            self.status_message.emit("Error: No hardware selected.")
+            return
+        
+        try:
+            self._service.save_config_as_default(self._current_hardware_id, config)
+            display_name = self._service.get_hardware_display_name(self._current_hardware_id)
+            self.status_message.emit(f"Default configuration saved for {display_name}")
+        except Exception as e:
+            self.status_message.emit(f"Error saving default config: {e}")
+
 

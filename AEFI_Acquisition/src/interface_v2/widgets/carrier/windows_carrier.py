@@ -6,6 +6,8 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout
 from PySide6.QtCore import Qt, Signal
 import PySide6QtAds as QtAds
 
+from ...styles.stylesheets import DOCK_MANAGER_STYLESHEET
+
 class WindowsCarrier(QWidget):
     """
     Carrier using Qt Advanced Docking System.
@@ -39,25 +41,8 @@ class WindowsCarrier(QWidget):
         # Registry: panel_id -> CDockWidget
         self._panels = {}
         
-        # Styling
-        self.setStyleSheet("""
-            ads--CDockManager {
-                background-color: #2A2A2A;
-            }
-            ads--CDockWidgetTab {
-                background-color: #3A3A3A;
-                border-color: #444;
-                color: #DDD;
-            }
-            ads--CDockWidgetTab[activeTab="true"] {
-                background-color: #2E7D32;
-                color: white;
-            }
-            ads--CDockAreaWidget {
-                background-color: #2A2A2A;
-                border: 1px solid #444;
-            }
-        """)
+        # Apply centralized stylesheet for QtAds
+        self.dock_manager.setStyleSheet(DOCK_MANAGER_STYLESHEET)
     
     def register_panel(self, panel_id: str, widget: QWidget, title: str):
         """
@@ -75,6 +60,8 @@ class WindowsCarrier(QWidget):
         # Create dock widget
         dock = QtAds.CDockWidget(title)
         dock.setWidget(widget)
+        
+        # Note: Styles are now handled by the DockManager stylesheet
         
         # Add to dock manager (center by default, will arrange later)
         self.dock_manager.addDockWidget(QtAds.CenterDockWidgetArea, dock)
