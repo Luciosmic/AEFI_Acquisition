@@ -43,3 +43,4 @@ Si l'intégration Qt est nécessaire, considérer :
 - [PyVista Qt Integration Issues](https://github.com/pyvista/pyvista/issues)
 - [VTK Qt macOS Rendering](https://discourse.vtk.org/t/vtk-9-pyqt-macos-no-rendering/3358)
 
+

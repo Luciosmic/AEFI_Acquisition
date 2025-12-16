@@ -108,3 +108,4 @@ class MCUAdvancedConfigurator(IHardwareAdvancedConfigurator):
         # Fallback to default
         return 1
 
+

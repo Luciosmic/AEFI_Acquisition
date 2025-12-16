@@ -17,3 +17,4 @@ class ResetCameraViewCommand:
             data={'view_name': self.view_name}
         )
 
+

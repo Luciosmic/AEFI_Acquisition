@@ -82,3 +82,4 @@ if __name__ == "__main__":
 - ✅ **Évolutivité** : Facile d'ajouter de nouveaux adapters (PyVista, etc.)
 - ✅ **CQRS** : Séparation Commands/Events/Queries
 
+

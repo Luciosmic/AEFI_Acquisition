@@ -13,3 +13,4 @@ print("Ouverture de la fenêtre (fermez-la pour continuer)...")
 plotter.show()
 print("Fenêtre fermée. Test terminé.")
 
+

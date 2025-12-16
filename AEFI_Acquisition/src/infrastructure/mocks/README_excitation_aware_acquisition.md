@@ -319,3 +319,4 @@ These functions prepare for future enhancements where:
 - `VoltageMeasurement`: Domain value object for measurements
 - `ExcitationParameters`: Domain value object for excitation configuration
 
+

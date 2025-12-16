@@ -231,3 +231,4 @@ class HardwareAdvancedConfigPanel(QWidget):
                 child.widget().deleteLater()
         self._apply_btn.setEnabled(False)
 
+

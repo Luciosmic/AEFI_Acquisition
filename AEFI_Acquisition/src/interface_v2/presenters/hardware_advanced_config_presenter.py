@@ -94,3 +94,4 @@ class HardwareAdvancedConfigPresenter(QObject):
         except Exception as e:
             self.status_message.emit(f"Error applying config: {e}")
 
+
