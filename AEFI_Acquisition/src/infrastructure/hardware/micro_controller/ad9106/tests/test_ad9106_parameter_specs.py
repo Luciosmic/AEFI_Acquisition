@@ -2,17 +2,17 @@
 import sys
 from pathlib import Path
 
+from infrastructure.hardware.micro_controller.ad9106.ad9106_advanced_configurator import AD9106AdvancedConfigurator
+from infrastructure.hardware.micro_controller.ad9106.ad9106_controller import AD9106Controller
+from application.services.hardware_configuration_service.hardware_configuration_service import HardwareConfigurationService
+from domain.shared.value_objects.hardware_advanced_parameter_schema import (
+    NumberParameterSchema, EnumParameterSchema
+)
+
 # Add src to path (from tests/ad9106/tests/ -> src/)
 # tests/ad9106/tests/ -> tests/ -> ad9106/ -> micro_controller/ -> hardware/ -> infrastructure/ -> src/
 src_path = Path(__file__).parent.parent.parent.parent.parent.parent.parent / "src"
 sys.path.insert(0, str(src_path))
-
-from infrastructure.hardware.micro_controller.ad9106.ad9106_advanced_configurator import AD9106AdvancedConfigurator
-from infrastructure.hardware.micro_controller.ad9106.ad9106_controller import AD9106Controller
-from application.services.hardware_configuration_service.hardware_configuration_service import HardwareConfigurationService
-from domain.value_objects.hardware_configuration.hardware_advanced_parameter_schema import (
-    NumberParameterSchema, EnumParameterSchema
-)
 
 print("=== Test AD9106 Conversion Logic (Presenter logic without PyQt6) ===\n")
 

@@ -1,7 +1,7 @@
 from typing import List
-from domain.repositories.i_acquisition_data_repository import IAcquisitionDataRepository
-from domain.events.scan_events import ScanPointAcquired
-from domain.events.domain_event import DomainEvent
+from domain.models.aefi_device.repositories.i_acquisition_data_repository import IAcquisitionDataRepository
+from domain.models.scan.events.scan_events import ScanPointAcquired
+from domain.shared.events.domain_event import DomainEvent
 import logging
 
 logger = logging.getLogger(__name__)

@@ -1,7 +1,7 @@
 from typing import Callable, Dict, List, Any
 from collections import defaultdict
 import logging
-from domain.events.i_domain_event_bus import IDomainEventBus
+from domain.shared.events.i_domain_event_bus import IDomainEventBus
 
 logger = logging.getLogger(__name__)
 

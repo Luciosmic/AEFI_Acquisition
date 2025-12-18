@@ -3,6 +3,11 @@ import os
 import unittest
 from datetime import datetime
 
+from tool.diagram_friendly_test import DiagramFriendlyTest
+from infrastructure.hardware.micro_controller.adapter_lifecycle_MCU import MCULifecycleAdapter
+from infrastructure.hardware.micro_controller.ads131a04.adapter_i_acquistion_port_ads131a04 import ADS131A04Adapter
+from domain.models.scan.value_objects.measurement_uncertainty import MeasurementUncertainty
+
 # Add src to path
 # Current path: src/infrastructure/hardware/micro_controller/ads131a04/tests/
 # Need to go up 5 levels to reach src parent, then import from src or add src to path
@@ -12,11 +17,6 @@ from datetime import datetime
 # ../../../.. -> infrastructure
 # ../../../../.. -> src
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../../../..'))
-
-from tool.diagram_friendly_test import DiagramFriendlyTest
-from infrastructure.hardware.micro_controller.adapter_lifecycle_MCU import MCULifecycleAdapter
-from infrastructure.hardware.micro_controller.ads131a04.adapter_i_acquistion_port_ads131a04 import ADS131A04Adapter
-from domain.value_objects.measurement_uncertainty import MeasurementUncertainty
 
 class TestAcquisitionSequence(DiagramFriendlyTest):
     

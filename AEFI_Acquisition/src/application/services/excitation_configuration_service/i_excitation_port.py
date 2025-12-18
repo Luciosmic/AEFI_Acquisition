@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from domain.value_objects.excitation.excitation_parameters import ExcitationParameters
+from domain.models.aefi_device.value_objects.excitation.excitation_parameters import ExcitationParameters
 
 class IExcitationPort(ABC):
     """

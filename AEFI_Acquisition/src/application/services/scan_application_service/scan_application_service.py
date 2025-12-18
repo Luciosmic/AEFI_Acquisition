@@ -12,35 +12,38 @@ Rationale:
 - Domain Layer handles pure logic.
 """
 
-from typing import Optional, Callable, List
+from typing import Optional, Callable, List, Dict, Any
 import logging
 import time
 from datetime import datetime
 
 from application.dtos.scan_dtos import Scan2DConfigDTO, ExportConfigDTO, ScanStatusDTO
-from domain.services.scan_trajectory_factory import ScanTrajectoryFactory
-from domain.value_objects.scan.step_scan_config import StepScanConfig
-from domain.value_objects.scan.scan_zone import ScanZone
-from domain.value_objects.scan.scan_pattern import ScanPattern
-from domain.value_objects.measurement_uncertainty import MeasurementUncertainty
-from domain.value_objects.scan.scan_status import ScanStatus
-from domain.value_objects.scan.scan_progress import ScanProgress
-from domain.value_objects.acquisition.voltage_measurement import VoltageMeasurement
+from domain.models.scan.scan_trajectory_factory import ScanTrajectoryFactory
+from domain.models.scan.value_objects.step_scan_config import StepScanConfig
+from domain.models.scan.value_objects.scan_zone import ScanZone
+from domain.models.scan.value_objects.scan_pattern import ScanPattern
+from domain.models.scan.value_objects.measurement_uncertainty import MeasurementUncertainty
+from domain.models.scan.value_objects.scan_status import ScanStatus
+from domain.models.scan.value_objects.scan_progress import ScanProgress
+from domain.models.aefi_device.value_objects.acquisition.voltage_measurement import VoltageMeasurement
+from application.services.motion_control_service.i_motion_port import IMotionPort
+from .ports.i_acquisition_port import IAcquisitionPort
+from .ports.i_scan_export_port import IScanExportPort
+from .ports.i_scan_executor import IScanExecutor
+from .ports.i_fly_scan_executor import IFlyScanExecutor
+
+from domain.models.scan.aggregates.step_scan import StepScan
+from domain.models.scan.aggregates.fly_scan import FlyScan
+from domain.models.scan.value_objects.fly_scan_config import FlyScanConfig
+from domain.models.scan.value_objects.scan_point_result import ScanPointResult
+from .ports.i_scan_output_port import IScanOutputPort
+from domain.models.scan.events.scan_events import ScanStarted, ScanPointAcquired, ScanCompleted, ScanFailed, ScanCancelled, ScanPaused, ScanResumed
+from domain.shared.events.domain_event import DomainEvent
+from domain.shared.events.i_domain_event_bus import IDomainEventBus
 
 # Ports
-from application.services.motion_control_service.i_motion_port import IMotionPort
-from .i_acquisition_port import IAcquisitionPort
-from .i_scan_export_port import IScanExportPort
-from .i_scan_executor import IScanExecutor
 
 logger = logging.getLogger(__name__)
-
-from domain.aggregates.step_scan import StepScan
-from domain.value_objects.scan.scan_point_result import ScanPointResult
-from .i_scan_output_port import IScanOutputPort
-from domain.events.scan_events import ScanStarted, ScanPointAcquired, ScanCompleted, ScanFailed, ScanCancelled, ScanPaused, ScanResumed
-from domain.events.domain_event import DomainEvent
-from domain.events.i_domain_event_bus import IDomainEventBus
 
 # ...
 
@@ -56,14 +59,17 @@ class ScanApplicationService:
         event_bus: IDomainEventBus,
         scan_executor: IScanExecutor,
         output_port: Optional[IScanOutputPort] = None, # Optional for backward compat/tests
+        fly_scan_executor: Optional[IFlyScanExecutor] = None,  # Optional FlyScan support
     ):
         self._motion_port = motion_port
         self._acquisition_port = acquisition_port
         self._event_bus = event_bus
         self._scan_executor = scan_executor
+        self._fly_scan_executor = fly_scan_executor
         self._output_port = output_port
-        
+
         self._current_scan: Optional[StepScan] = None
+        self._current_fly_scan: Optional[FlyScan] = None
         self._status = ScanStatus.PENDING
         self._paused = False
         self._cancelled = False
@@ -103,9 +109,10 @@ class ScanApplicationService:
             config = self._to_domain_config(scan_dto)
 
             # 0. Configure Motion Speed (if provided)
-            if scan_dto.motion_speed_mm_s is not None:
-                print(f"[ScanApplicationService] Setting motion speed to {scan_dto.motion_speed_mm_s} mm/s")
-                self._motion_port.set_speed(scan_dto.motion_speed_mm_s)
+            # 0. Configure Motion Speed (if provided)
+            # if scan_dto.motion_speed_mm_s is not None:
+            #     print(f"[ScanApplicationService] Setting motion speed to {scan_dto.motion_speed_mm_s} mm/s")
+            #     self._motion_port.set_speed(scan_dto.motion_speed_mm_s)
 
             # 1. Validate (Domain)
             print(f"[ScanApplicationService] Validating configuration...")
@@ -125,6 +132,14 @@ class ScanApplicationService:
             trajectory = ScanTrajectoryFactory.create_trajectory(config)
             total_points = len(trajectory)
             print(f"[ScanApplicationService] Trajectory generated with {total_points} points.")
+            
+            # 3.5. Generate AtomicMotions (Domain - Pure Calculation)
+            from domain.models.scan.services.motion_profile_selector import MotionProfileSelector
+            positions = list(trajectory.points)
+            profile_selector = MotionProfileSelector()  # Use default profiles
+            motions = ScanTrajectoryFactory.create_motions(positions, profile_selector)
+            scan.add_motions(motions)
+            print(f"[ScanApplicationService] Generated {len(motions)} AtomicMotions.")
             
             # 4. Delegate execution to ScanExecutor (Infrastructure)
             # The executor is responsible for running this asynchronously (if needed)
@@ -175,14 +190,18 @@ class ScanApplicationService:
         current_idx = 0
         total_pts = 0
         
+        # Use scan's status if available, otherwise use service's internal status
+        status = self._status
         if self._current_scan:
             current_idx = len(self._current_scan.points)
             total_pts = self._current_scan.expected_points
+            # Sync with scan's actual status
+            status = self._current_scan.status
 
         return ScanStatusDTO(
-            status=self._status.value,
-            is_running=self._status == ScanStatus.RUNNING,
-            is_paused=self._paused,
+            status=status.value,
+            is_running=status == ScanStatus.RUNNING,
+            is_paused=status == ScanStatus.PAUSED,
             current_point_index=current_idx,
             total_points=total_pts,
             progress_percentage=(current_idx / total_pts * 100.0) if total_pts > 0 else 0.0,
@@ -217,25 +236,52 @@ class ScanApplicationService:
         elif isinstance(event, ScanCancelled):
             self._status = ScanStatus.CANCELLED
             self._paused = False
+        elif isinstance(event, ScanPaused):
+            self._status = ScanStatus.PAUSED
+            self._paused = True
+        elif isinstance(event, ScanResumed):
+            self._status = ScanStatus.RUNNING
+            self._paused = False
             
         if not self._output_port:
             return
 
         if isinstance(event, ScanStarted):
-             self._output_port.present_scan_started(str(event.scan_id), {
-                "pattern": event.config.scan_pattern.name,
-                "points": event.config.total_points(),
-                "x_min": event.config.scan_zone.x_min,
-                "x_max": event.config.scan_zone.x_max,
-                "x_nb_points": event.config.x_nb_points,
-                "y_min": event.config.scan_zone.y_min,
-                "y_max": event.config.scan_zone.y_max,
-                "y_nb_points": event.config.y_nb_points
-            })
+            # Handle both StepScanConfig and FlyScanConfig
+            from domain.models.scan.value_objects.step_scan_config import StepScanConfig
+            from domain.models.scan.value_objects.fly_scan_config import FlyScanConfig
+            
+            if isinstance(event.config, FlyScanConfig):
+                # FlyScanConfig uses total_grid_points() instead of total_points()
+                points = event.config.total_grid_points()
+            elif isinstance(event.config, StepScanConfig):
+                # StepScanConfig has total_points()
+                points = event.config.total_points()
+            else:
+                # Fallback
+                points = getattr(event.config, 'total_points', lambda: 0)()
+            
+            # Build CLI-standardized structure (all presenters receive same structure)
+            cli_event = self._build_cli_event_structure(
+                "scan_started",
+                str(event.scan_id),
+                config={
+                    "pattern": event.config.scan_pattern.name,
+                    "points": points,
+                    "x_min": event.config.scan_zone.x_min,
+                    "x_max": event.config.scan_zone.x_max,
+                    "x_nb_points": event.config.x_nb_points,
+                    "y_min": event.config.scan_zone.y_min,
+                    "y_max": event.config.scan_zone.y_max,
+                    "y_nb_points": event.config.y_nb_points
+                }
+            )
+            # Extract scan_id and config for backward compatibility with IScanOutputPort signature
+            self._output_port.present_scan_started(cli_event["scan_id"], cli_event["config"])
 
         elif isinstance(event, ScanPointAcquired):
-            # Flatten data for UI
-            data = {
+            # Build CLI-standardized structure
+            point_data = {
                 "x": event.position.x,
                 "y": event.position.y,
                 "value": {
@@ -248,9 +294,9 @@ class ScanApplicationService:
                 },
                 "index": event.point_index
             }
-            # We assume total_points is available via current scan or we pass 0 if unknown
             total = self._current_scan.expected_points if self._current_scan else 0
-            self._output_port.present_scan_progress(event.point_index, total, data)
+            # Pass CLI structure (backward compatible with IScanOutputPort signature)
+            self._output_port.present_scan_progress(event.point_index, total, point_data)
 
         elif isinstance(event, ScanCompleted):
             self._output_port.present_scan_completed(str(event.scan_id), event.total_points)
@@ -289,3 +335,201 @@ class ScanApplicationService:
 
     def _extract_metadata(self, dto: Scan2DConfigDTO) -> dict:
         return {"mode": dto.scan_pattern}
+
+    # ==================================================================================
+    # CLI Structure Helpers (Pattern: All presenters use CLI structure)
+    # ==================================================================================
+    
+    def _build_cli_event_structure(self, event_name: str, scan_id: str, **kwargs) -> Dict[str, Any]:
+        """
+        Build CLI-standardized event structure.
+        All presenters receive the same structure (CLI JSON format).
+        
+        Args:
+            event_name: Event type (e.g., "scan_started", "scan_progress")
+            scan_id: Scan ID
+            **kwargs: Additional event-specific data
+        
+        Returns:
+            Dict with structure: {"event": ..., "scan_id": ..., "timestamp": ..., ...kwargs}
+        """
+        return {
+            "event": event_name,
+            "scan_id": scan_id,
+            "timestamp": datetime.now().isoformat(),
+            **kwargs
+        }
+
+    # ==================================================================================
+    # FLYSCAN EXECUTION
+    # ==================================================================================
+
+    def execute_fly_scan(
+        self,
+        config: FlyScanConfig,
+        acquisition_rate_hz: float
+    ) -> bool:
+        """
+        Execute a fly scan with continuous motion and acquisition.
+
+        Args:
+            config: FlyScan configuration (already validated)
+            acquisition_rate_hz: Measured acquisition rate capability
+
+        Returns:
+            True if execution started successfully
+        """
+        if self._fly_scan_executor is None:
+            print("[ScanApplicationService] FlyScan not supported (no executor)")
+            return False
+
+        try:
+            print(f"[ScanApplicationService] Starting FlyScan execution...")
+
+            # Create FlyScan aggregate
+            fly_scan = FlyScan()
+            fly_scan.start(config, acquisition_rate_hz)
+            self._current_fly_scan = fly_scan
+
+            # Generate trajectory
+            trajectory = ScanTrajectoryFactory.create_trajectory(config)
+
+            # Create motions from trajectory
+            from domain.models.scan.services.motion_profile_selector import MotionProfileSelector
+            profile_selector = MotionProfileSelector()
+            motions = ScanTrajectoryFactory.create_motions(
+                list(trajectory.points),
+                profile_selector
+            )
+
+            # Add motions to aggregate
+            fly_scan.add_motions(motions)
+
+            # Estimate and set expected points
+            from domain.models.scan.value_objects.acquisition_rate_capability import AcquisitionRateCapability
+            capability = AcquisitionRateCapability(
+                measured_rate_hz=acquisition_rate_hz,
+                measured_std_dev_hz=0.0,
+                measurement_timestamp=datetime.now(),
+                measurement_duration_s=1.0,
+                sample_count=100
+            )
+            estimated_points = config.estimate_total_points(capability)
+            fly_scan.set_expected_points(estimated_points)
+
+            # Publish domain events
+            events = fly_scan.domain_events
+            self._publish_events(events)
+            
+            # Notify output port (CLI-standardized structure)
+            if self._output_port:
+                flyscan_config = {
+                    "pattern": config.scan_pattern.name,
+                    "estimated_points": estimated_points,
+                    "x_min": config.scan_zone.x_min,
+                    "x_max": config.scan_zone.x_max,
+                    "x_nb_points": config.x_nb_points,
+                    "y_min": config.scan_zone.y_min,
+                    "y_max": config.scan_zone.y_max,
+                    "y_nb_points": config.y_nb_points,
+                    "motion_profile": {
+                        "min_speed": config.motion_profile.min_speed,
+                        "target_speed": config.motion_profile.target_speed,
+                        "acceleration": config.motion_profile.acceleration,
+                        "deceleration": config.motion_profile.deceleration
+                    },
+                    "desired_acquisition_rate_hz": config.desired_acquisition_rate_hz,
+                    "max_spatial_gap_mm": config.max_spatial_gap_mm
+                }
+            # Pass CLI structure (backward compatible)
+            # #region agent log
+            try:
+                with open('/Users/luis/Library/CloudStorage/Dropbox/Luis/1 PROJETS/1 - THESE/Ressources/ExperimentalData_ASSOCE/AEFI_Acquisition/AEFI_Acquisition/.cursor/debug.log', 'a') as f:
+                    import json
+                    f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"E","location":"scan_application_service.py:431","message":"calling present_flyscan_started","data":{"has_output_port":bool(self._output_port),"fly_scan_id":str(fly_scan.id)},"timestamp":__import__('time').time()*1000}) + '\n')
+            except (PermissionError, OSError):
+                pass  # Ignore log errors in tests
+            # #endregion
+            if self._output_port:
+                self._output_port.present_flyscan_started(str(fly_scan.id), flyscan_config)
+
+            # Subscribe to FlyScan events
+            self._event_bus.subscribe("scanpointacquired", self._on_flyscan_event)
+            self._event_bus.subscribe("scancompleted", self._on_flyscan_event)
+            self._event_bus.subscribe("scanfailed", self._on_flyscan_event)
+            self._event_bus.subscribe("scancancelled", self._on_flyscan_event)
+
+            # Execute via executor
+            success = self._fly_scan_executor.execute(
+                fly_scan,
+                motions,
+                config,
+                self._motion_port,
+                self._acquisition_port
+            )
+
+            if success:
+                self._status = ScanStatus.RUNNING
+                print(f"[ScanApplicationService] FlyScan started (estimated {estimated_points} points)")
+
+            return success
+
+        except Exception as e:
+            print(f"[ScanApplicationService] FlyScan execution failed: {e}")
+            if self._current_fly_scan:
+                self._current_fly_scan.fail(str(e))
+                events = self._current_fly_scan.domain_events
+                self._publish_events(events)
+            return False
+    
+    def _on_flyscan_event(self, event: DomainEvent):
+        """
+        Handle FlyScan domain events and forward to output port.
+        """
+        if not self._output_port or not self._current_fly_scan:
+            return
+        
+        if isinstance(event, ScanPointAcquired):
+            # Flatten data for UI
+            data = {
+                "x": event.position.x,
+                "y": event.position.y,
+                "value": {
+                    "x_in_phase": event.measurement.voltage_x_in_phase,
+                    "x_quadrature": event.measurement.voltage_x_quadrature,
+                    "y_in_phase": event.measurement.voltage_y_in_phase,
+                    "y_quadrature": event.measurement.voltage_y_quadrature,
+                    "z_in_phase": event.measurement.voltage_z_in_phase,
+                    "z_quadrature": event.measurement.voltage_z_quadrature
+                },
+                "index": event.point_index
+            }
+            total = self._current_fly_scan.expected_points if self._current_fly_scan else 0
+            self._output_port.present_flyscan_progress(event.point_index, total, data)
+        
+        elif isinstance(event, ScanCompleted):
+            self._status = ScanStatus.COMPLETED
+            self._output_port.present_flyscan_completed(str(event.scan_id), event.total_points)
+            # Unsubscribe from events
+            self._event_bus.unsubscribe("scanpointacquired", self._on_flyscan_event)
+            self._event_bus.unsubscribe("scancompleted", self._on_flyscan_event)
+            self._event_bus.unsubscribe("scanfailed", self._on_flyscan_event)
+            self._event_bus.unsubscribe("scancancelled", self._on_flyscan_event)
+        
+        elif isinstance(event, ScanFailed):
+            self._status = ScanStatus.FAILED
+            self._output_port.present_flyscan_failed(str(event.scan_id), event.reason)
+            # Unsubscribe from events
+            self._event_bus.unsubscribe("scanpointacquired", self._on_flyscan_event)
+            self._event_bus.unsubscribe("scancompleted", self._on_flyscan_event)
+            self._event_bus.unsubscribe("scanfailed", self._on_flyscan_event)
+            self._event_bus.unsubscribe("scancancelled", self._on_flyscan_event)
+        
+        elif isinstance(event, ScanCancelled):
+            self._status = ScanStatus.CANCELLED
+            self._output_port.present_flyscan_cancelled(str(event.scan_id))
+            # Unsubscribe from events
+            self._event_bus.unsubscribe("scanpointacquired", self._on_flyscan_event)
+            self._event_bus.unsubscribe("scancompleted", self._on_flyscan_event)
+            self._event_bus.unsubscribe("scanfailed", self._on_flyscan_event)
+            self._event_bus.unsubscribe("scancancelled", self._on_flyscan_event)

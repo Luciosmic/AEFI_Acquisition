@@ -3,6 +3,8 @@ import time
 import logging
 from pathlib import Path
 
+from domain.shared.value_objects.position_2d import Position2D
+
 # Add parent directory to sys.path to import composition_root_arcus directly
 parent_dir = Path(__file__).resolve().parent.parent
 if str(parent_dir) not in sys.path:
@@ -27,8 +29,6 @@ except ImportError:
     except ImportError:
         print("CRITICAL: Could not import ArcusCompositionRoot from either filename.")
         sys.exit(1)
-
-from domain.value_objects.geometric.position_2d import Position2D
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')

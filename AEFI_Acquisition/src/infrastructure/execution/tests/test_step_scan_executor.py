@@ -4,11 +4,11 @@ from typing import Any, Optional
 
 from infrastructure.tests.diagram_friendly_test import DiagramFriendlyTest
 from infrastructure.execution.step_scan_executor import StepScanExecutor
-from domain.aggregates.step_scan import StepScan
-from domain.value_objects.scan.scan_trajectory import ScanTrajectory
-from domain.value_objects.scan.step_scan_config import StepScanConfig, ScanPattern
-from domain.value_objects.geometric.position_2d import Position2D
-from domain.value_objects.acquisition.acquisition_sample import AcquisitionSample
+from domain.models.scan.aggregates.step_scan import StepScan
+from domain.models.scan.value_objects.scan_trajectory import ScanTrajectory
+from domain.models.scan.value_objects.step_scan_config import StepScanConfig, ScanPattern
+from domain.shared.value_objects.position_2d import Position2D
+from domain.models.aefi_device.value_objects.acquisition.acquisition_sample import AcquisitionSample
 
 class TracingMock:
     """
@@ -80,8 +80,8 @@ class TestStepScanExecutor(DiagramFriendlyTest):
         
         # Prepare Data
         # Prepare Data
-        from domain.value_objects.scan.scan_zone import ScanZone
-        from domain.value_objects.measurement_uncertainty import MeasurementUncertainty
+        from domain.models.scan.value_objects.scan_zone import ScanZone
+        from domain.models.scan.value_objects.measurement_uncertainty import MeasurementUncertainty
         
         scan_zone = ScanZone(x_min=0, x_max=1, y_min=0, y_max=1)
         uncertainty = MeasurementUncertainty(max_uncertainty_volts=1e-6)

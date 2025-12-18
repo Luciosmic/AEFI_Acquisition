@@ -18,7 +18,7 @@ from dataclasses import replace
 import json
 import os
 
-from domain.value_objects.hardware_configuration.hardware_advanced_parameter_schema import (
+from domain.shared.value_objects.hardware_advanced_parameter_schema import (
     HardwareAdvancedParameterSchema,
     NumberParameterSchema,
     BooleanParameterSchema,

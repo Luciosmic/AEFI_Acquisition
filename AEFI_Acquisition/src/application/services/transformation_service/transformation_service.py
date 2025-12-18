@@ -2,8 +2,8 @@ from typing import Tuple, Optional
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
-from domain.events.i_domain_event_bus import IDomainEventBus
-from domain.events.transformation_events import SensorTransformationAnglesUpdated
+from domain.shared.events.i_domain_event_bus import IDomainEventBus
+from domain.shared.events.transformation_events import SensorTransformationAnglesUpdated
 
 class TransformationService:
     """

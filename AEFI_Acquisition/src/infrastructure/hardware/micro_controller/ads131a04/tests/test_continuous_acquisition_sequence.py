@@ -3,20 +3,22 @@ import time
 import sys
 from pathlib import Path
 
+from tool.diagram_friendly_test import DiagramFriendlyTest
+from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from application.services.continuous_acquisition_service.continuous_acquisition_service import ContinuousAcquisitionService
+from application.services.continuous_acquisition_service.i_continuous_acquisition_executor import ContinuousAcquisitionConfig
+from src.application.services.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
+from domain.models.aefi_device.value_objects.acquisition.voltage_measurement import VoltageMeasurement
+from datetime import datetime
+import random
+
+from infrastructure.hardware.micro_controller.ads131a04.adapter_i_continuous_acquisition_ads131a04 import AdapterIContinuousAcquisitionAds131a04
+
 # Ensure src is in path
 # Ensure src is in path
 src_path = Path(__file__).resolve().parent.parent.parent.parent.parent.parent
 if str(src_path) not in sys.path:
     sys.path.append(str(src_path))
-
-from tool.diagram_friendly_test import DiagramFriendlyTest
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
-from application.services.continuous_acquisition_service.continuous_acquisition_service import ContinuousAcquisitionService
-from application.services.continuous_acquisition_service.i_continuous_acquisition_executor import ContinuousAcquisitionConfig
-from application.services.scan_application_service.i_acquisition_port import IAcquisitionPort
-from domain.value_objects.acquisition.voltage_measurement import VoltageMeasurement
-from datetime import datetime
-import random
 
 class RandomNoiseAcquisitionPort(IAcquisitionPort):
     def acquire_sample(self) -> VoltageMeasurement:
@@ -33,8 +35,6 @@ class RandomNoiseAcquisitionPort(IAcquisitionPort):
     
     def is_ready(self) -> bool:
         return True
-
-from infrastructure.hardware.micro_controller.ads131a04.adapter_i_continuous_acquisition_ads131a04 import AdapterIContinuousAcquisitionAds131a04
 
 class TestContinuousAcquisitionSequence(DiagramFriendlyTest):
     def test_full_acquisition_cycle(self):

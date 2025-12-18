@@ -4,6 +4,16 @@ Example: Using ExcitationAwareAcquisitionPort
 This example demonstrates how to integrate the excitation-aware acquisition
 mock service into the AEFI_Acquisition system.
 """
+from infrastructure.mocks.adapter_mock_i_acquisition_port import RandomNoiseAcquisitionPort
+from infrastructure.mocks.adapter_mock_i_excitation_port import MockExcitationPort
+from infrastructure.mocks.adapter_mock_excitation_aware_acquisition import (
+    ExcitationAwareAcquisitionPort,
+    OffsetVector3D
+)
+from domain.models.aefi_device.value_objects.excitation.excitation_parameters import ExcitationParameters
+from domain.models.aefi_device.value_objects.excitation.excitation_mode import ExcitationMode
+from domain.models.aefi_device.value_objects.excitation.excitation_level import ExcitationLevel
+
 
 """
 Example: Using ExcitationAwareAcquisitionPort
@@ -11,16 +21,6 @@ Example: Using ExcitationAwareAcquisitionPort
 Run from project root with:
     PYTHONPATH=src python src/infrastructure/mocks/example_excitation_aware_usage.py
 """
-
-from infrastructure.mocks.adapter_mock_i_acquisition_port import RandomNoiseAcquisitionPort
-from infrastructure.mocks.adapter_mock_i_excitation_port import MockExcitationPort
-from infrastructure.mocks.adapter_mock_excitation_aware_acquisition import (
-    ExcitationAwareAcquisitionPort,
-    OffsetVector3D
-)
-from domain.value_objects.excitation.excitation_parameters import ExcitationParameters
-from domain.value_objects.excitation.excitation_mode import ExcitationMode
-from domain.value_objects.excitation.excitation_level import ExcitationLevel
 
 
 def example_basic_usage():

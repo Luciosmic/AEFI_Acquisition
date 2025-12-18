@@ -3,14 +3,14 @@ import os
 import time
 import serial.tools.list_ports
 
+from infrastructure.hardware.micro_controller.MCU_serial_communicator import MCU_SerialCommunicator
+from infrastructure.hardware.micro_controller.ads131a04.adapter_i_acquistion_port_ads131a04 import ADS131A04Adapter
+from domain.models.scan.value_objects.measurement_uncertainty import MeasurementUncertainty
+
 # Add src to path so we can import modules
 # Add src to path so we can import modules
 # Assuming this file is in src/infrastructure/hardware/micro_controller/ads131a04/tests/
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../../../..'))
-
-from infrastructure.hardware.micro_controller.MCU_serial_communicator import MCU_SerialCommunicator
-from infrastructure.hardware.micro_controller.ads131a04.adapter_i_acquistion_port_ads131a04 import ADS131A04Adapter
-from domain.value_objects.measurement_uncertainty import MeasurementUncertainty
 
 def list_serial_ports():
     ports = serial.tools.list_ports.comports()

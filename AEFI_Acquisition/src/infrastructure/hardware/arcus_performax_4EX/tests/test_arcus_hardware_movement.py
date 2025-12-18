@@ -3,14 +3,14 @@ import sys
 import time
 from pathlib import Path
 
+from tool.diagram_friendly_test import DiagramFriendlyTest
+from infrastructure.hardware.arcus_performax_4EX.composition_root_arcus import ArcusCompositionRoot
+from domain.shared.value_objects.position_2d import Position2D
+
 # Ensure src is in path
 src_path = Path(__file__).resolve().parent.parent.parent.parent.parent
 if str(src_path) not in sys.path:
     sys.path.append(str(src_path))
-
-from tool.diagram_friendly_test import DiagramFriendlyTest
-from infrastructure.hardware.arcus_performax_4EX.composition_root_arcus import ArcusCompositionRoot
-from domain.value_objects.geometric.position_2d import Position2D
 
 class TestArcusHardwareMovement(DiagramFriendlyTest):
     def test_hardware_movement_sequence(self):

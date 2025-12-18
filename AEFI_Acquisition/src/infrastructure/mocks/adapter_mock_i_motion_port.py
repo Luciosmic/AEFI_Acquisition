@@ -2,10 +2,11 @@ from typing import List, Optional
 import threading
 import time
 from uuid import uuid4
-from domain.value_objects.geometric.position_2d import Position2D
+from domain.shared.value_objects.position_2d import Position2D
 from application.services.motion_control_service.i_motion_port import IMotionPort
-from domain.events.i_domain_event_bus import IDomainEventBus
-from domain.events.motion_events import MotionStarted, MotionCompleted, PositionUpdated, MotionStopped, EmergencyStopTriggered
+from domain.shared.events.i_domain_event_bus import IDomainEventBus
+from domain.models.scan.events.motion_events import MotionStarted, MotionCompleted, PositionUpdated, MotionStopped, EmergencyStopTriggered, MotionFailed
+from domain.models.test_bench.value_objects.motion_profile import MotionProfile
 
 class MockMotionPort(IMotionPort):
     """
@@ -18,11 +19,15 @@ class MockMotionPort(IMotionPort):
     def __init__(self, event_bus: Optional[IDomainEventBus] = None, motion_delay_ms: float = 100.0):
         print("[MockMotionPort] __init__: Mock motion port created at (0,0)")
         self._event_bus = event_bus
-        self._motion_delay_ms = motion_delay_ms
+        self._motion_delay_ms = motion_delay_ms  # Fallback delay if no profile provided
         self.move_history: List[Position2D] = []
         self._current_pos = Position2D(0, 0)
         self.last_speed: float | None = None
         self._is_moving: bool = False
+        self._failure_next: bool = False
+        self._failure_reason: str = "Simulated motion error"
+        self._current_motion_profile: Optional[MotionProfile] = None
+        self._current_estimated_duration_seconds: Optional[float] = None
 
     def move_to(self, position: Position2D) -> str:
         """
@@ -63,10 +68,45 @@ class MockMotionPort(IMotionPort):
         
         return motion_id
     
+    def set_failure_next_move(self, reason: str = "Simulated motion error") -> None:
+        """Configure the next move to fail with the given reason."""
+        self._failure_next = True
+        self._failure_reason = reason
+        print(f"[MockMotionPort] set_failure_next_move: Next move will fail with reason: {reason}")
+    
     def _simulate_motion(self, motion_id: str, target: Position2D):
-        """Simulate motion with delay and publish MotionCompleted event."""
+        """Simulate motion with delay and publish MotionCompleted or MotionFailed event."""
         start_time = time.time()
-        time.sleep(self._motion_delay_ms / 1000.0)  # Simulate motion time
+        
+        # Use estimated duration from domain if available, otherwise use fallback delay
+        if self._current_estimated_duration_seconds is not None:
+            motion_delay_seconds = self._current_estimated_duration_seconds
+            print(f"[MockMotionPort] _simulate_motion: Using domain-estimated duration: {motion_delay_seconds*1000:.1f}ms")
+        else:
+            motion_delay_seconds = self._motion_delay_ms / 1000.0
+            print(f"[MockMotionPort] _simulate_motion: Using fallback delay: {motion_delay_seconds*1000:.1f}ms")
+        
+        time.sleep(motion_delay_seconds)  # Simulate motion time
+        
+        # Clear profile after use (for next motion)
+        self._current_motion_profile = None
+        self._current_estimated_duration_seconds = None
+        
+        # Check if this move should fail
+        if self._failure_next:
+            self._failure_next = False  # Reset flag
+            self._is_moving = False
+            
+            duration = (time.time() - start_time) * 1000
+            print(f"[MockMotionPort] move_to: Motion FAILED at {target} (took {duration:.1f}ms) - {self._failure_reason}")
+            
+            # Publish MotionFailed event
+            if self._event_bus:
+                self._event_bus.publish("motionfailed", MotionFailed(
+                    motion_id=motion_id,
+                    error=self._failure_reason
+                ))
+            return
         
         # Update position
         self._current_pos = target
@@ -102,6 +142,21 @@ class MockMotionPort(IMotionPort):
     def set_speed(self, speed: float) -> None:
         self.last_speed = speed
         print(f"[MockMotionPort] set_speed: Speed set to {speed} cm/s")
+    
+    def set_motion_profile(self, profile: MotionProfile, estimated_duration_seconds: float) -> None:
+        """
+        Set the current motion profile and estimated duration.
+        This allows the mock to simulate realistic motion times based on domain calculations.
+        
+        Args:
+            profile: MotionProfile from domain
+            estimated_duration_seconds: Estimated duration calculated by AtomicMotion
+        """
+        self._current_motion_profile = profile
+        self._current_estimated_duration_seconds = estimated_duration_seconds
+        print(f"[MockMotionPort] set_motion_profile: Profile set | "
+              f"target_speed={profile.target_speed:.2f}mm/s, "
+              f"estimated_duration={estimated_duration_seconds*1000:.1f}ms")
 
     def stop(self) -> None:
         """Regular stop with deceleration."""

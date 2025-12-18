@@ -1,10 +1,10 @@
 import unittest
 from typing import List
-from application.scan_application_service.scan_application_service import ScanApplicationService
+from src.application.services.scan_application_service.scan_application_service import ScanApplicationService
 from application.dtos.scan_dtos import Scan2DConfigDTO
 from infrastructure.tests.mock_ports import MockMotionPort, MockAcquisitionPort
-from domain.events.domain_event import DomainEvent
-from domain.events.scan_events import ScanStarted, ScanPointAcquired, ScanCompleted
+from domain.shared.events.domain_event import DomainEvent
+from domain.models.scan.events.scan_events import ScanStarted, ScanPointAcquired, ScanCompleted
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
 from infrastructure.execution.step_scan_executor import StepScanExecutor
 from infrastructure.tests.diagram_friendly_test import DiagramFriendlyTest

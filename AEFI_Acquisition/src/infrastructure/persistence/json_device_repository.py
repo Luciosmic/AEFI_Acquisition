@@ -2,9 +2,9 @@ import json
 import os
 from typing import Dict, Any
 
-from ...domain.model.aggregates.aefi_device import AefiDevice
-from ...domain.model.value_objects.quad_source_geometry import QuadSourceGeometry
-from ...domain.model.value_objects.quaternion import Quaternion
+from domain.models.aefi_device.aggregates.aefi_device import AefiDevice
+from domain.models.aefi_device.value_objects.quad_source_geometry import QuadSourceGeometry
+from domain.models.aefi_device.value_objects.quaternion import Quaternion
 
 class JsonDeviceRepository:
     """

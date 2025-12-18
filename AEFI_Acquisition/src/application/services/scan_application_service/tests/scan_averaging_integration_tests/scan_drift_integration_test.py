@@ -4,11 +4,11 @@ import os
 import matplotlib.pyplot as plt
 from datetime import datetime
 
-from domain.value_objects.geometric.position_2d import Position2D
-from domain.value_objects.acquisition.voltage_measurement import VoltageMeasurement
+from domain.shared.value_objects.position_2d import Position2D
+from domain.models.aefi_device.value_objects.acquisition.voltage_measurement import VoltageMeasurement
 from application.services.motion_control_service.i_motion_port import IMotionPort
-from application.services.scan_application_service.i_acquisition_port import IAcquisitionPort
-from application.scan_application_service.scan_application_service import ScanApplicationService
+from src.application.services.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
+from src.application.services.scan_application_service.scan_application_service import ScanApplicationService
 from application.dtos.scan_dtos import Scan2DConfigDTO
 
 # --- Mocks ---

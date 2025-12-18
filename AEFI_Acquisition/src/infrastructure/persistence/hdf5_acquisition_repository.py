@@ -5,8 +5,8 @@ from pathlib import Path
 from datetime import datetime
 import logging
 
-from domain.repositories.i_acquisition_data_repository import IAcquisitionDataRepository
-from domain.value_objects.acquisition.acquisition_sample import AcquisitionSample
+from domain.models.aefi_device.repositories.i_acquisition_data_repository import IAcquisitionDataRepository
+from domain.models.aefi_device.value_objects.acquisition.acquisition_sample import AcquisitionSample
 
 logger = logging.getLogger(__name__)
 

@@ -9,6 +9,16 @@ import sys
 import unittest
 from pathlib import Path
 
+from diagram_friendly_test import DiagramFriendlyTest
+from infrastructure.hardware.micro_controller.MCU_serial_communicator import MCU_SerialCommunicator
+from infrastructure.hardware.micro_controller.ad9106.ad9106_controller import AD9106Controller
+from infrastructure.hardware.micro_controller.ad9106.ad9106_controller import AD9106Controller
+from infrastructure.hardware.micro_controller.ad9106.adapter_excitation_configuration_ad9106 import AdapterExcitationConfigurationAD9106
+from domain.models.aefi_device.value_objects.excitation.excitation_parameters import ExcitationParameters
+from domain.models.aefi_device.value_objects.excitation.excitation_mode import ExcitationMode
+from domain.models.aefi_device.value_objects.excitation.excitation_level import ExcitationLevel
+
+
 # Add src to path
 # Add src to path
 # tests -> ad9106 -> micro_controller -> hardware -> infrastructure -> src -> AEFI_Acquisition
@@ -18,15 +28,6 @@ sys.path.insert(0, str(root_dir / "src"))
 # Add .cursor/skills to path for diagram_friendly_test
 cursor_skills_dir = root_dir / ".cursor" / "skills"
 sys.path.insert(0, str(cursor_skills_dir / "diagram_friendly_test"))
-
-from diagram_friendly_test import DiagramFriendlyTest
-from infrastructure.hardware.micro_controller.MCU_serial_communicator import MCU_SerialCommunicator
-from infrastructure.hardware.micro_controller.ad9106.ad9106_controller import AD9106Controller
-from infrastructure.hardware.micro_controller.ad9106.ad9106_controller import AD9106Controller
-from infrastructure.hardware.micro_controller.ad9106.adapter_excitation_configuration_ad9106 import AdapterExcitationConfigurationAD9106
-from domain.value_objects.excitation.excitation_parameters import ExcitationParameters
-from domain.value_objects.excitation.excitation_mode import ExcitationMode
-from domain.value_objects.excitation.excitation_level import ExcitationLevel
 
 
 class TestAD9106Adapter(DiagramFriendlyTest):

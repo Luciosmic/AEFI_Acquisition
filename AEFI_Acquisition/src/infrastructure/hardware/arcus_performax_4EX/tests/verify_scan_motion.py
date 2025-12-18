@@ -26,7 +26,7 @@ except ImportError:
     from infrastructure.hardware.arcus_performax_4EX.arcus_composition_root import ArcusCompositionRoot
 
 from infrastructure.hardware.micro_controller.mcu_composition_root import MCUCompositionRoot
-from application.services.scan_application_service.scan_application_service import ScanApplicationService
+from src.application.services.scan_application_service.scan_application_service import ScanApplicationService
 from infrastructure.execution.step_scan_executor import StepScanExecutor
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
 from application.dtos.scan_dtos import Scan2DConfigDTO

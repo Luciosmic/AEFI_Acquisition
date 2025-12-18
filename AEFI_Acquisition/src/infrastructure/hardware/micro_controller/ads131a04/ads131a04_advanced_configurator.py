@@ -4,7 +4,7 @@ import os
 from dataclasses import replace
 
 from application.services.hardware_configuration_service.i_hardware_advanced_configurator import IHardwareAdvancedConfigurator
-from domain.value_objects.hardware_configuration.hardware_advanced_parameter_schema import (
+from domain.shared.value_objects.hardware_advanced_parameter_schema import (
     HardwareAdvancedParameterSchema, NumberParameterSchema, EnumParameterSchema, BooleanParameterSchema
 )
 from infrastructure.hardware.micro_controller.ads131a04.adapter_i_acquistion_port_ads131a04 import ADS131A04Adapter

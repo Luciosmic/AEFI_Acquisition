@@ -8,11 +8,11 @@ import shutil
 import sys
 import os
 
+from infrastructure.persistence.hdf5_acquisition_repository import HDF5AcquisitionRepository
+from domain.models.aefi_device.value_objects.acquisition.acquisition_sample import AcquisitionSample
+
 # Add src to python path
 sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
-
-from infrastructure.persistence.hdf5_acquisition_repository import HDF5AcquisitionRepository
-from domain.value_objects.acquisition.acquisition_sample import AcquisitionSample
 
 def demo_hdf5_creation():
     # Setup

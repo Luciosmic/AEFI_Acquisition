@@ -17,17 +17,17 @@ import logging
 from typing import Optional, Dict, Any
 
 from application.dtos.scan_dtos import ExportConfigDTO
-from .i_scan_export_port import IScanExportPort
+from .ports.i_scan_export_port import IScanExportPort
 
-from domain.events.scan_events import (
+from domain.models.scan.events.scan_events import (
     ScanStarted,
     ScanPointAcquired,
     ScanCompleted,
     ScanFailed,
     ScanCancelled,
 )
-from domain.events.domain_event import DomainEvent
-from domain.events.i_domain_event_bus import IDomainEventBus
+from domain.shared.events.domain_event import DomainEvent
+from domain.shared.events.i_domain_event_bus import IDomainEventBus
 
 
 logger = logging.getLogger(__name__)

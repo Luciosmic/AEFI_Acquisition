@@ -23,11 +23,11 @@ import threading
 import queue
 from uuid import uuid4
 from datetime import datetime
-from domain.events.i_domain_event_bus import IDomainEventBus
-from domain.events.motion_events import MotionStarted, MotionCompleted, MotionFailed, PositionUpdated
+from domain.shared.events.i_domain_event_bus import IDomainEventBus
+from domain.models.scan.events.motion_events import MotionStarted, MotionCompleted, MotionFailed, PositionUpdated
 
 from application.services.motion_control_service.i_motion_port import IMotionPort
-from domain.value_objects.geometric.position_2d import Position2D
+from domain.shared.value_objects.position_2d import Position2D
 from infrastructure.hardware.arcus_performax_4EX.driver_arcus_performax4EX import (
     ArcusPerformax4EXController,
 )
@@ -274,7 +274,10 @@ class ArcusAdapter(IMotionPort):
             steps_x = int(position.x * self.STEPS_PER_MM)
             steps_y = int(position.y * self.STEPS_PER_MM)
             
+            print(f"[ArcusAdapter DEBUG] _internal_move_to: Target(mm)=({position.x:.4f}, {position.y:.4f}) -> Steps=({steps_x}, {steps_y})")
+            
             if self._controller:
+                print(f"[ArcusAdapter DEBUG] Sending move command to controller...")
                 self._controller.move_to(self._axis_x, steps_x)
                 self._controller.move_to(self._axis_y, steps_y)
         except Exception as e:
@@ -301,16 +304,18 @@ class ArcusAdapter(IMotionPort):
 
     def _internal_wait_until_stopped(self, timeout: float = 30.0, poll_interval: float = 0.1):
         """Internal synchronous wait."""
-        print(f"[ArcusAdapter] DEBUG: _internal_wait_until_stopped started (timeout={timeout})")
+        print(f"[ArcusAdapter DEBUG] _internal_wait_until_stopped started (timeout={timeout})")
         start_time = time.time()
         while self.is_moving():
             if not self._running: # Abort if worker stopped
+                print(f"[ArcusAdapter DEBUG] Worker stopped during wait")
                 break
             if time.time() - start_time > timeout:
-                print(f"[ArcusAdapter] Motion timeout after {timeout}s")
+                print(f"[ArcusAdapter DEBUG] Motion timeout after {timeout}s")
                 break
+            # print(f"[ArcusAdapter DEBUG] Still moving...") # Too verbose?
             time.sleep(poll_interval)
-        print(f"[ArcusAdapter] DEBUG: _internal_wait_until_stopped finished. Duration: {time.time() - start_time:.3f}s")
+        print(f"[ArcusAdapter DEBUG] _internal_wait_until_stopped finished. Duration: {time.time() - start_time:.3f}s")
 
     # ==========================================================================
     # COMMANDS
@@ -349,7 +354,7 @@ class ArcusAdapter(IMotionPort):
             ))
 
         # Push to queue
-        print(f"[ArcusAdapter] DEBUG: Enqueuing MOVE_TO command: {motion_id}, Pos: {position}")
+        print(f"[ArcusAdapter DEBUG] Enqueuing MOVE_TO command: {motion_id}, Pos: {position}")
         self._command_queue.put(("MOVE_TO", (motion_id, position)))
         
         return motion_id
@@ -478,6 +483,8 @@ class ArcusAdapter(IMotionPort):
             # Convert steps to mm
             pos_x_mm = steps_x * self.MM_PER_STEP
             pos_y_mm = steps_y * self.MM_PER_STEP
+            
+            # print(f"[ArcusAdapter DEBUG] get_current_position: Steps=({steps_x}, {steps_y}) -> mm=({pos_x_mm:.4f}, {pos_y_mm:.4f})")
             
             return Position2D(x=pos_x_mm, y=pos_y_mm)
         except Exception as e:

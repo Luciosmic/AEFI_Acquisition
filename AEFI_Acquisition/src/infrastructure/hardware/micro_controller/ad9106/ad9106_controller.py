@@ -19,7 +19,7 @@ Design (QCS):
 
 from typing import Dict, Optional, Tuple
 from infrastructure.hardware.micro_controller.MCU_serial_communicator import MCU_SerialCommunicator
-from domain.shared.operation_result import OperationResult
+from domain.shared.value_objects.operation_result import OperationResult
 
 
 class AD9106Controller:

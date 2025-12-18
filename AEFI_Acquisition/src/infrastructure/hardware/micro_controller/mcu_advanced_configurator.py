@@ -4,7 +4,7 @@ import os
 from dataclasses import replace
 
 from application.services.hardware_configuration_service.i_hardware_advanced_configurator import IHardwareAdvancedConfigurator
-from domain.value_objects.hardware_configuration.hardware_advanced_parameter_schema import (
+from domain.shared.value_objects.hardware_advanced_parameter_schema import (
     HardwareAdvancedParameterSchema, NumberParameterSchema
 )
 from infrastructure.hardware.micro_controller.MCU_serial_communicator import MCU_SerialCommunicator

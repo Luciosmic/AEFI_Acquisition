@@ -19,18 +19,19 @@ Design:
 
 # EXTERNAL PYTHON LIBS
 from typing import Optional
-
-# DOMAIN VALUE OBJECTS
-from domain.value_objects.excitation.excitation_parameters import ExcitationParameters
-from domain.value_objects.excitation.excitation_mode import ExcitationMode
-from domain.shared.operation_result import OperationResult
-
-# APPLICATION
+from domain.models.aefi_device.value_objects.excitation.excitation_parameters import ExcitationParameters
+from domain.models.aefi_device.value_objects.excitation.excitation_mode import ExcitationMode
+from domain.shared.value_objects.operation_result import OperationResult
 from application.services.excitation_configuration_service.i_excitation_port import IExcitationPort
-
-# INFRASTRUCTURE
 from infrastructure.hardware.micro_controller.ad9106.ad9106_controller import AD9106Controller
 from infrastructure.hardware.micro_controller.MCU_serial_communicator import MCU_SerialCommunicator
+
+
+# DOMAIN VALUE OBJECTS
+
+# APPLICATION
+
+# INFRASTRUCTURE
 
 
 class AdapterExcitationConfigurationAD9106(IExcitationPort):

@@ -1,7 +1,7 @@
 from typing import List, Dict, Any
-from application.services.scan_application_service.i_export_port import IExportPort
+from src.application.services.scan_application_service.ports.i_scan_export_port import IScanExportPort
 
-class MockExportPort(IExportPort):
+class MockExportPort(IScanExportPort):
     def __init__(self):
         self.points: List[Dict[str, Any]] = []
         self.is_open = False

@@ -13,8 +13,8 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Optional
 
-from domain.value_objects.measurement_uncertainty import MeasurementUncertainty
-from application.services.scan_application_service.i_acquisition_port import IAcquisitionPort
+from domain.models.scan.value_objects.measurement_uncertainty import MeasurementUncertainty
+from src.application.services.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
 
 
 @dataclass

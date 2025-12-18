@@ -7,9 +7,9 @@ from application.services.continuous_acquisition_service.i_continuous_acquisitio
     IContinuousAcquisitionExecutor,
     ContinuousAcquisitionConfig,
 )
-from application.services.scan_application_service.i_acquisition_port import IAcquisitionPort
-from domain.events.i_domain_event_bus import IDomainEventBus
-from domain.events.continuous_acquisition_events import (
+from src.application.services.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
+from domain.shared.events.i_domain_event_bus import IDomainEventBus
+from domain.models.aefi_device.events.continuous_acquisition_events import (
     ContinuousAcquisitionSampleAcquired,
     ContinuousAcquisitionStopped
 )

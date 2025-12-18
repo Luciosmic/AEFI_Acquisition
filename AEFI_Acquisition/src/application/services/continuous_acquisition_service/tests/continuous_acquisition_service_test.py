@@ -17,7 +17,7 @@ from infrastructure.execution.continuous_acquisition_executor import (
 )
 from infrastructure.tests.mock_ports import MockAcquisitionPort
 
-from domain.events.continuous_acquisition_events import (
+from domain.models.aefi_device.events.continuous_acquisition_events import (
     ContinuousAcquisitionSampleAcquired,
 )
 

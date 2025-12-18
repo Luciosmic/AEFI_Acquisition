@@ -12,7 +12,7 @@ from .i_continuous_acquisition_executor import (
     IContinuousAcquisitionExecutor,
     ContinuousAcquisitionConfig,
 )
-from application.services.scan_application_service.i_acquisition_port import IAcquisitionPort
+from src.application.services.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
 
 
 class ContinuousAcquisitionService:

@@ -21,7 +21,7 @@ from infrastructure.hardware.arcus_performax_4EX.driver_arcus_performax4EX impor
 from infrastructure.hardware.arcus_performax_4EX.adapter_motion_port_arcus_performax4EX import ArcusAdapter
 from infrastructure.hardware.arcus_performax_4EX.adapter_lifecycle_arcus_performax4EX import ArcusPerformaxLifecycleAdapter
 from infrastructure.hardware.arcus_performax_4EX.arcus_advanced_configuration import ArcusPerformax4EXAdvancedConfigurator
-from domain.events.i_domain_event_bus import IDomainEventBus
+from domain.shared.events.i_domain_event_bus import IDomainEventBus
 
 
 class ArcusCompositionRoot:

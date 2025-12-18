@@ -9,6 +9,12 @@ import sys
 import unittest
 from pathlib import Path
 
+from diagram_friendly_test import DiagramFriendlyTest
+from infrastructure.hardware.micro_controller.MCU_serial_communicator import MCU_SerialCommunicator
+from infrastructure.hardware.micro_controller.ad9106.ad9106_controller import AD9106Controller
+from domain.shared.value_objects.operation_result import OperationResult
+
+
 # Add src to path
 src_dir = Path(__file__).resolve().parents[4]
 sys.path.insert(0, str(src_dir))
@@ -16,11 +22,6 @@ sys.path.insert(0, str(src_dir))
 # Add .cursor/skills to path for diagram_friendly_test
 cursor_skills_dir = Path(__file__).resolve().parents[5] / ".cursor" / "skills"
 sys.path.insert(0, str(cursor_skills_dir / "diagram_friendly_test"))
-
-from diagram_friendly_test import DiagramFriendlyTest
-from infrastructure.hardware.micro_controller.MCU_serial_communicator import MCU_SerialCommunicator
-from infrastructure.hardware.micro_controller.ad9106.ad9106_controller import AD9106Controller
-from domain.shared.operation_result import OperationResult
 
 
 class TestAD9106Controller(DiagramFriendlyTest):

@@ -28,7 +28,7 @@ except ImportError:
 
 # from infrastructure.hardware.micro_controller.mcu_composition_root import MCUCompositionRoot
 from infrastructure.mocks.adapter_mock_i_acquisition_port import MockAcquisitionPort
-from application.services.scan_application_service.scan_application_service import ScanApplicationService
+from src.application.services.scan_application_service.scan_application_service import ScanApplicationService
 from infrastructure.execution.step_scan_executor import StepScanExecutor
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
 from application.dtos.scan_dtos import Scan2DConfigDTO

@@ -14,11 +14,11 @@ import json
 import os
 from typing import Optional
 
-from application.services.scan_application_service.i_acquisition_port import IAcquisitionPort
+from src.application.services.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
 from application.services.system_lifecycle_service.i_hardware_initialization_port import IHardwareInitializationPort
 from application.services.continuous_acquisition_service.i_continuous_acquisition_executor import IContinuousAcquisitionExecutor
 from application.services.excitation_configuration_service.i_excitation_port import IExcitationPort
-from domain.events.i_domain_event_bus import IDomainEventBus
+from domain.shared.events.i_domain_event_bus import IDomainEventBus
 
 from infrastructure.hardware.micro_controller.MCU_serial_communicator import MCU_SerialCommunicator
 from infrastructure.hardware.micro_controller.ads131a04.adapter_i_acquistion_port_ads131a04 import ADS131A04Adapter

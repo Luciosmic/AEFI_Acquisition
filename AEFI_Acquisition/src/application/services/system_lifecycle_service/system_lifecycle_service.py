@@ -17,8 +17,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
-from domain.events.i_domain_event_bus import IDomainEventBus
-from domain.events.system_events import (
+from domain.shared.events.i_domain_event_bus import IDomainEventBus
+from domain.shared.events.system_events import (
     SystemReadyEvent,
     SystemStartupFailedEvent,
     SystemShuttingDownEvent,

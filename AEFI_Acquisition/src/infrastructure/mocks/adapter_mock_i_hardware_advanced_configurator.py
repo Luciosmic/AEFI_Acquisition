@@ -1,6 +1,6 @@
 from typing import Dict, Any, List
 from application.services.hardware_configuration_service.i_hardware_advanced_configurator import IHardwareAdvancedConfigurator
-from domain.value_objects.hardware_configuration.hardware_advanced_parameter_schema import (
+from domain.shared.value_objects.hardware_advanced_parameter_schema import (
     HardwareAdvancedParameterSchema,
     NumberParameterSchema,
     BooleanParameterSchema,

@@ -10,7 +10,7 @@ from application.system_lifecycle_service.system_lifecycle_service import (
     StartupConfig,
     ShutdownConfig,
 )
-from domain.events.system_events import (
+from domain.shared.events.system_events import (
     SystemReadyEvent,
     SystemStartupFailedEvent,
     SystemShuttingDownEvent,

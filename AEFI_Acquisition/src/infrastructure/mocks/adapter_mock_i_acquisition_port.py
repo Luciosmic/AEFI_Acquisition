@@ -1,7 +1,7 @@
 from datetime import datetime
 import random
-from application.services.scan_application_service.i_acquisition_port import IAcquisitionPort
-from domain.value_objects.acquisition.voltage_measurement import VoltageMeasurement
+from src.application.services.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
+from domain.models.aefi_device.value_objects.acquisition.voltage_measurement import VoltageMeasurement
 
 class MockAcquisitionPort(IAcquisitionPort):
     def __init__(self):
@@ -52,10 +52,10 @@ class RandomNoiseAcquisitionPort(IAcquisitionPort):
         vy_q = self._rng.gauss(0.0, self.noise_std)
         vz_i = self._rng.gauss(0.0, self.noise_std)
         vz_q = self._rng.gauss(0.0, self.noise_std)
-        print(
-            f"[RandomNoiseAcquisitionPort] Sample #{self.acquire_count}: " # Use self.acquire_count as it's the existing counter
-            f"Ux=({vx_i:.3f},{vx_q:.3f}) Uy=({vy_i:.3f},{vy_q:.3f}) Uz=({vz_i:.3f},{vz_q:.3f})"
-        )
+        #print(
+        #    f"[RandomNoiseAcquisitionPort] Sample #{self.acquire_count}: " # Use self.acquire_count as it's the existing counter
+        #    f"Ux=({vx_i:.3f},{vx_q:.3f}) Uy=({vy_i:.3f},{vy_q:.3f}) Uz=({vz_i:.3f},{vz_q:.3f})"
+        #)
         return VoltageMeasurement(
             voltage_x_in_phase=vx_i,
             voltage_x_quadrature=vx_q,
