@@ -1,5 +1,19 @@
-from PyQt6.QtWidgets import QDialog, QVBoxLayout, QLabel, QProgressBar
-from PyQt6.QtCore import Qt, QTimer
+"""
+Shutdown View for Interface V2.
+
+Responsibility:
+- Displays window during system shutdown
+- Waits for SystemLifecyclePresenter to complete shutdown
+- Auto-starts shutdown sequence
+
+Rationale:
+- Provides user feedback during hardware shutdown
+- Ensures clean shutdown of resources
+- Adapted from interface V1 for PySide6 compatibility
+"""
+
+from PySide6.QtWidgets import QDialog, QVBoxLayout, QLabel, QProgressBar
+from PySide6.QtCore import Qt, QTimer
 
 from interface.ui_system_lifecycle.presenter_system_lifecycle import SystemLifecyclePresenter
 from application.services.system_lifecycle_service.system_lifecycle_service import ShutdownConfig
@@ -27,7 +41,7 @@ class ShutdownView(QDialog):
         layout.addWidget(self.status_label)
         
         self.progress_bar = QProgressBar()
-        self.progress_bar.setRange(0, 0) # Indeterminate mode
+        self.progress_bar.setRange(0, 0)  # Indeterminate mode
         self.progress_bar.setTextVisible(False)
         layout.addWidget(self.progress_bar)
         
@@ -61,3 +75,4 @@ class ShutdownView(QDialog):
 
     def _on_error(self, message: str):
         self.status_label.setText(f"Error: {message}")
+

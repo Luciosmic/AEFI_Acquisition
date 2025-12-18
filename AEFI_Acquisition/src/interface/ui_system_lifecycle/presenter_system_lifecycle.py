@@ -1,7 +1,20 @@
-from PyQt6.QtCore import QObject, pyqtSignal
+"""
+System Lifecycle Presenter for Interface V2.
+
+Responsibility:
+- Handles startup/shutdown sequencing in a background thread
+- Emits signals for UI updates (thread-safe)
+- Implements ISystemLifecycleOutputPort
+
+Rationale:
+- Separates UI concerns from business logic
+- Provides thread-safe communication between services and UI
+- Adapted from interface V1 for PySide6 compatibility
+"""
+
+from PySide6.QtCore import QObject, Signal
 from typing import List, Optional
 import threading
-import time
 
 from application.services.system_lifecycle_service.i_system_lifecycle_output_port import ISystemLifecycleOutputPort
 from application.services.system_lifecycle_service.system_lifecycle_service import (
@@ -23,16 +36,16 @@ class SystemLifecyclePresenter(QObject, ISystemLifecycleOutputPort, metaclass=QA
     Handles startup/shutdown sequencing in a background thread and emits signals for UI updates.
     """
     
-    # Signals
-    startup_started = pyqtSignal(str)
-    initialization_step_updated = pyqtSignal(str, str) # step, status
-    startup_finished = pyqtSignal(bool, list) # success, errors
+    # Signals (PySide6 uses Signal instead of pyqtSignal)
+    startup_started = Signal(str)
+    initialization_step_updated = Signal(str, str)  # step, status
+    startup_finished = Signal(bool, list)  # success, errors
     
-    shutdown_started = pyqtSignal()
-    shutdown_step_updated = pyqtSignal(str, str)
-    shutdown_finished = pyqtSignal(bool, list)
+    shutdown_started = Signal()
+    shutdown_step_updated = Signal(str, str)
+    shutdown_finished = Signal(bool, list)
     
-    error_occurred = pyqtSignal(str)
+    error_occurred = Signal(str)
 
     def __init__(self):
         super().__init__()
@@ -99,3 +112,4 @@ class SystemLifecyclePresenter(QObject, ISystemLifecycleOutputPort, metaclass=QA
 
     def present_error(self, error_message: str) -> None:
         self.error_occurred.emit(error_message)
+

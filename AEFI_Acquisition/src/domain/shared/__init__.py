@@ -11,8 +11,9 @@ Notes:
   this module re-exports them to stabilise a common import path.
 """
 
-from .operation_result import OperationResult
+from domain.shared.value_objects.operation_result import OperationResult
 
 __all__ = ['OperationResult']
+
 
 
