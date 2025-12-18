@@ -1,0 +1,647 @@
+{
+  "test_name": "test_complete_scan_flow_with_atomic_motions",
+  "timestamp": "2025-12-18T01:25:18.915715",
+  "status": "PASSED",
+  "interactions": [
+    {
+      "timestamp": "2025-12-18T01:25:18.915978",
+      "actor": "System",
+      "action": "DIVIDER",
+      "target": "System",
+      "message": "Setup",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.916206",
+      "actor": "Test",
+      "action": "CREATE",
+      "target": "StepScanConfig",
+      "message": "Create scan configuration",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.916452",
+      "actor": "Test",
+      "action": "CREATE",
+      "target": "MotionProfileSelector",
+      "message": "Create profile selector",
+      "data": {
+        "threshold_mm": 5.0
+      },
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.916729",
+      "actor": "Test",
+      "action": "CREATE",
+      "target": "StepScan",
+      "message": "Create scan aggregate",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.916980",
+      "actor": "System",
+      "action": "DIVIDER",
+      "target": "System",
+      "message": "Generate Trajectory",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.917215",
+      "actor": "Test",
+      "action": "CALL",
+      "target": "ScanTrajectoryFactory",
+      "message": "create_trajectory(config)",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.917503",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "Trajectory",
+      "message": "Has 9 positions",
+      "data": {
+        "positions": 9
+      },
+      "expect": "9",
+      "got": "9"
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.917772",
+      "actor": "System",
+      "action": "DIVIDER",
+      "target": "System",
+      "message": "Create AtomicMotions",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.918006",
+      "actor": "Test",
+      "action": "CALL",
+      "target": "ScanTrajectoryFactory",
+      "message": "create_motions(positions, selector)",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.918270",
+      "actor": "System",
+      "action": "DIVIDER",
+      "target": "System",
+      "message": "Start Scan",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.918493",
+      "actor": "Test",
+      "action": "CALL",
+      "target": "StepScan",
+      "message": "start(config)",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.919156",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "StepScan",
+      "message": "Status is RUNNING",
+      "data": {
+        "status": "ScanStatus.RUNNING"
+      },
+      "expect": "RUNNING",
+      "got": "ScanStatus.RUNNING"
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.919378",
+      "actor": "Test",
+      "action": "CALL",
+      "target": "StepScan",
+      "message": "add_motions(motions)",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.919601",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "StepScan",
+      "message": "Has 8 motions",
+      "data": {
+        "motions_count": 8
+      },
+      "expect": "8",
+      "got": "8"
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.919833",
+      "actor": "System",
+      "action": "DIVIDER",
+      "target": "System",
+      "message": "Execute Motions",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.920291",
+      "actor": "Test",
+      "action": "CALL",
+      "target": "StepScan",
+      "message": "add_point_result(point_0)",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.920739",
+      "actor": "Test",
+      "action": "CALL",
+      "target": "AtomicMotion_0",
+      "message": "start(motion_0_b366e57e)",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.920949",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "AtomicMotion_0",
+      "message": "State is EXECUTING",
+      "data": {
+        "state": "MotionState.EXECUTING"
+      },
+      "expect": "EXECUTING",
+      "got": "MotionState.EXECUTING"
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.921162",
+      "actor": "Test",
+      "action": "CALL",
+      "target": "AtomicMotion_0",
+      "message": "complete()",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.921377",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "AtomicMotion_0",
+      "message": "State is COMPLETED",
+      "data": {
+        "state": "MotionState.COMPLETED"
+      },
+      "expect": "COMPLETED",
+      "got": "MotionState.COMPLETED"
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.921831",
+      "actor": "Test",
+      "action": "CALL",
+      "target": "StepScan",
+      "message": "add_point_result(point_1)",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.922289",
+      "actor": "Test",
+      "action": "CALL",
+      "target": "AtomicMotion_1",
+      "message": "start(motion_1_fafa0dc9)",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.922519",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "AtomicMotion_1",
+      "message": "State is EXECUTING",
+      "data": {
+        "state": "MotionState.EXECUTING"
+      },
+      "expect": "EXECUTING",
+      "got": "MotionState.EXECUTING"
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.922745",
+      "actor": "Test",
+      "action": "CALL",
+      "target": "AtomicMotion_1",
+      "message": "complete()",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.923053",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "AtomicMotion_1",
+      "message": "State is COMPLETED",
+      "data": {
+        "state": "MotionState.COMPLETED"
+      },
+      "expect": "COMPLETED",
+      "got": "MotionState.COMPLETED"
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.923539",
+      "actor": "Test",
+      "action": "CALL",
+      "target": "StepScan",
+      "message": "add_point_result(point_2)",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.924058",
+      "actor": "Test",
+      "action": "CALL",
+      "target": "AtomicMotion_2",
+      "message": "start(motion_2_2f4ce968)",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.924276",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "AtomicMotion_2",
+      "message": "State is EXECUTING",
+      "data": {
+        "state": "MotionState.EXECUTING"
+      },
+      "expect": "EXECUTING",
+      "got": "MotionState.EXECUTING"
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.924496",
+      "actor": "Test",
+      "action": "CALL",
+      "target": "AtomicMotion_2",
+      "message": "complete()",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.924714",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "AtomicMotion_2",
+      "message": "State is COMPLETED",
+      "data": {
+        "state": "MotionState.COMPLETED"
+      },
+      "expect": "COMPLETED",
+      "got": "MotionState.COMPLETED"
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.925235",
+      "actor": "Test",
+      "action": "CALL",
+      "target": "StepScan",
+      "message": "add_point_result(point_3)",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.925859",
+      "actor": "Test",
+      "action": "CALL",
+      "target": "AtomicMotion_3",
+      "message": "start(motion_3_cb543741)",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.926094",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "AtomicMotion_3",
+      "message": "State is EXECUTING",
+      "data": {
+        "state": "MotionState.EXECUTING"
+      },
+      "expect": "EXECUTING",
+      "got": "MotionState.EXECUTING"
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.926317",
+      "actor": "Test",
+      "action": "CALL",
+      "target": "AtomicMotion_3",
+      "message": "complete()",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.926539",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "AtomicMotion_3",
+      "message": "State is COMPLETED",
+      "data": {
+        "state": "MotionState.COMPLETED"
+      },
+      "expect": "COMPLETED",
+      "got": "MotionState.COMPLETED"
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.926991",
+      "actor": "Test",
+      "action": "CALL",
+      "target": "StepScan",
+      "message": "add_point_result(point_4)",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.927448",
+      "actor": "Test",
+      "action": "CALL",
+      "target": "AtomicMotion_4",
+      "message": "start(motion_4_c7e96df2)",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.927682",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "AtomicMotion_4",
+      "message": "State is EXECUTING",
+      "data": {
+        "state": "MotionState.EXECUTING"
+      },
+      "expect": "EXECUTING",
+      "got": "MotionState.EXECUTING"
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.927910",
+      "actor": "Test",
+      "action": "CALL",
+      "target": "AtomicMotion_4",
+      "message": "complete()",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.928144",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "AtomicMotion_4",
+      "message": "State is COMPLETED",
+      "data": {
+        "state": "MotionState.COMPLETED"
+      },
+      "expect": "COMPLETED",
+      "got": "MotionState.COMPLETED"
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.928605",
+      "actor": "Test",
+      "action": "CALL",
+      "target": "StepScan",
+      "message": "add_point_result(point_5)",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.929065",
+      "actor": "Test",
+      "action": "CALL",
+      "target": "AtomicMotion_5",
+      "message": "start(motion_5_d7b20449)",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.929285",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "AtomicMotion_5",
+      "message": "State is EXECUTING",
+      "data": {
+        "state": "MotionState.EXECUTING"
+      },
+      "expect": "EXECUTING",
+      "got": "MotionState.EXECUTING"
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.929509",
+      "actor": "Test",
+      "action": "CALL",
+      "target": "AtomicMotion_5",
+      "message": "complete()",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.929735",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "AtomicMotion_5",
+      "message": "State is COMPLETED",
+      "data": {
+        "state": "MotionState.COMPLETED"
+      },
+      "expect": "COMPLETED",
+      "got": "MotionState.COMPLETED"
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.930185",
+      "actor": "Test",
+      "action": "CALL",
+      "target": "StepScan",
+      "message": "add_point_result(point_6)",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.930633",
+      "actor": "Test",
+      "action": "CALL",
+      "target": "AtomicMotion_6",
+      "message": "start(motion_6_fe5439b0)",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.930851",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "AtomicMotion_6",
+      "message": "State is EXECUTING",
+      "data": {
+        "state": "MotionState.EXECUTING"
+      },
+      "expect": "EXECUTING",
+      "got": "MotionState.EXECUTING"
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.931078",
+      "actor": "Test",
+      "action": "CALL",
+      "target": "AtomicMotion_6",
+      "message": "complete()",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.931301",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "AtomicMotion_6",
+      "message": "State is COMPLETED",
+      "data": {
+        "state": "MotionState.COMPLETED"
+      },
+      "expect": "COMPLETED",
+      "got": "MotionState.COMPLETED"
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.931746",
+      "actor": "Test",
+      "action": "CALL",
+      "target": "StepScan",
+      "message": "add_point_result(point_7)",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.932178",
+      "actor": "Test",
+      "action": "CALL",
+      "target": "AtomicMotion_7",
+      "message": "start(motion_7_8033043f)",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.932401",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "AtomicMotion_7",
+      "message": "State is EXECUTING",
+      "data": {
+        "state": "MotionState.EXECUTING"
+      },
+      "expect": "EXECUTING",
+      "got": "MotionState.EXECUTING"
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.932617",
+      "actor": "Test",
+      "action": "CALL",
+      "target": "AtomicMotion_7",
+      "message": "complete()",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.932835",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "AtomicMotion_7",
+      "message": "State is COMPLETED",
+      "data": {
+        "state": "MotionState.COMPLETED"
+      },
+      "expect": "COMPLETED",
+      "got": "MotionState.COMPLETED"
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.933499",
+      "actor": "Test",
+      "action": "CALL",
+      "target": "StepScan",
+      "message": "add_point_result(point_8)",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.934592",
+      "actor": "System",
+      "action": "DIVIDER",
+      "target": "System",
+      "message": "Verify Completion",
+      "data": null,
+      "expect": null,
+      "got": null
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.934800",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "StepScan",
+      "message": "Status is COMPLETED",
+      "data": {
+        "status": "ScanStatus.COMPLETED"
+      },
+      "expect": "COMPLETED",
+      "got": "ScanStatus.COMPLETED"
+    },
+    {
+      "timestamp": "2025-12-18T01:25:18.935004",
+      "actor": "Test",
+      "action": "ASSERT",
+      "target": "StepScan",
+      "message": "Has 9 points",
+      "data": {
+        "points_count": 9
+      },
+      "expect": "9",
+      "got": "9"
+    }
+  ],
+  "summary": {
+    "total_interactions": 59,
+    "subscriptions": 0,
+    "publications": 0,
+    "assertions": 21
+  }
+}

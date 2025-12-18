@@ -1,0 +1,228 @@
+@startuml
+title Sequence Diagram: test_complete_scan_flow_with_atomic_motions
+autonumber
+skinparam responseMessageBelowArrow true
+
+== Setup ==
+
+"Test" -> "StepScanConfig" : **CREATE** Create scan configuration
+"Test" -> "MotionProfileSelector" : **CREATE** Create profile selector
+note right
+Data: {
+  "threshold_mm": 5.0
+}
+end note
+"Test" -> "StepScan" : **CREATE** Create scan aggregate
+
+== Generate Trajectory ==
+
+"Test" -> "ScanTrajectoryFactory" : **CALL** create_trajectory(config)
+"Test" -> "Trajectory" : **ASSERT** Has 9 positions
+note right
+Data: {
+  "positions": 9
+}
+Expect: 9
+Got: 9
+end note
+
+== Create AtomicMotions ==
+
+"Test" -> "ScanTrajectoryFactory" : **CALL** create_motions(positions, selector)
+
+== Start Scan ==
+
+"Test" -> "StepScan" : **CALL** start(config)
+"Test" -> "StepScan" : **ASSERT** Status is RUNNING
+note right
+Data: {
+  "status": "ScanStatus.RUNNING"
+}
+Expect: RUNNING
+Got: ScanStatus.RUNNING
+end note
+"Test" -> "StepScan" : **CALL** add_motions(motions)
+"Test" -> "StepScan" : **ASSERT** Has 8 motions
+note right
+Data: {
+  "motions_count": 8
+}
+Expect: 8
+Got: 8
+end note
+
+== Execute Motions ==
+
+"Test" -> "StepScan" : **CALL** add_point_result(point_0)
+"Test" -> "AtomicMotion_0" : **CALL** start(motion_0_b366e57e)
+"Test" -> "AtomicMotion_0" : **ASSERT** State is EXECUTING
+note right
+Data: {
+  "state": "MotionState.EXECUTING"
+}
+Expect: EXECUTING
+Got: MotionState.EXECUTING
+end note
+"Test" -> "AtomicMotion_0" : **CALL** complete()
+"Test" -> "AtomicMotion_0" : **ASSERT** State is COMPLETED
+note right
+Data: {
+  "state": "MotionState.COMPLETED"
+}
+Expect: COMPLETED
+Got: MotionState.COMPLETED
+end note
+"Test" -> "StepScan" : **CALL** add_point_result(point_1)
+"Test" -> "AtomicMotion_1" : **CALL** start(motion_1_fafa0dc9)
+"Test" -> "AtomicMotion_1" : **ASSERT** State is EXECUTING
+note right
+Data: {
+  "state": "MotionState.EXECUTING"
+}
+Expect: EXECUTING
+Got: MotionState.EXECUTING
+end note
+"Test" -> "AtomicMotion_1" : **CALL** complete()
+"Test" -> "AtomicMotion_1" : **ASSERT** State is COMPLETED
+note right
+Data: {
+  "state": "MotionState.COMPLETED"
+}
+Expect: COMPLETED
+Got: MotionState.COMPLETED
+end note
+"Test" -> "StepScan" : **CALL** add_point_result(point_2)
+"Test" -> "AtomicMotion_2" : **CALL** start(motion_2_2f4ce968)
+"Test" -> "AtomicMotion_2" : **ASSERT** State is EXECUTING
+note right
+Data: {
+  "state": "MotionState.EXECUTING"
+}
+Expect: EXECUTING
+Got: MotionState.EXECUTING
+end note
+"Test" -> "AtomicMotion_2" : **CALL** complete()
+"Test" -> "AtomicMotion_2" : **ASSERT** State is COMPLETED
+note right
+Data: {
+  "state": "MotionState.COMPLETED"
+}
+Expect: COMPLETED
+Got: MotionState.COMPLETED
+end note
+"Test" -> "StepScan" : **CALL** add_point_result(point_3)
+"Test" -> "AtomicMotion_3" : **CALL** start(motion_3_cb543741)
+"Test" -> "AtomicMotion_3" : **ASSERT** State is EXECUTING
+note right
+Data: {
+  "state": "MotionState.EXECUTING"
+}
+Expect: EXECUTING
+Got: MotionState.EXECUTING
+end note
+"Test" -> "AtomicMotion_3" : **CALL** complete()
+"Test" -> "AtomicMotion_3" : **ASSERT** State is COMPLETED
+note right
+Data: {
+  "state": "MotionState.COMPLETED"
+}
+Expect: COMPLETED
+Got: MotionState.COMPLETED
+end note
+"Test" -> "StepScan" : **CALL** add_point_result(point_4)
+"Test" -> "AtomicMotion_4" : **CALL** start(motion_4_c7e96df2)
+"Test" -> "AtomicMotion_4" : **ASSERT** State is EXECUTING
+note right
+Data: {
+  "state": "MotionState.EXECUTING"
+}
+Expect: EXECUTING
+Got: MotionState.EXECUTING
+end note
+"Test" -> "AtomicMotion_4" : **CALL** complete()
+"Test" -> "AtomicMotion_4" : **ASSERT** State is COMPLETED
+note right
+Data: {
+  "state": "MotionState.COMPLETED"
+}
+Expect: COMPLETED
+Got: MotionState.COMPLETED
+end note
+"Test" -> "StepScan" : **CALL** add_point_result(point_5)
+"Test" -> "AtomicMotion_5" : **CALL** start(motion_5_d7b20449)
+"Test" -> "AtomicMotion_5" : **ASSERT** State is EXECUTING
+note right
+Data: {
+  "state": "MotionState.EXECUTING"
+}
+Expect: EXECUTING
+Got: MotionState.EXECUTING
+end note
+"Test" -> "AtomicMotion_5" : **CALL** complete()
+"Test" -> "AtomicMotion_5" : **ASSERT** State is COMPLETED
+note right
+Data: {
+  "state": "MotionState.COMPLETED"
+}
+Expect: COMPLETED
+Got: MotionState.COMPLETED
+end note
+"Test" -> "StepScan" : **CALL** add_point_result(point_6)
+"Test" -> "AtomicMotion_6" : **CALL** start(motion_6_fe5439b0)
+"Test" -> "AtomicMotion_6" : **ASSERT** State is EXECUTING
+note right
+Data: {
+  "state": "MotionState.EXECUTING"
+}
+Expect: EXECUTING
+Got: MotionState.EXECUTING
+end note
+"Test" -> "AtomicMotion_6" : **CALL** complete()
+"Test" -> "AtomicMotion_6" : **ASSERT** State is COMPLETED
+note right
+Data: {
+  "state": "MotionState.COMPLETED"
+}
+Expect: COMPLETED
+Got: MotionState.COMPLETED
+end note
+"Test" -> "StepScan" : **CALL** add_point_result(point_7)
+"Test" -> "AtomicMotion_7" : **CALL** start(motion_7_8033043f)
+"Test" -> "AtomicMotion_7" : **ASSERT** State is EXECUTING
+note right
+Data: {
+  "state": "MotionState.EXECUTING"
+}
+Expect: EXECUTING
+Got: MotionState.EXECUTING
+end note
+"Test" -> "AtomicMotion_7" : **CALL** complete()
+"Test" -> "AtomicMotion_7" : **ASSERT** State is COMPLETED
+note right
+Data: {
+  "state": "MotionState.COMPLETED"
+}
+Expect: COMPLETED
+Got: MotionState.COMPLETED
+end note
+"Test" -> "StepScan" : **CALL** add_point_result(point_8)
+
+== Verify Completion ==
+
+"Test" -> "StepScan" : **ASSERT** Status is COMPLETED
+note right
+Data: {
+  "status": "ScanStatus.COMPLETED"
+}
+Expect: COMPLETED
+Got: ScanStatus.COMPLETED
+end note
+"Test" -> "StepScan" : **ASSERT** Has 9 points
+note right
+Data: {
+  "points_count": 9
+}
+Expect: 9
+Got: 9
+end note
+@enduml
