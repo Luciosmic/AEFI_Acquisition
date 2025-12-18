@@ -30,6 +30,7 @@ __pycache__/
 !/src/interface_v2/
 
 # Track documentation and config
+!/_INBOX/
 !/docs/
 !/requirements.txt
 !/README.md
@@ -40,6 +41,7 @@ __pycache__/
 !/.cursor/
 !/tests/
 !/tests/*
+!/_skills/
 
 # Legacy
 /src/infrastructure/legacy_ArcusPerfomax4EXStage/
