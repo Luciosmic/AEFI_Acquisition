@@ -17,7 +17,6 @@
 # Un-ignore Legacy_AEFI_Acquisition
 !AEFI_Acquisition/
 !AEFI_Acquisition/src/**
-!AEFI_Acquisition/src/interface_v2/
 !visualize_cube/
 !visualize_cube/**
 !Quaternions/
