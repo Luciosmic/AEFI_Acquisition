@@ -10,6 +10,10 @@
 # Un-ignore .gitignore itself
 !.gitignore
 
+# Un-ignore project configuration files
+!pyproject.toml
+!launch.sh
+
 # Un-ignore Legacy_AEFI_Acquisition
 !AEFI_Acquisition/
 !AEFI_Acquisition/src/**
