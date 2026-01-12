@@ -13,7 +13,7 @@ from domain.models.scan.aggregates.fly_scan import FlyScan
 from domain.models.scan.entities.atomic_motion import AtomicMotion
 from domain.models.scan.value_objects.fly_scan_config import FlyScanConfig
 from application.services.motion_control_service.i_motion_port import IMotionPort
-from src.application.services.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
+from application.services.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
 
 
 class IFlyScanExecutor(ABC):

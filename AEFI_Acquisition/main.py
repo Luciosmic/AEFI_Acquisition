@@ -11,7 +11,7 @@ from PySide6.QtWidgets import QApplication, QDialog, QVBoxLayout, QLabel, QProgr
 from PySide6.QtCore import Qt, QTimer, Signal
 
 # --- Domain & Application Services ---
-from src.application.services.scan_application_service.scan_application_service import ScanApplicationService
+from application.services.scan_application_service.scan_application_service import ScanApplicationService
 from application.services.excitation_configuration_service.excitation_configuration_service import ExcitationConfigurationService
 from application.services.continuous_acquisition_service.continuous_acquisition_service import ContinuousAcquisitionService
 from application.services.motion_control_service.motion_control_service import MotionControlService
@@ -21,7 +21,7 @@ from infrastructure.events.in_memory_event_bus import InMemoryEventBus
 from infrastructure.execution.step_scan_executor import StepScanExecutor
 from infrastructure.persistence.csv_scan_export_port import CsvScanExportPort
 from infrastructure.persistence.hdf5_scan_export_port import Hdf5ScanExportPort
-from src.application.services.scan_application_service.scan_export_service import ScanExportService
+from application.services.scan_application_service.scan_export_service import ScanExportService
 
 # --- Adapters (Mocks) ---
 from infrastructure.mocks.adapter_mock_i_acquisition_port import RandomNoiseAcquisitionPort
