@@ -4,9 +4,8 @@
 # Un-ignore specific directories and their contents
 !_docs/
 !_docs/**
-!AEFI_Acquisition_App/
-!AEFI_Acquisition_App/**
-
+!src/
+!src/**
 # Un-ignore .gitignore itself
 !.gitignore
 

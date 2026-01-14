@@ -12,4 +12,4 @@ if [ ! -d ".venv" ]; then
 fi
 
 # Run with uv (uses existing .venv)
-uv run --no-project python AEFI_Acquisition/main.py
+uv run --no-project python main.py
