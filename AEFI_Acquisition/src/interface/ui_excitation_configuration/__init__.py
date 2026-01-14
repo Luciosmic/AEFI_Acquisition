@@ -1,2 +1,0 @@
-# Excitation Configuration UI Module
-

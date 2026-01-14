@@ -4,16 +4,14 @@
 # Un-ignore specific directories and their contents
 !_docs/
 !_docs/**
-!AEFI_Acquisition_App/
-!AEFI_Acquisition_App/**
 
 # Un-ignore .gitignore itself
 !.gitignore
 
-# Un-ignore Legacy_AEFI_Acquisition
-!AEFI_Acquisition/
-!AEFI_Acquisition/src/**
-!AEFI_Acquisition/src/interface_v2/
+# Un-ignore 
+!src/
+!src/**
+
 !visualize_cube/
 !visualize_cube/**
 !Quaternions/
