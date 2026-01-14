@@ -1,5 +1,5 @@
 from PySide6.QtCore import QObject, Slot
-from interface_v2.widgets.panels.sensor_transformation_panel import SensorTransformationPanel
+from interface.widgets.panels.sensor_transformation_panel import SensorTransformationPanel
 from application.services.transformation_service.transformation_service import TransformationService
 
 class SensorTransformationPresenter(QObject):

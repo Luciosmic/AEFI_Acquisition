@@ -1,0 +1,35 @@
+[project]
+name = "aefi-acquisition"
+version = "0.1.0"
+description = "AEFI Acquisition System"
+requires-python = ">=3.10"
+dependencies = [
+    "PySide6>=6.0.0",
+    "PySide6-QtAds>=4.4.0",
+    "numpy>=1.26.0",
+    "matplotlib>=3.5.0",
+    "pylablib>=1.4.2",
+    "h5py>=3.8.0",
+    "pyvista>=0.42.3",
+    "scipy>=1.11.0",
+    "moderngl>=5.8.0",
+    "glfw>=2.5.0",
+    "pyrr>=0.10.3",
+    "numba>=0.57.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-qt>=4.0.0",
+    "black>=22.0.0",
+    "flake8>=4.0.0",
+    "mypy>=0.950",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["AEFI_Acquisition"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

@@ -15,7 +15,7 @@ Rationale:
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QLabel, QProgressBar
 from PySide6.QtCore import Qt, QTimer
 
-from interface_v2.ui_system_lifecycle.presenter_system_lifecycle import SystemLifecyclePresenter
+from interface.ui_system_lifecycle.presenter_system_lifecycle import SystemLifecyclePresenter
 from application.services.system_lifecycle_service.system_lifecycle_service import StartupConfig
 
 class StartupView(QDialog):

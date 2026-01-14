@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from PySide6.QtWidgets import QWidget
 from PySide6.QtCore import Signal
-from interface_v2.presentation.taskbar_model import TaskbarPresentationModel
+from interface.presentation.taskbar_model import TaskbarPresentationModel
 
 class TaskbarWidget(QWidget):
     """

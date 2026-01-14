@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import QBoxLayout, QPushButton, QFrame, QHBoxLayout
 from PySide6.QtCore import Qt, QSize
-from interface_v2.widgets.taskbar.taskbar_widget import TaskbarWidget
-from interface_v2.presentation.taskbar_model import TaskbarPresentationModel
+from interface.widgets.taskbar.taskbar_widget import TaskbarWidget
+from interface.presentation.taskbar_model import TaskbarPresentationModel
 
 class ModernTaskbar(TaskbarWidget):
     """

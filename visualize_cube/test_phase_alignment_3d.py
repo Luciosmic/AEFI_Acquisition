@@ -35,7 +35,7 @@ except ImportError as e:
     sys.exit(1)
 
 import math
-from interface_v2.presenters.signal_processor import SignalPostProcessor
+from interface.presenters.signal_processor import SignalPostProcessor
 
 def create_test_vectors():
     """

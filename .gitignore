@@ -7,6 +7,10 @@
 
 # Un-ignore .gitignore itself
 !.gitignore
+!launch.sh
+!requirements.txt
+!pyproject.toml
+!uv.lock
 
 # Un-ignore 
 !src/

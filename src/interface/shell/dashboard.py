@@ -2,21 +2,21 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QDockWidget, QHBoxLayout, QL
 from PySide6.QtCore import Qt
 import os
 
-from interface_v2.presentation.taskbar_model import TaskbarPresentationModel
-from interface_v2.presentation.carrier_model import CarrierPresentationModel
+from interface.presentation.taskbar_model import TaskbarPresentationModel
+from interface.presentation.carrier_model import CarrierPresentationModel
 
-from interface_v2.presenters.taskbar_presenter import TaskbarPresenter
+from interface.presenters.taskbar_presenter import TaskbarPresenter
 
-from interface_v2.widgets.taskbar.modern_taskbar import ModernTaskbar
-from interface_v2.widgets.carrier.windows_carrier import WindowsCarrier
-from interface_v2.widgets.panels.base_panel import BasePanel
-from interface_v2.widgets.panels.scan_control_panel import ScanControlPanel
-from interface_v2.widgets.panels.scan_visualization_panel import ScanVisualizationPanel
-from interface_v2.widgets.panels.motion_panel_compact import MotionPanelCompact
-from interface_v2.widgets.panels.excitation_panel import ExcitationPanel
-from interface_v2.widgets.panels.continuous_acquisition_panel import ContinuousAcquisitionPanel
-from interface_v2.widgets.panels.hardware_advanced_config_panel import HardwareAdvancedConfigPanel
-from interface_v2.widgets.panels.sensor_transformation_panel import SensorTransformationPanel
+from interface.widgets.taskbar.modern_taskbar import ModernTaskbar
+from interface.widgets.carrier.windows_carrier import WindowsCarrier
+from interface.widgets.panels.base_panel import BasePanel
+from interface.widgets.panels.scan_control_panel import ScanControlPanel
+from interface.widgets.panels.scan_visualization_panel import ScanVisualizationPanel
+from interface.widgets.panels.motion_panel_compact import MotionPanelCompact
+from interface.widgets.panels.excitation_panel import ExcitationPanel
+from interface.widgets.panels.continuous_acquisition_panel import ContinuousAcquisitionPanel
+from interface.widgets.panels.hardware_advanced_config_panel import HardwareAdvancedConfigPanel
+from interface.widgets.panels.sensor_transformation_panel import SensorTransformationPanel
 
 
 

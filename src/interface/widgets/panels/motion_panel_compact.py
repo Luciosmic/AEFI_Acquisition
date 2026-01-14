@@ -2,7 +2,7 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QGroupBox, QDoubleSpinBox, QGridLayout
 )
 from PySide6.QtCore import Qt, Signal
-from interface_v2.widgets.motion.position_visualizer import PositionVisualizer
+from interface.widgets.motion.position_visualizer import PositionVisualizer
 
 class MotionPanelCompact(QWidget):
     """

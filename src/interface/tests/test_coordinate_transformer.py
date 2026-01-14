@@ -8,7 +8,7 @@ skills_dir = Path(__file__).parents[3] / ".cursor" / "skills" / "diagram_friendl
 sys.path.append(str(skills_dir))
 
 from diagram_friendly_test import DiagramFriendlyTest
-from interface_v2.logic.coordinate_transformer import CoordinateTransformer
+from interface.logic.coordinate_transformer import CoordinateTransformer
 
 class TestCoordinateTransformer(DiagramFriendlyTest):
     

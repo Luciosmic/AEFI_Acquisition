@@ -1,4 +1,4 @@
-from interface_v2.widgets.panels.base_panel import BasePanel
+from interface.widgets.panels.base_panel import BasePanel
 
 # Placeholder kept for backward compatibility
 # Real implementations are:

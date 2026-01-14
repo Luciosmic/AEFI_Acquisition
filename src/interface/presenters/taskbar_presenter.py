@@ -1,6 +1,6 @@
 from PySide6.QtCore import QObject, Slot, Signal
-from interface_v2.presentation.taskbar_model import TaskbarPresentationModel
-from interface_v2.widgets.taskbar.taskbar_widget import TaskbarWidget
+from interface.presentation.taskbar_model import TaskbarPresentationModel
+from interface.widgets.taskbar.taskbar_widget import TaskbarWidget
 
 class TaskbarPresenter(QObject):
     """

@@ -18,7 +18,7 @@ from domain.events.continuous_acquisition_events import (
 from domain.events.transformation_events import SensorTransformationAnglesUpdated
 from domain.events.i_domain_event_bus import IDomainEventBus
 from application.services.transformation_service.transformation_service import TransformationService
-from interface_v2.presenters.signal_processor import SignalPostProcessor
+from interface.presenters.signal_processor import SignalPostProcessor
 
 class ContinuousAcquisitionPresenter(QObject):
     """

@@ -8,7 +8,7 @@ skills_dir = Path(__file__).parents[3] / ".cursor" / "skills" / "diagram_friendl
 sys.path.append(str(skills_dir))
 
 from diagram_friendly_test import DiagramFriendlyTest
-from interface_v2.presenters.signal_processor import SignalPostProcessor
+from interface.presenters.signal_processor import SignalPostProcessor
 
 class TestSignalPostProcessor(DiagramFriendlyTest):
     

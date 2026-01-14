@@ -1,0 +1,17 @@
+# EFImagingBench Application Requirements
+
+## Core Dependencies
+PyQt6>=6.0.0
+numpy>=1.21.0
+matplotlib>=3.5.0
+pylablib>=1.4.2
+h5py>=3.8.0
+
+## Testing
+pytest>=7.0.0
+pytest-qt>=4.0.0
+
+## Development
+black>=22.0.0
+flake8>=4.0.0
+mypy>=0.950

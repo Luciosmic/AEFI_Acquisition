@@ -8,7 +8,7 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from PySide6.QtWidgets import QApplication
-from interface_v2.shell.dashboard import Dashboard
+from interface.shell.dashboard import Dashboard
 
 def main():
     app = QApplication(sys.argv)
