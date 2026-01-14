@@ -10,7 +10,6 @@
 !launch.sh
 !requirements.txt
 !pyproject.toml
-!uv.lock
 
 # Un-ignore 
 !src/
