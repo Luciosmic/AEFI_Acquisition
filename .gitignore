@@ -34,3 +34,12 @@ _legacy_src
 data_repository
 examples
 *.swp
+
+# Configuration files (user-specific, not versioned)
+# Include .aefi_acquisition directory structure
+!.aefi_acquisition/
+!.aefi_acquisition/**
+# But ignore JSON config files (user-specific)
+.aefi_acquisition/configs/*.json
+# Keep example/template files
+!.aefi_acquisition/configs/*.example
