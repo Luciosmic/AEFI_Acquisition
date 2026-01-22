@@ -74,10 +74,10 @@ def main():
     # 2. Configuration: Hardware Adapter Registry
     # Simple dict-based configuration: port_name -> adapter_type ("mock" | "real")
     HARDWARE_CONFIG = {
-        "motion": "mock",        # "mock" | "real"
-        "acquisition": "mock",   # "mock" | "real"
-        "excitation": "mock",    # "mock" | "real"
-        "continuous": "mock",    # "mock" | "real"
+        "motion": "real",        # "mock" | "real"
+        "acquisition": "real",   # "mock" | "real"
+        "excitation": "real",    # "mock" | "real"
+        "continuous": "real",    # "mock" | "real"
     }
     print("--- Starting Interface V2 ---")
     print(f"Hardware Config: {HARDWARE_CONFIG}")

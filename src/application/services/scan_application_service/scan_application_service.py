@@ -102,10 +102,8 @@ class ScanApplicationService:
             print(f"[ScanApplicationService] Converting DTO to domain config...")
             config = self._to_domain_config(scan_dto)
 
-            # 0. Configure Motion Speed (if provided)
-            if scan_dto.motion_speed_mm_s is not None:
-                print(f"[ScanApplicationService] Setting motion speed to {scan_dto.motion_speed_mm_s} mm/s")
-                self._motion_port.set_speed(scan_dto.motion_speed_mm_s)
+            # Motion speed is controlled by advanced hardware configuration, not from scan parameters
+            # The speed is set via the hardware configuration panel and persists across scans
 
             # 1. Validate (Domain)
             print(f"[ScanApplicationService] Validating configuration...")
