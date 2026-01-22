@@ -59,30 +59,20 @@ class MCU_SerialCommunicator:
                 if not command.endswith('*'):
                     command += '*'
                 
-                # DEBUG: Trace sent command
-                print(f"[MCU_Serial] Sending: {command.strip()}")
                 self.ser.write(command.encode())
                 
                 # Special handling for acquisition command 'm'
                 if command.startswith('m') and command[1:].replace('*', '').isdigit():
                     confirmation = self.ser.readline() # Read confirmation
-                    # DEBUG: Trace confirmation
-                    print(f"[MCU_Serial] Confirmation (raw): {confirmation}")
                     
                     data_response = self.ser.readline() # Read data
-                    # DEBUG: Trace data response
-                    print(f"[MCU_Serial] Data Response (raw): {data_response}")
                     
                     response_str = data_response.decode('ascii', errors='ignore').rstrip('\r\n')
-                    print(f"[MCU_Serial] Data Response (decoded): {response_str}")
                     return True, response_str
                 else:
                     response = self.ser.readline()
-                    # DEBUG: Trace response
-                    print(f"[MCU_Serial] Response (raw): {response}")
                     
                     response_str = response.decode('ascii', errors='ignore').rstrip('\r\n')
-                    print(f"[MCU_Serial] Response (decoded): {response_str}")
                     return True, response_str
             except Exception as e:
                 print(f"[MCU_Serial] Error: {e}")

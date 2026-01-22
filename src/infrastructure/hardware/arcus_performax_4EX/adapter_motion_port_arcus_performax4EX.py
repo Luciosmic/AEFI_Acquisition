@@ -92,12 +92,24 @@ class ArcusAdapter(IMotionPort):
                 with open(config_path, 'r') as f:
                     config = json.load(f)
                     if "microns_per_step" in config:
-                        self.MICRONS_PER_STEP = float(config["microns_per_step"])
-                        self.MM_PER_STEP = self.MICRONS_PER_STEP / 1000.0
-                        self.STEPS_PER_MM = 1.0 / self.MM_PER_STEP
-                        print(f"[ArcusAdapter] Loaded calibration: {self.MICRONS_PER_STEP} microns/step ({self.STEPS_PER_MM:.2f} steps/mm)")
+                        self.update_calibration(float(config["microns_per_step"]))
         except Exception as e:
             print(f"[ArcusAdapter] Failed to load calibration: {e}")
+    
+    def update_calibration(self, microns_per_step: float) -> None:
+        """
+        Update calibration factor dynamically.
+        
+        This method should be called when the calibration factor is changed
+        from the UI to ensure all position calculations use the new value.
+        
+        Args:
+            microns_per_step: New calibration factor in microns per step
+        """
+        self.MICRONS_PER_STEP = float(microns_per_step)
+        self.MM_PER_STEP = self.MICRONS_PER_STEP / 1000.0
+        self.STEPS_PER_MM = 1.0 / self.MM_PER_STEP
+        print(f"[ArcusAdapter] Calibration updated: {self.MICRONS_PER_STEP} microns/step ({self.STEPS_PER_MM:.2f} steps/mm)")
 
     def set_controller(self, controller: ArcusPerformax4EXController) -> None:
         """Inject controller."""
@@ -167,14 +179,12 @@ class ArcusAdapter(IMotionPort):
             try:
                 # Block until a command is available
                 cmd_type, args = self._command_queue.get(timeout=0.5)
-                print(f"[ArcusAdapter] DEBUG: Worker popped command: {cmd_type}, Args: {args}")
                 
                 if cmd_type == "STOP_WORKER":
                     break
                 
                 if cmd_type == "MOVE_TO":
                     motion_id, position = args
-                    print(f"[ArcusAdapter] DEBUG: Processing MOVE_TO {motion_id} -> {position}")
                     start_time = time.time()
                     try:
                         self._internal_move_to(position)
@@ -268,7 +278,6 @@ class ArcusAdapter(IMotionPort):
 
     def _internal_move_to(self, position: Position2D):
         """Internal synchronous move execution."""
-        print(f"[ArcusAdapter] DEBUG: _internal_move_to calling controller with {position}")
         try:
             # Convert mm to steps
             steps_x = int(position.x * self.STEPS_PER_MM)
@@ -301,7 +310,6 @@ class ArcusAdapter(IMotionPort):
 
     def _internal_wait_until_stopped(self, timeout: float = 30.0, poll_interval: float = 0.1):
         """Internal synchronous wait."""
-        print(f"[ArcusAdapter] DEBUG: _internal_wait_until_stopped started (timeout={timeout})")
         start_time = time.time()
         while self.is_moving():
             if not self._running: # Abort if worker stopped
@@ -310,7 +318,6 @@ class ArcusAdapter(IMotionPort):
                 print(f"[ArcusAdapter] Motion timeout after {timeout}s")
                 break
             time.sleep(poll_interval)
-        print(f"[ArcusAdapter] DEBUG: _internal_wait_until_stopped finished. Duration: {time.time() - start_time:.3f}s")
 
     # ==========================================================================
     # COMMANDS
@@ -349,7 +356,6 @@ class ArcusAdapter(IMotionPort):
             ))
 
         # Push to queue
-        print(f"[ArcusAdapter] DEBUG: Enqueuing MOVE_TO command: {motion_id}, Pos: {position}")
         self._command_queue.put(("MOVE_TO", (motion_id, position)))
         
         return motion_id
