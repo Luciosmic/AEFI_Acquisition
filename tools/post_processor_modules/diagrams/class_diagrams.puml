@@ -1,0 +1,197 @@
+@startuml
+!theme plain
+package "Data Processing Pipeline" {
+    
+    class DataHandler {
+        - hdf5_file: h5py.File
+        - file_path: Path
+        - processing_history: List[str]
+        + __init__(file_path: Path)
+        + load_csv(csv_path: Path): DataFrame
+        + save_step(step_name: str, data: ndarray, metadata: dict)
+        + load_step(step_name: str): Tuple[ndarray, dict]
+        + get_processing_history(): List[str]
+        + close()
+    }
+    
+    class DataPreProcessor {
+        - grid_size: Optional[int]
+        + transform_to_hdf5(df: DataFrame): ndarray
+        + fill_incomplete_scans(data: ndarray, coords: dict): ndarray
+        + homogenize_grid(data: ndarray): ndarray
+        + create_square_grid(df: DataFrame, value_col: str): Tuple[ndarray, dict]
+    }
+    
+    class PrimaryFieldPhaseCalibrator {
+        - border_width: int
+        + extract_border_pixels(data: ndarray): ndarray
+        + calculate_mean_phase(border_data: ndarray): float
+        + apply_phase_rotation(data: ndarray, theta: float): ndarray
+        + calibrate(data: ndarray): Tuple[ndarray, float]
+    }
+    
+    class PrimaryFieldAmplitudeSubtractor {
+        - border_width: int
+        + extract_border_pixels(data: ndarray): ndarray
+        + calculate_mean_amplitude(border_data: ndarray, ignore_nan: bool): float
+        + subtract_from_all(data: ndarray, mean_value: float): ndarray
+        + subtract_primary_field(data: ndarray): Tuple[ndarray, float]
+    }
+    
+    class SensorToEFSourcesFrameRotator {
+        - rotation_angles: Tuple[float, float, float]
+        - quaternion: Quaternion
+        + set_rotation_angles(theta_x: float, theta_y: float, theta_z: float)
+        + create_quaternion(angles: Tuple): Quaternion
+        + apply_rotation_to_vector(vector: ndarray): ndarray
+        + rotate_vector_field(data: ndarray): ndarray
+        + get_rotation_matrix(): ndarray
+    }
+    
+    class DataInterpolator {
+        - target_grid_size: int
+        - interpolation_method: str
+        + create_finer_grid(original_extent: dict, factor: int): ndarray
+        + interpolate_values(data: ndarray, method: str): ndarray
+        + validate_quality(original: ndarray, interpolated: ndarray): dict
+        + interpolate(data: ndarray, target_grid: ndarray): ndarray
+    }
+    
+    class ProcessingPipeline {
+        - data_handler: DataHandler
+        - preprocessor: DataPreProcessor
+        - phase_calibrator: PrimaryFieldPhaseCalibrator
+        - amplitude_subtractor: PrimaryFieldAmplitudeSubtractor
+        - frame_rotator: SensorToEFSourcesFrameRotator
+        - interpolator: DataInterpolator
+        + __init__(output_path: Path)
+        + run_full_pipeline(csv_path: Path, rotation_angles: Tuple)
+        + run_partial_pipeline(start_step: str, end_step: str)
+    }
+    
+    class Quaternion {
+        - w: float
+        - x: float
+        - y: float
+        - z: float
+        + from_euler_angles(theta_x, theta_y, theta_z): Quaternion
+        + rotate_vector(v: ndarray): ndarray
+        + to_rotation_matrix(): ndarray
+        + conjugate(): Quaternion
+        + multiply(other: Quaternion): Quaternion
+    }
+}
+
+package "Analysis and Visualization Modules" {
+    
+    class NoiseAnalyzer {
+        - border_width_max: int
+        + analyze_noise_evolution_1d(data: ndarray, axis: str): dict
+        + analyze_noise_evolution_2d(data: ndarray): dict
+        + compute_mean_variance_profile(data: ndarray, depths: List[int]): Tuple[ndarray, ndarray]
+        + identify_noise_plateau(mean_profile: ndarray, var_profile: ndarray): int
+        + visualize_noise_evolution(profiles: dict): Figure
+    }
+    
+    class DataLineExtractor {
+        - interpolation_method: str
+        + extract_line_x0(data: ndarray, extent: list): Tuple[ndarray, ndarray]
+        + extract_line_y0(data: ndarray, extent: list): Tuple[ndarray, ndarray]
+        + extract_diagonal_xy(data: ndarray, extent: list): Tuple[ndarray, ndarray]
+        + extract_all_lines(data: ndarray, extent: list): dict
+    }
+    
+    class DataLineVisualizer {
+        - figure_size: Tuple[int, int]
+        - style: str
+        + plot_single_line(line_data: dict, title: str): Figure
+        + plot_all_lines(lines: dict, channel_idx: int): Figure
+        + plot_comparison(lines_dict: dict, channels: List[int]): Figure
+        + save_plot(figure: Figure, path: Path)
+    }
+    
+    class SignalSpatialResolutionEstimator {
+        - noise_threshold_factor: float
+        - min_zone_size: int
+        + estimate_resolution_map(data: ndarray, noise_level: float): ndarray
+        + compute_gradient_map(data: ndarray): ndarray
+        + identify_confidence_zones(gradient_map: ndarray, noise_level: float): ndarray
+        + merge_similar_zones(zones: ndarray, threshold: float): ndarray
+        + visualize_confidence_map(zones: ndarray, data: ndarray): Figure
+    }
+    
+    class StatisticsProvider {
+        + compute_snr(data: ndarray, noise_stats: dict): dict
+        + find_signal_maximum(data: ndarray): Tuple[float, Tuple[int, int]]
+        + compute_image_statistics(data: ndarray): dict
+        + compare_channels(data: ndarray, noise_stats: dict): dict
+        + generate_statistics_report(data: ndarray, noise_stats: dict): str
+    }
+    
+    class AnalysisPipeline {
+        - noise_analyzer: NoiseAnalyzer
+        - line_extractor: DataLineExtractor
+        - line_visualizer: DataLineVisualizer
+        - resolution_estimator: SignalSpatialResolutionEstimator
+        - statistics_provider: StatisticsProvider
+        + __init__(config: dict)
+        + run_full_analysis(data: ndarray, extent: list): dict
+        + generate_analysis_report(results: dict, output_path: Path)
+    }
+}
+
+ProcessingPipeline *-- DataHandler
+ProcessingPipeline *-- DataPreProcessor
+ProcessingPipeline *-- PrimaryFieldPhaseCalibrator
+ProcessingPipeline *-- PrimaryFieldAmplitudeSubtractor
+ProcessingPipeline *-- SensorToEFSourcesFrameRotator
+ProcessingPipeline *-- DataInterpolator
+SensorToEFSourcesFrameRotator *-- Quaternion
+
+AnalysisPipeline *-- NoiseAnalyzer
+AnalysisPipeline *-- DataLineExtractor
+AnalysisPipeline *-- DataLineVisualizer
+AnalysisPipeline *-- SignalSpatialResolutionEstimator
+AnalysisPipeline *-- StatisticsProvider
+
+AnalysisPipeline ..> ProcessingPipeline : uses processed data
+
+note right of DataHandler
+  Manages HDF5 lifecycle
+  Tracks all processing steps
+  Ensures traceability
+end note
+
+note right of PrimaryFieldPhaseCalibrator
+  Uses border pixels as reference
+  Cancels quadrature phase signal
+  θ = mean(atan2(Q_border, I_border))
+end note
+
+note right of SensorToEFSourcesFrameRotator
+  Uses quaternions for stability
+  Avoids gimbal lock
+  Rotation: q * v * q^(-1)
+end note
+
+note right of NoiseAnalyzer
+  Analyzes edge noise evolution
+  Identifies noise plateau
+  Computes mean/variance profiles
+  from edge → center
+end note
+
+note right of SignalSpatialResolutionEstimator
+  Creates confidence zone map
+  Based on gradient vs noise
+  Merges zones with similar signal
+  Provides spatial resolution estimate
+end note
+
+note right of StatisticsProvider
+  Computes SNR per channel
+  Finds signal maximum
+  Compares signal to noise
+  Generates comprehensive reports
+end note
+@enduml

@@ -1,0 +1,166 @@
+@startuml analysis_sequence
+!theme plain
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+
+actor User
+participant "AnalysisPipeline" as AP
+participant "NoiseAnalyzer" as NA
+participant "DataLineExtractor" as DLE
+participant "DataLineVisualizer" as DLV
+participant "ResolutionEstimator" as RE
+participant "StatisticsProvider" as SP
+database "HDF5 File" as HDF5
+
+User -> AP: run_full_analysis(processed_data, extent)
+activate AP
+
+== Noise Analysis Phase ==
+AP -> NA: analyze_noise_evolution_2d(data)
+activate NA
+NA -> NA: compute_mean_variance_profile()
+note right
+  For depth = 1, 2, 3, ... pixels from edge:
+  - Extract border pixels at depth
+  - Compute mean and variance
+  - Build profiles
+end note
+
+NA -> NA: identify_noise_plateau()
+note right
+  Find where variance stabilizes
+  (plateau indicates pure noise region)
+end note
+
+NA -> NA: visualize_noise_evolution()
+note right
+  Plot mean and variance vs depth
+  Highlight plateau region
+end note
+
+NA --> AP: {noise_stats, plateau_depth, profiles, figure}
+deactivate NA
+
+AP -> HDF5: save_analysis_step("noise_analysis", noise_stats)
+
+== Line Extraction Phase ==
+AP -> DLE: extract_all_lines(data, extent)
+activate DLE
+DLE -> DLE: extract_line_x0()
+note right: Extract data along x=0 line
+DLE -> DLE: extract_line_y0()
+note right: Extract data along y=0 line
+DLE -> DLE: extract_diagonal_xy()
+note right: Extract data along x=y diagonal
+DLE --> AP: {x0_line, y0_line, diagonal_line}
+deactivate DLE
+
+AP -> DLV: plot_all_lines(lines, channel_idx)
+activate DLV
+DLV -> DLV: create_figure()
+DLV -> DLV: plot_each_line()
+note right
+  Plot x=0, y=0, and x=y
+  on same figure for comparison
+end note
+DLV --> AP: figure
+deactivate DLV
+
+AP -> HDF5: save_analysis_step("line_profiles", lines)
+
+== Spatial Resolution Estimation ==
+AP -> RE: estimate_resolution_map(data, noise_level)
+activate RE
+RE -> RE: compute_gradient_map()
+note right
+  Calculate spatial gradients
+  ∇f = (∂f/∂x, ∂f/∂y)
+  |∇f| = magnitude of gradient
+end note
+
+RE -> RE: identify_confidence_zones()
+note right
+  Compare gradient to noise:
+  - If |∇f| > k·σ_noise: different zones
+  - If |∇f| ≤ k·σ_noise: same zone
+  (k = threshold factor, e.g., 3)
+end note
+
+RE -> RE: merge_similar_zones()
+note right
+  Merge adjacent zones with
+  similar signal levels
+end note
+
+RE -> RE: visualize_confidence_map()
+note right
+  Create color-coded map:
+  - Different colors for different zones
+  - Overlay on original data
+end note
+
+RE --> AP: {resolution_map, confidence_zones, figure}
+deactivate RE
+
+AP -> HDF5: save_analysis_step("resolution_map", resolution_map)
+
+== Statistics Computation ==
+AP -> SP: compute_image_statistics(data)
+activate SP
+SP -> SP: find_signal_maximum()
+note right
+  Find max value and location
+  for each channel
+end note
+
+SP -> SP: compute_snr(data, noise_stats)
+note right
+  SNR = max_signal / σ_noise
+  For each channel
+end note
+
+SP -> SP: compare_channels()
+note right
+  Compare SNR across channels
+  Identify best/worst channels
+end note
+
+SP -> SP: generate_statistics_report()
+note right
+  Create comprehensive report:
+  - Max signal per channel
+  - SNR per channel
+  - Noise statistics
+  - Spatial resolution estimate
+end note
+
+SP --> AP: {statistics, snr_dict, report_text}
+deactivate SP
+
+AP -> HDF5: save_analysis_step("statistics", statistics)
+
+== Report Generation ==
+AP -> AP: generate_analysis_report()
+note right
+  Compile all results:
+  - Noise analysis
+  - Line profiles
+  - Resolution map
+  - Statistics
+  Create PDF/HTML report
+end note
+
+AP -> HDF5: save_report(report_path)
+AP --> User: {analysis_results, report_path}
+deactivate AP
+
+User -> HDF5: review_results()
+note right
+  User can review:
+  - All analysis steps
+  - Figures
+  - Statistics
+  - Report
+end note
+
+@enduml

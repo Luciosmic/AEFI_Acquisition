@@ -1,0 +1,226 @@
+@startuml test_design_analysis
+!theme plain
+
+package "Analysis Module Tests" {
+    
+    abstract class AnalyticTestCase {
+        # analytic_function: Callable
+        # expected_result: Any
+        + generate_test_data(): ndarray
+        + compute_expected_output(): Any
+        + verify_result(actual: Any, expected: Any): bool
+        + run_test()
+    }
+    
+    class NoiseAnalyzerTest {
+        + generate_test_data(): ndarray
+        + compute_expected_output(): dict
+        + verify_result(actual, expected): bool
+    }
+    
+    class DataLineExtractorTest {
+        + generate_test_data(): ndarray
+        + compute_expected_output(): dict
+        + verify_result(actual, expected): bool
+    }
+    
+    class ResolutionEstimatorTest {
+        + generate_test_data(): ndarray
+        + compute_expected_output(): ndarray
+        + verify_result(actual, expected): bool
+    }
+    
+    class StatisticsProviderTest {
+        + generate_test_data(): ndarray
+        + compute_expected_output(): dict
+        + verify_result(actual, expected): bool
+    }
+    
+    class EndToEndAnalysisTest {
+        - all_modules: List[Module]
+        + generate_synthetic_data(): ndarray
+        + run_analysis_pipeline(): dict
+        + verify_all_outputs(): bool
+    }
+}
+
+AnalyticTestCase <|-- NoiseAnalyzerTest
+AnalyticTestCase <|-- DataLineExtractorTest
+AnalyticTestCase <|-- ResolutionEstimatorTest
+AnalyticTestCase <|-- StatisticsProviderTest
+AnalyticTestCase <|-- EndToEndAnalysisTest
+
+note right of NoiseAnalyzerTest
+  **Analytic Function**:
+  f(x,y) = N(0, σ²) + H(r - r₀)·A·sin(kx)·sin(ky)
+  where H is Heaviside function, r = distance from edge
+  
+  **Test Strategy**:
+  1. Generate data with known noise σ in border
+  2. Add signal only in center (r > r₀)
+  3. Analyze noise evolution from edge
+  4. Verify plateau detection at depth ≈ r₀
+  
+  **Expected Results**:
+  - Mean profile: constant ≈ 0 until r₀, then varies
+  - Variance profile: constant ≈ σ² until r₀, then increases
+  - Plateau depth: r₀ ± 1 pixel
+  
+  **1D Test**:
+  f(x) = N(0, σ²) for |x| < x₀
+  f(x) = N(0, σ²) + A·sin(kx) for |x| ≥ x₀
+  
+  **2D Test**:
+  Use rectangular or circular signal region
+  
+  **Tolerance**: 
+  - Mean: |μ_measured - 0| < 0.1σ
+  - Variance: |σ²_measured - σ²| < 0.2σ²
+  - Plateau depth: ±1 pixel
+end note
+
+note right of DataLineExtractorTest
+  **Analytic Function**:
+  f(x,y) = A·sin(kx)·cos(ly) + B·x·y
+  
+  **Test Strategy**:
+  1. Generate 2D field with known function
+  2. Extract lines at x=0, y=0, x=y
+  3. Compare with analytic values
+  4. Test interpolation accuracy
+  
+  **Expected Results**:
+  - x=0 line: f(0,y) = A·cos(ly)
+  - y=0 line: f(x,0) = A·sin(kx)
+  - x=y line: f(t,t) = A·sin(kt)·cos(lt) + B·t²
+  
+  **Edge Cases**:
+  - Grid points exactly on line
+  - Grid points requiring interpolation
+  - Diagonal with non-square grids
+  
+  **Tolerance**: 
+  - Direct extraction: exact match
+  - Interpolated: |f_extracted - f_analytic| < 1e-6
+end note
+
+note right of ResolutionEstimatorTest
+  **Analytic Function**:
+  f(x,y) = N(0, σ²) + ∑ᵢ Aᵢ·G(x-xᵢ, y-yᵢ, wᵢ)
+  where G is 2D Gaussian, wᵢ is width
+  
+  **Test Strategy**:
+  1. Create field with multiple Gaussian peaks
+  2. Add known noise level σ
+  3. Vary peak separations and widths
+  4. Estimate resolution map
+  5. Verify zone identification
+  
+  **Test Cases**:
+  a) Two peaks separated by d > 3w:
+     → Should identify as 2 separate zones
+  
+  b) Two peaks separated by d < w:
+     → Should merge into 1 zone
+  
+  c) Gradient |∇f| > k·σ:
+     → Should mark as different zones
+  
+  d) Gradient |∇f| < k·σ:
+     → Should mark as same zone
+  
+  **Expected Results**:
+  - Number of zones matches number of peaks
+  - Zone boundaries at gradient threshold
+  - Merged zones when peaks too close
+  
+  **Tolerance**:
+  - Zone count: exact match
+  - Boundary location: ±2 pixels
+  - Gradient threshold: k = 3 (configurable)
+end note
+
+note right of StatisticsProviderTest
+  **Analytic Function**:
+  Signal: f(x,y) = A_max·exp(-((x-x₀)²+(y-y₀)²)/(2w²))
+  Noise: n(x,y) = N(0, σ²)
+  Total: s(x,y) = f(x,y) + n(x,y)
+  
+  **Test Strategy**:
+  1. Generate signal with known maximum A_max
+  2. Add Gaussian noise with known σ
+  3. Compute statistics
+  4. Verify SNR calculation
+  
+  **Expected Results**:
+  - Maximum signal: A_max (within noise)
+  - Maximum location: (x₀, y₀) (±1 pixel)
+  - Theoretical SNR: A_max / σ
+  - Measured SNR: close to theoretical
+  
+  **Multi-Channel Test**:
+  - Channel 1: A₁, σ₁ → SNR₁
+  - Channel 2: A₂, σ₂ → SNR₂
+  - Verify channel comparison
+  
+  **Tolerance**:
+  - Max value: |A_measured - A_max| < 3σ
+  - Max location: ±1 pixel
+  - SNR: |SNR_measured - SNR_theoretical| < 10%
+  
+  **Statistical Validation**:
+  - Run Monte Carlo (N=100 trials)
+  - Verify SNR distribution
+  - Check confidence intervals
+end note
+
+note right of EndToEndAnalysisTest
+  **Synthetic Test Data**:
+  Complete realistic scan with:
+  1. Noise in border region (σ = 0.1)
+  2. Signal in center (A = 1.0)
+  3. Multiple features at different scales
+  4. Known SNR = 10
+  
+  **Test Strategy**:
+  1. Generate complete synthetic scan
+  2. Run full analysis pipeline:
+     - Noise analysis
+     - Line extraction
+     - Resolution estimation
+     - Statistics computation
+  3. Verify each output
+  
+  **Verification Points**:
+  
+  **Noise Analysis**:
+  - Plateau depth ≈ border width
+  - Variance in plateau ≈ σ²
+  - Variance in signal region > σ²
+  
+  **Line Extraction**:
+  - x=0, y=0, x=y lines match analytic
+  - Interpolation accurate
+  
+  **Resolution Map**:
+  - Identifies correct number of features
+  - Zone boundaries reasonable
+  - Confidence zones match signal regions
+  
+  **Statistics**:
+  - SNR ≈ 10 (±10%)
+  - Maximum location correct
+  - All channels analyzed
+  
+  **Report Generation**:
+  - All sections present
+  - Figures generated
+  - Statistics tables complete
+  
+  **Traceability**:
+  - All steps saved to HDF5
+  - Metadata complete
+  - Reproducible results
+end note
+
+@enduml
