@@ -166,5 +166,109 @@ class TestSignalPostProcessor(DiagramFriendlyTest):
         self.assertAlmostEqual(final_result["Ux In-Phase"], expected)
         self.assertAlmostEqual(final_result["Ux Quadrature"], 0.0)
 
+    def test_phase_alignment_negative_signals(self):
+        """Verify phase correction preserves sign of negative signals."""
+        self.log_divider("Phase Alignment Sign Invariance Test")
+        
+        # Test 1: I negative, Q = 0 -> Should remain negative
+        self.log_divider("Test 1: Negative I, Q=0")
+        sample_neg_i = {
+            "Ux In-Phase": -1.0, "Ux Quadrature": 0.0,
+            "Uy In-Phase": 0, "Uy Quadrature": 0,
+            "Uz In-Phase": 0, "Uz Quadrature": 0,
+        }
+        self.log_interaction("Test", "CALIBRATE", "SignalPostProcessor", "Calibrate Phase (negative I)", data=sample_neg_i)
+        self.processor.calibrate_phase(sample_neg_i)
+        
+        result_neg_i = self.processor.process_sample(sample_neg_i)
+        self.log_interaction("Test", "ASSERT", "Result", "Check Negative I Preserved", expect="-1.0", got=result_neg_i["Ux In-Phase"])
+        self.assertAlmostEqual(result_neg_i["Ux In-Phase"], -1.0, msg="Negative I should remain negative")
+        self.assertAlmostEqual(result_neg_i["Ux Quadrature"], 0.0, places=5)
+        
+        # Test 2: I = 0, Q negative -> Should give negative I after rotation
+        self.log_divider("Test 2: I=0, Negative Q")
+        self.processor.reset_calibration()
+        sample_neg_q = {
+            "Ux In-Phase": 0.0, "Ux Quadrature": -1.0,
+            "Uy In-Phase": 0, "Uy Quadrature": 0,
+            "Uz In-Phase": 0, "Uz Quadrature": 0,
+        }
+        self.log_interaction("Test", "CALIBRATE", "SignalPostProcessor", "Calibrate Phase (negative Q)", data=sample_neg_q)
+        self.processor.calibrate_phase(sample_neg_q)
+        
+        result_neg_q = self.processor.process_sample(sample_neg_q)
+        expected_mag = 1.0
+        self.log_interaction("Test", "ASSERT", "Result", "Check Negative Q -> Negative I", expect=f"-{expected_mag}", got=result_neg_q["Ux In-Phase"])
+        self.assertAlmostEqual(result_neg_q["Ux In-Phase"], -expected_mag, msg="Negative Q should result in negative I")
+        self.assertAlmostEqual(result_neg_q["Ux Quadrature"], 0.0, places=5)
+        
+        # Test 3: I and Q both negative -> Should preserve sign of I
+        self.log_divider("Test 3: Both I and Q Negative")
+        self.processor.reset_calibration()
+        sample_both_neg = {
+            "Ux In-Phase": -1.0, "Ux Quadrature": -1.0,
+            "Uy In-Phase": 0, "Uy Quadrature": 0,
+            "Uz In-Phase": 0, "Uz Quadrature": 0,
+        }
+        self.log_interaction("Test", "CALIBRATE", "SignalPostProcessor", "Calibrate Phase (both negative)", data=sample_both_neg)
+        self.processor.calibrate_phase(sample_both_neg)
+        
+        result_both_neg = self.processor.process_sample(sample_both_neg)
+        expected_mag_both = math.sqrt(2)
+        self.log_interaction("Test", "ASSERT", "Result", "Check Both Negative -> Negative I", expect=f"-{expected_mag_both}", got=result_both_neg["Ux In-Phase"])
+        self.assertAlmostEqual(result_both_neg["Ux In-Phase"], -expected_mag_both, msg="Both negative should result in negative I")
+        self.assertAlmostEqual(result_both_neg["Ux Quadrature"], 0.0, places=5)
+        
+        # Test 4: I positive, Q negative -> Should remain positive
+        self.log_divider("Test 4: Positive I, Negative Q")
+        self.processor.reset_calibration()
+        sample_pos_neg = {
+            "Ux In-Phase": 1.0, "Ux Quadrature": -1.0,
+            "Uy In-Phase": 0, "Uy Quadrature": 0,
+            "Uz In-Phase": 0, "Uz Quadrature": 0,
+        }
+        self.log_interaction("Test", "CALIBRATE", "SignalPostProcessor", "Calibrate Phase (positive I, negative Q)", data=sample_pos_neg)
+        self.processor.calibrate_phase(sample_pos_neg)
+        
+        result_pos_neg = self.processor.process_sample(sample_pos_neg)
+        expected_mag_pos_neg = math.sqrt(2)
+        self.log_interaction("Test", "ASSERT", "Result", "Check Positive I Preserved", expect=str(expected_mag_pos_neg), got=result_pos_neg["Ux In-Phase"])
+        self.assertAlmostEqual(result_pos_neg["Ux In-Phase"], expected_mag_pos_neg, msg="Positive I should remain positive")
+        self.assertAlmostEqual(result_pos_neg["Ux Quadrature"], 0.0, places=5)
+        
+        # Test 5: Verify magnitude is preserved
+        self.log_divider("Test 5: Magnitude Preservation")
+        self.processor.reset_calibration()
+        test_samples = [
+            {"I": 2.0, "Q": 0.0, "expected_sign": 1},
+            {"I": -2.0, "Q": 0.0, "expected_sign": -1},
+            {"I": 0.0, "Q": 2.0, "expected_sign": 1},
+            {"I": 0.0, "Q": -2.0, "expected_sign": -1},
+            {"I": 3.0, "Q": 4.0, "expected_sign": 1},  # Magnitude = 5
+            {"I": -3.0, "Q": -4.0, "expected_sign": -1},  # Magnitude = 5
+        ]
+        
+        for test_case in test_samples:
+            sample = {
+                "Ux In-Phase": test_case["I"], "Ux Quadrature": test_case["Q"],
+                "Uy In-Phase": 0, "Uy Quadrature": 0,
+                "Uz In-Phase": 0, "Uz Quadrature": 0,
+            }
+            original_mag = math.sqrt(test_case["I"]**2 + test_case["Q"]**2)
+            
+            self.processor.reset_calibration()
+            self.processor.calibrate_phase(sample)
+            result = self.processor.process_sample(sample)
+            
+            result_mag = abs(result["Ux In-Phase"])
+            expected_i = test_case["expected_sign"] * original_mag
+            
+            self.log_interaction("Test", "ASSERT", "Result", f"Magnitude preserved (I={test_case['I']}, Q={test_case['Q']})", 
+                               expect=str(expected_i), got=result["Ux In-Phase"])
+            self.assertAlmostEqual(result["Ux In-Phase"], expected_i, places=5, 
+                                 msg=f"Magnitude should be preserved with correct sign for I={test_case['I']}, Q={test_case['Q']}")
+            self.assertAlmostEqual(result_mag, original_mag, places=5, 
+                                 msg=f"Magnitude should be preserved: {original_mag}")
+
 if __name__ == "__main__":
     unittest.main()

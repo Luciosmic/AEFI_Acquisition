@@ -55,19 +55,34 @@ class SignalPostProcessor:
             # 2. Phase Rotation (Maximize In-Phase)
             if self.state.phase_correction_enabled:
                 theta = self.state.phase_angles.get(axis, 0.0)
-                # Rotate (I, Q) by -theta
-                # I' = I cos(th) + Q sin(th)  <-- Wait, standard rotation matrix
-                # To bring vector (I, Q) to X-axis (I-axis), we rotate by -theta
+                # Rotate (I, Q) by -theta to align on I-axis
                 # I_new = I cos(-th) - Q sin(-th) = I cos(th) + Q sin(th)
                 # Q_new = I sin(-th) + Q cos(-th) = -I sin(th) + Q cos(th)
+                
+                # Determine expected sign based on original vector quadrant
+                # The sign should reflect the quadrant of the original vector (I, Q)
+                if i_val != 0.0:
+                    expected_sign = 1.0 if i_val >= 0 else -1.0
+                else:
+                    # When I = 0, sign is determined by Q direction
+                    # Q > 0 means vector pointing "up" -> positive I after rotation
+                    # Q < 0 means vector pointing "down" -> negative I after rotation
+                    expected_sign = 1.0 if q_val >= 0 else -1.0
                 
                 cos_t = math.cos(theta)
                 sin_t = math.sin(theta)
                 
-                i_new = i_val * cos_t + q_val * sin_t
+                # Perform rotation (preserves magnitude)
+                i_rotated = i_val * cos_t + q_val * sin_t
                 q_new = -i_val * sin_t + q_val * cos_t
                 
-                i_val = i_new
+                # Preserve sign: if rotated I has wrong sign, correct it
+                # This ensures negative signals remain negative after phase correction
+                if (i_rotated >= 0) != (expected_sign >= 0):
+                    # Sign mismatch: correct by flipping sign while preserving magnitude
+                    i_val = -i_rotated
+                else:
+                    i_val = i_rotated
                 q_val = q_new
 
             # 3. Primary Field Subtraction
