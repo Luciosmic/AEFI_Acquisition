@@ -1,0 +1,19 @@
+{
+  "scan_config": {
+    "x_min": 600.0,
+    "x_max": 800.0,
+    "x_nb_points": 81,
+    "y_min": 600.0,
+    "y_max": 800.0,
+    "y_nb_points": 81,
+    "scan_pattern": "SERPENTINE",
+    "stabilization_delay_ms": 300,
+    "averaging_per_position": 10
+  },
+  "export_config": {
+    "enabled": true,
+    "output_directory": "data_repository/",
+    "filename_base": "scan",
+    "format": "CSV"
+  }
+}
