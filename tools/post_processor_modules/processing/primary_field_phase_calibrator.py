@@ -1,180 +1,187 @@
 """
-PrimaryFieldPhaseCalibrator - Calibrates phase using border reference points.
-Extracts mean phase from image borders and rotates to cancel quadrature signal.
-Adapted from signal_processor.py.
+PrimaryFieldPhaseCalibrator - Calibrates phase using a reference point.
+Rotates the entire field such that the reference point becomes In-Phase (Q=0),
+while preserving the sign of the In-Phase component.
 """
 
-from typing import Tuple, Optional
+from typing import Tuple, Optional, List
 import numpy as np
 
 
 class PrimaryFieldPhaseCalibrator:
     """
-    Calibrates phase by using border pixels as reference points.
-    Calculates mean phase angle at borders and applies rotation to cancel
-    quadrature component for reference points.
+    Calibrates phase by zeroing the quadrature component at a reference point.
+    Applies global rotation to the entire dataset.
+    Preserves the sign of the In-Phase component at the reference point.
     """
     
     def __init__(self, border_width: int = 1):
         """
         Initialize phase calibrator.
-        
         Args:
-            border_width: Width of border in pixels to use as reference
+            border_width: Deprecated, kept for backward compatibility.
         """
         self.border_width = border_width
     
-    def extract_border_pixels(self, data: np.ndarray) -> np.ndarray:
+    def get_reference_values(self, data: np.ndarray, ref_idx: Tuple[int, int]) -> np.ndarray:
         """
-        Extract border pixels from the data grid.
+        Extract vector at reference point.
+        Args:
+            data: Input data (H, W, C)
+            ref_idx: (y_index, x_index)
+        Returns:
+            Reference vector (C,)
+        """
+        y, x = ref_idx
+        if y >= data.shape[0] or x >= data.shape[1]:
+             raise ValueError(f"Reference index {ref_idx} out of bounds for shape {data.shape}")
+        return data[y, x, :]
+
+    def calculate_phase_correction(
+        self, 
+        ref_vector: np.ndarray, 
+        axis_pairs: Optional[List[Tuple[int, int]]] = None
+    ) -> dict:
+        """
+        Calculate rotation setup for each axis to zero Q at reference.
         
         Args:
-            data: Input data array, shape (H, W, C) or (H, W)
+            ref_vector: Vector at reference point (C,)
+            axis_pairs: List of (I, Q) indices
             
         Returns:
-            Array of border pixel values
-        """
-        if len(data.shape) == 2:
-            # 2D array - add channel dimension
-            data = data[:, :, np.newaxis]
-        
-        h, w, c = data.shape
-        bw = self.border_width
-        
-        # Extract borders (top, bottom, left, right)
-        top = data[:bw, :, :]
-        bottom = data[-bw:, :, :]
-        left = data[bw:-bw, :bw, :]  # Exclude corners already in top/bottom
-        right = data[bw:-bw, -bw:, :]
-        
-        # Concatenate all border pixels
-        border = np.concatenate([
-            top.reshape(-1, c),
-            bottom.reshape(-1, c),
-            left.reshape(-1, c),
-            right.reshape(-1, c)
-        ], axis=0)
-        
-        return border
-    
-    def calculate_mean_phase(self, border_data: np.ndarray, axis_pairs: Optional[list] = None) -> dict:
-        """
-        Calculate mean phase angle for each axis from border data.
-        
-        Args:
-            border_data: Border pixels, shape (N, C) where C is number of channels
-            axis_pairs: List of (in_phase_idx, quadrature_idx) tuples for each axis.
-                       If None, assumes standard 6-channel layout: [(0,1), (2,3), (4,5)]
-            
-        Returns:
-            Dictionary mapping axis name to phase angle in radians
+            Dictionary mapping axis name to:
+            {
+                'theta': float (rotation angle),
+                'flip_sign': bool (whether to flip sign after rotation)
+            }
         """
         if axis_pairs is None:
-            # Standard layout: X(I,Q), Y(I,Q), Z(I,Q)
             axis_pairs = [(0, 1), (2, 3), (4, 5)]
             axis_names = ['x', 'y', 'z']
         else:
             axis_names = [f'axis_{i}' for i in range(len(axis_pairs))]
-        
-        phase_angles = {}
+            
+        corrections = {}
         
         for axis_name, (i_idx, q_idx) in zip(axis_names, axis_pairs):
-            # Extract I and Q components
-            i_vals = border_data[:, i_idx]
-            q_vals = border_data[:, q_idx]
+            if i_idx >= len(ref_vector) or q_idx >= len(ref_vector):
+                continue
+                
+            i_val = ref_vector[i_idx]
+            q_val = ref_vector[q_idx]
             
-            # Remove NaN values
-            mask = ~(np.isnan(i_vals) | np.isnan(q_vals))
-            i_vals = i_vals[mask]
-            q_vals = q_vals[mask]
-            
-            if len(i_vals) == 0:
-                # No valid data
-                phase_angles[axis_name] = 0.0
+            if np.isnan(i_val) or np.isnan(q_val):
+                corrections[axis_name] = {'theta': 0.0, 'flip_sign': False}
                 continue
             
-            # Calculate phase angle for each point
-            phases = np.arctan2(q_vals, i_vals)
+            # Calculate angle of the vector
+            theta = np.arctan2(q_val, i_val)
             
-            # Mean phase (circular mean would be more accurate, but simple mean works for small angles)
-            mean_phase = np.mean(phases)
+            # Predict I value after rotation by -theta
+            # I_rotated = I_original * cos(-theta) - Q_original * sin(-theta) (standard vector rot)
+            # Actually, we rotate the BASIS by -theta, or the VECTOR by -theta to align with I axis?
+            # Goal: Make Q_new = 0.
+            # If V = |V| * exp(j*theta), multiplying by exp(-j*theta) gives |V|.
+            # So we rotate vector by -theta.
+            # Resulting I should be |V| (positive).
             
-            phase_angles[axis_name] = mean_phase
-        
-        return phase_angles
-    
+            # Logic:
+            # If original I was negative, we want final I to be negative.
+            # But standard rotation to zero phase gives positive modulus.
+            # So we flag to flip sign if original I < 0.
+            # Edge case: If I=0, sign is ambiguous, usually check Q direction, but let's stick to I < 0.
+            
+            flip_sign = False
+            if i_val < 0:
+                flip_sign = True
+            elif i_val == 0 and q_val != 0:
+                # If pure quadrature, decide based on Q? 
+                # signal_processor.py uses Q sign if I=0.
+                # If Q > 0 (Up), I becomes > 0. If Q < 0 (Down), I becomes > 0 (magnitude).
+                # Wait, signal processor says:
+                # "Q < 0 means vector pointing 'down' -> negative I after rotation"
+                # If we consider 'Up' as positive I direction?? No.
+                # Let's trust simpler logic: if magnitude is |V|, we want to preserve "direction".
+                # But "direction" is circular.
+                # Let's essentially say: We rotate the vector to the NEAREST real axis.
+                # If vector is close to -I axis (e.g. 170 deg), we rotate by small angle to -I.
+                # vs rotating by large angle to +I.
+                pass 
+                
+            corrections[axis_name] = {
+                'theta': theta,
+                'flip_sign': flip_sign
+            }
+            
+        return corrections
+
     def apply_phase_rotation(
         self, 
         data: np.ndarray, 
-        phase_angles: dict,
-        axis_pairs: Optional[list] = None
+        corrections: dict,
+        axis_pairs: Optional[List[Tuple[int, int]]] = None
     ) -> np.ndarray:
         """
-        Apply phase rotation to cancel quadrature component.
-        
-        Rotation matrix for angle θ:
-        [I']   [cos(θ)  sin(θ)] [I]
-        [Q'] = [-sin(θ) cos(θ)] [Q]
-        
-        Args:
-            data: Input data, shape (H, W, C)
-            phase_angles: Dictionary mapping axis name to phase angle
-            axis_pairs: List of (in_phase_idx, quadrature_idx) tuples
-            
-        Returns:
-            Phase-corrected data
+        Apply phase rotation and sign flip.
         """
         if axis_pairs is None:
             axis_pairs = [(0, 1), (2, 3), (4, 5)]
             axis_names = ['x', 'y', 'z']
         else:
             axis_names = [f'axis_{i}' for i in range(len(axis_pairs))]
-        
-        # Work on a copy
+            
         rotated = data.copy()
         
         for axis_name, (i_idx, q_idx) in zip(axis_names, axis_pairs):
-            theta = phase_angles.get(axis_name, 0.0)
+            if axis_name not in corrections:
+                continue
+                
+            params = corrections[axis_name]
+            theta = params['theta']
+            flip_sign = params['flip_sign']
             
-            # Extract I and Q
+            # Rotate by -theta
+            # I_new = I * cos(theta) + Q * sin(theta)
+            # Q_new = -I * sin(theta) + Q * cos(theta)
+            
             i_vals = data[:, :, i_idx]
             q_vals = data[:, :, q_idx]
             
-            # Apply rotation by -theta to bring vector to I-axis
-            # (We rotate by -theta to cancel the phase offset)
             cos_t = np.cos(theta)
             sin_t = np.sin(theta)
             
             i_new = i_vals * cos_t + q_vals * sin_t
             q_new = -i_vals * sin_t + q_vals * cos_t
             
+            if flip_sign:
+                i_new = -i_new
+                q_new = -q_new # Flip Q too? Q should be ~0. But mathematically yes, flip vector.
+            
             rotated[:, :, i_idx] = i_new
             rotated[:, :, q_idx] = q_new
-        
+            
         return rotated
-    
+
     def calibrate(
         self, 
         data: np.ndarray,
+        reference_idx: Tuple[int, int] = (0, 0),
         axis_pairs: Optional[list] = None
     ) -> Tuple[np.ndarray, dict]:
         """
-        Complete phase calibration pipeline.
-        
-        Args:
-            data: Input data, shape (H, W, C)
-            axis_pairs: Optional axis pair indices
-            
-        Returns:
-            Tuple of (calibrated data, phase angles dict)
+        Execute calibration using reference point.
         """
-        # Extract border pixels
-        border = self.extract_border_pixels(data)
+        # 1. Get reference vector
+        ref_vec = self.get_reference_values(data, reference_idx)
         
-        # Calculate mean phase
-        phase_angles = self.calculate_mean_phase(border, axis_pairs)
+        # 2. Calculate corrections
+        corrections = self.calculate_phase_correction(ref_vec, axis_pairs)
         
-        # Apply rotation
-        calibrated = self.apply_phase_rotation(data, phase_angles, axis_pairs)
+        # 3. Apply
+        calibrated = self.apply_phase_rotation(data, corrections, axis_pairs)
         
-        return calibrated, phase_angles
+        # Format phases for metadata (just the angle)
+        phases_meta = {k: v['theta'] for k, v in corrections.items()}
+        
+        return calibrated, phases_meta
