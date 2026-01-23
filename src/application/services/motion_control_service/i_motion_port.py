@@ -17,7 +17,7 @@ Design:
 """
 
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Optional, Tuple
 from domain.value_objects.geometric.position_2d import Position2D
 
 
@@ -131,7 +131,7 @@ class IMotionPort(ABC):
         pass
 
     @abstractmethod
-    def get_axis_limits(self) -> tuple[float, float]:
+    def get_axis_limits(self) -> Tuple[float, float]:
         """
         Get the maximum travel limits for X and Y axes.
         

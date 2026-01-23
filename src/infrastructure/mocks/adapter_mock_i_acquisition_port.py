@@ -1,5 +1,6 @@
 from datetime import datetime
 import random
+from typing import Optional
 from application.services.scan_application_service.i_acquisition_port import IAcquisitionPort
 from domain.value_objects.acquisition.voltage_measurement import VoltageMeasurement
 
@@ -38,7 +39,7 @@ class RandomNoiseAcquisitionPort(IAcquisitionPort):
     - Les autres composantes sont laissées à 0 pour rester simples.
     """
 
-    def __init__(self, noise_std: float = 0.1, seed: int | None = None) -> None:
+    def __init__(self, noise_std: float = 0.1, seed: Optional[int] = None) -> None:
         self.noise_std = noise_std
         self._rng = random.Random(seed)
         self.acquire_count = 0
