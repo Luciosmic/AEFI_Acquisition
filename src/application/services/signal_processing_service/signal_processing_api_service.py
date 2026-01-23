@@ -31,6 +31,20 @@ from application.services.motion_control_service.i_motion_port import IMotionPor
 from domain.repositories.i_voltage_measurement_reference_repository import IVoltageMeasurementReferenceRepository
 from .signal_processing_service import SignalProcessingService
 from .i_api_signal_processing_service import IApiSignalProcessingService
+from .dtos.signal_processing_request_dtos import (
+    ProcessMeasurementRequest,
+    CalibrateNoiseRequest,
+    CalibratePhaseRequest,
+    CalibratePrimaryRequest,
+    ResetCalibrationRequest
+)
+from .dtos.signal_processing_response_dtos import (
+    ProcessMeasurementResponse,
+    CalibrateNoiseResponse,
+    CalibratePhaseResponse,
+    CalibratePrimaryResponse,
+    ResetCalibrationResponse
+)
 
 
 class SignalProcessingApiService(IApiSignalProcessingService):
@@ -79,18 +93,18 @@ class SignalProcessingApiService(IApiSignalProcessingService):
     
     def process_measurement(
         self,
-        measurement: VoltageMeasurement
-    ) -> VoltageMeasurement:
+        request: ProcessMeasurementRequest
+    ) -> ProcessMeasurementResponse:
         """
         Process a measurement with current calibration.
         
         Args:
-            measurement: Raw voltage measurement
+            request: ProcessMeasurementRequest containing measurement to process
         
         Returns:
-            Processed voltage measurement
+            ProcessMeasurementResponse with processed measurement and applied reference
         """
-        return self._service.process_measurement(measurement)
+        return self._service.process_measurement(request)
     
     # ========================================================================
     # API Methods - Calibration
@@ -98,32 +112,29 @@ class SignalProcessingApiService(IApiSignalProcessingService):
     
     def calibrate_noise(
         self,
-        position: Optional[Position2D] = None,
-        excitation: Optional[ExcitationParameters] = None,
-        reference_measurement: Optional[VoltageMeasurement] = None
-    ) -> None:
+        request: CalibrateNoiseRequest
+    ) -> CalibrateNoiseResponse:
         """
         Calibrate noise offset.
         
-        If reference_measurement is provided, uses it directly.
+        If request.reference_measurement is provided, uses it directly.
         Otherwise, orchestrates acquisition.
         
         Args:
-            position: Optional target position (used if reference_measurement not provided)
-            excitation: Optional excitation parameters (default: off, used if reference_measurement not provided)
-            reference_measurement: Optional measurement to use as noise offset. If None, orchestrates acquisition.
+            request: CalibrateNoiseRequest with reference measurement and optional context
+        
+        Returns:
+            CalibrateNoiseResponse with new reference
         """
-        if reference_measurement is not None:
-            # Use provided measurement directly
-            self._service.calibrate_noise(reference_measurement, position, excitation)
-        else:
-            # Orchestrate acquisition
+        # If reference_measurement not provided, orchestrate acquisition
+        if request.reference_measurement is None:
             # Move to position if needed
-            if self._motion_port is not None and position is not None:
-                self._motion_port.move_to(position)
+            if self._motion_port is not None and request.position is not None:
+                self._motion_port.move_to(request.position)
                 self._motion_port.wait_until_stopped()
             
             # Set excitation (off by default for noise calibration)
+            excitation = request.excitation
             if excitation is None:
                 excitation = ExcitationParameters.off()
             self._excitation_port.apply_excitation(excitation)
@@ -135,41 +146,44 @@ class SignalProcessingApiService(IApiSignalProcessingService):
             # Acquire reference
             reference_measurement = self._acquisition_port.acquire_sample()
             
-            # Calibrate
-            self._service.calibrate_noise(reference_measurement, position, excitation)
+            # Update request with acquired measurement
+            request = CalibrateNoiseRequest(
+                reference_measurement=reference_measurement,
+                position=request.position,
+                excitation=excitation
+            )
+        
+        # Delegate to service (which uses DTOs)
+        return self._service.calibrate_noise(request)
     
     def calibrate_phase(
         self,
-        position: Optional[Position2D] = None,
-        excitation: Optional[ExcitationParameters] = None,
-        reference_measurement: Optional[VoltageMeasurement] = None
-    ) -> None:
+        request: CalibratePhaseRequest
+    ) -> CalibratePhaseResponse:
         """
         Calibrate phase angles.
         
-        If reference_measurement is provided, uses it directly (should be noise-corrected).
+        If request.reference_measurement is provided, uses it directly (should be noise-corrected).
         Otherwise, orchestrates acquisition.
         
         Args:
-            position: Optional target position (used if reference_measurement not provided)
-            excitation: Excitation parameters (required if reference_measurement not provided, should be on)
-            reference_measurement: Optional measurement to use for phase calculation. If None, orchestrates acquisition.
+            request: CalibratePhaseRequest with reference measurement and optional context
+        
+        Returns:
+            CalibratePhaseResponse with new reference
         """
-        if reference_measurement is not None:
-            # Use provided measurement directly (should already be noise-corrected)
-            self._service.calibrate_phase(reference_measurement, position, excitation)
-        else:
-            # Orchestrate acquisition
-            if excitation is None:
+        # If reference_measurement not provided, orchestrate acquisition
+        if request.reference_measurement is None:
+            if request.excitation is None:
                 raise ValueError("Excitation parameters required for phase calibration")
             
             # Move to position if needed
-            if self._motion_port is not None and position is not None:
-                self._motion_port.move_to(position)
+            if self._motion_port is not None and request.position is not None:
+                self._motion_port.move_to(request.position)
                 self._motion_port.wait_until_stopped()
             
             # Set excitation
-            self._excitation_port.apply_excitation(excitation)
+            self._excitation_port.apply_excitation(request.excitation)
             
             # Wait for stabilization
             import time
@@ -177,43 +191,48 @@ class SignalProcessingApiService(IApiSignalProcessingService):
             
             # Acquire reference (after noise correction)
             reference_measurement_raw = self._acquisition_port.acquire_sample()
-            reference_measurement = self._service.process_measurement(reference_measurement_raw)
+            process_request = ProcessMeasurementRequest(measurement=reference_measurement_raw)
+            process_response = self._service.process_measurement(process_request)
+            reference_measurement = process_response.processed_measurement
             
-            # Calibrate
-            self._service.calibrate_phase(reference_measurement, position, excitation)
+            # Update request with acquired measurement
+            request = CalibratePhaseRequest(
+                reference_measurement=reference_measurement,
+                position=request.position,
+                excitation=request.excitation
+            )
+        
+        # Delegate to service (which uses DTOs)
+        return self._service.calibrate_phase(request)
     
     def calibrate_primary(
         self,
-        position: Optional[Position2D] = None,
-        excitation: Optional[ExcitationParameters] = None,
-        reference_measurement: Optional[VoltageMeasurement] = None
-    ) -> None:
+        request: CalibratePrimaryRequest
+    ) -> CalibratePrimaryResponse:
         """
         Calibrate primary field offset.
         
-        If reference_measurement is provided, uses it directly (should be noise+phase-corrected).
+        If request.reference_measurement is provided, uses it directly (should be noise+phase-corrected).
         Otherwise, orchestrates acquisition.
         
         Args:
-            position: Optional target position (used if reference_measurement not provided)
-            excitation: Excitation parameters (required if reference_measurement not provided)
-            reference_measurement: Optional measurement to use as primary offset. If None, orchestrates acquisition.
+            request: CalibratePrimaryRequest with reference measurement and optional context
+        
+        Returns:
+            CalibratePrimaryResponse with new reference
         """
-        if reference_measurement is not None:
-            # Use provided measurement directly (should already be noise+phase-corrected)
-            self._service.calibrate_primary(reference_measurement, position, excitation)
-        else:
-            # Orchestrate acquisition
-            if excitation is None:
+        # If reference_measurement not provided, orchestrate acquisition
+        if request.reference_measurement is None:
+            if request.excitation is None:
                 raise ValueError("Excitation parameters required for primary calibration")
             
             # Move to position if needed
-            if self._motion_port is not None and position is not None:
-                self._motion_port.move_to(position)
+            if self._motion_port is not None and request.position is not None:
+                self._motion_port.move_to(request.position)
                 self._motion_port.wait_until_stopped()
             
             # Maintain excitation
-            self._excitation_port.apply_excitation(excitation)
+            self._excitation_port.apply_excitation(request.excitation)
             
             # Wait for stabilization
             import time
@@ -221,10 +240,19 @@ class SignalProcessingApiService(IApiSignalProcessingService):
             
             # Acquire reference (after noise+phase correction)
             reference_measurement_raw = self._acquisition_port.acquire_sample()
-            reference_measurement = self._service.process_measurement(reference_measurement_raw)
+            process_request = ProcessMeasurementRequest(measurement=reference_measurement_raw)
+            process_response = self._service.process_measurement(process_request)
+            reference_measurement = process_response.processed_measurement
             
-            # Calibrate
-            self._service.calibrate_primary(reference_measurement, position, excitation)
+            # Update request with acquired measurement
+            request = CalibratePrimaryRequest(
+                reference_measurement=reference_measurement,
+                position=request.position,
+                excitation=request.excitation
+            )
+        
+        # Delegate to service (which uses DTOs)
+        return self._service.calibrate_primary(request)
     
     def perform_automatic_calibration(
         self,
@@ -234,7 +262,7 @@ class SignalProcessingApiService(IApiSignalProcessingService):
         """
         Perform complete automatic calibration sequence.
         
-        Delegates to SignalProcessingService.perform_automatic_calibration.
+        Orchestrates: noise (excitation off) -> phase (excitation on) -> primary (excitation on).
         
         Args:
             target_position: Optional target position for calibration
@@ -243,19 +271,64 @@ class SignalProcessingApiService(IApiSignalProcessingService):
         Returns:
             Complete VoltageMeasurementReference
         """
-        return self._service.perform_automatic_calibration(
-            self._acquisition_port,
-            self._excitation_port,
-            self._motion_port,
-            target_position,
-            excitation_params
+        import time
+        
+        # Step 1: Move to position if needed
+        if self._motion_port is not None and target_position is not None:
+            self._motion_port.move_to(target_position)
+            self._motion_port.wait_until_stopped()
+        
+        # Step 2: Calibrate noise (excitation off)
+        excitation_off = ExcitationParameters.off()
+        self._excitation_port.apply_excitation(excitation_off)
+        time.sleep(0.1)
+        noise_measurement = self._acquisition_port.acquire_sample()
+        noise_request = CalibrateNoiseRequest(
+            reference_measurement=noise_measurement,
+            position=target_position,
+            excitation=excitation_off
         )
+        self._service.calibrate_noise(noise_request)
+        
+        # Step 3: Calibrate phase (excitation on)
+        self._excitation_port.apply_excitation(excitation_params)
+        time.sleep(0.1)
+        phase_measurement_raw = self._acquisition_port.acquire_sample()
+        # Apply noise correction before phase calibration
+        process_request = ProcessMeasurementRequest(measurement=phase_measurement_raw)
+        process_response = self._service.process_measurement(process_request)
+        phase_measurement = process_response.processed_measurement
+        phase_request = CalibratePhaseRequest(
+            reference_measurement=phase_measurement,
+            position=target_position,
+            excitation=excitation_params
+        )
+        self._service.calibrate_phase(phase_request)
+        
+        # Step 4: Calibrate primary (excitation still on)
+        primary_measurement_raw = self._acquisition_port.acquire_sample()
+        # Apply noise+phase correction before primary calibration
+        process_request = ProcessMeasurementRequest(measurement=primary_measurement_raw)
+        process_response = self._service.process_measurement(process_request)
+        primary_measurement = process_response.processed_measurement
+        primary_request = CalibratePrimaryRequest(
+            reference_measurement=primary_measurement,
+            position=target_position,
+            excitation=excitation_params
+        )
+        self._service.calibrate_primary(primary_request)
+        
+        # Return complete reference
+        reference = self._service.get_reference()
+        if reference is None:
+            raise RuntimeError("Automatic calibration failed: no reference created")
+        return reference
     
     # ========================================================================
     # API Methods - Reference Management
     # ========================================================================
     
-    def get_current_reference(self) -> Optional[VoltageMeasurementReference]:
+    def get_reference(self) -> Optional[VoltageMeasurementReference]:
         """
         Get current calibration reference.
         
@@ -263,6 +336,15 @@ class SignalProcessingApiService(IApiSignalProcessingService):
             Current VoltageMeasurementReference or None
         """
         return self._service.get_reference()
+    
+    def get_current_reference(self) -> Optional[VoltageMeasurementReference]:
+        """
+        Alias for get_reference() for backward compatibility.
+        
+        Returns:
+            Current VoltageMeasurementReference or None
+        """
+        return self.get_reference()
     
     def set_reference(self, reference: VoltageMeasurementReference) -> None:
         """
@@ -273,9 +355,20 @@ class SignalProcessingApiService(IApiSignalProcessingService):
         """
         self._service.set_reference(reference)
     
-    def reset_calibration(self) -> None:
-        """Reset all calibration parameters."""
-        self._service.reset_calibration()
+    def reset_calibration(
+        self,
+        request: ResetCalibrationRequest
+    ) -> ResetCalibrationResponse:
+        """
+        Reset all calibration parameters.
+        
+        Args:
+            request: ResetCalibrationRequest (empty, for API consistency)
+        
+        Returns:
+            ResetCalibrationResponse with success status
+        """
+        return self._service.reset_calibration(request)
     
     # ========================================================================
     # API Methods - Persistence
@@ -396,7 +489,7 @@ class SignalProcessingApiService(IApiSignalProcessingService):
         """
         reference = self._service.get_reference()
         
-        if reference is None:
+        if reference is None or not (reference.is_noise_calibrated() or reference.is_phase_calibrated() or reference.is_primary_calibrated()):
             return {
                 "calibrated": False,
                 "noise_calibrated": False,

@@ -1,6 +1,13 @@
 from typing import Dict
 from datetime import datetime
 from application.services.signal_processing_service.i_api_signal_processing_service import IApiSignalProcessingService
+from application.services.signal_processing_service.dtos.signal_processing_request_dtos import (
+    ProcessMeasurementRequest,
+    CalibrateNoiseRequest,
+    CalibratePhaseRequest,
+    CalibratePrimaryRequest,
+    ResetCalibrationRequest
+)
 from domain.value_objects.acquisition.voltage_measurement import VoltageMeasurement
 
 
@@ -35,11 +42,14 @@ class SignalPostProcessor:
         # Convert Dict -> VoltageMeasurement
         measurement = self._dict_to_measurement(raw_measurement)
         
-        # Process using service
-        processed_measurement = self._signal_processing_service.process_measurement(measurement)
+        # Create Request DTO
+        request = ProcessMeasurementRequest(measurement=measurement)
+        
+        # Process using service (returns Response DTO)
+        response = self._signal_processing_service.process_measurement(request)
         
         # Convert VoltageMeasurement -> Dict
-        return self._measurement_to_dict(processed_measurement)
+        return self._measurement_to_dict(response.processed_measurement)
 
     def calibrate_noise(self, current_sample: Dict[str, float]) -> None:
         """
@@ -49,7 +59,8 @@ class SignalPostProcessor:
             current_sample: Dictionary with measurement data
         """
         measurement = self._dict_to_measurement(current_sample)
-        self._signal_processing_service.calibrate_noise(reference_measurement=measurement)
+        request = CalibrateNoiseRequest(reference_measurement=measurement)
+        self._signal_processing_service.calibrate_noise(request)
 
     def calibrate_phase(self, current_sample_pre_phase: Dict[str, float]) -> None:
         """
@@ -60,7 +71,8 @@ class SignalPostProcessor:
             current_sample_pre_phase: Dictionary with measurement data (noise-corrected)
         """
         measurement = self._dict_to_measurement(current_sample_pre_phase)
-        self._signal_processing_service.calibrate_phase(reference_measurement=measurement)
+        request = CalibratePhaseRequest(reference_measurement=measurement)
+        self._signal_processing_service.calibrate_phase(request)
 
     def calibrate_primary(self, current_sample_fully_processed: Dict[str, float]) -> None:
         """
@@ -71,11 +83,13 @@ class SignalPostProcessor:
             current_sample_fully_processed: Dictionary with measurement data (fully processed)
         """
         measurement = self._dict_to_measurement(current_sample_fully_processed)
-        self._signal_processing_service.calibrate_primary(reference_measurement=measurement)
+        request = CalibratePrimaryRequest(reference_measurement=measurement)
+        self._signal_processing_service.calibrate_primary(request)
     
     def reset_calibration(self) -> None:
         """Reset all calibrations."""
-        self._signal_processing_service.reset_calibration()
+        request = ResetCalibrationRequest()
+        self._signal_processing_service.reset_calibration(request)
     
     def _dict_to_measurement(self, d: Dict[str, float]) -> VoltageMeasurement:
         """

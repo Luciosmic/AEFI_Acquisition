@@ -36,6 +36,13 @@ from infrastructure.mocks.adapter_mock_i_motion_port import MockMotionPort
 from infrastructure.mocks.adapter_mock_excitation_aware_acquisition import ExcitationAwareAcquisitionPort
 from infrastructure.persistence.json_voltage_measurement_reference_repository import JsonVoltageMeasurementReferenceRepository
 from application.services.signal_processing_service.signal_processing_api_service import SignalProcessingApiService
+from application.services.signal_processing_service.dtos.signal_processing_request_dtos import (
+    ProcessMeasurementRequest,
+    CalibrateNoiseRequest,
+    CalibratePhaseRequest,
+    CalibratePrimaryRequest,
+    ResetCalibrationRequest
+)
 
 
 
@@ -122,10 +129,12 @@ class TestSignalProcessingApiServiceE2E(unittest.TestCase):
     def test_manual_calibration_workflow(self):
         """Test manual calibration workflow step by step."""
         # Step 1: Calibrate noise (excitation off)
-        self.api_service.calibrate_noise(
+        request = CalibrateNoiseRequest(
+            reference_measurement=None,
             position=Position2D(50.0, 50.0),
             excitation=None  # Will default to off
         )
+        self.api_service.calibrate_noise(request)
         
         # Verify noise is calibrated
         reference = self.api_service.get_current_reference()
@@ -142,10 +151,12 @@ class TestSignalProcessingApiServiceE2E(unittest.TestCase):
         )
         self.excitation_port.apply_excitation(excitation)
         
-        self.api_service.calibrate_phase(
+        request = CalibratePhaseRequest(
+            reference_measurement=None,
             position=Position2D(50.0, 50.0),
             excitation=excitation
         )
+        self.api_service.calibrate_phase(request)
         
         # Verify phase is calibrated
         reference = self.api_service.get_current_reference()
@@ -154,10 +165,12 @@ class TestSignalProcessingApiServiceE2E(unittest.TestCase):
         self.assertFalse(reference.is_primary_calibrated())
         
         # Step 3: Calibrate primary (excitation still on)
-        self.api_service.calibrate_primary(
+        request = CalibratePrimaryRequest(
+            reference_measurement=None,
             position=Position2D(50.0, 50.0),
             excitation=excitation
         )
+        self.api_service.calibrate_primary(request)
         
         # Verify all are calibrated
         reference = self.api_service.get_current_reference()
@@ -179,7 +192,8 @@ class TestSignalProcessingApiServiceE2E(unittest.TestCase):
         )
         
         # Calibrate noise with provided measurement
-        self.api_service.calibrate_noise(reference_measurement=noise_measurement)
+        request = CalibrateNoiseRequest(reference_measurement=noise_measurement)
+        self.api_service.calibrate_noise(request)
         
         # Verify
         reference = self.api_service.get_current_reference()
@@ -201,7 +215,8 @@ class TestSignalProcessingApiServiceE2E(unittest.TestCase):
             voltage_z_quadrature=0.0,
             timestamp=self.timestamp
         )
-        self.api_service.calibrate_noise(reference_measurement=noise_measurement)
+        request = CalibrateNoiseRequest(reference_measurement=noise_measurement)
+        self.api_service.calibrate_noise(request)
         
         # Process a measurement
         raw_measurement = VoltageMeasurement(
@@ -214,7 +229,9 @@ class TestSignalProcessingApiServiceE2E(unittest.TestCase):
             timestamp=self.timestamp
         )
         
-        processed = self.api_service.process_measurement(raw_measurement)
+        request = ProcessMeasurementRequest(measurement=raw_measurement)
+        response = self.api_service.process_measurement(request)
+        processed = response.processed_measurement
         
         # Verify noise correction applied
         self.assertAlmostEqual(processed.voltage_x_in_phase, 1.0, places=5)
@@ -232,16 +249,22 @@ class TestSignalProcessingApiServiceE2E(unittest.TestCase):
             voltage_z_quadrature=0.0,
             timestamp=self.timestamp
         )
-        self.api_service.calibrate_noise(reference_measurement=noise_measurement)
+        request = CalibrateNoiseRequest(reference_measurement=noise_measurement)
+        self.api_service.calibrate_noise(request)
         
         # Save reference
         name = self.api_service.save_reference(name="test_calibration")
         self.assertEqual(name, "test_calibration")
         
         # Reset calibration
-        self.api_service.reset_calibration()
+        request = ResetCalibrationRequest()
+        self.api_service.reset_calibration(request)
         reference = self.api_service.get_current_reference()
-        self.assertIsNone(reference)
+        # After reset, reference should be empty (not calibrated)
+        self.assertIsNotNone(reference)
+        self.assertFalse(reference.is_noise_calibrated())
+        self.assertFalse(reference.is_phase_calibrated())
+        self.assertFalse(reference.is_primary_calibrated())
         
         # Load reference
         loaded = self.api_service.load_reference("test_calibration")
@@ -267,7 +290,8 @@ class TestSignalProcessingApiServiceE2E(unittest.TestCase):
                 voltage_z_quadrature=0.0,
                 timestamp=self.timestamp
             )
-            self.api_service.calibrate_noise(reference_measurement=noise_measurement)
+            request = CalibrateNoiseRequest(reference_measurement=noise_measurement)
+            self.api_service.calibrate_noise(request)
             self.api_service.save_reference(name=f"calibration_{i}")
         
         # List all references
@@ -309,7 +333,8 @@ class TestSignalProcessingApiServiceE2E(unittest.TestCase):
             voltage_z_quadrature=0.0,
             timestamp=self.timestamp
         )
-        self.api_service.calibrate_noise(reference_measurement=noise_measurement)
+        request = CalibrateNoiseRequest(reference_measurement=noise_measurement)
+        self.api_service.calibrate_noise(request)
         
         # Check status
         status = self.api_service.get_calibration_status()
@@ -339,10 +364,13 @@ class TestSignalProcessingApiServiceE2E(unittest.TestCase):
         self.assertNotEqual(raw_sample.voltage_x_in_phase, 0.0)
         
         # Calibrate noise with this sample
-        self.api_service.calibrate_noise(reference_measurement=raw_sample)
+        request = CalibrateNoiseRequest(reference_measurement=raw_sample)
+        self.api_service.calibrate_noise(request)
         
         # Process the same sample (should subtract noise)
-        processed = self.api_service.process_measurement(raw_sample)
+        request = ProcessMeasurementRequest(measurement=raw_sample)
+        response = self.api_service.process_measurement(request)
+        processed = response.processed_measurement
         
         # After noise correction, the offset should be removed
         # (within noise tolerance)
