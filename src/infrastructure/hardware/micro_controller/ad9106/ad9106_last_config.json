@@ -1,0 +1,39 @@
+{
+    "frequency_hz": 1000.0,
+    "channels": {
+        "1": {
+            "gain": 0,
+            "phase": 0,
+            "offset": 0
+        },
+        "2": {
+            "gain": 0,
+            "phase": 0,
+            "offset": 0
+        },
+        "3": {
+            "gain": 500,
+            "phase": 180,
+            "offset": 0
+        },
+        "4": {
+            "gain": 600,
+            "phase": 90,
+            "offset": 0
+        }
+    },
+    "dacs": {
+        "1": {
+            "offset": 0
+        },
+        "2": {
+            "offset": 0
+        },
+        "3": {
+            "offset": 0
+        },
+        "4": {
+            "offset": 0
+        }
+    }
+}

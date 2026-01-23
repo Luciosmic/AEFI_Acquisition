@@ -64,12 +64,17 @@ class AD9106AdvancedConfigurator(IHardwareAdvancedConfigurator):
         ))
         
         # Channel Settings (Restricted to DDS1 and DDS2 as per requirements)
-        for ch in range(1, 3):
+        # Channel Settings (Expanded to all 4 channels)
+        for ch in range(1, 5):
+            default_gain = 0.0
+            if ch in [3, 4]:
+                default_gain = 10000.0 # Default gain for Ch 3/4 to match controller default
+
             specs.append(NumberParameterSchema(
                 key=f"ch{ch}_gain",
                 display_name=f"DDS {ch} Gain",
                 description=f"Digital Gain for DDS {ch}",
-                default_value=0.0,
+                default_value=default_gain,
                 min_value=0.0,
                 max_value=16376.0,
                 group=f"DDS {ch}"
@@ -150,13 +155,15 @@ class AD9106AdvancedConfigurator(IHardwareAdvancedConfigurator):
                 
 
             # Channels (Restricted to DDS1 and DDS2)
-            for ch in range(1, 3):
-                if f"dds{ch}_gain" in config:
-                    self._controller.set_dds_gain(ch, int(config[f"dds{ch}_gain"]))
-                if f"dds{ch}_phase" in config:
-                    self._controller.set_dds_phase(ch, int(config[f"dds{ch}_phase"]))
-                if f"dds{ch}_offset" in config:
-                    self._controller.set_dds_offset(ch, int(config[f"dds{ch}_offset"]))
+            # Channels (Expanded to all 4 channels)
+            for ch in range(1, 5):
+                # Note: Keys come from get_parameter_specs which uses "ch{ch}_..." prefix
+                if f"ch{ch}_gain" in config:
+                    self._controller.set_dds_gain(ch, int(config[f"ch{ch}_gain"]))
+                if f"ch{ch}_phase" in config:
+                    self._controller.set_dds_phase(ch, int(config[f"ch{ch}_phase"]))
+                if f"ch{ch}_offset" in config:
+                    self._controller.set_dds_offset(ch, int(config[f"ch{ch}_offset"]))
                     
         except Exception as e:
             print(f"[AD9106AdvancedConfigurator] Failed to apply config to hardware: {e}")
@@ -170,7 +177,7 @@ class AD9106AdvancedConfigurator(IHardwareAdvancedConfigurator):
             "dacs": {} # Not exposed in advanced config yet, but needed for JSON structure
         }
         
-        for ch in range(1, 3):
+        for ch in range(1, 5):
             json_config["channels"][str(ch)] = {
                 "gain": int(config.get(f"ch{ch}_gain", 0)),
                 "phase": int(config.get(f"ch{ch}_phase", 0)),
@@ -200,11 +207,11 @@ class AD9106AdvancedConfigurator(IHardwareAdvancedConfigurator):
             "dacs": {}
         }
         
-        for ch in range(1, 3):
+        for ch in range(1, 5):
             json_config["channels"][str(ch)] = {
-                "gain": int(config.get(f"dds{ch}_gain", 0)),
-                "phase": int(config.get(f"dds{ch}_phase", 0)),
-                "offset": int(config.get(f"dds{ch}_offset", 0))
+                "gain": int(config.get(f"ch{ch}_gain", 0)),
+                "phase": int(config.get(f"ch{ch}_phase", 0)),
+                "offset": int(config.get(f"ch{ch}_offset", 0))
             }
             json_config["dacs"][str(ch)] = {"offset": 0}
             
