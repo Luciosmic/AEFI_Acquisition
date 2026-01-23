@@ -9,13 +9,26 @@ sys.path.append(str(skills_dir))
 
 from diagram_friendly_test import DiagramFriendlyTest
 from interface.presenters.signal_processor import SignalPostProcessor
+from application.services.signal_processing_service.signal_processing_api_service import SignalProcessingApiService
+from unittest.mock import Mock
+from application.services.scan_application_service.i_acquisition_port import IAcquisitionPort
+from application.services.excitation_configuration_service.i_excitation_port import IExcitationPort
 
 class TestSignalPostProcessor(DiagramFriendlyTest):
     
     def setUp(self):
         super().setUp()
-        self.processor = SignalPostProcessor()
-        self.log_interaction("Test", "CREATE", "SignalPostProcessor", "Initialized processor instance")
+        # Create API service with mocked ports and inject into processor
+        mock_acquisition = Mock(spec=IAcquisitionPort)
+        mock_excitation = Mock(spec=IExcitationPort)
+        signal_processing_service = SignalProcessingApiService(
+            acquisition_port=mock_acquisition,
+            excitation_port=mock_excitation,
+            motion_port=None,
+            repository=None
+        )
+        self.processor = SignalPostProcessor(signal_processing_service)
+        self.log_interaction("Test", "CREATE", "SignalPostProcessor", "Initialized processor instance with service")
         
     def test_noise_subtraction(self):
         """Verify noise offset is correctly subtracted."""

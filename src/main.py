@@ -211,6 +211,21 @@ def main():
     # Transformation Service (Shared State)
     transformation_service = TransformationService(event_bus)
     
+    # Signal Processing API Service
+    from application.services.signal_processing_service.signal_processing_api_service import SignalProcessingApiService
+    from infrastructure.persistence.json_voltage_measurement_reference_repository import JsonVoltageMeasurementReferenceRepository
+    
+    # Create repository for calibration persistence
+    voltage_reference_repository = JsonVoltageMeasurementReferenceRepository()
+    
+    # Create API service (orchestrates SignalProcessingService with ports)
+    signal_processing_service = SignalProcessingApiService(
+        acquisition_port=acquisition_port,
+        excitation_port=excitation_port,
+        motion_port=motion_port,
+        repository=voltage_reference_repository
+    )
+    
     # Hardware Configuration Service
     print("\n--- Creating Hardware Configuration Service ---")
     configurators: list[IHardwareAdvancedConfigurator] = []
@@ -267,7 +282,12 @@ def main():
     excitation_presenter = ExcitationPresenter(excitation_service)
     
     # Continuous Presenter needs Transformation Service now
-    continuous_presenter = ContinuousAcquisitionPresenter(continuous_service, event_bus, transformation_service)
+    continuous_presenter = ContinuousAcquisitionPresenter(
+        continuous_service,
+        event_bus,
+        transformation_service,
+        signal_processing_service
+    )
     
     # Transformation Presenter needs Panel + Service
     transformation_presenter = SensorTransformationPresenter(dashboard.panels["transformation"], transformation_service)

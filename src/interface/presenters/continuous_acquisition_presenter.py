@@ -18,6 +18,7 @@ from domain.events.continuous_acquisition_events import (
 from domain.events.transformation_events import SensorTransformationAnglesUpdated
 from domain.events.i_domain_event_bus import IDomainEventBus
 from application.services.transformation_service.transformation_service import TransformationService
+from application.services.signal_processing_service.i_api_signal_processing_service import IApiSignalProcessingService
 from interface.presenters.signal_processor import SignalPostProcessor
 
 class ContinuousAcquisitionPresenter(QObject):
@@ -36,15 +37,21 @@ class ContinuousAcquisitionPresenter(QObject):
     sample_acquired = Signal(dict)  # {acquisition_id, index, measurement:{...}, timestamp}
     angles_updated = Signal(tuple) # For updating the read-only display
 
-    def __init__(self, service: ContinuousAcquisitionService, event_bus: IDomainEventBus, transformation_service: TransformationService):
+    def __init__(
+        self,
+        service: ContinuousAcquisitionService,
+        event_bus: IDomainEventBus,
+        transformation_service: TransformationService,
+        signal_processing_service: IApiSignalProcessingService
+    ):
         super().__init__()
         self._service = service
         self._event_bus = event_bus
         self._transformation_service = transformation_service
         self._current_acquisition_id: str | None = None
         
-        # Signal Processor
-        self._processor = SignalPostProcessor()
+        # Signal Processor (adapter that uses the service)
+        self._processor = SignalPostProcessor(signal_processing_service)
         self._last_raw_sample: Dict[str, float] = {}
 
         # Subscribe to domain events - USE LOWERCASE EVENT NAMES (matching publish calls)
@@ -79,17 +86,12 @@ class ContinuousAcquisitionPresenter(QObject):
     def calibrate_phase(self):
         """
         Use last received sample (after noise correction) to align phase.
-        We must re-apply noise correction to the raw sample first to get the 'pre-phase' state.
+        The service handles applying noise correction before phase calibration.
         """
         if self._last_raw_sample:
-            # 1. Apply Noise Correction only
-            state_backup = self._processor.state.phase_correction_enabled
-            self._processor.state.phase_correction_enabled = False # Disable temporarily
-            
+            # Process sample to get noise-corrected version
             pre_phase_sample = self._processor.process_sample(self._last_raw_sample)
-            
             self._processor.calibrate_phase(pre_phase_sample)
-            self._processor.state.phase_correction_enabled = True # Re-enable (or ensure it's on)
 
     @Slot()
     def calibrate_primary(self):

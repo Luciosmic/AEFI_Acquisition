@@ -1,123 +1,119 @@
-import math
-from dataclasses import dataclass, field
-from typing import Dict, Tuple, Optional
+from typing import Dict
+from datetime import datetime
+from application.services.signal_processing_service.i_api_signal_processing_service import IApiSignalProcessingService
+from domain.value_objects.acquisition.voltage_measurement import VoltageMeasurement
 
-@dataclass
-class ProcessingState:
-    """Stores the calibration constants."""
-    # Noise Offset (Zero)
-    noise_offset: Dict[str, Tuple[float, float]] = field(default_factory=dict) # {axis: (I, Q)}
-    noise_correction_enabled: bool = False
-
-    # Phase Correction
-    phase_angles: Dict[str, float] = field(default_factory=dict) # {axis: radians}
-    phase_correction_enabled: bool = False
-
-    # Primary Field Offset (Tare)
-    primary_offset: Dict[str, Tuple[float, float]] = field(default_factory=dict) # {axis: (I, Q)}
-    primary_correction_enabled: bool = False
 
 class SignalPostProcessor:
     """
-    Encapsulates signal processing logic for the interface.
-    Handles Noise Correction -> Phase Alignment -> Primary Field Subtraction.
+    Adapter for signal processing in the interface layer.
+    
+    Converts between Dict format (used by UI) and VoltageMeasurement (domain).
+    Delegates processing logic to IApiSignalProcessingService.
     """
     
-    def __init__(self):
-        self.state = ProcessingState()
+    def __init__(self, signal_processing_service: IApiSignalProcessingService):
+        """
+        Initialize signal post processor.
+        
+        Args:
+            signal_processing_service: Service for signal processing operations
+        """
+        self._signal_processing_service = signal_processing_service
 
     def process_sample(self, raw_measurement: Dict[str, float]) -> Dict[str, float]:
         """
         Apply enabled corrections to a raw measurement dictionary.
         Expected keys format: "Ux In-Phase", "Ux Quadrature", etc.
+        
+        Args:
+            raw_measurement: Dictionary with measurement data
+        
+        Returns:
+            Dictionary with processed measurement data
         """
-        processed = raw_measurement.copy()
+        # Convert Dict -> VoltageMeasurement
+        measurement = self._dict_to_measurement(raw_measurement)
         
-        # We process by axis pairs (X, Y, Z)
-        axes = ["Ux", "Uy", "Uz"]
+        # Process using service
+        processed_measurement = self._signal_processing_service.process_measurement(measurement)
         
-        for axis in axes:
-            k_i = f"{axis} In-Phase"
-            k_q = f"{axis} Quadrature"
-            
-            if k_i not in processed or k_q not in processed:
-                continue
+        # Convert VoltageMeasurement -> Dict
+        return self._measurement_to_dict(processed_measurement)
 
-            i_val = processed[k_i]
-            q_val = processed[k_q]
-
-            # 1. Noise Subtraction
-            if self.state.noise_correction_enabled:
-                offset_i, offset_q = self.state.noise_offset.get(axis, (0.0, 0.0))
-                i_val -= offset_i
-                q_val -= offset_q
-
-            # 2. Phase Rotation (Maximize In-Phase)
-            if self.state.phase_correction_enabled:
-                theta = self.state.phase_angles.get(axis, 0.0)
-                # Rotate (I, Q) by -theta
-                # I' = I cos(th) + Q sin(th)  <-- Wait, standard rotation matrix
-                # To bring vector (I, Q) to X-axis (I-axis), we rotate by -theta
-                # I_new = I cos(-th) - Q sin(-th) = I cos(th) + Q sin(th)
-                # Q_new = I sin(-th) + Q cos(-th) = -I sin(th) + Q cos(th)
-                
-                cos_t = math.cos(theta)
-                sin_t = math.sin(theta)
-                
-                i_new = i_val * cos_t + q_val * sin_t
-                q_new = -i_val * sin_t + q_val * cos_t
-                
-                i_val = i_new
-                q_val = q_new
-
-            # 3. Primary Field Subtraction
-            if self.state.primary_correction_enabled:
-                offset_i, offset_q = self.state.primary_offset.get(axis, (0.0, 0.0))
-                i_val -= offset_i
-                q_val -= offset_q
-
-            processed[k_i] = i_val
-            processed[k_q] = q_val
-            
-        return processed
-
-    def calibrate_noise(self, current_sample: Dict[str, float]):
-        """Store current values as noise offset."""
-        axes = ["Ux", "Uy", "Uz"]
-        for axis in axes:
-            i = current_sample.get(f"{axis} In-Phase", 0.0)
-            q = current_sample.get(f"{axis} Quadrature", 0.0)
-            self.state.noise_offset[axis] = (i, q)
-        
-        self.state.noise_correction_enabled = True
-
-    def calibrate_phase(self, current_sample_pre_phase: Dict[str, float]):
+    def calibrate_noise(self, current_sample: Dict[str, float]) -> None:
         """
-        Calculate angle to rotate (I, Q) onto the I axis (Q=0).
+        Calibrate noise offset using current sample.
+        
+        Args:
+            current_sample: Dictionary with measurement data
+        """
+        measurement = self._dict_to_measurement(current_sample)
+        self._signal_processing_service.calibrate_noise(reference_measurement=measurement)
+
+    def calibrate_phase(self, current_sample_pre_phase: Dict[str, float]) -> None:
+        """
+        Calibrate phase alignment using current sample.
         This should be called AFTER noise subtraction but BEFORE primary subtraction.
+        
+        Args:
+            current_sample_pre_phase: Dictionary with measurement data (noise-corrected)
         """
-        axes = ["Ux", "Uy", "Uz"]
-        for axis in axes:
-            # Get values (potentially already noise-corrected if passed correctly)
-            i = current_sample_pre_phase.get(f"{axis} In-Phase", 0.0)
-            q = current_sample_pre_phase.get(f"{axis} Quadrature", 0.0)
-            
-            # Calculate angle of the vector
-            theta = math.atan2(q, i)
-            self.state.phase_angles[axis] = theta
-            
-        self.state.phase_correction_enabled = True
+        measurement = self._dict_to_measurement(current_sample_pre_phase)
+        self._signal_processing_service.calibrate_phase(reference_measurement=measurement)
 
-    def calibrate_primary(self, current_sample_fully_processed: Dict[str, float]):
-        """Store current values (after noise+phase) as primary offset."""
-        axes = ["Ux", "Uy", "Uz"]
-        for axis in axes:
-            i = current_sample_fully_processed.get(f"{axis} In-Phase", 0.0)
-            q = current_sample_fully_processed.get(f"{axis} Quadrature", 0.0)
-            self.state.primary_offset[axis] = (i, q)
-            
-        self.state.primary_correction_enabled = True
+    def calibrate_primary(self, current_sample_fully_processed: Dict[str, float]) -> None:
+        """
+        Calibrate primary field offset using current sample.
+        This should be called AFTER noise and phase corrections.
+        
+        Args:
+            current_sample_fully_processed: Dictionary with measurement data (fully processed)
+        """
+        measurement = self._dict_to_measurement(current_sample_fully_processed)
+        self._signal_processing_service.calibrate_primary(reference_measurement=measurement)
     
-    def reset_calibration(self):
+    def reset_calibration(self) -> None:
         """Reset all calibrations."""
-        self.state = ProcessingState()
+        self._signal_processing_service.reset_calibration()
+    
+    def _dict_to_measurement(self, d: Dict[str, float]) -> VoltageMeasurement:
+        """
+        Convert dictionary format to VoltageMeasurement.
+        
+        Expected keys: "Ux In-Phase", "Ux Quadrature", etc.
+        
+        Args:
+            d: Dictionary with measurement data
+        
+        Returns:
+            VoltageMeasurement object
+        """
+        return VoltageMeasurement(
+            voltage_x_in_phase=d.get("Ux In-Phase", 0.0),
+            voltage_x_quadrature=d.get("Ux Quadrature", 0.0),
+            voltage_y_in_phase=d.get("Uy In-Phase", 0.0),
+            voltage_y_quadrature=d.get("Uy Quadrature", 0.0),
+            voltage_z_in_phase=d.get("Uz In-Phase", 0.0),
+            voltage_z_quadrature=d.get("Uz Quadrature", 0.0),
+            timestamp=datetime.now()
+        )
+    
+    def _measurement_to_dict(self, m: VoltageMeasurement) -> Dict[str, float]:
+        """
+        Convert VoltageMeasurement to dictionary format.
+        
+        Args:
+            m: VoltageMeasurement object
+        
+        Returns:
+            Dictionary with measurement data
+        """
+        return {
+            "Ux In-Phase": m.voltage_x_in_phase,
+            "Ux Quadrature": m.voltage_x_quadrature,
+            "Uy In-Phase": m.voltage_y_in_phase,
+            "Uy Quadrature": m.voltage_y_quadrature,
+            "Uz In-Phase": m.voltage_z_in_phase,
+            "Uz Quadrature": m.voltage_z_quadrature,
+        }
