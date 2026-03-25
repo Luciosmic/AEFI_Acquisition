@@ -1,45 +1,36 @@
-# Ignore everything by default
-*
-
-# Un-ignore specific directories and their contents
-!_docs/
-!_docs/**
-
-# Un-ignore .gitignore itself
-!.gitignore
-!launch.sh
-!requirements.txt
-!pyproject.toml
-
-# Un-ignore 
-!src/
-!src/**
-
-!external_modules/
-!external_modules/**
-!Quaternions/
-!Quaternions/**
-
-# Re-ignore common temporary/build files that might be inside the whitelisted directories
+# --- Python / build ---
 __pycache__/
-*.pyc
-.DS_Store
-.env
-.venv
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# --- Outils & caches ---
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# --- Environnements & secrets ---
+.venv/
 venv/
+.env
+
+# --- IDE / OS ---
 .idea/
 .vscode/
-_legacy_src
-
-data_repository
-examples
 *.swp
+*.bak
+.DS_Store
+Thumbs.db
 
-# Configuration files (user-specific, not versioned)
-# Include .aefi_acquisition directory structure
-!.aefi_acquisition/
-!.aefi_acquisition/**
-# But ignore JSON config files (user-specific)
+# Fichiers temporaires locaux (racine du dépôt uniquement)
+/_tmp*
+/.git_*.txt
+
+# --- Config utilisateur (garder les gabarits .example) ---
 .aefi_acquisition/configs/*.json
-# Keep example/template files
 !.aefi_acquisition/configs/*.example
