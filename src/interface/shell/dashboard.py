@@ -17,7 +17,7 @@ from interface.widgets.panels.excitation_panel import ExcitationPanel
 from interface.widgets.panels.continuous_acquisition_panel import ContinuousAcquisitionPanel
 from interface.widgets.panels.hardware_advanced_config_panel import HardwareAdvancedConfigPanel
 from interface.widgets.panels.sensor_transformation_panel import SensorTransformationPanel
-
+from interface.widgets.panels.post_processing_panel import PostProcessingPanel
 
 
 class SettingsPanel(BasePanel):
@@ -45,6 +45,7 @@ class Dashboard(QWidget):
             "excitation": ExcitationPanel(),
             "hardware_config": HardwareAdvancedConfigPanel(),
             "transformation": SensorTransformationPanel(),
+            "post_processing": PostProcessingPanel(),
             "settings": SettingsPanel()
         }
         
@@ -79,6 +80,7 @@ class Dashboard(QWidget):
             "excitation": "Excitation",
             "hardware_config": "Hardware Config",
             "transformation": "Ref. Transform",
+            "post_processing": "Post-Processing",
             "settings": "Settings"
         }
         
