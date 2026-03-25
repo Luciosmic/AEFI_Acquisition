@@ -1,7 +1,10 @@
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QGroupBox, 
-    QDoubleSpinBox, QFormLayout
+    QDoubleSpinBox, QFormLayout, QPushButton
 )
+from PySide6.QtCore import Signal, Slot, QProcess
+import sys
+import os
 from PySide6.QtCore import Signal, Slot
 
 class SensorTransformationPanel(QWidget):
@@ -30,7 +33,29 @@ class SensorTransformationPanel(QWidget):
         l_angles.addRow("Theta Z (deg):", self.spin_theta_z)
         
         main_layout.addWidget(grp_angles)
+        
+        # --- 2. 3D Visualization Tool Launch ---
+        self.btn_launch_cube = QPushButton("Launch 3D Sensor Visualizer")
+        self.btn_launch_cube.setStyleSheet("""
+            QPushButton {
+                background-color: #00897B;
+                color: white;
+                padding: 8px;
+                border-radius: 4px;
+                font-weight: bold;
+                margin-top: 10px;
+            }
+            QPushButton:hover {
+                background-color: #00796B;
+            }
+        """)
+        self.btn_launch_cube.clicked.connect(self._launch_cube_visualizer)
+        main_layout.addWidget(self.btn_launch_cube)
+        
         main_layout.addStretch()
+        
+        # Process holder
+        self.process = None
         
         # Connect internal signals
         self.spin_theta_x.valueChanged.connect(self._on_inputs_changed)
@@ -56,3 +81,18 @@ class SensorTransformationPanel(QWidget):
             self.spin_theta_y.value(),
             self.spin_theta_z.value()
         )
+
+    def _launch_cube_visualizer(self):
+        """Lances the emerging 3D cube visualizer via QProcess."""
+        if self.process is not None and self.process.state() == QProcess.Running:
+            return # Already running
+            
+        python_exe = sys.executable
+        # From src/interface/widgets/panels/sensor_transformation_panel.py -> ... -> root
+        root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))
+        script_path = os.path.join(root_dir, "visualize_cube", "cube_visualizor_emerging", "main.py")
+        
+        print(f"[SensorTransformationPanel] Launching Cube Visualizer: {python_exe} {script_path}")
+        
+        self.process = QProcess(self)
+        self.process.start(python_exe, [script_path])
