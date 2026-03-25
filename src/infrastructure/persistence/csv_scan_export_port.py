@@ -33,7 +33,7 @@ class CsvScanExportPort(IScanExportPort):
     CSV-based implementation of `IExportPort`.
 
     Notes:
-    - By default, files are written under a `data_repository` directory
+    - By default, files are written under `.aefi_acquisition/scans/raw_data`
       at the project root (configurable via `directory` in `configure`).
     - The caller is responsible for providing a flat `data` dict with
       scalar values in `write_point`.
@@ -41,7 +41,7 @@ class CsvScanExportPort(IScanExportPort):
 
     # Base directory used when `directory` passed to `configure` is relative or empty.
     base_output_dir: Path = field(
-        default_factory=lambda: Path("data_repository")
+        default_factory=lambda: Path(".aefi_acquisition") / "scans" / "raw_data"
     )
 
     _file: Optional[TextIO] = field(init=False, default=None)

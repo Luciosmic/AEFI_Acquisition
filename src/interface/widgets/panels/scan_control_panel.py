@@ -129,7 +129,7 @@ class ScanControlPanel(QWidget):
 
         self.input_export_filename = QLineEdit("scan")
         self.input_export_directory = QLineEdit("")
-        self.input_export_directory.setPlaceholderText("data_repository/")
+        self.input_export_directory.setPlaceholderText(".aefi_acquisition/scans/raw_data/")
 
         self.combo_export_format = QComboBox()
         self.combo_export_format.addItems(["CSV", "HDF5"])
