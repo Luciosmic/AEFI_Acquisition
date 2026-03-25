@@ -163,6 +163,35 @@ class PrimaryFieldPhaseCalibrator:
             
         return rotated
 
+    def _find_nearest_valid_point(self, data: np.ndarray, start_idx: Tuple[int, int]) -> Tuple[int, int]:
+        """
+        Find the nearest pixel (Euclidean distance) that has valid (non-NaN) data.
+        """
+        rows, cols = data.shape[:2]
+        y0, x0 = start_idx
+        
+        # Check start point first
+        if not np.any(np.isnan(data[y0, x0, :])):
+            return (y0, x0)
+            
+        # Create a grid of indices
+        yy, xx = np.indices((rows, cols))
+        
+        # Calculate distances
+        distances = (yy - y0)**2 + (xx - x0)**2
+        
+        # Sort by distance
+        # We flat the arrays to iterate
+        sorted_indices = np.argsort(distances.ravel())
+        
+        for idx in sorted_indices:
+            y, x = np.unravel_index(idx, (rows, cols))
+            if not np.any(np.isnan(data[y, x, :])):
+                return (int(y), int(x))
+                
+        # If we get here, the entire dataset is NaN
+        return start_idx
+
     def calibrate(
         self, 
         data: np.ndarray,
@@ -172,16 +201,20 @@ class PrimaryFieldPhaseCalibrator:
         """
         Execute calibration using reference point.
         """
-        # 1. Get reference vector
-        ref_vec = self.get_reference_values(data, reference_idx)
+        # 1. Validate reference point and find nearest valid if necessary
+        valid_idx = self._find_nearest_valid_point(data, reference_idx)
         
-        # 2. Calculate corrections
+        # 2. Get reference vector
+        ref_vec = self.get_reference_values(data, valid_idx)
+        
+        # 3. Calculate corrections
         corrections = self.calculate_phase_correction(ref_vec, axis_pairs)
         
-        # 3. Apply
+        # 4. Apply
         calibrated = self.apply_phase_rotation(data, corrections, axis_pairs)
         
         # Format phases for metadata (just the angle)
         phases_meta = {k: v['theta'] for k, v in corrections.items()}
+        phases_meta['reference_used'] = valid_idx # Store which ref was actually used
         
         return calibrated, phases_meta
