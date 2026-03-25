@@ -90,7 +90,7 @@ class SensorTransformationPanel(QWidget):
         python_exe = sys.executable
         # From src/interface/widgets/panels/sensor_transformation_panel.py -> ... -> root
         root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))
-        script_path = os.path.join(root_dir, "visualize_cube", "cube_visualizer", "main.py")
+        script_path = os.path.join(root_dir, "external_modules", "cube_visualizer", "main.py")
         
         print(f"[SensorTransformationPanel] Launching Cube Visualizer: {python_exe} {script_path}")
         

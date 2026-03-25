@@ -1,0 +1,47 @@
+{
+  "scan_001_baseline": {
+    "filename": "scan_001_baseline.csv",
+    "description": "Baseline signal (clean)",
+    "full_path": "C:\\Users\\manip\\AEFI_Acquisition\\tools\\post_processor_modules\\tests\\synthetic_scans_data_repository\\batch_20260123_201635\\scan_001_baseline.csv"
+  },
+  "scan_002_phase_offset": {
+    "filename": "scan_002_phase_offset.csv",
+    "description": "Phase offsets: (30, -45, 90)",
+    "full_path": "C:\\Users\\manip\\AEFI_Acquisition\\tools\\post_processor_modules\\tests\\synthetic_scans_data_repository\\batch_20260123_201635\\scan_002_phase_offset.csv"
+  },
+  "scan_003_dc_offset": {
+    "filename": "scan_003_dc_offset.csv",
+    "description": "DC offsets added",
+    "full_path": "C:\\Users\\manip\\AEFI_Acquisition\\tools\\post_processor_modules\\tests\\synthetic_scans_data_repository\\batch_20260123_201635\\scan_003_dc_offset.csv"
+  },
+  "scan_004_rotation_z45": {
+    "filename": "scan_004_rotation_z45.csv",
+    "description": "Rotated 45 deg Z",
+    "full_path": "C:\\Users\\manip\\AEFI_Acquisition\\tools\\post_processor_modules\\tests\\synthetic_scans_data_repository\\batch_20260123_201635\\scan_004_rotation_z45.csv",
+    "rotation_angles": [
+      0.0,
+      0.0,
+      45.0
+    ]
+  },
+  "scan_005_combined_rotated": {
+    "filename": "scan_005_combined_rotated.csv",
+    "description": "Combined: Rot->Phase->Amp",
+    "full_path": "C:\\Users\\manip\\AEFI_Acquisition\\tools\\post_processor_modules\\tests\\synthetic_scans_data_repository\\batch_20260123_201635\\scan_005_combined_rotated.csv",
+    "rotation_angles": [
+      0.0,
+      0.0,
+      45.0
+    ]
+  },
+  "scan_006_combined": {
+    "filename": "scan_006_combined.csv",
+    "description": "Combined: Phase->Amp (No Rotation)",
+    "full_path": "C:\\Users\\manip\\AEFI_Acquisition\\tools\\post_processor_modules\\tests\\synthetic_scans_data_repository\\batch_20260123_201635\\scan_006_combined.csv"
+  },
+  "scan_007_negative_ref": {
+    "filename": "scan_007_negative_ref.csv",
+    "description": "Negative Base Signal (Sign Preservation Test)",
+    "full_path": "C:\\Users\\manip\\AEFI_Acquisition\\tools\\post_processor_modules\\tests\\synthetic_scans_data_repository\\batch_20260123_201635\\scan_007_negative_ref.csv"
+  }
+}

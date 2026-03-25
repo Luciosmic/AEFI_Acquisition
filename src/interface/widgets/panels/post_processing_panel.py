@@ -53,7 +53,9 @@ class PostProcessingPanel(BasePanel):
         python_exe = sys.executable
         # From src/interface/widgets/panels/post_processing_panel.py -> src/interface/widgets/panels -> src/interface/widgets -> src/interface -> src -> root
         root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))
-        script_path = os.path.join(root_dir, "tools", "post_processor_modules", "composition_root.py")
+        script_path = os.path.join(
+            root_dir, "external_modules", "post_processor_module", "composition_root.py"
+        )
         
         print(f"[PostProcessingPanel] Launching Post-Processor: {python_exe} {script_path}")
         

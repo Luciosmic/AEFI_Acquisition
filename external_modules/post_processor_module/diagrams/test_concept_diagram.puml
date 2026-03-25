@@ -1,0 +1,72 @@
+@startuml test_concept_diagram
+!theme plain
+skinparam defaultTextAlignment center
+skinparam componentStyle rectangle
+skinparam arrowColor #333333
+skinparam arrowThickness 2
+
+title Analytic Testing Strategy\n(Deterministic Validation)
+
+package "1. Synthetic Input Generation" as Gen {
+  [**SyntheticScanGenerator**\nCreates "Perfect" Data\n+ Controlled Defects] as Generator
+}
+
+package "2. Module Validation Logic" as Tests {
+    
+  frame "Phase Test" {
+    [Input: Signal with\n**Known Phase Shift (φ)**] as InPhase
+    [**Phase Calibrator**] as ModPhase
+    [Check 1: Recovered Angle ≈ φ\nCheck 2: Border Q Component ≈ 0] as CheckPhase
+    
+    InPhase -> ModPhase
+    ModPhase -> CheckPhase
+  }
+  
+  frame "Amplitude Test" {
+    [Input: Signal with\n**Known DC Offset (A)**] as InAmp
+    [**Amplitude Subtractor**] as ModAmp
+    [Check 1: Recovered Offset ≈ A\nCheck 2: Border Mean ≈ 0] as CheckAmp
+    
+    InAmp -> ModAmp
+    ModAmp -> CheckAmp
+  }
+  
+  frame "Rotation Test" {
+    [Input: Vector Field\n**(X-Aligned)**] as InRot
+    [**Frame Rotator**\n(Rotate 90° Z)] as ModRot
+    [Check: Vector is now\n**Y-Aligned**?] as CheckRot
+    
+    InRot -> ModRot
+    ModRot -> CheckRot
+  }
+  
+  frame "Interpolation Test" {
+    [Input: Coarse Grid\n**z = x² + y²**] as InInterp
+    [**Interpolator**\n(Cubic)] as ModInterp
+    [Check: Error vs Analytic Truth\n**< Tolerance**] as CheckInterp
+    
+    InInterp -> ModInterp
+    ModInterp -> CheckInterp
+  }
+}
+
+Generator -down-> InPhase : injects
+Generator -down-> InAmp : injects
+Generator -down-> InRot : generates
+Generator -down-> InInterp : generates
+
+note right of Gen
+  **Why?**
+  Real data has unknown truth.
+  Synthetic data allows us to know
+  EXACTLY what the result should be.
+end note
+
+note right of Tests
+  **Goal**
+  Prove mathematically that each
+  module corrects the specific defect
+  it was designed to handle.
+end note
+
+@enduml

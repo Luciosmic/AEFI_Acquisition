@@ -15,8 +15,8 @@
 !src/
 !src/**
 
-!visualize_cube/
-!visualize_cube/**
+!external_modules/
+!external_modules/**
 !Quaternions/
 !Quaternions/**
 
