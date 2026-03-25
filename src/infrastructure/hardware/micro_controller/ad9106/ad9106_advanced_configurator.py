@@ -103,7 +103,7 @@ class AD9106AdvancedConfigurator(IHardwareAdvancedConfigurator):
         # Load default config if exists
         updated_specs = []
         try:
-            config_path = os.path.join(os.path.dirname(__file__), "ad9106_default_config.json")
+            config_path = os.path.join(".aefi_acquisition", "configs", "ad9106_default_config.json")
             default_config = {}
             if os.path.exists(config_path):
                 with open(config_path, 'r') as f:
@@ -188,8 +188,8 @@ class AD9106AdvancedConfigurator(IHardwareAdvancedConfigurator):
             json_config["dacs"][str(ch)] = {"offset": 0}
             
         try:
-            # Save to the same directory as this file
-            config_path = os.path.join(os.path.dirname(__file__), "ad9106_last_config.json")
+            # Save to the configs folder
+            config_path = os.path.join(".aefi_acquisition", "configs", "ad9106_last_config.json")
             with open(config_path, 'w') as f:
                 json.dump(json_config, f, indent=4)
             print(f"[AD9106AdvancedConfigurator] Config saved to {config_path}")
@@ -216,7 +216,7 @@ class AD9106AdvancedConfigurator(IHardwareAdvancedConfigurator):
             json_config["dacs"][str(ch)] = {"offset": 0}
             
         try:
-            config_path = os.path.join(os.path.dirname(__file__), "ad9106_default_config.json")
+            config_path = os.path.join(".aefi_acquisition", "configs", "ad9106_default_config.json")
             with open(config_path, 'w') as f:
                 json.dump(json_config, f, indent=4)
             print(f"[AD9106AdvancedConfigurator] Default config saved to {config_path}")
