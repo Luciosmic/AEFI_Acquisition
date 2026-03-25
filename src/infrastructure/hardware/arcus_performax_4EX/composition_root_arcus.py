@@ -60,5 +60,8 @@ class ArcusCompositionRoot:
         self.lifecycle: IHardwareInitializationPort = ArcusPerformaxLifecycleAdapter(self.motion, self._driver, port=port)
         
         # 4. Instantiate Configurator
-        # Uses the same driver to apply configuration
-        self.config: IHardwareAdvancedConfigurator = ArcusPerformax4EXAdvancedConfigurator(controller=self._driver)
+        # Uses the same driver to apply configuration and adapter for calibration updates
+        self.config: IHardwareAdvancedConfigurator = ArcusPerformax4EXAdvancedConfigurator(
+            controller=self._driver,
+            adapter=self.motion
+        )

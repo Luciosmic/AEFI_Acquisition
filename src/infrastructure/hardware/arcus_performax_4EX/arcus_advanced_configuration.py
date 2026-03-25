@@ -12,7 +12,7 @@ Rationale:
 - Clear separation from motion control port
 """
 
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, TYPE_CHECKING
 from pathlib import Path
 from dataclasses import replace
 import json
@@ -29,6 +29,9 @@ from application.services.hardware_configuration_service.i_hardware_advanced_con
 from infrastructure.hardware.arcus_performax_4EX.driver_arcus_performax4EX import (
     ArcusPerformax4EXController,
 )
+
+if TYPE_CHECKING:
+    from infrastructure.hardware.arcus_performax_4EX.adapter_motion_port_arcus_performax4EX import ArcusAdapter
 
 
 class ArcusAdvancedConfigurationSpecs:
@@ -158,10 +161,12 @@ class ArcusAdvancedConfigurationApplier:
     - Bridge high-level configuration dict to low-level controller API
     - Handle parameter resolution (specific > generic)
     - Apply speed, acceleration, deceleration, and homing
+    - Update adapter calibration when microns_per_step changes
     """
     
-    def __init__(self, controller: ArcusPerformax4EXController):
+    def __init__(self, controller: ArcusPerformax4EXController, adapter=None):
         self._controller = controller
+        self._adapter = adapter  # Optional ArcusAdapter reference for calibration updates
     
     def apply(self, config: Dict[str, Any]) -> None:
         """
@@ -206,6 +211,11 @@ class ArcusAdvancedConfigurationApplier:
         # Homing via controller if requested
         if config.get("home_both_axes"):
             self._controller.home_both(blocking=True)
+        
+        # Update adapter calibration if microns_per_step is provided
+        if "microns_per_step" in config and self._adapter is not None:
+            microns_per_step = float(config["microns_per_step"])
+            self._adapter.update_calibration(microns_per_step)
 
 
 class ArcusPerformax4EXAdvancedConfigurator(IHardwareAdvancedConfigurator):
@@ -222,14 +232,19 @@ class ArcusPerformax4EXAdvancedConfigurator(IHardwareAdvancedConfigurator):
     - Uses centralized specs and applier for maintainability
     """
 
-    def __init__(self, controller: Optional[ArcusPerformax4EXController] = None) -> None:
+    def __init__(self, controller: Optional[ArcusPerformax4EXController] = None, adapter=None) -> None:
         """
-        Optionally inject a controller instance.
+        Optionally inject a controller instance and adapter.
 
         If no controller is provided, apply_config will create a short-lived
         controller to apply settings.
+        
+        Args:
+            controller: Optional ArcusPerformax4EXController instance
+            adapter: Optional ArcusAdapter instance for calibration updates
         """
         self._controller = controller
+        self._adapter = adapter  # Optional ArcusAdapter reference for calibration updates
 
     @property
     def hardware_id(self) -> str:
@@ -294,7 +309,7 @@ class ArcusPerformax4EXAdvancedConfigurator(IHardwareAdvancedConfigurator):
                 if not connected:
                     raise RuntimeError("Failed to connect ArcusPerformax4EXController")
 
-            applier = ArcusAdvancedConfigurationApplier(controller)
+            applier = ArcusAdvancedConfigurationApplier(controller, self._adapter)
             applier.apply(config)
         finally:
             if owns_controller:

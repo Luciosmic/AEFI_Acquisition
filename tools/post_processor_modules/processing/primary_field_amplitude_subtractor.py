@@ -1,7 +1,6 @@
 """
-PrimaryFieldAmplitudeSubtractor - Subtracts primary field using border reference.
-Calculates mean amplitude at borders (excluding NaN) and subtracts from entire image.
-Adapted from signal_processor.py.
+PrimaryFieldAmplitudeSubtractor - Subtracts primary field using reference point.
+Subtracts the signal measured at the reference point from the entire scan.
 """
 
 from typing import Tuple, Optional
@@ -10,115 +9,52 @@ import numpy as np
 
 class PrimaryFieldAmplitudeSubtractor:
     """
-    Subtracts primary field amplitude using border pixels as reference.
-    Calculates mean amplitude at borders and subtracts from entire image.
+    Subtracts primary field by subtracting the reference point signal from all data.
     """
     
     def __init__(self, border_width: int = 1):
         """
-        Initialize amplitude subtractor.
-        
+        Initialize.
         Args:
-            border_width: Width of border in pixels to use as reference
+            border_width: Deprecated, kept for backward compatibility.
         """
         self.border_width = border_width
     
-    def extract_border_pixels(self, data: np.ndarray) -> np.ndarray:
+    def get_reference_values(self, data: np.ndarray, ref_idx: Tuple[int, int]) -> np.ndarray:
         """
-        Extract border pixels from the data grid.
-        
-        Args:
-            data: Input data array, shape (H, W, C) or (H, W)
-            
-        Returns:
-            Array of border pixel values
+        Extract vector at reference point.
         """
-        if len(data.shape) == 2:
-            # 2D array - add channel dimension
-            data = data[:, :, np.newaxis]
-        
-        h, w, c = data.shape
-        bw = self.border_width
-        
-        # Extract borders (top, bottom, left, right)
-        top = data[:bw, :, :]
-        bottom = data[-bw:, :, :]
-        left = data[bw:-bw, :bw, :]  # Exclude corners already in top/bottom
-        right = data[bw:-bw, -bw:, :]
-        
-        # Concatenate all border pixels
-        border = np.concatenate([
-            top.reshape(-1, c),
-            bottom.reshape(-1, c),
-            left.reshape(-1, c),
-            right.reshape(-1, c)
-        ], axis=0)
-        
-        return border
-    
-    def calculate_mean_amplitude(
-        self, 
-        border_data: np.ndarray, 
-        ignore_nan: bool = True
-    ) -> np.ndarray:
-        """
-        Calculate mean amplitude for each channel from border data.
-        
-        Args:
-            border_data: Border pixels, shape (N, C)
-            ignore_nan: If True, exclude NaN values from mean calculation
-            
-        Returns:
-            Array of mean values, shape (C,)
-        """
-        if ignore_nan:
-            mean_values = np.nanmean(border_data, axis=0)
-        else:
-            mean_values = np.mean(border_data, axis=0)
-        
-        # Replace any NaN results with 0
-        mean_values = np.nan_to_num(mean_values, nan=0.0)
-        
-        return mean_values
-    
-    def subtract_from_all(self, data: np.ndarray, mean_values: np.ndarray) -> np.ndarray:
-        """
-        Subtract mean values from entire image.
-        
-        Args:
-            data: Input data, shape (H, W, C)
-            mean_values: Mean values to subtract, shape (C,)
-            
-        Returns:
-            Data with mean subtracted
-        """
-        # Broadcast subtraction across all pixels
-        subtracted = data - mean_values[np.newaxis, np.newaxis, :]
-        
-        return subtracted
+        y, x = ref_idx
+        if y >= data.shape[0] or x >= data.shape[1]:
+             raise ValueError(f"Reference index {ref_idx} out of bounds.")
+        return data[y, x, :]
     
     def subtract_primary_field(
         self, 
         data: np.ndarray,
-        ignore_nan: bool = True
+        reference_idx: Tuple[int, int] = (0, 0),
+        ignore_nan: bool = True # Kept for signature compatibility, unused
     ) -> Tuple[np.ndarray, np.ndarray]:
         """
-        Complete primary field subtraction pipeline.
+        Subtract reference signal from entire grid.
         
         Args:
-            data: Input data, shape (H, W, C)
-            ignore_nan: If True, exclude NaN from mean calculation
+            data: Input data (H, W, C)
+            reference_idx: (y, x) coordinates of primary field reference
             
         Returns:
-            Tuple of (subtracted data, mean amplitudes)
+            Tuple (subtracted_data, reference_vector)
         """
-        # Extract border pixels
-        border = self.extract_border_pixels(data)
+        # Get reference vector
+        ref_vec = self.get_reference_values(data, reference_idx)
         
-        # Calculate mean amplitude
-        mean_amplitudes = self.calculate_mean_amplitude(border, ignore_nan)
+        # Handle potential NaNs in reference
+        # If ref is NaN, we probably shouldn't subtract anything (or error out)
+        # Let's convert NaN to 0 to be safe, but warn?
+        ref_to_subtract = np.nan_to_num(ref_vec, nan=0.0)
         
-        # Subtract from all
-        subtracted = self.subtract_from_all(data, mean_amplitudes)
+        # Subtract
+        # Broadcast (C,) -> (1, 1, C)
+        subtracted = data - ref_to_subtract[np.newaxis, np.newaxis, :]
         
-        return subtracted, mean_amplitudes
+        return subtracted, ref_to_subtract

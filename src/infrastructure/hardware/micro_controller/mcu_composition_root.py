@@ -104,11 +104,11 @@ class MCUCompositionRoot:
         
         # Defaults (Factory Settings)
         adc_default_path = os.path.join(base_dir, "ads131a04/ads131a04_default_config.json")
-        dds_default_path = os.path.join(base_dir, "ad9106/ad9106_default_config.json")
+        dds_default_path = os.path.join(".aefi_acquisition", "configs", "ad9106_default_config.json")
         
         # User Config (Last Saved State)
         adc_user_path = os.path.join(base_dir, "ads131a04/ads131a04_last_config.json")
-        dds_user_path = os.path.join(base_dir, "ad9106/ad9106_last_config.json")
+        dds_user_path = os.path.join(".aefi_acquisition", "configs", "ad9106_last_config.json")
         
         adc_config = {}
         dds_config = {}

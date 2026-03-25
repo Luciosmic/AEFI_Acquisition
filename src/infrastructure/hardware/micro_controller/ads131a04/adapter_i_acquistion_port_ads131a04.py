@@ -137,15 +137,10 @@ class ADS131A04Adapter(IAcquisitionPort):
         if not success:
             print(f"[ADS131Adapter] Acquisition failed. Response: {response}")
             raise RuntimeError(f"Acquisition failed: {response}")
-        
-        # DEBUG: Trace raw response
-        print(f"[ADS131Adapter] Raw response: '{response}'")
 
         # Parse response: tab-separated raw ADC codes (8 channels hardware, use first 6)
         try:
             raw_codes = [int(x) for x in response.split('\t') if x.strip()]
-            # DEBUG: Trace parsed codes
-            print(f"[ADS131Adapter] Parsed codes: {raw_codes}")
             
             if len(raw_codes) < 6:
                 print(f"[ADS131Adapter] Error: Not enough channels. Got {len(raw_codes)}")

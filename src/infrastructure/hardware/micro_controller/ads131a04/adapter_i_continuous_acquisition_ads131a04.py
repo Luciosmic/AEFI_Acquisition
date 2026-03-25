@@ -100,9 +100,6 @@ class AdapterIContinuousAcquisitionAds131a04(IContinuousAcquisitionExecutor):
                 # or read from a buffer. For now, we poll the single-shot acquisition.
                 try:
                     sample = acquisition_port.acquire_sample()
-                    # DEBUG: Trace sample index (every 10 samples to avoid spam)
-                    if index % 10 == 0:
-                        print(f"[ContinuousAcquisition] Acquired sample #{index}")
                 except Exception as e:
                     print(f"[ContinuousAcquisition] Error acquiring sample: {e}")
                     raise e

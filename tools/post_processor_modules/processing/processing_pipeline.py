@@ -58,6 +58,7 @@ class ProcessingPipeline:
         self,
         csv_path: Path,
         rotation_angles: Optional[Tuple[float, float, float]] = None,
+        reference_point: Tuple[int, int] = (0, 0),
         skip_interpolation: bool = False
     ) -> Dict:
         """
@@ -91,17 +92,21 @@ class ProcessingPipeline:
             summary['steps_completed'].append('preprocess')
             
             # Step 3: Phase calibration
-            print("Calibrating phase...")
-            phase_calibrated, phase_angles = self.phase_calibrator.calibrate(preprocessed)
-            phase_metadata = {'phase_angles': phase_angles}
+            print(f"Calibrating phase (Ref: {reference_point})...")
+            phase_calibrated, phase_angles = self.phase_calibrator.calibrate(
+                preprocessed, 
+                reference_idx=reference_point
+            )
+            phase_metadata = {'phase_angles': phase_angles, 'reference_point': reference_point}
             self.data_handler.save_step('phase_calibrated', phase_calibrated, phase_metadata)
             self.current_data = phase_calibrated
             summary['steps_completed'].append('phase_calibration')
             
             # Step 4: Amplitude subtraction
-            print("Subtracting primary field amplitude...")
+            print(f"Subtracting primary field amplitude (Ref: {reference_point})...")
             amplitude_subtracted, mean_amplitudes = self.amplitude_subtractor.subtract_primary_field(
-                phase_calibrated
+                phase_calibrated,
+                reference_idx=reference_point
             )
             amp_metadata = {'mean_amplitudes': mean_amplitudes.tolist()}
             self.data_handler.save_step('amplitude_subtracted', amplitude_subtracted, amp_metadata)
@@ -130,6 +135,10 @@ class ProcessingPipeline:
                     rotated,
                     extent
                 )
+                # Propagate rotation info if available
+                if rotation_angles is not None:
+                    interp_metadata['rotation_angles'] = rotation_angles
+                
                 self.data_handler.save_step('interpolated', interpolated, interp_metadata)
                 self.current_data = interpolated
                 summary['steps_completed'].append('interpolation')

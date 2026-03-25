@@ -85,7 +85,6 @@ class MotionControlService:
         try:
             current = self._get_reference_position()
             target = Position2D(x=target_x, y=current.y)
-            print(f"[MotionControlService] DEBUG: move_absolute_x: Ref={current}, Target={target}")
             
             self._motion_port.move_to(target)
             self._update_target(target)
@@ -101,7 +100,6 @@ class MotionControlService:
         try:
             current = self._get_reference_position()
             target = Position2D(x=current.x, y=target_y)
-            print(f"[MotionControlService] DEBUG: move_absolute_y: Ref={current}, Target={target}")
             
             self._motion_port.move_to(target)
             self._update_target(target)

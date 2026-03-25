@@ -98,14 +98,30 @@ class DataHandler:
         if metadata:
             for key, value in metadata.items():
                 # Handle different types appropriately
-                if isinstance(value, (np.ndarray, list, tuple)):
-                    group.attrs[key] = np.array(value)
+                if isinstance(value, (dict, list, tuple)):
+                    # Store complex structures as JSON string to avoid HDF5 type issues
+                    import json
+                    # Convert numpy types to python types for JSON serialization if needed
+                    # simplified approach: try json dumps
+                    try:
+                        # If it's a list/tuple of purely numbers, numpy array is fine and preferred for speed/access?
+                        # But for robustness against strings, JSON is safer.
+                        # Check if it is a list of strings
+                        if isinstance(value, (list, tuple)) and len(value) > 0 and isinstance(value[0], str):
+                             group.attrs[key] = json.dumps(value)
+                        elif isinstance(value, np.ndarray) and value.dtype.kind in ('U', 'S'):
+                             group.attrs[key] = json.dumps(value.tolist())
+                        elif isinstance(value, (np.ndarray, list, tuple)):
+                             # Fallback for numerical arrays
+                             group.attrs[key] = np.array(value)
+                        else:
+                             # Dicts
+                             group.attrs[key] = json.dumps(value)
+                    except Exception:
+                        # Fallback to string representation
+                        group.attrs[key] = str(value)
                 elif isinstance(value, (str, int, float, bool)):
                     group.attrs[key] = value
-                elif isinstance(value, dict):
-                    # Store dict as JSON string
-                    import json
-                    group.attrs[key] = json.dumps(value)
                 else:
                     group.attrs[key] = str(value)
         

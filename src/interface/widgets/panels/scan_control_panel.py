@@ -4,6 +4,8 @@ from PySide6.QtWidgets import (
     QCheckBox
 )
 from PySide6.QtCore import Signal
+import json
+import os
 
 class ScanControlPanel(QWidget):
     """
@@ -20,6 +22,7 @@ class ScanControlPanel(QWidget):
         super().__init__(parent)
         self._build_ui()
         self._connect_signals()
+        self._load_config()
 
     def _build_ui(self):
         layout = QVBoxLayout(self)
@@ -96,8 +99,6 @@ class ScanControlPanel(QWidget):
         self.input_y_max = QLineEdit("800.0")
         self.input_y_nb = QLineEdit("81")
         
-        self.input_speed = QLineEdit("100.0")
-        
         self.input_stabilization = QLineEdit("300") # ms
         self.input_averaging = QLineEdit("10") # samples
         
@@ -110,7 +111,6 @@ class ScanControlPanel(QWidget):
         form_layout.addRow("Y Min (mm):", self.input_y_min)
         form_layout.addRow("Y Max (mm):", self.input_y_max)
         form_layout.addRow("Y Points:", self.input_y_nb)
-        form_layout.addRow("Speed (mm/s):", self.input_speed)
         form_layout.addRow("Stabilization (ms):", self.input_stabilization)
         form_layout.addRow("Averaging (samples):", self.input_averaging)
         form_layout.addRow("Pattern:", self.combo_pattern)
@@ -189,7 +189,6 @@ class ScanControlPanel(QWidget):
             "y_min": self.input_y_min.text(),
             "y_max": self.input_y_max.text(),
             "y_nb_points": self.input_y_nb.text(),
-            "motion_speed_mm_s": self.input_speed.text(),
             "stabilization_delay_ms": self.input_stabilization.text(),
             "averaging_per_position": self.input_averaging.text(),
             "scan_pattern": self.combo_pattern.currentText(),
@@ -248,3 +247,54 @@ class ScanControlPanel(QWidget):
         self.btn_stop.setEnabled(False)
         self.btn_pause.setEnabled(False)
         self.btn_resume.setEnabled(False)
+    
+    def _load_config(self):
+        """
+        Load scan configuration from JSON file.
+        Falls back to UI defaults if file doesn't exist or is invalid.
+        """
+        config_path = os.path.join(".aefi_acquisition", "configs", "scan_default_config.json")
+        
+        try:
+            if os.path.exists(config_path):
+                with open(config_path, 'r', encoding='utf-8') as f:
+                    config = json.load(f)
+                
+                # Load scan configuration
+                scan_config = config.get("scan_config", {})
+                if scan_config:
+                    self.input_x_min.setText(str(scan_config.get("x_min", 600.0)))
+                    self.input_x_max.setText(str(scan_config.get("x_max", 800.0)))
+                    self.input_x_nb.setText(str(scan_config.get("x_nb_points", 81)))
+                    self.input_y_min.setText(str(scan_config.get("y_min", 600.0)))
+                    self.input_y_max.setText(str(scan_config.get("y_max", 800.0)))
+                    self.input_y_nb.setText(str(scan_config.get("y_nb_points", 81)))
+                    self.input_stabilization.setText(str(scan_config.get("stabilization_delay_ms", 300)))
+                    self.input_averaging.setText(str(scan_config.get("averaging_per_position", 10)))
+                    
+                    # Set pattern in combo box
+                    pattern = scan_config.get("scan_pattern", "SERPENTINE")
+                    index = self.combo_pattern.findText(pattern)
+                    if index >= 0:
+                        self.combo_pattern.setCurrentIndex(index)
+                
+                # Load export configuration
+                export_config = config.get("export_config", {})
+                if export_config:
+                    self.checkbox_export_enabled.setChecked(export_config.get("enabled", True))
+                    self.input_export_filename.setText(export_config.get("filename_base", "scan"))
+                    self.input_export_directory.setText(export_config.get("output_directory", ""))
+                    
+                    # Set format in combo box
+                    format_str = export_config.get("format", "CSV")
+                    format_index = self.combo_export_format.findText(format_str)
+                    if format_index >= 0:
+                        self.combo_export_format.setCurrentIndex(format_index)
+                
+                print(f"[ScanControlPanel] Configuration loaded from {config_path}")
+            else:
+                print(f"[ScanControlPanel] Config file not found at {config_path}, using UI defaults")
+        except json.JSONDecodeError as e:
+            print(f"[ScanControlPanel] Invalid JSON in config file: {e}, using UI defaults")
+        except Exception as e:
+            print(f"[ScanControlPanel] Error loading config: {e}, using UI defaults")

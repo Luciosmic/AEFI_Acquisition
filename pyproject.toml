@@ -14,8 +14,8 @@ dependencies = [
     "scipy>=1.11.0",
     "moderngl>=5.8.0",
     "glfw>=2.5.0",
-    "pyrr>=0.10.3",
     "numba>=0.57.0",
+    "pandas>=1.5.0",
 ]
 
 [project.optional-dependencies]
@@ -25,6 +25,14 @@ dev = [
     "black>=22.0.0",
     "flake8>=4.0.0",
     "mypy>=0.950",
+]
+
+[tool.uv]
+# Configuration for uv package manager
+required-environments = [
+    "sys_platform == 'win32' and platform_machine == 'AMD64'",
+    "sys_platform == 'linux'",
+    "sys_platform == 'darwin'",
 ]
 
 [tool.hatch.build.targets.wheel]
