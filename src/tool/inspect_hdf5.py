@@ -36,14 +36,14 @@ def inspect_hdf5(path: str) -> None:
     Resolution strategy:
     - If `path` is absolute and exists -> use it.
     - If `path` is relative:
-        * first try `<project_root>/data_repository/<path>`
+        * first try `<project_root>/.aefi_acquisition/scans/processed_data/<path>`
         * then fall back to current working directory.
     """
     raw_path = Path(path)
 
     # Project root = parent of "src" directory (this file is under src/tool/)
     project_root = Path(__file__).resolve().parents[2]
-    data_repo = project_root / "data_repository"
+    data_repo = project_root / ".aefi_acquisition" / "scans" / "processed_data"
 
     file_path: Path
     if raw_path.is_absolute():

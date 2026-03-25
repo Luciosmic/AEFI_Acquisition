@@ -18,8 +18,8 @@ def main():
     
     # Paths
     project_root = Path(__file__).parent.parent.parent
-    scan_dir = project_root / "data_repository" / "scans"
-    output_dir = project_root / "data_repository" / "processed"
+    scan_dir = project_root / ".aefi_acquisition" / "scans" / "raw_data"
+    output_dir = project_root / ".aefi_acquisition" / "scans" / "processed_data"
     output_dir.mkdir(exist_ok=True)
     
     # Find latest CSV file
