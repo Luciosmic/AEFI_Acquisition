@@ -1,0 +1,44 @@
+@startuml
+
+hide empty members
+skinparam linetype ortho
+
+package "Domain Layer" #White {
+
+    package "Model: AEFI Device" {
+        
+        class AefiDevice <<Aggregate>> {
+            + get_interactions(): List<AefiInteractionPair>
+            + get_sensor_orientation(): Quaternion
+        }
+
+        class QuadSourceGeometry <<ValueObject>> {
+            - diagonal_spacing_mm: float
+            + get_source_local_pos(quadrant): Vector3D
+        }
+
+        class Quaternion <<ValueObject>> {
+            - w: float
+            - x: float
+            - y: float
+            - z: float
+            + {static} from_euler(roll, pitch, yaw): Quaternion
+            + rotate(vector: Vector3D): Vector3D
+            + inverse(): Quaternion
+            + multiply(other: Quaternion): Quaternion
+            note right: Mathématique robuste.\nEvite le Gimbal Lock.
+        }
+    }
+
+    class AefiPhysicsEngine <<Domain Service>> {
+        + compute_field(device: AefiDevice, ...): Vector3D
+        note bottom: Utilise device.orientation.rotate()\npour corriger le champ mesuré
+    }
+}
+
+' Relations
+AefiDevice o-- QuadSourceGeometry : "Définie par"
+QuadSourceGeometry *-- Quaternion : "Orientation Capteur"
+AefiPhysicsEngine ..> Quaternion : "Applique"
+
+@enduml

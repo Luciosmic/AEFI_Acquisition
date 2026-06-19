@@ -1,0 +1,257 @@
+{
+  "tests": [
+    {
+      "test_name": "test_nominal_scan_execution",
+      "timestamp": "2025-12-18T03:09:47.292733",
+      "status": "PASSED",
+      "interactions": [
+        {
+          "timestamp": "2025-12-18T03:09:47.292991",
+          "actor": "System",
+          "action": "DIVIDER",
+          "target": "System",
+          "message": "Setup",
+          "data": null,
+          "expect": null,
+          "got": null
+        },
+        {
+          "timestamp": "2025-12-18T03:09:47.293206",
+          "actor": "Test",
+          "action": "CREATE",
+          "target": "EventBus",
+          "message": "Initialize event bus"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:47.293419",
+          "actor": "Test",
+          "action": "CREATE",
+          "target": "MotionPort",
+          "message": "Initialize mock motion port"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:47.293631",
+          "actor": "Test",
+          "action": "CREATE",
+          "target": "AcquisitionPort",
+          "message": "Initialize mock acquisition port"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:47.293884",
+          "actor": "Test",
+          "action": "CREATE",
+          "target": "ScanExecutor",
+          "message": "Initialize scan executor"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:47.294137",
+          "actor": "Test",
+          "action": "CREATE",
+          "target": "ScanService",
+          "message": "Initialize scan application service"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:47.294415",
+          "actor": "Test",
+          "action": "CREATE",
+          "target": "ScanConfig",
+          "message": "Create scan configuration"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:47.294655",
+          "actor": "System",
+          "action": "DIVIDER",
+          "target": "System",
+          "message": "Execution",
+          "data": null,
+          "expect": null,
+          "got": null
+        },
+        {
+          "timestamp": "2025-12-18T03:09:47.294863",
+          "actor": "Test",
+          "action": "CREATE",
+          "target": "ScanDTO",
+          "message": "Create scan DTO from config"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:47.295075",
+          "actor": "Test",
+          "action": "CALL",
+          "target": "ScanService",
+          "message": "execute_scan(dto)"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:47.295765",
+          "actor": "EventBus",
+          "action": "PUBLISH",
+          "target": "TestHandler",
+          "message": "Received ScanStarted"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:47.296623",
+          "actor": "EventBus",
+          "action": "PUBLISH",
+          "target": "TestHandler",
+          "message": "Received ScanPointAcquired"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:47.297370",
+          "actor": "Test",
+          "action": "ASSERT",
+          "target": "ScanService",
+          "message": "Execution started",
+          "expect": "True",
+          "got": "True"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:47.297575",
+          "actor": "System",
+          "action": "DIVIDER",
+          "target": "System",
+          "message": "Waiting for Completion",
+          "data": null,
+          "expect": null,
+          "got": null
+        },
+        {
+          "timestamp": "2025-12-18T03:09:49.217082",
+          "actor": "EventBus",
+          "action": "PUBLISH",
+          "target": "TestHandler",
+          "message": "Received ScanPointAcquired"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:51.923936",
+          "actor": "EventBus",
+          "action": "PUBLISH",
+          "target": "TestHandler",
+          "message": "Received ScanPointAcquired"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:53.846772",
+          "actor": "EventBus",
+          "action": "PUBLISH",
+          "target": "TestHandler",
+          "message": "Received ScanPointAcquired"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:53.847394",
+          "actor": "EventBus",
+          "action": "PUBLISH",
+          "target": "TestHandler",
+          "message": "Received ScanCompleted"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:53.909613",
+          "actor": "Test",
+          "action": "INFO",
+          "target": "ScanService",
+          "message": "Scan completed in 6.61s"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:53.910307",
+          "actor": "System",
+          "action": "DIVIDER",
+          "target": "System",
+          "message": "Verification",
+          "data": null,
+          "expect": null,
+          "got": null
+        },
+        {
+          "timestamp": "2025-12-18T03:09:53.911038",
+          "actor": "Test",
+          "action": "ASSERT",
+          "target": "ScanService",
+          "message": "Status is COMPLETED",
+          "data": {
+            "status": "completed"
+          },
+          "expect": "completed",
+          "got": "completed"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:53.911533",
+          "actor": "Test",
+          "action": "ASSERT",
+          "target": "StepScan",
+          "message": "Scan status is COMPLETED",
+          "data": {
+            "status": "ScanStatus.COMPLETED"
+          },
+          "expect": "COMPLETED",
+          "got": "ScanStatus.COMPLETED"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:53.911971",
+          "actor": "Test",
+          "action": "ASSERT",
+          "target": "StepScan",
+          "message": "Has 4 points",
+          "data": {
+            "points": 4
+          },
+          "expect": "4",
+          "got": "4"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:53.912411",
+          "actor": "Test",
+          "action": "ASSERT",
+          "target": "EventBus",
+          "message": "ScanStarted event emitted",
+          "data": {
+            "events": [
+              "ScanStarted",
+              "ScanPointAcquired",
+              "ScanPointAcquired",
+              "ScanPointAcquired",
+              "ScanPointAcquired",
+              "ScanCompleted"
+            ]
+          },
+          "expect": "True",
+          "got": "True"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:53.912973",
+          "actor": "Test",
+          "action": "ASSERT",
+          "target": "EventBus",
+          "message": "4 ScanPointAcquired events",
+          "data": {
+            "count": 4
+          },
+          "expect": "4",
+          "got": "4"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:53.913502",
+          "actor": "Test",
+          "action": "ASSERT",
+          "target": "EventBus",
+          "message": "ScanCompleted event emitted",
+          "data": {
+            "events": [
+              "ScanStarted",
+              "ScanPointAcquired",
+              "ScanPointAcquired",
+              "ScanPointAcquired",
+              "ScanPointAcquired",
+              "ScanCompleted"
+            ]
+          },
+          "expect": "True",
+          "got": "True"
+        }
+      ],
+      "summary": {
+        "total_interactions": 26,
+        "subscriptions": 0,
+        "publications": 6,
+        "assertions": 7
+      }
+    }
+  ]
+}

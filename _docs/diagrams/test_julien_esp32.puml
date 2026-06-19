@@ -1,0 +1,40 @@
+@startuml
+skinparam componentStyle uml2
+skinparam packageStyle rectangle
+
+package "Domain Layer (Intouché)" {
+  interface "IAcquisitionPort" as Port
+}
+
+package "Infrastructure Layer (Modifications)" {
+  component "ADS131A04Adapter" as Adapter #LightYellow
+  component "MCU_SerialCommunicator" as Comm #LightCoral
+}
+
+package "Hardware (Remplacement)" {
+  node "ESP32 (Nouveau)" as MCU #LightBlue {
+    [Firmware C++]
+  }
+  node "ADS131A04 (ADC Externe)" as ADC
+  node "AD9106 (DDS)" as DDS
+}
+
+Port <|.. Adapter
+Adapter --> Comm : Envoie commandes ('m1')
+Comm <--> MCU : USB/Serial ou WiFi
+MCU --> ADC : SPI
+MCU --> DDS : SPI
+
+note right of Comm
+  <b>Point Critique</b>
+  À adapter si changement
+  de média (WiFi vs USB)
+end note
+
+note right of Adapter
+  <b>Ajustement</b>
+  À modifier seulement si
+  la syntaxe des commandes change
+end note
+
+@enduml

@@ -1,0 +1,236 @@
+{
+  "tests": [
+    {
+      "test_name": "test_event_based_execution",
+      "timestamp": "2025-12-18T02:20:08.290765",
+      "status": "PASSED",
+      "interactions": [
+        {
+          "timestamp": "2025-12-18T02:20:08.291373",
+          "actor": "System",
+          "action": "DIVIDER",
+          "target": "System",
+          "message": "Setup Phase",
+          "data": null,
+          "expect": null,
+          "got": null
+        },
+        {
+          "timestamp": "2025-12-18T02:20:08.291977",
+          "actor": "TestRunner",
+          "action": "CREATE",
+          "target": "EventBus",
+          "message": "Initialize InMemoryEventBus"
+        },
+        {
+          "timestamp": "2025-12-18T02:20:08.292531",
+          "actor": "TestRunner",
+          "action": "CREATE",
+          "target": "MotionPort",
+          "message": "Initialize MockMotionPort",
+          "data": {
+            "delay_ms": 50.0
+          }
+        },
+        {
+          "timestamp": "2025-12-18T02:20:08.293073",
+          "actor": "TestRunner",
+          "action": "CREATE",
+          "target": "AcquisitionPort",
+          "message": "Initialize MockAcquisitionPort"
+        },
+        {
+          "timestamp": "2025-12-18T02:20:08.293591",
+          "actor": "TestRunner",
+          "action": "CREATE",
+          "target": "ScanExecutor",
+          "message": "Initialize StepScanExecutor"
+        },
+        {
+          "timestamp": "2025-12-18T02:20:08.294122",
+          "actor": "TestRunner",
+          "action": "CREATE",
+          "target": "StepScan",
+          "message": "Initialize Scan Aggregate"
+        },
+        {
+          "timestamp": "2025-12-18T02:20:08.294656",
+          "actor": "TestRunner",
+          "action": "COMMAND",
+          "target": "StepScan",
+          "message": "Start Scan"
+        },
+        {
+          "timestamp": "2025-12-18T02:20:08.296183",
+          "actor": "TestRunner",
+          "action": "SUBSCRIBE",
+          "target": "EventBus",
+          "message": "Subscribe to motion events"
+        },
+        {
+          "timestamp": "2025-12-18T02:20:08.296634",
+          "actor": "System",
+          "action": "DIVIDER",
+          "target": "System",
+          "message": "Execution Phase",
+          "data": null,
+          "expect": null,
+          "got": null
+        },
+        {
+          "timestamp": "2025-12-18T02:20:08.298390",
+          "actor": "TestRunner",
+          "action": "CALL",
+          "target": "ScanExecutor",
+          "message": "execute(scan, trajectory)"
+        },
+        {
+          "timestamp": "2025-12-18T02:20:08.299027",
+          "actor": "System",
+          "action": "DIVIDER",
+          "target": "System",
+          "message": "Verification Phase",
+          "data": null,
+          "expect": null,
+          "got": null
+        },
+        {
+          "timestamp": "2025-12-18T02:20:08.299939",
+          "actor": "EventBus",
+          "action": "RECEIVE",
+          "target": "TestHandler",
+          "message": "Received MotionStarted",
+          "data": {
+            "event": "MotionStarted"
+          }
+        },
+        {
+          "timestamp": "2025-12-18T02:20:08.300848",
+          "actor": "TestRunner",
+          "action": "ASSERT",
+          "target": "ScanExecutor",
+          "message": "Check execution success",
+          "expect": "True",
+          "got": "True"
+        },
+        {
+          "timestamp": "2025-12-18T02:20:08.301276",
+          "actor": "TestRunner",
+          "action": "ASSERT",
+          "target": "StepScan",
+          "message": "Check scan status",
+          "expect": "ScanStatus.COMPLETED",
+          "got": "ScanStatus.RUNNING"
+        }
+      ],
+      "summary": {
+        "total_interactions": 14,
+        "subscriptions": 1,
+        "publications": 0,
+        "assertions": 2
+      }
+    },
+    {
+      "test_name": "test_motion_failure_handling",
+      "timestamp": "2025-12-18T02:20:08.303793",
+      "status": "PASSED",
+      "interactions": [
+        {
+          "timestamp": "2025-12-18T02:20:08.304178",
+          "actor": "System",
+          "action": "DIVIDER",
+          "target": "System",
+          "message": "Setup - Failure Test",
+          "data": null,
+          "expect": null,
+          "got": null
+        },
+        {
+          "timestamp": "2025-12-18T02:20:08.305493",
+          "actor": "TestRunner",
+          "action": "COMMAND",
+          "target": "MotionPort",
+          "message": "Inject Failure Configuration",
+          "data": {
+            "reason": "Simulated Critical Error"
+          }
+        },
+        {
+          "timestamp": "2025-12-18T02:20:08.305973",
+          "actor": "TestRunner",
+          "action": "SUBSCRIBE",
+          "target": "EventBus",
+          "message": "Subscribe to motion events"
+        },
+        {
+          "timestamp": "2025-12-18T02:20:08.306395",
+          "actor": "System",
+          "action": "DIVIDER",
+          "target": "System",
+          "message": "Execution - Failure Test",
+          "data": null,
+          "expect": null,
+          "got": null
+        },
+        {
+          "timestamp": "2025-12-18T02:20:08.306917",
+          "actor": "System",
+          "action": "DIVIDER",
+          "target": "System",
+          "message": "Verification - Failure Test",
+          "data": null,
+          "expect": null,
+          "got": null
+        },
+        {
+          "timestamp": "2025-12-18T02:20:08.308324",
+          "actor": "TestRunner",
+          "action": "ASSERT",
+          "target": "ScanExecutor",
+          "message": "Check execution failure",
+          "expect": "False",
+          "got": "True"
+        }
+      ],
+      "summary": {
+        "total_interactions": 6,
+        "subscriptions": 1,
+        "publications": 0,
+        "assertions": 1
+      }
+    },
+    {
+      "test_name": "test_physics_based_execution",
+      "timestamp": "2025-12-18T02:20:08.310412",
+      "status": "PASSED",
+      "interactions": [
+        {
+          "timestamp": "2025-12-18T02:20:08.310745",
+          "actor": "System",
+          "action": "DIVIDER",
+          "target": "System",
+          "message": "Setup - Physics Test",
+          "data": null,
+          "expect": null,
+          "got": null
+        },
+        {
+          "timestamp": "2025-12-18T02:20:08.311095",
+          "actor": "TestRunner",
+          "action": "CREATE",
+          "target": "MotionProfile",
+          "message": "Defined physics profile",
+          "data": {
+            "target_speed": 10.0
+          }
+        }
+      ],
+      "summary": {
+        "total_interactions": 2,
+        "subscriptions": 0,
+        "publications": 0,
+        "assertions": 0
+      }
+    }
+  ]
+}

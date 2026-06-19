@@ -1,0 +1,176 @@
+@startuml Architecture Overview - Scan System
+
+!define RECTANGLE class
+
+skinparam packageStyle rectangle
+skinparam backgroundColor #FEFEFE
+skinparam linetype ortho
+
+title Scan System - DDD/Hexagonal Architecture Overview
+
+package "Presentation Layer" #TECHNOLOGY {
+    [GUI / API]
+}
+
+package "Application Layer" #LightBlue {
+    
+    package "Application Services" {
+        [ScanApplicationService]
+    }
+    
+    package "Event Subscribers" {
+        [ExportEventSubscriber]
+        [UIEventSubscriber]
+        [LoggingEventSubscriber]
+    }
+    
+    package "DTOs" {
+        [Scan2DConfigDTO]
+        [ExportConfigDTO]
+        [ScanStatusDTO]
+    }
+    
+    package "Ports (Interfaces)" {
+        interface "IMotionPort" as IMotion
+        interface "IAcquisitionPort" as IAcq
+        interface "IExportPort" as IExport
+    }
+}
+
+package "Domain Layer" #LightGreen {
+    
+    package "Aggregates" {
+        [StepScan] <<Aggregate Root>>
+    }
+    
+    package "Domain Services" {
+        [MeasurementStatisticsService]
+        [ScanTrajectoryFactory]
+    }
+    
+    package "Value Objects" {
+        [VoltageMeasurement]
+        [ScanPointResult]
+        [Position2D]
+        [StepScanConfig]
+        [ScanZone]
+    }
+    
+    package "Domain Events" {
+        [ScanStarted]
+        [ScanPointAcquired]
+        [ScanCompleted]
+        [ScanFailed]
+        [ScanCancelled]
+    }
+}
+
+package "Infrastructure Layer" #LightYellow {
+    
+    package "Hardware Adapters" {
+        [MotionAdapter]
+        [AcquisitionAdapter]
+    }
+    
+    package "Export Adapters" {
+        [HDF5Exporter]
+        [CSVExporter]
+    }
+    
+    package "External Systems" {
+        database "HDF5 File" as HDF5
+        database "CSV File" as CSV
+        component "Motion Controller" as MotionHW
+        component "ADC Hardware" as ADCHW
+    }
+}
+
+' ==========================================
+' VERTICAL FLOW (Top to Bottom)
+' ==========================================
+
+[GUI / API] --> [ScanApplicationService] : execute_scan(dto)
+[ScanApplicationService] --> [StepScan] : orchestrates
+[ScanApplicationService] --> [MeasurementStatisticsService] : uses
+[ScanApplicationService] --> [ScanTrajectoryFactory] : uses
+
+' ==========================================
+' HORIZONTAL FLOW (Ports & Adapters)
+' ==========================================
+
+[ScanApplicationService] --> IMotion : uses
+[ScanApplicationService] --> IAcq : uses
+
+IMotion <|.. [MotionAdapter] : implements
+IAcq <|.. [AcquisitionAdapter] : implements
+IExport <|.. [HDF5Exporter] : implements
+IExport <|.. [CSVExporter] : implements
+
+[MotionAdapter] --> MotionHW
+[AcquisitionAdapter] --> ADCHW
+[HDF5Exporter] --> HDF5
+[CSVExporter] --> CSV
+
+' ==========================================
+' EVENT FLOW
+' ==========================================
+
+[StepScan] ..> [ScanStarted] : emits
+[StepScan] ..> [ScanPointAcquired] : emits
+[StepScan] ..> [ScanCompleted] : emits
+
+[ScanApplicationService] ..> [ExportEventSubscriber] : dispatches events
+[ScanApplicationService] ..> [UIEventSubscriber] : dispatches events
+
+[ExportEventSubscriber] --> IExport : orchestrates
+
+' ==========================================
+' DOMAIN COMPOSITION
+' ==========================================
+
+[StepScan] *-- [ScanPointResult]
+[ScanPointResult] *-- [Position2D]
+[ScanPointResult] *-- [VoltageMeasurement]
+[StepScan] ..> [StepScanConfig] : uses
+
+note right of [Domain Layer]
+  **Pure Business Logic**
+  - No I/O, no side-effects
+  - Manages state (StepScan)
+  - Emits domain events
+  - Testable without infrastructure
+end note
+
+note right of [Application Layer]
+  **Orchestration & Use Cases**
+  - Coordinates domain + infrastructure
+  - Dispatches events to subscribers
+  - No business logic
+  - Translates DTOs ↔ Domain objects
+end note
+
+note right of [Infrastructure Layer]
+  **I/O & External Systems**
+  - Hardware communication
+  - File persistence
+  - Implements ports
+  - Replaceable adapters
+end note
+
+note as N1
+  **Event-Driven Architecture:**
+  1. Domain emits events (ScanStarted, ScanPointAcquired, etc.)
+  2. Application dispatches to subscribers
+  3. Subscribers react (Export, UI, Logging)
+  4. Decoupled: easy to add/remove subscribers
+end note
+
+note as N2
+  **Key Design Patterns:**
+  - Hexagonal Architecture (Ports & Adapters)
+  - Domain-Driven Design (Aggregates, Value Objects, Services)
+  - Event-Driven Architecture (Domain Events + Subscribers)
+  - CQRS (Commands via Application Service, Queries via Domain)
+end note
+
+@enduml

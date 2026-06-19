@@ -1,0 +1,72 @@
+@startuml
+
+hide empty members
+skinparam linetype ortho
+
+package "Infrastructure Layer" #DDDDDD {
+    class JsonDeviceRepository {
+        + load_device_configuration(): QuadSourceGeometry
+        note bottom: Lit le fichier de config\ndu dispositif (calibration)
+    }
+}
+
+package "Domain Layer" #White {
+
+    package "Model: AEFI Device (Coeur Métier)" {
+        
+        class AefiDevice <<Aggregate / ValueObject>> {
+            - id: DeviceId
+            - sensor_id: str
+            + get_interactions(): List<AefiInteractionPair>
+            + get_orientation_offset(): float
+            note bottom: L'objet du modèle.\nEncapsule la physique de détection.
+        }
+
+        class FourSphereGeometry <<ValueObject>> {
+            - diagonal_spacing_mm: float
+            - angle_offset_rad: float
+            + get_source_local_pos(quadrant): Vector3D
+            note right: La configuration mathématique\n(Interchangeable)
+        }
+
+        class AefiInteractionPair <<ValueObject>> {
+            - source_id: str
+            - relative_vector: Vector3D
+            note right: Vecteur d'interaction\n(Source -> Capteur)
+        }
+    }
+
+    package "Model: Bench & Motion" {
+        class TestBench <<Aggregate Root>> {
+            + run_acquisition()
+        }
+
+        class ScanningHead <<Entity>> {
+            - current_global_position: Vector3D
+            + move_to(x, y)
+        }
+    }
+
+    package "Services" {
+        class AefiPhysicsEngine <<Domain Service>> {
+            + compute_field(device: AefiDevice, voltages: Map): Vector3D
+            note bottom: Calcule le champ résultant\nen itérant sur les interactions du Device
+        }
+    }
+}
+
+' Relations Infra
+JsonDeviceRepository ..> QuadSourceGeometry : "Hydrate"
+
+' Relations Domain - Device
+AefiDevice o-- QuadSourceGeometry : "Est défini par"
+AefiDevice ..> AefiInteractionPair : "Produit"
+
+' Relations Domain - Bench
+TestBench *-- ScanningHead : "Pilote"
+ScanningHead o-- AefiDevice : "Transporte"
+
+' Relations Domain - Physics
+AefiPhysicsEngine ..> AefiDevice : "Utilise"
+
+@enduml

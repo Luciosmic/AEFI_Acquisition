@@ -1,0 +1,49 @@
+@startuml
+title Sequence Diagram: test_full_acquisition_flow
+autonumber
+skinparam responseMessageBelowArrow true
+
+== Setup Phase ==
+
+"TestAcquisition" -> "MCULifecycleAdapter" : **CREATE** Initialize MCU Lifecycle Adapter
+note right
+Data: {
+  "port": "COM10",
+  "baudrate": 1500000
+}
+end note
+"MCULifecycleAdapter" -> "MCU_SerialCommunicator" : **CALL** connect
+note right
+Data: {
+  "port": "COM10"
+}
+end note
+"TestAcquisition" -> "ADS131A04Adapter" : **CREATE** Initialize Acquisition Adapter
+
+== Execution Phase ==
+
+"TestAcquisition" -> "ADS131A04Adapter" : **CALL** configure_for_uncertainty
+note right
+Data: {
+  "max_uncertainty": 0.001
+}
+end note
+"TestAcquisition" -> "ADS131A04Adapter" : **CALL** acquire_sample
+"ADS131A04Adapter" -> "MCU_SerialCommunicator" : **CALL** send_command('m1')
+"ADS131A04Adapter" --> "TestAcquisition" : **RETURN** VoltageMeasurement
+note right
+Data: {
+  "ch1": "0.010334",
+  "timestamp": "2025-12-12T15:58:43.705115"
+}
+end note
+
+== Verification Phase ==
+
+"TestAcquisition" -> "Measurement" : **ASSERT** Verify measurement is not None
+note right
+Expect: VoltageMeasurement object
+Got: VoltageMeasurement object
+end note
+"TestAcquisition" -> "MCULifecycleAdapter" : **CALL** close_all
+@enduml

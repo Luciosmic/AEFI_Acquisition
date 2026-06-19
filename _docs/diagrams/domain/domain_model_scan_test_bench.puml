@@ -1,0 +1,149 @@
+@startuml Domain Metagraph - Scan & Test Bench
+
+skinparam classAttributeIconSize 0
+skinparam backgroundColor #FEFEFE
+skinparam linetype ortho
+
+package "Domain Layer" {
+
+    package "Scan Domain" {
+
+        class StepScan <<Aggregate Root>> {
+            + start(config)
+            + add_point_result(result)
+            + complete()
+            + cancel()
+        }
+
+        class ScanPointResult <<Value Object>> {
+        }
+
+        class Position2D <<Value Object>> {
+        }
+
+        class VoltageMeasurement <<Value Object>> {
+        }
+
+        class StepScanConfig <<Value Object>> {
+            + validate()
+            + total_points()
+        }
+
+        class ScanZone <<Value Object>> {
+        }
+
+        enum ScanPattern {
+            SERPENTINE
+            RASTER
+            COMB
+        }
+
+        class MeasurementUncertainty <<Value Object>> {
+        }
+
+        class ScanTrajectoryFactory <<Factory>> {
+            + create_trajectory(config)
+        }
+
+        class ScanTrajectory <<Value Object>> {
+        }
+
+        interface DomainEvent {
+        }
+
+        class ScanStarted <<Domain Event>> {
+        }
+        class ScanPointAcquired <<Domain Event>> {
+        }
+        class ScanCompleted <<Domain Event>> {
+        }
+        class ScanFailed <<Domain Event>> {
+        }
+        class ScanCancelled <<Domain Event>> {
+        }
+
+        enum ScanStatus {
+            PENDING
+            RUNNING
+            COMPLETED
+            FAILED
+            CANCELLED
+        }
+    }
+
+    package "Device & Test Bench Domain" {
+
+        class AefiDevice <<Aggregate / ValueObject>> {
+            + get_interactions()
+            + get_orientation_offset()
+        }
+
+        class FourSphereGeometry <<Value Object>> {
+            + get_source_local_pos(quadrant)
+        }
+
+        class AefiInteractionPair <<Value Object>> {
+        }
+
+        class TestBench <<Aggregate Root>> {
+            + run_acquisition()
+        }
+
+        class ScanningHead <<Entity>> {
+            + move_to(x, y)
+        }
+
+        class AefiPhysicsEngine <<Domain Service>> {
+            + compute_field(device, voltages)
+        }
+    }
+}
+
+' ===========================
+' Relations - Scan Domain
+' ===========================
+StepScan "1" *-- "0..*" ScanPointResult
+ScanPointResult *-- Position2D
+ScanPointResult *-- VoltageMeasurement
+
+StepScan ..> ScanStatus
+
+StepScanConfig *-- ScanZone
+StepScanConfig *-- ScanPattern
+StepScanConfig *-- MeasurementUncertainty
+
+ScanTrajectoryFactory ..> StepScanConfig
+ScanTrajectoryFactory ..> ScanTrajectory
+ScanTrajectory *-- Position2D
+
+StepScan ..> ScanStarted
+StepScan ..> ScanPointAcquired
+StepScan ..> ScanCompleted
+StepScan ..> ScanFailed
+StepScan ..> ScanCancelled
+
+ScanStarted --|> DomainEvent
+ScanPointAcquired --|> DomainEvent
+ScanCompleted --|> DomainEvent
+ScanFailed --|> DomainEvent
+ScanCancelled --|> DomainEvent
+
+' ===========================
+' Relations - Device & Bench
+' ===========================
+AefiDevice o-- FourSphereGeometry
+AefiDevice ..> AefiInteractionPair
+
+TestBench *-- ScanningHead
+ScanningHead o-- AefiDevice
+
+AefiPhysicsEngine ..> AefiDevice
+
+' ===========================
+' Cross-domain links (high-level)
+' ===========================
+TestBench ..> StepScan : "orchestrates"
+ScanningHead ..> ScanTrajectory : "follows"
+AefiPhysicsEngine ..> ScanPointResult : "post-processes"
+
+@enduml

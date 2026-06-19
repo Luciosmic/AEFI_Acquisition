@@ -1,0 +1,31 @@
+@startuml
+participant "Motor\nHardware" as Motor
+participant "Motor\nAdapter" as Adapter
+participant "Hardware\nEventBus" as HWBus
+participant "Scan\nUseCase" as UseCase
+participant "Acquisition" as Acq
+participant "Domain\nEventBus" as DomainBus
+participant "UI\nEventBus" as UIBus
+participant "WebSocket" as WS
+
+Motor -> Adapter : position_changed(100.5)
+activate Adapter
+Adapter -> HWBus : publish(MotorPositionChanged)
+deactivate Adapter
+
+HWBus -> UseCase : handle(MotorPositionChanged)
+activate UseCase
+UseCase -> Acq : read_sensor_at_position()
+activate Acq
+
+Acq -> Motor : read()
+Motor --> Acq : data
+Acq -> DomainBus : raise(DataPointAcquired)
+deactivate Acq
+deactivate UseCase
+
+DomainBus -> UIBus : publish(DataPointAvailable)
+UIBus -> WS : send_to_client()
+WS -> WS : update_plot()
+
+@enduml

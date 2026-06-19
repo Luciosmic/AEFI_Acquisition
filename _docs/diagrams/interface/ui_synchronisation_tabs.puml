@@ -1,0 +1,47 @@
+@startuml
+participant "Advanced\nConfig Tab" as AdvUI
+participant "Advanced\nPresenter" as AdvPresenter
+participant "Update Config\nUseCase" as UseCase
+participant "Excitation\nAdapter" as Adapter
+participant "Event Bus" as EventBus
+participant "Simple\nConfig Tab" as SimpleUI
+participant "Simple\nPresenter" as SimplePresenter
+
+AdvUI -> AdvPresenter : set_phase_regime("custom")
+activate AdvPresenter
+
+AdvPresenter -> UseCase : execute(SetPhaseCommand)
+activate UseCase
+
+UseCase -> Adapter : set_phase_regime(custom)
+activate Adapter
+Adapter -> Adapter : write to hardware\nupdate shadow state
+Adapter -> EventBus : publish(HardwareConfigChanged)
+deactivate Adapter
+
+UseCase -> EventBus : publish(ExcitationConfigChanged)
+deactivate UseCase
+deactivate AdvPresenter
+
+EventBus -> SimplePresenter : notify(ExcitationConfigChanged)
+activate SimplePresenter
+
+SimplePresenter -> UseCase : get_current_config()
+activate UseCase
+UseCase -> Adapter : detect_mode()
+activate Adapter
+Adapter -> Adapter : compare shadow\nwith presets
+Adapter --> UseCase : ExcitationConfig(CUSTOM)
+deactivate Adapter
+UseCase --> SimplePresenter : ConfigViewModel(mode=CUSTOM)
+deactivate UseCase
+
+SimplePresenter -> SimpleUI : update_display("Custom")
+deactivate SimplePresenter
+
+note right of SimpleUI
+  Affiche "Custom (modifié)"
+  au lieu de "Normal"
+end note
+
+@enduml

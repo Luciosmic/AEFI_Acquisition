@@ -1,0 +1,69 @@
+@startuml
+package "Application Layer" {
+  interface "AdvancedHardwareConfigPort" as Port {
+    +get_parameters(): List[ConfigParameter]
+    +set_parameter(name, value)
+    +validate_value(name, value): bool
+  }
+  
+  class ConfigParameter {
+    +name: str
+    +type: ParameterType
+    +constraints: ParameterConstraints
+    +current_value: Any
+  }
+}
+
+package "Domain Layer" {
+  enum ParameterType {
+    RANGE
+    ENUM
+    BOOLEAN
+  }
+  
+  class ParameterConstraints {
+    +min_value: Optional[float]
+    +max_value: Optional[float]
+    +allowed_values: Optional[List]
+  }
+}
+
+package "Infrastructure Layer" {
+  class MotorAdapter {
+    -driver: MotorDriver
+    +get_parameters()
+    +set_parameter()
+    +validate_value()
+  }
+  
+  class SensorAdapter {
+    -hardware: SensorHW
+    +get_parameters()
+    +set_parameter()
+    +validate_value()
+  }
+}
+
+package "UI Layer" {
+  class ConfigPresenter {
+    -hardware: Port
+    +load_parameters()
+    +update_parameter(name, value)
+  }
+  
+  class DynamicConfigView {
+    +add_slider(name, constraints)
+    +add_dropdown(name, options)
+    +add_checkbox(name)
+  }
+}
+
+Port <|.. MotorAdapter
+Port <|.. SensorAdapter
+ConfigPresenter --> Port
+ConfigPresenter --> DynamicConfigView
+Port --> ConfigParameter
+ConfigParameter --> ParameterType
+ConfigParameter --> ParameterConstraints
+
+@enduml

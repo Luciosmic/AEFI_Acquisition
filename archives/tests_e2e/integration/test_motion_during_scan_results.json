@@ -1,0 +1,85 @@
+{
+  "tests": [
+    {
+      "test_name": "test_emergency_stop_during_scan",
+      "timestamp": "2025-12-18T02:20:05.457349",
+      "status": "PASSED",
+      "interactions": [
+        {
+          "timestamp": "2025-12-18T02:20:05.457702",
+          "actor": "System",
+          "action": "DIVIDER",
+          "target": "System",
+          "message": "Setup",
+          "data": null,
+          "expect": null,
+          "got": null
+        },
+        {
+          "timestamp": "2025-12-18T02:20:05.458092",
+          "actor": "System",
+          "action": "DIVIDER",
+          "target": "System",
+          "message": "Start Scan",
+          "data": null,
+          "expect": null,
+          "got": null
+        },
+        {
+          "timestamp": "2025-12-18T02:20:05.458422",
+          "actor": "Test",
+          "action": "CALL",
+          "target": "ScanService",
+          "message": "execute_scan(dto)"
+        },
+        {
+          "timestamp": "2025-12-18T02:20:05.662109",
+          "actor": "System",
+          "action": "DIVIDER",
+          "target": "System",
+          "message": "Emergency Stop",
+          "data": null,
+          "expect": null,
+          "got": null
+        },
+        {
+          "timestamp": "2025-12-18T02:20:05.664825",
+          "actor": "Test",
+          "action": "CALL",
+          "target": "MotionService",
+          "message": "emergency_stop()"
+        },
+        {
+          "timestamp": "2025-12-18T02:20:05.666883",
+          "actor": "Test",
+          "action": "ASSERT",
+          "target": "MotionService",
+          "message": "Emergency stop succeeded",
+          "data": {
+            "result": true
+          },
+          "expect": "True",
+          "got": "True"
+        },
+        {
+          "timestamp": "2025-12-18T02:20:05.871164",
+          "actor": "Test",
+          "action": "ASSERT",
+          "target": "ScanService",
+          "message": "Scan stopped",
+          "data": {
+            "status": "cancelled"
+          },
+          "expect": "cancelled or failed",
+          "got": "cancelled"
+        }
+      ],
+      "summary": {
+        "total_interactions": 7,
+        "subscriptions": 0,
+        "publications": 0,
+        "assertions": 2
+      }
+    }
+  ]
+}

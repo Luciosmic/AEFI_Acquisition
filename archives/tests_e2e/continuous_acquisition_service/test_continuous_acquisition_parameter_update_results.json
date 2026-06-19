@@ -1,0 +1,125 @@
+{
+  "tests": [
+    {
+      "test_name": "test_update_duration_limit",
+      "timestamp": "2025-12-18T02:20:05.062626",
+      "status": "PASSED",
+      "interactions": [
+        {
+          "timestamp": "2025-12-18T02:20:05.062899",
+          "actor": "System",
+          "action": "DIVIDER",
+          "target": "System",
+          "message": "Setup",
+          "data": null,
+          "expect": null,
+          "got": null
+        },
+        {
+          "timestamp": "2025-12-18T02:20:05.063162",
+          "actor": "System",
+          "action": "DIVIDER",
+          "target": "System",
+          "message": "Start Acquisition",
+          "data": null,
+          "expect": null,
+          "got": null
+        },
+        {
+          "timestamp": "2025-12-18T02:20:05.063500",
+          "actor": "Test",
+          "action": "CALL",
+          "target": "ContinuousService",
+          "message": "update_acquisition_parameters(config)"
+        },
+        {
+          "timestamp": "2025-12-18T02:20:05.064313",
+          "actor": "Test",
+          "action": "ASSERT",
+          "target": "Executor",
+          "message": "Config update processed",
+          "data": {
+            "interval": 0.01
+          },
+          "expect": ">0",
+          "got": "0.01"
+        }
+      ],
+      "summary": {
+        "total_interactions": 4,
+        "subscriptions": 0,
+        "publications": 0,
+        "assertions": 1
+      }
+    },
+    {
+      "test_name": "test_update_sample_rate",
+      "timestamp": "2025-12-18T02:20:05.078164",
+      "status": "PASSED",
+      "interactions": [
+        {
+          "timestamp": "2025-12-18T02:20:05.078422",
+          "actor": "System",
+          "action": "DIVIDER",
+          "target": "System",
+          "message": "Setup",
+          "data": null,
+          "expect": null,
+          "got": null
+        },
+        {
+          "timestamp": "2025-12-18T02:20:05.078685",
+          "actor": "System",
+          "action": "DIVIDER",
+          "target": "System",
+          "message": "Start Acquisition",
+          "data": null,
+          "expect": null,
+          "got": null
+        },
+        {
+          "timestamp": "2025-12-18T02:20:05.078913",
+          "actor": "Test",
+          "action": "CALL",
+          "target": "ContinuousService",
+          "message": "start_acquisition(config)"
+        },
+        {
+          "timestamp": "2025-12-18T02:20:05.079201",
+          "actor": "System",
+          "action": "DIVIDER",
+          "target": "System",
+          "message": "Update Parameters",
+          "data": null,
+          "expect": null,
+          "got": null
+        },
+        {
+          "timestamp": "2025-12-18T02:20:05.079422",
+          "actor": "Test",
+          "action": "CALL",
+          "target": "ContinuousService",
+          "message": "update_acquisition_parameters(config)"
+        },
+        {
+          "timestamp": "2025-12-18T02:20:05.079653",
+          "actor": "Test",
+          "action": "ASSERT",
+          "target": "Executor",
+          "message": "Interval updated",
+          "data": {
+            "interval": 0.005
+          },
+          "expect": "~0.005",
+          "got": "0.0050"
+        }
+      ],
+      "summary": {
+        "total_interactions": 6,
+        "subscriptions": 0,
+        "publications": 0,
+        "assertions": 1
+      }
+    }
+  ]
+}
