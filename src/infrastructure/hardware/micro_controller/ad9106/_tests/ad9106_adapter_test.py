@@ -8,16 +8,14 @@ for sequence diagram generation.
 import sys
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
-# Add src to path
-# Add src to path
-# tests -> ad9106 -> micro_controller -> hardware -> infrastructure -> src -> AEFI_Acquisition
+# Add src to path — tests -> ad9106 -> micro_controller -> hardware -> infrastructure -> src -> AEFI_Acquisition
 root_dir = Path(__file__).resolve().parents[6]
 sys.path.insert(0, str(root_dir / "src"))
 
 from tool.diagram_friendly_test import DiagramFriendlyTest
 from infrastructure.hardware.micro_controller.MCU_serial_communicator import MCU_SerialCommunicator
-from infrastructure.hardware.micro_controller.ad9106.ad9106_controller import AD9106Controller
 from infrastructure.hardware.micro_controller.ad9106.ad9106_controller import AD9106Controller
 from infrastructure.hardware.micro_controller.ad9106.adapter_excitation_configuration_ad9106 import AdapterExcitationConfigurationAD9106
 from domain.value_objects.excitation.excitation_parameters import ExcitationParameters
@@ -27,12 +25,19 @@ from domain.value_objects.excitation.excitation_level import ExcitationLevel
 
 class TestAD9106Adapter(DiagramFriendlyTest):
     """Test AdapterExcitationConfigurationAD9106 with diagram-friendly logging."""
-    
+
     def setUp(self):
         super().setUp()
+        # Patch serial communication so tests run without hardware
+        self._send_patcher = patch.object(MCU_SerialCommunicator, 'send_command', return_value=(True, "OK"))
+        self._send_patcher.start()
         self.communicator = None
         self.controller = None
         self.adapter = None
+
+    def tearDown(self):
+        self._send_patcher.stop()
+        super().tearDown()
     
     def test_apply_excitation_x_dir(self):
         """Test applying X_DIR excitation mode."""
@@ -125,11 +130,11 @@ class TestAD9106Adapter(DiagramFriendlyTest):
             action="ASSERT",
             target="AD9106Adapter",
             message="Verify X_DIR phases (DDS1=0°, DDS2=180)",
-            expect={"phase_dds1": 0, "phase_dds2": 180},
+            expect={"phase_dds1": 0, "phase_dds2": 32768},
             got={"phase_dds1": memory_state["DDS"]["Phase"][1], "phase_dds2": memory_state["DDS"]["Phase"][2]}
         )
-        self.assertEqual(memory_state["DDS"]["Phase"][1], 0)  # DDS1: 0°
-        self.assertEqual(memory_state["DDS"]["Phase"][2], 180)  # DDS2: 180 (User defined)
+        self.assertEqual(memory_state["DDS"]["Phase"][1], 0)    # DDS1: 0°
+        self.assertEqual(memory_state["DDS"]["Phase"][2], 32768)  # DDS2: 180° = 32768 (raw register)
         
         # Verify gains (50% of MAX_EXCITATION_GAIN = 5500)
         expected_gain = int((50.0 / 100.0) * 5500)

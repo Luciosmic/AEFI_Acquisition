@@ -193,7 +193,6 @@ class ScanApplicationService:
     def subscribe_to_scan_updates(self, callback: Callable[[DomainEvent], None]) -> None:
         """Subscribe to scan point acquired events."""
         self._event_bus.subscribe("scanpointacquired", callback)
-        self._event_bus.subscribe("scanstarted", callback)
 
     def subscribe_to_scan_completion(self, callback: Callable[[DomainEvent], None]) -> None:
         """Subscribe to scan completion events."""

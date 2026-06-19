@@ -189,6 +189,10 @@ class ADS131A04AdvancedConfigurator(IHardwareAdvancedConfigurator):
         # Convert high_res boolean to resolution_mode string for fMOD calculation
         resolution_mode = "high_resolution" if high_res else "low_power"
         
+        # Convert ref_voltage register value back to float for adapter compatibility
+        _ref_voltage_values = {0: 2.442, 1: 4.0}
+        reference_voltage_float = _ref_voltage_values.get(ref_voltage, 2.442)
+
         json_config = {
             "clkin_divider": 2, # Fixed for now
             "iclk_divider": 2,  # Fixed for now
@@ -198,7 +202,8 @@ class ADS131A04AdvancedConfigurator(IHardwareAdvancedConfigurator):
             # A_SYS_CFG register parameters (for hardware configuration)
             "negative_ref": negative_ref,
             "high_res": high_res,
-            "ref_voltage": ref_voltage,  # 0=2.442V, 1=4.0V
+            "ref_voltage": ref_voltage,       # 0=2.442V, 1=4.0V (register value)
+            "reference_voltage": reference_voltage_float,  # float required by adapter.load_config
             "ref_selection": ref_selection,  # 0=External, 1=Internal
             "channels": {}
         }

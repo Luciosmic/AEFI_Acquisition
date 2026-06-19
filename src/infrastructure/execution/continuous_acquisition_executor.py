@@ -31,11 +31,16 @@ from domain.events.continuous_acquisition_events import (
 
 
 class ContinuousAcquisitionExecutor(IContinuousAcquisitionExecutor):
-    def __init__(self, event_bus: IDomainEventBus) -> None:
+    def __init__(self, event_bus: IDomainEventBus, acquisition_port: IAcquisitionPort | None = None) -> None:
         self._event_bus = event_bus
         self._thread: threading.Thread | None = None
         self._stop_flag = threading.Event()
         self._current_acquisition_id: UUID | None = None
+        self._config: ContinuousAcquisitionConfig | None = None
+
+    def update_config(self, config: ContinuousAcquisitionConfig) -> None:
+        """Dynamically update configuration of a running acquisition."""
+        self._config = config
 
     def start(self, config: ContinuousAcquisitionConfig, acquisition_port: IAcquisitionPort) -> None:
         """

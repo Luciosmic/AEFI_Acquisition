@@ -1,3 +1,4 @@
+import itertools
 import unittest
 import time
 import threading
@@ -28,13 +29,14 @@ class TestArcusEventBus(DiagramFriendlyTest):
         self.mock_controller = MagicMock()
         self.mock_controller.is_connected.return_value = True
         
-        # Simulate motion: is_moving returns True 3 times then False
-        self.mock_controller.is_moving.side_effect = [True, True, True, False, False, False]
+        # Simulate motion: is_moving returns True several times then always False.
+        # Infinite iterator prevents StopIteration when monitor/worker threads poll concurrently.
+        _is_moving_values = itertools.chain(itertools.repeat(True, 6), itertools.repeat(False))
+        self.mock_controller.is_moving.side_effect = lambda axis: next(_is_moving_values)
         
         # Configure get_position to return target steps (simulating successful move)
-        # Target is (10.0, 20.0) mm
-        # STEPS_PER_MM = 1.0 / (43.6 / 1000.0) = 22.9357798
-        steps_per_mm = 1.0 / (43.6 / 1000.0)
+        # Calibration loaded from arcus_default_config.json: 21.8 microns/step → 45.87 steps/mm
+        steps_per_mm = 1000.0 / 21.8
         target_x_steps = int(10.0 * steps_per_mm)
         target_y_steps = int(20.0 * steps_per_mm)
         

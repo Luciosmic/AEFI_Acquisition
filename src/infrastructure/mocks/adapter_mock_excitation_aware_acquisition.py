@@ -87,7 +87,7 @@ class ExcitationAwareAcquisitionPort(IAcquisitionPort):
     # Default excitation mode to offset vector mapping
     DEFAULT_EXCITATION_OFFSET_MAP: Dict[ExcitationMode, OffsetVector3D] = {
         ExcitationMode.X_DIR: OffsetVector3D(1.0, 0.0, 0.0),
-        ExcitationMode.Y_DIR: OffsetVector3D(0.0, 1.0, 0.0),  # Note: Y_DIR maps to Z offset
+        ExcitationMode.Y_DIR: OffsetVector3D(0.0, 0.0, 1.0),  # Y_DIR excitation maps to Z axis offset
         ExcitationMode.CIRCULAR_PLUS: OffsetVector3D(0.0, 0.0, 0.0),  # No offset for circular
         ExcitationMode.CIRCULAR_MINUS: OffsetVector3D(0.0, 0.0, 0.0),  # No offset for circular
         ExcitationMode.CUSTOM: OffsetVector3D(0.0, 0.0, 0.0),  # No offset for custom
