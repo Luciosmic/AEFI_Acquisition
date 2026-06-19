@@ -24,11 +24,7 @@ from application.services.system_lifecycle_service.system_lifecycle_service impo
     ShutdownConfig
 )
 
-from abc import ABCMeta
-
-# Fix for metaclass conflict between QObject and ABC
-class QABCMeta(type(QObject), ABCMeta):
-    pass
+from interface.qt_abc import QABCMeta
 
 class SystemLifecyclePresenter(QObject, ISystemLifecycleOutputPort, metaclass=QABCMeta):
     """
