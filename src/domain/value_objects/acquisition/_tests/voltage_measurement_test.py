@@ -1,7 +1,7 @@
 """Tests for VoltageMeasurement value object."""
 import pytest
 from datetime import datetime
-from .voltage_measurement import VoltageMeasurement
+from ..voltage_measurement import VoltageMeasurement
 
 def test_voltage_measurement_creation():
     """Test creating a valid voltage measurement."""

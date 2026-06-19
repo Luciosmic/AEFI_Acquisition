@@ -13,13 +13,14 @@ import os
 # Ensure src is in path
 sys.path.append(str(Path(__file__).parents[4] / "src"))
 
-from infrastructure.tests.diagram_friendly_test import DiagramFriendlyTest
+from tool.diagram_friendly_test import DiagramFriendlyTest
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
 from infrastructure.persistence.hdf5_acquisition_repository import HDF5AcquisitionRepository
 from application.handlers.acquisition_data_handler import AcquisitionDataHandler
 from application.scan_application_service.scan_application_service import ScanApplicationService
 from application.dtos.scan_dtos import Scan2DConfigDTO
-from infrastructure.tests.mock_ports import MockMotionPort, MockAcquisitionPort
+from infrastructure.mocks.adapter_mock_i_motion_port import MockMotionPort
+from infrastructure.mocks.adapter_mock_i_acquisition_port import MockAcquisitionPort
 
 class ScanExportWithEventBusIntegrationTest(DiagramFriendlyTest):
     

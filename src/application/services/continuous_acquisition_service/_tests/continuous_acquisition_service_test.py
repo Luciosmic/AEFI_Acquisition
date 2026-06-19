@@ -1,7 +1,7 @@
 import time
 from typing import List
 
-from infrastructure.tests.diagram_friendly_test import DiagramFriendlyTest
+from tool.diagram_friendly_test import DiagramFriendlyTest
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
 
 from application.continuous_acquisition_service.continuous_acquisition_service import (
@@ -15,7 +15,7 @@ from application.services.continuous_acquisition_service.i_continuous_acquisitio
 from infrastructure.execution.continuous_acquisition_executor import (
     ContinuousAcquisitionExecutor,
 )
-from infrastructure.tests.mock_ports import MockAcquisitionPort
+from infrastructure.mocks.adapter_mock_i_acquisition_port import MockAcquisitionPort
 
 from domain.events.continuous_acquisition_events import (
     ContinuousAcquisitionSampleAcquired,

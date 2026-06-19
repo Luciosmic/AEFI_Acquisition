@@ -1,7 +1,7 @@
 """Tests for ScanZone value object."""
 import pytest
-from .scan_zone import ScanZone, PHYSICAL_X_MAX_CM, PHYSICAL_Y_MAX_CM
-from ..geometric.position_2d import Position2D
+from ..scan_zone import ScanZone, PHYSICAL_X_MAX_CM, PHYSICAL_Y_MAX_CM
+from ...geometric.position_2d import Position2D
 
 def test_scan_zone_creation():
     """Test creating a valid scan zone."""

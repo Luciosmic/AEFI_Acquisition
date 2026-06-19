@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import MagicMock, ANY
 from typing import Any, Optional
 
-from infrastructure.tests.diagram_friendly_test import DiagramFriendlyTest
+from tool.diagram_friendly_test import DiagramFriendlyTest
 from infrastructure.execution.step_scan_executor import StepScanExecutor
 from domain.aggregates.step_scan import StepScan
 from domain.value_objects.scan.scan_trajectory import ScanTrajectory

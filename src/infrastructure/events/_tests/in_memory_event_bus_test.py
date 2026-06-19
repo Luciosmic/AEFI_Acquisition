@@ -3,7 +3,7 @@ Tests for InMemoryEventBus (Diagram-Friendly)
 """
 
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
-from infrastructure.tests.diagram_friendly_test import DiagramFriendlyTest
+from tool.diagram_friendly_test import DiagramFriendlyTest
 
 class TestInMemoryEventBus(DiagramFriendlyTest):
     """Test InMemoryEventBus pub/sub functionality with diagram generation."""

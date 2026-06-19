@@ -1,6 +1,6 @@
 """Tests for ScanProgress value object."""
 import pytest
-from .scan_progress import ScanProgress
+from ..scan_progress import ScanProgress
 
 def test_scan_progress_creation():
     """Test creating valid scan progress."""

@@ -9,7 +9,7 @@ from application.handlers.acquisition_data_handler import AcquisitionDataHandler
 from domain.events.scan_events import ScanPointAcquired
 from domain.value_objects.acquisition.acquisition_sample import AcquisitionSample
 from domain.value_objects.geometric.position_2d import Position2D
-from infrastructure.tests.diagram_friendly_test import DiagramFriendlyTest
+from tool.diagram_friendly_test import DiagramFriendlyTest
 
 class TestAcquisitionDataHandler(DiagramFriendlyTest):
     """Test AcquisitionDataHandler orchestration."""

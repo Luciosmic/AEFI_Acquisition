@@ -1,7 +1,7 @@
 import unittest
 from typing import Any, Dict, List
 
-from infrastructure.tests.diagram_friendly_test import DiagramFriendlyTest
+from tool.diagram_friendly_test import DiagramFriendlyTest
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
 
 from application.system_lifecycle_service.system_lifecycle_service import (

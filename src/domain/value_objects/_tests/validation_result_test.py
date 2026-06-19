@@ -1,6 +1,6 @@
 """Tests for ValidationResult value object."""
 import pytest
-from .validation_result import ValidationResult
+from ..validation_result import ValidationResult
 
 def test_validation_result_success():
     """Test creating a successful validation result."""

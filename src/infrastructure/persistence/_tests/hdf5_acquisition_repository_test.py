@@ -8,7 +8,7 @@ import numpy as np
 
 from infrastructure.persistence.hdf5_acquisition_repository import HDF5AcquisitionRepository
 from domain.value_objects.acquisition.acquisition_sample import AcquisitionSample
-from infrastructure.tests.diagram_friendly_test import DiagramFriendlyTest
+from tool.diagram_friendly_test import DiagramFriendlyTest
 
 class TestHDF5AcquisitionRepository(DiagramFriendlyTest):
     """Test HDF5 persistence with diagram generation."""

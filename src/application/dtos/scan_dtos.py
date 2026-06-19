@@ -8,12 +8,12 @@ These objects carry data between the UI/API and the Application Service.
 from dataclasses import dataclass
 from typing import Optional
 
-@dataclass
+
+@dataclass(frozen=True)
 class Scan2DConfigDTO:
     """Configuration for a 2D scan (from UI).
-    Units:
-    - Positions: mm
-    - Speed: mm/s (implicit in other DTOs if added)
+
+    Units: positions in mm, speed in mm/s.
     """
     x_min: float
     x_max: float
@@ -24,23 +24,21 @@ class Scan2DConfigDTO:
     scan_pattern: str  # 'SERPENTINE', 'RASTER', 'COMB'
     stabilization_delay_ms: int
     averaging_per_position: int
-    stabilization_delay_ms: int
-    averaging_per_position: int
     uncertainty_volts: float
     motion_speed_mm_s: Optional[float] = None
 
-@dataclass
+
+@dataclass(frozen=True)
 class ExportConfigDTO:
     """Configuration for data export."""
     enabled: bool
     output_directory: str
     filename_base: str
     include_metadata: bool = True
-    # Export format hint (e.g. "CSV", "HDF5").
-    # Infrastructure/application can use this to select the appropriate port.
     format: str = "CSV"
 
-@dataclass
+
+@dataclass(frozen=True)
 class ScanStatusDTO:
     """Status of the current scan."""
     status: str

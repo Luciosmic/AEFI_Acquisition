@@ -16,7 +16,7 @@ from application.dtos.hardware_parameter_dtos import ActionableHardwareParameter
 from infrastructure.hardware.arcus_performax_4EX.adapter_arcus_performax4EX import (
     ArcusPerformax4EXConfigProvider,
 )
-from infrastructure.tests.diagram_friendly_test import DiagramFriendlyTest
+from tool.diagram_friendly_test import DiagramFriendlyTest
 
 
 class TestHardwareConfigurationService(DiagramFriendlyTest):
