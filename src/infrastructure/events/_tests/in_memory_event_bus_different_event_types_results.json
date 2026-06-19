@@ -1,10 +1,10 @@
 {
   "test_name": "test_different_event_types",
-  "timestamp": "2025-12-12T01:53:06.765212",
+  "timestamp": "2026-06-19T11:01:36.164407",
   "status": "PASSED",
   "interactions": [
     {
-      "timestamp": "2025-12-12T01:53:06.765213",
+      "timestamp": "2026-06-19T11:01:36.164408",
       "actor": "Test",
       "action": "CREATE",
       "target": "InMemoryEventBus",
@@ -14,7 +14,7 @@
       "got": null
     },
     {
-      "timestamp": "2025-12-12T01:53:06.765229",
+      "timestamp": "2026-06-19T11:01:36.164423",
       "actor": "Test",
       "action": "SUBSCRIBE",
       "target": "InMemoryEventBus",
@@ -26,7 +26,7 @@
       "got": null
     },
     {
-      "timestamp": "2025-12-12T01:53:06.765239",
+      "timestamp": "2026-06-19T11:01:36.164433",
       "actor": "Test",
       "action": "SUBSCRIBE",
       "target": "InMemoryEventBus",
@@ -38,7 +38,7 @@
       "got": null
     },
     {
-      "timestamp": "2025-12-12T01:53:06.765246",
+      "timestamp": "2026-06-19T11:01:36.164441",
       "actor": "Test",
       "action": "PUBLISH",
       "target": "InMemoryEventBus",
@@ -51,7 +51,7 @@
       "got": null
     },
     {
-      "timestamp": "2025-12-12T01:53:06.765254",
+      "timestamp": "2026-06-19T11:01:36.164450",
       "actor": "HandlerA",
       "action": "RECEIVE",
       "target": "Test",
@@ -63,7 +63,7 @@
       "got": null
     },
     {
-      "timestamp": "2025-12-12T01:53:06.765260",
+      "timestamp": "2026-06-19T11:01:36.164457",
       "actor": "Test",
       "action": "PUBLISH",
       "target": "InMemoryEventBus",
@@ -76,7 +76,7 @@
       "got": null
     },
     {
-      "timestamp": "2025-12-12T01:53:06.765266",
+      "timestamp": "2026-06-19T11:01:36.164465",
       "actor": "HandlerB",
       "action": "RECEIVE",
       "target": "Test",
@@ -88,7 +88,7 @@
       "got": null
     },
     {
-      "timestamp": "2025-12-12T01:53:06.765273",
+      "timestamp": "2026-06-19T11:01:36.164472",
       "actor": "Test",
       "action": "ASSERT",
       "target": "InMemoryEventBus",
@@ -98,7 +98,7 @@
       "got": "['A']"
     },
     {
-      "timestamp": "2025-12-12T01:53:06.765284",
+      "timestamp": "2026-06-19T11:01:36.164482",
       "actor": "Test",
       "action": "ASSERT",
       "target": "InMemoryEventBus",

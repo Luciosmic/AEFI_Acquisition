@@ -4,12 +4,14 @@ from typing import List
 from tool.diagram_friendly_test import DiagramFriendlyTest
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
 
-from application.continuous_acquisition_service.continuous_acquisition_service import (
+from application.services.continuous_acquisition_service.continuous_acquisition_service import (
     ContinuousAcquisitionService,
+)
+from application.services.continuous_acquisition_service.dtos.continuous_acquisition_dtos import (
+    ContinuousAcquisitionConfig,
 )
 from application.services.continuous_acquisition_service.i_continuous_acquisition_executor import (
     IContinuousAcquisitionExecutor,
-    ContinuousAcquisitionConfig,
 )
 
 from infrastructure.execution.continuous_acquisition_executor import (
@@ -75,7 +77,7 @@ class TestContinuousAcquisitionService(DiagramFriendlyTest):
             acquisition_port=self.acquisition_port,
             event_bus=self.event_bus,
         )
-        self.service = ContinuousAcquisitionService(self.executor)
+        self.service = ContinuousAcquisitionService(self.executor, self.acquisition_port)
 
     def test_continuous_acquisition_short_burst(self) -> None:
         """

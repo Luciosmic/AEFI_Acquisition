@@ -1,10 +1,10 @@
 {
   "test_name": "test_unsubscribe",
-  "timestamp": "2025-12-12T01:53:06.770666",
+  "timestamp": "2026-06-19T11:01:36.168981",
   "status": "PASSED",
   "interactions": [
     {
-      "timestamp": "2025-12-12T01:53:06.770667",
+      "timestamp": "2026-06-19T11:01:36.168982",
       "actor": "Test",
       "action": "CREATE",
       "target": "InMemoryEventBus",
@@ -14,7 +14,7 @@
       "got": null
     },
     {
-      "timestamp": "2025-12-12T01:53:06.770684",
+      "timestamp": "2026-06-19T11:01:36.168997",
       "actor": "Test",
       "action": "SUBSCRIBE",
       "target": "InMemoryEventBus",
@@ -26,7 +26,7 @@
       "got": null
     },
     {
-      "timestamp": "2025-12-12T01:53:06.770694",
+      "timestamp": "2026-06-19T11:01:36.169006",
       "actor": "Test",
       "action": "PUBLISH",
       "target": "InMemoryEventBus",
@@ -39,7 +39,7 @@
       "got": null
     },
     {
-      "timestamp": "2025-12-12T01:53:06.770703",
+      "timestamp": "2026-06-19T11:01:36.169014",
       "actor": "Handler",
       "action": "RECEIVE",
       "target": "Test",
@@ -51,7 +51,7 @@
       "got": null
     },
     {
-      "timestamp": "2025-12-12T01:53:06.770711",
+      "timestamp": "2026-06-19T11:01:36.169021",
       "actor": "Test",
       "action": "UNSUBSCRIBE",
       "target": "InMemoryEventBus",
@@ -63,7 +63,7 @@
       "got": null
     },
     {
-      "timestamp": "2025-12-12T01:53:06.770719",
+      "timestamp": "2026-06-19T11:01:36.169030",
       "actor": "Test",
       "action": "PUBLISH",
       "target": "InMemoryEventBus",
@@ -76,7 +76,7 @@
       "got": null
     },
     {
-      "timestamp": "2025-12-12T01:53:06.770752",
+      "timestamp": "2026-06-19T11:01:36.169060",
       "actor": "Test",
       "action": "ASSERT",
       "target": "InMemoryEventBus",

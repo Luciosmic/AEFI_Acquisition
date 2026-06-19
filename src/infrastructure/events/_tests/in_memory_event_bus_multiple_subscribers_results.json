@@ -1,10 +1,10 @@
 {
   "test_name": "test_multiple_subscribers",
-  "timestamp": "2025-12-12T01:53:06.768892",
+  "timestamp": "2026-06-19T11:01:36.167392",
   "status": "PASSED",
   "interactions": [
     {
-      "timestamp": "2025-12-12T01:53:06.768893",
+      "timestamp": "2026-06-19T11:01:36.167394",
       "actor": "Test",
       "action": "CREATE",
       "target": "InMemoryEventBus",
@@ -14,7 +14,7 @@
       "got": null
     },
     {
-      "timestamp": "2025-12-12T01:53:06.768912",
+      "timestamp": "2026-06-19T11:01:36.167411",
       "actor": "Test",
       "action": "SUBSCRIBE",
       "target": "InMemoryEventBus",
@@ -26,7 +26,7 @@
       "got": null
     },
     {
-      "timestamp": "2025-12-12T01:53:06.768924",
+      "timestamp": "2026-06-19T11:01:36.167421",
       "actor": "Test",
       "action": "SUBSCRIBE",
       "target": "InMemoryEventBus",
@@ -38,7 +38,7 @@
       "got": null
     },
     {
-      "timestamp": "2025-12-12T01:53:06.768934",
+      "timestamp": "2026-06-19T11:01:36.167429",
       "actor": "Test",
       "action": "PUBLISH",
       "target": "InMemoryEventBus",
@@ -51,7 +51,7 @@
       "got": null
     },
     {
-      "timestamp": "2025-12-12T01:53:06.768950",
+      "timestamp": "2026-06-19T11:01:36.167438",
       "actor": "Handler1",
       "action": "RECEIVE",
       "target": "Test",
@@ -63,7 +63,7 @@
       "got": null
     },
     {
-      "timestamp": "2025-12-12T01:53:06.768958",
+      "timestamp": "2026-06-19T11:01:36.167445",
       "actor": "Handler2",
       "action": "RECEIVE",
       "target": "Test",
@@ -75,7 +75,7 @@
       "got": null
     },
     {
-      "timestamp": "2025-12-12T01:53:06.768968",
+      "timestamp": "2026-06-19T11:01:36.167452",
       "actor": "Test",
       "action": "ASSERT",
       "target": "InMemoryEventBus",
@@ -85,7 +85,7 @@
       "got": "['hello']"
     },
     {
-      "timestamp": "2025-12-12T01:53:06.768983",
+      "timestamp": "2026-06-19T11:01:36.167461",
       "actor": "Test",
       "action": "ASSERT",
       "target": "InMemoryEventBus",
