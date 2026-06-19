@@ -23,6 +23,8 @@ aefi_64bit_py311_venv/
 # --- IDE / OS ---
 .idea/
 .vscode/
+.claude/
+.packmind/
 *.swp
 *.bak
 .DS_Store
@@ -35,3 +37,13 @@ Thumbs.db
 # --- Config utilisateur (garder les gabarits .example) ---
 .aefi_acquisition/configs/*.json
 !.aefi_acquisition/configs/*.example
+
+
+
+# --- Résultats de tests (traces DiagramFriendlyTest — timestamps changeants) ---
+**/*_results.json
+# Graphiques produits par les tests d'intégration (artefacts matplotlib)
+**/*_test_result_*.png
+
+# --- Données de scan HDF5 (artefacts runtime) ---
+**/*.h5

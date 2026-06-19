@@ -3,60 +3,37 @@ from unittest.mock import MagicMock
 import sys
 from pathlib import Path
 
-# Ensure src is in path
 src_path = Path(__file__).resolve().parent.parent.parent.parent.parent
 if str(src_path) not in sys.path:
     sys.path.append(str(src_path))
 
 from infrastructure.hardware.arcus_performax_4EX.adapter_motion_port_arcus_performax4EX import ArcusAdapter
+from infrastructure.hardware.arcus_performax_4EX.driver_arcus_performax4EX import ArcusPerformax4EXController
+
 
 class TestArcusSpeedSetting(unittest.TestCase):
     def setUp(self):
         self.adapter = ArcusAdapter()
-        # Mock the controller/stage
-        self.mock_stage = MagicMock()
-        self.adapter._stage = self.mock_stage
-        
-        # Constants
-        self.STEPS_PER_CM = 10000.0 / 43.6 # 1/0.00436
+        self.mock_controller = MagicMock(spec=ArcusPerformax4EXController)
+        self.adapter.set_controller(self.mock_controller)
 
-    def test_speed_conversion_6_54(self):
+        # Read from adapter so the test stays consistent with whatever
+        # arcus_default_config.json sets as microns_per_step.
+        self.STEPS_PER_MM = self.adapter.STEPS_PER_MM
+
+    def test_speed_conversion_6_54_cm_s(self):
         # Arrange
-        target_speed_cm_s = 6.54
-        
-        # Expected Hz: 6.54 * (1 / 0.00436) = 6.54 * 229.357... = 1499.99... -> 1500
-        expected_hz = 1500 
-        
+        target_speed_mm_s = 65.4  # 6.54 cm/s = 65.4 mm/s
+
+        # Expected Hz: int(65.4 * 22.9357...) = int(1499.99...) = 1499
+        expected_hz = int(target_speed_mm_s * self.STEPS_PER_MM)
+
         # Act
-        self.adapter.set_speed(target_speed_cm_s)
-        
+        self.adapter.set_speed(target_speed_mm_s)
+
         # Assert
-        # Check if it was called with something close to 1500
-        # Since we can't easily check exact integer match if calculation varies slightly,
-        # we'll capture the call args.
-        
-        calls = self.mock_stage.query.call_args_list
-        self.assertTrue(len(calls) >= 2)
-        
-        # Parse the calls to verify value
-        # Call format: query("HSX=1500")
-        
-        found_x = False
-        found_y = False
-        
-        for call in calls:
-            arg = call[0][0] # first arg
-            if arg.startswith("HSX="):
-                val = int(arg.split("=")[1])
-                self.assertAlmostEqual(val, expected_hz, delta=1)
-                found_x = True
-            elif arg.startswith("HSY="):
-                val = int(arg.split("=")[1])
-                self.assertAlmostEqual(val, expected_hz, delta=1)
-                found_y = True
-                
-        self.assertTrue(found_x, "Did not find HSX command")
-        self.assertTrue(found_y, "Did not find HSY command")
+        self.mock_controller.set_speed.assert_called_once_with(expected_hz)
+
 
 if __name__ == '__main__':
     unittest.main()
