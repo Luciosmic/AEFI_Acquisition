@@ -51,7 +51,7 @@ class Dashboard(QWidget):
         
         # --- 2. UI Composition ---
 
-        self.setWindowTitle("EFI Imaging Bench V2")
+        self.setWindowTitle("AEFI Acquisition Software")
         self.resize(1200, 800)
         
         main_layout = QVBoxLayout(self)
