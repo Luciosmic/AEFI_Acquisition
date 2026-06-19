@@ -9,7 +9,7 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from application.hardware_configuration_service.hardware_configuration_service import (
+from application.services.hardware_configuration_service.hardware_configuration_service import (
     HardwareConfigurationService,
 )
 from application.dtos.hardware_parameter_dtos import ActionableHardwareParametersSpec

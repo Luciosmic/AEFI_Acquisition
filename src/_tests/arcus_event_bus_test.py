@@ -8,10 +8,7 @@ import os
 # Add src to sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
 
-try:
-    from tests.diagram_test_base import DiagramFriendlyTest
-except ImportError:
-    from diagram_test_base import DiagramFriendlyTest
+from tool.diagram_friendly_test import DiagramFriendlyTest
 
 from infrastructure.hardware.arcus_performax_4EX.adapter_motion_port_arcus_performax4EX import ArcusAdapter
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus

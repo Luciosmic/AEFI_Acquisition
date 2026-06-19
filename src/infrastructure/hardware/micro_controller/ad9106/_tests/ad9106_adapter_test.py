@@ -15,11 +15,7 @@ from pathlib import Path
 root_dir = Path(__file__).resolve().parents[6]
 sys.path.insert(0, str(root_dir / "src"))
 
-# Add .cursor/skills to path for diagram_friendly_test
-cursor_skills_dir = root_dir / ".cursor" / "skills"
-sys.path.insert(0, str(cursor_skills_dir / "diagram_friendly_test"))
-
-from diagram_friendly_test import DiagramFriendlyTest
+from tool.diagram_friendly_test import DiagramFriendlyTest
 from infrastructure.hardware.micro_controller.MCU_serial_communicator import MCU_SerialCommunicator
 from infrastructure.hardware.micro_controller.ad9106.ad9106_controller import AD9106Controller
 from infrastructure.hardware.micro_controller.ad9106.ad9106_controller import AD9106Controller

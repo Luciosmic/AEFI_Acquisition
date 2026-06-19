@@ -6,11 +6,7 @@ import os
 # Add src to sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
 
-# Import helper
-try:
-    from tests.diagram_test_base import DiagramFriendlyTest
-except ImportError:
-    from diagram_test_base import DiagramFriendlyTest
+from tool.diagram_friendly_test import DiagramFriendlyTest
 
 from application.services.hardware_configuration_service.hardware_configuration_service import HardwareConfigurationService
 from interface.ui_hardware_advanced_configuration.presenter_generic_hardware_config import GenericHardwareConfigPresenter

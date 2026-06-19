@@ -1,9 +1,9 @@
 """Tests for StepScanConfig value object."""
 import pytest
-from ..step_scan_config import StepScanConfig
-from ..scan_zone import ScanZone
-from ..scan_mode import ScanMode
-from ...acquisition.acquisition_parameters import AcquisitionParameters
+from domain.value_objects.scan.step_scan_config import StepScanConfig
+from domain.value_objects.scan.scan_zone import ScanZone
+from domain.value_objects.scan.scan_mode import ScanMode
+from domain.value_objects.acquisition.acquisition_parameters import AcquisitionParameters
 
 @pytest.fixture
 def valid_scan_zone():

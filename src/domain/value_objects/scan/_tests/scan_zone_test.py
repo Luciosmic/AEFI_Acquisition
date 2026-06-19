@@ -1,7 +1,7 @@
 """Tests for ScanZone value object."""
 import pytest
-from ..scan_zone import ScanZone, PHYSICAL_X_MAX_CM, PHYSICAL_Y_MAX_CM
-from ...geometric.position_2d import Position2D
+from domain.value_objects.scan.scan_zone import ScanZone, PHYSICAL_X_MAX_MM, PHYSICAL_Y_MAX_MM
+from domain.value_objects.geometric.position_2d import Position2D
 
 def test_scan_zone_creation():
     """Test creating a valid scan zone."""
@@ -42,22 +42,22 @@ def test_scan_zone_rejects_negative_y():
 def test_scan_zone_rejects_exceeding_physical_x_limit():
     """Test that X values exceeding physical limit are rejected."""
     with pytest.raises(ValueError, match="Invalid X range"):
-        ScanZone(x_min=0.0, x_max=PHYSICAL_X_MAX_CM + 1, y_min=0.0, y_max=10.0)
+        ScanZone(x_min=0.0, x_max=PHYSICAL_X_MAX_MM + 1, y_min=0.0, y_max=10.0)
 
 def test_scan_zone_rejects_exceeding_physical_y_limit():
     """Test that Y values exceeding physical limit are rejected."""
     with pytest.raises(ValueError, match="Invalid Y range"):
-        ScanZone(x_min=0.0, x_max=10.0, y_min=0.0, y_max=PHYSICAL_Y_MAX_CM + 1)
+        ScanZone(x_min=0.0, x_max=10.0, y_min=0.0, y_max=PHYSICAL_Y_MAX_MM + 1)
 
 def test_scan_zone_accepts_maximum_physical_limits():
     """Test that maximum physical limits are accepted."""
     zone = ScanZone(
-        x_min=0.0, x_max=PHYSICAL_X_MAX_CM,
-        y_min=0.0, y_max=PHYSICAL_Y_MAX_CM
+        x_min=0.0, x_max=PHYSICAL_X_MAX_MM,
+        y_min=0.0, y_max=PHYSICAL_Y_MAX_MM
     )
     
-    assert zone.x_max == PHYSICAL_X_MAX_CM
-    assert zone.y_max == PHYSICAL_Y_MAX_CM
+    assert zone.x_max == PHYSICAL_X_MAX_MM
+    assert zone.y_max == PHYSICAL_Y_MAX_MM
 
 def test_scan_zone_contains_position_inside():
     """Test contains() returns True for position inside zone."""
