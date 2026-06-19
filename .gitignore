@@ -23,6 +23,7 @@ aefi_64bit_py311_venv/
 # --- IDE / OS ---
 .idea/
 .vscode/
+.claude/
 *.swp
 *.bak
 .DS_Store
@@ -35,3 +36,6 @@ Thumbs.db
 # --- Config utilisateur (garder les gabarits .example) ---
 .aefi_acquisition/configs/*.json
 !.aefi_acquisition/configs/*.example
+
+
+**/*_results.json
