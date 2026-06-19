@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Callable, Dict, Any
 
-from application.dtos.scan_dtos import Scan2DConfigDTO, ScanStatusDTO
-from application.services.scan_application_service.i_scan_output_port import IScanOutputPort
+from .dtos.scan_dtos import Scan2DConfigDTO, ScanStatusDTO
+from .ports.i_scan_output_port import IScanOutputPort
 from domain.events.domain_event import DomainEvent
 
 

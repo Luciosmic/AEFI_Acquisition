@@ -24,8 +24,8 @@ from domain.events.system_events import (
     SystemShuttingDownEvent,
     SystemShutdownCompleteEvent,
 )
-from .i_hardware_initialization_port import IHardwareInitializationPort
-from .i_system_lifecycle_output_port import ISystemLifecycleOutputPort
+from .ports.i_hardware_initialization_port import IHardwareInitializationPort
+from .ports.i_system_lifecycle_output_port import ISystemLifecycleOutputPort
 
 
 @dataclass

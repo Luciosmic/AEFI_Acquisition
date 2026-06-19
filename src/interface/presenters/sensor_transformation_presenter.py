@@ -1,6 +1,7 @@
 from PySide6.QtCore import QObject, Slot
 from interface.widgets.panels.sensor_transformation_panel import SensorTransformationPanel
 from application.services.transformation_service.transformation_service import TransformationService
+from application.services.transformation_service.dtos.transformation_dtos import SetRotationAnglesDTO
 
 class SensorTransformationPresenter(QObject):
     """
@@ -25,5 +26,5 @@ class SensorTransformationPresenter(QObject):
     @Slot(float, float, float)
     def _on_angles_changed(self, theta_x, theta_y, theta_z):
         """Update service angles."""
-        self._service.set_rotation_angles(theta_x, theta_y, theta_z)
+        self._service.set_rotation_angles(SetRotationAnglesDTO(theta_x=theta_x, theta_y=theta_y, theta_z=theta_z))
 

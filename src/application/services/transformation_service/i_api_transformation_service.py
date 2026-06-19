@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Tuple
 
+from .dtos.transformation_dtos import SetRotationAnglesDTO
+
 
 class IApiTransformationService(ABC):
     """
@@ -18,7 +20,7 @@ class IApiTransformationService(ABC):
     """
 
     @abstractmethod
-    def set_rotation_angles(self, theta_x: float, theta_y: float, theta_z: float) -> None: ...
+    def set_rotation_angles(self, dto: SetRotationAnglesDTO) -> None: ...
 
     @abstractmethod
     def get_rotation_angles(self) -> Tuple[float, float, float]: ...
