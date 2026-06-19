@@ -41,8 +41,7 @@ from application.services.system_lifecycle_service.system_lifecycle_service impo
     StartupConfig
 )
 
-# --- Interface V2 ---
-# --- Interface V2 ---
+# --- Interface ---
 from interface.shell.dashboard import Dashboard
 from interface.presenters.motion_presenter import MotionPresenter
 from interface.presenters.excitation_presenter import ExcitationPresenter
@@ -318,7 +317,15 @@ def main():
     continuous_panel.calibrate_phase_requested.connect(continuous_presenter.calibrate_phase)
     continuous_panel.calibrate_primary_requested.connect(continuous_presenter.calibrate_primary)
     continuous_panel.reset_calibration_requested.connect(continuous_presenter.reset_calibration)
-    
+
+    # Correction toggles (panel -> presenter)
+    continuous_panel.noise_toggled.connect(continuous_presenter.on_noise_toggled)
+    continuous_panel.phase_toggled.connect(continuous_presenter.on_phase_toggled)
+    continuous_panel.primary_toggled.connect(continuous_presenter.on_primary_toggled)
+
+    # Correction state feedback (presenter -> panel)
+    continuous_presenter.correction_states_updated.connect(continuous_panel.update_correction_states)
+
     continuous_panel.apply_rotation_toggled.connect(continuous_presenter.on_rotation_toggled)
     
     continuous_presenter.acquisition_started.connect(continuous_panel.on_acquisition_started)
