@@ -30,11 +30,12 @@ class ContinuousAcquisitionPresenter(QObject):
     """
 
     # Signals emitted to the UI
-    acquisition_started = Signal(str)  # acquisition_id
-    acquisition_stopped = Signal(str)  # acquisition_id
-    acquisition_failed = Signal(str)  # reason
-    sample_acquired = Signal(dict)  # {acquisition_id, index, measurement:{...}, timestamp}
-    angles_updated = Signal(tuple) # For updating the read-only display
+    acquisition_started = Signal(str)   # acquisition_id
+    acquisition_stopped = Signal(str)   # acquisition_id
+    acquisition_failed = Signal(str)    # reason
+    sample_acquired = Signal(dict)      # {acquisition_id, index, measurement:{...}, timestamp}
+    angles_updated = Signal(tuple)      # For updating the read-only display
+    correction_states_updated = Signal(bool, bool, bool, str, str, str)  # (noise, phase, primary, noise_str, phase_str, primary_str)
 
     def __init__(self, service: ContinuousAcquisitionService, event_bus: IDomainEventBus, transformation_service: TransformationService):
         super().__init__()
@@ -69,40 +70,82 @@ class ContinuousAcquisitionPresenter(QObject):
     # Calibration Commands (Logic)
     # ------------------------------------------------------------------ #
     
+    @staticmethod
+    def _fmt_offset(offset: dict) -> str:
+        """Format {axis: (I, Q)} as compact magnitude string in mV."""
+        import math
+        parts = []
+        for ax in ("Ux", "Uy", "Uz"):
+            i, q = offset.get(ax, (0.0, 0.0))
+            mag_mv = math.sqrt(i**2 + q**2) * 1000
+            parts.append(f"{ax[1]}={mag_mv:.2f}")
+        return "  ".join(parts) + " mV"
+
+    @staticmethod
+    def _fmt_phase(angles: dict) -> str:
+        """Format {axis: radians} as compact degree string."""
+        import math
+        parts = []
+        for ax in ("Ux", "Uy", "Uz"):
+            deg = math.degrees(angles.get(ax, 0.0))
+            parts.append(f"{ax[1]}={deg:.1f}°")
+        return "  ".join(parts)
+
+    def _emit_correction_states(self):
+        s = self._processor.state
+        noise_str = self._fmt_offset(s.noise_offset) if s.noise_offset else "—"
+        phase_str = self._fmt_phase(s.phase_angles) if s.phase_angles else "—"
+        primary_str = self._fmt_offset(s.primary_offset) if s.primary_offset else "—"
+        self.correction_states_updated.emit(
+            s.noise_correction_enabled,
+            s.phase_correction_enabled,
+            s.primary_correction_enabled,
+            noise_str,
+            phase_str,
+            primary_str,
+        )
+
     @Slot()
     def calibrate_noise(self):
         """Use last received sample to calibrate noise offset."""
         if self._last_raw_sample:
             self._processor.calibrate_noise(self._last_raw_sample)
-            
+            self._emit_correction_states()
+
     @Slot()
     def calibrate_phase(self):
-        """
-        Use last received sample (after noise correction) to align phase.
-        We must re-apply noise correction to the raw sample first to get the 'pre-phase' state.
-        """
+        """Use last received sample (after noise correction) to align phase."""
         if self._last_raw_sample:
-            # 1. Apply Noise Correction only
-            state_backup = self._processor.state.phase_correction_enabled
-            self._processor.state.phase_correction_enabled = False # Disable temporarily
-            
+            self._processor.state.phase_correction_enabled = False
             pre_phase_sample = self._processor.process_sample(self._last_raw_sample)
-            
             self._processor.calibrate_phase(pre_phase_sample)
-            self._processor.state.phase_correction_enabled = True # Re-enable (or ensure it's on)
+            self._emit_correction_states()
 
     @Slot()
     def calibrate_primary(self):
         """Use last received (fully processed) sample to tare primary field."""
         if self._last_raw_sample:
-            # Get current processed value
             processed = self._processor.process_sample(self._last_raw_sample)
             self._processor.calibrate_primary(processed)
+            self._emit_correction_states()
 
     @Slot()
     def reset_calibration(self):
         """Clear all offsets and corrections."""
         self._processor.reset_calibration()
+        self._emit_correction_states()
+
+    @Slot(bool)
+    def on_noise_toggled(self, enabled: bool):
+        self._processor.state.noise_correction_enabled = enabled
+
+    @Slot(bool)
+    def on_phase_toggled(self, enabled: bool):
+        self._processor.state.phase_correction_enabled = enabled
+
+    @Slot(bool)
+    def on_primary_toggled(self, enabled: bool):
+        self._processor.state.primary_correction_enabled = enabled
 
     # ------------------------------------------------------------------ #
     # UI Commands (from panel signals)
