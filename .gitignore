@@ -40,10 +40,13 @@ Thumbs.db
 
 
 
-# --- Résultats de tests (traces DiagramFriendlyTest — timestamps changeants) ---
+# --- Artefacts générés par les tests à l'exécution ---
+# Graphiques matplotlib
+**/_tests/**/*.png
+# Diagrammes PlantUML produits par DiagramFriendlyTest
+**/_tests/**/*_results.puml
+# Traces JSON DiagramFriendlyTest + archives e2e
 **/*_results.json
-# Graphiques produits par les tests d'intégration (artefacts matplotlib)
-**/*_test_result_*.png
 
 # --- Données de scan HDF5 (artefacts runtime) ---
 **/*.h5
