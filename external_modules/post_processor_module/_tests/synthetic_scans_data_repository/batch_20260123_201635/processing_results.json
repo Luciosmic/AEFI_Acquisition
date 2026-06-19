@@ -1,9 +1,0 @@
-{
-  "scan_001_baseline": "PASS",
-  "scan_002_phase_offset": "PASS",
-  "scan_003_dc_offset": "PASS",
-  "scan_004_rotation_z45": "PASS",
-  "scan_005_combined_rotated": "PASS",
-  "scan_006_combined": "PASS",
-  "scan_007_negative_ref": "PASS"
-}
