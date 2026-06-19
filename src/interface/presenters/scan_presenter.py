@@ -136,6 +136,7 @@ class ScanPresenter(QObject, IScanOutputPort, metaclass=QABCMeta):
                 y_max=float(params.get("y_max", 800.0)),
                 y_nb_points=int(params.get("y_nb_points", 81)),  # Aligned with UI default
                 scan_pattern=params.get("scan_pattern", "SERPENTINE"),
+                scan_axis=params.get("scan_axis", "Y"),
                 motion_speed_mm_s=None,  # Speed controlled by advanced hardware configuration
                 stabilization_delay_ms=int(params.get("stabilization_delay_ms", 300)),
                 averaging_per_position=int(params.get("averaging_per_position", 10)),

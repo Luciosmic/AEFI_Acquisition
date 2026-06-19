@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QGroupBox, QDoubleSpinBox, QComboBox
+    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QGroupBox, QDoubleSpinBox, QComboBox
 )
 from PySide6.QtGui import QPainter, QColor, QPen, QBrush, QFont
 from PySide6.QtCore import Qt, Signal
@@ -175,20 +175,6 @@ class ExcitationPanel(QWidget):
                 border: 1px solid #444;
                 padding: 4px;
             }
-            QPushButton {
-                background-color: #2E86AB;
-                color: white;
-                border: none;
-                border-radius: 4px;
-                padding: 8px;
-                font-weight: bold;
-            }
-            QPushButton:hover {
-                background-color: #1E6A8A;
-            }
-            QPushButton:pressed {
-                background-color: #0E4A6A;
-            }
         """)
 
         group = QGroupBox("Excitation Configuration")
@@ -257,24 +243,20 @@ class ExcitationPanel(QWidget):
         freq_layout.addStretch()
         v_layout.addLayout(freq_layout)
         
-        # Apply Button
-        self.btn_apply = QPushButton("Apply")
-        v_layout.addWidget(self.btn_apply)
-
         layout.addWidget(group)
         layout.addStretch()
 
     def _connect_signals(self):
         self.mode_combo.currentTextChanged.connect(self._on_mode_changed)
-        self.btn_apply.clicked.connect(self._on_apply_clicked)
+        self.level_spin.editingFinished.connect(self._emit_changed)
+        self.freq_spin.editingFinished.connect(self._emit_changed)
 
     def _on_mode_changed(self, mode_text: str):
-        """Update visualization when mode changes."""
         mode_code = self._text_to_mode_code(mode_text)
         self.sphere_widget.set_excitation_mode(mode_code)
+        self._emit_changed()
 
-    def _on_apply_clicked(self):
-        """Emit configuration change."""
+    def _emit_changed(self):
         mode = self._text_to_mode_code(self.mode_combo.currentText())
         level = self.level_spin.value()
         freq = self.freq_spin.value()
