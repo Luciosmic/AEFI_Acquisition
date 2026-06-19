@@ -16,6 +16,7 @@ Design:
 from dataclasses import dataclass
 from .scan_zone import ScanZone
 from .scan_pattern import ScanPattern
+from .scan_axis import ScanAxis
 from ..measurement_uncertainty import MeasurementUncertainty
 
 @dataclass(frozen=True)
@@ -37,15 +38,18 @@ class StepScanConfig:
     
     # Scan pattern
     scan_pattern: ScanPattern
-    
+
     # Timing
     stabilization_delay_ms: int  # Wait time after movement
-    
+
     # Averaging (scan-level, domain logic)
     averaging_per_position: int  # Number of measurements to average per position
-    
+
     # Measurement quality requirement
     measurement_uncertainty: MeasurementUncertainty
+
+    # Scan orientation — must come after all required fields (dataclass constraint)
+    scan_axis: ScanAxis = ScanAxis.Y  # fast axis: Y=columns-first (preferred), X=rows-first (legacy)
     
     def __post_init__(self):
         """Validate configuration parameters."""

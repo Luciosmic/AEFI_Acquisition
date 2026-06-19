@@ -22,6 +22,7 @@ from domain.services.scan_trajectory_factory import ScanTrajectoryFactory
 from domain.value_objects.scan.step_scan_config import StepScanConfig
 from domain.value_objects.scan.scan_zone import ScanZone
 from domain.value_objects.scan.scan_pattern import ScanPattern
+from domain.value_objects.scan.scan_axis import ScanAxis
 from domain.value_objects.measurement_uncertainty import MeasurementUncertainty
 from domain.value_objects.scan.scan_status import ScanStatus
 from domain.value_objects.scan.scan_progress import ScanProgress
@@ -282,8 +283,9 @@ class ScanApplicationService:
             scan_pattern=ScanPattern[dto.scan_pattern],
             stabilization_delay_ms=dto.stabilization_delay_ms,
             averaging_per_position=dto.averaging_per_position,
-            measurement_uncertainty=MeasurementUncertainty(max_uncertainty_volts=dto.uncertainty_volts)
+            measurement_uncertainty=MeasurementUncertainty(max_uncertainty_volts=dto.uncertainty_volts),
+            scan_axis=ScanAxis[dto.scan_axis],
         )
 
     def _extract_metadata(self, dto: Scan2DConfigDTO) -> dict:
-        return {"mode": dto.scan_pattern}
+        return {"mode": dto.scan_pattern, "axis": dto.scan_axis}
