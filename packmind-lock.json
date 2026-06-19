@@ -1,0 +1,685 @@
+{
+  "lockfileVersion": 2,
+  "packageSlugs": [
+    "@global/solidai-standards"
+  ],
+  "agents": [
+    "claude",
+    "packmind"
+  ],
+  "installedAt": "2026-06-19T07:13:39.267Z",
+  "artifacts": {
+    "user:command:create-application-service": {
+      "name": "Create application service",
+      "type": "command",
+      "id": "f261337f-9da8-443a-a02a-444954ccd7c5",
+      "version": 1,
+      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
+      "packageIds": [
+        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/commands/create-application-service.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".packmind/commands/create-application-service.md",
+          "agent": "packmind"
+        }
+      ]
+    },
+    "user:command:create-domain-event": {
+      "name": "Create domain event",
+      "type": "command",
+      "id": "c68bd42d-15dc-4c75-83d6-3b43e1bc4072",
+      "version": 1,
+      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
+      "packageIds": [
+        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/commands/create-domain-event.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".packmind/commands/create-domain-event.md",
+          "agent": "packmind"
+        }
+      ]
+    },
+    "user:command:create-port-interface": {
+      "name": "Create port interface",
+      "type": "command",
+      "id": "40cac39c-d7c5-46bc-9870-726c990ac00d",
+      "version": 1,
+      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
+      "packageIds": [
+        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/commands/create-port-interface.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".packmind/commands/create-port-interface.md",
+          "agent": "packmind"
+        }
+      ]
+    },
+    "user:command:create-presenter": {
+      "name": "Create presenter",
+      "type": "command",
+      "id": "23516e41-95c5-48ba-968a-2b7451174f8c",
+      "version": 1,
+      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
+      "packageIds": [
+        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/commands/create-presenter.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".packmind/commands/create-presenter.md",
+          "agent": "packmind"
+        }
+      ]
+    },
+    "user:command:document-an-atomic-functionality-fa-from-an-intention": {
+      "name": "Document an Atomic Functionality (FA) from an intention",
+      "type": "command",
+      "id": "908dd01f-e741-4774-b49f-5d95b7e42568",
+      "version": 1,
+      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
+      "packageIds": [
+        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/commands/document-an-atomic-functionality-fa-from-an-intention.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".packmind/commands/document-an-atomic-functionality-fa-from-an-intention.md",
+          "agent": "packmind"
+        }
+      ]
+    },
+    "user:command:pre-pr-quality-check": {
+      "name": "Pre pr quality check",
+      "type": "command",
+      "id": "b64458b1-418a-4aa1-ae3d-c4d148a31db7",
+      "version": 1,
+      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
+      "packageIds": [
+        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/commands/pre-pr-quality-check.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".packmind/commands/pre-pr-quality-check.md",
+          "agent": "packmind"
+        }
+      ]
+    },
+    "user:command:seed-graph-of-intentions-folder-scaffold": {
+      "name": "Seed Graph of Intentions (folder scaffold)",
+      "type": "command",
+      "id": "34146c00-3dc0-4080-9b90-a399416903ab",
+      "version": 1,
+      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
+      "packageIds": [
+        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/commands/seed-graph-of-intentions-folder-scaffold.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".packmind/commands/seed-graph-of-intentions-folder-scaffold.md",
+          "agent": "packmind"
+        }
+      ]
+    },
+    "user:standard:application-service-structure": {
+      "name": "Application Service Structure",
+      "type": "standard",
+      "id": "a2355748-e054-4418-bf4e-4134d394c6c9",
+      "version": 1,
+      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
+      "packageIds": [
+        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/rules/packmind/standard-application-service-structure.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".packmind/standards/application-service-structure.md",
+          "agent": "packmind"
+        }
+      ]
+    },
+    "user:standard:domain-events-for-cross-layer-communication": {
+      "name": "Domain Events for Cross-Layer Communication",
+      "type": "standard",
+      "id": "4690b9e8-94c2-4bd8-96f1-6d7d40aed515",
+      "version": 1,
+      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
+      "packageIds": [
+        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/rules/packmind/standard-domain-events-for-cross-layer-communication.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".packmind/standards/domain-events-for-cross-layer-communication.md",
+          "agent": "packmind"
+        }
+      ]
+    },
+    "user:standard:port-interface-naming-and-placement": {
+      "name": "Port Interface Naming and Placement",
+      "type": "standard",
+      "id": "50e9f3df-484e-408e-9d18-2bba4043ba18",
+      "version": 1,
+      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
+      "packageIds": [
+        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/rules/packmind/standard-port-interface-naming-and-placement.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".packmind/standards/port-interface-naming-and-placement.md",
+          "agent": "packmind"
+        }
+      ]
+    },
+    "user:standard:presenter-responsibility-boundary": {
+      "name": "Presenter Responsibility Boundary",
+      "type": "standard",
+      "id": "82b226d3-113c-48b1-88c5-df8afe94a482",
+      "version": 1,
+      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
+      "packageIds": [
+        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/rules/packmind/standard-presenter-responsibility-boundary.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".packmind/standards/presenter-responsibility-boundary.md",
+          "agent": "packmind"
+        }
+      ]
+    },
+    "user:standard:solidai-aggregate-domain-racine-entites-et-value-objects": {
+      "name": "SolidAI — Aggregate Domain : Racine, Entités et Value Objects",
+      "type": "standard",
+      "id": "86f1176e-4545-4ff0-a3d4-31e13635ac31",
+      "version": 3,
+      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
+      "packageIds": [
+        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/rules/packmind/standard-solidai-aggregate-domain-racine-entites-et-value-objects.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".packmind/standards/solidai-aggregate-domain-racine-entites-et-value-objects.md",
+          "agent": "packmind"
+        }
+      ]
+    },
+    "user:standard:solidai-aggregate-domain-racine-entites-value-objects-et-events": {
+      "name": "SolidAI — Aggregate Domain : Racine, Entités, Value Objects et Events",
+      "type": "standard",
+      "id": "185a01aa-c19c-44e1-b3a9-155106cefdd7",
+      "version": 2,
+      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
+      "packageIds": [
+        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/rules/packmind/standard-solidai-aggregate-domain-racine-entites-value-objects-et-events.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".packmind/standards/solidai-aggregate-domain-racine-entites-value-objects-et-events.md",
+          "agent": "packmind"
+        }
+      ]
+    },
+    "user:standard:solidai-architecture-fractale-trio-atomique-intention-code-tests-co-localises": {
+      "name": "SolidAI — Architecture Fractale Trio Atomique : Intention, Code, Tests Co-localisés",
+      "type": "standard",
+      "id": "3fa6d099-947d-47de-902c-5d0a2424a3e3",
+      "version": 4,
+      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
+      "packageIds": [
+        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/rules/packmind/standard-solidai-architecture-fractale-trio-atomique-intention-code-tests-co-localises.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".packmind/standards/solidai-architecture-fractale-trio-atomique-intention-code-tests-co-localises.md",
+          "agent": "packmind"
+        }
+      ]
+    },
+    "user:standard:solidai-graph-of-intentions-promiseddd-modeling": {
+      "name": "SolidAI — Graph of Intentions (Promise↔DDD) Modeling",
+      "type": "standard",
+      "id": "57674dea-f639-4832-8c54-6d375f3584ba",
+      "version": 1,
+      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
+      "packageIds": [
+        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/rules/packmind/standard-solidai-graph-of-intentions-promiseddd-modeling.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".packmind/standards/solidai-graph-of-intentions-promiseddd-modeling.md",
+          "agent": "packmind"
+        }
+      ]
+    },
+    "user:standard:solidai-graphe-de-pensee-ossature-ddd-crew-et-regles-de-traversal-experimental": {
+      "name": "SolidAI — Graphe de Pensée : Ossature DDD-Crew et Règles de Traversal [EXPÉRIMENTAL]",
+      "type": "standard",
+      "id": "7bc1d5d1-4aa6-40df-b80d-5751b711b210",
+      "version": 1,
+      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
+      "packageIds": [
+        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/rules/packmind/standard-solidai-graphe-de-pensee-ossature-ddd-crew-et-regles-de-traversal-experimental.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".packmind/standards/solidai-graphe-de-pensee-ossature-ddd-crew-et-regles-de-traversal-experimental.md",
+          "agent": "packmind"
+        }
+      ]
+    },
+    "user:standard:solidai-navigation-agents-ia-placement-deterministe-fake-real-interface-atome": {
+      "name": "SolidAI — Navigation Agents IA : Placement Déterministe Fake, Real, Interface, Atome",
+      "type": "standard",
+      "id": "de2c2a19-626e-4ecb-91de-210ae95b188e",
+      "version": 1,
+      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
+      "packageIds": [
+        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/rules/packmind/standard-solidai-navigation-agents-ia-placement-deterministe-fake-real-interface-atome.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".packmind/standards/solidai-navigation-agents-ia-placement-deterministe-fake-real-interface-atome.md",
+          "agent": "packmind"
+        }
+      ]
+    },
+    "user:standard:solidai-nomenclature-snakecase-prefixes-ifake-dossier-tests-suffixe-testpy": {
+      "name": "SolidAI — Nomenclature : snake_case, Préfixes I/fake_, Dossier _tests/, Suffixe _test.py",
+      "type": "standard",
+      "id": "edcce616-c673-4f15-b01f-63d6c8e18841",
+      "version": 3,
+      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
+      "packageIds": [
+        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/rules/packmind/standard-solidai-nomenclature-snakecase-prefixes-ifake-dossier-tests-suffixe-testpy.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".packmind/standards/solidai-nomenclature-snakecase-prefixes-ifake-dossier-tests-suffixe-testpy.md",
+          "agent": "packmind"
+        }
+      ]
+    },
+    "user:standard:solidai-regles-dimport-ddd-isolation-domain-application-infrastructure": {
+      "name": "SolidAI — Règles d'Import DDD : Isolation Domain, Application, Infrastructure",
+      "type": "standard",
+      "id": "55493d63-802b-40ae-ba05-bbd5472ae565",
+      "version": 2,
+      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
+      "packageIds": [
+        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/rules/packmind/standard-solidai-regles-dimport-ddd-isolation-domain-application-infrastructure.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".packmind/standards/solidai-regles-dimport-ddd-isolation-domain-application-infrastructure.md",
+          "agent": "packmind"
+        }
+      ]
+    },
+    "user:standard:solidai-services-applicatifs-structure-interfaces-et-ports-infrastructure-1": {
+      "name": "SolidAI — Services Applicatifs : Structure, Interfaces et Ports Infrastructure",
+      "type": "standard",
+      "id": "7777889b-2f63-460a-b52a-6bff3cf8b23c",
+      "version": 1,
+      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
+      "packageIds": [
+        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/rules/packmind/standard-solidai-services-applicatifs-structure-interfaces-et-ports-infrastructure-1.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".packmind/standards/solidai-services-applicatifs-structure-interfaces-et-ports-infrastructure-1.md",
+          "agent": "packmind"
+        }
+      ]
+    },
+    "user:standard:solidai-test-doubles-ddd-fake-in-memory-vs-mock-placement-infrastructure": {
+      "name": "SolidAI — Test Doubles DDD : Fake In-Memory vs Mock, Placement Infrastructure",
+      "type": "standard",
+      "id": "abc99ee4-aa7c-485f-8a8e-cdb4208655a3",
+      "version": 1,
+      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
+      "packageIds": [
+        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/rules/packmind/standard-solidai-test-doubles-ddd-fake-in-memory-vs-mock-placement-infrastructure.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".packmind/standards/solidai-test-doubles-ddd-fake-in-memory-vs-mock-placement-infrastructure.md",
+          "agent": "packmind"
+        }
+      ]
+    },
+    "user:standard:test-mock-placement-and-dto-construction": {
+      "name": "Test Mock Placement and DTO Construction",
+      "type": "standard",
+      "id": "45bd878e-e2e5-487a-8be7-864fba376135",
+      "version": 1,
+      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
+      "packageIds": [
+        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/rules/packmind/standard-test-mock-placement-and-dto-construction.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".packmind/standards/test-mock-placement-and-dto-construction.md",
+          "agent": "packmind"
+        }
+      ]
+    },
+    "default:skill:packmind-cli-list-commands": {
+      "name": "Packmind CLI List Commands",
+      "type": "skill",
+      "id": "74d42562-7209-4bfa-b690-cb5c23fadf2f",
+      "version": 1,
+      "spaceId": "",
+      "packageIds": [],
+      "source": "default",
+      "files": [
+        {
+          "path": ".claude/skills/packmind-cli-list-commands/LICENSE.txt",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".claude/skills/packmind-cli-list-commands/SKILL.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        }
+      ]
+    },
+    "default:skill:packmind-create-package": {
+      "name": "Package Creator",
+      "type": "skill",
+      "id": "8e9b9e9c-65ab-438f-bbbb-e3c5a625c625",
+      "version": 1,
+      "spaceId": "",
+      "packageIds": [],
+      "source": "default",
+      "files": [
+        {
+          "path": ".claude/skills/packmind-create-package/LICENSE.txt",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".claude/skills/packmind-create-package/README.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".claude/skills/packmind-create-package/SKILL.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        }
+      ]
+    },
+    "default:skill:packmind-onboard": {
+      "name": "packmind-onboard",
+      "type": "skill",
+      "id": "0c808e08-70e8-402c-a60e-c38e9076e391",
+      "version": 1,
+      "spaceId": "",
+      "packageIds": [],
+      "source": "default",
+      "files": [
+        {
+          "path": ".claude/skills/packmind-onboard/LICENSE.txt",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".claude/skills/packmind-onboard/packmind-versions/0.16.0/completion-summary.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".claude/skills/packmind-onboard/packmind-versions/0.16.0/create-items.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".claude/skills/packmind-onboard/packmind-versions/0.16.0/create-package.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".claude/skills/packmind-onboard/packmind-versions/0.16.0/list-packages.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".claude/skills/packmind-onboard/packmind-versions/0.16.0/select-package.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".claude/skills/packmind-onboard/packmind-versions/0.23.0/completion-summary.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".claude/skills/packmind-onboard/packmind-versions/0.23.0/create-items.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".claude/skills/packmind-onboard/packmind-versions/0.23.0/create-package.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".claude/skills/packmind-onboard/packmind-versions/0.23.0/list-packages.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".claude/skills/packmind-onboard/packmind-versions/0.23.0/select-package.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".claude/skills/packmind-onboard/README.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".claude/skills/packmind-onboard/references/ci-local-workflow-parity.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".claude/skills/packmind-onboard/references/file-template-consistency.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".claude/skills/packmind-onboard/references/role-taxonomy-drift.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".claude/skills/packmind-onboard/references/test-data-construction.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".claude/skills/packmind-onboard/SKILL.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        }
+      ]
+    },
+    "default:skill:packmind-update-playbook": {
+      "name": "Update Playbook",
+      "type": "skill",
+      "id": "cf068672-d48e-4669-a8e2-aa7d7d027f94",
+      "version": 1,
+      "spaceId": "",
+      "packageIds": [],
+      "source": "default",
+      "files": [
+        {
+          "path": ".claude/skills/packmind-update-playbook/LICENSE.txt",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".claude/skills/packmind-update-playbook/packmind-versions/0.21.0/apply-changes.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".claude/skills/packmind-update-playbook/packmind-versions/0.23.0/apply-changes.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".claude/skills/packmind-update-playbook/references/agent-skills-specification.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".claude/skills/packmind-update-playbook/references/create-command-procedure.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".claude/skills/packmind-update-playbook/references/create-skill-procedure.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".claude/skills/packmind-update-playbook/references/create-standard-procedure.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".claude/skills/packmind-update-playbook/SKILL.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".claude/skills/packmind-update-playbook/steps/analyze-commands.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".claude/skills/packmind-update-playbook/steps/analyze-skills.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        },
+        {
+          "path": ".claude/skills/packmind-update-playbook/steps/analyze-standards.md",
+          "agent": "claude",
+          "isSkillDefinition": true
+        }
+      ]
+    }
+  },
+  "cliVersion": "0.30.1"
+}
