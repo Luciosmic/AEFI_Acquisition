@@ -4,9 +4,9 @@ from typing import List, Optional, Any
 import time
 import threading
 
-from application.services.scan_application_service.i_scan_executor import IScanExecutor
-from application.services.motion_control_service.i_motion_port import IMotionPort
-from application.services.scan_application_service.i_acquisition_port import IAcquisitionPort
+from application.services.scan_application_service.ports.i_scan_executor import IScanExecutor
+from application.services.motion_control_service.ports.i_motion_port import IMotionPort
+from application.services.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
 
 from domain.aggregates.step_scan import StepScan
 from domain.events.domain_event import DomainEvent

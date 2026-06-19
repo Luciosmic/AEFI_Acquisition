@@ -16,7 +16,7 @@ from PySide6.QtCore import QObject, Signal
 from typing import List, Optional
 import threading
 
-from application.services.system_lifecycle_service.i_system_lifecycle_output_port import ISystemLifecycleOutputPort
+from application.services.system_lifecycle_service.ports.i_system_lifecycle_output_port import ISystemLifecycleOutputPort
 from application.services.system_lifecycle_service.system_lifecycle_service import (
     SystemStartupApplicationService, 
     SystemShutdownApplicationService,

@@ -29,7 +29,7 @@ from infrastructure.hardware.micro_controller.mcu_composition_root import MCUCom
 from application.services.scan_application_service.scan_application_service import ScanApplicationService
 from infrastructure.execution.step_scan_executor import StepScanExecutor
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
-from application.dtos.scan_dtos import Scan2DConfigDTO
+from application.services.scan_application_service.dtos.scan_dtos import Scan2DConfigDTO
 from interface.ui_motion_control.presenter_motion_control import MotionControlPresenter
 from PyQt6.QtCore import QCoreApplication
 

@@ -20,7 +20,7 @@ from typing import Dict, Any, Optional
 import h5py
 import numpy as np
 
-from application.services.scan_application_service.i_scan_export_port import (
+from application.services.scan_export_service.ports.i_scan_export_port import (
     IScanExportPort,
 )
 

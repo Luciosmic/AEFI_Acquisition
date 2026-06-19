@@ -9,7 +9,7 @@ from typing import Dict, Any
 from tool.diagram_friendly_test import DiagramFriendlyTest
 from application.services.scan_application_service.scan_application_service import ScanApplicationService
 from application.ports.i_scan_output_port import IScanOutputPort
-from application.dtos.scan_dtos import Scan2DConfigDTO
+from application.services.scan_application_service.dtos.scan_dtos import Scan2DConfigDTO
 from domain.events.scan_events import ScanStarted, ScanCompleted
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
 from domain.value_objects.scan.scan_pattern import ScanPattern

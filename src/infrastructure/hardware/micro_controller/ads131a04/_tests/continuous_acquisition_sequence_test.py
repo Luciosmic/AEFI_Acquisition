@@ -12,8 +12,8 @@ if str(src_path) not in sys.path:
 from tool.diagram_friendly_test import DiagramFriendlyTest
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
 from application.services.continuous_acquisition_service.continuous_acquisition_service import ContinuousAcquisitionService
-from application.services.continuous_acquisition_service.i_continuous_acquisition_executor import ContinuousAcquisitionConfig
-from application.services.scan_application_service.i_acquisition_port import IAcquisitionPort
+from application.services.continuous_acquisition_service.ports.i_continuous_acquisition_executor import ContinuousAcquisitionConfig
+from application.services.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
 from domain.value_objects.acquisition.voltage_measurement import VoltageMeasurement
 from datetime import datetime
 import random

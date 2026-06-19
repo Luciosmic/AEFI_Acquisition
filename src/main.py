@@ -24,7 +24,7 @@ from infrastructure.events.in_memory_event_bus import InMemoryEventBus
 from infrastructure.execution.step_scan_executor import StepScanExecutor
 from infrastructure.persistence.csv_scan_export_port import CsvScanExportPort
 from infrastructure.persistence.hdf5_scan_export_port import Hdf5ScanExportPort
-from application.services.scan_application_service.scan_export_service import ScanExportService
+from application.services.scan_export_service.scan_export_service import ScanExportService
 
 # --- Adapters (Mocks) ---
 from infrastructure.mocks.adapter_mock_i_acquisition_port import RandomNoiseAcquisitionPort
@@ -55,7 +55,7 @@ from application.services.transformation_service.transformation_service import T
 
 # --- Hardware Configuration ---
 from application.services.hardware_configuration_service.hardware_configuration_service import HardwareConfigurationService
-from application.services.hardware_configuration_service.i_hardware_advanced_configurator import IHardwareAdvancedConfigurator
+from application.services.hardware_configuration_service.ports.i_hardware_advanced_configurator import IHardwareAdvancedConfigurator
 from interface.presenters.hardware_advanced_config_presenter import HardwareAdvancedConfigPresenter
 from interface.styles.theme import apply_dark_theme
 

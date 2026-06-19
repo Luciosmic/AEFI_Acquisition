@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import MagicMock
 from application.services.excitation_configuration_service.excitation_configuration_service import ExcitationConfigurationService
-from application.services.excitation_configuration_service.i_excitation_port import IExcitationPort
+from application.services.excitation_configuration_service.ports.i_excitation_port import IExcitationPort
 from domain.value_objects.excitation.excitation_mode import ExcitationMode
 from domain.value_objects.excitation.excitation_parameters import ExcitationParameters
 from tool.diagram_friendly_test import DiagramFriendlyTest

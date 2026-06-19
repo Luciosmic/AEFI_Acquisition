@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import MagicMock
 from application.services.motion_control_service.motion_control_service import MotionControlService
-from application.services.motion_control_service.i_motion_port import IMotionPort
+from application.services.motion_control_service.ports.i_motion_port import IMotionPort
 from domain.value_objects.geometric.position_2d import Position2D
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
 from tool.diagram_friendly_test import DiagramFriendlyTest

@@ -1,7 +1,7 @@
 from typing import List, Dict, Any
 from time import sleep
 import threading
-from application.services.scan_application_service.i_scan_executor import IScanExecutor
+from application.services.scan_application_service.ports.i_scan_executor import IScanExecutor
 from domain.aggregates.step_scan import StepScan
 from domain.value_objects.scan.scan_trajectory import ScanTrajectory
 from domain.value_objects.scan.step_scan_config import StepScanConfig

@@ -1,5 +1,5 @@
 from typing import Optional, Any
-from application.services.system_lifecycle_service.i_hardware_initialization_port import IHardwareInitializationPort
+from application.services.system_lifecycle_service.ports.i_hardware_initialization_port import IHardwareInitializationPort
 from infrastructure.hardware.arcus_performax_4EX.adapter_motion_port_arcus_performax4EX import ArcusAdapter
 from infrastructure.hardware.arcus_performax_4EX.driver_arcus_performax4EX import ArcusPerformax4EXController
 

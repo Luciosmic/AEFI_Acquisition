@@ -16,11 +16,11 @@ import threading
 import time
 from uuid import uuid4, UUID
 
-from application.services.continuous_acquisition_service.i_continuous_acquisition_executor import (
+from application.services.continuous_acquisition_service.ports.i_continuous_acquisition_executor import (
     IContinuousAcquisitionExecutor,
     ContinuousAcquisitionConfig,
 )
-from application.services.scan_application_service.i_acquisition_port import IAcquisitionPort
+from application.services.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
 
 from domain.events.i_domain_event_bus import IDomainEventBus
 from domain.events.continuous_acquisition_events import (

@@ -1,7 +1,7 @@
 import unittest
 from typing import List
-from application.scan_application_service.scan_application_service import ScanApplicationService
-from application.dtos.scan_dtos import Scan2DConfigDTO
+from application.services.scan_application_service.scan_application_service import ScanApplicationService
+from application.services.scan_application_service.dtos.scan_dtos import Scan2DConfigDTO
 from infrastructure.mocks.adapter_mock_i_motion_port import MockMotionPort
 from infrastructure.mocks.adapter_mock_i_acquisition_port import MockAcquisitionPort
 from domain.events.domain_event import DomainEvent

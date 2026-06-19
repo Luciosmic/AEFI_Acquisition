@@ -3,9 +3,10 @@ from typing import Dict, Any
 import time
 
 from application.services.scan_application_service.scan_application_service import ScanApplicationService
-from application.services.scan_application_service.i_scan_output_port import IScanOutputPort
-from application.services.scan_application_service.scan_export_service import ScanExportService
-from application.dtos.scan_dtos import Scan2DConfigDTO, ExportConfigDTO
+from application.services.scan_application_service.ports.i_scan_output_port import IScanOutputPort
+from application.services.scan_export_service.scan_export_service import ScanExportService
+from application.services.scan_application_service.dtos.scan_dtos import Scan2DConfigDTO
+from application.services.scan_export_service.dtos.scan_export_dtos import ExportConfigDTO
 from domain.events.i_domain_event_bus import IDomainEventBus
 from interface.qt_abc import QABCMeta
 

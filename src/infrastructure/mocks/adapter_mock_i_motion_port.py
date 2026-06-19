@@ -3,7 +3,7 @@ import threading
 import time
 from uuid import uuid4
 from domain.value_objects.geometric.position_2d import Position2D
-from application.services.motion_control_service.i_motion_port import IMotionPort
+from application.services.motion_control_service.ports.i_motion_port import IMotionPort
 from domain.events.i_domain_event_bus import IDomainEventBus
 from domain.events.motion_events import MotionStarted, MotionCompleted, PositionUpdated, MotionStopped, EmergencyStopTriggered
 

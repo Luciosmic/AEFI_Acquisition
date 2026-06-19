@@ -19,7 +19,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, Any, Optional, List, TextIO
 
-from application.services.scan_application_service.i_scan_export_port import (
+from application.services.scan_export_service.ports.i_scan_export_port import (
     IScanExportPort,
 )
 

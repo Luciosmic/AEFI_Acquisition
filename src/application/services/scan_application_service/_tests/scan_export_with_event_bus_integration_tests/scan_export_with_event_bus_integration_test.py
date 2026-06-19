@@ -17,8 +17,8 @@ from tool.diagram_friendly_test import DiagramFriendlyTest
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
 from infrastructure.persistence.hdf5_acquisition_repository import HDF5AcquisitionRepository
 from application.handlers.acquisition_data_handler import AcquisitionDataHandler
-from application.scan_application_service.scan_application_service import ScanApplicationService
-from application.dtos.scan_dtos import Scan2DConfigDTO
+from application.services.scan_application_service.scan_application_service import ScanApplicationService
+from application.services.scan_application_service.dtos.scan_dtos import Scan2DConfigDTO
 from infrastructure.mocks.adapter_mock_i_motion_port import MockMotionPort
 from infrastructure.mocks.adapter_mock_i_acquisition_port import MockAcquisitionPort
 
