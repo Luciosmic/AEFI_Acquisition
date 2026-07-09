@@ -38,23 +38,31 @@ Aucune association formelle n'existe entre un fichier de scan et les paramètres
 
 ### Plan de développement
 
-#### Phase 0 — Gitignore (sans risque)
+#### Phase 0 — Gitignore (sans risque) ✅ FAIT
 
-Compléter `.gitignore` pour couvrir les données runtime non encore ignorées :
+Complété `.gitignore` pour couvrir les données runtime non encore ignorées :
 - `scans/raw_data/*.csv` et `*.fig`
 - `.aefi_acquisition/logs/`
 
+Fichiers déjà commités correspondants désindexés (`git rm --cached`), conservés sur disque.
+
 ---
 
-#### Phase 0.5 — Clarifier `TestBench` ← prérequis avant tout travail domain
+#### Phase 0.5 — Clarifier `TestBench` ← prérequis avant tout travail domain ✅ FAIT
 
-**Problème** : deux doublons domain existent et doivent être clarifiés avant d'ajouter du code :
+**Audit** : aucun des candidats n'était importé par application/infrastructure/interface, et aucun n'avait de tests. Un 3e doublon fantôme a été trouvé en prime : `domain/model/aggregates/aefi_device.py` n'existait pas sur disque mais était importé par `aefi_physics_engine.py` et `json_device_repository.py` — ces deux fichiers étaient donc déjà cassés et morts.
 
-1. `domain/aggregates/bench.py` — `TestBench` (géométrie logique : colonnes, capteur, associations). Méthodes `TODO` non implémentées.
-2. `domain/model/test_bench/` — `BenchCalibrationData`, `ScanningHead`, `WorkingVolume` — doublon potentiel.
-3. `domain/aggregates/aefi_device.py` vs `domain/model/aefi_device/aefi_device.py` — même doublon côté device.
+**Décision utilisateur** : tout supprimer (tentative de refactoring jugée "clumsy", à reprendre proprement si besoin).
 
-**Action** : auditer et trancher — vivant ou mort ? Quel aggregate modélise quoi ? Aucune ligne domain écrite avant cette clarification.
+**Supprimé** :
+- `domain/aggregates/bench.py` (`TestBench`)
+- `domain/aggregates/aefi_device.py` (doublon `AefiDevice`)
+- `domain/model/aefi_device/` (doublon `AefiDevice` + VOs)
+- `domain/model/test_bench/` (`BenchCalibrationData`, `ScanningHead`, `WorkingVolume`)
+- `domain/services/aefi_physics_engine.py` (cassé, mort)
+- `infrastructure/persistence/json_device_repository.py` (cassé, mort)
+
+Suite de tests `src/` (149 tests) vérifiée verte après suppression.
 
 ---
 
@@ -152,4 +160,4 @@ Panneau de visualisation de la config active avant lancement d'un scan.
 - [ ] La config est validée au chargement (champs obligatoires, cohérence des valeurs)
 - [ ] L'UI affiche la config active avant de lancer un scan
 - [ ] Tests unitaires sur la validation et le snapshot (Fake repository en mémoire)
-- [ ] `TestBench` et ses doublons clarifiés dans le domain
+- [x] `TestBench` et ses doublons clarifiés dans le domain
