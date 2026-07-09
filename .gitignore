@@ -31,6 +31,5 @@ Thumbs.db
 /_tmp*
 /.git_*.txt
 
-# --- Config utilisateur (garder les gabarits .example) ---
-.aefi_acquisition/configs/*.json
-!.aefi_acquisition/configs/*.example
+# --- Données locales runtime (configs, scans, logs) ---
+.aefi_acquisition/
