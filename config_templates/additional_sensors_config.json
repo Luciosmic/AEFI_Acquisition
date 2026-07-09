@@ -1,0 +1,36 @@
+{
+  "schema_version": "1.0",
+  "description": "Auxiliary sensors embedded in the AEFI acquisition system",
+  "magnetometer": {
+    "reference": "LSM9DS1",
+    "channels": {
+      "Bx": 2,
+      "By": 3,
+      "Bz": 4
+    },
+    "unit": "T"
+  },
+  "accelerometer": {
+    "reference": "LSM9DS1",
+    "channels": {
+      "ax": 5,
+      "ay": 6,
+      "az": 7
+    },
+    "unit": "g"
+  },
+  "gyroscope": {
+    "reference": "LSM9DS1",
+    "channels": {
+      "gx": 8,
+      "gy": 9,
+      "gz": 10
+    },
+    "unit": "dps"
+  },
+  "lidar": {
+    "reference": "LIDAR",
+    "channel": 11,
+    "unit": "mm"
+  }
+}
