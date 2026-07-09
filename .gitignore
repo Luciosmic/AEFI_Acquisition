@@ -34,9 +34,11 @@ Thumbs.db
 /_tmp*
 /.git_*.txt
 
-# --- Config utilisateur (garder les gabarits .example) ---
-.aefi_acquisition/configs/*.json
-!.aefi_acquisition/configs/*.example
+# --- Configs runtime (remplies à l'exécution) ---
+.aefi_acquisition/configs/
+
+# --- Templates versionnés (config_templates/ — trackés dans git) ---
+# Rien à ignorer ici : config_templates/*.json sont les sources de vérité versionnées
 
 
 
