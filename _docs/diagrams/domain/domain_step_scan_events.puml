@@ -1,0 +1,65 @@
+@startuml
+title StepScan Auto-Completion Event Flow
+skinparam style strictuml
+skinparam sequenceMessageAlign center
+
+actor "Client / Test" as Client
+participant "ScanTrajectoryFactory" as Factory
+participant "StepScanConfig" as Config
+participant "StepScan" as Scan
+participant "DomainEvents" as Events
+
+group [1] Configuration
+    Client -> Config: Create(ScanMode, GridDimensions...)
+    activate Config
+    Config --> Client: config (Expected Points: N)
+    deactivate Config
+end
+
+group [2] Trajectory Generation
+    Client -> Factory: create_trajectory(config)
+    activate Factory
+    Factory --> Client: ScanTrajectory (N points)
+    deactivate Factory
+end
+
+group [3] Scan Initialization
+    Client -> Scan: StepScan(config)
+    activate Scan
+    Scan -> Events: emit ScanStarted
+    Scan --> Client: scan (Status: RUNNING)
+    deactivate Scan
+end
+
+group [4] Execution Loop
+    loop For each point i in 1..N
+        Client -> Client: Acquire Measurement
+        Client -> Scan: add_point_result(position[i], measurement)
+        activate Scan
+        
+        Scan -> Events: emit ScanPointAcquired
+        
+        Scan -> Scan: check_completion()
+        activate Scan
+        
+        alt Points Collected < N
+            Scan --> Scan: Continue
+            Scan --> Client: Status: RUNNING
+        else Points Collected == N
+            Scan -> Scan: status = COMPLETED
+            Scan -> Events: emit ScanCompleted
+            Scan --> Client: Status: COMPLETED
+        end
+        deactivate Scan
+        deactivate Scan
+    end
+end
+
+group [5] Verification
+    Client -> Scan: domain_events
+    activate Scan
+    Scan --> Client: [ScanStarted, ScanPointAcquired... , ScanCompleted]
+    deactivate Scan
+end
+
+@enduml

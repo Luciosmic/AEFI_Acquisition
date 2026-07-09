@@ -1,0 +1,430 @@
+{
+  "tests": [
+    {
+      "test_name": "test_execution_with_atomic_motions",
+      "timestamp": "2025-12-18T03:09:36.234964",
+      "status": "PASSED",
+      "interactions": [
+        {
+          "timestamp": "2025-12-18T03:09:36.235219",
+          "actor": "System",
+          "action": "DIVIDER",
+          "target": "System",
+          "message": "Setup",
+          "data": null,
+          "expect": null,
+          "got": null
+        },
+        {
+          "timestamp": "2025-12-18T03:09:36.235635",
+          "actor": "System",
+          "action": "DIVIDER",
+          "target": "System",
+          "message": "Generate Trajectory and Motions",
+          "data": null,
+          "expect": null,
+          "got": null
+        },
+        {
+          "timestamp": "2025-12-18T03:09:36.236049",
+          "actor": "Test",
+          "action": "ASSERT",
+          "target": "Trajectory",
+          "message": "Has 9 positions",
+          "data": {
+            "positions": 9
+          },
+          "expect": "9",
+          "got": "9"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:36.236394",
+          "actor": "Test",
+          "action": "ASSERT",
+          "target": "AtomicMotions",
+          "message": "Has 8 motions",
+          "data": {
+            "motions": 8
+          },
+          "expect": "8",
+          "got": "8"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:36.237093",
+          "actor": "System",
+          "action": "DIVIDER",
+          "target": "System",
+          "message": "Execute Scan",
+          "data": null,
+          "expect": null,
+          "got": null
+        },
+        {
+          "timestamp": "2025-12-18T03:09:36.237316",
+          "actor": "Test",
+          "action": "CALL",
+          "target": "ScanExecutor",
+          "message": "execute(scan, trajectory, config)"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:36.237623",
+          "actor": "Test",
+          "action": "ASSERT",
+          "target": "ScanExecutor",
+          "message": "Execution started",
+          "data": {
+            "success": true
+          },
+          "expect": "True",
+          "got": "True"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:36.238756",
+          "actor": "EventBus",
+          "action": "PUBLISH",
+          "target": "TestHandler",
+          "message": "Motion event: MotionStarted"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:37.195566",
+          "actor": "EventBus",
+          "action": "PUBLISH",
+          "target": "TestHandler",
+          "message": "Motion event: MotionCompleted"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:37.205605",
+          "actor": "EventBus",
+          "action": "PUBLISH",
+          "target": "TestHandler",
+          "message": "Motion event: MotionStarted"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:38.160065",
+          "actor": "EventBus",
+          "action": "PUBLISH",
+          "target": "TestHandler",
+          "message": "Motion event: MotionCompleted"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:38.174426",
+          "actor": "EventBus",
+          "action": "PUBLISH",
+          "target": "TestHandler",
+          "message": "Motion event: MotionStarted"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:40.309946",
+          "actor": "EventBus",
+          "action": "PUBLISH",
+          "target": "TestHandler",
+          "message": "Motion event: MotionCompleted"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:40.324907",
+          "actor": "EventBus",
+          "action": "PUBLISH",
+          "target": "TestHandler",
+          "message": "Motion event: MotionStarted"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:41.281126",
+          "actor": "EventBus",
+          "action": "PUBLISH",
+          "target": "TestHandler",
+          "message": "Motion event: MotionCompleted"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:41.285455",
+          "actor": "EventBus",
+          "action": "PUBLISH",
+          "target": "TestHandler",
+          "message": "Motion event: MotionStarted"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:42.242995",
+          "actor": "EventBus",
+          "action": "PUBLISH",
+          "target": "TestHandler",
+          "message": "Motion event: MotionCompleted"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:42.248271",
+          "actor": "EventBus",
+          "action": "PUBLISH",
+          "target": "TestHandler",
+          "message": "Motion event: MotionStarted"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:44.384974",
+          "actor": "EventBus",
+          "action": "PUBLISH",
+          "target": "TestHandler",
+          "message": "Motion event: MotionCompleted"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:44.400199",
+          "actor": "EventBus",
+          "action": "PUBLISH",
+          "target": "TestHandler",
+          "message": "Motion event: MotionStarted"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:45.358839",
+          "actor": "EventBus",
+          "action": "PUBLISH",
+          "target": "TestHandler",
+          "message": "Motion event: MotionCompleted"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:45.369586",
+          "actor": "EventBus",
+          "action": "PUBLISH",
+          "target": "TestHandler",
+          "message": "Motion event: MotionStarted"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:46.325789",
+          "actor": "EventBus",
+          "action": "PUBLISH",
+          "target": "TestHandler",
+          "message": "Motion event: MotionCompleted"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:46.377135",
+          "actor": "System",
+          "action": "DIVIDER",
+          "target": "System",
+          "message": "Verification",
+          "data": null,
+          "expect": null,
+          "got": null
+        },
+        {
+          "timestamp": "2025-12-18T03:09:46.379229",
+          "actor": "Test",
+          "action": "ASSERT",
+          "target": "StepScan",
+          "message": "Status is COMPLETED",
+          "data": {
+            "status": "ScanStatus.COMPLETED"
+          },
+          "expect": "COMPLETED",
+          "got": "ScanStatus.COMPLETED"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:46.380521",
+          "actor": "Test",
+          "action": "ASSERT",
+          "target": "StepScan",
+          "message": "Has 9 points",
+          "data": {
+            "points": 9
+          },
+          "expect": "9",
+          "got": "9"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:46.381265",
+          "actor": "Test",
+          "action": "ASSERT",
+          "target": "MotionTracker",
+          "message": "Motions tracked",
+          "data": {
+            "completed": 8
+          },
+          "expect": "8",
+          "got": "8"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:46.381908",
+          "actor": "Test",
+          "action": "ASSERT",
+          "target": "EventBus",
+          "message": "MotionStarted events",
+          "data": {
+            "count": 8
+          },
+          "expect": "8",
+          "got": "8"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:46.382569",
+          "actor": "Test",
+          "action": "ASSERT",
+          "target": "EventBus",
+          "message": "MotionCompleted events",
+          "data": {
+            "count": 8
+          },
+          "expect": "8",
+          "got": "8"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:46.383214",
+          "actor": "Test",
+          "action": "ASSERT",
+          "target": "AtomicMotion_206046d2-6fe5-48ab-96e8-f34c5471689a",
+          "message": "State is COMPLETED",
+          "data": {
+            "state": "MotionState.COMPLETED"
+          },
+          "expect": "COMPLETED",
+          "got": "MotionState.COMPLETED"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:46.383787",
+          "actor": "Test",
+          "action": "ASSERT",
+          "target": "AtomicMotion_77aebb05-2a34-4c7c-8c45-606197870efd",
+          "message": "State is COMPLETED",
+          "data": {
+            "state": "MotionState.COMPLETED"
+          },
+          "expect": "COMPLETED",
+          "got": "MotionState.COMPLETED"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:46.384360",
+          "actor": "Test",
+          "action": "ASSERT",
+          "target": "AtomicMotion_dc776eb8-fec9-4c55-b59b-6268f695a2be",
+          "message": "State is COMPLETED",
+          "data": {
+            "state": "MotionState.COMPLETED"
+          },
+          "expect": "COMPLETED",
+          "got": "MotionState.COMPLETED"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:46.385232",
+          "actor": "Test",
+          "action": "ASSERT",
+          "target": "AtomicMotion_4d0cd481-9d66-40c7-a5ab-4fd1e293f88b",
+          "message": "State is COMPLETED",
+          "data": {
+            "state": "MotionState.COMPLETED"
+          },
+          "expect": "COMPLETED",
+          "got": "MotionState.COMPLETED"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:46.385915",
+          "actor": "Test",
+          "action": "ASSERT",
+          "target": "AtomicMotion_8366b637-0b30-4d1d-803b-b42008e09a17",
+          "message": "State is COMPLETED",
+          "data": {
+            "state": "MotionState.COMPLETED"
+          },
+          "expect": "COMPLETED",
+          "got": "MotionState.COMPLETED"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:46.386311",
+          "actor": "Test",
+          "action": "ASSERT",
+          "target": "AtomicMotion_134b8115-411a-4df5-89e3-e587c92b0fab",
+          "message": "State is COMPLETED",
+          "data": {
+            "state": "MotionState.COMPLETED"
+          },
+          "expect": "COMPLETED",
+          "got": "MotionState.COMPLETED"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:46.386679",
+          "actor": "Test",
+          "action": "ASSERT",
+          "target": "AtomicMotion_addc74a1-ce9f-49a3-ad15-fa8b7adbbd89",
+          "message": "State is COMPLETED",
+          "data": {
+            "state": "MotionState.COMPLETED"
+          },
+          "expect": "COMPLETED",
+          "got": "MotionState.COMPLETED"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:46.387044",
+          "actor": "Test",
+          "action": "ASSERT",
+          "target": "AtomicMotion_1e639072-de3d-44c5-b4ea-a469cbda73e6",
+          "message": "State is COMPLETED",
+          "data": {
+            "state": "MotionState.COMPLETED"
+          },
+          "expect": "COMPLETED",
+          "got": "MotionState.COMPLETED"
+        }
+      ],
+      "summary": {
+        "total_interactions": 37,
+        "subscriptions": 0,
+        "publications": 16,
+        "assertions": 16
+      }
+    },
+    {
+      "test_name": "test_motion_profile_application",
+      "timestamp": "2025-12-18T03:09:46.389982",
+      "status": "PASSED",
+      "interactions": [
+        {
+          "timestamp": "2025-12-18T03:09:46.390365",
+          "actor": "System",
+          "action": "DIVIDER",
+          "target": "System",
+          "message": "Setup",
+          "data": null,
+          "expect": null,
+          "got": null
+        },
+        {
+          "timestamp": "2025-12-18T03:09:46.390799",
+          "actor": "System",
+          "action": "DIVIDER",
+          "target": "System",
+          "message": "Test Profile Application",
+          "data": null,
+          "expect": null,
+          "got": null
+        },
+        {
+          "timestamp": "2025-12-18T03:09:46.393616",
+          "actor": "EventBus",
+          "action": "PUBLISH",
+          "target": "TestHandler",
+          "message": "Motion event: MotionStarted"
+        },
+        {
+          "timestamp": "2025-12-18T03:09:46.593610",
+          "actor": "Test",
+          "action": "INFO",
+          "target": "MotionPort",
+          "message": "Speed configuration",
+          "data": {
+            "last_speed": 1.0
+          }
+        },
+        {
+          "timestamp": "2025-12-18T03:09:46.594953",
+          "actor": "Test",
+          "action": "ASSERT",
+          "target": "MotionPort",
+          "message": "Speed was set",
+          "data": {
+            "speed": 1.0
+          },
+          "expect": ">0",
+          "got": "1.0"
+        }
+      ],
+      "summary": {
+        "total_interactions": 5,
+        "subscriptions": 0,
+        "publications": 1,
+        "assertions": 1
+      }
+    }
+  ]
+}

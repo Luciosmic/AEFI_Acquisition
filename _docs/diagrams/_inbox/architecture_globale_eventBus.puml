@@ -1,0 +1,29 @@
+@startuml
+!define RECTANGLE class
+
+package "Application Layer" {
+  [Domain EventBus\n(In-Memory)] as DomainBus
+  [Integration EventBus\n(RabbitMQ/WebSocket)] as IntegrationBus
+  
+  DomainBus -down-> IntegrationBus : publishes to
+}
+
+package "Infrastructure Layer" {
+  [Motor Adapter] as Motor
+  [Sensor Adapter] as Sensor
+  [Hardware EventBus] as HWBus
+}
+
+package "UI Layer" {
+  [WebSocket Client] as WS
+  [Real-time UI] as UI
+}
+
+Motor -up-> HWBus : publishes
+Sensor -up-> HWBus : publishes
+HWBus -up-> DomainBus : triggers
+
+IntegrationBus -down-> WS : pushes
+WS --> UI : updates
+
+@enduml

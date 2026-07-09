@@ -1,0 +1,66 @@
+@startuml
+skinparam linetype ortho
+skinparam backgroundColor #FEFEFE
+skinparam classBackgroundColor #FFFFFF
+skinparam stereotypeCBackgroundColor #ADD1B2
+
+abstract class SignalDisplayStrategy {
+    + {abstract} render(data, canvas)
+}
+
+class TimeSeriesDisplayStrategy {
+    + render(data, canvas)
+}
+
+abstract class SignalDataAdapter {
+    + {abstract} fetch_data() : dict
+}
+
+class AcquisitionManagerAdapter {
+    - manager
+    + fetch_data() : dict
+}
+
+class DisplayConversionService {
+    - service : VisualizationService
+    + format_for_display(raw_data) : dict
+}
+
+class SignalViewerWidget {
+    - data_adapter : SignalDataAdapter
+    - display_strategy : SignalDisplayStrategy
+    - display_service : DisplayConversionService
+    - channels : List[ChannelConfigDTO]
+    + update_visualization()
+    - _build_ui()
+}
+
+class SignalViewerFactory {
+    + {static} create_viewer(signal_type, config) : SignalViewerWidget
+}
+
+class ChannelConfigDTO {
+    - name : str
+    - index : int
+    - color : str
+    - attr : str
+    - is_dotted : bool
+}
+
+class VisualizationService {
+    - acquisition_port
+    - current_unit : str
+    - v_to_vm_factor : float
+    + convert_value(raw, channel_index, unit) : float
+    + get_stats(values) : dict
+}
+
+SignalDisplayStrategy <|-- TimeSeriesDisplayStrategy
+SignalDataAdapter <|-- AcquisitionManagerAdapter
+SignalViewerWidget --> SignalDataAdapter
+SignalViewerWidget --> SignalDisplayStrategy
+SignalViewerWidget --> DisplayConversionService
+SignalViewerWidget --> ChannelConfigDTO : uses List
+DisplayConversionService --> VisualizationService
+SignalViewerFactory ..> SignalViewerWidget : creates
+@enduml

@@ -8,10 +8,8 @@ Responsibility:
 
 from __future__ import annotations
 
-from .i_continuous_acquisition_executor import (
-    IContinuousAcquisitionExecutor,
-    ContinuousAcquisitionConfig,
-)
+from .i_continuous_acquisition_executor import IContinuousAcquisitionExecutor
+from .dtos.continuous_acquisition_dtos import ContinuousAcquisitionConfig
 from application.services.scan_application_service.i_acquisition_port import IAcquisitionPort
 
 

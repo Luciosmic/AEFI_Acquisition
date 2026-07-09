@@ -1,0 +1,146 @@
+{
+  "tests": [
+    {
+      "test_name": "test_emergency_stop",
+      "timestamp": "2025-12-18T02:20:07.737424",
+      "status": "PASSED",
+      "interactions": [
+        {
+          "timestamp": "2025-12-18T02:20:07.737785",
+          "actor": "System",
+          "action": "DIVIDER",
+          "target": "System",
+          "message": "Setup",
+          "data": null,
+          "expect": null,
+          "got": null
+        },
+        {
+          "timestamp": "2025-12-18T02:20:07.738309",
+          "actor": "System",
+          "action": "DIVIDER",
+          "target": "System",
+          "message": "Execute Emergency Stop",
+          "data": null,
+          "expect": null,
+          "got": null
+        },
+        {
+          "timestamp": "2025-12-18T02:20:07.738863",
+          "actor": "Test",
+          "action": "CALL",
+          "target": "MotionService",
+          "message": "move_absolute(50.0, 50.0)"
+        },
+        {
+          "timestamp": "2025-12-18T02:20:07.791106",
+          "actor": "Test",
+          "action": "CALL",
+          "target": "MotionService",
+          "message": "emergency_stop()"
+        },
+        {
+          "timestamp": "2025-12-18T02:20:07.793452",
+          "actor": "Test",
+          "action": "ASSERT",
+          "target": "MotionService",
+          "message": "Emergency stop succeeded",
+          "data": {
+            "result": true
+          },
+          "expect": "True",
+          "got": "True"
+        },
+        {
+          "timestamp": "2025-12-18T02:20:07.897353",
+          "actor": "Test",
+          "action": "ASSERT",
+          "target": "MotionPort",
+          "message": "Motion stopped",
+          "data": {
+            "is_moving": false
+          },
+          "expect": "False",
+          "got": "False"
+        }
+      ],
+      "summary": {
+        "total_interactions": 6,
+        "subscriptions": 0,
+        "publications": 0,
+        "assertions": 2
+      }
+    },
+    {
+      "test_name": "test_normal_stop",
+      "timestamp": "2025-12-18T02:20:07.899368",
+      "status": "PASSED",
+      "interactions": [
+        {
+          "timestamp": "2025-12-18T02:20:07.899779",
+          "actor": "System",
+          "action": "DIVIDER",
+          "target": "System",
+          "message": "Setup",
+          "data": null,
+          "expect": null,
+          "got": null
+        },
+        {
+          "timestamp": "2025-12-18T02:20:07.900190",
+          "actor": "System",
+          "action": "DIVIDER",
+          "target": "System",
+          "message": "Execute Normal Stop",
+          "data": null,
+          "expect": null,
+          "got": null
+        },
+        {
+          "timestamp": "2025-12-18T02:20:07.900721",
+          "actor": "Test",
+          "action": "CALL",
+          "target": "MotionService",
+          "message": "move_absolute(50.0, 50.0)"
+        },
+        {
+          "timestamp": "2025-12-18T02:20:07.955804",
+          "actor": "Test",
+          "action": "CALL",
+          "target": "MotionService",
+          "message": "stop()"
+        },
+        {
+          "timestamp": "2025-12-18T02:20:07.956904",
+          "actor": "Test",
+          "action": "ASSERT",
+          "target": "MotionService",
+          "message": "Stop succeeded",
+          "data": {
+            "result": true
+          },
+          "expect": "True",
+          "got": "True"
+        },
+        {
+          "timestamp": "2025-12-18T02:20:08.062234",
+          "actor": "Test",
+          "action": "ASSERT",
+          "target": "MotionPort",
+          "message": "Motion stopped",
+          "data": {
+            "is_moving": false
+          },
+          "expect": "False",
+          "got": "False"
+        }
+      ],
+      "summary": {
+        "total_interactions": 6,
+        "subscriptions": 0,
+        "publications": 0,
+        "assertions": 2
+      }
+    }
+  ]
+}

@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
     QComboBox,
     QFormLayout,
     QGridLayout,
+    QSizePolicy,
 )
 from PySide6.QtCore import Qt, Signal
 import pyqtgraph as pg  # type: ignore[import]
@@ -165,32 +166,72 @@ class ContinuousAcquisitionPanel(QWidget):
 
         # 4. Calibration Controls
         grp_calib = QGroupBox("Signal Processing")
-        l_calib = QVBoxLayout(grp_calib)
+        l_calib = QGridLayout(grp_calib)
         l_calib.setContentsMargins(5, 5, 5, 5)
-        
+        l_calib.setSpacing(4)
+
+        _TOGGLE_STYLE = (
+            "QPushButton { color: #888; border: 1px solid #555; border-radius: 3px; padding: 2px 6px; }"
+            "QPushButton:checked { background-color: #27AE60; color: white; border: 1px solid #27AE60; font-weight: bold; }"
+            "QPushButton:disabled { color: #444; border: 1px solid #333; }"
+        )
+
         self.btn_calib_noise = QPushButton("Zero Noise")
         self.btn_calib_noise.setToolTip("Set current background as noise offset (Zero)")
         self.btn_calib_noise.clicked.connect(self._on_calib_noise_clicked)
-        
+
+        self.btn_toggle_noise = QPushButton("ON")
+        self.btn_toggle_noise.setCheckable(True)
+        self.btn_toggle_noise.setEnabled(False)
+        self.btn_toggle_noise.setFixedWidth(38)
+        self.btn_toggle_noise.setStyleSheet(_TOGGLE_STYLE)
+        self.btn_toggle_noise.toggled.connect(self._on_noise_toggled)
+
         self.btn_calib_phase = QPushButton("Align Phase")
         self.btn_calib_phase.setToolTip("Rotate Phase to maximize In-Phase component")
         self.btn_calib_phase.clicked.connect(self._on_calib_phase_clicked)
-        
+
+        self.btn_toggle_phase = QPushButton("ON")
+        self.btn_toggle_phase.setCheckable(True)
+        self.btn_toggle_phase.setEnabled(False)
+        self.btn_toggle_phase.setFixedWidth(38)
+        self.btn_toggle_phase.setStyleSheet(_TOGGLE_STYLE)
+        self.btn_toggle_phase.toggled.connect(self._on_phase_toggled)
+
         self.btn_calib_primary = QPushButton("Null Primary")
         self.btn_calib_primary.setToolTip("Set current signal as Primary Field offset (Tare)")
         self.btn_calib_primary.clicked.connect(self._on_calib_primary_clicked)
 
+        self.btn_toggle_primary = QPushButton("ON")
+        self.btn_toggle_primary.setCheckable(True)
+        self.btn_toggle_primary.setEnabled(False)
+        self.btn_toggle_primary.setFixedWidth(38)
+        self.btn_toggle_primary.setStyleSheet(_TOGGLE_STYLE)
+        self.btn_toggle_primary.toggled.connect(self._on_primary_toggled)
+
         self.btn_reset_calib = QPushButton("Reset All")
-        self.btn_reset_calib.setStyleSheet("color: red;")
+        self.btn_reset_calib.setStyleSheet("color: #E74C3C;")
         self.btn_reset_calib.clicked.connect(self._on_reset_calib_clicked)
-        
-        l_calib.addWidget(self.btn_calib_noise)
-        l_calib.addWidget(self.btn_calib_phase)
-        l_calib.addWidget(self.btn_calib_primary)
-        l_calib.addWidget(self.btn_reset_calib)
-        
-        l_calib.addWidget(self.btn_reset_calib)
-        
+
+        _LBL_STYLE = "color: #888; font-size: 10px; font-style: italic;"
+        self.lbl_val_noise   = QLabel("—")
+        self.lbl_val_phase   = QLabel("—")
+        self.lbl_val_primary = QLabel("—")
+        for lbl in (self.lbl_val_noise, self.lbl_val_phase, self.lbl_val_primary):
+            lbl.setStyleSheet(_LBL_STYLE)
+
+        l_calib.addWidget(self.btn_calib_noise,    0, 0)
+        l_calib.addWidget(self.btn_toggle_noise,   0, 1)
+        l_calib.addWidget(self.lbl_val_noise,      0, 2)
+        l_calib.addWidget(self.btn_calib_phase,    1, 0)
+        l_calib.addWidget(self.btn_toggle_phase,   1, 1)
+        l_calib.addWidget(self.lbl_val_phase,      1, 2)
+        l_calib.addWidget(self.btn_calib_primary,  2, 0)
+        l_calib.addWidget(self.btn_toggle_primary, 2, 1)
+        l_calib.addWidget(self.lbl_val_primary,    2, 2)
+        l_calib.addWidget(self.btn_reset_calib,    3, 0, 1, 3)
+        l_calib.setColumnStretch(2, 1)
+
         controls_layout.addWidget(grp_calib)
 
         # 5. Coordinate Transform Controls
@@ -264,6 +305,11 @@ class ContinuousAcquisitionPanel(QWidget):
     calibrate_primary_requested = Signal()
     reset_calibration_requested = Signal()
 
+    # Signals for correction toggles
+    noise_toggled = Signal(bool)
+    phase_toggled = Signal(bool)
+    primary_toggled = Signal(bool)
+
     def _on_calib_noise_clicked(self):
         self.calibrate_noise_requested.emit()
 
@@ -272,10 +318,34 @@ class ContinuousAcquisitionPanel(QWidget):
 
     def _on_calib_primary_clicked(self):
         self.calibrate_primary_requested.emit()
-        
-    
+
     def _on_reset_calib_clicked(self):
         self.reset_calibration_requested.emit()
+
+    def _on_noise_toggled(self, checked: bool):
+        self.noise_toggled.emit(checked)
+
+    def _on_phase_toggled(self, checked: bool):
+        self.phase_toggled.emit(checked)
+
+    def _on_primary_toggled(self, checked: bool):
+        self.primary_toggled.emit(checked)
+
+    def update_correction_states(self, noise: bool, phase: bool, primary: bool,
+                                noise_str: str = "—", phase_str: str = "—", primary_str: str = "—"):
+        """Sync toggle buttons and value labels (called by presenter after calibration/reset)."""
+        for btn, enabled in (
+            (self.btn_toggle_noise,   noise),
+            (self.btn_toggle_phase,   phase),
+            (self.btn_toggle_primary, primary),
+        ):
+            btn.blockSignals(True)
+            btn.setEnabled(True)
+            btn.setChecked(enabled)
+            btn.blockSignals(False)
+        self.lbl_val_noise.setText(noise_str)
+        self.lbl_val_phase.setText(phase_str)
+        self.lbl_val_primary.setText(primary_str)
 
     # Signals for Rotation
     apply_rotation_toggled = Signal(bool)

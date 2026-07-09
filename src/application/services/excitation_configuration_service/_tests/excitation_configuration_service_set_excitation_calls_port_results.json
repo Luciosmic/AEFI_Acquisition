@@ -1,0 +1,12 @@
+{
+  "test_name": "test_set_excitation_calls_port",
+  "timestamp": "2026-06-19T11:01:25.169039",
+  "status": "PASSED",
+  "interactions": [],
+  "summary": {
+    "total_interactions": 0,
+    "subscriptions": 0,
+    "publications": 0,
+    "assertions": 0
+  }
+}

@@ -1,0 +1,103 @@
+{
+  "tests": [
+    {
+      "test_name": "test_invalid_sample_rate",
+      "timestamp": "2025-12-18T02:20:05.050816",
+      "status": "PASSED",
+      "interactions": [
+        {
+          "timestamp": "2025-12-18T02:20:05.051092",
+          "actor": "System",
+          "action": "DIVIDER",
+          "target": "System",
+          "message": "Setup",
+          "data": null,
+          "expect": null,
+          "got": null
+        },
+        {
+          "timestamp": "2025-12-18T02:20:05.051369",
+          "actor": "System",
+          "action": "DIVIDER",
+          "target": "System",
+          "message": "Test Invalid Config",
+          "data": null,
+          "expect": null,
+          "got": null
+        },
+        {
+          "timestamp": "2025-12-18T02:20:05.051595",
+          "actor": "Test",
+          "action": "CALL",
+          "target": "ContinuousService",
+          "message": "start_acquisition(invalid_config)"
+        },
+        {
+          "timestamp": "2025-12-18T02:20:05.051919",
+          "actor": "Test",
+          "action": "INFO",
+          "target": "Service",
+          "message": "Handled invalid config without crash"
+        }
+      ],
+      "summary": {
+        "total_interactions": 4,
+        "subscriptions": 0,
+        "publications": 0,
+        "assertions": 0
+      }
+    },
+    {
+      "test_name": "test_stop_when_not_running",
+      "timestamp": "2025-12-18T02:20:05.054624",
+      "status": "PASSED",
+      "interactions": [
+        {
+          "timestamp": "2025-12-18T02:20:05.054986",
+          "actor": "System",
+          "action": "DIVIDER",
+          "target": "System",
+          "message": "Setup",
+          "data": null,
+          "expect": null,
+          "got": null
+        },
+        {
+          "timestamp": "2025-12-18T02:20:05.058795",
+          "actor": "System",
+          "action": "DIVIDER",
+          "target": "System",
+          "message": "Test Stop When Not Running",
+          "data": null,
+          "expect": null,
+          "got": null
+        },
+        {
+          "timestamp": "2025-12-18T02:20:05.059084",
+          "actor": "Test",
+          "action": "CALL",
+          "target": "ContinuousService",
+          "message": "stop_acquisition() (not running)"
+        },
+        {
+          "timestamp": "2025-12-18T02:20:05.059317",
+          "actor": "Test",
+          "action": "ASSERT",
+          "target": "Service",
+          "message": "Stop succeeded without error",
+          "data": {
+            "is_running": false
+          },
+          "expect": "False",
+          "got": "False"
+        }
+      ],
+      "summary": {
+        "total_interactions": 4,
+        "subscriptions": 0,
+        "publications": 0,
+        "assertions": 1
+      }
+    }
+  ]
+}

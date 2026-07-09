@@ -1,0 +1,114 @@
+{
+  "tests": [
+    {
+      "test_name": "test_scan_cancellation_during_execution",
+      "timestamp": "2025-12-18T02:20:08.067889",
+      "status": "PASSED",
+      "interactions": [
+        {
+          "timestamp": "2025-12-18T02:20:08.068527",
+          "actor": "System",
+          "action": "DIVIDER",
+          "target": "System",
+          "message": "Setup",
+          "data": null,
+          "expect": null,
+          "got": null
+        },
+        {
+          "timestamp": "2025-12-18T02:20:08.072250",
+          "actor": "System",
+          "action": "DIVIDER",
+          "target": "System",
+          "message": "Start Scan",
+          "data": null,
+          "expect": null,
+          "got": null
+        },
+        {
+          "timestamp": "2025-12-18T02:20:08.072746",
+          "actor": "Test",
+          "action": "CALL",
+          "target": "ScanService",
+          "message": "execute_scan(dto)"
+        },
+        {
+          "timestamp": "2025-12-18T02:20:08.279190",
+          "actor": "System",
+          "action": "DIVIDER",
+          "target": "System",
+          "message": "Cancel Scan",
+          "data": null,
+          "expect": null,
+          "got": null
+        },
+        {
+          "timestamp": "2025-12-18T02:20:08.281883",
+          "actor": "Test",
+          "action": "CALL",
+          "target": "ScanService",
+          "message": "cancel_scan()"
+        },
+        {
+          "timestamp": "2025-12-18T02:20:08.283806",
+          "actor": "EventBus",
+          "action": "PUBLISH",
+          "target": "TestHandler",
+          "message": "Received ScanCancelled"
+        },
+        {
+          "timestamp": "2025-12-18T02:20:08.284394",
+          "actor": "System",
+          "action": "DIVIDER",
+          "target": "System",
+          "message": "Verification",
+          "data": null,
+          "expect": null,
+          "got": null
+        },
+        {
+          "timestamp": "2025-12-18T02:20:08.285213",
+          "actor": "Test",
+          "action": "ASSERT",
+          "target": "ScanService",
+          "message": "Status is CANCELLED",
+          "data": {
+            "status": "cancelled"
+          },
+          "expect": "cancelled",
+          "got": "cancelled"
+        },
+        {
+          "timestamp": "2025-12-18T02:20:08.285843",
+          "actor": "Test",
+          "action": "ASSERT",
+          "target": "StepScan",
+          "message": "Scan status is CANCELLED",
+          "data": {
+            "status": "ScanStatus.CANCELLED"
+          },
+          "expect": "CANCELLED",
+          "got": "ScanStatus.CANCELLED"
+        },
+        {
+          "timestamp": "2025-12-18T02:20:08.286553",
+          "actor": "Test",
+          "action": "ASSERT",
+          "target": "EventBus",
+          "message": "ScanCancelled event emitted",
+          "data": {
+            "event": true
+          },
+          "expect": "True",
+          "got": "True"
+        }
+      ],
+      "summary": {
+        "total_interactions": 10,
+        "subscriptions": 0,
+        "publications": 1,
+        "assertions": 3
+      }
+    }
+  ]
+}

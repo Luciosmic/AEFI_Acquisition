@@ -1,0 +1,218 @@
+{
+  "tests": [
+    {
+      "test_name": "test_scan_pause_resume",
+      "timestamp": "2025-12-18T02:51:18.328034",
+      "status": "PASSED",
+      "interactions": [
+        {
+          "timestamp": "2025-12-18T02:51:18.328283",
+          "actor": "System",
+          "action": "DIVIDER",
+          "target": "System",
+          "message": "Setup",
+          "data": null,
+          "expect": null,
+          "got": null
+        },
+        {
+          "timestamp": "2025-12-18T02:51:18.328597",
+          "actor": "System",
+          "action": "DIVIDER",
+          "target": "System",
+          "message": "Start Scan",
+          "data": null,
+          "expect": null,
+          "got": null
+        },
+        {
+          "timestamp": "2025-12-18T02:51:18.328827",
+          "actor": "Test",
+          "action": "CALL",
+          "target": "ScanService",
+          "message": "execute_scan(dto)"
+        },
+        {
+          "timestamp": "2025-12-18T02:51:18.631252",
+          "actor": "System",
+          "action": "DIVIDER",
+          "target": "System",
+          "message": "Pause Scan",
+          "data": null,
+          "expect": null,
+          "got": null
+        },
+        {
+          "timestamp": "2025-12-18T02:51:18.632059",
+          "actor": "Test",
+          "action": "CALL",
+          "target": "ScanService",
+          "message": "pause_scan()"
+        },
+        {
+          "timestamp": "2025-12-18T02:51:18.633250",
+          "actor": "EventBus",
+          "action": "PUBLISH",
+          "target": "TestHandler",
+          "message": "Received ScanPaused"
+        },
+        {
+          "timestamp": "2025-12-18T02:51:18.633701",
+          "actor": "System",
+          "action": "DIVIDER",
+          "target": "System",
+          "message": "Verify Paused",
+          "data": null,
+          "expect": null,
+          "got": null
+        },
+        {
+          "timestamp": "2025-12-18T02:51:18.634234",
+          "actor": "Test",
+          "action": "ASSERT",
+          "target": "ScanService",
+          "message": "Status is PAUSED",
+          "data": {
+            "status": "paused"
+          },
+          "expect": "paused",
+          "got": "paused"
+        },
+        {
+          "timestamp": "2025-12-18T02:51:18.634892",
+          "actor": "Test",
+          "action": "ASSERT",
+          "target": "ScanService",
+          "message": "is_paused is True",
+          "data": {
+            "is_paused": true
+          },
+          "expect": "True",
+          "got": "True"
+        },
+        {
+          "timestamp": "2025-12-18T02:51:18.635385",
+          "actor": "Test",
+          "action": "ASSERT",
+          "target": "EventBus",
+          "message": "ScanPaused event emitted",
+          "data": {
+            "event": true
+          },
+          "expect": "True",
+          "got": "True"
+        },
+        {
+          "timestamp": "2025-12-18T02:51:18.635785",
+          "actor": "System",
+          "action": "DIVIDER",
+          "target": "System",
+          "message": "Resume Scan",
+          "data": null,
+          "expect": null,
+          "got": null
+        },
+        {
+          "timestamp": "2025-12-18T02:51:18.636359",
+          "actor": "Test",
+          "action": "CALL",
+          "target": "ScanService",
+          "message": "resume_scan()"
+        },
+        {
+          "timestamp": "2025-12-18T02:51:18.637275",
+          "actor": "EventBus",
+          "action": "PUBLISH",
+          "target": "TestHandler",
+          "message": "Received ScanResumed"
+        },
+        {
+          "timestamp": "2025-12-18T02:51:18.637720",
+          "actor": "System",
+          "action": "DIVIDER",
+          "target": "System",
+          "message": "Verify Resumed",
+          "data": null,
+          "expect": null,
+          "got": null
+        },
+        {
+          "timestamp": "2025-12-18T02:51:18.638132",
+          "actor": "Test",
+          "action": "ASSERT",
+          "target": "ScanService",
+          "message": "Status is RUNNING",
+          "data": {
+            "status": "running"
+          },
+          "expect": "running",
+          "got": "running"
+        },
+        {
+          "timestamp": "2025-12-18T02:51:18.638817",
+          "actor": "Test",
+          "action": "ASSERT",
+          "target": "ScanService",
+          "message": "is_paused is False",
+          "data": {
+            "is_paused": false
+          },
+          "expect": "False",
+          "got": "False"
+        },
+        {
+          "timestamp": "2025-12-18T02:51:18.639255",
+          "actor": "Test",
+          "action": "ASSERT",
+          "target": "EventBus",
+          "message": "ScanResumed event emitted",
+          "data": {
+            "event": true
+          },
+          "expect": "True",
+          "got": "True"
+        },
+        {
+          "timestamp": "2025-12-18T02:51:18.639672",
+          "actor": "System",
+          "action": "DIVIDER",
+          "target": "System",
+          "message": "Wait for Completion",
+          "data": null,
+          "expect": null,
+          "got": null
+        },
+        {
+          "timestamp": "2025-12-18T02:51:19.359371",
+          "actor": "Test",
+          "action": "ASSERT",
+          "target": "ScanService",
+          "message": "Final status is COMPLETED",
+          "data": {
+            "status": "completed"
+          },
+          "expect": "completed",
+          "got": "completed"
+        },
+        {
+          "timestamp": "2025-12-18T02:51:19.359729",
+          "actor": "Test",
+          "action": "ASSERT",
+          "target": "StepScan",
+          "message": "Points acquired",
+          "data": {
+            "points": 16
+          },
+          "expect": ">0",
+          "got": "16"
+        }
+      ],
+      "summary": {
+        "total_interactions": 20,
+        "subscriptions": 0,
+        "publications": 2,
+        "assertions": 8
+      }
+    }
+  ]
+}

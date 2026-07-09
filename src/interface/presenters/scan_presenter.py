@@ -7,8 +7,9 @@ from application.services.scan_application_service.i_scan_output_port import ISc
 from application.services.scan_application_service.scan_export_service import ScanExportService
 from application.dtos.scan_dtos import Scan2DConfigDTO, ExportConfigDTO
 from domain.events.i_domain_event_bus import IDomainEventBus
+from interface.qt_abc import QABCMeta
 
-class ScanPresenter(QObject, IScanOutputPort):
+class ScanPresenter(QObject, IScanOutputPort, metaclass=QABCMeta):
     """
     Presenter for the Scan feature.
     

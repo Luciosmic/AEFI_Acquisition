@@ -1,0 +1,12 @@
+{
+  "test_name": "test_initial_state_is_off",
+  "timestamp": "2026-06-19T11:01:25.168255",
+  "status": "PASSED",
+  "interactions": [],
+  "summary": {
+    "total_interactions": 0,
+    "subscriptions": 0,
+    "publications": 0,
+    "assertions": 0
+  }
+}

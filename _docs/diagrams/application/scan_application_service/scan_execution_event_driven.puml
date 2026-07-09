@@ -1,0 +1,193 @@
+@startuml Scan Execution Flow - Event-Driven Architecture
+
+title Scan Execution with Event-Driven Export & UI Updates
+
+skinparam style strictuml
+skinparam sequenceMessageAlign center
+skinparam BoxPadding 10
+
+actor "Client (UI)" as Client
+box "Application Layer" #LightBlue
+    participant "ScanApplicationService" as Service
+    participant "ExportEventSubscriber" as ExportSub
+    participant "UIEventSubscriber" as UISub
+end box
+
+box "Domain Layer" #LightGreen
+    participant "MeasurementStatisticsService" as StatsSvc
+    participant "ScanTrajectoryFactory" as Factory
+    participant "StepScan\n(Aggregate)" as Scan
+end box
+
+box "Infrastructure Layer" #LightYellow
+    participant "IMotionPort" as Motion
+    participant "IAcquisitionPort" as Acquisition
+    participant "IExportPort\n(HDF5/CSV)" as Export
+end box
+
+== Initialization ==
+
+Client ->> Service: execute_scan(configDTO)
+activate Service
+
+Service ->> Service: _to_domain_config(dto)
+Service ->> Service: validate config
+
+Service ->> Scan: new StepScan()
+activate Scan
+Scan -->> Service: scan
+deactivate Scan
+
+Service ->> Scan: start(config)
+activate Scan
+note right of Scan
+  Domain Logic:
+  - Set status = RUNNING
+  - Calculate _expected_points
+  - Emit ScanStarted event
+end note
+Scan ->> Scan: _expected_points = config.total_points()
+Scan ->> Scan: emit ScanStarted(scan_id, config)
+Scan -->> Service: domain_events
+deactivate Scan
+
+Service ->> Service: _dispatch_events(scan.events)
+activate Service
+Service ->> ExportSub: on_event(ScanStarted)
+activate ExportSub
+ExportSub ->> Export: configure(directory, filename, metadata)
+ExportSub ->> Export: start()
+note right: Create HDF5/CSV file\nWrite header/metadata
+deactivate ExportSub
+
+Service ->> UISub: on_event(ScanStarted)
+activate UISub
+UISub ->> Client: Update UI: "Scan Started"
+deactivate UISub
+deactivate Service
+
+== Trajectory Generation ==
+
+Service ->> Factory: create_trajectory(config)
+activate Factory
+note right of Factory
+  Pure Domain Logic:
+  - Calculate positions based on pattern
+  - SERPENTINE / RASTER / COMB
+end note
+Factory -->> Service: trajectory (List[Position2D])
+deactivate Factory
+
+== Execution Loop ==
+
+loop for each position in trajectory
+    
+    Service ->> Service: check_pause_cancel()
+    
+    ' A. Move
+    Service ->> Motion: move_to(position)
+    activate Motion
+    Motion -->> Service: ✓
+    deactivate Motion
+    
+    ' B. Stabilize
+    Service ->> Service: sleep(stabilization_delay_ms)
+    
+    ' C. Acquire N measurements
+    loop N = averaging_per_position
+        Service ->> Acquisition: acquire_sample()
+        activate Acquisition
+        Acquisition -->> Service: raw_measurement
+        deactivate Acquisition
+    end
+    
+    ' D. Calculate Statistics (Domain Service)
+    Service ->> StatsSvc: calculate_statistics(measurements)
+    activate StatsSvc
+    note right of StatsSvc
+      Domain Logic:
+      if N=1: std_dev = 0.0
+      if N>1: calculate mean & std_dev
+    end note
+    StatsSvc -->> Service: averaged_measurement\n(with std_dev fields)
+    deactivate StatsSvc
+    
+    Service ->> Service: Create ScanPointResult(position, measurement, index)
+    
+    ' E. Update Aggregate (Domain Logic)
+    Service ->> Scan: add_point_result(result)
+    activate Scan
+    note right of Scan
+      Domain State Management:
+      1. Append to _points
+      2. Emit ScanPointAcquired
+      3. Check if len(_points) >= _expected_points
+      4. If yes: auto-complete() and emit ScanCompleted
+    end note
+    Scan ->> Scan: _points.append(result)
+    Scan ->> Scan: emit ScanPointAcquired(scan_id, index, position, measurement)
+    
+    alt len(_points) >= _expected_points
+        Scan ->> Scan: complete()
+        note right: Auto-completion!\nDomain decides when complete
+        Scan ->> Scan: status = COMPLETED
+        Scan ->> Scan: emit ScanCompleted(scan_id, total_points)
+    end
+    
+    Scan -->> Service: domain_events
+    deactivate Scan
+    
+    ' F. Dispatch Events to Subscribers
+    Service ->> Service: _dispatch_events(scan.events)
+    activate Service
+    
+    Service ->> ExportSub: on_event(ScanPointAcquired)
+    activate ExportSub
+    ExportSub ->> Export: write_point({x, y, voltage, std_dev, ...})
+    note right: Write data point to file
+    deactivate ExportSub
+    
+    Service ->> UISub: on_event(ScanPointAcquired)
+    activate UISub
+    UISub ->> Client: Update progress bar\nUpdate plot
+    deactivate UISub
+    
+    deactivate Service
+    
+end
+
+== Finalization ==
+
+note over Service
+  Application just dispatches final events.
+  Domain already auto-completed if all points acquired.
+end note
+
+Service ->> Service: _dispatch_events(scan.events)
+activate Service
+
+Service ->> ExportSub: on_event(ScanCompleted)
+activate ExportSub
+ExportSub ->> Export: stop()
+note right: Close file gracefully
+deactivate ExportSub
+
+Service ->> UISub: on_event(ScanCompleted)
+activate UISub
+UISub ->> Client: Show "Scan Complete" message
+deactivate UISub
+
+deactivate Service
+
+Service -->> Client: True (Success)
+deactivate Service
+
+note over Client, Export
+  **Key Architecture Points:**
+  1. Domain manages state (auto-completion)
+  2. Application orchestrates infrastructure
+  3. Subscribers react to domain events
+  4. Export and UI are decoupled via events
+end note
+
+@enduml

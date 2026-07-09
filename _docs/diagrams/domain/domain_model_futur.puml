@@ -1,0 +1,114 @@
+@startuml Domain Metagraph - Integrated
+
+skinparam classAttributeIconSize 0
+skinparam backgroundColor #FEFEFE
+skinparam linetype ortho
+
+' ===========================
+' SHARED KERNEL (Le langage commun)
+' ===========================
+package "Shared Kernel" #DDDDDD {
+    class Position2D <<Shared ValueObject>> {
+        + x: float
+        + y: float
+    }
+    
+    class FieldVector <<Shared ValueObject>> {
+        + x: float
+        + y: float
+        + z: float
+    }
+
+    class Voltage <<Shared ValueObject>> {
+        + value: float
+        + unit: str
+    }
+}
+
+package "Domain Layer" {
+
+    ' ===========================
+    ' SCAN DOMAIN (La Stratégie)
+    ' ===========================
+    package "Scan Domain" {
+        class StepScan <<Aggregate Root>> {
+            - status: ScanStatus
+            + start()
+            + next_target(): Position2D
+            + register_result(pos: Position2D, field: FieldVector)
+        }
+
+        class ScanPointResult <<Value Object>> {
+            - timestamp: DateTime
+        }
+
+        class ScanTrajectory <<Value Object>> {
+            + get_path(): List<Position2D>
+        }
+        
+        class StepScanConfig <<Value Object>> {}
+    }
+
+    ' ===========================
+    ' DEVICE & BENCH DOMAIN (L'Exécution)
+    ' ===========================
+    package "Device & Bench Domain" {
+        class TestBench <<Aggregate Root>> {
+            + move_head_to(target: Position2D)
+            + acquire_sample(): Dict[SourceId, Voltage]
+        }
+
+        class ScanningHead <<Entity>> {
+            - current_position: Position2D
+        }
+
+        class AefiDevice <<Aggregate>> {
+        }
+        
+        class AefiPhysicsEngine <<Domain Service>> {
+            + compute_field(device, voltages): FieldVector
+        }
+    }
+}
+
+package "Application Layer" #F0F8FF {
+    class ScanOrchestratorService {
+        + run_scan_loop()
+    }
+    note right: Le Chef d'Orchestre qui fait le lien :\n1. Scan.next_target()\n2. Bench.move_to()\n3. Bench.acquire()\n4. Physics.compute()\n5. Scan.register_result()
+}
+
+' ===========================
+' RELATIONS VIA SHARED KERNEL
+' ===========================
+
+' Le Scan génère des positions partagées
+ScanTrajectory ..> Position2D : "Génère"
+StepScan ..> Position2D : "Dicte"
+
+' Le Banc consomme des positions partagées
+TestBench ..> Position2D : "Reçoit"
+ScanningHead o-- Position2D : "Est à"
+
+' Le Physique produit des vecteurs partagés
+AefiPhysicsEngine ..> FieldVector : "Calcule"
+AefiPhysicsEngine ..> Voltage : "Utilise"
+
+' Le Scan stocke le résultat partagé
+ScanPointResult o-- Position2D
+ScanPointResult o-- FieldVector
+
+' ===========================
+' ORCHESTRATION
+' ===========================
+ScanOrchestratorService --> StepScan : "Pilote"
+ScanOrchestratorService --> TestBench : "Commande"
+ScanOrchestratorService --> AefiPhysicsEngine : "Sollicite"
+
+' Liens internes
+TestBench *-- ScanningHead
+ScanningHead o-- AefiDevice
+StepScan *-- ScanPointResult
+StepScanConfig *-- ScanTrajectory
+
+@enduml
