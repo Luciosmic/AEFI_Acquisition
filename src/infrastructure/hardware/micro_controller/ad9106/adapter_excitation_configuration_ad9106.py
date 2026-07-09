@@ -26,7 +26,7 @@ from domain.value_objects.excitation.excitation_mode import ExcitationMode
 from domain.shared.operation_result import OperationResult
 
 # APPLICATION
-from application.services.excitation_configuration_service.i_excitation_port import IExcitationPort
+from application.services.excitation_configuration_service.ports.i_excitation_port import IExcitationPort
 
 # INFRASTRUCTURE
 from infrastructure.hardware.micro_controller.ad9106.ad9106_controller import AD9106Controller

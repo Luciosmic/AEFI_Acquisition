@@ -25,12 +25,12 @@ class TestFullScanSimulation(unittest.TestCase):
             scan_zone=ScanZone(x_min=0.0, x_max=2.0, y_min=0.0, y_max=2.0),
             x_nb_points=3,
             y_nb_points=3,
-            scan_mode=ScanMode.RASTER,
+            scan_pattern=ScanMode.RASTER,
             stabilization_delay_ms=10,
-            averaging_per_scan_point=1,
+            averaging_per_position=1,
             measurement_uncertainty=MeasurementUncertainty(max_uncertainty_volts=1e-6)
         )
-        print(f"    Mode: {config.scan_mode.name}")
+        print(f"    Mode: {config.scan_pattern.name}")
         print(f"    Zone: {config.scan_zone}")
         print(f"    Grid: {config.x_nb_points}x{config.y_nb_points}")
         

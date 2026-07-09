@@ -1,13 +1,7 @@
 import unittest
 import numpy as np
-import sys
-from pathlib import Path
 
-# Add skills for DiagramFriendlyTest
-skills_dir = Path(__file__).parents[3] / ".cursor" / "skills" / "diagram_friendly_test"
-sys.path.append(str(skills_dir))
-
-from diagram_friendly_test import DiagramFriendlyTest
+from tool.diagram_friendly_test import DiagramFriendlyTest
 from interface.logic.coordinate_transformer import CoordinateTransformer
 
 class TestCoordinateTransformer(DiagramFriendlyTest):

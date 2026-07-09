@@ -23,6 +23,8 @@ aefi_64bit_py311_venv/
 # --- IDE / OS ---
 .idea/
 .vscode/
+.claude/
+.packmind/
 *.swp
 *.bak
 .DS_Store
@@ -34,3 +36,9 @@ Thumbs.db
 
 # --- Données locales runtime (configs, scans, logs) ---
 .aefi_acquisition/
+
+# --- Artefacts générés par les tests à l'exécution ---
+**/_tests/**/*.png
+**/_tests/**/*_results.puml
+**/*_results.json
+**/*.h5

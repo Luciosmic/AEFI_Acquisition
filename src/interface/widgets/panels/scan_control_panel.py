@@ -103,8 +103,11 @@ class ScanControlPanel(QWidget):
         self.input_averaging = QLineEdit("10") # samples
         
         self.combo_pattern = QComboBox()
-        self.combo_pattern.addItems(["RASTER", "SERPENTINE", "SPIRAL"])
-        
+        self.combo_pattern.addItems(["SERPENTINE", "RASTER"])
+
+        self.combo_axis = QComboBox()
+        self.combo_axis.addItems(["Y", "X"])  # Y = columns-first (preferred)
+
         form_layout.addRow("X Min (mm):", self.input_x_min)
         form_layout.addRow("X Max (mm):", self.input_x_max)
         form_layout.addRow("X Points:", self.input_x_nb)
@@ -114,6 +117,7 @@ class ScanControlPanel(QWidget):
         form_layout.addRow("Stabilization (ms):", self.input_stabilization)
         form_layout.addRow("Averaging (samples):", self.input_averaging)
         form_layout.addRow("Pattern:", self.combo_pattern)
+        form_layout.addRow("Axis (fast):", self.combo_axis)
         
         config_group.setLayout(form_layout)
         layout.addWidget(config_group)
@@ -192,6 +196,7 @@ class ScanControlPanel(QWidget):
             "stabilization_delay_ms": self.input_stabilization.text(),
             "averaging_per_position": self.input_averaging.text(),
             "scan_pattern": self.combo_pattern.currentText(),
+            "scan_axis": self.combo_axis.currentText(),
             "export_enabled": self.checkbox_export_enabled.isChecked(),
             "export_output_directory": self.input_export_directory.text(),
             "export_filename_base": self.input_export_filename.text(),
@@ -277,6 +282,12 @@ class ScanControlPanel(QWidget):
                     index = self.combo_pattern.findText(pattern)
                     if index >= 0:
                         self.combo_pattern.setCurrentIndex(index)
+
+                    # Set axis in combo box
+                    axis = scan_config.get("scan_axis", "Y")
+                    axis_index = self.combo_axis.findText(axis)
+                    if axis_index >= 0:
+                        self.combo_axis.setCurrentIndex(axis_index)
                 
                 # Load export configuration
                 export_config = config.get("export_config", {})

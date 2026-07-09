@@ -1,5 +1,5 @@
 from typing import Dict, Any, List
-from application.services.hardware_configuration_service.i_hardware_advanced_configurator import IHardwareAdvancedConfigurator
+from application.services.hardware_configuration_service.ports.i_hardware_advanced_configurator import IHardwareAdvancedConfigurator
 from application.dtos.hardware_parameter_dtos import ActionableHardwareParametersSpec
 
 class MockHardwareConfigProvider(IHardwareAdvancedConfigurator):

@@ -8,16 +8,13 @@ for sequence diagram generation.
 import sys
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 # Add src to path
 src_dir = Path(__file__).resolve().parents[4]
 sys.path.insert(0, str(src_dir))
 
-# Add .cursor/skills to path for diagram_friendly_test
-cursor_skills_dir = Path(__file__).resolve().parents[5] / ".cursor" / "skills"
-sys.path.insert(0, str(cursor_skills_dir / "diagram_friendly_test"))
-
-from diagram_friendly_test import DiagramFriendlyTest
+from tool.diagram_friendly_test import DiagramFriendlyTest
 from infrastructure.hardware.micro_controller.MCU_serial_communicator import MCU_SerialCommunicator
 from infrastructure.hardware.micro_controller.ad9106.ad9106_controller import AD9106Controller
 from domain.shared.operation_result import OperationResult
@@ -25,11 +22,18 @@ from domain.shared.operation_result import OperationResult
 
 class TestAD9106Controller(DiagramFriendlyTest):
     """Test AD9106Controller with diagram-friendly logging."""
-    
+
     def setUp(self):
         super().setUp()
+        # Patch serial communication so tests run without hardware
+        self._send_patcher = patch.object(MCU_SerialCommunicator, 'send_command', return_value=(True, "OK"))
+        self._send_patcher.start()
         self.communicator = None
         self.controller = None
+
+    def tearDown(self):
+        self._send_patcher.stop()
+        super().tearDown()
     
     def test_set_dds_frequency(self):
         """Test frequency configuration."""

@@ -2,14 +2,18 @@
 
 ## Rationale
 
-Encapsuler les transformations de repère appliquées aux données de capteur (rotation du frame sensor, passage repère local → repère monde). Ces transformations sont une logique applicative qui coordonne les value objects domain `FrameRotation`, `Vector3D`, `Quaternion`.
+Gérer les transformations de coordonnées entre le repère capteur et le repère source. Utilisé pour corriger l'orientation mécanique du capteur AEFI lors du post-traitement des mesures.
 
 ## Responsibility
 
-- Appliquer les transformations de repère aux mesures de champ électrique.
-- Fournir une API claire pour la couche interface (panneau transformation capteur).
+- Définir les angles de rotation (θx, θy, θz) appliqués à chaque vecteur de mesure.
+- Activer ou désactiver l'application de la transformation.
+- Fournir les transformations directe (Capteur → Source) et inverse (Source → Capteur).
+- Publier `SensorTransformationAnglesUpdated` sur `IDomainEventBus` lors de chaque changement d'angles.
 
 ## Design
 
-- **Service applicatif** : coordonne des value objects domain purs, pas de dépendance hardware.
-- Publie des événements de transformation si les résultats doivent être broadcastés sur le bus.
+- **Purement calculatoire** : repose sur `scipy.spatial.transform.Rotation` (ordre 'XYZ' extrinsèque, angles en degrés). Aucun port infrastructure dédié.
+- **État interne** : angles courants (`_angles: np.ndarray`) + flag `_enabled`.
+- **`IDomainEventBus` optionnel** : injecté au constructeur, peut être `None` (mode test sans bus).
+- **`force_transform_sensor_to_source`** : bypass du flag `_enabled` pour les panneaux de référence.

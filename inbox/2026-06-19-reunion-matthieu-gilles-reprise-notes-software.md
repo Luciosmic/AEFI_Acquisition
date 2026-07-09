@@ -6,7 +6,7 @@
 
 - Afficher la taille de la visu : ???
 - Afficher des pixels carrés : FORCER LE RAPPORT D'ECHELLE DANS L'UI
-- Ajouter Toggle sur les corrections phase etc.
+- Ajouter Toggle sur les corrections phase : IMPLEMENTE
 
 ## Scan / Motion
 

@@ -20,9 +20,9 @@ class HDF5AcquisitionRepository(IAcquisitionDataRepository):
         self.base_path = Path(base_path)
         self.base_path.mkdir(parents=True, exist_ok=True)
         
-    def _get_file_path(self, scan_id: str) -> Path:
+    def _get_file_path(self, scan_id) -> Path:
         # Sanitize scan_id to be safe for filenames
-        safe_id = "".join([c for c in scan_id if c.isalnum() or c in ('-', '_')])
+        safe_id = "".join([c for c in str(scan_id) if c.isalnum() or c in ('-', '_')])
         return self.base_path / f"scan_{safe_id}.h5"
 
     def save(self, scan_id: str, data: List[AcquisitionSample]) -> None:

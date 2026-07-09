@@ -4,6 +4,7 @@ from scipy.spatial.transform import Rotation as R
 
 from domain.events.i_domain_event_bus import IDomainEventBus
 from domain.events.transformation_events import SensorTransformationAnglesUpdated
+from .dtos.transformation_dtos import SetRotationAnglesDTO
 
 class TransformationService:
     """
@@ -16,19 +17,19 @@ class TransformationService:
         self._enabled = False
         self._event_bus = event_bus
 
-    def set_rotation_angles(self, theta_x: float, theta_y: float, theta_z: float):
+    def set_rotation_angles(self, dto: SetRotationAnglesDTO) -> None:
         """
         Set rotation angles in DEGREES.
         Rotation order is 'XYZ' (extrinsic - rotations around FIXED axes).
         """
-        self._angles = np.array([theta_x, theta_y, theta_z])
+        self._angles = np.array([dto.theta_x, dto.theta_y, dto.theta_z])
         self._rotation = R.from_euler('XYZ', self._angles, degrees=True)
-        
+
         if self._event_bus:
             self._event_bus.publish("sensortransformationanglesupdated", SensorTransformationAnglesUpdated(
-                theta_x=theta_x, 
-                theta_y=theta_y, 
-                theta_z=theta_z
+                theta_x=dto.theta_x,
+                theta_y=dto.theta_y,
+                theta_z=dto.theta_z,
             ))
 
     def get_rotation_angles(self) -> Tuple[float, float, float]:

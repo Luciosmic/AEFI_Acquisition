@@ -1,5 +1,5 @@
 from typing import Optional
-from application.services.system_lifecycle_service.i_hardware_initialization_port import IHardwareInitializationPort
+from application.services.system_lifecycle_service.ports.i_hardware_initialization_port import IHardwareInitializationPort
 from infrastructure.hardware.micro_controller.MCU_serial_communicator import MCU_SerialCommunicator
 
 class MCULifecycleAdapter(IHardwareInitializationPort):

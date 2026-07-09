@@ -17,27 +17,27 @@ import logging
 import time
 from datetime import datetime
 
-from application.dtos.scan_dtos import Scan2DConfigDTO, ExportConfigDTO, ScanStatusDTO
+from .dtos.scan_dtos import Scan2DConfigDTO, ScanStatusDTO
 from domain.services.scan_trajectory_factory import ScanTrajectoryFactory
 from domain.value_objects.scan.step_scan_config import StepScanConfig
 from domain.value_objects.scan.scan_zone import ScanZone
 from domain.value_objects.scan.scan_pattern import ScanPattern
+from domain.value_objects.scan.scan_axis import ScanAxis
 from domain.value_objects.measurement_uncertainty import MeasurementUncertainty
 from domain.value_objects.scan.scan_status import ScanStatus
 from domain.value_objects.scan.scan_progress import ScanProgress
 from domain.value_objects.acquisition.voltage_measurement import VoltageMeasurement
 
 # Ports
-from application.services.motion_control_service.i_motion_port import IMotionPort
-from .i_acquisition_port import IAcquisitionPort
-from .i_scan_export_port import IScanExportPort
-from .i_scan_executor import IScanExecutor
+from application.services.motion_control_service.ports.i_motion_port import IMotionPort
+from .ports.i_acquisition_port import IAcquisitionPort
+from .ports.i_scan_executor import IScanExecutor
+from .ports.i_scan_output_port import IScanOutputPort
 
 logger = logging.getLogger(__name__)
 
 from domain.aggregates.step_scan import StepScan
 from domain.value_objects.scan.scan_point_result import ScanPointResult
-from .i_scan_output_port import IScanOutputPort
 from domain.events.scan_events import ScanStarted, ScanPointAcquired, ScanCompleted, ScanFailed, ScanCancelled, ScanPaused, ScanResumed
 from domain.events.domain_event import DomainEvent
 from domain.events.i_domain_event_bus import IDomainEventBus
@@ -194,7 +194,6 @@ class ScanApplicationService:
     def subscribe_to_scan_updates(self, callback: Callable[[DomainEvent], None]) -> None:
         """Subscribe to scan point acquired events."""
         self._event_bus.subscribe("scanpointacquired", callback)
-        self._event_bus.subscribe("scanstarted", callback)
 
     def subscribe_to_scan_completion(self, callback: Callable[[DomainEvent], None]) -> None:
         """Subscribe to scan completion events."""
@@ -282,8 +281,9 @@ class ScanApplicationService:
             scan_pattern=ScanPattern[dto.scan_pattern],
             stabilization_delay_ms=dto.stabilization_delay_ms,
             averaging_per_position=dto.averaging_per_position,
-            measurement_uncertainty=MeasurementUncertainty(max_uncertainty_volts=dto.uncertainty_volts)
+            measurement_uncertainty=MeasurementUncertainty(max_uncertainty_volts=dto.uncertainty_volts),
+            scan_axis=ScanAxis[dto.scan_axis],
         )
 
     def _extract_metadata(self, dto: Scan2DConfigDTO) -> dict:
-        return {"mode": dto.scan_pattern}
+        return {"mode": dto.scan_pattern, "axis": dto.scan_axis}

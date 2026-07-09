@@ -1,4 +1,4 @@
-from .i_excitation_port import IExcitationPort
+from .ports.i_excitation_port import IExcitationPort
 from domain.value_objects.excitation.excitation_parameters import ExcitationParameters
 from domain.value_objects.excitation.excitation_level import ExcitationLevel
 from domain.value_objects.excitation.excitation_mode import ExcitationMode

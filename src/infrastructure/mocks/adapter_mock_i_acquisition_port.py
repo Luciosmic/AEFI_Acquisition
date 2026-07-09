@@ -1,6 +1,6 @@
 from datetime import datetime
 import random
-from application.services.scan_application_service.i_acquisition_port import IAcquisitionPort
+from application.services.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
 from domain.value_objects.acquisition.voltage_measurement import VoltageMeasurement
 
 class MockAcquisitionPort(IAcquisitionPort):

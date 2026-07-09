@@ -1,13 +1,7 @@
 import unittest
 import math
-import sys
-from pathlib import Path
 
-# Add the skills directory to sys.path to import DiagramFriendlyTest
-skills_dir = Path(__file__).parents[3] / ".cursor" / "skills" / "diagram_friendly_test"
-sys.path.append(str(skills_dir))
-
-from diagram_friendly_test import DiagramFriendlyTest
+from tool.diagram_friendly_test import DiagramFriendlyTest
 from interface.presenters.signal_processor import SignalPostProcessor
 
 class TestSignalPostProcessor(DiagramFriendlyTest):

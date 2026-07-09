@@ -18,11 +18,7 @@ from pathlib import Path
 src_dir = Path(__file__).resolve().parents[4]
 sys.path.insert(0, str(src_dir))
 
-# Import DiagramFriendlyTest from skill
-skill_path = Path(__file__).resolve().parents[5] / ".cursor" / "skills" / "diagram_friendly_test"
-sys.path.insert(0, str(skill_path))
-
-from diagram_friendly_test import DiagramFriendlyTest
+from tool.diagram_friendly_test import DiagramFriendlyTest
 
 from infrastructure.hardware.arcus_performax_4EX.adapter_motion_port_arcus_performax4EX import ArcusAdapter
 from infrastructure.hardware.arcus_performax_4EX.adapter_lifecycle_arcus_performax4EX import ArcusPerformaxLifecycleAdapter

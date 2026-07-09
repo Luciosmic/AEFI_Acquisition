@@ -10,7 +10,7 @@ from application.services.continuous_acquisition_service.continuous_acquisition_
 from application.services.continuous_acquisition_service.dtos.continuous_acquisition_dtos import (
     ContinuousAcquisitionConfig,
 )
-from application.services.continuous_acquisition_service.i_continuous_acquisition_executor import (
+from application.services.continuous_acquisition_service.ports.i_continuous_acquisition_executor import (
     IContinuousAcquisitionExecutor,
 )
 

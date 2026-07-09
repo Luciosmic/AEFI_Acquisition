@@ -1,6 +1,6 @@
 from typing import Optional
 
-from application.services.motion_control_service.i_motion_port import IMotionPort
+from application.services.motion_control_service.ports.i_motion_port import IMotionPort
 from domain.value_objects.geometric.position_2d import Position2D
 from domain.shared.operation_result import OperationResult
 from domain.events.i_domain_event_bus import IDomainEventBus

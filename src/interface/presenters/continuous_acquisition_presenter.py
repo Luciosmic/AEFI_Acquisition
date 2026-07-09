@@ -9,7 +9,7 @@ from PySide6.QtCore import QObject, Signal, Slot
 from typing import Dict, Any
 
 from application.services.continuous_acquisition_service.continuous_acquisition_service import ContinuousAcquisitionService
-from application.services.continuous_acquisition_service.i_continuous_acquisition_executor import ContinuousAcquisitionConfig
+from application.services.continuous_acquisition_service.ports.i_continuous_acquisition_executor import ContinuousAcquisitionConfig
 from domain.events.continuous_acquisition_events import (
     ContinuousAcquisitionSampleAcquired,
     ContinuousAcquisitionFailed,

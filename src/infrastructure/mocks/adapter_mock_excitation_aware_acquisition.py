@@ -31,8 +31,8 @@ from datetime import datetime
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
-from application.services.scan_application_service.i_acquisition_port import IAcquisitionPort
-from application.services.excitation_configuration_service.i_excitation_port import IExcitationPort
+from application.services.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
+from application.services.excitation_configuration_service.ports.i_excitation_port import IExcitationPort
 from domain.value_objects.acquisition.voltage_measurement import VoltageMeasurement
 from domain.value_objects.excitation.excitation_parameters import ExcitationParameters
 from domain.value_objects.excitation.excitation_mode import ExcitationMode
@@ -87,7 +87,7 @@ class ExcitationAwareAcquisitionPort(IAcquisitionPort):
     # Default excitation mode to offset vector mapping
     DEFAULT_EXCITATION_OFFSET_MAP: Dict[ExcitationMode, OffsetVector3D] = {
         ExcitationMode.X_DIR: OffsetVector3D(1.0, 0.0, 0.0),
-        ExcitationMode.Y_DIR: OffsetVector3D(0.0, 1.0, 0.0),  # Note: Y_DIR maps to Z offset
+        ExcitationMode.Y_DIR: OffsetVector3D(0.0, 0.0, 1.0),  # Y_DIR excitation maps to Z axis offset
         ExcitationMode.CIRCULAR_PLUS: OffsetVector3D(0.0, 0.0, 0.0),  # No offset for circular
         ExcitationMode.CIRCULAR_MINUS: OffsetVector3D(0.0, 0.0, 0.0),  # No offset for circular
         ExcitationMode.CUSTOM: OffsetVector3D(0.0, 0.0, 0.0),  # No offset for custom

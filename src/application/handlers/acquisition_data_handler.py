@@ -35,8 +35,7 @@ class AcquisitionDataHandler:
             # We might need to enrich the event or context.
             # For now, let's assume the event has what we need or we use a placeholder/context.
             
-            # TODO: Ensure ScanPointAcquired has scan_id
-            scan_id = str(getattr(event, 'scan_id', 'unknown_scan'))
+            scan_id = getattr(event, 'scan_id', 'unknown_scan')
             
             sample = event.measurement
             
