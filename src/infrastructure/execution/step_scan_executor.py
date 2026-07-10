@@ -16,7 +16,9 @@ from domain.step_scan.value_objects.scan_trajectory.scan_trajectory import ScanT
 from domain.step_scan.value_objects.step_scan_config.step_scan_config import StepScanConfig
 from domain.step_scan.value_objects.scan_point_result.scan_point_result import ScanPointResult
 from domain.step_scan.value_objects.scan_status.scan_status import ScanStatus
-from domain.shared_kernel.events.motion_events import MotionCompleted, MotionFailed, MotionStopped
+from domain.shared_kernel.events.motion_completed.motion_completed import MotionCompleted
+from domain.shared_kernel.events.motion_failed.motion_failed import MotionFailed
+from domain.shared_kernel.events.motion_stopped.motion_stopped import MotionStopped
 
 
 class StepScanExecutor(IScanExecutor):

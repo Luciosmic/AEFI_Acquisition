@@ -11,6 +11,7 @@ sys.path.insert(0, str(root_dir))
 
 from PySide6.QtWidgets import QApplication, QDialog, QVBoxLayout, QLabel, QProgressBar
 from PySide6.QtCore import Qt, QTimer, Signal
+from PySide6.QtGui import QIcon
 
 # --- Domain & Application Services ---
 from application.services.scan_application_service.scan_application_service import ScanApplicationService
@@ -66,6 +67,12 @@ def main():
     # 1. Create QApplication
     app = QApplication(sys.argv)
     app.setApplicationName("AEFI Acquisition - Interface V2")
+    app.setWindowIcon(QIcon(str(root_dir / "interface" / "assets" / "app_icon.ico")))
+
+    if sys.platform == "win32":
+        import ctypes
+        # Windows groups taskbar entries by AppUserModelID; without it, python.exe's own icon wins.
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("AEFI.Acquisition.InterfaceV2")
     
     # Apply Dark Theme
     apply_dark_theme(app)
