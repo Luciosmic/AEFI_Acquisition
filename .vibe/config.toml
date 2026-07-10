@@ -90,6 +90,12 @@ enabled_skills = [
     "vibe",
 ]
 
+# Add Claude Code plugins directory to skill search path
+# This allows Vibe to discover and use Claude skills with minimal coupling
+skill_paths = [
+    "/Users/luis/Library/CloudStorage/Dropbox/UTUKI/CONNAISSANCES/claude-code-plugins",
+]
+
 [[providers]]
 name = "mistral"
 api_base = "https://api.mistral.ai/v1"
