@@ -23,7 +23,8 @@ from application.services.electric_field_probe_service.electric_field_probe_serv
 # --- Infrastructure ---
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
-from infrastructure.execution.step_scan_executor import StepScanExecutor
+from infrastructure.execution.thread_pool_task_runner import ThreadPoolTaskRunner
+from infrastructure.execution.event_bus_motion_synchronizer import EventBusMotionSynchronizer
 from infrastructure.persistence.csv_scan_export_port import CsvScanExportPort
 from infrastructure.persistence.hdf5_scan_export_port import Hdf5ScanExportPort
 from application.services.scan_export_service.scan_export_service import ScanExportService
@@ -37,7 +38,6 @@ from infrastructure.mocks.adapter_mock_i_continuous_acquisition_executor import 
 from infrastructure.mocks.adapter_mock_i_hardware_initialization_port import MockHardwareInitializationPort
 from infrastructure.hardware.narda_ep600.adapter_electric_field_probe_port import NardaEP601ProbeAdapter
 from infrastructure.hardware.narda_ep600.fake.fake_electric_field_probe_adapter import FakeElectricFieldProbeAdapter
-from infrastructure.execution.electric_field_probe_acquisition_executor import ElectricFieldProbeAcquisitionExecutor
 
 # --- System Lifecycle ---
 from application.services.system_lifecycle_service.system_lifecycle_service import (
@@ -227,11 +227,17 @@ def main():
     app.processEvents()
     print("\n--- Creating Application Services ---")
     
-    # Scan Executor (Infrastructure service)
-    scan_executor = StepScanExecutor(motion_port, acquisition_port, event_bus, probe_port)
-    
+    # Shared task runner + motion synchronizer (one instance, reused by both services)
+    task_runner = ThreadPoolTaskRunner()
+    motion_sync = EventBusMotionSynchronizer(event_bus)
+
     # Scan Application Service
-    scan_service = ScanApplicationService(motion_port, acquisition_port, event_bus, scan_executor)
+    scan_service = ScanApplicationService(
+        motion_port, acquisition_port, event_bus,
+        task_runner=task_runner,
+        motion_sync=motion_sync,
+        field_probe_port=probe_port,
+    )
     
     # Scan Export Service
     csv_export_port = CsvScanExportPort()
@@ -247,10 +253,11 @@ def main():
     # Motion Control Service
     motion_control_service = MotionControlService(motion_port, event_bus)
 
-    # Electric Field Probe Service
-    electric_field_probe_executor = ElectricFieldProbeAcquisitionExecutor(event_bus=event_bus)
+    # Electric Field Probe Service (reuses the shared task_runner)
     electric_field_probe_service = ElectricFieldProbeService(
-        electric_field_probe_executor, probe_port, event_bus
+        task_runner=task_runner,
+        probe_port=probe_port,
+        event_bus=event_bus,
     )
     
     # Transformation Service (Shared State)

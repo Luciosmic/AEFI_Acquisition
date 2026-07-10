@@ -15,7 +15,8 @@ from domain.step_scan.events.scan_completed.scan_completed import ScanCompleted
 from domain.step_scan.events.electric_field_scan_point_acquired.electric_field_scan_point_acquired import ElectricFieldScanPointAcquired
 from domain.electric_field_probe.value_objects.field_measurement.field_measurement import FieldMeasurement
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
-from infrastructure.execution.step_scan_executor import StepScanExecutor
+from infrastructure.execution.thread_pool_task_runner import ThreadPoolTaskRunner
+from infrastructure.execution.event_bus_motion_synchronizer import EventBusMotionSynchronizer
 from tool.diagram_friendly_test import DiagramFriendlyTest
 
 class TestScanApplicationService(DiagramFriendlyTest):
@@ -23,30 +24,25 @@ class TestScanApplicationService(DiagramFriendlyTest):
         super().setUp()
         self.log_interaction("Test", "CREATE", "ScanApplicationService", "Setup service and ports")
 
-        # Event bus must be created first so MockMotionPort can publish events through it
         self.event_bus = InMemoryEventBus()
         self.motion_port = MockMotionPort(event_bus=self.event_bus, motion_delay_ms=10)
         self.acquisition_port = MockAcquisitionPort()
         self.events: List[DomainEvent] = []
 
-        # Subscribe to relevant events via EventBus
         self.log_interaction("Test", "SUBSCRIBE", "EventBus", "Subscribe to scan events")
         self.event_bus.subscribe('scanstarted', self.on_event)
         self.event_bus.subscribe('scanpointacquired', self.on_event)
         self.event_bus.subscribe('scancompleted', self.on_event)
 
-        # Use real StepScanExecutor with mock ports and in‑memory bus
-        self.scan_executor = StepScanExecutor(
-            motion_port=self.motion_port,
-            acquisition_port=self.acquisition_port,
-            event_bus=self.event_bus,
-        )
+        task_runner = ThreadPoolTaskRunner()
+        motion_sync = EventBusMotionSynchronizer(self.event_bus)
 
         self.service = ScanApplicationService(
             self.motion_port,
             self.acquisition_port,
             self.event_bus,
-            self.scan_executor,
+            task_runner=task_runner,
+            motion_sync=motion_sync,
         )
 
     def on_event(self, event: DomainEvent):
@@ -78,7 +74,6 @@ class TestScanApplicationService(DiagramFriendlyTest):
         def _on_completed(event):
             deadline.set()
         self.event_bus.subscribe('scancompleted', _on_completed)
-        # If already received, set immediately
         if any(isinstance(e, ScanCompleted) for e in self.events):
             return True
         return deadline.wait(timeout=timeout)
@@ -102,7 +97,6 @@ class TestScanApplicationService(DiagramFriendlyTest):
         self.log_interaction("Test", "ASSERT", "ScanApplicationService", "Verify execution success", expect=True, got=success)
         self.assertTrue(success)
 
-        # Wait for the executor thread to complete (4 points × 10 ms + buffer)
         completed = self._wait_for_scan_completion(timeout=5.0)
         self.assertTrue(completed, "Scan did not complete within timeout")
 
@@ -120,7 +114,7 @@ class TestScanApplicationService(DiagramFriendlyTest):
         self.assertEqual(len(self.motion_port.move_history), 4)
 
     def test_subscriptions(self):
-        """Test the new subscription methods."""
+        """Test the subscription methods."""
         self.log_interaction("Test", "START", "ScanApplicationService", "Start subscription test")
 
         received_updates = []
@@ -150,7 +144,6 @@ class TestScanApplicationService(DiagramFriendlyTest):
         )
         self.service.execute_scan(scan_dto)
 
-        # Wait for scan to finish before asserting
         self.assertTrue(done.wait(timeout=5.0), "Scan did not complete within timeout")
 
         self.log_interaction("Test", "ASSERT", "ScanApplicationService", "Verify updates received", expect=4, got=len(received_updates))
