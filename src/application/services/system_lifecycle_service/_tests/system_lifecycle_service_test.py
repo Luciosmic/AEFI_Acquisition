@@ -10,10 +10,16 @@ from application.services.system_lifecycle_service.system_lifecycle_service impo
     StartupConfig,
     ShutdownConfig,
 )
-from domain.shared_kernel.events.system_events import (
+from domain.shared_kernel.events.system_ready_event.system_ready_event import (
     SystemReadyEvent,
+)
+from domain.shared_kernel.events.system_startup_failed_event.system_startup_failed_event import (
     SystemStartupFailedEvent,
+)
+from domain.shared_kernel.events.system_shutting_down_event.system_shutting_down_event import (
     SystemShuttingDownEvent,
+)
+from domain.shared_kernel.events.system_shutdown_complete_event.system_shutdown_complete_event import (
     SystemShutdownCompleteEvent,
 )
 
