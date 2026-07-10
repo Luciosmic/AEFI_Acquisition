@@ -3,7 +3,7 @@ import numpy as np
 from scipy.spatial.transform import Rotation as R
 
 from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
-from domain.shared_kernel.events.transformation_events import SensorTransformationAnglesUpdated
+from domain.shared_kernel.events.sensor_transformation_angles_updated.sensor_transformation_angles_updated import SensorTransformationAnglesUpdated
 from .dtos.transformation_dtos import SetRotationAnglesDTO
 
 class TransformationService:
