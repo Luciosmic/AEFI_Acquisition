@@ -1,4 +1,4 @@
-"""
+﻿"""
 Scan Application Service
 
 Responsibility:
@@ -23,7 +23,7 @@ from domain.step_scan.value_objects.step_scan_config.step_scan_config import Ste
 from domain.step_scan.value_objects.scan_zone.scan_zone import ScanZone
 from domain.step_scan.value_objects.scan_pattern.scan_pattern import ScanPattern
 from domain.step_scan.value_objects.scan_axis.scan_axis import ScanAxis
-from domain.shared_kernel.value_objects.measurement_uncertainty import MeasurementUncertainty
+from domain.shared_kernel.value_objects.measurement_uncertainty.measurement_uncertainty import MeasurementUncertainty
 from domain.step_scan.value_objects.scan_status.scan_status import ScanStatus
 from domain.step_scan.value_objects.scan_progress.scan_progress import ScanProgress
 from domain.shared_kernel.value_objects.acquisition.voltage_measurement import VoltageMeasurement
