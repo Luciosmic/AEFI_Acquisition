@@ -12,7 +12,8 @@ from application.services.scan_application_service.ports.i_acquisition_port impo
 from application.services.scan_application_service.scan_application_service import ScanApplicationService
 from application.services.scan_application_service.dtos.scan_dtos import Scan2DConfigDTO
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
-from infrastructure.execution.step_scan_executor import StepScanExecutor
+from infrastructure.execution.thread_pool_task_runner import ThreadPoolTaskRunner
+from infrastructure.execution.event_bus_motion_synchronizer import EventBusMotionSynchronizer
 from infrastructure.mocks.adapter_mock_i_motion_port import MockMotionPort
 
 
@@ -67,16 +68,17 @@ class TestScanAveragingIntegration(unittest.TestCase):
         print(f"INTEGRATION TEST: SCAN AVERAGING & VISUALIZATION ({pattern_name})")
         print("="*60)
 
-        # 1. Setup — use real event bus so StepScanExecutor can receive MotionCompleted events
+        # 1. Setup
         event_bus = InMemoryEventBus()
         motion_port = MockMotionPort(event_bus=event_bus, motion_delay_ms=1)
         acquisition_port = NoisyAcquisitionPort(motion_port)
-        scan_executor = StepScanExecutor(
-            motion_port=motion_port,
-            acquisition_port=acquisition_port,
-            event_bus=event_bus,
+        task_runner = ThreadPoolTaskRunner()
+        motion_sync = EventBusMotionSynchronizer(event_bus)
+        service = ScanApplicationService(
+            motion_port, acquisition_port, event_bus,
+            task_runner=task_runner,
+            motion_sync=motion_sync,
         )
-        service = ScanApplicationService(motion_port, acquisition_port, event_bus, scan_executor)
 
         # Subscribe before executing so we reliably receive scancompleted
         done = threading.Event()
@@ -101,7 +103,7 @@ class TestScanAveragingIntegration(unittest.TestCase):
         success = service.execute_scan(config_dto)
         self.assertTrue(success, "Scan execution failed")
 
-        # Wait for executor thread to complete (25 points × 1ms + acquisition overhead)
+        # Wait for scan thread to complete (25 points × 1ms + acquisition overhead)
         self.assertTrue(done.wait(timeout=30.0), "Scan did not complete within timeout")
         print("    Scan Completed")
 

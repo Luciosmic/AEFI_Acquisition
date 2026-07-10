@@ -10,7 +10,8 @@ from application.services.scan_application_service.ports.i_acquisition_port impo
 from application.services.scan_application_service.scan_application_service import ScanApplicationService
 from application.services.scan_application_service.dtos.scan_dtos import Scan2DConfigDTO
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
-from infrastructure.execution.step_scan_executor import StepScanExecutor
+from infrastructure.execution.thread_pool_task_runner import ThreadPoolTaskRunner
+from infrastructure.execution.event_bus_motion_synchronizer import EventBusMotionSynchronizer
 from infrastructure.mocks.adapter_mock_i_motion_port import MockMotionPort
 
 
@@ -60,12 +61,13 @@ class TestScanDriftIntegration(unittest.TestCase):
         motion_port = MockMotionPort(event_bus=event_bus, motion_delay_ms=1)
         drift_rate = 0.01
         acquisition_port = DriftingAcquisitionPort(drift_per_sample=drift_rate)
-        scan_executor = StepScanExecutor(
-            motion_port=motion_port,
-            acquisition_port=acquisition_port,
-            event_bus=event_bus,
+        task_runner = ThreadPoolTaskRunner()
+        motion_sync = EventBusMotionSynchronizer(event_bus)
+        service = ScanApplicationService(
+            motion_port, acquisition_port, event_bus,
+            task_runner=task_runner,
+            motion_sync=motion_sync,
         )
-        service = ScanApplicationService(motion_port, acquisition_port, event_bus, scan_executor)
 
         done = threading.Event()
         event_bus.subscribe("scancompleted", lambda e: done.set())
