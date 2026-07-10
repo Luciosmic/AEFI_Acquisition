@@ -12,7 +12,7 @@ from domain.shared_kernel.value_objects.acquisition.voltage_measurement import V
 from domain.step_scan.value_objects.scan_status.scan_status import ScanStatus
 from domain.step_scan.events.scan_completed.scan_completed import ScanCompleted
 
-from domain.services.scan_trajectory_factory import ScanTrajectoryFactory
+from domain.step_scan.services.scan_trajectory_factory.scan_trajectory_factory import ScanTrajectoryFactory
 
 class TestStepScanCompletion(unittest.TestCase):
     

@@ -3,7 +3,7 @@ import random
 import time
 from datetime import datetime
 from domain.step_scan.step_scan import StepScan
-from domain.services.scan_trajectory_factory import ScanTrajectoryFactory
+from domain.step_scan.services.scan_trajectory_factory.scan_trajectory_factory import ScanTrajectoryFactory
 from domain.step_scan.value_objects.step_scan_config.step_scan_config import StepScanConfig
 from domain.step_scan.value_objects.scan_zone.scan_zone import ScanZone
 from domain.step_scan.value_objects.scan_mode.scan_mode import ScanMode

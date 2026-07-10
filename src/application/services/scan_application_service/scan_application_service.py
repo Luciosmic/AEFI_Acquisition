@@ -18,7 +18,7 @@ import time
 from datetime import datetime
 
 from .dtos.scan_dtos import Scan2DConfigDTO, ScanStatusDTO
-from domain.services.scan_trajectory_factory import ScanTrajectoryFactory
+from domain.step_scan.services.scan_trajectory_factory.scan_trajectory_factory import ScanTrajectoryFactory
 from domain.step_scan.value_objects.step_scan_config.step_scan_config import StepScanConfig
 from domain.step_scan.value_objects.scan_zone.scan_zone import ScanZone
 from domain.step_scan.value_objects.scan_pattern.scan_pattern import ScanPattern

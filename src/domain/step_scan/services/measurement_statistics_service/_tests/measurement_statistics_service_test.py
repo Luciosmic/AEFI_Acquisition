@@ -3,7 +3,7 @@ from datetime import datetime
 import math
 
 from domain.shared_kernel.value_objects.acquisition.voltage_measurement import VoltageMeasurement
-from domain.services.measurement_statistics_service import MeasurementStatisticsService
+from domain.step_scan.services.measurement_statistics_service.measurement_statistics_service import MeasurementStatisticsService
 
 class TestMeasurementStatisticsService(unittest.TestCase):
     def log(self, msg: str):
