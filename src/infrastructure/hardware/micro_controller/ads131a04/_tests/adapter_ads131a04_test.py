@@ -1,4 +1,4 @@
-"""
+﻿"""
 Test ADS131A04 Adapter with real hardware.
 
 Usage:
@@ -14,7 +14,7 @@ sys.path.insert(0, str(src_dir))
 
 from ..MCU_serial_communicator import MCU_SerialCommunicator
 from .ads131a04_adapter import ADS131A04Adapter
-from ....domain.shared_kernel.value_objects.measurement_uncertainty import MeasurementUncertainty
+from ....domain.shared_kernel.value_objects.measurement_uncertainty.measurement_uncertainty import MeasurementUncertainty
 
 
 def test_connection():

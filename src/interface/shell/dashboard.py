@@ -15,9 +15,11 @@ from interface.widgets.panels.scan_visualization_panel import ScanVisualizationP
 from interface.widgets.panels.motion_panel_compact import MotionPanelCompact
 from interface.widgets.panels.excitation_panel import ExcitationPanel
 from interface.widgets.panels.continuous_acquisition_panel import ContinuousAcquisitionPanel
+from interface.widgets.panels.electric_field_probe_panel import ElectricFieldProbePanel
 from interface.widgets.panels.hardware_advanced_config_panel import HardwareAdvancedConfigPanel
 from interface.widgets.panels.sensor_transformation_panel import SensorTransformationPanel
 from interface.widgets.panels.external_modules_panel import ExternalModulesPanel
+from interface.widgets.panels.logs_panel import LogsPanel
 
 
 class SettingsPanel(BasePanel):
@@ -34,18 +36,20 @@ class Dashboard(QWidget):
     """
     def __init__(self):
         super().__init__()
-        
+
         # --- 1. Panel Instantiation ---
 
         self.panels = {
             "scan_control": ScanControlPanel(),
             "scan_viz": ScanVisualizationPanel(),
             "continuous": ContinuousAcquisitionPanel(),
+            "electric_field_probe": ElectricFieldProbePanel(),
             "motion": MotionPanelCompact(),
             "excitation": ExcitationPanel(),
             "hardware_config": HardwareAdvancedConfigPanel(),
             "transformation": SensorTransformationPanel(),
             "external_modules": ExternalModulesPanel(),
+            "logs": LogsPanel(),
             "settings": SettingsPanel()
         }
         
@@ -76,11 +80,13 @@ class Dashboard(QWidget):
             "scan_control": "Scan Control",
             "scan_viz": "Visualization",
             "continuous": "Continuous Acq.",
+            "electric_field_probe": "Electric Field Probe",
             "motion": "Motion Control",
             "excitation": "Excitation",
             "hardware_config": "Hardware Config",
             "transformation": "Ref. Transform",
             "external_modules": "External Modules",
+            "logs": "Logs",
             "settings": "Settings"
         }
         

@@ -10,12 +10,18 @@ from typing import Dict, Any
 
 from application.services.continuous_acquisition_service.continuous_acquisition_service import ContinuousAcquisitionService
 from application.services.continuous_acquisition_service.ports.i_continuous_acquisition_executor import ContinuousAcquisitionConfig
-from domain.shared_kernel.events.continuous_acquisition_events import (
+from domain.shared_kernel.events.continuous_acquisition_sample_acquired.continuous_acquisition_sample_acquired import (
     ContinuousAcquisitionSampleAcquired,
-    ContinuousAcquisitionFailed,
-    ContinuousAcquisitionStopped
 )
-from domain.shared_kernel.events.transformation_events import SensorTransformationAnglesUpdated
+from domain.shared_kernel.events.continuous_acquisition_failed.continuous_acquisition_failed import (
+    ContinuousAcquisitionFailed,
+)
+from domain.shared_kernel.events.continuous_acquisition_stopped.continuous_acquisition_stopped import (
+    ContinuousAcquisitionStopped,
+)
+from domain.shared_kernel.events.sensor_transformation_angles_updated.sensor_transformation_angles_updated import (
+    SensorTransformationAnglesUpdated,
+)
 from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
 from application.services.transformation_service.transformation_service import TransformationService
 from interface.presenters.signal_processor import SignalPostProcessor

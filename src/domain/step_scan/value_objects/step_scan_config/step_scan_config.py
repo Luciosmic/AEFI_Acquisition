@@ -1,4 +1,4 @@
-"""
+﻿"""
 Domain: Step Scan Configuration
 
 Responsibility:
@@ -17,7 +17,7 @@ from dataclasses import dataclass
 from domain.step_scan.value_objects.scan_zone.scan_zone import ScanZone
 from domain.step_scan.value_objects.scan_pattern.scan_pattern import ScanPattern
 from domain.step_scan.value_objects.scan_axis.scan_axis import ScanAxis
-from domain.shared_kernel.value_objects.measurement_uncertainty import MeasurementUncertainty
+from domain.shared_kernel.value_objects.measurement_uncertainty.measurement_uncertainty import MeasurementUncertainty
 
 @dataclass(frozen=True)
 class StepScanConfig:
@@ -48,7 +48,7 @@ class StepScanConfig:
     # Measurement quality requirement
     measurement_uncertainty: MeasurementUncertainty
 
-    # Scan orientation — must come after all required fields (dataclass constraint)
+    # Scan orientation â€” must come after all required fields (dataclass constraint)
     scan_axis: ScanAxis = ScanAxis.Y  # fast axis: Y=columns-first (preferred), X=rows-first (legacy)
     
     def __post_init__(self):
@@ -75,7 +75,7 @@ class StepScanConfig:
         Returns:
             ValidationResult with validation status
         """
-        from domain.shared_kernel.value_objects.validation_result import ValidationResult
+        from domain.shared_kernel.value_objects.validation_result.validation_result import ValidationResult
         
         # Validation is done in __post_init__, so if we got here, it's valid
         return ValidationResult(is_valid=True, errors=[], warnings=[])

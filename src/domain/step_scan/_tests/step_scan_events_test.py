@@ -1,11 +1,11 @@
-import unittest
+﻿import unittest
 from datetime import datetime
 
 from domain.step_scan.step_scan import StepScan
 from domain.step_scan.value_objects.step_scan_config.step_scan_config import StepScanConfig
 from domain.step_scan.value_objects.scan_zone.scan_zone import ScanZone
 from domain.step_scan.value_objects.scan_pattern.scan_pattern import ScanPattern
-from domain.shared_kernel.value_objects.measurement_uncertainty import MeasurementUncertainty
+from domain.shared_kernel.value_objects.measurement_uncertainty.measurement_uncertainty import MeasurementUncertainty
 from domain.step_scan.value_objects.scan_point_result.scan_point_result import ScanPointResult
 from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
 from domain.shared_kernel.value_objects.acquisition.voltage_measurement import VoltageMeasurement

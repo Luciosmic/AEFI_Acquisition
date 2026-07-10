@@ -1,4 +1,4 @@
-import unittest
+﻿import unittest
 import random
 import time
 from datetime import datetime
@@ -7,7 +7,7 @@ from domain.step_scan.services.scan_trajectory_factory.scan_trajectory_factory i
 from domain.step_scan.value_objects.step_scan_config.step_scan_config import StepScanConfig
 from domain.step_scan.value_objects.scan_zone.scan_zone import ScanZone
 from domain.step_scan.value_objects.scan_mode.scan_mode import ScanMode
-from domain.shared_kernel.value_objects.measurement_uncertainty import MeasurementUncertainty
+from domain.shared_kernel.value_objects.measurement_uncertainty.measurement_uncertainty import MeasurementUncertainty
 from domain.step_scan.value_objects.scan_point_result.scan_point_result import ScanPointResult
 from domain.shared_kernel.value_objects.acquisition.voltage_measurement import VoltageMeasurement
 from domain.step_scan.events.scan_started.scan_started import ScanStarted
@@ -18,7 +18,7 @@ class TestFullScanSimulation(unittest.TestCase):
     
     def test_simulate_full_scan(self):
         print("\n" + "="*50)
-        print("🚀 STARTING FULL SCAN SIMULATION")
+        print("ðŸš€ STARTING FULL SCAN SIMULATION")
         print("="*50)
         
         # 1. Configuration
@@ -55,12 +55,12 @@ class TestFullScanSimulation(unittest.TestCase):
         # Check Event
         events = scan.domain_events
         if events and isinstance(events[0], ScanStarted):
-            print("    ✅ EVENT EMITTED: ScanStarted")
+            print("    âœ… EVENT EMITTED: ScanStarted")
             
         # 5. Execution Loop
         print("\n[5] Executing Scan Loop...")
         for i, position in enumerate(trajectory):
-            print(f"    📍 Point {i+1}/{len(trajectory)} at ({position.x:.1f}, {position.y:.1f})")
+            print(f"    ðŸ“ Point {i+1}/{len(trajectory)} at ({position.x:.1f}, {position.y:.1f})")
             
             # Simulate Hardware Move (Sleep)
             # time.sleep(0.01) 
@@ -91,7 +91,7 @@ class TestFullScanSimulation(unittest.TestCase):
             # Check Event
             events = scan.domain_events
             if events and isinstance(events[0], ScanPointAcquired):
-                print(f"       ✅ EVENT EMITTED: ScanPointAcquired (V={voltage:.3f}V)")
+                print(f"       âœ… EVENT EMITTED: ScanPointAcquired (V={voltage:.3f}V)")
                 
         # 6. Complete Scan
         print("\n[6] Completing Scan...")
@@ -101,10 +101,10 @@ class TestFullScanSimulation(unittest.TestCase):
         # Check Event
         events = scan.domain_events
         if events and isinstance(events[0], ScanCompleted):
-            print(f"    ✅ EVENT EMITTED: ScanCompleted (Total Points: {events[0].total_points})")
+            print(f"    âœ… EVENT EMITTED: ScanCompleted (Total Points: {events[0].total_points})")
             
         print("\n" + "="*50)
-        print("🏁 SIMULATION COMPLETE")
+        print("ðŸ SIMULATION COMPLETE")
         print("="*50 + "\n")
 
 if __name__ == '__main__':

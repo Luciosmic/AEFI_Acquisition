@@ -1,11 +1,11 @@
-import unittest
+﻿import unittest
 from datetime import datetime
 
 from domain.step_scan.step_scan import StepScan
 from domain.step_scan.value_objects.step_scan_config.step_scan_config import StepScanConfig
 from domain.step_scan.value_objects.scan_zone.scan_zone import ScanZone
 from domain.step_scan.value_objects.scan_pattern.scan_pattern import ScanPattern
-from domain.shared_kernel.value_objects.measurement_uncertainty import MeasurementUncertainty
+from domain.shared_kernel.value_objects.measurement_uncertainty.measurement_uncertainty import MeasurementUncertainty
 from domain.step_scan.value_objects.scan_point_result.scan_point_result import ScanPointResult
 from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
 from domain.shared_kernel.value_objects.acquisition.voltage_measurement import VoltageMeasurement
@@ -18,7 +18,7 @@ class TestStepScanCompletion(unittest.TestCase):
     
     def test_auto_completion(self):
         print("\n" + "="*60)
-        print("🔍 EXTENSIVE VISUAL TEST: SCAN COMPLETION LOGIC")
+        print("ðŸ” EXTENSIVE VISUAL TEST: SCAN COMPLETION LOGIC")
         print("="*60)
         
         # 1. Setup Config
@@ -32,15 +32,15 @@ class TestStepScanCompletion(unittest.TestCase):
             averaging_per_position=1,
             measurement_uncertainty=MeasurementUncertainty(max_uncertainty_volts=1e-6)
         )
-        print(f"    • [StepScanConfig] Mode: {config.scan_pattern.name}")
-        print(f"    • [StepScanConfig] Zone: X[{config.scan_zone.x_min}, {config.scan_zone.x_max}], Y[{config.scan_zone.y_min}, {config.scan_zone.y_max}]")
-        print(f"    • [StepScanConfig] Grid: {config.x_nb_points}x{config.y_nb_points}")
-        print(f"    • [StepScanConfig] Expected Points: {config.x_nb_points * config.y_nb_points}")
+        print(f"    â€¢ [StepScanConfig] Mode: {config.scan_pattern.name}")
+        print(f"    â€¢ [StepScanConfig] Zone: X[{config.scan_zone.x_min}, {config.scan_zone.x_max}], Y[{config.scan_zone.y_min}, {config.scan_zone.y_max}]")
+        print(f"    â€¢ [StepScanConfig] Grid: {config.x_nb_points}x{config.y_nb_points}")
+        print(f"    â€¢ [StepScanConfig] Expected Points: {config.x_nb_points * config.y_nb_points}")
         
         # 2. Generate Trajectory
         print("\n[2] TRAJECTORY GENERATION")
         trajectory = ScanTrajectoryFactory.create_trajectory(config)
-        print(f"    • [ScanTrajectoryFactory] Generated {len(trajectory)} points:")
+        print(f"    â€¢ [ScanTrajectoryFactory] Generated {len(trajectory)} points:")
         for i, p in enumerate(trajectory):
             print(f"      {i}: ({p.x:.1f}, {p.y:.1f})")
 
@@ -48,15 +48,15 @@ class TestStepScanCompletion(unittest.TestCase):
         print("\n[3] SCAN INITIALIZATION")
         scan = StepScan()
         scan.start(config)
-        print(f"    • [StepScan] Scan ID: {scan.id}")
-        print(f"    • [StepScan] Status: {scan.status.name}")
+        print(f"    â€¢ [StepScan] Scan ID: {scan.id}")
+        print(f"    â€¢ [StepScan] Status: {scan.status.name}")
         self.assertEqual(scan.status, ScanStatus.RUNNING)
         
         # 4. Execute Scan (Add Points)
         print("\n[4] EXECUTION (Adding Points)")
         
         for i, position in enumerate(trajectory):
-            print(f"    👉 Processing Point {i+1}/{len(trajectory)}...")
+            print(f"    ðŸ‘‰ Processing Point {i+1}/{len(trajectory)}...")
             
             # Create Result
             # DATA SOURCE: Synthetic/Hardcoded for this test
@@ -74,12 +74,12 @@ class TestStepScanCompletion(unittest.TestCase):
                 point_index=i
             )
             
-            print(f"       • [ScanTrajectory] Position: ({result.position.x:.1f}, {result.position.y:.1f})")
-            print(f"       • [TestSimulation] Source: SYNTHETIC (0.1 * index)")
-            print(f"       • [TestSimulation] Measured: {result.measurement.voltage_x_in_phase:.3f} V")
+            print(f"       â€¢ [ScanTrajectory] Position: ({result.position.x:.1f}, {result.position.y:.1f})")
+            print(f"       â€¢ [TestSimulation] Source: SYNTHETIC (0.1 * index)")
+            print(f"       â€¢ [TestSimulation] Measured: {result.measurement.voltage_x_in_phase:.3f} V")
             
             scan.add_point_result(result)
-            print(f"       • [StepScan] New Status: {scan.status.name}")
+            print(f"       â€¢ [StepScan] New Status: {scan.status.name}")
             
             if i < len(trajectory) - 1:
                 self.assertEqual(scan.status, ScanStatus.RUNNING)
@@ -95,16 +95,16 @@ class TestStepScanCompletion(unittest.TestCase):
         # Last event should be ScanCompleted
         self.assertIsInstance(events[-1], ScanCompleted)
         e = events[-1]
-        print(f"    ✅ [StepScan] Scan automatically completed!")
-        print(f"    • [DomainEvent] Event: {type(e).__name__}")
-        print(f"    • [DomainEvent] Total Points: {e.total_points}")
+        print(f"    âœ… [StepScan] Scan automatically completed!")
+        print(f"    â€¢ [DomainEvent] Event: {type(e).__name__}")
+        print(f"    â€¢ [DomainEvent] Total Points: {e.total_points}")
         
         # 6. Final Object Inspection
         print("\n[6] FINAL OBJECT INSPECTION")
-        print(f"    • [StepScan] ID: {scan.id}")
-        print(f"    • [StepScan] Status: {scan.status.name}")
-        print(f"    • [StepScan] Total Points Collected: {len(scan.points)}")
-        print("    • [StepScan] Points Summary:")
+        print(f"    â€¢ [StepScan] ID: {scan.id}")
+        print(f"    â€¢ [StepScan] Status: {scan.status.name}")
+        print(f"    â€¢ [StepScan] Total Points Collected: {len(scan.points)}")
+        print("    â€¢ [StepScan] Points Summary:")
         for p in scan.points:
              print(f"      - Index {p.point_index}: Pos({p.position.x:.1f}, {p.position.y:.1f}) -> {p.measurement.voltage_x_in_phase:.3f} V")
              
@@ -135,10 +135,10 @@ class TestStepScanCompletion(unittest.TestCase):
             output_path = os.path.join(os.path.dirname(__file__), "scan_result_plot.png")
             plt.savefig(output_path)
             plt.close()
-            print(f"    ✅ Image saved to: {output_path}")
+            print(f"    âœ… Image saved to: {output_path}")
             
         except ImportError:
-            print("    ⚠️ Matplotlib not installed, skipping image generation.")
+            print("    âš ï¸ Matplotlib not installed, skipping image generation.")
 
 if __name__ == '__main__':
     unittest.main()

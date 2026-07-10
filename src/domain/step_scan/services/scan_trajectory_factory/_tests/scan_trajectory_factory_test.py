@@ -1,10 +1,10 @@
-import unittest
+﻿import unittest
 
 from domain.step_scan.value_objects.step_scan_config.step_scan_config import StepScanConfig
 from domain.step_scan.value_objects.scan_zone.scan_zone import ScanZone
 from domain.step_scan.value_objects.scan_pattern.scan_pattern import ScanPattern
 from domain.step_scan.value_objects.scan_axis.scan_axis import ScanAxis
-from domain.shared_kernel.value_objects.measurement_uncertainty import MeasurementUncertainty
+from domain.shared_kernel.value_objects.measurement_uncertainty.measurement_uncertainty import MeasurementUncertainty
 from domain.step_scan.services.scan_trajectory_factory.scan_trajectory_factory import ScanTrajectoryFactory
 
 
@@ -54,10 +54,10 @@ class TestScanTrajectoryFactory(unittest.TestCase):
     def test_serpentine_y_axis(self):
         """Default Y-axis: zigzag along Y for each X column."""
         pts = list(ScanTrajectoryFactory.create_trajectory(_base(ScanPattern.SERPENTINE, ScanAxis.Y)))
-        # Column x=0 (even): y=0,5,10 (bottom→top)
+        # Column x=0 (even): y=0,5,10 (bottomâ†’top)
         self.assertEqual((pts[0].x, pts[0].y), (0.0, 0.0))
         self.assertEqual((pts[2].x, pts[2].y), (0.0, 10.0))
-        # Column x=5 (odd): y=10,5,0 (top→bottom)
+        # Column x=5 (odd): y=10,5,0 (topâ†’bottom)
         self.assertEqual((pts[3].x, pts[3].y), (5.0, 10.0))
         self.assertEqual((pts[5].x, pts[5].y), (5.0, 0.0))
         # Column x=10 (even): y=0,5,10

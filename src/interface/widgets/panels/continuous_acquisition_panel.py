@@ -104,6 +104,21 @@ class ContinuousAcquisitionPanel(QWidget):
         l_params.addRow("Scale:", self.cbo_scale)
         self._scale_factor = 1.0  # Default V
 
+        # Mode Control (Auto = fit to data, Oscillo = fixed calibre)
+        self.cbo_mode = QComboBox()
+        self.cbo_mode.addItems(["Auto", "Oscillo"])
+        self.cbo_mode.currentTextChanged.connect(self._on_mode_changed)
+        l_params.addRow("Mode:", self.cbo_mode)
+
+        self.lbl_fullscale = QLabel("Range (±)")
+        self.spin_fullscale = QDoubleSpinBox()
+        self.spin_fullscale.setRange(0.001, 1_000_000.0)
+        self.spin_fullscale.setValue(1.0)
+        self.spin_fullscale.valueChanged.connect(self._on_fullscale_changed)
+        l_params.addRow(self.lbl_fullscale, self.spin_fullscale)
+        self.lbl_fullscale.setVisible(False)
+        self.spin_fullscale.setVisible(False)
+
         controls_layout.addWidget(grp_params)
 
         # 2. Controls
@@ -278,7 +293,12 @@ class ContinuousAcquisitionPanel(QWidget):
             self.curves[ch["name"]] = curve
 
         vlayout.addWidget(self.plot)
-        
+
+        # pyqtgraph's built-in "A" (autorange) button forces autorange on both axes,
+        # bypassing our Oscillo fixed calibre. Reflect that back into the Mode selector
+        # so the switch to Auto stays visible instead of silently overriding Oscillo.
+        self.plot.getPlotItem().autoBtn.clicked.connect(self._on_autorange_btn_clicked)
+
         # Initialize time slot visibility based on default window mode
         self._update_time_slot_visibility(self.window_mode_combo.currentText())
 
@@ -462,12 +482,36 @@ class ContinuousAcquisitionPanel(QWidget):
             self._scale_factor = 1e6
         else:
             self._scale_factor = 1.0
-            
+
         self.plot.setLabel("left", f"Voltage ({unit})")
         self._update_plot()
-    
+        self._apply_view_mode()
+
     def _update_time_slot_visibility(self, mode_text: str):
         """Show/hide Time Slot controls based on window mode."""
         is_sliding = mode_text.startswith("Sliding")
         self.lbl_time_slot.setVisible(is_sliding)
         self.window_length_spin.setVisible(is_sliding)
+
+    def _on_mode_changed(self, mode_text: str):
+        """Switch between Auto (fit to data) and Oscillo (fixed calibre)."""
+        is_oscillo = mode_text == "Oscillo"
+        self.lbl_fullscale.setVisible(is_oscillo)
+        self.spin_fullscale.setVisible(is_oscillo)
+        self._apply_view_mode()
+
+    def _on_fullscale_changed(self):
+        self._apply_view_mode()
+
+    def _on_autorange_btn_clicked(self):
+        """Keep the Mode selector in sync when the user hits pyqtgraph's own 'A' button."""
+        self.cbo_mode.setCurrentText("Auto")
+
+    def _apply_view_mode(self):
+        """Apply Auto autorange or Oscillo fixed calibre to the Y axis."""
+        if self.cbo_mode.currentText() == "Oscillo":
+            fs = self.spin_fullscale.value()
+            self.plot.disableAutoRange(axis=pg.ViewBox.YAxis)
+            self.plot.setYRange(-fs, fs, padding=0)
+        else:
+            self.plot.enableAutoRange(axis=pg.ViewBox.YAxis, enable=True)
