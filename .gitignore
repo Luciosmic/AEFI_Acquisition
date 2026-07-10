@@ -25,6 +25,9 @@ aefi_64bit_py311_venv/
 .vscode/
 .claude/
 .packmind/
+
+# Vibe session files (keep config, ignore runtime)
+.vibe/session_touched_files_*
 *.swp
 *.bak
 .DS_Store
