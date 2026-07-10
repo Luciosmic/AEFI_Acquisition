@@ -10,10 +10,14 @@ from typing import Dict, Any
 
 from application.services.continuous_acquisition_service.continuous_acquisition_service import ContinuousAcquisitionService
 from application.services.continuous_acquisition_service.ports.i_continuous_acquisition_executor import ContinuousAcquisitionConfig
-from domain.shared_kernel.events.continuous_acquisition_events import (
+from domain.shared_kernel.events.continuous_acquisition_sample_acquired.continuous_acquisition_sample_acquired import (
     ContinuousAcquisitionSampleAcquired,
+)
+from domain.shared_kernel.events.continuous_acquisition_failed.continuous_acquisition_failed import (
     ContinuousAcquisitionFailed,
-    ContinuousAcquisitionStopped
+)
+from domain.shared_kernel.events.continuous_acquisition_stopped.continuous_acquisition_stopped import (
+    ContinuousAcquisitionStopped,
 )
 from domain.shared_kernel.events.transformation_events import SensorTransformationAnglesUpdated
 from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus

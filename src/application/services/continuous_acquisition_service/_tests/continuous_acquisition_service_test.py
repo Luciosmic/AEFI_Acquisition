@@ -19,7 +19,7 @@ from infrastructure.execution.continuous_acquisition_executor import (
 )
 from infrastructure.mocks.adapter_mock_i_acquisition_port import MockAcquisitionPort
 
-from domain.shared_kernel.events.continuous_acquisition_events import (
+from domain.shared_kernel.events.continuous_acquisition_sample_acquired.continuous_acquisition_sample_acquired import (
     ContinuousAcquisitionSampleAcquired,
 )
 

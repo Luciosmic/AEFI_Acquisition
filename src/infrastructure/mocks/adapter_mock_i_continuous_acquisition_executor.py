@@ -9,9 +9,11 @@ from application.services.continuous_acquisition_service.ports.i_continuous_acqu
 )
 from application.services.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
 from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
-from domain.shared_kernel.events.continuous_acquisition_events import (
+from domain.shared_kernel.events.continuous_acquisition_sample_acquired.continuous_acquisition_sample_acquired import (
     ContinuousAcquisitionSampleAcquired,
-    ContinuousAcquisitionStopped
+)
+from domain.shared_kernel.events.continuous_acquisition_stopped.continuous_acquisition_stopped import (
+    ContinuousAcquisitionStopped,
 )
 
 class MockContinuousAcquisitionExecutor(IContinuousAcquisitionExecutor):
