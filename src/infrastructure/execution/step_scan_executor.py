@@ -1,21 +1,25 @@
 from __future__ import annotations
 
 from typing import List, Optional, Any
+import logging
 import time
 import threading
 
 from application.services.scan_application_service.ports.i_scan_executor import IScanExecutor
 from application.services.motion_control_service.ports.i_motion_port import IMotionPort
 from application.services.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
+from application.services.electric_field_probe_service.ports.i_electric_field_probe_port import IElectricFieldProbePort
 
 from domain.step_scan.step_scan import StepScan
 from domain.shared_kernel.events.domain_event import DomainEvent
 from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
 from domain.step_scan.services.measurement_statistics_service.measurement_statistics_service import MeasurementStatisticsService
+from domain.electric_field_probe.services.field_measurement_statistics_service.field_measurement_statistics_service import FieldMeasurementStatisticsService
 from domain.step_scan.value_objects.scan_trajectory.scan_trajectory import ScanTrajectory
 from domain.step_scan.value_objects.step_scan_config.step_scan_config import StepScanConfig
 from domain.step_scan.value_objects.scan_point_result.scan_point_result import ScanPointResult
 from domain.step_scan.value_objects.scan_status.scan_status import ScanStatus
+from domain.step_scan.events.electric_field_scan_point_acquired.electric_field_scan_point_acquired import ElectricFieldScanPointAcquired
 from domain.shared_kernel.events.motion_completed.motion_completed import MotionCompleted
 from domain.shared_kernel.events.motion_failed.motion_failed import MotionFailed
 from domain.shared_kernel.events.motion_stopped.motion_stopped import MotionStopped
@@ -29,17 +33,22 @@ class StepScanExecutor(IScanExecutor):
     - Decouples motion execution from scan logic via Domain Events.
     - Handles asynchronous motion hardware (like Arcus) correctly.
     - Allows responsive cancellation during motion wait.
+    - Optionally acquires electric field probe measurements at each scan point.
     """
+
+    logger = logging.getLogger(__name__)
 
     def __init__(
         self,
         motion_port: IMotionPort,
         acquisition_port: IAcquisitionPort,
         event_bus: IDomainEventBus,
+        field_probe_port: Optional[IElectricFieldProbePort] = None,
     ) -> None:
         self._motion_port = motion_port
         self._acquisition_port = acquisition_port
         self._event_bus = event_bus
+        self._field_probe_port = field_probe_port
         
         # State for event synchronization
         self._pending_motion_id: Optional[str] = None
@@ -224,7 +233,33 @@ class StepScanExecutor(IScanExecutor):
                 # D. Average (Domain Service)
                 averaged_measurement = MeasurementStatisticsService.calculate_statistics(measurements)
 
-                # E. Create value object and add to aggregate
+                # E. Optionally acquire electric field measurements
+                field_measurement = None
+                if self._field_probe_port is not None and self._field_probe_port.is_ready():
+                    try:
+                        field_measurements = []
+                        for _ in range(config.averaging_per_position):
+                            if scan.status == ScanStatus.CANCELLED:
+                                return False
+                            field_measurements.append(self._field_probe_port.acquire_sample())
+                        
+                        # Average field measurements using the new statistics service
+                        field_measurement = FieldMeasurementStatisticsService.calculate_statistics(field_measurements)
+                        
+                        # Publish electric field scan point acquired event
+                        ef_event = ElectricFieldScanPointAcquired(
+                            scan_id=scan.id,
+                            point_index=i,
+                            position=position,
+                            field_measurement=field_measurement,
+                        )
+                        self._event_bus.publish("electricfieldscanpointacquired", ef_event)
+                    except Exception as e:
+                        # Log but don't fail the scan if field probe fails
+                        print(f"[StepScanExecutor] Field probe acquisition failed: {e}")
+                        self.logger.warning(f"Field probe acquisition failed at point {i}: {e}")
+
+                # F. Create value object and add to aggregate
                 point_result = ScanPointResult(
                     position=position,
                     measurement=averaged_measurement,
@@ -232,7 +267,7 @@ class StepScanExecutor(IScanExecutor):
                 )
                 scan.add_point_result(point_result)
 
-                # F. Publish domain events
+                # G. Publish domain events
                 self._publish_events(scan.domain_events)
 
             # Finalize if not already completed by domain

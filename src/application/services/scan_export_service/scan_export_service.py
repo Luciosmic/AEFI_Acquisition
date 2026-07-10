@@ -24,6 +24,7 @@ from domain.step_scan.events.scan_point_acquired.scan_point_acquired import Scan
 from domain.step_scan.events.scan_completed.scan_completed import ScanCompleted
 from domain.step_scan.events.scan_failed.scan_failed import ScanFailed
 from domain.step_scan.events.scan_cancelled.scan_cancelled import ScanCancelled
+from domain.step_scan.events.electric_field_scan_point_acquired.electric_field_scan_point_acquired import ElectricFieldScanPointAcquired
 from domain.shared_kernel.events.domain_event import DomainEvent
 from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
 
@@ -38,6 +39,7 @@ class ScanExportService:
     Notes:
     - Works in an event-driven fashion: subscribes to `ScanStarted`,
       `ScanPointAcquired`, `ScanCompleted`, `ScanFailed`, `ScanCancelled`.
+    - Also handles `ElectricFieldScanPointAcquired` events for electric field probe data.
     - Uses `ExportConfigDTO` to know whether export is enabled and
       where to write files.
     """
@@ -55,6 +57,9 @@ class ScanExportService:
 
         self._config: Optional[ExportConfigDTO] = None
         self._export_active: bool = False  # True between ScanStarted and completion/failure/cancel
+        self._field_export_active: bool = False  # True if electric field export is configured
+        self._field_probe_info: Optional[Dict[str, Any]] = None
+        self._field_n_components: int = 0
 
         # Subscribe to scan events
         self._event_bus.subscribe("scanstarted", self._on_event)
@@ -62,6 +67,8 @@ class ScanExportService:
         self._event_bus.subscribe("scancompleted", self._on_event)
         self._event_bus.subscribe("scanfailed", self._on_event)
         self._event_bus.subscribe("scancancelled", self._on_event)
+        # Subscribe to electric field scan events
+        self._event_bus.subscribe("electricfieldscanpointacquired", self._on_event)
 
     # ------------------------------------------------------------------ #
     # Configuration API (called from UI / presenter)
@@ -92,6 +99,8 @@ class ScanExportService:
                 self._handle_scan_started(event)
             elif isinstance(event, ScanPointAcquired):
                 self._handle_scan_point_acquired(event)
+            elif isinstance(event, ElectricFieldScanPointAcquired):
+                self._handle_electric_field_scan_point_acquired(event)
             elif isinstance(event, (ScanCompleted, ScanFailed, ScanCancelled)):
                 self._handle_scan_finished(event)
         except Exception as exc:
@@ -103,6 +112,7 @@ class ScanExportService:
         if not self._config or not self._config.enabled:
             print("[ScanExportService] Export disabled or not configured.")
             self._export_active = False
+            self._field_export_active = False
             return
 
         # Select the appropriate export port based on configuration.
@@ -130,6 +140,12 @@ class ScanExportService:
         self._active_port.configure(directory, filename_base, metadata)
         self._active_port.start()
         self._export_active = True
+        
+        # Check if this is an HDF5 port and configure field data if needed
+        if fmt == "HDF5" and hasattr(self._active_port, 'configure_field_data'):
+            # For now, we'll configure field data when we receive the first electric field point
+            # This allows us to get the probe info and number of components from the actual event
+            self._field_export_active = True
 
     def _handle_scan_point_acquired(self, event: ScanPointAcquired) -> None:
         if not self._export_active:
@@ -138,6 +154,29 @@ class ScanExportService:
         data = self._flatten_point(event)
         if self._active_port is not None:
             self._active_port.write_point(data)
+
+    def _handle_electric_field_scan_point_acquired(self, event: ElectricFieldScanPointAcquired) -> None:
+        """Handle electric field scan point acquired events."""
+        if not self._export_active or not self._field_export_active:
+            return
+
+        # For HDF5 export, configure field data on first point if not already configured
+        if self._field_n_components == 0 and hasattr(self._active_port, 'configure_field_data'):
+            n_components = len(event.field_measurement.components)
+            # Extract probe info if available from the measurement
+            probe_info = {
+                "probe_serial": getattr(event.field_measurement, "probe_serial", "unknown"),
+                "n_components": n_components,
+            }
+            self._active_port.configure_field_data(n_components, probe_info)
+            self._field_n_components = n_components
+
+        # Flatten the electric field point
+        data = self._flatten_electric_field_point(event)
+        
+        # Write to the active port if it supports field data
+        if hasattr(self._active_port, 'write_field_point'):
+            self._active_port.write_field_point(data)
 
     def _handle_scan_finished(self, event: DomainEvent) -> None:
         if not self._export_active:
@@ -205,6 +244,30 @@ class ScanExportService:
             "std_dev_y_quadrature": getattr(m, "std_dev_y_quadrature", None),
             "std_dev_z_in_phase": getattr(m, "std_dev_z_in_phase", None),
             "std_dev_z_quadrature": getattr(m, "std_dev_z_quadrature", None),
+        }
+
+    def _flatten_electric_field_point(self, event: ElectricFieldScanPointAcquired) -> Dict[str, Any]:
+        """
+        Flatten an `ElectricFieldScanPointAcquired` event into a dict for export.
+
+        Includes:
+        - scan_id, point_index
+        - x, y
+        - field components
+        - field standard deviations (if available)
+        """
+        pos = event.position
+        fm = event.field_measurement
+
+        return {
+            "scan_id": str(event.scan_id),
+            "point_index": event.point_index,
+            "x": pos.x,
+            "y": pos.y,
+            # Field measurement components
+            "field_components": fm.components,
+            # Standard deviations (may be None if not provided)
+            "field_std_dev_components": fm.std_dev_components,
         }
 
 

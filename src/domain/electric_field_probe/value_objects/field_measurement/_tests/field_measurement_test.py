@@ -32,3 +32,33 @@ def test_is_frozen():
     m = FieldMeasurement(components=(1.0,), timestamp=datetime.now())
     with pytest.raises(Exception):
         m.components = (2.0,)
+
+
+def test_std_dev_components_validation():
+    """Test that std_dev_components must match components length."""
+    with pytest.raises(ValueError):
+        FieldMeasurement(
+            components=(1.0, 2.0),
+            timestamp=datetime.now(),
+            std_dev_components=(0.1,)  # Wrong length
+        )
+
+
+def test_std_dev_components_with_valid_data():
+    """Test that valid std_dev_components is accepted."""
+    m = FieldMeasurement(
+        components=(1.0, 2.0),
+        timestamp=datetime.now(),
+        std_dev_components=(0.1, 0.2)
+    )
+    assert m.std_dev_components == (0.1, 0.2)
+
+
+def test_std_dev_components_rejects_non_finite():
+    """Test that std_dev_components rejects non-finite values."""
+    with pytest.raises(ValueError):
+        FieldMeasurement(
+            components=(1.0, 2.0),
+            timestamp=datetime.now(),
+            std_dev_components=(0.1, math.inf)
+        )
