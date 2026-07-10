@@ -228,7 +228,7 @@ def main():
     print("\n--- Creating Application Services ---")
     
     # Scan Executor (Infrastructure service)
-    scan_executor = StepScanExecutor(motion_port, acquisition_port, event_bus)
+    scan_executor = StepScanExecutor(motion_port, acquisition_port, event_bus, probe_port)
     
     # Scan Application Service
     scan_service = ScanApplicationService(motion_port, acquisition_port, event_bus, scan_executor)
