@@ -21,9 +21,9 @@ Design:
 from typing import Optional
 
 # DOMAIN VALUE OBJECTS
-from domain.value_objects.excitation.excitation_parameters import ExcitationParameters
-from domain.value_objects.excitation.excitation_mode import ExcitationMode
-from domain.shared.operation_result import OperationResult
+from domain.shared_kernel.value_objects.excitation.excitation_parameters import ExcitationParameters
+from domain.shared_kernel.value_objects.excitation.excitation_mode import ExcitationMode
+from domain.shared_kernel.operation_result import OperationResult
 
 # APPLICATION
 from application.services.excitation_configuration_service.ports.i_excitation_port import IExcitationPort

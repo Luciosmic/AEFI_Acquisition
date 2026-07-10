@@ -12,13 +12,13 @@ Rationale:
 """
 
 from typing import List
-from ..value_objects.geometric.position_2d import Position2D
-from ..value_objects.scan.step_scan_config import StepScanConfig
-from ..value_objects.scan.scan_pattern import ScanPattern
-from ..value_objects.scan.scan_axis import ScanAxis
-from ..value_objects.validation_result import ValidationResult
+from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
+from domain.step_scan.value_objects.step_scan_config.step_scan_config import StepScanConfig
+from domain.step_scan.value_objects.scan_pattern.scan_pattern import ScanPattern
+from domain.step_scan.value_objects.scan_axis.scan_axis import ScanAxis
+from domain.shared_kernel.value_objects.validation_result import ValidationResult
 
-from ..value_objects.scan.scan_trajectory import ScanTrajectory
+from domain.step_scan.value_objects.scan_trajectory.scan_trajectory import ScanTrajectory
 
 class ScanTrajectoryFactory:
     """

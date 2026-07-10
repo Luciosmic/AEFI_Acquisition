@@ -8,15 +8,15 @@ from application.services.scan_application_service.ports.i_scan_executor import 
 from application.services.motion_control_service.ports.i_motion_port import IMotionPort
 from application.services.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
 
-from domain.aggregates.step_scan import StepScan
-from domain.events.domain_event import DomainEvent
-from domain.events.i_domain_event_bus import IDomainEventBus
+from domain.step_scan.step_scan import StepScan
+from domain.shared_kernel.events.domain_event import DomainEvent
+from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
 from domain.services.measurement_statistics_service import MeasurementStatisticsService
-from domain.value_objects.scan.scan_trajectory import ScanTrajectory
-from domain.value_objects.scan.step_scan_config import StepScanConfig
-from domain.value_objects.scan.scan_point_result import ScanPointResult
-from domain.value_objects.scan.scan_status import ScanStatus
-from domain.events.motion_events import MotionCompleted, MotionFailed, MotionStopped
+from domain.step_scan.value_objects.scan_trajectory.scan_trajectory import ScanTrajectory
+from domain.step_scan.value_objects.step_scan_config.step_scan_config import StepScanConfig
+from domain.step_scan.value_objects.scan_point_result.scan_point_result import ScanPointResult
+from domain.step_scan.value_objects.scan_status.scan_status import ScanStatus
+from domain.shared_kernel.events.motion_events import MotionCompleted, MotionFailed, MotionStopped
 
 
 class StepScanExecutor(IScanExecutor):

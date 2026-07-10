@@ -2,13 +2,13 @@ from typing import List, Dict, Any
 from time import sleep
 import threading
 from application.services.scan_application_service.ports.i_scan_executor import IScanExecutor
-from domain.aggregates.step_scan import StepScan
-from domain.value_objects.scan.scan_trajectory import ScanTrajectory
-from domain.value_objects.scan.step_scan_config import StepScanConfig
-from domain.value_objects.scan.scan_status import ScanStatus
-from domain.value_objects.scan.scan_point_result import ScanPointResult
-from domain.value_objects.acquisition.acquisition_sample import AcquisitionSample
-from domain.events.i_domain_event_bus import IDomainEventBus
+from domain.step_scan.step_scan import StepScan
+from domain.step_scan.value_objects.scan_trajectory.scan_trajectory import ScanTrajectory
+from domain.step_scan.value_objects.step_scan_config.step_scan_config import StepScanConfig
+from domain.step_scan.value_objects.scan_status.scan_status import ScanStatus
+from domain.step_scan.value_objects.scan_point_result.scan_point_result import ScanPointResult
+from domain.shared_kernel.value_objects.acquisition.acquisition_sample import AcquisitionSample
+from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
 
 class MockScanExecutor(IScanExecutor):
     """

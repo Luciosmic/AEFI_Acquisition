@@ -6,8 +6,8 @@ import os
 import matplotlib.pyplot as plt
 from datetime import datetime
 
-from domain.value_objects.geometric.position_2d import Position2D
-from domain.value_objects.acquisition.voltage_measurement import VoltageMeasurement
+from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
+from domain.shared_kernel.value_objects.acquisition.voltage_measurement import VoltageMeasurement
 from application.services.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
 from application.services.scan_application_service.scan_application_service import ScanApplicationService
 from application.services.scan_application_service.dtos.scan_dtos import Scan2DConfigDTO

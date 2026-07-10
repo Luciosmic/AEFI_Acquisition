@@ -7,8 +7,8 @@ Adapted from interface v1 for PySide6 and new panel architecture.
 
 from PySide6.QtCore import QObject, Signal, Slot
 from application.services.motion_control_service.motion_control_service import MotionControlService
-from domain.events.i_domain_event_bus import IDomainEventBus
-from domain.events.motion_events import PositionUpdated, MotionCompleted, MotionFailed
+from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from domain.shared_kernel.events.motion_events import PositionUpdated, MotionCompleted, MotionFailed
 
 
 class MotionPresenter(QObject):

@@ -9,10 +9,10 @@ import unittest
 from datetime import datetime
 from unittest.mock import Mock
 
-from domain.value_objects.acquisition.voltage_measurement import VoltageMeasurement
-from domain.value_objects.excitation.excitation_parameters import ExcitationParameters
-from domain.value_objects.excitation.excitation_mode import ExcitationMode
-from domain.value_objects.excitation.excitation_level import ExcitationLevel
+from domain.shared_kernel.value_objects.acquisition.voltage_measurement import VoltageMeasurement
+from domain.shared_kernel.value_objects.excitation.excitation_parameters import ExcitationParameters
+from domain.shared_kernel.value_objects.excitation.excitation_mode import ExcitationMode
+from domain.shared_kernel.value_objects.excitation.excitation_level import ExcitationLevel
 
 from infrastructure.mocks.adapter_mock_i_acquisition_port import RandomNoiseAcquisitionPort
 from infrastructure.mocks.adapter_mock_i_excitation_port import MockExcitationPort

@@ -1,10 +1,10 @@
 import unittest
 
-from domain.value_objects.scan.step_scan_config import StepScanConfig
-from domain.value_objects.scan.scan_zone import ScanZone
-from domain.value_objects.scan.scan_pattern import ScanPattern
-from domain.value_objects.scan.scan_axis import ScanAxis
-from domain.value_objects.measurement_uncertainty import MeasurementUncertainty
+from domain.step_scan.value_objects.step_scan_config.step_scan_config import StepScanConfig
+from domain.step_scan.value_objects.scan_zone.scan_zone import ScanZone
+from domain.step_scan.value_objects.scan_pattern.scan_pattern import ScanPattern
+from domain.step_scan.value_objects.scan_axis.scan_axis import ScanAxis
+from domain.shared_kernel.value_objects.measurement_uncertainty import MeasurementUncertainty
 from domain.services.scan_trajectory_factory import ScanTrajectoryFactory
 
 

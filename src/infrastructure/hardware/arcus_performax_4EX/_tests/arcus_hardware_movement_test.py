@@ -10,7 +10,7 @@ if str(src_path) not in sys.path:
 
 from tool.diagram_friendly_test import DiagramFriendlyTest
 from infrastructure.hardware.arcus_performax_4EX.composition_root_arcus import ArcusCompositionRoot
-from domain.value_objects.geometric.position_2d import Position2D
+from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
 
 class TestArcusHardwareMovement(DiagramFriendlyTest):
     def test_hardware_movement_sequence(self):

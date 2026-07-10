@@ -9,7 +9,7 @@ if str(src_path) not in sys.path:
 
 from infrastructure.hardware.arcus_performax_4EX.adapter_motion_port_arcus_performax4EX import ArcusAdapter
 from infrastructure.hardware.arcus_performax_4EX.driver_arcus_performax4EX import ArcusPerformax4EXController
-from domain.value_objects.geometric.position_2d import Position2D
+from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
 
 
 class TestArcusUnitConversion(unittest.TestCase):

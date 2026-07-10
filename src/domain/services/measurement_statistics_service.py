@@ -6,7 +6,7 @@ Responsibility: Calculate statistical properties (mean, std dev) of a set of mea
 from typing import List
 import math
 from datetime import datetime
-from ..value_objects.acquisition.voltage_measurement import VoltageMeasurement
+from domain.shared_kernel.value_objects.acquisition.voltage_measurement import VoltageMeasurement
 
 class MeasurementStatisticsService:
     """

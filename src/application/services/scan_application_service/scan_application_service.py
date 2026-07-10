@@ -19,14 +19,14 @@ from datetime import datetime
 
 from .dtos.scan_dtos import Scan2DConfigDTO, ScanStatusDTO
 from domain.services.scan_trajectory_factory import ScanTrajectoryFactory
-from domain.value_objects.scan.step_scan_config import StepScanConfig
-from domain.value_objects.scan.scan_zone import ScanZone
-from domain.value_objects.scan.scan_pattern import ScanPattern
-from domain.value_objects.scan.scan_axis import ScanAxis
-from domain.value_objects.measurement_uncertainty import MeasurementUncertainty
-from domain.value_objects.scan.scan_status import ScanStatus
-from domain.value_objects.scan.scan_progress import ScanProgress
-from domain.value_objects.acquisition.voltage_measurement import VoltageMeasurement
+from domain.step_scan.value_objects.step_scan_config.step_scan_config import StepScanConfig
+from domain.step_scan.value_objects.scan_zone.scan_zone import ScanZone
+from domain.step_scan.value_objects.scan_pattern.scan_pattern import ScanPattern
+from domain.step_scan.value_objects.scan_axis.scan_axis import ScanAxis
+from domain.shared_kernel.value_objects.measurement_uncertainty import MeasurementUncertainty
+from domain.step_scan.value_objects.scan_status.scan_status import ScanStatus
+from domain.step_scan.value_objects.scan_progress.scan_progress import ScanProgress
+from domain.shared_kernel.value_objects.acquisition.voltage_measurement import VoltageMeasurement
 
 # Ports
 from application.services.motion_control_service.ports.i_motion_port import IMotionPort
@@ -36,11 +36,17 @@ from .ports.i_scan_output_port import IScanOutputPort
 
 logger = logging.getLogger(__name__)
 
-from domain.aggregates.step_scan import StepScan
-from domain.value_objects.scan.scan_point_result import ScanPointResult
-from domain.events.scan_events import ScanStarted, ScanPointAcquired, ScanCompleted, ScanFailed, ScanCancelled, ScanPaused, ScanResumed
-from domain.events.domain_event import DomainEvent
-from domain.events.i_domain_event_bus import IDomainEventBus
+from domain.step_scan.step_scan import StepScan
+from domain.step_scan.value_objects.scan_point_result.scan_point_result import ScanPointResult
+from domain.step_scan.events.scan_started.scan_started import ScanStarted
+from domain.step_scan.events.scan_point_acquired.scan_point_acquired import ScanPointAcquired
+from domain.step_scan.events.scan_completed.scan_completed import ScanCompleted
+from domain.step_scan.events.scan_failed.scan_failed import ScanFailed
+from domain.step_scan.events.scan_cancelled.scan_cancelled import ScanCancelled
+from domain.step_scan.events.scan_paused.scan_paused import ScanPaused
+from domain.step_scan.events.scan_resumed.scan_resumed import ScanResumed
+from domain.shared_kernel.events.domain_event import DomainEvent
+from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
 
 # ...
 

@@ -6,9 +6,9 @@ from uuid import uuid4
 from datetime import datetime
 
 from application.handlers.acquisition_data_handler import AcquisitionDataHandler
-from domain.events.scan_events import ScanPointAcquired
-from domain.value_objects.acquisition.acquisition_sample import AcquisitionSample
-from domain.value_objects.geometric.position_2d import Position2D
+from domain.step_scan.events.scan_point_acquired.scan_point_acquired import ScanPointAcquired
+from domain.shared_kernel.value_objects.acquisition.acquisition_sample import AcquisitionSample
+from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
 from tool.diagram_friendly_test import DiagramFriendlyTest
 
 class TestAcquisitionDataHandler(DiagramFriendlyTest):

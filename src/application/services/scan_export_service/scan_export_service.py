@@ -19,15 +19,13 @@ from typing import Optional, Dict, Any
 from .dtos.scan_export_dtos import ExportConfigDTO
 from .ports.i_scan_export_port import IScanExportPort
 
-from domain.events.scan_events import (
-    ScanStarted,
-    ScanPointAcquired,
-    ScanCompleted,
-    ScanFailed,
-    ScanCancelled,
-)
-from domain.events.domain_event import DomainEvent
-from domain.events.i_domain_event_bus import IDomainEventBus
+from domain.step_scan.events.scan_started.scan_started import ScanStarted
+from domain.step_scan.events.scan_point_acquired.scan_point_acquired import ScanPointAcquired
+from domain.step_scan.events.scan_completed.scan_completed import ScanCompleted
+from domain.step_scan.events.scan_failed.scan_failed import ScanFailed
+from domain.step_scan.events.scan_cancelled.scan_cancelled import ScanCancelled
+from domain.shared_kernel.events.domain_event import DomainEvent
+from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
 
 
 logger = logging.getLogger(__name__)

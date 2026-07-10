@@ -1,7 +1,7 @@
 from .ports.i_excitation_port import IExcitationPort
-from domain.value_objects.excitation.excitation_parameters import ExcitationParameters
-from domain.value_objects.excitation.excitation_level import ExcitationLevel
-from domain.value_objects.excitation.excitation_mode import ExcitationMode
+from domain.shared_kernel.value_objects.excitation.excitation_parameters import ExcitationParameters
+from domain.shared_kernel.value_objects.excitation.excitation_level import ExcitationLevel
+from domain.shared_kernel.value_objects.excitation.excitation_mode import ExcitationMode
 
 class ExcitationConfigurationService:
     """

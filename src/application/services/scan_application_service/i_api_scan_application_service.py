@@ -3,7 +3,7 @@ from typing import Callable, Dict, Any
 
 from .dtos.scan_dtos import Scan2DConfigDTO, ScanStatusDTO
 from .ports.i_scan_output_port import IScanOutputPort
-from domain.events.domain_event import DomainEvent
+from domain.shared_kernel.events.domain_event import DomainEvent
 
 
 class IApiScanApplicationService(ABC):

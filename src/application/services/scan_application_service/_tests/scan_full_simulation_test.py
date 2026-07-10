@@ -2,15 +2,17 @@ import unittest
 import random
 import time
 from datetime import datetime
-from domain.aggregates.step_scan import StepScan
+from domain.step_scan.step_scan import StepScan
 from domain.services.scan_trajectory_factory import ScanTrajectoryFactory
-from domain.value_objects.scan.step_scan_config import StepScanConfig
-from domain.value_objects.scan.scan_zone import ScanZone
-from domain.value_objects.scan.scan_mode import ScanMode
-from domain.value_objects.measurement_uncertainty import MeasurementUncertainty
-from domain.value_objects.scan.scan_point_result import ScanPointResult
-from domain.value_objects.acquisition.voltage_measurement import VoltageMeasurement
-from domain.events.scan_events import ScanStarted, ScanPointAcquired, ScanCompleted
+from domain.step_scan.value_objects.step_scan_config.step_scan_config import StepScanConfig
+from domain.step_scan.value_objects.scan_zone.scan_zone import ScanZone
+from domain.step_scan.value_objects.scan_mode.scan_mode import ScanMode
+from domain.shared_kernel.value_objects.measurement_uncertainty import MeasurementUncertainty
+from domain.step_scan.value_objects.scan_point_result.scan_point_result import ScanPointResult
+from domain.shared_kernel.value_objects.acquisition.voltage_measurement import VoltageMeasurement
+from domain.step_scan.events.scan_started.scan_started import ScanStarted
+from domain.step_scan.events.scan_point_acquired.scan_point_acquired import ScanPointAcquired
+from domain.step_scan.events.scan_completed.scan_completed import ScanCompleted
 
 class TestFullScanSimulation(unittest.TestCase):
     
