@@ -1,5 +1,5 @@
 ---
-description: 'Scaffold a Qt presenter that implements an application service output port and exposes signals/slots to bridge the service and view so you can cleanly wire new UI panels while keeping business logic and UI event handling decoupled when adding features to the dashboard.'
+description: 'Create presenter'
 ---
 
 # Create Presenter

@@ -1,12 +1,12 @@
 ---
 name: 'Presenter Responsibility Boundary'
 alwaysApply: true
-description: 'Enforce a Presenter Responsibility Boundary for Python Qt presenters in `src/interface/presenters/*_presenter.py` by inheriting from `QObject` and the service output port, emitting Qt signals in output-port methods, handling `@Slot` user actions by forwarding to application services, registering via `service.set_output_port(self)` in `__init__`, and avoiding domain imports and business computations (e.g., ETA) to keep UI glue thin and business logic testable and maintainable.'
+description: 'Presenter Responsibility Boundary'
 ---
 
 # Standard: Presenter Responsibility Boundary
 
-Enforce a Presenter Responsibility Boundary for Python Qt presenters in `src/interface/presenters/*_presenter.py` by inheriting from `QObject` and the service output port, emitting Qt signals in output-port methods, handling `@Slot` user actions by forwarding to application services, registering via `service.set_output_port(self)` in `__init__`, and avoiding domain imports and business computations (e.g., ETA) to keep UI glue thin and business logic testable and maintainable. :
+Presenters in `src/interface/presenters/` act as the glue between application services and Qt views. They have a dual role: implementing the output port (service → presenter) and handling Qt slots (vi... :
 * Avoid stateful computation that derives business values (e.g., ETA, averages) — delegate to the service instead
 * Do not import from `domain/` directly — use DTOs from `application/dtos/`
 * Emit Qt signals in output port implementation methods — do not manipulate view state directly

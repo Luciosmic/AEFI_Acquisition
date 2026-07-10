@@ -1,12 +1,12 @@
 ---
 name: 'Application Service Structure'
 alwaysApply: true
-description: 'Enforce Python application service structure under `src/application/services/*_service.py` with constructor-injected port interfaces (`I*.py`/`i_*.py`), no direct IO or `infrastructure/` imports, clear command/query separation, and post-change domain event publication via `IDomainEventBus` to preserve layering, testability, and maintainable orchestration.'
+description: 'Application Service Structure'
 ---
 
 # Standard: Application Service Structure
 
-Enforce Python application service structure under `src/application/services/*_service.py` with constructor-injected port interfaces (`I*.py`/`i_*.py`), no direct IO or `infrastructure/` imports, clear command/query separation, and post-change domain event publication via `IDomainEventBus` to preserve layering, testability, and maintainable orchestration. :
+Application services in the `src/application/services/` layer orchestrate hardware ports, domain aggregates, and infrastructure adapters. They must never perform direct IO, never import infrastructure... :
 * Depend only on port interfaces (`I*.py`) defined in the same service folder or in `domain/`
 * Each service folder must include at least one port interface file (`i_*.py`) and a `tests/` subfolder
 * Expose commands (state-mutating methods) and queries (read-only) as distinct method groups
