@@ -18,6 +18,7 @@ from application.services.scan_application_service.scan_application_service impo
 from application.services.excitation_configuration_service.excitation_configuration_service import ExcitationConfigurationService
 from application.services.continuous_acquisition_service.continuous_acquisition_service import ContinuousAcquisitionService
 from application.services.motion_control_service.motion_control_service import MotionControlService
+from application.services.electric_field_probe_service.electric_field_probe_service import ElectricFieldProbeService
 
 # --- Infrastructure ---
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
@@ -34,6 +35,9 @@ from infrastructure.mocks.adapter_mock_excitation_aware_acquisition import Excit
 from infrastructure.mocks.adapter_mock_i_motion_port import MockMotionPort
 from infrastructure.mocks.adapter_mock_i_continuous_acquisition_executor import MockContinuousAcquisitionExecutor
 from infrastructure.mocks.adapter_mock_i_hardware_initialization_port import MockHardwareInitializationPort
+from infrastructure.hardware.narda_ep600.adapter_electric_field_probe_port import NardaEP601ProbeAdapter
+from infrastructure.hardware.narda_ep600.fake.fake_electric_field_probe_adapter import FakeElectricFieldProbeAdapter
+from infrastructure.execution.electric_field_probe_acquisition_executor import ElectricFieldProbeAcquisitionExecutor
 
 # --- System Lifecycle ---
 from application.services.system_lifecycle_service.system_lifecycle_service import (
@@ -50,6 +54,7 @@ from interface.widgets.panels.logs_panel import LogsPanel, install_console_captu
 from interface.presenters.motion_presenter import MotionPresenter
 from interface.presenters.excitation_presenter import ExcitationPresenter
 from interface.presenters.continuous_acquisition_presenter import ContinuousAcquisitionPresenter
+from interface.presenters.electric_field_probe_presenter import ElectricFieldProbePresenter
 from interface.presenters.sensor_transformation_presenter import SensorTransformationPresenter
 from interface.presenters.scan_presenter import ScanPresenter
 
@@ -97,7 +102,9 @@ def main():
         "acquisition": "real",   # "mock" | "real"
         "excitation": "real",    # "mock" | "real"
         "continuous": "real",    # "mock" | "real"
+        "electric_field_probe": "real",  # "mock" | "real" — picks the adapter only, connection is manual (cf. panel)
     }
+    NARDA_COM_PORT = "COM8"  # cf. config_templates/electric_field_probe_config.json
     print("--- Starting Interface V2 ---")
     print(f"Hardware Config: {HARDWARE_CONFIG}")
     
@@ -197,6 +204,17 @@ def main():
         acquisition_port = base_acquisition_port
         print("  [acquisition] -> using base port directly (real hardware)")
     
+    # --- Electric Field Probe (Narda EP-601) ---
+    # Deliberately NOT added to lifecycle_adapters: this probe is auto-off and
+    # times out often, so it must never block or fail app startup. Connection
+    # is a manual action from the panel (Connect button), not a startup step.
+    if HARDWARE_CONFIG["electric_field_probe"] == "real":
+        print(f"  [electric_field_probe] -> real (Narda EP-601 on {NARDA_COM_PORT})")
+        probe_port = NardaEP601ProbeAdapter(port=NARDA_COM_PORT)
+    else:
+        print("  [electric_field_probe] -> mock")
+        probe_port = FakeElectricFieldProbeAdapter()
+
     # 5. Create Hardware Initialization Port
     if lifecycle_adapters:
         from infrastructure.hardware.composite_hardware_initialization_port import CompositeHardwareInitializationPort
@@ -228,6 +246,12 @@ def main():
     
     # Motion Control Service
     motion_control_service = MotionControlService(motion_port, event_bus)
+
+    # Electric Field Probe Service
+    electric_field_probe_executor = ElectricFieldProbeAcquisitionExecutor(event_bus=event_bus)
+    electric_field_probe_service = ElectricFieldProbeService(
+        electric_field_probe_executor, probe_port, event_bus
+    )
     
     # Transformation Service (Shared State)
     transformation_service = TransformationService(event_bus)
@@ -292,6 +316,9 @@ def main():
     
     # Continuous Presenter needs Transformation Service now
     continuous_presenter = ContinuousAcquisitionPresenter(continuous_service, event_bus, transformation_service)
+
+    # Electric Field Probe Presenter
+    electric_field_probe_presenter = ElectricFieldProbePresenter(electric_field_probe_service, event_bus)
     
     # Transformation Presenter needs Panel + Service
     transformation_presenter = SensorTransformationPresenter(dashboard.panels["transformation"], transformation_service)
@@ -358,9 +385,26 @@ def main():
     continuous_presenter.sample_acquired.connect(continuous_panel.on_sample_acquired)
     continuous_presenter.angles_updated.connect(continuous_panel.update_angles_display)
     print("  [continuous] wired")
-    
-    print("  [continuous] wired")
-    
+
+    # Electric Field Probe Panel
+    electric_field_probe_panel = dashboard.panels["electric_field_probe"]
+    electric_field_probe_panel.connect_requested.connect(electric_field_probe_presenter.on_connect_requested)
+    electric_field_probe_panel.disconnect_requested.connect(electric_field_probe_presenter.on_disconnect_requested)
+    electric_field_probe_panel.acquisition_start_requested.connect(electric_field_probe_presenter.on_acquisition_start_requested)
+    electric_field_probe_panel.acquisition_stop_requested.connect(electric_field_probe_presenter.on_acquisition_stop_requested)
+    electric_field_probe_panel.parameters_updated.connect(electric_field_probe_presenter.on_parameters_updated)
+    electric_field_probe_panel.calibrate_noise_requested.connect(electric_field_probe_presenter.calibrate_noise)
+    electric_field_probe_panel.reset_calibration_requested.connect(electric_field_probe_presenter.reset_calibration)
+    electric_field_probe_panel.noise_toggled.connect(electric_field_probe_presenter.on_noise_toggled)
+
+    electric_field_probe_presenter.probe_connection_changed.connect(electric_field_probe_panel.on_probe_connection_changed)
+    electric_field_probe_presenter.probe_axes_defined.connect(electric_field_probe_panel.on_probe_axes_defined)
+    electric_field_probe_presenter.acquisition_started.connect(electric_field_probe_panel.on_acquisition_started)
+    electric_field_probe_presenter.acquisition_stopped.connect(electric_field_probe_panel.on_acquisition_stopped)
+    electric_field_probe_presenter.sample_acquired.connect(electric_field_probe_panel.on_sample_acquired)
+    electric_field_probe_presenter.noise_state_updated.connect(electric_field_probe_panel.update_correction_states)
+    print("  [electric_field_probe] wired")
+
     # Scan Panels Wiring
     scan_control_panel = dashboard.panels["scan_control"]
     scan_visualization_panel = dashboard.panels["scan_viz"]

@@ -1,0 +1,11 @@
+{
+  "schema_version": "1.0",
+  "description": "Connection parameters for the electric_field_probe device (currently: Narda EP-601, tri-axial). Connection is manual from the panel, never at app startup — the probe is auto-off and times out often.",
+
+  "brand": "Narda",
+  "model": "EP-601",
+  "com_port": "COM8",
+  "baudrate": 9600,
+  "timeout_s": 1.0,
+  "auto_off_s": 180
+}
