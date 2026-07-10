@@ -24,7 +24,10 @@ import queue
 from uuid import uuid4
 from datetime import datetime
 from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
-from domain.shared_kernel.events.motion_events import MotionStarted, MotionCompleted, MotionFailed, PositionUpdated
+from domain.shared_kernel.events.motion_started.motion_started import MotionStarted
+from domain.shared_kernel.events.motion_completed.motion_completed import MotionCompleted
+from domain.shared_kernel.events.motion_failed.motion_failed import MotionFailed
+from domain.shared_kernel.events.position_updated.position_updated import PositionUpdated
 
 from application.services.motion_control_service.ports.i_motion_port import IMotionPort
 from domain.shared_kernel.value_objects.geometric.position_2d import Position2D

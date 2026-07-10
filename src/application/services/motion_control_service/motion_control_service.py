@@ -4,8 +4,8 @@ from application.services.motion_control_service.ports.i_motion_port import IMot
 from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
 from domain.shared_kernel.operation_result import OperationResult
 from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
-from domain.shared_kernel.events.motion_events import PositionUpdated
-from domain.shared_kernel.events.motion_events import PositionUpdated, EmergencyStopTriggered
+from domain.shared_kernel.events.position_updated.position_updated import PositionUpdated
+from domain.shared_kernel.events.emergency_stop_triggered.emergency_stop_triggered import EmergencyStopTriggered
 
 
 class MotionControlService:
