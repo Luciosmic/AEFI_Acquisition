@@ -7,7 +7,7 @@ import struct
 
 import serial
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 AUTO_OFF_DEFAULT_S = 180  # cf. narda-ep60x_protocole-communication.md — reglable via #00en*
 
@@ -85,6 +85,20 @@ class NardaEP601:
         if len(raw) != 13 or raw[0:1] != b"A":
             raise IOError(f"reponse ?A inattendue: {raw!r}")
         return struct.unpack("<3f", raw[1:13])
+
+    def set_frequency_correction(self, freq_hz):
+        """Active la correction de calibration factory a freq_hz (resolution 10kHz, #00k*).
+        Retourne la frequence effectivement appliquee en Hz. La sonde ignore silencieusement
+        une frequence hors plage (pas d'erreur explicite) : on le detecte en comparant la
+        reponse (echo en MHz, confirme empiriquement) a la demande et on leve ValueError."""
+        fr = round(freq_hz / 10_000)
+        raw = self._query(f"#00k {fr}*", 5)
+        if len(raw) != 5 or raw[0:1] != b"k":
+            raise IOError(f"reponse k inattendue: {raw!r}")
+        applied_hz = round(struct.unpack("<f", raw[1:5])[0] * 1e6)
+        if abs(applied_hz - freq_hz) > 10_000:
+            raise ValueError(f"correction non appliquee a {freq_hz} Hz (sonde a repondu {applied_hz} Hz — hors plage ?)")
+        return applied_hz
 
     def get_total_field_averaged(self, n=16):
         """Moyenne arithmetique de n lectures ?T — la sonde n'a pas de moyennage cote protocole
