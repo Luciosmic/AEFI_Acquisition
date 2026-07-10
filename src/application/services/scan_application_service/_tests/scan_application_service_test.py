@@ -1,14 +1,19 @@
 import threading
 import unittest
+from datetime import datetime
 from typing import List
+from uuid import uuid4
 from application.services.scan_application_service.scan_application_service import ScanApplicationService
 from application.services.scan_application_service.dtos.scan_dtos import Scan2DConfigDTO
 from infrastructure.mocks.adapter_mock_i_motion_port import MockMotionPort
 from infrastructure.mocks.adapter_mock_i_acquisition_port import MockAcquisitionPort
 from domain.shared_kernel.events.domain_event import DomainEvent
+from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
 from domain.step_scan.events.scan_started.scan_started import ScanStarted
 from domain.step_scan.events.scan_point_acquired.scan_point_acquired import ScanPointAcquired
 from domain.step_scan.events.scan_completed.scan_completed import ScanCompleted
+from domain.step_scan.events.electric_field_scan_point_acquired.electric_field_scan_point_acquired import ElectricFieldScanPointAcquired
+from domain.electric_field_probe.value_objects.field_measurement.field_measurement import FieldMeasurement
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
 from infrastructure.execution.step_scan_executor import StepScanExecutor
 from tool.diagram_friendly_test import DiagramFriendlyTest
@@ -153,6 +158,40 @@ class TestScanApplicationService(DiagramFriendlyTest):
 
         self.log_interaction("Test", "ASSERT", "ScanApplicationService", "Verify completion received", expect=1, got=len(received_completion))
         self.assertEqual(len(received_completion), 1)
+
+    def test_electric_field_scan_point_forwarded_to_output_port(self):
+        """ElectricFieldScanPointAcquired must be flattened (component_N + norm) and forwarded."""
+        received = []
+        self.service.set_output_port(_RecordingOutputPort(received))
+
+        event = ElectricFieldScanPointAcquired(
+            scan_id=uuid4(),
+            point_index=3,
+            position=Position2D(x=1.0, y=2.0),
+            field_measurement=FieldMeasurement(components=(3.0, 4.0), timestamp=datetime.now()),
+        )
+        self.event_bus.publish("electricfieldscanpointacquired", event)
+
+        self.assertEqual(len(received), 1)
+        current, total, data = received[0]
+        self.assertEqual(current, 3)
+        self.assertEqual(data["x"], 1.0)
+        self.assertEqual(data["y"], 2.0)
+        self.assertEqual(data["value"], {"component_0": 3.0, "component_1": 4.0, "norm": 5.0})
+
+
+class _RecordingOutputPort:
+    """Minimal IScanOutputPort fake — records present_field_scan_progress calls only."""
+
+    def __init__(self, sink: List):
+        self._sink = sink
+
+    def present_field_scan_progress(self, current_point_index, total_points, point_data):
+        self._sink.append((current_point_index, total_points, point_data))
+
+    def __getattr__(self, name):
+        return lambda *a, **k: None
+
 
 if __name__ == '__main__':
     unittest.main()

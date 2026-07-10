@@ -45,6 +45,7 @@ from domain.step_scan.events.scan_failed.scan_failed import ScanFailed
 from domain.step_scan.events.scan_cancelled.scan_cancelled import ScanCancelled
 from domain.step_scan.events.scan_paused.scan_paused import ScanPaused
 from domain.step_scan.events.scan_resumed.scan_resumed import ScanResumed
+from domain.step_scan.events.electric_field_scan_point_acquired.electric_field_scan_point_acquired import ElectricFieldScanPointAcquired
 from domain.shared_kernel.events.domain_event import DomainEvent
 from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
 
@@ -83,6 +84,7 @@ class ScanApplicationService:
         self._event_bus.subscribe("scancancelled", self._on_domain_event)
         self._event_bus.subscribe("scanpaused", self._on_domain_event)
         self._event_bus.subscribe("scanresumed", self._on_domain_event)
+        self._event_bus.subscribe("electricfieldscanpointacquired", self._on_domain_event)
 
 
     def set_output_port(self, output_port: IScanOutputPort) -> None:
@@ -269,6 +271,21 @@ class ScanApplicationService:
 
         elif isinstance(event, ScanResumed):
             self._output_port.present_scan_resumed(str(event.scan_id), event.resume_from_point_index)
+
+        elif isinstance(event, ElectricFieldScanPointAcquired):
+            fm = event.field_measurement
+            # ponytail: generic component_N keys — axis labels (X/Y/Z) aren't
+            # carried by this event; add them if per-axis naming is needed later.
+            value = {f"component_{i}": c for i, c in enumerate(fm.components)}
+            value["norm"] = fm.norm
+            data = {
+                "x": event.position.x,
+                "y": event.position.y,
+                "value": value,
+                "index": event.point_index,
+            }
+            total = self._current_scan.expected_points if self._current_scan else 0
+            self._output_port.present_field_scan_progress(event.point_index, total, data)
     
     # ... rest of methods ...
 

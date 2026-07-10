@@ -233,19 +233,25 @@ class StepScanExecutor(IScanExecutor):
                 # D. Average (Domain Service)
                 averaged_measurement = MeasurementStatisticsService.calculate_statistics(measurements)
 
-                # E. Optionally acquire electric field measurements
+                # E. Optionally acquire electric field measurements.
+                # One flaky read must not discard the whole averaging window:
+                # each sample gets its own retry, and the point is only
+                # skipped entirely if every sample ultimately fails (probe
+                # truly gone), not on a single transient timeout.
                 field_measurement = None
                 if self._field_probe_port is not None and self._field_probe_port.is_ready():
-                    try:
-                        field_measurements = []
-                        for _ in range(config.averaging_per_position):
-                            if scan.status == ScanStatus.CANCELLED:
-                                return False
-                            field_measurements.append(self._field_probe_port.acquire_sample())
-                        
+                    field_measurements = []
+                    for _ in range(config.averaging_per_position):
+                        if scan.status == ScanStatus.CANCELLED:
+                            return False
+                        sample = self._acquire_field_sample_with_retry(i)
+                        if sample is not None:
+                            field_measurements.append(sample)
+
+                    if field_measurements:
                         # Average field measurements using the new statistics service
                         field_measurement = FieldMeasurementStatisticsService.calculate_statistics(field_measurements)
-                        
+
                         # Publish electric field scan point acquired event
                         ef_event = ElectricFieldScanPointAcquired(
                             scan_id=scan.id,
@@ -254,10 +260,8 @@ class StepScanExecutor(IScanExecutor):
                             field_measurement=field_measurement,
                         )
                         self._event_bus.publish("electricfieldscanpointacquired", ef_event)
-                    except Exception as e:
-                        # Log but don't fail the scan if field probe fails
-                        print(f"[StepScanExecutor] Field probe acquisition failed: {e}")
-                        self.logger.warning(f"Field probe acquisition failed at point {i}: {e}")
+                    else:
+                        self.logger.warning(f"Field probe: all samples failed at point {i}, skipping field data for this point")
 
                 # F. Create value object and add to aggregate
                 point_result = ScanPointResult(
@@ -293,6 +297,25 @@ class StepScanExecutor(IScanExecutor):
     # ------------------------------------------------------------------ #
     # Helper
     # ------------------------------------------------------------------ #
+
+    FIELD_SAMPLE_MAX_RETRIES = 2  # ponytail: fixed retry budget for now — expose via config if a probe needs tuning
+
+    def _acquire_field_sample_with_retry(self, point_index: int):
+        """
+        Acquire one electric field sample, retrying on transient failures
+        (e.g. a single missed serial read on the Narda probe). Returns None
+        — instead of raising — once retries are exhausted, so the caller
+        can keep whatever other samples of the averaging window succeeded.
+        """
+        for attempt in range(self.FIELD_SAMPLE_MAX_RETRIES + 1):
+            try:
+                return self._field_probe_port.acquire_sample()
+            except Exception as e:
+                self.logger.warning(
+                    f"Field probe sample failed at point {point_index} "
+                    f"(attempt {attempt + 1}/{self.FIELD_SAMPLE_MAX_RETRIES + 1}): {e}"
+                )
+        return None
 
     def _publish_events(self, events: List[DomainEvent]) -> None:
         for event in events:

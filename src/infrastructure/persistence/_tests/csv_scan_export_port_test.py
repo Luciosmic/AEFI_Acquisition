@@ -1,0 +1,54 @@
+import csv
+import shutil
+import tempfile
+import unittest
+from pathlib import Path
+
+from infrastructure.persistence.csv_scan_export_port import CsvScanExportPort
+
+
+class TestCsvScanExportPortFieldData(unittest.TestCase):
+    """Electric field data must land in a readable sidecar CSV, flattened per component."""
+
+    def setUp(self):
+        self.tmp_dir = Path(tempfile.mkdtemp())
+        self.port = CsvScanExportPort()
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp_dir, ignore_errors=True)
+
+    def test_write_field_point_creates_separate_file_named_after_probe(self):
+        self.port.configure(str(self.tmp_dir), "scan", metadata={})
+        self.port.start()
+        self.port.configure_field_data(n_components=2, probe_info={"probe_label": "narda_ep600", "n_components": 2})
+
+        self.port.write_field_point({
+            "scan_id": "abc",
+            "point_index": 0,
+            "x": 1.0,
+            "y": 2.0,
+            "field_components": (3.0, 4.0),
+            "field_std_dev_components": (0.1, 0.2),
+        })
+        self.port.stop()
+
+        main_files = list(self.tmp_dir.glob("*_scan.csv"))
+        field_files = list(self.tmp_dir.glob("*_narda_ep600.csv"))
+        self.assertEqual(len(field_files), 1)
+        # Field data must be a distinct file from the main aefi_device export.
+        self.assertNotEqual(main_files, field_files)
+
+        with field_files[0].open(newline="", encoding="utf-8") as f:
+            rows = list(csv.DictReader(f))
+
+        self.assertEqual(len(rows), 1)
+        row = rows[0]
+        self.assertEqual(row["field_component_0"], "3.0")
+        self.assertEqual(row["field_component_1"], "4.0")
+        self.assertEqual(row["field_std_dev_component_0"], "0.1")
+        self.assertEqual(row["field_std_dev_component_1"], "0.2")
+        self.assertNotIn("field_components", row)
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -124,8 +124,10 @@ class ScanExportService:
 
         directory = self._config.output_directory
         # Base filename specific to exported scan data; actual timestamp
-        # is applied inside the export port implementation.
-        filename_base = f"{self._config.filename_base}_stepScanResults"
+        # is applied inside the export port implementation. "_aefi" marks
+        # this as the AD9106/ADS131A04 chain's file, as opposed to the
+        # separate electric-field-probe file (see _field_probe_label).
+        filename_base = f"{self._config.filename_base}_aefi_stepScanResults"
 
         metadata = self._build_metadata(event)
 
@@ -140,11 +142,15 @@ class ScanExportService:
         self._active_port.configure(directory, filename_base, metadata)
         self._active_port.start()
         self._export_active = True
-        
-        # Check if this is an HDF5 port and configure field data if needed
-        if fmt == "HDF5" and hasattr(self._active_port, 'configure_field_data'):
-            # For now, we'll configure field data when we receive the first electric field point
-            # This allows us to get the probe info and number of components from the actual event
+        # Reset per-scan field-export state — must not leak into a new scan
+        # (would otherwise skip re-calling configure_field_data below).
+        self._field_n_components = 0
+
+        # Field export rides on whichever port is active (CSV or HDF5), as
+        # long as it supports it — field data is configured lazily on the
+        # first electric field point (see _handle_electric_field_scan_point_acquired),
+        # once the probe's component count is known from the actual event.
+        if hasattr(self._active_port, 'configure_field_data'):
             self._field_export_active = True
 
     def _handle_scan_point_acquired(self, event: ScanPointAcquired) -> None:
@@ -160,12 +166,14 @@ class ScanExportService:
         if not self._export_active or not self._field_export_active:
             return
 
-        # For HDF5 export, configure field data on first point if not already configured
+        # Configure field data on first point if not already configured for this scan
         if self._field_n_components == 0 and hasattr(self._active_port, 'configure_field_data'):
             n_components = len(event.field_measurement.components)
-            # Extract probe info if available from the measurement
             probe_info = {
-                "probe_serial": getattr(event.field_measurement, "probe_serial", "unknown"),
+                # ponytail: Narda EP-601 is the only probe integrated today,
+                # hence hardcoded — derive from the connected probe's
+                # brand/model once a second probe type exists.
+                "probe_label": "narda_ep600",
                 "n_components": n_components,
             }
             self._active_port.configure_field_data(n_components, probe_info)

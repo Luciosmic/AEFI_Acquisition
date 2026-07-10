@@ -48,6 +48,16 @@ class CsvScanExportPort(IScanExportPort):
     _writer: Optional[csv.DictWriter] = field(init=False, default=None)
     _fieldnames: Optional[List[str]] = field(init=False, default=None)
     _configured_path: Optional[Path] = field(init=False, default=None)
+    _dir_path: Optional[Path] = field(init=False, default=None)
+    _timestamp: Optional[str] = field(init=False, default=None)
+
+    # Electric field data goes to its own file (named after the probe, e.g.
+    # "<timestamp>_narda_ep600.csv") rather than sharing the main file: its
+    # points arrive via a separate call (write_field_point), not necessarily
+    # in lockstep with write_point, so it can't share write_point's row/columns.
+    _field_file: Optional[TextIO] = field(init=False, default=None)
+    _field_writer: Optional[csv.DictWriter] = field(init=False, default=None)
+    _field_fieldnames: Optional[List[str]] = field(init=False, default=None)
 
     def configure(
         self, directory: str, filename: str, metadata: Dict[str, Any]
@@ -81,6 +91,8 @@ class CsvScanExportPort(IScanExportPort):
         )
         final_name = f"{timestamp}_{safe_base}.csv"
 
+        self._dir_path = dir_path
+        self._timestamp = timestamp
         self._configured_path = dir_path / final_name
         print(f"[CsvScanExportPort] CWD: {os.getcwd()}")
         print(f"[CsvScanExportPort] Configured export path (rel): {self._configured_path}")
@@ -129,8 +141,56 @@ class CsvScanExportPort(IScanExportPort):
         self._file.flush()
         # print(f"[CsvScanExportPort] Wrote point: {row.get('point_index', '?')}")
 
+    def configure_field_data(self, n_components: int, probe_info: Dict[str, Any]) -> None:
+        """
+        Open a dedicated `<timestamp>_<probe_label>.csv` file for electric
+        field probe data — a separate file from the main aefi_device export,
+        named after the probe (`probe_info["probe_label"]`) rather than
+        suffixed onto the main file's name.
+
+        Must be called before `write_field_point()`. Header is written on the
+        first call to `write_field_point`, from that row's own keys.
+        """
+        if self._dir_path is None or self._timestamp is None:
+            raise RuntimeError("CsvScanExportPort.configure() must be called before configure_field_data().")
+
+        probe_label = (probe_info or {}).get("probe_label", "field_probe")
+        field_path = self._dir_path / f"{self._timestamp}_{probe_label}.csv"
+        print(f"[CsvScanExportPort] Field data export path: {field_path}")
+        self._field_file = field_path.open(mode="w", newline="", encoding="utf-8")
+        self._field_writer = csv.DictWriter(self._field_file, fieldnames=[])
+        self._field_fieldnames = None
+
+    def write_field_point(self, data: Dict[str, Any]) -> None:
+        """
+        Write a single electric field measurement point to the sidecar CSV.
+
+        Expects `field_components` (tuple) and `field_std_dev_components`
+        (tuple or None), which are flattened into `field_component_0..N` /
+        `field_std_dev_component_0..N` columns.
+        """
+        if self._field_file is None or self._field_writer is None:
+            raise RuntimeError("CsvScanExportPort.configure_field_data() must be called before write_field_point().")
+
+        row = {k: v for k, v in data.items() if k not in ("field_components", "field_std_dev_components")}
+        for i, c in enumerate(data.get("field_components", ())):
+            row[f"field_component_{i}"] = c
+        std_devs = data.get("field_std_dev_components")
+        if std_devs:
+            for i, s in enumerate(std_devs):
+                row[f"field_std_dev_component_{i}"] = s
+
+        if self._field_fieldnames is None:
+            self._field_fieldnames = list(row.keys())
+            self._field_writer.fieldnames = self._field_fieldnames  # type: ignore[attr-defined]
+            self._field_writer.writeheader()
+
+        out_row = {k: row.get(k, "") for k in self._field_fieldnames}
+        self._field_writer.writerow(out_row)
+        self._field_file.flush()
+
     def stop(self) -> None:
-        """Close the CSV file if it is open."""
+        """Close the CSV file(s) if open."""
         if self._file is not None:
             try:
                 self._file.flush()
@@ -141,5 +201,17 @@ class CsvScanExportPort(IScanExportPort):
         self._writer = None
         self._fieldnames = None
         self._configured_path = None
+        self._dir_path = None
+        self._timestamp = None
+
+        if self._field_file is not None:
+            try:
+                self._field_file.flush()
+            finally:
+                self._field_file.close()
+
+        self._field_file = None
+        self._field_writer = None
+        self._field_fieldnames = None
 
 

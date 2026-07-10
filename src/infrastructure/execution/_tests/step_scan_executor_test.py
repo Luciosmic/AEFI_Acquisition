@@ -106,6 +106,47 @@ class TestStepScanExecutor(DiagramFriendlyTest):
         # ScanStarted + 2Ã—ScanPointAcquired + ScanCompleted = 4 minimum
         self.assertTrue(self._publish_count >= 4, f"Expected >= 4 publishes, got {self._publish_count}")
 
+    def test_field_sample_retry_recovers_from_transient_failure(self):
+        """A single flaky read must not be treated as a lost sample."""
+        calls = {"n": 0}
+
+        def flaky_acquire():
+            calls["n"] += 1
+            if calls["n"] == 1:
+                raise TimeoutError("simulated transient timeout")
+            return "sample-ok"
+
+        executor = StepScanExecutor(
+            motion_port=self.motion_port,
+            acquisition_port=self.acquisition_port,
+            event_bus=self.event_bus,
+        )
+        executor._field_probe_port = MagicMock()
+        executor._field_probe_port.acquire_sample.side_effect = flaky_acquire
+
+        result = executor._acquire_field_sample_with_retry(point_index=0)
+
+        self.assertEqual(result, "sample-ok")
+        self.assertEqual(calls["n"], 2)
+
+    def test_field_sample_retry_gives_up_after_max_retries(self):
+        """Once every retry is exhausted, the point's field sample is skipped (returns None), not raised."""
+        executor = StepScanExecutor(
+            motion_port=self.motion_port,
+            acquisition_port=self.acquisition_port,
+            event_bus=self.event_bus,
+        )
+        executor._field_probe_port = MagicMock()
+        executor._field_probe_port.acquire_sample.side_effect = TimeoutError("probe gone")
+
+        result = executor._acquire_field_sample_with_retry(point_index=0)
+
+        self.assertIsNone(result)
+        self.assertEqual(
+            executor._field_probe_port.acquire_sample.call_count,
+            StepScanExecutor.FIELD_SAMPLE_MAX_RETRIES + 1,
+        )
+
 
 if __name__ == '__main__':
     unittest.main()

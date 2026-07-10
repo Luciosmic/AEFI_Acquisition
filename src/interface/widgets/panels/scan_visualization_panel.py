@@ -9,15 +9,17 @@ class ScanVisualizationPanel(QWidget):
     Panel for visualizing 2D scan results with matplotlib colormaps.
     Supports single channel view and 6-channel grid view.
     """
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, enable_grid_view: bool = True):
         super().__init__(parent)
-        
+
         # Data storage
         self.data_grids = {}  # channel -> 2D numpy array
         self.extent = [0, 1, 0, 1]  # [x_min, x_max, y_min, y_max]
         self.available_channels = []
         self.current_channel = None
-        
+        self._grid_shape = (1, 1)
+        self._enable_grid_view = enable_grid_view
+
         self._build_ui()
 
     def _build_ui(self):
@@ -43,7 +45,8 @@ class ScanVisualizationPanel(QWidget):
         # View Mode Selector
         toolbar_layout.addWidget(QLabel("View:"))
         self.combo_view_mode = QComboBox()
-        self.combo_view_mode.addItems(["Single View", "6-Channel Grid"])
+        view_modes = ["Single View", "6-Channel Grid"] if self._enable_grid_view else ["Single View"]
+        self.combo_view_mode.addItems(view_modes)
         self.combo_view_mode.currentTextChanged.connect(self._on_view_mode_changed)
         toolbar_layout.addWidget(self.combo_view_mode)
         
@@ -68,24 +71,33 @@ class ScanVisualizationPanel(QWidget):
         self.ims_dict = {}   # channel -> image artist
         self._setup_single_view()
 
-    def initialize_scan(self, x_min, x_max, x_nb, y_min, y_max, y_nb):
-        """Initialize data grids for a new scan."""
+    def initialize_scan(self, x_min, x_max, x_nb, y_min, y_max, y_nb, channels=None):
+        """
+        Initialize data grids for a new scan.
+
+        `channels`: explicit channel list. Defaults to the 6 AD9106/ADS131A04
+        voltage channels (X/Y/Z x In-Phase/Quadrature). Pass `[]` when the
+        channel set isn't known yet (e.g. electric field probe, whose
+        component count depends on the connected probe) — channels are then
+        created lazily from whatever keys `update_data_point` receives.
+        """
         self.extent = [float(x_min), float(x_max), float(y_min), float(y_max)]
-        
-        # Initialize 6 channels (X/Y/Z × In-Phase/Quadrature)
-        self.available_channels = [
-            'x_in_phase', 'x_quadrature',
-            'y_in_phase', 'y_quadrature',
-            'z_in_phase', 'z_quadrature'
-        ]
-        
+        self._grid_shape = (int(y_nb), int(x_nb))
+
+        if channels is None:
+            channels = [
+                'x_in_phase', 'x_quadrature',
+                'y_in_phase', 'y_quadrature',
+                'z_in_phase', 'z_quadrature'
+            ]
+        self.available_channels = list(channels)
+
         # Create empty grids
-        for channel in self.available_channels:
-            self.data_grids[channel] = np.full((int(y_nb), int(x_nb)), np.nan)
-        
+        self.data_grids = {ch: np.full(self._grid_shape, np.nan) for ch in self.available_channels}
+
         # Set default channel
-        self.current_channel = 'x_in_phase'
-        
+        self.current_channel = self.available_channels[0] if self.available_channels else None
+
         # Populate channel combo
         self._update_channel_combo()
         
@@ -97,24 +109,32 @@ class ScanVisualizationPanel(QWidget):
             self._setup_grid_view()
 
     def update_data_point(self, x_idx, y_idx, measurements: dict):
-        """Update a single data point with measurements."""
+        """Update a single data point with measurements. Unknown channels are
+        created lazily (grid shape fixed at `initialize_scan` time)."""
+        new_channel_added = False
         for channel, value in measurements.items():
-            if channel in self.data_grids:
-                self.data_grids[channel][y_idx, x_idx] = value
-        
+            if channel not in self.data_grids:
+                self.data_grids[channel] = np.full(self._grid_shape, np.nan)
+                self.available_channels.append(channel)
+                new_channel_added = True
+            self.data_grids[channel][y_idx, x_idx] = value
+
+        if new_channel_added:
+            if self.current_channel is None:
+                self.current_channel = self.available_channels[0]
+            self._update_channel_combo()
+
         self._refresh_visualization()
 
     def update_data_point_from_position(self, x, y, measurements: dict):
         """Update data point by calculating indices from physical coordinates."""
         # Calculate indices based on extent and grid size
         x_min, x_max, y_min, y_max = self.extent
-        
-        # Get grid dimensions from one of the grids
-        if not self.data_grids:
-            return
-            
-        first_grid = next(iter(self.data_grids.values()))
-        y_nb, x_nb = first_grid.shape
+
+        # Grid dimensions are fixed at `initialize_scan` time, independently
+        # of whether any channel grid has been created yet (channels can be
+        # created lazily on the first point — see `update_data_point`).
+        y_nb, x_nb = self._grid_shape
         
         # Avoid division by zero
         if x_nb > 1:
@@ -303,7 +323,7 @@ class ScanVisualizationPanel(QWidget):
         elif 'quadrature' in channel:
             m_type = "In-Quadrature"
         
-        title = f"{axis} {m_type}" if axis and m_type else channel
+        title = f"{axis} {m_type}" if axis and m_type else channel.replace('_', ' ').title()
         
         # Color mapping
         color_map = {'X': '#2196F3', 'Y': '#FFC107', 'Z': '#F44336'}

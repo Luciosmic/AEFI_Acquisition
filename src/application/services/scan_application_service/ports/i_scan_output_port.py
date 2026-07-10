@@ -25,6 +25,9 @@ class IScanOutputPort(ABC):
     def present_scan_progress(self, current_point_index: int, total_points: int, point_data: Any) -> None: ...
 
     @abstractmethod
+    def present_field_scan_progress(self, current_point_index: int, total_points: int, point_data: Any) -> None: ...
+
+    @abstractmethod
     def present_scan_completed(self, scan_id: str, total_points: int) -> None: ...
 
     @abstractmethod

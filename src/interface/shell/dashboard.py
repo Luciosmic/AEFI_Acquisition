@@ -42,6 +42,7 @@ class Dashboard(QWidget):
         self.panels = {
             "scan_control": ScanControlPanel(),
             "scan_viz": ScanVisualizationPanel(),
+            "field_scan_viz": ScanVisualizationPanel(enable_grid_view=False),
             "continuous": ContinuousAcquisitionPanel(),
             "electric_field_probe": ElectricFieldProbePanel(),
             "motion": MotionPanelCompact(),
@@ -79,6 +80,7 @@ class Dashboard(QWidget):
         panel_metadata = {
             "scan_control": "Scan Control",
             "scan_viz": "Visualization",
+            "field_scan_viz": "Field Scan Viz",
             "continuous": "Continuous Acq.",
             "electric_field_probe": "Electric Field Probe",
             "motion": "Motion Control",

@@ -408,6 +408,7 @@ def main():
     # Scan Panels Wiring
     scan_control_panel = dashboard.panels["scan_control"]
     scan_visualization_panel = dashboard.panels["scan_viz"]
+    field_scan_visualization_panel = dashboard.panels["field_scan_viz"]
     
     # Control -> Presenter
     scan_control_panel.scan_start_requested.connect(scan_presenter.on_scan_start_requested)
@@ -430,15 +431,28 @@ def main():
             config["x_min"], config["x_max"], config["x_nb_points"],
             config["y_min"], config["y_max"], config["y_nb_points"]
         )
-        
+        # Channel set depends on the connected probe (mono/bi/tri-axial),
+        # so it's left empty here and populated lazily from the first point.
+        field_scan_visualization_panel.initialize_scan(
+            config["x_min"], config["x_max"], config["x_nb_points"],
+            config["y_min"], config["y_max"], config["y_nb_points"],
+            channels=[]
+        )
+
     def on_scan_progress_viz(current, total, data):
         # data has 'x', 'y', 'value'
         scan_visualization_panel.update_data_point_from_position(
             data["x"], data["y"], data["value"]
         )
 
+    def on_field_scan_progress_viz(current, total, data):
+        field_scan_visualization_panel.update_data_point_from_position(
+            data["x"], data["y"], data["value"]
+        )
+
     scan_presenter.scan_started.connect(on_scan_started_viz)
     scan_presenter.scan_progress.connect(on_scan_progress_viz)
+    scan_presenter.field_scan_progress.connect(on_field_scan_progress_viz)
     print("  [scan] wired")
 
     # Hardware Advanced Config Panel Wiring
