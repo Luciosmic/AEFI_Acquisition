@@ -1,9 +1,9 @@
-"""Tests for StepScanConfig value object."""
+﻿"""Tests for StepScanConfig value object."""
 import pytest
 from domain.step_scan.value_objects.step_scan_config.step_scan_config import StepScanConfig
 from domain.step_scan.value_objects.scan_zone.scan_zone import ScanZone
 from domain.step_scan.value_objects.scan_mode.scan_mode import ScanMode
-from domain.shared_kernel.value_objects.measurement_uncertainty import MeasurementUncertainty
+from domain.shared_kernel.value_objects.measurement_uncertainty.measurement_uncertainty import MeasurementUncertainty
 
 
 def _make_config(scan_zone, **overrides):
