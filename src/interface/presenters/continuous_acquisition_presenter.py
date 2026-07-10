@@ -19,7 +19,9 @@ from domain.shared_kernel.events.continuous_acquisition_failed.continuous_acquis
 from domain.shared_kernel.events.continuous_acquisition_stopped.continuous_acquisition_stopped import (
     ContinuousAcquisitionStopped,
 )
-from domain.shared_kernel.events.transformation_events import SensorTransformationAnglesUpdated
+from domain.shared_kernel.events.sensor_transformation_angles_updated.sensor_transformation_angles_updated import (
+    SensorTransformationAnglesUpdated,
+)
 from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
 from application.services.transformation_service.transformation_service import TransformationService
 from interface.presenters.signal_processor import SignalPostProcessor
