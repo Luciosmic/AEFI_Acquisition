@@ -17,7 +17,7 @@ Design:
 """
 
 from abc import ABC, abstractmethod
-from domain.value_objects.acquisition.voltage_measurement import VoltageMeasurement
+from domain.shared_kernel.value_objects.acquisition.voltage_measurement import VoltageMeasurement
 
 
 class IAcquisitionPort(ABC):

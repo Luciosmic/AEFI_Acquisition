@@ -22,8 +22,8 @@ from application.services.continuous_acquisition_service.ports.i_continuous_acqu
 )
 from application.services.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
 
-from domain.events.i_domain_event_bus import IDomainEventBus
-from domain.events.continuous_acquisition_events import (
+from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from domain.shared_kernel.events.continuous_acquisition_events import (
     ContinuousAcquisitionSampleAcquired,
     ContinuousAcquisitionFailed,
     ContinuousAcquisitionStopped,

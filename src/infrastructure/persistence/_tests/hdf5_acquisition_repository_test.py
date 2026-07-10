@@ -7,7 +7,7 @@ from datetime import datetime
 import numpy as np
 
 from infrastructure.persistence.hdf5_acquisition_repository import HDF5AcquisitionRepository
-from domain.value_objects.acquisition.acquisition_sample import AcquisitionSample
+from domain.shared_kernel.value_objects.acquisition.acquisition_sample import AcquisitionSample
 from tool.diagram_friendly_test import DiagramFriendlyTest
 
 class TestHDF5AcquisitionRepository(DiagramFriendlyTest):

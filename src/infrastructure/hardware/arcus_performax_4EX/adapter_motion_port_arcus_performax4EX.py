@@ -23,11 +23,11 @@ import threading
 import queue
 from uuid import uuid4
 from datetime import datetime
-from domain.events.i_domain_event_bus import IDomainEventBus
-from domain.events.motion_events import MotionStarted, MotionCompleted, MotionFailed, PositionUpdated
+from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from domain.shared_kernel.events.motion_events import MotionStarted, MotionCompleted, MotionFailed, PositionUpdated
 
 from application.services.motion_control_service.ports.i_motion_port import IMotionPort
-from domain.value_objects.geometric.position_2d import Position2D
+from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
 from infrastructure.hardware.arcus_performax_4EX.driver_arcus_performax4EX import (
     ArcusPerformax4EXController,
 )

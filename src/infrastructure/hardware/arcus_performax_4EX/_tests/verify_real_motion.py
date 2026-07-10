@@ -28,7 +28,7 @@ except ImportError:
         print("CRITICAL: Could not import ArcusCompositionRoot from either filename.")
         sys.exit(1)
 
-from domain.value_objects.geometric.position_2d import Position2D
+from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')

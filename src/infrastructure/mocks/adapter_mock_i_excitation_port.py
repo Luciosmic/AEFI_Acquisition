@@ -1,5 +1,5 @@
 from application.services.excitation_configuration_service.ports.i_excitation_port import IExcitationPort
-from domain.value_objects.excitation.excitation_parameters import ExcitationParameters
+from domain.shared_kernel.value_objects.excitation.excitation_parameters import ExcitationParameters
 
 class MockExcitationPort(IExcitationPort):
     """

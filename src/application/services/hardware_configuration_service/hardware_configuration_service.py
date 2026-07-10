@@ -16,7 +16,7 @@ Design:
 
 from typing import Any, Dict, List
 
-from domain.value_objects.hardware_configuration.hardware_advanced_parameter_schema import HardwareAdvancedParameterSchema
+from domain.shared_kernel.value_objects.hardware_configuration.hardware_advanced_parameter_schema import HardwareAdvancedParameterSchema
 from .ports.i_hardware_advanced_configurator import IHardwareAdvancedConfigurator
 
 

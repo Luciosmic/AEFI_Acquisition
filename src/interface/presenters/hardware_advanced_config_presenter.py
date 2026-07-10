@@ -9,7 +9,7 @@ from PySide6.QtCore import QObject, Signal, Slot
 from typing import List, Dict, Any, Optional
 
 from application.services.hardware_configuration_service.hardware_configuration_service import HardwareConfigurationService
-from domain.value_objects.hardware_configuration.hardware_advanced_parameter_schema import (
+from domain.shared_kernel.value_objects.hardware_configuration.hardware_advanced_parameter_schema import (
     HardwareAdvancedParameterSchema,
     NumberParameterSchema,
     EnumParameterSchema,

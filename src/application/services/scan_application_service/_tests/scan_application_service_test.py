@@ -5,8 +5,10 @@ from application.services.scan_application_service.scan_application_service impo
 from application.services.scan_application_service.dtos.scan_dtos import Scan2DConfigDTO
 from infrastructure.mocks.adapter_mock_i_motion_port import MockMotionPort
 from infrastructure.mocks.adapter_mock_i_acquisition_port import MockAcquisitionPort
-from domain.events.domain_event import DomainEvent
-from domain.events.scan_events import ScanStarted, ScanPointAcquired, ScanCompleted
+from domain.shared_kernel.events.domain_event import DomainEvent
+from domain.step_scan.events.scan_started.scan_started import ScanStarted
+from domain.step_scan.events.scan_point_acquired.scan_point_acquired import ScanPointAcquired
+from domain.step_scan.events.scan_completed.scan_completed import ScanCompleted
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
 from infrastructure.execution.step_scan_executor import StepScanExecutor
 from tool.diagram_friendly_test import DiagramFriendlyTest

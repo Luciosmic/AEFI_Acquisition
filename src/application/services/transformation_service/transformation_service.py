@@ -2,8 +2,8 @@ from typing import Tuple, Optional
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
-from domain.events.i_domain_event_bus import IDomainEventBus
-from domain.events.transformation_events import SensorTransformationAnglesUpdated
+from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from domain.shared_kernel.events.transformation_events import SensorTransformationAnglesUpdated
 from .dtos.transformation_dtos import SetRotationAnglesDTO
 
 class TransformationService:

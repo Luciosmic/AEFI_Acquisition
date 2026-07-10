@@ -33,9 +33,9 @@ from scipy.spatial.transform import Rotation as R
 
 from application.services.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
 from application.services.excitation_configuration_service.ports.i_excitation_port import IExcitationPort
-from domain.value_objects.acquisition.voltage_measurement import VoltageMeasurement
-from domain.value_objects.excitation.excitation_parameters import ExcitationParameters
-from domain.value_objects.excitation.excitation_mode import ExcitationMode
+from domain.shared_kernel.value_objects.acquisition.voltage_measurement import VoltageMeasurement
+from domain.shared_kernel.value_objects.excitation.excitation_parameters import ExcitationParameters
+from domain.shared_kernel.value_objects.excitation.excitation_mode import ExcitationMode
 
 
 @dataclass

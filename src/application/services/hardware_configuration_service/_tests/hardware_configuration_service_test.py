@@ -12,7 +12,7 @@ if str(SRC) not in sys.path:
 from application.services.hardware_configuration_service.hardware_configuration_service import (
     HardwareConfigurationService,
 )
-from domain.value_objects.hardware_configuration.hardware_advanced_parameter_schema import (
+from domain.shared_kernel.value_objects.hardware_configuration.hardware_advanced_parameter_schema import (
     HardwareAdvancedParameterSchema,
 )
 from infrastructure.hardware.arcus_performax_4EX.arcus_advanced_configuration import (

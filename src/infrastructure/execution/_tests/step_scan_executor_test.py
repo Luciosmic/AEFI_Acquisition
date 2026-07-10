@@ -6,11 +6,11 @@ from tool.diagram_friendly_test import DiagramFriendlyTest
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
 from infrastructure.execution.step_scan_executor import StepScanExecutor
 from infrastructure.mocks.adapter_mock_i_motion_port import MockMotionPort
-from domain.aggregates.step_scan import StepScan
-from domain.value_objects.scan.scan_trajectory import ScanTrajectory
-from domain.value_objects.scan.step_scan_config import StepScanConfig, ScanPattern
-from domain.value_objects.geometric.position_2d import Position2D
-from domain.value_objects.acquisition.acquisition_sample import AcquisitionSample
+from domain.step_scan.step_scan import StepScan
+from domain.step_scan.value_objects.scan_trajectory.scan_trajectory import ScanTrajectory
+from domain.step_scan.value_objects.step_scan_config.step_scan_config import StepScanConfig, ScanPattern
+from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
+from domain.shared_kernel.value_objects.acquisition.acquisition_sample import AcquisitionSample
 
 
 class TracingAcquisitionPort:
@@ -70,8 +70,8 @@ class TestStepScanExecutor(DiagramFriendlyTest):
     def test_execute_nominal_case(self):
         self.log_interaction("Test", "START", "StepScanExecutor", "Start nominal execution test")
 
-        from domain.value_objects.scan.scan_zone import ScanZone
-        from domain.value_objects.measurement_uncertainty import MeasurementUncertainty
+        from domain.step_scan.value_objects.scan_zone.scan_zone import ScanZone
+        from domain.shared_kernel.value_objects.measurement_uncertainty import MeasurementUncertainty
 
         scan_zone = ScanZone(x_min=0, x_max=1, y_min=0, y_max=1)
         uncertainty = MeasurementUncertainty(max_uncertainty_volts=1e-6)

@@ -1,0 +1,35 @@
+{
+  "schema_version": "1.0",
+  "description": "Acquisition parameters for one AEFI measurement session. Change freely between experiments; hardware identity is in aefi_device_config.json.",
+  "hardware_ref": "aefi_device_config.json",
+
+  "excitation": {
+    "dds_chip": "ADS131A04",
+    "frequency_hz": 1000,
+    "dds_field_generator": {
+      "dds1": { "gain": 5000, "phase_deg": 180 },
+      "dds2": { "gain": 5000, "phase_deg": 0 }
+    },
+    "dds_lock_in_detection": {
+      "dds3": { "gain": 10000, "phase_deg": 90 },
+      "dds4": { "gain": 10000, "phase_deg": 0 }
+    }
+  },
+
+  "adc": {
+    "chip": "AD9106",
+    "oversampling": 8,
+    "averaging": 10,
+    "gains": {
+      "ch1": 0,
+      "ch2": 0,
+      "ch3": 0,
+      "ch4": 0
+    },
+    "reference_potential": {
+      "internal": true,
+      "voltage": "4.0V",
+      "high_resolution": true
+    }
+  }
+}

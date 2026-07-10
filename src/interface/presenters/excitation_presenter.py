@@ -7,8 +7,8 @@ Adapted from interface v1 for PySide6.
 
 from PySide6.QtCore import QObject, Signal, Slot
 from application.services.excitation_configuration_service.excitation_configuration_service import ExcitationConfigurationService
-from domain.value_objects.excitation.excitation_mode import ExcitationMode
-from domain.value_objects.excitation.excitation_parameters import ExcitationParameters
+from domain.shared_kernel.value_objects.excitation.excitation_mode import ExcitationMode
+from domain.shared_kernel.value_objects.excitation.excitation_parameters import ExcitationParameters
 
 
 class ExcitationPresenter(QObject):

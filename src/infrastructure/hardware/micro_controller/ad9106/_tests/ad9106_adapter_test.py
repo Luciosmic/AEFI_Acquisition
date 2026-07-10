@@ -18,9 +18,9 @@ from tool.diagram_friendly_test import DiagramFriendlyTest
 from infrastructure.hardware.micro_controller.MCU_serial_communicator import MCU_SerialCommunicator
 from infrastructure.hardware.micro_controller.ad9106.ad9106_controller import AD9106Controller
 from infrastructure.hardware.micro_controller.ad9106.adapter_excitation_configuration_ad9106 import AdapterExcitationConfigurationAD9106
-from domain.value_objects.excitation.excitation_parameters import ExcitationParameters
-from domain.value_objects.excitation.excitation_mode import ExcitationMode
-from domain.value_objects.excitation.excitation_level import ExcitationLevel
+from domain.shared_kernel.value_objects.excitation.excitation_parameters import ExcitationParameters
+from domain.shared_kernel.value_objects.excitation.excitation_mode import ExcitationMode
+from domain.shared_kernel.value_objects.excitation.excitation_level import ExcitationLevel
 
 
 class TestAD9106Adapter(DiagramFriendlyTest):

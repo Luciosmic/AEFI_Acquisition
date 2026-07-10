@@ -10,7 +10,7 @@ sys.path.insert(0, str(src_path))
 from infrastructure.hardware.micro_controller.ad9106.ad9106_advanced_configurator import AD9106AdvancedConfigurator
 from infrastructure.hardware.micro_controller.ad9106.ad9106_controller import AD9106Controller
 from application.services.hardware_configuration_service.hardware_configuration_service import HardwareConfigurationService
-from domain.value_objects.hardware_configuration.hardware_advanced_parameter_schema import (
+from domain.shared_kernel.value_objects.hardware_configuration.hardware_advanced_parameter_schema import (
     NumberParameterSchema, EnumParameterSchema
 )
 

@@ -19,9 +19,9 @@ Design:
 from abc import ABC, abstractmethod
 from typing import Protocol
 
-from domain.aggregates.step_scan import StepScan
-from domain.value_objects.scan.scan_trajectory import ScanTrajectory
-from domain.value_objects.scan.step_scan_config import StepScanConfig
+from domain.step_scan.step_scan import StepScan
+from domain.step_scan.value_objects.scan_trajectory.scan_trajectory import ScanTrajectory
+from domain.step_scan.value_objects.step_scan_config.step_scan_config import StepScanConfig
 
 
 class IScanExecutor(ABC):
