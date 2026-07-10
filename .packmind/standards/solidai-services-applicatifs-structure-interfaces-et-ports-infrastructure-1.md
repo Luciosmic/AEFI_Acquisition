@@ -4,7 +4,7 @@ Ce standard définit l'anatomie complète d'un service applicatif dans SolidAI. 
 
 ## Rules
 
-* Structurer chaque service applicatif avec le trio atomique obligatoire : X_service_intention.md, i_api_X_service.py, dtos/, X_service.py, et _tests/ — sans exception
+* Structurer chaque service applicatif avec le trio atomique obligatoire : intention.md, i_api_X_service.py, dtos/, X_service.py, et _tests/ — sans exception
 * Préfixer l'interface inbound du service avec i_api_ pour la distinguer sans ambiguïté des ports outbound et des interfaces Domain
 * Déclarer les ports outbound vers l'Infrastructure dans application/X_service/ports/ — ces ports expriment un besoin technique de l'Application, pas un concept du Domain
 * Distinguer explicitement le sens des interfaces : i_api_ est inbound (Adapters → Application), i_ dans ports/ est outbound (Application → Infrastructure)
