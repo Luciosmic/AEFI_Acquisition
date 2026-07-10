@@ -1,6 +1,6 @@
 from typing import Dict, Any, List
 from application.services.hardware_configuration_service.ports.i_hardware_advanced_configurator import IHardwareAdvancedConfigurator
-from application.dtos.hardware_parameter_dtos import ActionableHardwareParametersSpec
+from domain.value_objects.hardware_configuration.hardware_advanced_parameter_schema import HardwareAdvancedParameterSchema
 
 class MockHardwareConfigProvider(IHardwareAdvancedConfigurator):
     """
@@ -23,7 +23,7 @@ class MockHardwareConfigProvider(IHardwareAdvancedConfigurator):
         return f"Mock Hardware ({self._hardware_id})"
     
     @staticmethod
-    def get_parameter_specs() -> List[ActionableHardwareParametersSpec]:
+    def get_parameter_specs() -> List[HardwareAdvancedParameterSchema]:
         return []
         
     def apply_config(self, config: Dict[str, Any]) -> None:

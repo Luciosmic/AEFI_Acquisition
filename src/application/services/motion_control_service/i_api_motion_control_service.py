@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from domain.shared.operation_result import OperationResult
+from domain.shared_kernel.operation_result import OperationResult
 
 
 class IApiMotionControlService(ABC):

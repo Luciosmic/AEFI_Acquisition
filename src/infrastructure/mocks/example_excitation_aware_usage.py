@@ -18,9 +18,9 @@ from infrastructure.mocks.adapter_mock_excitation_aware_acquisition import (
     ExcitationAwareAcquisitionPort,
     OffsetVector3D
 )
-from domain.value_objects.excitation.excitation_parameters import ExcitationParameters
-from domain.value_objects.excitation.excitation_mode import ExcitationMode
-from domain.value_objects.excitation.excitation_level import ExcitationLevel
+from domain.shared_kernel.value_objects.excitation.excitation_parameters import ExcitationParameters
+from domain.shared_kernel.value_objects.excitation.excitation_mode import ExcitationMode
+from domain.shared_kernel.value_objects.excitation.excitation_level import ExcitationLevel
 
 
 def example_basic_usage():

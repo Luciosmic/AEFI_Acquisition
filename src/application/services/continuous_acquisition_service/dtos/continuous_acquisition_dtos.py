@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Optional
 
-from domain.value_objects.measurement_uncertainty import MeasurementUncertainty
+from domain.shared_kernel.value_objects.measurement_uncertainty import MeasurementUncertainty
 
 
 @dataclass(frozen=True)

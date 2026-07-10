@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
-from domain.value_objects.excitation.excitation_mode import ExcitationMode
-from domain.value_objects.excitation.excitation_parameters import ExcitationParameters
+from domain.shared_kernel.value_objects.excitation.excitation_mode import ExcitationMode
+from domain.shared_kernel.value_objects.excitation.excitation_parameters import ExcitationParameters
 
 
 class IApiExcitationConfigurationService(ABC):

@@ -1,11 +1,11 @@
 from typing import Optional
 
 from application.services.motion_control_service.ports.i_motion_port import IMotionPort
-from domain.value_objects.geometric.position_2d import Position2D
-from domain.shared.operation_result import OperationResult
-from domain.events.i_domain_event_bus import IDomainEventBus
-from domain.events.motion_events import PositionUpdated
-from domain.events.motion_events import PositionUpdated, EmergencyStopTriggered
+from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
+from domain.shared_kernel.operation_result import OperationResult
+from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from domain.shared_kernel.events.motion_events import PositionUpdated
+from domain.shared_kernel.events.motion_events import PositionUpdated, EmergencyStopTriggered
 
 
 class MotionControlService:

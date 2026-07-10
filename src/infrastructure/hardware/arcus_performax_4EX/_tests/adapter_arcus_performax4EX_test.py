@@ -13,7 +13,7 @@ src_dir = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(src_dir))
 
 from infrastructure.arcus_performax_4EX.adapter_arcus_performax4EX import ArcusAdapter
-from domain.value_objects.geometric.position_2d import Position2D
+from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
 
 
 def find_arcus_port():
