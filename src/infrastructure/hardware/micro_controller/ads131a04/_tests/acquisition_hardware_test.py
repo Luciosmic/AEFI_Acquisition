@@ -1,4 +1,4 @@
-import sys
+﻿import sys
 import os
 import time
 import serial.tools.list_ports
@@ -10,7 +10,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '../../../../..'))
 
 from infrastructure.hardware.micro_controller.MCU_serial_communicator import MCU_SerialCommunicator
 from infrastructure.hardware.micro_controller.ads131a04.adapter_i_acquistion_port_ads131a04 import ADS131A04Adapter
-from domain.shared_kernel.value_objects.measurement_uncertainty import MeasurementUncertainty
+from domain.shared_kernel.value_objects.measurement_uncertainty.measurement_uncertainty import MeasurementUncertainty
 
 def list_serial_ports():
     ports = serial.tools.list_ports.comports()
@@ -55,7 +55,7 @@ def main():
             print(f"Ch4 (Y Quadrature): {measurement.voltage_y_quadrature:.6f} V")
             print(f"Ch5 (Z In-Phase): {measurement.voltage_z_in_phase:.6f} V")
             print(f"Ch6 (Z Quadrature): {measurement.voltage_z_quadrature:.6f} V")
-            print(f"Uncertainty: ±{measurement.uncertainty_estimate_volts:.6f} V")
+            print(f"Uncertainty: Â±{measurement.uncertainty_estimate_volts:.6f} V")
             print("--------------------------")
         except Exception as e:
             print(f"Error during acquisition: {e}")

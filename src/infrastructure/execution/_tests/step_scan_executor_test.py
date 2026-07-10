@@ -1,4 +1,4 @@
-import threading
+﻿import threading
 import unittest
 from unittest.mock import MagicMock
 
@@ -71,7 +71,7 @@ class TestStepScanExecutor(DiagramFriendlyTest):
         self.log_interaction("Test", "START", "StepScanExecutor", "Start nominal execution test")
 
         from domain.step_scan.value_objects.scan_zone.scan_zone import ScanZone
-        from domain.shared_kernel.value_objects.measurement_uncertainty import MeasurementUncertainty
+        from domain.shared_kernel.value_objects.measurement_uncertainty.measurement_uncertainty import MeasurementUncertainty
 
         scan_zone = ScanZone(x_min=0, x_max=1, y_min=0, y_max=1)
         uncertainty = MeasurementUncertainty(max_uncertainty_volts=1e-6)
@@ -99,11 +99,11 @@ class TestStepScanExecutor(DiagramFriendlyTest):
         self.log_interaction("Test", "ASSERT", "StepScanExecutor", "Check success", expect="True", got=str(success))
         self.assertTrue(success)
 
-        # Wait for worker thread to finish (2 points × 10 ms + buffer)
+        # Wait for worker thread to finish (2 points Ã— 10 ms + buffer)
         self.assertTrue(done.wait(timeout=5.0), "Scan did not complete within timeout")
 
         self.log_interaction("Test", "ASSERT", "EventBus", "Check publish calls")
-        # ScanStarted + 2×ScanPointAcquired + ScanCompleted = 4 minimum
+        # ScanStarted + 2Ã—ScanPointAcquired + ScanCompleted = 4 minimum
         self.assertTrue(self._publish_count >= 4, f"Expected >= 4 publishes, got {self._publish_count}")
 
 
