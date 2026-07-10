@@ -41,9 +41,12 @@ from application.services.system_lifecycle_service.system_lifecycle_service impo
     SystemShutdownApplicationService,
     StartupConfig
 )
+from interface.ui_system_lifecycle.presenter_system_lifecycle import SystemLifecyclePresenter
+from interface.ui_system_lifecycle.view_startup import StartupView
 
 # --- Interface ---
 from interface.shell.dashboard import Dashboard
+from interface.widgets.panels.logs_panel import LogsPanel, install_console_capture
 from interface.presenters.motion_presenter import MotionPresenter
 from interface.presenters.excitation_presenter import ExcitationPresenter
 from interface.presenters.continuous_acquisition_presenter import ContinuousAcquisitionPresenter
@@ -76,7 +79,17 @@ def main():
     
     # Apply Dark Theme
     apply_dark_theme(app)
-    
+
+    # 1bis. Logs panel + splash: shown first, capture everything from here on
+    splash_logs_panel = LogsPanel()
+    log_stream = install_console_capture(splash_logs_panel)
+
+    lifecycle_presenter = SystemLifecyclePresenter()
+    startup_view = StartupView(lifecycle_presenter, logs_panel=splash_logs_panel)
+    startup_view.show()
+    startup_view.set_phase("Configuration matérielle...")
+    app.processEvents()
+
     # 2. Configuration: Hardware Adapter Registry
     # Simple dict-based configuration: port_name -> adapter_type ("mock" | "real")
     HARDWARE_CONFIG = {
@@ -192,6 +205,8 @@ def main():
         init_port = MockHardwareInitializationPort()
     
     # 6. Create Application Services
+    startup_view.set_phase("Services applicatifs...")
+    app.processEvents()
     print("\n--- Creating Application Services ---")
     
     # Scan Executor (Infrastructure service)
@@ -238,10 +253,6 @@ def main():
     use_startup = len(lifecycle_adapters) > 0
     
     if use_startup:
-        # Import lifecycle presenter (Interface V2 - PySide6)
-        from interface.ui_system_lifecycle.presenter_system_lifecycle import SystemLifecyclePresenter
-        
-        lifecycle_presenter = SystemLifecyclePresenter()
         startup_service = SystemStartupApplicationService(
             hardware_initializer=init_port,
             calibration_service=None,
@@ -259,8 +270,15 @@ def main():
         lifecycle_presenter.set_services(startup_service, shutdown_service)
     
     # 8. Create Dashboard (View Shell)
+    startup_view.set_phase("Construction de l'interface...")
+    app.processEvents()
     print("\n--- Creating Dashboard ---")
     dashboard = Dashboard()
+
+    # Dashboard's permanent Logs panel picks up the splash's history so far,
+    # then stays live via the same stream for the rest of the app's life.
+    dashboard.panels["logs"].text_edit.setPlainText(splash_logs_panel.text_edit.toPlainText())
+    log_stream.text_written.connect(dashboard.panels["logs"].append_line)
 
     # 9. Create UI Presenters (Interface V2)
     # Note: Presenters now depend on Services AND Dashboard panels (Views)
@@ -400,42 +418,32 @@ def main():
 
     print("  [transformation] wired (via constructor)")
     
-    # 11. Startup Sequence (if real hardware) or Direct Launch (if mocks only)
+    # 11. Startup Sequence (hardware init if real hardware) or Direct Launch (if mocks only)
+    # StartupView has been visible since the very start of main(); the log
+    # panel it hosted moves into the Dashboard once it's shown.
+    def on_startup_finished(success: bool, errors: list):
+        if success:
+            print("Hardware initialization successful.")
+            startup_view.close()
+
+            print("\n--- Launching Dashboard ---")
+            dashboard.show()
+            print("Dashboard launched successfully!")
+        else:
+            print(f"CRITICAL: Hardware initialization failed: {errors}")
+            # StartupView will display the error
+            # User can close the window manually
+
+    lifecycle_presenter.startup_finished.connect(on_startup_finished)
+
     if use_startup:
-        # Import startup view (Interface V2 - PySide6)
-        from interface.ui_system_lifecycle.view_startup import StartupView
-        
-        startup_view = StartupView(lifecycle_presenter)
-        
-        # Define startup completion handler
-        dashboard_window = None
-        
-        def on_startup_finished(success: bool, errors: list):
-            nonlocal dashboard_window
-            if success:
-                print("Hardware initialization successful.")
-                startup_view.close()
-                
-                # Show Dashboard
-                print("\n--- Launching Dashboard ---")
-                dashboard_window = dashboard
-                dashboard_window.show()
-                print("Dashboard launched successfully!")
-            else:
-                print(f"CRITICAL: Hardware initialization failed: {errors}")
-                # StartupView will display the error
-                # User can close the window manually
-        
-        lifecycle_presenter.startup_finished.connect(on_startup_finished)
-        
-        # Show startup screen and start initialization
-        startup_view.show()
+        startup_view.set_phase("Initialisation matérielle...")
+        app.processEvents()
+        startup_view.start_hardware_init()
     else:
-        # No startup needed for mocks - launch dashboard directly
-        print("\n--- Launching Dashboard ---")
-        dashboard.show()
-        print("Dashboard launched successfully!")
-    
+        # No hardware lifecycle to run for mocks - finish immediately
+        on_startup_finished(success=True, errors=[])
+
     sys.exit(app.exec())
 
 

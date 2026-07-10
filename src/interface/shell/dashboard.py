@@ -18,6 +18,7 @@ from interface.widgets.panels.continuous_acquisition_panel import ContinuousAcqu
 from interface.widgets.panels.hardware_advanced_config_panel import HardwareAdvancedConfigPanel
 from interface.widgets.panels.sensor_transformation_panel import SensorTransformationPanel
 from interface.widgets.panels.external_modules_panel import ExternalModulesPanel
+from interface.widgets.panels.logs_panel import LogsPanel
 
 
 class SettingsPanel(BasePanel):
@@ -34,7 +35,7 @@ class Dashboard(QWidget):
     """
     def __init__(self):
         super().__init__()
-        
+
         # --- 1. Panel Instantiation ---
 
         self.panels = {
@@ -46,6 +47,7 @@ class Dashboard(QWidget):
             "hardware_config": HardwareAdvancedConfigPanel(),
             "transformation": SensorTransformationPanel(),
             "external_modules": ExternalModulesPanel(),
+            "logs": LogsPanel(),
             "settings": SettingsPanel()
         }
         
@@ -81,6 +83,7 @@ class Dashboard(QWidget):
             "hardware_config": "Hardware Config",
             "transformation": "Ref. Transform",
             "external_modules": "External Modules",
+            "logs": "Logs",
             "settings": "Settings"
         }
         
