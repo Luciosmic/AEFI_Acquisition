@@ -1,4 +1,4 @@
-﻿"""
+"""
 Mock: Excitation-Aware Acquisition Port
 
 Responsibility:

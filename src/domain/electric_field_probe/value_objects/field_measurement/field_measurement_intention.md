@@ -1,4 +1,4 @@
-﻿# field_measurement — Intention
+# field_measurement — Intention
 
 ## Rationale
 

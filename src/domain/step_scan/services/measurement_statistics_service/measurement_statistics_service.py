@@ -1,4 +1,4 @@
-﻿"""
+"""
 Domain Service: Measurement Statistics
 Responsibility: Calculate statistical properties (mean, std dev) of a set of measurements.
 """

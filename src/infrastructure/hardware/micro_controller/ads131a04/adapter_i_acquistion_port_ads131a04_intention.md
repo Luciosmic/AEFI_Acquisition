@@ -1,4 +1,4 @@
-﻿# adapter_i_acquisition_port_ads131a04 — Intention
+# adapter_i_acquisition_port_ads131a04 — Intention
 
 ## Rationale
 

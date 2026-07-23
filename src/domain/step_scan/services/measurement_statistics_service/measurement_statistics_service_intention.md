@@ -1,4 +1,4 @@
-﻿# measurement_statistics_service — Intention
+# measurement_statistics_service — Intention
 
 ## Rationale
 

@@ -1,4 +1,4 @@
-﻿from typing import List
+from typing import List
 from domain.step_scan.repositories.i_acquisition_data_repository import IAcquisitionDataRepository
 from domain.step_scan.events.scan_point_acquired.scan_point_acquired import ScanPointAcquired
 from domain.shared_kernel.events.domain_event import DomainEvent

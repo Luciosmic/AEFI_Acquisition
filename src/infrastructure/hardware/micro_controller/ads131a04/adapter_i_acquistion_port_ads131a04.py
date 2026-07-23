@@ -1,4 +1,4 @@
-﻿"""
+"""
 ADS131A04 Acquisition Adapter - Infrastructure Layer
 
 Responsibility:

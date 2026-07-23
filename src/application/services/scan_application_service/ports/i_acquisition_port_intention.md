@@ -1,4 +1,4 @@
-﻿# i_acquisition_port — Intention
+# i_acquisition_port — Intention
 
 ## Rationale
 

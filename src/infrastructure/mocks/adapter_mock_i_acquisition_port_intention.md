@@ -1,4 +1,4 @@
-﻿# adapter_mock_i_acquisition_port — Intention
+# adapter_mock_i_acquisition_port — Intention
 
 ## Rationale
 

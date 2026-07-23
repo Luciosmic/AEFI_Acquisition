@@ -1,4 +1,4 @@
-﻿# field_measurement_statistics_service — Intention
+# field_measurement_statistics_service — Intention
 
 ## Rationale
 Provide domain-level statistics calculation for electric field measurements, enabling averaging and uncertainty estimation during scan operations. This service mirrors the functionality of `MeasurementStatisticsService` but operates on `FieldMeasurement` value objects instead of `AefiVoltageMeasurement`.

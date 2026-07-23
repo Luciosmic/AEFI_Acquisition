@@ -1,4 +1,4 @@
-﻿# scan_point_result — Intention
+# scan_point_result — Intention
 
 ## Rationale
 

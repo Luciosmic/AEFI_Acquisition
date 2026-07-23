@@ -1,4 +1,4 @@
-﻿# Excitation-Aware Acquisition Mock Service
+# Excitation-Aware Acquisition Mock Service
 
 ## Overview
 

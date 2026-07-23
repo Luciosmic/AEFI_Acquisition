@@ -1,4 +1,4 @@
-﻿# ADS131A04 — Adaptateur ADC
+# ADS131A04 — Adaptateur ADC
 
 ## Rationale
 Ce module implémente l'acquisition des tensions électriques mesurées par le capteur AEFI via l'ADC Texas Instruments ADS131A04. Il traduit les concepts domaine (incertitude de mesure) en paramètres hardware (gain PGA, OSR, fréquence d'échantillonnage).

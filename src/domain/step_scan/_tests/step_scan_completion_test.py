@@ -1,4 +1,4 @@
-﻿import unittest
+import unittest
 from datetime import datetime
 
 from domain.step_scan.step_scan import StepScan

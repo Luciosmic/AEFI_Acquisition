@@ -1,4 +1,4 @@
-﻿# Valeurs Objets — Acquisition
+# Valeurs Objets — Acquisition
 
 ## Rationale
 Ce dossier contient les valeurs objets domaine représentant les données brutes issues du capteur électromagnétique. Ils constituent le langage ubiquitaire du domaine pour les données de mesure, indépendant du hardware ADC sous-jacent.

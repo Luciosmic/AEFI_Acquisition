@@ -1,4 +1,4 @@
-﻿"""
+"""
 Unit tests for ExcitationAwareAcquisitionPort.
 
 Tests the integration between acquisition and excitation systems,

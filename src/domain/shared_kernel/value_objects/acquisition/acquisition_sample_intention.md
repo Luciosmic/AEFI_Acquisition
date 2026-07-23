@@ -1,4 +1,4 @@
-﻿# acquisition_sample — Intention
+# acquisition_sample — Intention
 
 ## Rationale
 

@@ -1,4 +1,4 @@
-﻿"""
+"""
 Scan Point Result Value Object
 
 Responsibility:
