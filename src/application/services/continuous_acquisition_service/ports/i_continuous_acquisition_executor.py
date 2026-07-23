@@ -37,4 +37,8 @@ class IContinuousAcquisitionExecutor(ABC):
         Dynamically update configuration of running acquisition.
         """
 
+    @abstractmethod
+    def is_running(self) -> bool:
+        """True if the acquisition worker is currently active."""
+
 

@@ -56,6 +56,13 @@ ACQUISITION_STOPPED_TOPIC = "electricfieldprobeacquisitionstopped"
 class ElectricFieldProbeService(IApiElectricFieldProbeService):
     """Application service for a generic electric field probe."""
 
+    # Applicative rule: the Narda probe is known to be flaky (transient
+    # USB/serial errors). A single bad read must not kill the streaming
+    # worker — consumers (e.g. a scan collecting samples off the event bus)
+    # have no way to restart it. Tolerate a bounded run of consecutive
+    # failures before treating it as a real failure.
+    MAX_CONSECUTIVE_SAMPLE_FAILURES = 2
+
     def __init__(
         self,
         task_runner: IAsyncTaskRunner,
@@ -113,6 +120,9 @@ class ElectricFieldProbeService(IApiElectricFieldProbeService):
             self.stop_acquisition()
         self.start_acquisition(config)
 
+    def is_acquisition_running(self) -> bool:
+        return self._current_task is not None and self._current_task.is_running()
+
     # ------------------------------------------------------------------ #
     # Acquisition loop (runs inside the task submitted to IAsyncTaskRunner)
     # ------------------------------------------------------------------ #
@@ -131,6 +141,7 @@ class ElectricFieldProbeService(IApiElectricFieldProbeService):
         index = 0
         probe = probe_port.get_probe()
         serial_number = probe.serial_number if probe else "unknown"
+        consecutive_failures = 0
 
         try:
             while not self._stop_flag.is_set():
@@ -143,12 +154,23 @@ class ElectricFieldProbeService(IApiElectricFieldProbeService):
                 try:
                     sample = probe_port.acquire_sample()
                 except Exception as e:
-                    error_event = ContinuousAcquisitionFailed(
-                        acquisition_id=acquisition_id, reason=str(e)
+                    consecutive_failures += 1
+                    logger.warning(
+                        "Field probe sample failed (%d/%d consecutive): %s",
+                        consecutive_failures,
+                        self.MAX_CONSECUTIVE_SAMPLE_FAILURES,
+                        e,
                     )
-                    self._event_bus.publish(ACQUISITION_FAILED_TOPIC, error_event)
-                    return
+                    if consecutive_failures > self.MAX_CONSECUTIVE_SAMPLE_FAILURES:
+                        error_event = ContinuousAcquisitionFailed(
+                            acquisition_id=acquisition_id, reason=str(e)
+                        )
+                        self._event_bus.publish(ACQUISITION_FAILED_TOPIC, error_event)
+                        return
+                    time.sleep(dt)
+                    continue
 
+                consecutive_failures = 0
                 event = FieldSampleAcquired(
                     probe_serial_number=serial_number,
                     acquisition_id=acquisition_id,

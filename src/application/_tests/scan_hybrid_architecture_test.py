@@ -8,6 +8,7 @@ from tool.diagram_friendly_test import DiagramFriendlyTest
 from application.services.scan_application_service.scan_application_service import ScanApplicationService
 from application.services.scan_application_service.ports.i_scan_output_port import IScanOutputPort
 from application.services.scan_application_service.dtos.scan_dtos import Scan2DConfigDTO
+from application.services.continuous_acquisition_service.continuous_acquisition_service import ContinuousAcquisitionService
 from domain.step_scan.events.scan_started.scan_started import ScanStarted
 from domain.step_scan.events.scan_completed.scan_completed import ScanCompleted
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
@@ -15,6 +16,7 @@ from infrastructure.execution.fake.fake_thread_pool_task_runner import FakeThrea
 from infrastructure.execution.fake.fake_event_bus_motion_synchronizer import FakeEventBusMotionSynchronizer
 from infrastructure.mocks.adapter_mock_i_motion_port import MockMotionPort
 from infrastructure.mocks.adapter_mock_i_acquisition_port import MockAcquisitionPort
+from infrastructure.mocks.adapter_mock_i_continuous_acquisition_executor import MockContinuousAcquisitionExecutor
 from unittest.mock import MagicMock
 
 
@@ -33,6 +35,9 @@ class TestScanHybridArchitecture(DiagramFriendlyTest):
         event_bus = InMemoryEventBus()
         motion_port = MockMotionPort(event_bus=event_bus, motion_delay_ms=0)
         acquisition_port = MockAcquisitionPort()
+        continuous_acquisition_service = ContinuousAcquisitionService(
+            MockContinuousAcquisitionExecutor(event_bus), acquisition_port
+        )
 
         # 5×5 = 25 points — pre-program 25 successful motion results
         motion_sync = FakeEventBusMotionSynchronizer(
@@ -46,7 +51,7 @@ class TestScanHybridArchitecture(DiagramFriendlyTest):
         # 2. CREATE SERVICE
         self.log_interaction("TestAgent", "CREATE", "ScanApplicationService", "Initialize Service")
         service = ScanApplicationService(
-            motion_port, acquisition_port, event_bus,
+            motion_port, continuous_acquisition_service, event_bus,
             task_runner=task_runner,
             motion_sync=motion_sync,
         )

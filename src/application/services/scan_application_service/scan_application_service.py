@@ -16,6 +16,7 @@ Rationale:
 
 from typing import Optional, Callable, List
 import logging
+import queue
 import time
 from datetime import datetime
 
@@ -35,10 +36,18 @@ from domain.step_scan.value_objects.scan_trajectory.scan_trajectory import ScanT
 # Ports
 from application.services.motion_control_service.ports.i_motion_port import IMotionPort
 from application._shared.ports.i_async_task_runner import IAsyncTaskRunner
-from .ports.i_acquisition_port import IAcquisitionPort
 from .ports.i_motion_synchronizer import IMotionSynchronizer
 from .ports.i_scan_output_port import IScanOutputPort
 from application.services.electric_field_probe_service.ports.i_electric_field_probe_port import IElectricFieldProbePort
+
+# Continuous acquisition streams (scan is a subscriber, not a puller — the
+# continuous worker owns the driver exclusively).
+from application.services.continuous_acquisition_service.i_api_continuous_acquisition_service import IApiContinuousAcquisitionService
+from application.services.continuous_acquisition_service.dtos.continuous_acquisition_dtos import ContinuousAcquisitionConfig
+from application.services.electric_field_probe_service.i_api_electric_field_probe_service import IApiElectricFieldProbeService
+from application.services.electric_field_probe_service.dtos.electric_field_probe_dtos import ElectricFieldProbeAcquisitionConfig
+from domain.shared_kernel.events.continuous_acquisition_sample_acquired.continuous_acquisition_sample_acquired import ContinuousAcquisitionSampleAcquired
+from domain.electric_field_probe.events.field_sample_acquired.field_sample_acquired import FieldSampleAcquired
 
 # Error union (cross-layer translation)
 from .errors.motion_sync_error import (
@@ -50,6 +59,16 @@ from .errors.motion_sync_error import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def _drain_queue(q: "queue.Queue") -> None:
+    """Discard whatever is currently buffered in `q` without blocking."""
+    while True:
+        try:
+            q.get_nowait()
+        except queue.Empty:
+            return
+
 
 from domain.step_scan.step_scan import StepScan
 from domain.step_scan.value_objects.scan_point_result.scan_point_result import ScanPointResult
@@ -75,36 +94,39 @@ class ScanApplicationService:
     adapters that own only concurrency/protocol concerns.
     """
 
-    # Retry budget for a single EF probe sample acquisition.
-    # Applicative rule: transient USB/serial errors on the Narda probe are
-    # retried before abandoning the sample (not a hardware invariant → belongs
-    # here, not in infrastructure).
-    FIELD_SAMPLE_MAX_RETRIES = 2
+    # Ceiling above the Narda probe's fastest filter response (~33 Hz at F1;
+    # RECOMMENDED_FILTER=F4/F5 in driver_narda_ep601.py is slower). The
+    # continuous worker's inter-sample sleep barely adds delay once real
+    # acquire latency dominates — this is a safe upper bound, not a tuned rate.
+    NARDA_CONTINUOUS_SAMPLE_RATE_HZ = 50.0
 
-    # Retry budget for a whole point's worth of EF probe samples.
-    # Applicative rule: the Narda probe is less robust than the AEFI ADC path,
-    # so a point is never validated on partial field data — we keep sampling
-    # at the same point (extra passes over the averaging window) rather than
-    # advance with a gap. Expressed as "extra passes" so the bound scales with
-    # averaging_per_position instead of being a fixed sample count.
-    FIELD_POINT_MAX_RETRY_PASSES = 3
+    # Total budget to collect one point's averaging window from a sample
+    # stream (ADC or EF probe) before giving up. Same order of magnitude as
+    # the existing motion timeout (wait_for_motion(timeout_seconds=30.0)) —
+    # "hardware should have responded by now".
+    POINT_ACQUISITION_TIMEOUT_S = 30.0
 
     def __init__(
         self,
         motion_port: IMotionPort,
-        acquisition_port: IAcquisitionPort,
+        continuous_acquisition_service: IApiContinuousAcquisitionService,
         event_bus: IDomainEventBus,
         task_runner: IAsyncTaskRunner,
         motion_sync: IMotionSynchronizer,
         field_probe_port: Optional[IElectricFieldProbePort] = None,
+        electric_field_probe_service: Optional[IApiElectricFieldProbeService] = None,
         output_port: Optional[IScanOutputPort] = None,
     ):
         self._motion_port = motion_port
-        self._acquisition_port = acquisition_port
+        self._continuous_acquisition_service = continuous_acquisition_service
         self._event_bus = event_bus
         self._task_runner = task_runner
         self._motion_sync = motion_sync
+        # Kept only for the cheap, local is_ready() gate — never pulled for
+        # samples anymore (that goes through electric_field_probe_service's
+        # stream, see _execute_scan_loop).
         self._field_probe_port = field_probe_port
+        self._electric_field_probe_service = electric_field_probe_service
         self._output_port = output_port
 
         self._current_scan: Optional[StepScan] = None
@@ -218,7 +240,51 @@ class ScanApplicationService:
         Runs inside a task submitted to IAsyncTaskRunner.  All state mutations
         go through the StepScan aggregate; pause/cancel signals arrive via the
         aggregate's status field (set by pause_scan/cancel_scan on the service).
+
+        Acquisition is subscription-based, not pulled: the ADC and (optionally)
+        the EF probe are driven by their own continuous-acquisition worker
+        (started here if not already running elsewhere, e.g. a live-view
+        panel), and this loop just collects samples off the event bus per
+        point. This keeps a single owner of each driver at all times.
         """
+        use_field = (
+            self._field_probe_port is not None
+            and self._electric_field_probe_service is not None
+            and self._field_probe_port.is_ready()
+        )
+
+        adc_queue: "queue.Queue" = queue.Queue()
+        field_queue: "queue.Queue" = queue.Queue()
+
+        def _on_adc_sample(event: ContinuousAcquisitionSampleAcquired) -> None:
+            adc_queue.put(event.sample)
+
+        def _on_field_sample(event: FieldSampleAcquired) -> None:
+            field_queue.put(event.sample)
+
+        self._event_bus.subscribe("continuousacquisitionsampleacquired", _on_adc_sample)
+        if use_field:
+            self._event_bus.subscribe("fieldsampleacquired", _on_field_sample)
+
+        # Only start what isn't already running, and only stop what we
+        # started — a live-view session running before the scan keeps
+        # running, untouched, after it.
+        adc_started_by_scan = not self._continuous_acquisition_service.is_acquisition_running()
+        if adc_started_by_scan:
+            self._continuous_acquisition_service.start_acquisition(
+                ContinuousAcquisitionConfig(sample_rate_hz=None)
+            )
+
+        field_started_by_scan = False
+        if use_field:
+            field_started_by_scan = not self._electric_field_probe_service.is_acquisition_running()
+            if field_started_by_scan:
+                self._electric_field_probe_service.start_acquisition(
+                    ElectricFieldProbeAcquisitionConfig(
+                        sample_rate_hz=self.NARDA_CONTINUOUS_SAMPLE_RATE_HZ
+                    )
+                )
+
         try:
             for i, position in enumerate(trajectory):
                 if scan.status == ScanStatus.CANCELLED:
@@ -265,34 +331,41 @@ class ScanApplicationService:
                         return
 
                 # --- AEFI Acquisition ---
-                measurements = []
-                for _ in range(config.averaging_per_position):
-                    if scan.status == ScanStatus.CANCELLED:
-                        return
-                    measurements.append(self._acquisition_port.acquire_sample())
+                # Samples accumulated in the queue while moving/stabilizing
+                # don't correspond to the settled position — drop them before
+                # collecting this point's averaging window.
+                _drain_queue(adc_queue)
+                measurements = self._collect_samples(adc_queue, config.averaging_per_position, scan)
+                if measurements is None:
+                    return
+                if len(measurements) < config.averaging_per_position:
+                    scan.fail(
+                        f"AEFI acquisition: point {i} timed out after "
+                        f"{self.POINT_ACQUISITION_TIMEOUT_S}s "
+                        f"({len(measurements)}/{config.averaging_per_position} samples)"
+                    )
+                    self._publish_events(scan.domain_events)
+                    return
 
                 averaged_measurement = MeasurementStatisticsService.calculate_statistics(measurements)
 
                 # --- EF Probe (optional) ---
-                # Invariant: a point is not validated on partial field data.
-                # Each sample gets its own retry budget (FIELD_SAMPLE_MAX_RETRIES);
-                # the point itself stays "in progress" (index does not advance,
-                # add_point_result is not called) until the full averaging
-                # window is collected or the point-level retry budget
-                # (FIELD_POINT_MAX_RETRY_PASSES) is exhausted, in which case the
-                # whole scan fails rather than publishing an incomplete point.
+                # Invariant: a point is not validated on partial field data —
+                # the whole scan fails rather than publish an incomplete point.
                 field_measurement = None
-                if self._field_probe_port is not None and self._field_probe_port.is_ready():
-                    field_measurements = self._acquire_field_samples_until_complete(
-                        scan, i, config.averaging_per_position
+                if use_field:
+                    _drain_queue(field_queue)
+                    field_measurements = self._collect_samples(
+                        field_queue, config.averaging_per_position, scan
                     )
-                    if scan.status == ScanStatus.CANCELLED:
-                        return
                     if field_measurements is None:
+                        return
+                    if len(field_measurements) < config.averaging_per_position:
                         scan.fail(
-                            f"Narda probe: point {i} never reached "
-                            f"{config.averaging_per_position} samples — aborting scan "
-                            f"rather than validating an incomplete point"
+                            f"Narda probe: point {i} timed out after "
+                            f"{self.POINT_ACQUISITION_TIMEOUT_S}s "
+                            f"({len(field_measurements)}/{config.averaging_per_position} samples) "
+                            "— aborting scan rather than validating an incomplete point"
                         )
                         self._publish_events(scan.domain_events)
                         return
@@ -327,57 +400,40 @@ class ScanApplicationService:
             scan.fail(str(exc))
             self._publish_events(scan.domain_events)
 
-    def _acquire_field_sample_with_retry(self, point_index: int):
-        """
-        Acquire one EF probe sample, retrying on transient failures.
+        finally:
+            self._event_bus.unsubscribe("continuousacquisitionsampleacquired", _on_adc_sample)
+            if use_field:
+                self._event_bus.unsubscribe("fieldsampleacquired", _on_field_sample)
+            if adc_started_by_scan:
+                self._continuous_acquisition_service.stop_acquisition()
+            if field_started_by_scan:
+                self._electric_field_probe_service.stop_acquisition()
 
-        Returns the sample, or None once the retry budget is exhausted, so the
-        caller can keep whatever other samples in the averaging window succeeded.
-        """
-        for attempt in range(self.FIELD_SAMPLE_MAX_RETRIES + 1):
-            try:
-                return self._field_probe_port.acquire_sample()
-            except Exception as e:
-                logger.warning(
-                    "Field probe sample failed at point %d (attempt %d/%d): %s",
-                    point_index,
-                    attempt + 1,
-                    self.FIELD_SAMPLE_MAX_RETRIES + 1,
-                    e,
-                )
-        return None
-
-    def _acquire_field_samples_until_complete(
-        self, scan: StepScan, point_index: int, required_samples: int
+    def _collect_samples(
+        self, sample_queue: "queue.Queue", count: int, scan: StepScan
     ) -> Optional[List]:
         """
-        Keep sampling the EF probe at the current point until `required_samples`
-        have been collected, bounded by FIELD_POINT_MAX_RETRY_PASSES extra
-        passes over the averaging window.
+        Collect `count` samples from `sample_queue`, bounded by
+        POINT_ACQUISITION_TIMEOUT_S total.
 
-        Returns the list of samples, or None if the scan was cancelled or the
-        retry budget was exhausted before reaching `required_samples`.
+        Polls with a short timeout so a cancel signal is noticed promptly
+        instead of blocking for the whole budget. Returns whatever was
+        collected (possibly short, if the budget ran out) — the caller
+        decides whether that's a failure — or None if the scan was cancelled
+        mid-collection.
         """
         samples: List = []
-        max_attempts = required_samples * (self.FIELD_POINT_MAX_RETRY_PASSES + 1)
-        attempts = 0
-        while len(samples) < required_samples and attempts < max_attempts:
+        deadline = time.monotonic() + self.POINT_ACQUISITION_TIMEOUT_S
+        while len(samples) < count:
             if scan.status == ScanStatus.CANCELLED:
                 return None
-            attempts += 1
-            sample = self._acquire_field_sample_with_retry(point_index)
-            if sample is not None:
-                samples.append(sample)
-
-        if len(samples) < required_samples:
-            logger.warning(
-                "Narda probe: point %d incomplete (%d/%d samples) after %d attempts, giving up",
-                point_index,
-                len(samples),
-                required_samples,
-                attempts,
-            )
-            return None
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                break
+            try:
+                samples.append(sample_queue.get(timeout=min(remaining, 0.2)))
+            except queue.Empty:
+                continue
         return samples
 
     # ==================================================================================

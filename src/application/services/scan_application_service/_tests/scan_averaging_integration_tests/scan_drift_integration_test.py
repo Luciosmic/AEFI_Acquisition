@@ -9,10 +9,12 @@ from domain.shared_kernel.value_objects.acquisition.voltage_measurement import V
 from application.services.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
 from application.services.scan_application_service.scan_application_service import ScanApplicationService
 from application.services.scan_application_service.dtos.scan_dtos import Scan2DConfigDTO
+from application.services.continuous_acquisition_service.continuous_acquisition_service import ContinuousAcquisitionService
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
 from infrastructure.execution.thread_pool_task_runner import ThreadPoolTaskRunner
 from infrastructure.execution.event_bus_motion_synchronizer import EventBusMotionSynchronizer
 from infrastructure.mocks.adapter_mock_i_motion_port import MockMotionPort
+from infrastructure.mocks.adapter_mock_i_continuous_acquisition_executor import MockContinuousAcquisitionExecutor
 
 
 class DriftingAcquisitionPort(IAcquisitionPort):
@@ -44,10 +46,26 @@ class DriftingAcquisitionPort(IAcquisitionPort):
 
 
 class TestScanDriftIntegration(unittest.TestCase):
+    """
+    Retired: this test's drift model is "+drift_per_sample per call to
+    acquire_sample()", which assumed the scan pulled the driver directly in
+    a tight per-point loop (exactly averaging_per_position calls per point,
+    none between points). Since ScanApplicationService now consumes a
+    continuous background stream (see [[scan_application_service]] /
+    the acquisition-streaming refactor), acquire_sample() runs flat out for
+    the whole scan duration — call count per point is no longer
+    deterministic, so "drift = f(call count)" is not a coherent model
+    anymore. Coverage for per-point averaging correctness under this
+    architecture is provided by scan_averaging_integration_test.py instead
+    (its signal model depends on physical position, not call count, so it
+    stays valid under streaming).
+    """
 
+    @unittest.skip("drift-vs-call-count model incompatible with continuous streaming acquisition — see class docstring")
     def test_drift_raster(self):
         self._run_drift_test("RASTER")
 
+    @unittest.skip("drift-vs-call-count model incompatible with continuous streaming acquisition — see class docstring")
     def test_drift_serpentine(self):
         self._run_drift_test("SERPENTINE")
 
@@ -61,10 +79,13 @@ class TestScanDriftIntegration(unittest.TestCase):
         motion_port = MockMotionPort(event_bus=event_bus, motion_delay_ms=1)
         drift_rate = 0.01
         acquisition_port = DriftingAcquisitionPort(drift_per_sample=drift_rate)
+        continuous_service = ContinuousAcquisitionService(
+            MockContinuousAcquisitionExecutor(event_bus), acquisition_port
+        )
         task_runner = ThreadPoolTaskRunner()
         motion_sync = EventBusMotionSynchronizer(event_bus)
         service = ScanApplicationService(
-            motion_port, acquisition_port, event_bus,
+            motion_port, continuous_service, event_bus,
             task_runner=task_runner,
             motion_sync=motion_sync,
         )

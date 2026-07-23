@@ -98,3 +98,6 @@ class MockContinuousAcquisitionExecutor(IContinuousAcquisitionExecutor):
             self._current_interval = 1.0 / config.sample_rate_hz
         else:
             self._current_interval = 0.0
+
+    def is_running(self) -> bool:
+        return self._is_running

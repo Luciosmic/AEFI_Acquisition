@@ -76,6 +76,9 @@ class AdapterIContinuousAcquisitionAds131a04(IContinuousAcquisitionExecutor):
         # TODO: Implement dynamic config update if needed
         pass
 
+    def is_running(self) -> bool:
+        return self._thread is not None and self._thread.is_alive()
+
     def _worker(
         self,
         acquisition_id: UUID,
@@ -84,11 +87,11 @@ class AdapterIContinuousAcquisitionAds131a04(IContinuousAcquisitionExecutor):
     ) -> None:
         """Background acquisition loop."""
         print(f"[ContinuousAcquisition] Worker started. ID: {acquisition_id}")
-        if not config.sample_rate_hz or config.sample_rate_hz <= 0:
-            print("[ContinuousAcquisition] Invalid sample rate.")
-            return
 
-        dt = 1.0 / config.sample_rate_hz
+        # sample_rate_hz=None means best-effort: acquire back-to-back at
+        # whatever rate the serial link allows, matching the previous
+        # scan-loop pull throughput (no artificial pacing).
+        dt = 1.0 / config.sample_rate_hz if config.sample_rate_hz and config.sample_rate_hz > 0 else 0.0
         t0 = time.time()
         index = 0
 

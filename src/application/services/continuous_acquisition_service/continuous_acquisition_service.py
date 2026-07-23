@@ -41,4 +41,7 @@ class ContinuousAcquisitionService:
              pass
         self._executor.update_config(config)
 
+    def is_acquisition_running(self) -> bool:
+        return self._executor.is_running()
+
 

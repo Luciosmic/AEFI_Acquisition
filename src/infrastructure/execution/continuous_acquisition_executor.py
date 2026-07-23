@@ -70,6 +70,9 @@ class ContinuousAcquisitionExecutor(IContinuousAcquisitionExecutor):
         if self._thread:
             self._thread.join(timeout=2.0)
 
+    def is_running(self) -> bool:
+        return self._thread is not None and self._thread.is_alive()
+
     # ------------------------------------------------------------------ #
     # Internal worker
     # ------------------------------------------------------------------ #

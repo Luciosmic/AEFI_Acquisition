@@ -231,35 +231,42 @@ def main():
     task_runner = ThreadPoolTaskRunner()
     motion_sync = EventBusMotionSynchronizer(event_bus)
 
-    # Scan Application Service
-    scan_service = ScanApplicationService(
-        motion_port, acquisition_port, event_bus,
-        task_runner=task_runner,
-        motion_sync=motion_sync,
-        field_probe_port=probe_port,
-    )
-    
-    # Scan Export Service
-    csv_export_port = CsvScanExportPort()
-    hdf5_export_port = Hdf5ScanExportPort()
-    scan_export_service = ScanExportService(event_bus, csv_export_port, hdf5_export_port)
-    
-    # Excitation Service
-    excitation_service = ExcitationConfigurationService(excitation_port)
-    
     # Continuous Acquisition Service - PASS acquisition_port NOT event_bus!
+    # Built before ScanApplicationService: the scan drives its acquisition
+    # through this service's stream (start/stop + subscribe) instead of
+    # pulling acquisition_port directly, so it needs the service, not the
+    # raw port.
     continuous_service = ContinuousAcquisitionService(continuous_executor, acquisition_port)
-    
-    # Motion Control Service
-    motion_control_service = MotionControlService(motion_port, event_bus)
 
     # Electric Field Probe Service (reuses the shared task_runner)
+    # Same reasoning: built before ScanApplicationService, which subscribes
+    # to its sample stream rather than pulling probe_port directly.
     electric_field_probe_service = ElectricFieldProbeService(
         task_runner=task_runner,
         probe_port=probe_port,
         event_bus=event_bus,
     )
-    
+
+    # Scan Application Service
+    scan_service = ScanApplicationService(
+        motion_port, continuous_service, event_bus,
+        task_runner=task_runner,
+        motion_sync=motion_sync,
+        field_probe_port=probe_port,
+        electric_field_probe_service=electric_field_probe_service,
+    )
+
+    # Scan Export Service
+    csv_export_port = CsvScanExportPort()
+    hdf5_export_port = Hdf5ScanExportPort()
+    scan_export_service = ScanExportService(event_bus, csv_export_port, hdf5_export_port)
+
+    # Excitation Service
+    excitation_service = ExcitationConfigurationService(excitation_port)
+
+    # Motion Control Service
+    motion_control_service = MotionControlService(motion_port, event_bus)
+
     # Transformation Service (Shared State)
     transformation_service = TransformationService(event_bus)
     

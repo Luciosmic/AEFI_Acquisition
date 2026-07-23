@@ -26,3 +26,6 @@ class IApiContinuousAcquisitionService(ABC):
 
     @abstractmethod
     def update_acquisition_parameters(self, config: ContinuousAcquisitionConfig) -> None: ...
+
+    @abstractmethod
+    def is_acquisition_running(self) -> bool: ...
