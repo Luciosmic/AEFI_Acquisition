@@ -1,17 +1,17 @@
-from datetime import datetime
+﻿from datetime import datetime
 import random
 from application.services.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
-from domain.shared_kernel.value_objects.acquisition.voltage_measurement import VoltageMeasurement
+from domain.shared_kernel.value_objects.acquisition.aefi_voltage_measurement import AefiVoltageMeasurement
 
 class MockAcquisitionPort(IAcquisitionPort):
     def __init__(self):
         self.acquire_count = 0
         
-    def acquire_sample(self) -> VoltageMeasurement:
+    def acquire_sample(self) -> AefiVoltageMeasurement:
         self.acquire_count += 1
         print(f"[MockAcquisitionPort] Acquiring sample #{self.acquire_count}")
         # Return synthetic data based on count
-        return VoltageMeasurement(
+        return AefiVoltageMeasurement(
             voltage_x_in_phase=0.1 * self.acquire_count,
             voltage_x_quadrature=0.0,
             voltage_y_in_phase=0.2 * self.acquire_count,
@@ -33,7 +33,7 @@ class RandomNoiseAcquisitionPort(IAcquisitionPort):
     """
     Mock d'acquisition continue générant un signal aléatoire.
 
-    - Chaque appel à acquire_sample() retourne un VoltageMeasurement
+    - Chaque appel à acquire_sample() retourne un AefiVoltageMeasurement
       avec bruit gaussien (mu=0, sigma configurable) sur Ex In-Phase.
     - Les autres composantes sont laissées à 0 pour rester simples.
     """
@@ -43,7 +43,7 @@ class RandomNoiseAcquisitionPort(IAcquisitionPort):
         self._rng = random.Random(seed)
         self.acquire_count = 0
 
-    def acquire_sample(self) -> VoltageMeasurement:
+    def acquire_sample(self) -> AefiVoltageMeasurement:
         self.acquire_count += 1
         # Génère un bruit gaussien indépendant pour chaque composante
         vx_i = self._rng.gauss(0.0, self.noise_std)
@@ -56,7 +56,7 @@ class RandomNoiseAcquisitionPort(IAcquisitionPort):
             f"[RandomNoiseAcquisitionPort] Sample #{self.acquire_count}: " # Use self.acquire_count as it's the existing counter
             f"Ux=({vx_i:.3f},{vx_q:.3f}) Uy=({vy_i:.3f},{vy_q:.3f}) Uz=({vz_i:.3f},{vz_q:.3f})"
         )
-        return VoltageMeasurement(
+        return AefiVoltageMeasurement(
             voltage_x_in_phase=vx_i,
             voltage_x_quadrature=vx_q,
             voltage_y_in_phase=vy_i,

@@ -1,4 +1,4 @@
-# scan_point_result — Intention
+﻿# scan_point_result — Intention
 
 ## Rationale
 
@@ -6,7 +6,7 @@ Value object encapsulant le résultat d'acquisition en un point de scan : positi
 
 ## Responsibility
 
-- Stocker `position: Position2D`, `measurement: VoltageMeasurement`, `point_index: int`.
+- Stocker `position: Position2D`, `measurement: AefiVoltageMeasurement`, `point_index: int`.
 - Servir d'unité de donnée entre `StepScanExecutor` et l'agrégat `StepScan`.
 
 ## Design

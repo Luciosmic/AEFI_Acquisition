@@ -1,12 +1,12 @@
-"""Tests for VoltageMeasurement value object."""
+"""Tests for AefiVoltageMeasurement value object."""
 import pytest
 from datetime import datetime
-from domain.shared_kernel.value_objects.acquisition.voltage_measurement import VoltageMeasurement
+from domain.shared_kernel.value_objects.acquisition.aefi_voltage_measurement import AefiVoltageMeasurement
 
 def test_voltage_measurement_creation():
     """Test creating a valid voltage measurement."""
     now = datetime.now()
-    measurement = VoltageMeasurement(
+    measurement = AefiVoltageMeasurement(
         voltage_x_in_phase=1.5,
         voltage_x_quadrature=0.3,
         voltage_y_in_phase=2.1,
@@ -22,7 +22,7 @@ def test_voltage_measurement_creation():
 
 def test_voltage_measurement_immutable():
     """Test that voltage measurement is immutable."""
-    measurement = VoltageMeasurement(
+    measurement = AefiVoltageMeasurement(
         voltage_x_in_phase=1.0,
         voltage_x_quadrature=0.0,
         voltage_y_in_phase=0.0,
@@ -38,7 +38,7 @@ def test_voltage_measurement_immutable():
 def test_voltage_measurement_rejects_nan():
     """Test that NaN values are rejected."""
     with pytest.raises(ValueError, match="must be finite"):
-        VoltageMeasurement(
+        AefiVoltageMeasurement(
             voltage_x_in_phase=float('nan'),
             voltage_x_quadrature=0.0,
             voltage_y_in_phase=0.0,
@@ -51,7 +51,7 @@ def test_voltage_measurement_rejects_nan():
 def test_voltage_measurement_rejects_inf():
     """Test that infinite values are rejected."""
     with pytest.raises(ValueError, match="must be finite"):
-        VoltageMeasurement(
+        AefiVoltageMeasurement(
             voltage_x_in_phase=float('inf'),
             voltage_x_quadrature=0.0,
             voltage_y_in_phase=0.0,
@@ -63,7 +63,7 @@ def test_voltage_measurement_rejects_inf():
 
 def test_voltage_measurement_accepts_zero():
     """Test that zero values are accepted."""
-    measurement = VoltageMeasurement(
+    measurement = AefiVoltageMeasurement(
         voltage_x_in_phase=0.0,
         voltage_x_quadrature=0.0,
         voltage_y_in_phase=0.0,
@@ -77,7 +77,7 @@ def test_voltage_measurement_accepts_zero():
 
 def test_voltage_measurement_accepts_negative():
     """Test that negative values are accepted."""
-    measurement = VoltageMeasurement(
+    measurement = AefiVoltageMeasurement(
         voltage_x_in_phase=-1.5,
         voltage_x_quadrature=-0.3,
         voltage_y_in_phase=-2.1,

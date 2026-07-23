@@ -1,11 +1,11 @@
-import threading
+﻿import threading
 import unittest
 import random
 import os
 import matplotlib.pyplot as plt
 from datetime import datetime
 
-from domain.shared_kernel.value_objects.acquisition.voltage_measurement import VoltageMeasurement
+from domain.shared_kernel.value_objects.acquisition.aefi_voltage_measurement import AefiVoltageMeasurement
 from application.services.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
 from application.services.scan_application_service.scan_application_service import ScanApplicationService
 from application.services.scan_application_service.dtos.scan_dtos import Scan2DConfigDTO
@@ -23,12 +23,12 @@ class DriftingAcquisitionPort(IAcquisitionPort):
         self.sample_count = 0
         self.random = random.Random(42)
 
-    def acquire_sample(self) -> VoltageMeasurement:
+    def acquire_sample(self) -> AefiVoltageMeasurement:
         drift_value = self.sample_count * self.drift_per_sample
         self.sample_count += 1
         measured_value = drift_value + self.random.gauss(0, 0.01)
 
-        return VoltageMeasurement(
+        return AefiVoltageMeasurement(
             voltage_x_in_phase=measured_value,
             voltage_x_quadrature=0.0,
             voltage_y_in_phase=0.0,

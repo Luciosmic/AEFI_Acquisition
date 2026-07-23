@@ -1,4 +1,4 @@
-# scan_point_acquired — Intention
+﻿# scan_point_acquired — Intention
 
 ## Rationale
 
@@ -9,7 +9,7 @@ Modéliser l'acquisition d'un point de scan comme un fait immuable passé, avec 
 - `scan_id` : identifiant du scan.
 - `point_index` : index du point acquis.
 - `position` : `Position2D` du point.
-- `measurement` : `VoltageMeasurement` complète — évite un second accès à l'agrégat depuis la UI.
+- `measurement` : `AefiVoltageMeasurement` complète — évite un second accès à l'agrégat depuis la UI.
 
 ## Design
 

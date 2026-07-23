@@ -1,4 +1,4 @@
-"""
+﻿"""
 Scan Application Service
 
 Responsibility:
@@ -14,7 +14,8 @@ Rationale:
 - Infrastructure Layer provides task execution and motion synchronization primitives.
 """
 
-from typing import Optional, Callable, List
+from dataclasses import dataclass
+from typing import Any, Optional, Callable, List
 import logging
 import queue
 import time
@@ -30,7 +31,7 @@ from domain.step_scan.value_objects.scan_pattern.scan_pattern import ScanPattern
 from domain.step_scan.value_objects.scan_axis.scan_axis import ScanAxis
 from domain.shared_kernel.value_objects.measurement_uncertainty.measurement_uncertainty import MeasurementUncertainty
 from domain.step_scan.value_objects.scan_status.scan_status import ScanStatus
-from domain.shared_kernel.value_objects.acquisition.voltage_measurement import VoltageMeasurement
+from domain.shared_kernel.value_objects.acquisition.aefi_voltage_measurement import AefiVoltageMeasurement
 from domain.step_scan.value_objects.scan_trajectory.scan_trajectory import ScanTrajectory
 
 # Ports
@@ -47,7 +48,6 @@ from application.services.continuous_acquisition_service.dtos.continuous_acquisi
 from application.services.electric_field_probe_service.i_api_electric_field_probe_service import IApiElectricFieldProbeService
 from application.services.electric_field_probe_service.dtos.electric_field_probe_dtos import ElectricFieldProbeAcquisitionConfig
 from domain.shared_kernel.events.continuous_acquisition_sample_acquired.continuous_acquisition_sample_acquired import ContinuousAcquisitionSampleAcquired
-from domain.electric_field_probe.events.field_sample_acquired.field_sample_acquired import FieldSampleAcquired
 
 # Error union (cross-layer translation)
 from .errors.motion_sync_error import (
@@ -84,6 +84,66 @@ from domain.shared_kernel.events.domain_event import DomainEvent
 from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
 
 
+@dataclass
+class AuxiliaryProbeChannel:
+    """
+    One auxiliary (non-primary) sample stream feeding the scan loop — e.g.
+    the Narda EF probe, or any future secondary probe.
+
+    Distinct from the primary AEFI/ADC channel (hardcoded in the loop):
+    a primary result feeds scan.add_point_result() directly, while an
+    auxiliary probe publishes its own per-point domain event via
+    publish_point_result. All registered channels are blocking — conservative
+    default, matching the original Narda-only invariant: if a channel fails
+    to collect averaging_per_position samples for a point, the whole scan
+    fails rather than publish an incomplete point. Making a given probe
+    optional instead of blocking is a per-probe policy decision left for
+    later, not something this registry decides on its own.
+
+    service/acquisition_config are duck-typed on purpose: any service
+    exposing start_acquisition(config)/stop_acquisition()/is_acquisition_running()
+    fits (IApiContinuousAcquisitionService and IApiElectricFieldProbeService
+    already share that shape).
+    """
+
+    name: str
+    event_topic: str
+    service: Any
+    acquisition_config: Any
+    is_ready: Callable[[], bool]
+    publish_point_result: Callable[[Any, int, Any, List], None]
+
+
+def make_electric_field_probe_channel(
+    probe_port: IElectricFieldProbePort,
+    probe_service: IApiElectricFieldProbeService,
+    event_bus: IDomainEventBus,
+    sample_rate_hz: float,
+) -> AuxiliaryProbeChannel:
+    """Build the Narda EF probe's auxiliary channel registration."""
+
+    def _publish(scan: StepScan, point_index: int, position, samples: List) -> None:
+        field_measurement = FieldMeasurementStatisticsService.calculate_statistics(samples)
+        event_bus.publish(
+            "electricfieldscanpointacquired",
+            ElectricFieldScanPointAcquired(
+                scan_id=scan.id,
+                point_index=point_index,
+                position=position,
+                field_measurement=field_measurement,
+            ),
+        )
+
+    return AuxiliaryProbeChannel(
+        name="Narda probe",
+        event_topic="fieldsampleacquired",
+        service=probe_service,
+        acquisition_config=ElectricFieldProbeAcquisitionConfig(sample_rate_hz=sample_rate_hz),
+        is_ready=probe_port.is_ready,
+        publish_point_result=_publish,
+    )
+
+
 class ScanApplicationService:
     """
     Application Service for Scan Operations.
@@ -113,8 +173,7 @@ class ScanApplicationService:
         event_bus: IDomainEventBus,
         task_runner: IAsyncTaskRunner,
         motion_sync: IMotionSynchronizer,
-        field_probe_port: Optional[IElectricFieldProbePort] = None,
-        electric_field_probe_service: Optional[IApiElectricFieldProbeService] = None,
+        auxiliary_probes: Optional[List[AuxiliaryProbeChannel]] = None,
         output_port: Optional[IScanOutputPort] = None,
     ):
         self._motion_port = motion_port
@@ -122,11 +181,7 @@ class ScanApplicationService:
         self._event_bus = event_bus
         self._task_runner = task_runner
         self._motion_sync = motion_sync
-        # Kept only for the cheap, local is_ready() gate — never pulled for
-        # samples anymore (that goes through electric_field_probe_service's
-        # stream, see _execute_scan_loop).
-        self._field_probe_port = field_probe_port
-        self._electric_field_probe_service = electric_field_probe_service
+        self._auxiliary_probes: List[AuxiliaryProbeChannel] = list(auxiliary_probes or [])
         self._output_port = output_port
 
         self._current_scan: Optional[StepScan] = None
@@ -241,30 +296,19 @@ class ScanApplicationService:
         go through the StepScan aggregate; pause/cancel signals arrive via the
         aggregate's status field (set by pause_scan/cancel_scan on the service).
 
-        Acquisition is subscription-based, not pulled: the ADC and (optionally)
-        the EF probe are driven by their own continuous-acquisition worker
-        (started here if not already running elsewhere, e.g. a live-view
-        panel), and this loop just collects samples off the event bus per
-        point. This keeps a single owner of each driver at all times.
+        Acquisition is subscription-based, not pulled: the ADC and every
+        registered auxiliary probe (self._auxiliary_probes) are driven by
+        their own continuous-acquisition worker (started here if not already
+        running elsewhere, e.g. a live-view panel), and this loop just
+        collects samples off the event bus per point. This keeps a single
+        owner of each driver at all times.
         """
-        use_field = (
-            self._field_probe_port is not None
-            and self._electric_field_probe_service is not None
-            and self._field_probe_port.is_ready()
-        )
-
         adc_queue: "queue.Queue" = queue.Queue()
-        field_queue: "queue.Queue" = queue.Queue()
 
         def _on_adc_sample(event: ContinuousAcquisitionSampleAcquired) -> None:
             adc_queue.put(event.sample)
 
-        def _on_field_sample(event: FieldSampleAcquired) -> None:
-            field_queue.put(event.sample)
-
         self._event_bus.subscribe("continuousacquisitionsampleacquired", _on_adc_sample)
-        if use_field:
-            self._event_bus.subscribe("fieldsampleacquired", _on_field_sample)
 
         # Only start what isn't already running, and only stop what we
         # started — a live-view session running before the scan keeps
@@ -275,15 +319,31 @@ class ScanApplicationService:
                 ContinuousAcquisitionConfig(sample_rate_hz=None)
             )
 
-        field_started_by_scan = False
-        if use_field:
-            field_started_by_scan = not self._electric_field_probe_service.is_acquisition_running()
-            if field_started_by_scan:
-                self._electric_field_probe_service.start_acquisition(
-                    ElectricFieldProbeAcquisitionConfig(
-                        sample_rate_hz=self.NARDA_CONTINUOUS_SAMPLE_RATE_HZ
-                    )
-                )
+        # Active auxiliary channels: (channel, its queue). A channel that
+        # isn't ready (probe not connected) is simply skipped for this scan.
+        active_channels: List[tuple] = []
+        channel_handlers: List[tuple] = []
+        channels_started_by_scan: List[AuxiliaryProbeChannel] = []
+
+        for channel in self._auxiliary_probes:
+            if not channel.is_ready():
+                continue
+
+            channel_queue: "queue.Queue" = queue.Queue()
+
+            def _make_handler(q: "queue.Queue") -> Callable:
+                def _handler(event: Any) -> None:
+                    q.put(event.sample)
+                return _handler
+
+            handler = _make_handler(channel_queue)
+            self._event_bus.subscribe(channel.event_topic, handler)
+            channel_handlers.append((channel.event_topic, handler))
+            active_channels.append((channel, channel_queue))
+
+            if not channel.service.is_acquisition_running():
+                channel.service.start_acquisition(channel.acquisition_config)
+                channels_started_by_scan.append(channel)
 
         try:
             for i, position in enumerate(trajectory):
@@ -349,37 +409,30 @@ class ScanApplicationService:
 
                 averaged_measurement = MeasurementStatisticsService.calculate_statistics(measurements)
 
-                # --- EF Probe (optional) ---
-                # Invariant: a point is not validated on partial field data —
-                # the whole scan fails rather than publish an incomplete point.
-                field_measurement = None
-                if use_field:
-                    _drain_queue(field_queue)
-                    field_measurements = self._collect_samples(
-                        field_queue, config.averaging_per_position, scan
+                # --- Auxiliary probes ---
+                # Invariant: a point is not validated on partial data from any
+                # registered channel — the whole scan fails rather than
+                # publish an incomplete point. All channels are blocking
+                # (conservative default); making a probe optional instead is
+                # a per-probe policy decision, not made here.
+                for channel, channel_queue in active_channels:
+                    _drain_queue(channel_queue)
+                    channel_samples = self._collect_samples(
+                        channel_queue, config.averaging_per_position, scan
                     )
-                    if field_measurements is None:
+                    if channel_samples is None:
                         return
-                    if len(field_measurements) < config.averaging_per_position:
+                    if len(channel_samples) < config.averaging_per_position:
                         scan.fail(
-                            f"Narda probe: point {i} timed out after "
+                            f"{channel.name}: point {i} timed out after "
                             f"{self.POINT_ACQUISITION_TIMEOUT_S}s "
-                            f"({len(field_measurements)}/{config.averaging_per_position} samples) "
+                            f"({len(channel_samples)}/{config.averaging_per_position} samples) "
                             "— aborting scan rather than validating an incomplete point"
                         )
                         self._publish_events(scan.domain_events)
                         return
 
-                    field_measurement = FieldMeasurementStatisticsService.calculate_statistics(
-                        field_measurements
-                    )
-                    ef_event = ElectricFieldScanPointAcquired(
-                        scan_id=scan.id,
-                        point_index=i,
-                        position=position,
-                        field_measurement=field_measurement,
-                    )
-                    self._event_bus.publish("electricfieldscanpointacquired", ef_event)
+                    channel.publish_point_result(scan, i, position, channel_samples)
 
                 # --- Add result to aggregate ---
                 point_result = ScanPointResult(
@@ -402,12 +455,12 @@ class ScanApplicationService:
 
         finally:
             self._event_bus.unsubscribe("continuousacquisitionsampleacquired", _on_adc_sample)
-            if use_field:
-                self._event_bus.unsubscribe("fieldsampleacquired", _on_field_sample)
+            for topic, handler in channel_handlers:
+                self._event_bus.unsubscribe(topic, handler)
             if adc_started_by_scan:
                 self._continuous_acquisition_service.stop_acquisition()
-            if field_started_by_scan:
-                self._electric_field_probe_service.stop_acquisition()
+            for channel in channels_started_by_scan:
+                channel.service.stop_acquisition()
 
     def _collect_samples(
         self, sample_queue: "queue.Queue", count: int, scan: StepScan

@@ -1,4 +1,4 @@
-"""
+﻿"""
 Mock: Excitation-Aware Acquisition Port
 
 Responsibility:
@@ -33,7 +33,7 @@ from scipy.spatial.transform import Rotation as R
 
 from application.services.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
 from application.services.excitation_configuration_service.ports.i_excitation_port import IExcitationPort
-from domain.shared_kernel.value_objects.acquisition.voltage_measurement import VoltageMeasurement
+from domain.shared_kernel.value_objects.acquisition.aefi_voltage_measurement import AefiVoltageMeasurement
 from domain.shared_kernel.value_objects.excitation.excitation_parameters import ExcitationParameters
 from domain.shared_kernel.value_objects.excitation.excitation_mode import ExcitationMode
 
@@ -130,12 +130,12 @@ class ExcitationAwareAcquisitionPort(IAcquisitionPort):
         # Physical Sensor Orientation (Identity by default)
         self._sensor_rotation = R.identity()
     
-    def acquire_sample(self) -> VoltageMeasurement:
+    def acquire_sample(self) -> AefiVoltageMeasurement:
         """
         Acquire a sample and apply excitation-dependent offset.
         
         Returns:
-            VoltageMeasurement with offset applied to in-phase components
+            AefiVoltageMeasurement with offset applied to in-phase components
         """
         # Get base measurement
         base_measurement = self._base_port.acquire_sample()
@@ -320,9 +320,9 @@ class ExcitationAwareAcquisitionPort(IAcquisitionPort):
     
     def _apply_offset_to_measurement(
         self, 
-        measurement: VoltageMeasurement, 
+        measurement: AefiVoltageMeasurement, 
         offset: OffsetVector3D
-    ) -> VoltageMeasurement:
+    ) -> AefiVoltageMeasurement:
         """
         Apply offset vector to voltage measurement.
         
@@ -334,7 +334,7 @@ class ExcitationAwareAcquisitionPort(IAcquisitionPort):
             offset: 3D offset vector to apply (in Source Frame)
             
         Returns:
-            New VoltageMeasurement with offset applied
+            New AefiVoltageMeasurement with offset applied
         """
         # Transform offset vector from Source Frame to Sensor Frame
         # v_source (Ideal Signal) -> v_sensor (Measured Signal)
@@ -368,7 +368,7 @@ class ExcitationAwareAcquisitionPort(IAcquisitionPort):
         new_z_q = measurement.voltage_z_quadrature + quad_offset.z
         
         # Create new measurement (immutable, so we create a new one)
-        return VoltageMeasurement(
+        return AefiVoltageMeasurement(
             voltage_x_in_phase=new_x_i,
             voltage_x_quadrature=new_x_q,
             voltage_y_in_phase=new_y_i,

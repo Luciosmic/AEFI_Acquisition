@@ -1,8 +1,8 @@
-from dataclasses import dataclass
+﻿from dataclasses import dataclass
 from uuid import UUID
 
 from domain.shared_kernel.events.domain_event import DomainEvent
-from domain.shared_kernel.value_objects.acquisition.voltage_measurement import VoltageMeasurement
+from domain.shared_kernel.value_objects.acquisition.aefi_voltage_measurement import AefiVoltageMeasurement
 
 
 @dataclass(frozen=True)
@@ -13,4 +13,4 @@ class ContinuousAcquisitionSampleAcquired(DomainEvent):
 
     acquisition_id: UUID
     sample_index: int
-    sample: VoltageMeasurement
+    sample: AefiVoltageMeasurement

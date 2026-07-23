@@ -1,10 +1,10 @@
-# field_measurement — Intention
+﻿# field_measurement — Intention
 
 ## Rationale
 
 Représenter une mesure de champ électrique en V/m, pour un nombre d'axes
 variable (mono/bi/tri-axial), sans porter aucune notion d'in-phase/quadrature
-— ce concept est propre au contexte `aefi_device` (`VoltageMeasurement`), pas
+— ce concept est propre au contexte `aefi_device` (`AefiVoltageMeasurement`), pas
 à une sonde de champ électrique générique.
 
 ## Responsibility

@@ -1,4 +1,4 @@
-# Excitation-Aware Acquisition Mock Service
+﻿# Excitation-Aware Acquisition Mock Service
 
 ## Overview
 
@@ -45,7 +45,7 @@ The `ExcitationAwareAcquisitionPort` is a mock service that seamlessly integrate
 │         └─────────────────────────────┘                      │
 │                        │                                     │
 │         ┌──────────────▼──────────────┐                      │
-│         │  VoltageMeasurement         │                      │
+│         │  AefiVoltageMeasurement         │                      │
 │         │  (with offset applied)       │                      │
 │         └─────────────────────────────┘                      │
 └─────────────────────────────────────────────────────────────┘
@@ -316,7 +316,7 @@ These functions prepare for future enhancements where:
 
 - `IAcquisitionPort`: Base acquisition port interface
 - `IExcitationPort`: Excitation port interface
-- `VoltageMeasurement`: Domain value object for measurements
+- `AefiVoltageMeasurement`: Domain value object for measurements
 - `ExcitationParameters`: Domain value object for excitation configuration
 
 

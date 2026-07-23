@@ -1,13 +1,19 @@
 """
-Domain: Acquisition - Voltage Measurement
+Domain: Acquisition - AEFI Voltage Measurement
 
 Responsibility:
-    Represents a single voltage measurement from the electric field sensor.
+    Represents a single AEFI measurement: the phase-sensitive (in-phase /
+    quadrature) voltage reading produced by the AEFI's own synchronous
+    detection chain (ADS131A04, phase-referenced to the AD9106 excitation).
     Uses ubiquitous language (domain terminology) instead of hardware channels.
 
 Rationale:
     Encapsulates the 6 voltage components (X, Y, Z in-phase and quadrature)
-    measured by the ADC. Immutable value object with timestamp.
+    measured by the ADC. Immutable value object with timestamp. Named
+    explicitly for AEFI (rather than a generic "voltage measurement") because
+    it is not just any voltage reading — it's the AEFI's own synchronous
+    detection, distinct from the electric field probe's amplitude-only
+    FieldMeasurement (no phase reference).
 
 Design:
     - Frozen dataclass (immutable)
@@ -19,13 +25,15 @@ from datetime import datetime
 from typing import Optional
 
 @dataclass(frozen=True)
-class VoltageMeasurement:
-    """Voltage measurement from electric field sensor.
-    
-    Represents the 6 components of the electric field measurement:
+class AefiVoltageMeasurement:
+    """AEFI voltage measurement: phase-sensitive reading from the AEFI's
+    synchronous detection chain.
+
+    Represents the 6 components of the AEFI measurement:
     - X, Y, Z directions
-    - In-phase and quadrature components for each direction
-    
+    - In-phase and quadrature components for each direction, relative to
+      the AD9106 excitation phase reference
+
     Mapping to ADC channels (done in infrastructure):
     - voltage_x_in_phase = ADC1_Ch1
     - voltage_x_quadrature = ADC1_Ch2

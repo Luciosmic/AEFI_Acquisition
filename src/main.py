@@ -14,7 +14,10 @@ from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtGui import QIcon
 
 # --- Domain & Application Services ---
-from application.services.scan_application_service.scan_application_service import ScanApplicationService
+from application.services.scan_application_service.scan_application_service import (
+    ScanApplicationService,
+    make_electric_field_probe_channel,
+)
 from application.services.excitation_configuration_service.excitation_configuration_service import ExcitationConfigurationService
 from application.services.continuous_acquisition_service.continuous_acquisition_service import ContinuousAcquisitionService
 from application.services.motion_control_service.motion_control_service import MotionControlService
@@ -247,13 +250,20 @@ def main():
         event_bus=event_bus,
     )
 
-    # Scan Application Service
+    # Scan Application Service — auxiliary probes (currently: Narda EF probe)
+    # are registered as blocking channels; see AuxiliaryProbeChannel for what
+    # "blocking" means and make_electric_field_probe_channel for the Narda wiring.
+    narda_channel = make_electric_field_probe_channel(
+        probe_port=probe_port,
+        probe_service=electric_field_probe_service,
+        event_bus=event_bus,
+        sample_rate_hz=ScanApplicationService.NARDA_CONTINUOUS_SAMPLE_RATE_HZ,
+    )
     scan_service = ScanApplicationService(
         motion_port, continuous_service, event_bus,
         task_runner=task_runner,
         motion_sync=motion_sync,
-        field_probe_port=probe_port,
-        electric_field_probe_service=electric_field_probe_service,
+        auxiliary_probes=[narda_channel],
     )
 
     # Scan Export Service

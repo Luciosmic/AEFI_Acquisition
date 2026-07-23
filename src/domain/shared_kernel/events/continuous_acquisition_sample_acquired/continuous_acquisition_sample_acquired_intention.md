@@ -1,4 +1,4 @@
-# continuous_acquisition_sample_acquired — Intention
+﻿# continuous_acquisition_sample_acquired — Intention
 
 ## Rationale
 
@@ -7,7 +7,7 @@ Modéliser la réception d'un échantillon d'acquisition continue (streaming tem
 ## Responsibility
 
 - Signale qu'un nouvel échantillon de tension a été acquis dans le cadre d'une acquisition continue.
-- Porte l'identifiant de l'acquisition, l'index de l'échantillon et la mesure (`VoltageMeasurement`).
+- Porte l'identifiant de l'acquisition, l'index de l'échantillon et la mesure (`AefiVoltageMeasurement`).
 
 ## Design
 

@@ -1,4 +1,4 @@
-from typing import List
+﻿from typing import List
 from domain.step_scan.repositories.i_acquisition_data_repository import IAcquisitionDataRepository
 from domain.step_scan.events.scan_point_acquired.scan_point_acquired import ScanPointAcquired
 from domain.shared_kernel.events.domain_event import DomainEvent
@@ -29,7 +29,7 @@ class AcquisitionDataHandler:
             # Assuming event.measurement corresponds to AcquisitionSample structure
             # or we map it here.
             
-            # The event has 'measurement' which is 'VoltageMeasurement' (aliased as AcquisitionSample)
+            # The event has 'measurement' which is 'AefiVoltageMeasurement' (aliased as AcquisitionSample)
             # The event also needs a scan_id. 
             # Currently ScanPointAcquired might not have scan_id if it's just point data.
             # We might need to enrich the event or context.

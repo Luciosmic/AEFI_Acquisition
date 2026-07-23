@@ -1,4 +1,4 @@
-"""
+﻿"""
 Unit tests for ExcitationAwareAcquisitionPort.
 
 Tests the integration between acquisition and excitation systems,
@@ -9,7 +9,7 @@ import unittest
 from datetime import datetime
 from unittest.mock import Mock
 
-from domain.shared_kernel.value_objects.acquisition.voltage_measurement import VoltageMeasurement
+from domain.shared_kernel.value_objects.acquisition.aefi_voltage_measurement import AefiVoltageMeasurement
 from domain.shared_kernel.value_objects.excitation.excitation_parameters import ExcitationParameters
 from domain.shared_kernel.value_objects.excitation.excitation_mode import ExcitationMode
 from domain.shared_kernel.value_objects.excitation.excitation_level import ExcitationLevel
@@ -90,7 +90,7 @@ class TestExcitationAwareAcquisitionPort(unittest.TestCase):
         measurement = self.aware_port.acquire_sample()
         
         # Should return base measurement (with noise)
-        self.assertIsInstance(measurement, VoltageMeasurement)
+        self.assertIsInstance(measurement, AefiVoltageMeasurement)
         self.assertIsNotNone(measurement.voltage_x_in_phase)
     
     def test_acquire_with_x_dir_excitation(self):
@@ -264,7 +264,7 @@ class TestExcitationAwareAcquisitionPort(unittest.TestCase):
         # Separation vector should be added to offset
         # Base offset (1,0,0) + separation (0.5,0.5,0) = (1.5,0.5,0)
         # We can't easily test exact values due to noise, but we verify it runs
-        self.assertIsInstance(measurement, VoltageMeasurement)
+        self.assertIsInstance(measurement, AefiVoltageMeasurement)
     
     def test_equalization_factor(self):
         """Test equalization factor functionality."""
@@ -309,7 +309,7 @@ class TestExcitationAwareAcquisitionPort(unittest.TestCase):
         
         # Get measurement
         measurement = aware_port_no_exc.acquire_sample()
-        self.assertIsInstance(measurement, VoltageMeasurement)
+        self.assertIsInstance(measurement, AefiVoltageMeasurement)
     
     def test_level_scaling(self):
         """Test that excitation level scales the offset."""

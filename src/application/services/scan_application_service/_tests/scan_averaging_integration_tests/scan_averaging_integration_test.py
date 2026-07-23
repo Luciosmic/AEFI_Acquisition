@@ -1,4 +1,4 @@
-import threading
+﻿import threading
 import unittest
 import random
 import math
@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from datetime import datetime
 
 from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
-from domain.shared_kernel.value_objects.acquisition.voltage_measurement import VoltageMeasurement
+from domain.shared_kernel.value_objects.acquisition.aefi_voltage_measurement import AefiVoltageMeasurement
 from application.services.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
 from application.services.scan_application_service.scan_application_service import ScanApplicationService
 from application.services.scan_application_service.dtos.scan_dtos import Scan2DConfigDTO
@@ -25,7 +25,7 @@ class NoisyAcquisitionPort(IAcquisitionPort):
         self.noise_std_dev = noise_std_dev
         self.random = random.Random(42)
 
-    def acquire_sample(self) -> VoltageMeasurement:
+    def acquire_sample(self) -> AefiVoltageMeasurement:
         pos = self.motion_port.get_current_position()
 
         # Signal Function: f(x, y) = x + y
@@ -37,7 +37,7 @@ class NoisyAcquisitionPort(IAcquisitionPort):
         noise = self.random.gauss(0, current_sigma)
         measured_value = true_signal + noise
 
-        return VoltageMeasurement(
+        return AefiVoltageMeasurement(
             voltage_x_in_phase=measured_value,
             voltage_x_quadrature=0.0,
             voltage_y_in_phase=0.0,

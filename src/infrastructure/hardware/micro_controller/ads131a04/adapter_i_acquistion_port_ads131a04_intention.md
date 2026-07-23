@@ -1,4 +1,4 @@
-# adapter_i_acquisition_port_ads131a04 — Intention
+﻿# adapter_i_acquisition_port_ads131a04 — Intention
 
 ## Rationale
 
@@ -6,7 +6,7 @@ Adaptateur Real implémentant `IAcquisitionPort` pour l'ADC ADS131A04 via le MCU
 
 ## Responsibility
 
-- Implémenter `acquire_sample() → VoltageMeasurement` : déclencher une acquisition ADS131A04, lire les 6 canaux (X/Y/Z × In-Phase/Quadrature), convertir en volts, retourner.
+- Implémenter `acquire_sample() → AefiVoltageMeasurement` : déclencher une acquisition ADS131A04, lire les 6 canaux (X/Y/Z × In-Phase/Quadrature), convertir en volts, retourner.
 - Gérer les erreurs de communication MCU et les convertir en exceptions Python claires.
 
 ## Design

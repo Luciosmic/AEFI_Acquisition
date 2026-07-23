@@ -3,7 +3,10 @@ import unittest
 from datetime import datetime
 from typing import List
 from uuid import uuid4
-from application.services.scan_application_service.scan_application_service import ScanApplicationService
+from application.services.scan_application_service.scan_application_service import (
+    ScanApplicationService,
+    make_electric_field_probe_channel,
+)
 from application.services.scan_application_service.dtos.scan_dtos import Scan2DConfigDTO
 from application.services.continuous_acquisition_service.continuous_acquisition_service import ContinuousAcquisitionService
 from application.services.continuous_acquisition_service.dtos.continuous_acquisition_dtos import ContinuousAcquisitionConfig
@@ -213,12 +216,17 @@ class TestScanApplicationService(DiagramFriendlyTest):
         field_service = ElectricFieldProbeService(
             task_runner=ThreadPoolTaskRunner(), probe_port=probe, event_bus=self.event_bus
         )
+        narda_channel = make_electric_field_probe_channel(
+            probe_port=probe,
+            probe_service=field_service,
+            event_bus=self.event_bus,
+            sample_rate_hz=ScanApplicationService.NARDA_CONTINUOUS_SAMPLE_RATE_HZ,
+        )
         service = ScanApplicationService(
             self.motion_port, self.continuous_acquisition_service, self.event_bus,
             task_runner=ThreadPoolTaskRunner(),
             motion_sync=EventBusMotionSynchronizer(self.event_bus),
-            field_probe_port=probe,
-            electric_field_probe_service=field_service,
+            auxiliary_probes=[narda_channel],
         )
         self.event_bus.subscribe('scanpointacquired', self.on_event)
         self.event_bus.subscribe('scancompleted', self.on_event)
@@ -248,12 +256,17 @@ class TestScanApplicationService(DiagramFriendlyTest):
         field_service = ElectricFieldProbeService(
             task_runner=ThreadPoolTaskRunner(), probe_port=probe, event_bus=self.event_bus
         )
+        narda_channel = make_electric_field_probe_channel(
+            probe_port=probe,
+            probe_service=field_service,
+            event_bus=self.event_bus,
+            sample_rate_hz=ScanApplicationService.NARDA_CONTINUOUS_SAMPLE_RATE_HZ,
+        )
         service = ScanApplicationService(
             self.motion_port, self.continuous_acquisition_service, self.event_bus,
             task_runner=ThreadPoolTaskRunner(),
             motion_sync=EventBusMotionSynchronizer(self.event_bus),
-            field_probe_port=probe,
-            electric_field_probe_service=field_service,
+            auxiliary_probes=[narda_channel],
         )
         # Speed up the test: no point in waiting the real 30s budget to see
         # the collection time out.

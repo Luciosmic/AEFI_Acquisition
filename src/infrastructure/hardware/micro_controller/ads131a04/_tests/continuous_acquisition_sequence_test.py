@@ -1,4 +1,4 @@
-import unittest
+﻿import unittest
 import time
 import sys
 from pathlib import Path
@@ -14,13 +14,13 @@ from infrastructure.events.in_memory_event_bus import InMemoryEventBus
 from application.services.continuous_acquisition_service.continuous_acquisition_service import ContinuousAcquisitionService
 from application.services.continuous_acquisition_service.ports.i_continuous_acquisition_executor import ContinuousAcquisitionConfig
 from application.services.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
-from domain.shared_kernel.value_objects.acquisition.voltage_measurement import VoltageMeasurement
+from domain.shared_kernel.value_objects.acquisition.aefi_voltage_measurement import AefiVoltageMeasurement
 from datetime import datetime
 import random
 
 class RandomNoiseAcquisitionPort(IAcquisitionPort):
-    def acquire_sample(self) -> VoltageMeasurement:
-        return VoltageMeasurement(
+    def acquire_sample(self) -> AefiVoltageMeasurement:
+        return AefiVoltageMeasurement(
             voltage_x_in_phase=random.uniform(-1, 1),
             voltage_x_quadrature=random.uniform(-1, 1),
             voltage_y_in_phase=random.uniform(-1, 1),

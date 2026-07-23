@@ -1,4 +1,4 @@
-"""
+﻿"""
 Acquisition Port Interface
 
 Responsibility:
@@ -17,7 +17,7 @@ Design:
 """
 
 from abc import ABC, abstractmethod
-from domain.shared_kernel.value_objects.acquisition.voltage_measurement import VoltageMeasurement
+from domain.shared_kernel.value_objects.acquisition.aefi_voltage_measurement import AefiVoltageMeasurement
 
 
 class IAcquisitionPort(ABC):
@@ -31,7 +31,7 @@ class IAcquisitionPort(ABC):
     """
     
     @abstractmethod
-    def acquire_sample(self) -> VoltageMeasurement:
+    def acquire_sample(self) -> AefiVoltageMeasurement:
         """
         Acquire a single voltage measurement sample.
         

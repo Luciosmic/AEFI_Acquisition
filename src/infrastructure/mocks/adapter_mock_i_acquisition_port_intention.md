@@ -1,4 +1,4 @@
-# adapter_mock_i_acquisition_port — Intention
+﻿# adapter_mock_i_acquisition_port — Intention
 
 ## Rationale
 
@@ -6,7 +6,7 @@ Mock de `IAcquisitionPort` pour les tests de scan sans le hardware ADS131A04. Re
 
 ## Responsibility
 
-- Implémenter `acquire_sample() → VoltageMeasurement` avec des données synthétiques.
+- Implémenter `acquire_sample() → AefiVoltageMeasurement` avec des données synthétiques.
 - Permettre la configuration des valeurs retournées (constantes, bruit gaussien, pattern).
 
 ## Design

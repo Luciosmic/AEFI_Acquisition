@@ -1,8 +1,8 @@
-# acquisition_sample — Intention
+﻿# acquisition_sample — Intention
 
 ## Rationale
 
-Value object étendant `VoltageMeasurement` avec un timestamp de capture. Utilisé pour la persistence temporelle dans `IAcquisitionDataRepository` (HDF5) où le temps d'acquisition est une métadonnée essentielle pour la reproductibilité expérimentale.
+Value object étendant `AefiVoltageMeasurement` avec un timestamp de capture. Utilisé pour la persistence temporelle dans `IAcquisitionDataRepository` (HDF5) où le temps d'acquisition est une métadonnée essentielle pour la reproductibilité expérimentale.
 
 ## Responsibility
 
@@ -11,5 +11,5 @@ Value object étendant `VoltageMeasurement` avec un timestamp de capture. Utilis
 
 ## Design
 
-- **`@dataclass(frozen=True)`** avec `timestamp` comme champ supplémentaire vs `VoltageMeasurement`.
+- **`@dataclass(frozen=True)`** avec `timestamp` comme champ supplémentaire vs `AefiVoltageMeasurement`.
 - Le timestamp est stocké comme POSIX float dans HDF5 pour l'efficacité, mais exposé comme `datetime` dans le domain.
