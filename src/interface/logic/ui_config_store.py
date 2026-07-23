@@ -26,6 +26,7 @@ class UIConfigStore:
     SCAN_CONFIG_PATH = os.path.join(".aefi_acquisition", "configs", "scan_default_config.json")
     EXPORT_CONFIG_PATH = os.path.join(".aefi_acquisition", "configs", "export_default_config.json")
     EXPORT_CONFIG_TEMPLATE_PATH = os.path.join("config_templates", "export_default_config.json")
+    MOTION_CONFIG_PATH = os.path.join(".aefi_acquisition", "configs", "motion_last_config.json")
 
     def load_scan_config(self) -> Dict[str, Any]:
         """Return the `scan_config` section, or {} if missing/invalid."""
@@ -48,6 +49,19 @@ class UIConfigStore:
         os.makedirs(os.path.dirname(self.EXPORT_CONFIG_PATH), exist_ok=True)
         with open(self.EXPORT_CONFIG_PATH, "w", encoding="utf-8") as f:
             json.dump(export_config, f, indent=2, ensure_ascii=False)
+
+    def load_motion_config(self) -> Dict[str, Any]:
+        """Return the last-saved motion UI preferences (e.g. speed_mode), or {} if missing/invalid."""
+        try:
+            with open(self.MOTION_CONFIG_PATH, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except (OSError, json.JSONDecodeError):
+            return {}
+
+    def save_motion_config(self, motion_config: Dict[str, Any]) -> None:
+        os.makedirs(os.path.dirname(self.MOTION_CONFIG_PATH), exist_ok=True)
+        with open(self.MOTION_CONFIG_PATH, "w", encoding="utf-8") as f:
+            json.dump(motion_config, f, indent=2, ensure_ascii=False)
 
     def _init_export_config_from_template(self) -> None:
         if os.path.exists(self.EXPORT_CONFIG_PATH) or not os.path.exists(self.EXPORT_CONFIG_TEMPLATE_PATH):

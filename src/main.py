@@ -368,7 +368,8 @@ def main():
     motion_panel.home_requested.connect(motion_presenter.on_home_requested)
     motion_panel.stop_requested.connect(motion_presenter.on_stop_requested)
     motion_panel.estop_requested.connect(motion_presenter.on_estop_requested)
-    
+    motion_panel.speed_mode_changed.connect(motion_presenter.on_speed_mode_requested)
+
     motion_presenter.position_updated.connect(motion_panel.update_position)
     motion_presenter.status_updated.connect(motion_panel.update_status)
     motion_presenter.jog_enabled_changed.connect(motion_panel.set_jog_enabled)
@@ -376,6 +377,7 @@ def main():
     
     # Initialize presenter to fetch limits
     motion_presenter.initialize()
+    motion_presenter.on_speed_mode_requested(motion_panel.get_current_speed_mode())
     print("  [motion] wired")
     
     # Excitation Panel

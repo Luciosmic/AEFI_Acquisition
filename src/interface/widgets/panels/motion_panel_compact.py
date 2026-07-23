@@ -1,14 +1,18 @@
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QGroupBox, QDoubleSpinBox, QGridLayout
+    QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QGroupBox, QDoubleSpinBox, QGridLayout, QComboBox
 )
 from PySide6.QtCore import Qt, Signal
 from interface.widgets.motion.position_visualizer import PositionVisualizer
+from interface.logic.ui_config_store import UIConfigStore
 
 class MotionPanelCompact(QWidget):
     """
     Compact, square version of motion control panel.
     Optimized for smaller spaces while maintaining all essential controls.
     """
+    SPEED_MODES = ("slow", "medium", "fast")
+    DEFAULT_SPEED_MODE = "medium"
+
     # Signals to be connected to a Presenter
     jog_requested = Signal(float, float)  # dx, dy
     move_to_requested = Signal(str, float)  # axis ('x' or 'y'), target_position
@@ -17,11 +21,14 @@ class MotionPanelCompact(QWidget):
     home_requested = Signal(str)  # 'x', 'y', 'xy'
     stop_requested = Signal()
     estop_requested = Signal()
+    speed_mode_changed = Signal(str)  # 'slow', 'medium', 'fast'
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, config_store: UIConfigStore = None):
         super().__init__(parent)
+        self._config_store = config_store or UIConfigStore()
         self._build_ui()
         self._connect_signals()
+        self._load_speed_mode()
 
     def _build_ui(self):
         layout = QVBoxLayout(self)
@@ -140,7 +147,14 @@ class MotionPanelCompact(QWidget):
         self.spin_step.setMaximumWidth(50)
         main_grid.addWidget(self.spin_step, 2, 1)
         main_grid.addWidget(QLabel("mm"), 2, 2)
-        
+
+        # Speed mode (same row as jog step, on the right side)
+        main_grid.addWidget(QLabel("Speed:"), 2, 3)
+        self.combo_speed_mode = QComboBox()
+        self.combo_speed_mode.addItems([m.capitalize() for m in self.SPEED_MODES])
+        self.combo_speed_mode.setMaximumWidth(75)
+        main_grid.addWidget(self.combo_speed_mode, 2, 4)
+
         # Row 3-4: Stop Buttons (Left side, stacked)
         self.btn_stop = QPushButton("STOP")
         self.btn_stop.setStyleSheet("background-color: #FBC02D; color: black; font-weight: bold; font-size: 11px;")
@@ -251,9 +265,27 @@ class MotionPanelCompact(QWidget):
         self.btn_stop.clicked.connect(self.stop_requested.emit)
         self.btn_estop.clicked.connect(self.estop_requested.emit)
 
+        self.combo_speed_mode.currentTextChanged.connect(self._on_speed_mode_changed)
+
     def _on_jog(self, dx_sign, dy_sign):
         step = self.spin_step.value()
         self.jog_requested.emit(dx_sign * step, dy_sign * step)
+
+    def _load_speed_mode(self):
+        """Restore the last-selected speed mode, defaulting to medium."""
+        saved_mode = self._config_store.load_motion_config().get("speed_mode", self.DEFAULT_SPEED_MODE)
+        if saved_mode not in self.SPEED_MODES:
+            saved_mode = self.DEFAULT_SPEED_MODE
+        self.combo_speed_mode.setCurrentText(saved_mode.capitalize())
+
+    def _on_speed_mode_changed(self, text: str):
+        mode = text.lower()
+        self._config_store.save_motion_config({"speed_mode": mode})
+        self.speed_mode_changed.emit(mode)
+
+    def get_current_speed_mode(self) -> str:
+        """Current speed mode ('slow', 'medium', or 'fast')."""
+        return self.combo_speed_mode.currentText().lower()
 
     def set_jog_enabled(self, enabled: bool):
         """Enable/disable jog buttons based on motion state."""

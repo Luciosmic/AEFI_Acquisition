@@ -26,6 +26,7 @@ class MockMotionPort(IMotionPort):
         self.move_history: List[Position2D] = []
         self._current_pos = Position2D(0, 0)
         self.last_speed: float | None = None
+        self.last_speed_mode: str | None = None
         self._is_moving: bool = False
 
     def move_to(self, position: Position2D) -> str:
@@ -106,6 +107,10 @@ class MockMotionPort(IMotionPort):
     def set_speed(self, speed: float) -> None:
         self.last_speed = speed
         print(f"[MockMotionPort] set_speed: Speed set to {speed} cm/s")
+
+    def set_speed_mode(self, mode: str) -> None:
+        self.last_speed_mode = mode
+        print(f"[MockMotionPort] set_speed_mode: Speed mode set to {mode}")
 
     def stop(self) -> None:
         """Regular stop with deceleration."""
