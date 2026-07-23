@@ -345,6 +345,19 @@ class ScanApplicationService:
                 channel.service.start_acquisition(channel.acquisition_config)
                 channels_started_by_scan.append(channel)
 
+        def _release_streams() -> None:
+            # Called before every terminal event publication (as well as in
+            # `finally`, as a safety net — idempotent, safe to call twice):
+            # an observer reacting to scancompleted/scanfailed must never see
+            # a stream this scan owns still running.
+            self._event_bus.unsubscribe("aefivoltagesampleacquired", _on_adc_sample)
+            for topic, handler in channel_handlers:
+                self._event_bus.unsubscribe(topic, handler)
+            if adc_started_by_scan:
+                self._aefi_acquisition_service.stop_acquisition()
+            for channel in channels_started_by_scan:
+                channel.service.stop_acquisition()
+
         try:
             for i, position in enumerate(trajectory):
                 if scan.status == ScanStatus.CANCELLED:
@@ -370,6 +383,7 @@ class ScanApplicationService:
                     else:
                         reason = f"Motion stopped externally at point {i}: {error.reason}"  # type: ignore[union-attr]
                     scan.fail(reason)
+                    _release_streams()
                     self._publish_events(scan.domain_events)
                     return
 
@@ -404,6 +418,7 @@ class ScanApplicationService:
                         f"{self.POINT_ACQUISITION_TIMEOUT_S}s "
                         f"({len(measurements)}/{config.averaging_per_position} samples)"
                     )
+                    _release_streams()
                     self._publish_events(scan.domain_events)
                     return
 
@@ -429,6 +444,7 @@ class ScanApplicationService:
                             f"({len(channel_samples)}/{config.averaging_per_position} samples) "
                             "— aborting scan rather than validating an incomplete point"
                         )
+                        _release_streams()
                         self._publish_events(scan.domain_events)
                         return
 
@@ -441,26 +457,35 @@ class ScanApplicationService:
                     point_index=i,
                 )
                 scan.add_point_result(point_result)
+                # add_point_result() auto-completes the aggregate (and queues
+                # a ScanCompleted event) once the last point is in — release
+                # streams *before* publishing so an observer reacting to
+                # ScanCompleted never sees a stream this scan owns still
+                # running. The Finalize check below is then a no-op for the
+                # common case; it stays as a fallback for the (defensive)
+                # scenario where the aggregate didn't auto-complete.
+                if scan.status == ScanStatus.COMPLETED:
+                    _release_streams()
                 self._publish_events(scan.domain_events)
 
             # --- Finalize ---
             if scan.status != ScanStatus.COMPLETED:
                 scan.complete()
+                _release_streams()
                 self._publish_events(scan.domain_events)
 
         except Exception as exc:
             logger.error("Scan loop raised unexpectedly: %s", exc)
             scan.fail(str(exc))
+            _release_streams()
             self._publish_events(scan.domain_events)
 
         finally:
-            self._event_bus.unsubscribe("aefivoltagesampleacquired", _on_adc_sample)
-            for topic, handler in channel_handlers:
-                self._event_bus.unsubscribe(topic, handler)
-            if adc_started_by_scan:
-                self._aefi_acquisition_service.stop_acquisition()
-            for channel in channels_started_by_scan:
-                channel.service.stop_acquisition()
+            # Safety net for the cancel-return paths above (which don't
+            # publish a terminal event themselves) and any path we didn't
+            # anticipate. Idempotent — a harmless no-op if _release_streams()
+            # already ran for this scan.
+            _release_streams()
 
     def _collect_samples(
         self, sample_queue: "queue.Queue", count: int, scan: StepScan

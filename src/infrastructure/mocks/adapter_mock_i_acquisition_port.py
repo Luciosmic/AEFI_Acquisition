@@ -9,7 +9,6 @@ class MockAcquisitionPort(IAcquisitionPort):
         
     def acquire_sample(self) -> AefiVoltageMeasurement:
         self.acquire_count += 1
-        print(f"[MockAcquisitionPort] Acquiring sample #{self.acquire_count}")
         # Return synthetic data based on count
         return AefiVoltageMeasurement(
             voltage_x_in_phase=0.1 * self.acquire_count,
@@ -52,10 +51,6 @@ class RandomNoiseAcquisitionPort(IAcquisitionPort):
         vy_q = self._rng.gauss(0.0, self.noise_std)
         vz_i = self._rng.gauss(0.0, self.noise_std)
         vz_q = self._rng.gauss(0.0, self.noise_std)
-        print(
-            f"[RandomNoiseAcquisitionPort] Sample #{self.acquire_count}: " # Use self.acquire_count as it's the existing counter
-            f"Ux=({vx_i:.3f},{vx_q:.3f}) Uy=({vy_i:.3f},{vy_q:.3f}) Uz=({vz_i:.3f},{vz_q:.3f})"
-        )
         return AefiVoltageMeasurement(
             voltage_x_in_phase=vx_i,
             voltage_x_quadrature=vx_q,

@@ -64,15 +64,7 @@ class ContinuousAcquisitionPresenter(QObject):
         """Handle rotation angles update event."""
         self.angles_updated.emit((event.theta_x, event.theta_y, event.theta_z))
 
-
-    def shutdown(self):
-        """Cleanup resources."""
-        # Unsubscribe from events
-        if self._event_bus:
-            self._event_bus.unsubscribe("AefiVoltageSampleAcquired", self._on_sample_event)
-            self._event_bus.unsubscribe("ContinuousAcquisitionFailed", self._on_failed_event)
-            self._event_bus.unsubscribe("ContinuousAcquisitionStopped", self._on_stopped_event)
-            self._event_bus.unsubscribe("SensorTransformationAnglesUpdated", self._on_angles_updated_event)
+    # ------------------------------------------------------------------ #
     # Calibration Commands (Logic)
     # ------------------------------------------------------------------ #
     
@@ -281,8 +273,10 @@ class ContinuousAcquisitionPresenter(QObject):
 
     def shutdown(self):
         """Cleanup resources."""
-        # Unsubscribe from events
+        # Unsubscribe from events — keys must match the lowercase topics used
+        # by subscribe() (InMemoryEventBus keys are exact string matches).
         if self._event_bus:
-            self._event_bus.unsubscribe("AefiVoltageSampleAcquired", self._on_sample_event)
-            self._event_bus.unsubscribe("ContinuousAcquisitionFailed", self._on_failed_event)
-            self._event_bus.unsubscribe("ContinuousAcquisitionStopped", self._on_stopped_event)
+            self._event_bus.unsubscribe("aefivoltagesampleacquired", self._on_sample_event)
+            self._event_bus.unsubscribe("continuousacquisitionfailed", self._on_failed_event)
+            self._event_bus.unsubscribe("continuousacquisitionstopped", self._on_stopped_event)
+            self._event_bus.unsubscribe("sensortransformationanglesupdated", self._on_angles_updated_event)
