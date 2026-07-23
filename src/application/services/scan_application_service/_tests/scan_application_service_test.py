@@ -12,6 +12,7 @@ from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
 from domain.step_scan.events.scan_started.scan_started import ScanStarted
 from domain.step_scan.events.scan_point_acquired.scan_point_acquired import ScanPointAcquired
 from domain.step_scan.events.scan_completed.scan_completed import ScanCompleted
+from domain.step_scan.events.scan_failed.scan_failed import ScanFailed
 from domain.step_scan.events.electric_field_scan_point_acquired.electric_field_scan_point_acquired import ElectricFieldScanPointAcquired
 from domain.electric_field_probe.value_objects.field_measurement.field_measurement import FieldMeasurement
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
@@ -171,6 +172,99 @@ class TestScanApplicationService(DiagramFriendlyTest):
         self.assertEqual(data["x"], 1.0)
         self.assertEqual(data["y"], 2.0)
         self.assertEqual(data["value"], {"component_0": 3.0, "component_1": 4.0, "norm": 5.0})
+
+    def test_field_probe_point_retried_until_complete(self):
+        """A point stays unvalidated across a bad sampling pass and is only
+        confirmed once the full averaging window is actually collected."""
+        # First FIELD_SAMPLE_MAX_RETRIES+1 calls fail (exhausts one sample's
+        # retry budget, forcing an extra point-level pass), then it recovers.
+        probe = _ScriptedFieldProbePort(script=[False, False, False, True])
+        service = ScanApplicationService(
+            self.motion_port, self.acquisition_port, self.event_bus,
+            task_runner=ThreadPoolTaskRunner(),
+            motion_sync=EventBusMotionSynchronizer(self.event_bus),
+            field_probe_port=probe,
+        )
+        self.event_bus.subscribe('scanpointacquired', self.on_event)
+        self.event_bus.subscribe('scancompleted', self.on_event)
+
+        scan_dto = Scan2DConfigDTO(
+            x_min=0, x_max=1, x_nb_points=1,
+            y_min=0, y_max=1, y_nb_points=1,
+            scan_pattern="RASTER",
+            stabilization_delay_ms=0,
+            averaging_per_position=1,
+            uncertainty_volts=1e-6,
+        )
+        self.assertTrue(service.execute_scan(scan_dto))
+
+        deadline = threading.Event()
+        self.event_bus.subscribe('scancompleted', lambda e: deadline.set())
+        self.assertTrue(deadline.wait(timeout=5.0), "Scan did not complete within timeout")
+
+        self.assertTrue(any(isinstance(e, ScanCompleted) for e in self.events))
+        self.assertTrue(any(isinstance(e, ScanPointAcquired) for e in self.events))
+
+    def test_field_probe_exhausted_retry_budget_fails_scan(self):
+        """If the probe never recovers within the point-level retry budget,
+        the scan fails instead of validating an incomplete point."""
+        probe = _ScriptedFieldProbePort(script=[False])  # always fails
+        service = ScanApplicationService(
+            self.motion_port, self.acquisition_port, self.event_bus,
+            task_runner=ThreadPoolTaskRunner(),
+            motion_sync=EventBusMotionSynchronizer(self.event_bus),
+            field_probe_port=probe,
+        )
+        self.event_bus.subscribe('scanpointacquired', self.on_event)
+        self.event_bus.subscribe('scanfailed', self.on_event)
+
+        scan_dto = Scan2DConfigDTO(
+            x_min=0, x_max=1, x_nb_points=1,
+            y_min=0, y_max=1, y_nb_points=1,
+            scan_pattern="RASTER",
+            stabilization_delay_ms=0,
+            averaging_per_position=1,
+            uncertainty_volts=1e-6,
+        )
+        self.assertTrue(service.execute_scan(scan_dto))
+
+        deadline = threading.Event()
+        self.event_bus.subscribe('scanfailed', lambda e: deadline.set())
+        self.assertTrue(deadline.wait(timeout=5.0), "Scan did not fail within timeout")
+
+        self.assertTrue(any(isinstance(e, ScanFailed) for e in self.events))
+        self.assertFalse(any(isinstance(e, ScanPointAcquired) for e in self.events))
+
+
+class _ScriptedFieldProbePort:
+    """Minimal IElectricFieldProbePort fake — acquire_sample() follows a
+    scripted pass/fail sequence (cycled), to drive point-level retry paths."""
+
+    def __init__(self, script: List[bool]):
+        self._script = script
+        self._call_count = 0
+
+    def is_ready(self) -> bool:
+        return True
+
+    def acquire_sample(self) -> FieldMeasurement:
+        outcome = self._script[self._call_count % len(self._script)]
+        self._call_count += 1
+        if not outcome:
+            raise RuntimeError("simulated Narda comm failure")
+        return FieldMeasurement(components=(1.0, 2.0, 3.0), timestamp=datetime.now())
+
+    def connect(self) -> None:
+        pass
+
+    def disconnect(self) -> None:
+        pass
+
+    def is_connected(self) -> bool:
+        return True
+
+    def get_probe(self):
+        return None
 
 
 class _RecordingOutputPort:

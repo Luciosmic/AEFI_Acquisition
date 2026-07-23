@@ -81,6 +81,14 @@ class ScanApplicationService:
     # here, not in infrastructure).
     FIELD_SAMPLE_MAX_RETRIES = 2
 
+    # Retry budget for a whole point's worth of EF probe samples.
+    # Applicative rule: the Narda probe is less robust than the AEFI ADC path,
+    # so a point is never validated on partial field data — we keep sampling
+    # at the same point (extra passes over the averaging window) rather than
+    # advance with a gap. Expressed as "extra passes" so the bound scales with
+    # averaging_per_position instead of being a fixed sample count.
+    FIELD_POINT_MAX_RETRY_PASSES = 3
+
     def __init__(
         self,
         motion_port: IMotionPort,
@@ -266,33 +274,39 @@ class ScanApplicationService:
                 averaged_measurement = MeasurementStatisticsService.calculate_statistics(measurements)
 
                 # --- EF Probe (optional) ---
-                # One flaky read must not discard the whole averaging window:
-                # each sample gets its own retry budget (FIELD_SAMPLE_MAX_RETRIES).
+                # Invariant: a point is not validated on partial field data.
+                # Each sample gets its own retry budget (FIELD_SAMPLE_MAX_RETRIES);
+                # the point itself stays "in progress" (index does not advance,
+                # add_point_result is not called) until the full averaging
+                # window is collected or the point-level retry budget
+                # (FIELD_POINT_MAX_RETRY_PASSES) is exhausted, in which case the
+                # whole scan fails rather than publishing an incomplete point.
                 field_measurement = None
                 if self._field_probe_port is not None and self._field_probe_port.is_ready():
-                    field_measurements = []
-                    for _ in range(config.averaging_per_position):
-                        if scan.status == ScanStatus.CANCELLED:
-                            return
-                        sample = self._acquire_field_sample_with_retry(i)
-                        if sample is not None:
-                            field_measurements.append(sample)
+                    field_measurements = self._acquire_field_samples_until_complete(
+                        scan, i, config.averaging_per_position
+                    )
+                    if scan.status == ScanStatus.CANCELLED:
+                        return
+                    if field_measurements is None:
+                        scan.fail(
+                            f"Narda probe: point {i} never reached "
+                            f"{config.averaging_per_position} samples — aborting scan "
+                            f"rather than validating an incomplete point"
+                        )
+                        self._publish_events(scan.domain_events)
+                        return
 
-                    if field_measurements:
-                        field_measurement = FieldMeasurementStatisticsService.calculate_statistics(
-                            field_measurements
-                        )
-                        ef_event = ElectricFieldScanPointAcquired(
-                            scan_id=scan.id,
-                            point_index=i,
-                            position=position,
-                            field_measurement=field_measurement,
-                        )
-                        self._event_bus.publish("electricfieldscanpointacquired", ef_event)
-                    else:
-                        logger.warning(
-                            "Field probe: all samples failed at point %d, skipping field data", i
-                        )
+                    field_measurement = FieldMeasurementStatisticsService.calculate_statistics(
+                        field_measurements
+                    )
+                    ef_event = ElectricFieldScanPointAcquired(
+                        scan_id=scan.id,
+                        point_index=i,
+                        position=position,
+                        field_measurement=field_measurement,
+                    )
+                    self._event_bus.publish("electricfieldscanpointacquired", ef_event)
 
                 # --- Add result to aggregate ---
                 point_result = ScanPointResult(
@@ -332,6 +346,39 @@ class ScanApplicationService:
                     e,
                 )
         return None
+
+    def _acquire_field_samples_until_complete(
+        self, scan: StepScan, point_index: int, required_samples: int
+    ) -> Optional[List]:
+        """
+        Keep sampling the EF probe at the current point until `required_samples`
+        have been collected, bounded by FIELD_POINT_MAX_RETRY_PASSES extra
+        passes over the averaging window.
+
+        Returns the list of samples, or None if the scan was cancelled or the
+        retry budget was exhausted before reaching `required_samples`.
+        """
+        samples: List = []
+        max_attempts = required_samples * (self.FIELD_POINT_MAX_RETRY_PASSES + 1)
+        attempts = 0
+        while len(samples) < required_samples and attempts < max_attempts:
+            if scan.status == ScanStatus.CANCELLED:
+                return None
+            attempts += 1
+            sample = self._acquire_field_sample_with_retry(point_index)
+            if sample is not None:
+                samples.append(sample)
+
+        if len(samples) < required_samples:
+            logger.warning(
+                "Narda probe: point %d incomplete (%d/%d samples) after %d attempts, giving up",
+                point_index,
+                len(samples),
+                required_samples,
+                attempts,
+            )
+            return None
+        return samples
 
     # ==================================================================================
     # EVENT ROUTING

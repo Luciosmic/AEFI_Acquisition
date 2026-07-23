@@ -4,12 +4,48 @@ Protocole documenté et validé sur banc dans le sous-projet Ressources/Experime
 """
 import statistics
 import struct
+from collections import namedtuple
 
 import serial
 
-__version__ = "0.3.0"
+__version__ = "0.5.0"
 
 AUTO_OFF_DEFAULT_S = 180  # cf. narda-ep60x_protocole-communication.md — reglable via #00en*
+
+# La sonde est un detecteur a diode (antenne + diode par axe), pas un digitaliseur RF :
+# elle demodule le champ en une tension proportionnelle a l'amplitude, puis mesure CETTE
+# tension. Deux bandes passantes distinctes, a ne pas confondre :
+#
+#   champ RF (RF_SENSING_RANGE_HZ)  -->  diode/detecteur  -->  amplitude demodulee
+#       -->  filtre F1-F8 (READING_BANDWIDTH_HZ_RANGE)  -->  valeur numerique (?T/?A)
+#
+# RF_SENSING_RANGE_HZ = frequences RF que la sonde peut DETECTER (10kHz-9.25GHz).
+# READING_*_RANGE = a quelle vitesse la VALEUR LUE peut suivre un champ qui varie dans le
+# temps (scan, modulation...) — sans rapport avec la frequence RF elle-meme.
+RF_SENSING_RANGE_HZ = (10_000, 9_250_000_000)  # EP-601, specs datasheet/manuel table 1-2
+
+# Bornes globales connues (datasheet EP600-FEN-20913) ; pas de valeur exacte par filtre F1-F8
+# publiee (le manuel renvoie a un document separe absent de docs/). F1 ~ borne haute (rapide),
+# F8 ~ borne basse (lent). Voir FILTERS ci-dessous pour les compromis qualitatifs par filtre.
+READING_BANDWIDTH_HZ_RANGE = (2.3, 28.0)
+READING_RATE_S_RANGE = (0.03, 22.0)
+
+FilterProfile = namedtuple("FilterProfile", "settling_time power_consumption sensitivity mains_rejection")
+
+# Transcription best-effort de la table qualitative du manuel (§5.5.10.1, mise en page PDF
+# imparfaite a l'extraction) — voir narda-ep60x_protocole-communication.md. F4-F5 recommandes
+# par Narda comme compromis "normal operation".
+FILTERS = {
+    1: FilterProfile("tres rapide", "tres faible", "faible", "aucune"),
+    2: FilterProfile("tres rapide", "tres faible", "moyenne", "faible / elevee"),
+    3: FilterProfile("rapide", "faible", "bonne", "correcte"),
+    4: FilterProfile("moyen", "moyenne", "elevee", "bonne / elevee"),
+    5: FilterProfile("moyen", "moyenne", "elevee", "elevee"),
+    6: FilterProfile("moyen", "moyenne", "elevee", "tres elevee"),
+    7: FilterProfile("lent", "elevee", "tres elevee", "bonne"),
+    8: FilterProfile("lent", "tres elevee", "tres elevee", "elevee"),
+}
+RECOMMENDED_FILTER = 4
 
 
 class NardaProbeTimeout(TimeoutError):
@@ -52,6 +88,32 @@ class NardaEP601:
                 f"(auto-off par defaut apres {AUTO_OFF_DEFAULT_S}s d'inactivite) ou deconnectee"
             )
         return raw
+
+    def _send_no_reply(self, cmd):
+        if self._serial is None:
+            raise RuntimeError("not connected — call connect() or use as a context manager")
+        self._serial.reset_input_buffer()
+        self._serial.write(cmd.encode("ascii"))
+        # Purge defensive : observe sur banc le 2026-07-10, la commande suivante recevait des
+        # octets residuels apres un #00fn* (echo ? reponse non documentee ?) qui corrompaient
+        # sa lecture. On lit/jette tout ce qui traine (bloque jusqu'a self.timeout si rien).
+        self._serial.read(64)
+
+    def set_filter(self, filter_number):
+        """Regle le filtre de traitement, 1 (F1, rapide/bruite) a 8 (F8, lent/sensible) —
+        voir FILTERS[filter_number] pour le compromis (temps de reponse, consommation,
+        sensibilite, rejection secteur 50/60Hz) et RECOMMENDED_FILTER pour le defaut Narda.
+        Filtre = bande passante de LECTURE (READING_BANDWIDTH_HZ_RANGE), pas la bande RF de
+        la sonde (RF_SENSING_RANGE_HZ) — voir le commentaire en tete de module.
+
+        `fn` est en ecriture seule (pas de reponse, pas de commande ?f pour relire l'etat
+        courant, table 6-1). Mapping GUI F1-F8 -> index protocole 0-7 INFERE (n∈[0,7]
+        documente cote serie, F1-F8 cote WinEP600, jamais confirme explicitement egal par le
+        manuel) — a verifier sur banc si le comportement observe ne correspond pas a
+        l'attendu."""
+        if filter_number not in FILTERS:
+            raise ValueError(f"filtre {filter_number} hors plage (1-8)")
+        self._send_no_reply(f"#00f{filter_number - 1}*")
 
     def get_version(self):
         """Version firmware (#00?v*), ex. "vEP600:1.32 07/20;"."""
