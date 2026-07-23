@@ -2,28 +2,26 @@
 
 ## Rationale
 
-Implémentation concrète de `IElectricFieldProbeAcquisitionExecutor`, miroir de
-`ContinuousAcquisitionExecutor` mais découplée de `VoltageMeasurement` : le
-contexte `electric_field_probe` n'a pas de notion in-phase/quadrature, donc
-son propre événement `FieldSampleAcquired` évite de forcer un mensonge de
-type sur l'événement partagé.
+`ElectricFieldProbeService` doit rester un délégateur mince (connect/disconnect
++ start/stop/is_running vers l'executor), pas porter la boucle
+d'acquisition — mécanique d'exécution (thread, boucle, retry), donc
+infrastructure. Même rôle que `AefiAcquisitionExecutor` pour le canal AEFI.
 
 ## Responsibility
 
-- Démarrer une boucle d'acquisition à `sample_rate_hz` dans un thread séparé,
-  via `IElectricFieldProbePort.acquire_sample()`.
-- Publier `FieldSampleAcquired` à chaque échantillon (topic
-  `"fieldsampleacquired"`) — sert de battement de cœur au voyant "données
-  reçues" côté UI.
-- Réutiliser `ContinuousAcquisitionStopped`/`ContinuousAcquisitionFailed`
-  (génériques, ne portent que `acquisition_id`/`reason`) sous des topics
-  dédiés (`"electricfieldprobeacquisition{stopped,failed}"`) pour ne pas
-  interférer avec les abonnements du presenter lock-in existant.
-- Arrêter proprement la boucle sur `stop()` (thread daemon + flag d'arrêt).
+- Implémenter `IElectricFieldProbeAcquisitionExecutor`.
+- Faire tourner la boucle d'acquisition dans un thread daemon : rate control
+  (`sample_rate_hz`), `max_duration_s`, publication de `FieldSampleAcquired`.
+- Tolérer jusqu'à `MAX_CONSECUTIVE_SAMPLE_FAILURES` (2) échecs consécutifs de
+  `probe_port.acquire_sample()` avant de publier `ContinuousAcquisitionFailed`
+  — la sonde Narda est connue pour être flaky (erreurs USB/série
+  transitoires) ; un consommateur du flux (ex. un scan) n'a aucun moyen de
+  relancer le worker après une seule mauvaise lecture.
+- Publier `ContinuousAcquisitionStopped` en sortie de boucle (`finally`).
 
 ## Design
 
-- Copie quasi-exacte de `ContinuousAcquisitionExecutor` — même stratégie
-  thread + `threading.Event`, volontairement dupliquée plutôt que
-  généralisée : les deux executors n'ont en commun que la mécanique de
-  boucle, pas le type de mesure qu'ils publient.
+- Thread + `threading.Event` pour le stop flag, `join(timeout=2.0)` — même
+  squelette que `AefiAcquisitionExecutor`.
+- Contrairement à `AefiAcquisitionExecutor`, pas de `update_config()` : voir
+  `i_electric_field_probe_acquisition_executor_intention.md`.

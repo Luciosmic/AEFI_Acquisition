@@ -3,7 +3,14 @@ Electric Field Probe Application Service
 
 Responsibility:
 - Connect/disconnect the probe on demand, absorbing hardware exceptions.
-- Delegate continuous acquisition start/stop/update to the executor port.
+- Thin use case that delegates continuous acquisition (start/stop/update) to
+  the IElectricFieldProbeAcquisitionExecutor port.
+
+Rationale:
+- The acquisition loop (rate control, retry policy, event publication) is
+  execution mechanics, not use-case orchestration — it belongs in
+  infrastructure behind the executor port. Same pattern as
+  AefiAcquisitionService / IAefiAcquisitionExecutor for the AEFI channel.
 """
 
 from __future__ import annotations
@@ -11,11 +18,11 @@ from __future__ import annotations
 from application.services.electric_field_probe_service.i_api_electric_field_probe_service import (
     IApiElectricFieldProbeService,
 )
-from application.services.electric_field_probe_service.ports.i_electric_field_probe_acquisition_executor import (
-    IElectricFieldProbeAcquisitionExecutor,
-)
 from application.services.electric_field_probe_service.ports.i_electric_field_probe_port import (
     IElectricFieldProbePort,
+)
+from application.services.electric_field_probe_service.ports.i_electric_field_probe_acquisition_executor import (
+    IElectricFieldProbeAcquisitionExecutor,
 )
 from application.services.electric_field_probe_service.dtos.electric_field_probe_dtos import (
     ElectricFieldProbeAcquisitionConfig,
@@ -73,4 +80,13 @@ class ElectricFieldProbeService(IApiElectricFieldProbeService):
     def update_acquisition_parameters(
         self, config: ElectricFieldProbeAcquisitionConfig
     ) -> None:
-        self._executor.update_config(config)
+        # Unlike AefiAcquisitionExecutor.update_config (applied on the next
+        # start, since the worker closure never re-reads self._config), a
+        # running Narda stream must be restarted for a new sample_rate_hz to
+        # take effect — dt is computed once at loop entry.
+        if self._executor.is_running():
+            self._executor.stop()
+        self._executor.start(config, self._probe_port)
+
+    def is_acquisition_running(self) -> bool:
+        return self._executor.is_running()

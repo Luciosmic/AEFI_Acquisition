@@ -5,7 +5,7 @@ Ce module implémente l'acquisition des tensions électriques mesurées par le c
 
 ## Responsibility
 - `ADS131Controller` (`ads131_controller.py`) : contrôleur bas-niveau. Configure les registres de l'ADC (ICLK divider, OSR, gains par canal) via `MCU_SerialCommunicator` et déclenche les acquisitions.
-- `ADS131A04Adapter` (`adapter_i_acquistion_port_ads131a04.py`) : implémenter `IAcquisitionPort`. Traduit `MeasurementUncertainty` → `ADCHardwareConfig` (gain, OSR, Vref), lit les données brutes et les convertit en `VoltageMeasurement` avec le mapping de canaux domaine (voltage_x_in_phase = ADC1_Ch1, etc.).
+- `ADS131A04Adapter` (`adapter_i_acquistion_port_ads131a04.py`) : implémenter `IAcquisitionPort`. Traduit `MeasurementUncertainty` → `ADCHardwareConfig` (gain, OSR, Vref), lit les données brutes et les convertit en `AefiVoltageMeasurement` avec le mapping de canaux domaine (voltage_x_in_phase = ADC1_Ch1, etc.).
 
 ## Design
 - La formule d'incertitude matérielle guide le choix du gain et de l'OSR : `Incertitude ≈ Vref / (2^N · Gain · √OSR)`.

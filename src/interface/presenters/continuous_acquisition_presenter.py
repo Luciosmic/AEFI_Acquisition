@@ -1,17 +1,17 @@
 """
 Continuous Acquisition Presenter - Interface V2
 
-Bridges between ContinuousAcquisitionService and ContinuousAcquisitionPanel.
+Bridges between AefiAcquisitionService and ContinuousAcquisitionPanel.
 Adapted from interface v1 for PySide6.
 """
 
 from PySide6.QtCore import QObject, Signal, Slot
 from typing import Dict, Any
 
-from application.services.continuous_acquisition_service.continuous_acquisition_service import ContinuousAcquisitionService
-from application.services.continuous_acquisition_service.ports.i_continuous_acquisition_executor import ContinuousAcquisitionConfig
-from domain.shared_kernel.events.continuous_acquisition_sample_acquired.continuous_acquisition_sample_acquired import (
-    ContinuousAcquisitionSampleAcquired,
+from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
+from application.services.aefi_acquisition_service.ports.i_aefi_acquisition_executor import AefiAcquisitionConfig
+from domain.shared_kernel.events.aefi_voltage_sample_acquired.aefi_voltage_sample_acquired import (
+    AefiVoltageSampleAcquired,
 )
 from domain.shared_kernel.events.continuous_acquisition_failed.continuous_acquisition_failed import (
     ContinuousAcquisitionFailed,
@@ -43,7 +43,7 @@ class ContinuousAcquisitionPresenter(QObject):
     angles_updated = Signal(tuple)      # For updating the read-only display
     correction_states_updated = Signal(bool, bool, bool, str, str, str)  # (noise, phase, primary, noise_str, phase_str, primary_str)
 
-    def __init__(self, service: ContinuousAcquisitionService, event_bus: IDomainEventBus, transformation_service: TransformationService):
+    def __init__(self, service: AefiAcquisitionService, event_bus: IDomainEventBus, transformation_service: TransformationService):
         super().__init__()
         self._service = service
         self._event_bus = event_bus
@@ -55,7 +55,7 @@ class ContinuousAcquisitionPresenter(QObject):
         self._last_raw_sample: Dict[str, float] = {}
 
         # Subscribe to domain events - USE LOWERCASE EVENT NAMES (matching publish calls)
-        self._event_bus.subscribe("continuousacquisitionsampleacquired", self._on_sample_event)
+        self._event_bus.subscribe("aefivoltagesampleacquired", self._on_sample_event)
         self._event_bus.subscribe("continuousacquisitionfailed", self._on_failed_event)
         self._event_bus.subscribe("continuousacquisitionstopped", self._on_stopped_event)
         self._event_bus.subscribe("sensortransformationanglesupdated", self._on_angles_updated_event)
@@ -64,15 +64,7 @@ class ContinuousAcquisitionPresenter(QObject):
         """Handle rotation angles update event."""
         self.angles_updated.emit((event.theta_x, event.theta_y, event.theta_z))
 
-
-    def shutdown(self):
-        """Cleanup resources."""
-        # Unsubscribe from events
-        if self._event_bus:
-            self._event_bus.unsubscribe("ContinuousAcquisitionSampleAcquired", self._on_sample_event)
-            self._event_bus.unsubscribe("ContinuousAcquisitionFailed", self._on_failed_event)
-            self._event_bus.unsubscribe("ContinuousAcquisitionStopped", self._on_stopped_event)
-            self._event_bus.unsubscribe("SensorTransformationAnglesUpdated", self._on_angles_updated_event)
+    # ------------------------------------------------------------------ #
     # Calibration Commands (Logic)
     # ------------------------------------------------------------------ #
     
@@ -165,7 +157,7 @@ class ContinuousAcquisitionPresenter(QObject):
         Args:
             params: {sample_rate_hz, max_duration_s (optional)}
         """
-        config = ContinuousAcquisitionConfig(
+        config = AefiAcquisitionConfig(
             sample_rate_hz=float(params.get("sample_rate_hz", 20.0)),
             max_duration_s=params.get("max_duration_s", None),
             target_uncertainty=None,
@@ -182,7 +174,7 @@ class ContinuousAcquisitionPresenter(QObject):
     @Slot(dict)
     def on_parameters_updated(self, params: Dict[str, Any]):
         """Handle live parameter updates from panel."""
-        config = ContinuousAcquisitionConfig(
+        config = AefiAcquisitionConfig(
             sample_rate_hz=float(params.get("sample_rate_hz", 20.0)),
             max_duration_s=params.get("max_duration_s", None),
             target_uncertainty=None,
@@ -210,7 +202,7 @@ class ContinuousAcquisitionPresenter(QObject):
             self.acquisition_stopped.emit(str(event.acquisition_id))
             self._current_acquisition_id = None
 
-    def _on_sample_event(self, event: ContinuousAcquisitionSampleAcquired):
+    def _on_sample_event(self, event: AefiVoltageSampleAcquired):
         """
         Handle sample acquired event.
         Called from executor thread - emit Qt signals for UI thread.
@@ -281,8 +273,10 @@ class ContinuousAcquisitionPresenter(QObject):
 
     def shutdown(self):
         """Cleanup resources."""
-        # Unsubscribe from events
+        # Unsubscribe from events — keys must match the lowercase topics used
+        # by subscribe() (InMemoryEventBus keys are exact string matches).
         if self._event_bus:
-            self._event_bus.unsubscribe("ContinuousAcquisitionSampleAcquired", self._on_sample_event)
-            self._event_bus.unsubscribe("ContinuousAcquisitionFailed", self._on_failed_event)
-            self._event_bus.unsubscribe("ContinuousAcquisitionStopped", self._on_stopped_event)
+            self._event_bus.unsubscribe("aefivoltagesampleacquired", self._on_sample_event)
+            self._event_bus.unsubscribe("continuousacquisitionfailed", self._on_failed_event)
+            self._event_bus.unsubscribe("continuousacquisitionstopped", self._on_stopped_event)
+            self._event_bus.unsubscribe("sensortransformationanglesupdated", self._on_angles_updated_event)

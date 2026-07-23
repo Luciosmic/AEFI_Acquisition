@@ -1,11 +1,13 @@
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QLineEdit, QComboBox, QPushButton, QGroupBox, QFormLayout,
-    QCheckBox
+    QCheckBox, QFileDialog
 )
 from PySide6.QtCore import Signal
-import json
-import os
+from pathlib import Path
+
+from interface.logic.ui_config_store import UIConfigStore
+
 
 class ScanControlPanel(QWidget):
     """
@@ -18,8 +20,9 @@ class ScanControlPanel(QWidget):
     scan_pause_requested = Signal()
     scan_resume_requested = Signal()
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, config_store: UIConfigStore = None):
         super().__init__(parent)
+        self._config_store = config_store or UIConfigStore()
         self._build_ui()
         self._connect_signals()
         self._load_config()
@@ -133,15 +136,24 @@ class ScanControlPanel(QWidget):
 
         self.input_export_filename = QLineEdit("scan")
         self.input_export_directory = QLineEdit("")
-        self.input_export_directory.setPlaceholderText(".aefi_acquisition/scans/raw_data/")
+        self.input_export_directory.setPlaceholderText("~/Desktop/AEFI_Acquisition_Exports")
+
+        self.btn_browse_export_directory = QPushButton("Browse...")
+
+        directory_row = QHBoxLayout()
+        directory_row.addWidget(self.input_export_directory)
+        directory_row.addWidget(self.btn_browse_export_directory)
 
         self.combo_export_format = QComboBox()
         self.combo_export_format.addItems(["CSV", "HDF5"])
 
+        self.btn_save_export_defaults = QPushButton("Set as default")
+
         export_layout.addRow(self.checkbox_export_enabled)
         export_layout.addRow("Filename base:", self.input_export_filename)
-        export_layout.addRow("Output directory:", self.input_export_directory)
+        export_layout.addRow("Output directory:", directory_row)
         export_layout.addRow("Format:", self.combo_export_format)
+        export_layout.addRow(self.btn_save_export_defaults)
 
         export_group.setLayout(export_layout)
         layout.addWidget(export_group)
@@ -183,6 +195,14 @@ class ScanControlPanel(QWidget):
         self.btn_stop.clicked.connect(self.scan_stop_requested)
         self.btn_pause.clicked.connect(self.scan_pause_requested)
         self.btn_resume.clicked.connect(self.scan_resume_requested)
+        self.btn_browse_export_directory.clicked.connect(self._on_browse_export_directory)
+        self.btn_save_export_defaults.clicked.connect(self._save_export_defaults)
+
+    def _on_browse_export_directory(self):
+        start_dir = self.input_export_directory.text() or str(Path.home() / "Desktop" / "AEFI_Acquisition_Exports")
+        chosen = QFileDialog.getExistingDirectory(self, "Select export directory", start_dir)
+        if chosen:
+            self.input_export_directory.setText(chosen)
 
     def _on_start_clicked(self):
         """Gather parameters and emit signal."""
@@ -254,58 +274,46 @@ class ScanControlPanel(QWidget):
         self.btn_resume.setEnabled(False)
     
     def _load_config(self):
-        """
-        Load scan configuration from JSON file.
-        Falls back to UI defaults if file doesn't exist or is invalid.
-        """
-        config_path = os.path.join(".aefi_acquisition", "configs", "scan_default_config.json")
-        
-        try:
-            if os.path.exists(config_path):
-                with open(config_path, 'r', encoding='utf-8') as f:
-                    config = json.load(f)
-                
-                # Load scan configuration
-                scan_config = config.get("scan_config", {})
-                if scan_config:
-                    self.input_x_min.setText(str(scan_config.get("x_min", 600.0)))
-                    self.input_x_max.setText(str(scan_config.get("x_max", 800.0)))
-                    self.input_x_nb.setText(str(scan_config.get("x_nb_points", 81)))
-                    self.input_y_min.setText(str(scan_config.get("y_min", 600.0)))
-                    self.input_y_max.setText(str(scan_config.get("y_max", 800.0)))
-                    self.input_y_nb.setText(str(scan_config.get("y_nb_points", 81)))
-                    self.input_stabilization.setText(str(scan_config.get("stabilization_delay_ms", 300)))
-                    self.input_averaging.setText(str(scan_config.get("averaging_per_position", 10)))
-                    
-                    # Set pattern in combo box
-                    pattern = scan_config.get("scan_pattern", "SERPENTINE")
-                    index = self.combo_pattern.findText(pattern)
-                    if index >= 0:
-                        self.combo_pattern.setCurrentIndex(index)
+        """Populate the form from stored scan/export defaults, falling back to UI defaults."""
+        scan_config = self._config_store.load_scan_config()
+        if scan_config:
+            self.input_x_min.setText(str(scan_config.get("x_min", 600.0)))
+            self.input_x_max.setText(str(scan_config.get("x_max", 800.0)))
+            self.input_x_nb.setText(str(scan_config.get("x_nb_points", 81)))
+            self.input_y_min.setText(str(scan_config.get("y_min", 600.0)))
+            self.input_y_max.setText(str(scan_config.get("y_max", 800.0)))
+            self.input_y_nb.setText(str(scan_config.get("y_nb_points", 81)))
+            self.input_stabilization.setText(str(scan_config.get("stabilization_delay_ms", 300)))
+            self.input_averaging.setText(str(scan_config.get("averaging_per_position", 10)))
 
-                    # Set axis in combo box
-                    axis = scan_config.get("scan_axis", "Y")
-                    axis_index = self.combo_axis.findText(axis)
-                    if axis_index >= 0:
-                        self.combo_axis.setCurrentIndex(axis_index)
-                
-                # Load export configuration
-                export_config = config.get("export_config", {})
-                if export_config:
-                    self.checkbox_export_enabled.setChecked(export_config.get("enabled", True))
-                    self.input_export_filename.setText(export_config.get("filename_base", "scan"))
-                    self.input_export_directory.setText(export_config.get("output_directory", ""))
-                    
-                    # Set format in combo box
-                    format_str = export_config.get("format", "CSV")
-                    format_index = self.combo_export_format.findText(format_str)
-                    if format_index >= 0:
-                        self.combo_export_format.setCurrentIndex(format_index)
-                
-                print(f"[ScanControlPanel] Configuration loaded from {config_path}")
-            else:
-                print(f"[ScanControlPanel] Config file not found at {config_path}, using UI defaults")
-        except json.JSONDecodeError as e:
-            print(f"[ScanControlPanel] Invalid JSON in config file: {e}, using UI defaults")
-        except Exception as e:
-            print(f"[ScanControlPanel] Error loading config: {e}, using UI defaults")
+            pattern_index = self.combo_pattern.findText(scan_config.get("scan_pattern", "SERPENTINE"))
+            if pattern_index >= 0:
+                self.combo_pattern.setCurrentIndex(pattern_index)
+
+            axis_index = self.combo_axis.findText(scan_config.get("scan_axis", "Y"))
+            if axis_index >= 0:
+                self.combo_axis.setCurrentIndex(axis_index)
+
+        export_config = self._config_store.load_export_config()
+        if export_config:
+            self.checkbox_export_enabled.setChecked(export_config.get("enabled", True))
+            self.input_export_filename.setText(export_config.get("filename_base", "scan"))
+            self.input_export_directory.setText(export_config.get("output_directory", ""))
+
+            format_index = self.combo_export_format.findText(export_config.get("format", "CSV"))
+            if format_index >= 0:
+                self.combo_export_format.setCurrentIndex(format_index)
+
+    def _save_export_defaults(self):
+        """Persist the current export settings as the new defaults."""
+        export_config = {
+            "enabled": self.checkbox_export_enabled.isChecked(),
+            "filename_base": self.input_export_filename.text(),
+            "output_directory": self.input_export_directory.text(),
+            "format": self.combo_export_format.currentText(),
+        }
+        try:
+            self._config_store.save_export_config(export_config)
+            self.lbl_status.setText("Status: Export defaults saved")
+        except OSError as e:
+            self.lbl_status.setText(f"Status: Failed to save export defaults ({e})")

@@ -3,6 +3,9 @@ from typing import List
 
 from tool.diagram_friendly_test import DiagramFriendlyTest
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.execution.electric_field_probe_acquisition_executor import (
+    ElectricFieldProbeAcquisitionExecutor,
+)
 
 from application.services.electric_field_probe_service.electric_field_probe_service import (
     ElectricFieldProbeService,
@@ -11,9 +14,6 @@ from application.services.electric_field_probe_service.dtos.electric_field_probe
     ElectricFieldProbeAcquisitionConfig,
 )
 
-from infrastructure.execution.electric_field_probe_acquisition_executor import (
-    ElectricFieldProbeAcquisitionExecutor,
-)
 from infrastructure.hardware.narda_ep600.fake.fake_electric_field_probe_adapter import (
     FakeElectricFieldProbeAdapter,
 )
@@ -28,7 +28,7 @@ from domain.electric_field_probe.events.electric_field_probe_connection_changed.
 
 class TestElectricFieldProbeService(DiagramFriendlyTest):
     """
-    Diagram-friendly test for ElectricFieldProbeService + Executor.
+    Diagram-friendly test for ElectricFieldProbeService.
 
     Goal:
     - Verify connect/disconnect never raise and publish connection events.
@@ -48,9 +48,11 @@ class TestElectricFieldProbeService(DiagramFriendlyTest):
             "electricfieldprobeconnectionchanged", self.connection_events.append
         )
 
-        self.executor = ElectricFieldProbeAcquisitionExecutor(event_bus=self.event_bus)
+        executor = ElectricFieldProbeAcquisitionExecutor(self.event_bus)
         self.service = ElectricFieldProbeService(
-            self.executor, self.probe_port, self.event_bus
+            executor=executor,
+            probe_port=self.probe_port,
+            event_bus=self.event_bus,
         )
 
     def test_connect_probe_publishes_connected_event(self) -> None:
@@ -64,7 +66,12 @@ class TestElectricFieldProbeService(DiagramFriendlyTest):
         self,
     ) -> None:
         failing_port = FakeElectricFieldProbeAdapter(simulate_connection_failure=True)
-        service = ElectricFieldProbeService(self.executor, failing_port, self.event_bus)
+        executor = ElectricFieldProbeAcquisitionExecutor(self.event_bus)
+        service = ElectricFieldProbeService(
+            executor=executor,
+            probe_port=failing_port,
+            event_bus=self.event_bus,
+        )
 
         service.connect_probe()  # must not raise
 

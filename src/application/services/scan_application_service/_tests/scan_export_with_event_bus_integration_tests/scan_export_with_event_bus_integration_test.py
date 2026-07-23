@@ -15,13 +15,16 @@ sys.path.append(str(Path(__file__).parents[4] / "src"))
 
 from tool.diagram_friendly_test import DiagramFriendlyTest
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
-from infrastructure.execution.step_scan_executor import StepScanExecutor
+from infrastructure.execution.thread_pool_task_runner import ThreadPoolTaskRunner
+from infrastructure.execution.event_bus_motion_synchronizer import EventBusMotionSynchronizer
 from infrastructure.persistence.hdf5_acquisition_repository import HDF5AcquisitionRepository
 from application.handlers.acquisition_data_handler import AcquisitionDataHandler
 from application.services.scan_application_service.scan_application_service import ScanApplicationService
 from application.services.scan_application_service.dtos.scan_dtos import Scan2DConfigDTO
+from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
 from infrastructure.mocks.adapter_mock_i_motion_port import MockMotionPort
 from infrastructure.mocks.adapter_mock_i_acquisition_port import MockAcquisitionPort
+from infrastructure.mocks.adapter_mock_i_aefi_acquisition_executor import MockAefiAcquisitionExecutor
 
 
 class ScanExportWithEventBusIntegrationTest(DiagramFriendlyTest):
@@ -58,21 +61,21 @@ class ScanExportWithEventBusIntegrationTest(DiagramFriendlyTest):
         self.log_interaction("Test", "SUBSCRIBE", "EventBus", "Handler subscribes to scanpointacquired")
         self.event_bus.subscribe("scanpointacquired", self.handler.handle)
 
-        # 5. Setup Application (Service + Executor)
-        # MockMotionPort needs event_bus so it publishes MotionCompleted for StepScanExecutor
+        # 5. Setup Application (Service with task runner + motion sync)
         self.log_interaction("Test", "CREATE", "ScanService", "Init with Ports & Bus")
         self.motion_port = MockMotionPort(event_bus=self.event_bus, motion_delay_ms=5)
         self.acquisition_port = MockAcquisitionPort()
-        self.scan_executor = StepScanExecutor(
-            motion_port=self.motion_port,
-            acquisition_port=self.acquisition_port,
-            event_bus=self.event_bus,
+        self.continuous_service = AefiAcquisitionService(
+            MockAefiAcquisitionExecutor(self.event_bus), self.acquisition_port
         )
+        task_runner = ThreadPoolTaskRunner()
+        motion_sync = EventBusMotionSynchronizer(self.event_bus)
         self.scan_service = ScanApplicationService(
             self.motion_port,
-            self.acquisition_port,
+            self.continuous_service,
             self.event_bus,
-            self.scan_executor,
+            task_runner=task_runner,
+            motion_sync=motion_sync,
         )
 
     def tearDown(self):
@@ -101,7 +104,7 @@ class ScanExportWithEventBusIntegrationTest(DiagramFriendlyTest):
         self.log_interaction("Test", "ASSERT", "ScanService", "Check execution success", expect=True, got=success)
         self.assertTrue(success)
 
-        # Wait for executor thread (4 points × 5ms + buffer)
+        # Wait for scan thread to complete (4 points × 5ms + buffer)
         self.assertTrue(done.wait(timeout=5.0), "Scan did not complete within timeout")
 
         # Verify Persistence

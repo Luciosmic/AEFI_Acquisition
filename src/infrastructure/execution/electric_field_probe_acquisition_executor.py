@@ -2,21 +2,24 @@
 ElectricFieldProbeAcquisitionExecutor
 
 Responsibility:
-- Run a continuous acquisition loop in a background worker thread using the
-  IElectricFieldProbePort and publish domain events for each sample.
+- Run a continuous acquisition loop for an electric field probe in a
+  background worker thread, publishing domain events for each sample.
+- Tolerate a bounded run of consecutive sample failures before treating the
+  stream as failed — the Narda probe is known to be flaky (transient
+  USB/serial errors), and a single bad read must not kill the streaming
+  worker (consumers off the event bus have no way to restart it).
 
 Design:
-- Mirrors ContinuousAcquisitionExecutor, kept separate to avoid coupling
-  electric_field_probe to VoltageMeasurement.
 - Non-blocking `start(config, probe_port)`; loop runs in a daemon thread.
 - `stop()` uses an Event flag and join with timeout.
 """
 
 from __future__ import annotations
 
+import logging
 import threading
 import time
-from uuid import uuid4, UUID
+from uuid import UUID, uuid4
 
 from application.services.electric_field_probe_service.ports.i_electric_field_probe_acquisition_executor import (
     IElectricFieldProbeAcquisitionExecutor,
@@ -27,7 +30,6 @@ from application.services.electric_field_probe_service.ports.i_electric_field_pr
 from application.services.electric_field_probe_service.dtos.electric_field_probe_dtos import (
     ElectricFieldProbeAcquisitionConfig,
 )
-
 from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
 from domain.electric_field_probe.events.field_sample_acquired.field_sample_acquired import (
     FieldSampleAcquired,
@@ -39,31 +41,27 @@ from domain.shared_kernel.events.continuous_acquisition_stopped.continuous_acqui
     ContinuousAcquisitionStopped,
 )
 
+logger = logging.getLogger(__name__)
+
 SAMPLE_ACQUIRED_TOPIC = "fieldsampleacquired"
 ACQUISITION_FAILED_TOPIC = "electricfieldprobeacquisitionfailed"
 ACQUISITION_STOPPED_TOPIC = "electricfieldprobeacquisitionstopped"
 
 
 class ElectricFieldProbeAcquisitionExecutor(IElectricFieldProbeAcquisitionExecutor):
+    MAX_CONSECUTIVE_SAMPLE_FAILURES = 2
+
     def __init__(self, event_bus: IDomainEventBus) -> None:
         self._event_bus = event_bus
         self._thread: threading.Thread | None = None
         self._stop_flag = threading.Event()
         self._current_acquisition_id: UUID | None = None
 
-    def update_config(self, config: ElectricFieldProbeAcquisitionConfig) -> None:
-        """Dynamically update configuration of a running acquisition."""
-        # Config is re-read from the worker's local variable each loop via
-        # closures would be needed for live update; kept simple for now,
-        # matching ContinuousAcquisitionExecutor's current behaviour.
-        pass
-
     def start(
         self,
         config: ElectricFieldProbeAcquisitionConfig,
         probe_port: IElectricFieldProbePort,
     ) -> None:
-        """Start a new continuous acquisition in the background."""
         if self._thread and self._thread.is_alive():
             return
 
@@ -77,10 +75,12 @@ class ElectricFieldProbeAcquisitionExecutor(IElectricFieldProbeAcquisitionExecut
         self._thread.start()
 
     def stop(self) -> None:
-        """Request graceful stop of the running acquisition."""
         self._stop_flag.set()
         if self._thread:
             self._thread.join(timeout=2.0)
+
+    def is_running(self) -> bool:
+        return self._thread is not None and self._thread.is_alive()
 
     # ------------------------------------------------------------------ #
     # Internal worker
@@ -92,7 +92,6 @@ class ElectricFieldProbeAcquisitionExecutor(IElectricFieldProbeAcquisitionExecut
         config: ElectricFieldProbeAcquisitionConfig,
         probe_port: IElectricFieldProbePort,
     ) -> None:
-        """Background acquisition loop."""
         if config.sample_rate_hz <= 0:
             return
 
@@ -101,6 +100,7 @@ class ElectricFieldProbeAcquisitionExecutor(IElectricFieldProbeAcquisitionExecut
         index = 0
         probe = probe_port.get_probe()
         serial_number = probe.serial_number if probe else "unknown"
+        consecutive_failures = 0
 
         try:
             while not self._stop_flag.is_set():
@@ -110,8 +110,26 @@ class ElectricFieldProbeAcquisitionExecutor(IElectricFieldProbeAcquisitionExecut
                 ):
                     break
 
-                sample = probe_port.acquire_sample()
+                try:
+                    sample = probe_port.acquire_sample()
+                except Exception as e:
+                    consecutive_failures += 1
+                    logger.warning(
+                        "Field probe sample failed (%d/%d consecutive): %s",
+                        consecutive_failures,
+                        self.MAX_CONSECUTIVE_SAMPLE_FAILURES,
+                        e,
+                    )
+                    if consecutive_failures > self.MAX_CONSECUTIVE_SAMPLE_FAILURES:
+                        error_event = ContinuousAcquisitionFailed(
+                            acquisition_id=acquisition_id, reason=str(e)
+                        )
+                        self._event_bus.publish(ACQUISITION_FAILED_TOPIC, error_event)
+                        return
+                    time.sleep(dt)
+                    continue
 
+                consecutive_failures = 0
                 event = FieldSampleAcquired(
                     probe_serial_number=serial_number,
                     acquisition_id=acquisition_id,
@@ -122,7 +140,9 @@ class ElectricFieldProbeAcquisitionExecutor(IElectricFieldProbeAcquisitionExecut
 
                 index += 1
                 time.sleep(dt)
+
         except Exception as e:
+            logger.error("Acquisition loop raised unexpectedly: %s", e)
             error_event = ContinuousAcquisitionFailed(
                 acquisition_id=acquisition_id, reason=str(e)
             )

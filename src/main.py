@@ -14,16 +14,20 @@ from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtGui import QIcon
 
 # --- Domain & Application Services ---
-from application.services.scan_application_service.scan_application_service import ScanApplicationService
+from application.services.scan_application_service.scan_application_service import (
+    ScanApplicationService,
+    make_electric_field_probe_channel,
+)
 from application.services.excitation_configuration_service.excitation_configuration_service import ExcitationConfigurationService
-from application.services.continuous_acquisition_service.continuous_acquisition_service import ContinuousAcquisitionService
+from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
 from application.services.motion_control_service.motion_control_service import MotionControlService
 from application.services.electric_field_probe_service.electric_field_probe_service import ElectricFieldProbeService
 
 # --- Infrastructure ---
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
-from infrastructure.execution.step_scan_executor import StepScanExecutor
+from infrastructure.execution.thread_pool_task_runner import ThreadPoolTaskRunner
+from infrastructure.execution.event_bus_motion_synchronizer import EventBusMotionSynchronizer
 from infrastructure.persistence.csv_scan_export_port import CsvScanExportPort
 from infrastructure.persistence.hdf5_scan_export_port import Hdf5ScanExportPort
 from application.services.scan_export_service.scan_export_service import ScanExportService
@@ -33,11 +37,11 @@ from infrastructure.mocks.adapter_mock_i_acquisition_port import RandomNoiseAcqu
 from infrastructure.mocks.adapter_mock_i_excitation_port import MockExcitationPort
 from infrastructure.mocks.adapter_mock_excitation_aware_acquisition import ExcitationAwareAcquisitionPort
 from infrastructure.mocks.adapter_mock_i_motion_port import MockMotionPort
-from infrastructure.mocks.adapter_mock_i_continuous_acquisition_executor import MockContinuousAcquisitionExecutor
+from infrastructure.mocks.adapter_mock_i_aefi_acquisition_executor import MockAefiAcquisitionExecutor
+from infrastructure.execution.electric_field_probe_acquisition_executor import ElectricFieldProbeAcquisitionExecutor
 from infrastructure.mocks.adapter_mock_i_hardware_initialization_port import MockHardwareInitializationPort
 from infrastructure.hardware.narda_ep600.adapter_electric_field_probe_port import NardaEP601ProbeAdapter
 from infrastructure.hardware.narda_ep600.fake.fake_electric_field_probe_adapter import FakeElectricFieldProbeAdapter
-from infrastructure.execution.electric_field_probe_acquisition_executor import ElectricFieldProbeAcquisitionExecutor
 
 # --- System Lifecycle ---
 from application.services.system_lifecycle_service.system_lifecycle_service import (
@@ -167,13 +171,13 @@ def main():
         if continuous_executor is None:
             print("  [continuous] -> WARNING: Cannot use real continuous without MCU (acquisition=real required)")
             print("  [continuous] -> Falling back to mock")
-            continuous_executor = MockContinuousAcquisitionExecutor(event_bus)
+            continuous_executor = MockAefiAcquisitionExecutor(event_bus)
         else:
             print("  [continuous] -> real (from MCUCompositionRoot)")
     else:
         if continuous_executor is None:
             print("  [continuous] -> mock")
-            continuous_executor = MockContinuousAcquisitionExecutor(event_bus)
+            continuous_executor = MockAefiAcquisitionExecutor(event_bus)
     
     # --- Wrap acquisition port with excitation-aware wrapper (only for mocks) ---
     # This simulates the physical coupling between excitation and acquisition
@@ -227,32 +231,54 @@ def main():
     app.processEvents()
     print("\n--- Creating Application Services ---")
     
-    # Scan Executor (Infrastructure service)
-    scan_executor = StepScanExecutor(motion_port, acquisition_port, event_bus)
-    
-    # Scan Application Service
-    scan_service = ScanApplicationService(motion_port, acquisition_port, event_bus, scan_executor)
-    
+    # Shared task runner + motion synchronizer (one instance, reused by both services)
+    task_runner = ThreadPoolTaskRunner()
+    motion_sync = EventBusMotionSynchronizer(event_bus)
+
+    # Continuous Acquisition Service - PASS acquisition_port NOT event_bus!
+    # Built before ScanApplicationService: the scan drives its acquisition
+    # through this service's stream (start/stop + subscribe) instead of
+    # pulling acquisition_port directly, so it needs the service, not the
+    # raw port.
+    continuous_service = AefiAcquisitionService(continuous_executor, acquisition_port)
+
+    # Electric Field Probe Service
+    # Same reasoning: built before ScanApplicationService, which subscribes
+    # to its sample stream rather than pulling probe_port directly.
+    electric_field_probe_executor = ElectricFieldProbeAcquisitionExecutor(event_bus)
+    electric_field_probe_service = ElectricFieldProbeService(
+        executor=electric_field_probe_executor,
+        probe_port=probe_port,
+        event_bus=event_bus,
+    )
+
+    # Scan Application Service — auxiliary probes (currently: Narda EF probe)
+    # are registered as blocking channels; see AuxiliaryProbeChannel for what
+    # "blocking" means and make_electric_field_probe_channel for the Narda wiring.
+    narda_channel = make_electric_field_probe_channel(
+        probe_port=probe_port,
+        probe_service=electric_field_probe_service,
+        event_bus=event_bus,
+        sample_rate_hz=ScanApplicationService.NARDA_CONTINUOUS_SAMPLE_RATE_HZ,
+    )
+    scan_service = ScanApplicationService(
+        motion_port, continuous_service, event_bus,
+        task_runner=task_runner,
+        motion_sync=motion_sync,
+        auxiliary_probes=[narda_channel],
+    )
+
     # Scan Export Service
     csv_export_port = CsvScanExportPort()
     hdf5_export_port = Hdf5ScanExportPort()
     scan_export_service = ScanExportService(event_bus, csv_export_port, hdf5_export_port)
-    
+
     # Excitation Service
     excitation_service = ExcitationConfigurationService(excitation_port)
-    
-    # Continuous Acquisition Service - PASS acquisition_port NOT event_bus!
-    continuous_service = ContinuousAcquisitionService(continuous_executor, acquisition_port)
-    
+
     # Motion Control Service
     motion_control_service = MotionControlService(motion_port, event_bus)
 
-    # Electric Field Probe Service
-    electric_field_probe_executor = ElectricFieldProbeAcquisitionExecutor(event_bus=event_bus)
-    electric_field_probe_service = ElectricFieldProbeService(
-        electric_field_probe_executor, probe_port, event_bus
-    )
-    
     # Transformation Service (Shared State)
     transformation_service = TransformationService(event_bus)
     
@@ -342,7 +368,8 @@ def main():
     motion_panel.home_requested.connect(motion_presenter.on_home_requested)
     motion_panel.stop_requested.connect(motion_presenter.on_stop_requested)
     motion_panel.estop_requested.connect(motion_presenter.on_estop_requested)
-    
+    motion_panel.speed_mode_changed.connect(motion_presenter.on_speed_mode_requested)
+
     motion_presenter.position_updated.connect(motion_panel.update_position)
     motion_presenter.status_updated.connect(motion_panel.update_status)
     motion_presenter.jog_enabled_changed.connect(motion_panel.set_jog_enabled)
@@ -350,6 +377,7 @@ def main():
     
     # Initialize presenter to fetch limits
     motion_presenter.initialize()
+    motion_presenter.on_speed_mode_requested(motion_panel.get_current_speed_mode())
     print("  [motion] wired")
     
     # Excitation Panel
@@ -408,6 +436,7 @@ def main():
     # Scan Panels Wiring
     scan_control_panel = dashboard.panels["scan_control"]
     scan_visualization_panel = dashboard.panels["scan_viz"]
+    field_scan_visualization_panel = dashboard.panels["field_scan_viz"]
     
     # Control -> Presenter
     scan_control_panel.scan_start_requested.connect(scan_presenter.on_scan_start_requested)
@@ -430,15 +459,28 @@ def main():
             config["x_min"], config["x_max"], config["x_nb_points"],
             config["y_min"], config["y_max"], config["y_nb_points"]
         )
-        
+        # Channel set depends on the connected probe (mono/bi/tri-axial),
+        # so it's left empty here and populated lazily from the first point.
+        field_scan_visualization_panel.initialize_scan(
+            config["x_min"], config["x_max"], config["x_nb_points"],
+            config["y_min"], config["y_max"], config["y_nb_points"],
+            channels=[]
+        )
+
     def on_scan_progress_viz(current, total, data):
         # data has 'x', 'y', 'value'
         scan_visualization_panel.update_data_point_from_position(
             data["x"], data["y"], data["value"]
         )
 
+    def on_field_scan_progress_viz(current, total, data):
+        field_scan_visualization_panel.update_data_point_from_position(
+            data["x"], data["y"], data["value"]
+        )
+
     scan_presenter.scan_started.connect(on_scan_started_viz)
     scan_presenter.scan_progress.connect(on_scan_progress_viz)
+    scan_presenter.field_scan_progress.connect(on_field_scan_progress_viz)
     print("  [scan] wired")
 
     # Hardware Advanced Config Panel Wiring

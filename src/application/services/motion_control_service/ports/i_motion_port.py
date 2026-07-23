@@ -91,6 +91,19 @@ class IMotionPort(ABC):
         pass
 
     @abstractmethod
+    def set_speed_mode(self, mode: str) -> None:
+        """
+        Apply a named speed preset ('slow', 'medium', or 'fast') to both axes.
+
+        Args:
+            mode: One of 'slow', 'medium', 'fast'.
+
+        Raises:
+            MotionError: If setting the speed mode fails.
+        """
+        pass
+
+    @abstractmethod
     def stop(self) -> None:
         """
         Stop motion with deceleration (Normal Stop).

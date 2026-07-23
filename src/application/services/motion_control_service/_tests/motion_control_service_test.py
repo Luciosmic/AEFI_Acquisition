@@ -31,6 +31,16 @@ class TestMotionControlService(DiagramFriendlyTest):
         self.service.emergency_stop()
         self.assertEqual(len(events), 1)
 
+    def test_set_speed_mode_calls_port(self):
+        result = self.service.set_speed_mode("fast")
+        self.assertTrue(result.is_success)
+        self.motion_port.set_speed_mode.assert_called_once_with("fast")
+
+    def test_set_speed_mode_rejects_invalid_mode(self):
+        result = self.service.set_speed_mode("ludicrous")
+        self.assertTrue(result.is_failure)
+        self.motion_port.set_speed_mode.assert_not_called()
+
 
 if __name__ == "__main__":
     unittest.main()

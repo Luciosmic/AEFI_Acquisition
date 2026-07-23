@@ -2,13 +2,19 @@
 Electric Field Probe Acquisition Executor Port Interface
 
 Responsibility:
-- Abstract interface for continuous (streaming) acquisition execution from
-  an electric field probe.
+- Abstract interface for continuous (streaming) acquisition execution of an
+  electric field probe.
 
 Rationale:
-- Application layer depends on this port instead of direct threading or
-  hardware code — mirrors IContinuousAcquisitionExecutor, kept separate to
-  avoid coupling electric_field_probe to VoltageMeasurement.
+- Application layer depends on this port instead of direct threading code.
+  Infrastructure implements the actual worker (mirrors
+  IAefiAcquisitionExecutor / AefiAcquisitionExecutor for the AEFI channel).
+
+Design:
+- Abstract Base Class (ABC), pure interface.
+- start()/stop()/update_config()/is_running() — same shape as
+  IAefiAcquisitionExecutor so both continuous-acquisition channels read the
+  same way.
 """
 
 from abc import ABC, abstractmethod
@@ -22,7 +28,7 @@ from application.services.electric_field_probe_service.ports.i_electric_field_pr
 
 
 class IElectricFieldProbeAcquisitionExecutor(ABC):
-    """Port for starting / stopping continuous acquisition from a probe."""
+    """Port for starting / stopping continuous electric field probe acquisition."""
 
     @abstractmethod
     def start(
@@ -37,5 +43,5 @@ class IElectricFieldProbeAcquisitionExecutor(ABC):
         """Request graceful stop of the continuous acquisition."""
 
     @abstractmethod
-    def update_config(self, config: ElectricFieldProbeAcquisitionConfig) -> None:
-        """Dynamically update configuration of running acquisition."""
+    def is_running(self) -> bool:
+        """True if the acquisition worker is currently active."""

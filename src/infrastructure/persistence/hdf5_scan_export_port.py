@@ -40,10 +40,15 @@ class Hdf5ScanExportPort(IScanExportPort):
         * positions: shape (N, 2)   -> columns: [x, y]
         * measurements: shape (N, 6)-> mean voltages
         * std_dev: shape (N, 6)     -> standard deviations
+    - Datasets under `/electric_field_data` (if field probe is used):
+        * field_positions: shape (M, 2) -> columns: [x, y]
+        * field_measurements: shape (M, P) -> P components (varies by probe)
+        * field_std_dev: shape (M, P) -> standard deviations for each component
+        * probe_info: attributes with probe metadata (brand, model, serial, axes)
     """
 
     base_output_dir: Path = field(
-        default_factory=lambda: Path(".aefi_acquisition") / "scans" / "raw_data"
+        default_factory=lambda: Path.home() / "Desktop" / "AEFI_Acquisition_Exports"
     )
 
     _file_path: Optional[Path] = field(init=False, default=None)
@@ -51,6 +56,11 @@ class Hdf5ScanExportPort(IScanExportPort):
     _pos_dset = None
     _meas_dset = None
     _std_dset = None
+    _field_pos_dset = None
+    _field_meas_dset = None
+    _field_std_dset = None
+    _field_index: int = field(init=False, default=0)
+    _field_n_components: int = field(init=False, default=0)
     _index: int = field(init=False, default=0)
 
     def configure(
@@ -132,6 +142,63 @@ class Hdf5ScanExportPort(IScanExportPort):
         )
 
         self._index = 0
+        self._field_index = 0
+        self._field_n_components = 0
+
+    def configure_field_data(self, n_components: int, probe_info: Optional[Dict[str, Any]] = None) -> None:
+        """
+        Configure the electric field datasets.
+        
+        Must be called before write_field_point() if exporting field measurements.
+        
+        Args:
+            n_components: Number of components in the field measurements (e.g., 3 for tri-axial)
+            probe_info: Optional dictionary with probe metadata (brand, model, serial, axis_labels)
+        """
+        if self._file is None:
+            raise RuntimeError("Hdf5ScanExportPort.start() must be called before configure_field_data().")
+        
+        self._field_n_components = n_components
+        root = self._file
+        
+        # Create electric field group
+        ef_group = root.create_group("electric_field_data")
+        
+        # Store probe info as attributes
+        if probe_info:
+            for key, value in probe_info.items():
+                try:
+                    ef_group.attrs[key] = value
+                except TypeError:
+                    ef_group.attrs[key] = str(value)
+        
+        # Create resizable datasets for electric field data
+        self._field_pos_dset = ef_group.create_dataset(
+            "field_positions",
+            shape=(0, 2),
+            maxshape=(None, 2),
+            dtype="f8",
+            chunks=True,
+        )
+        
+        self._field_meas_dset = ef_group.create_dataset(
+            "field_measurements",
+            shape=(0, n_components),
+            maxshape=(None, n_components),
+            dtype="f8",
+            chunks=True,
+        )
+        
+        self._field_std_dset = ef_group.create_dataset(
+            "field_std_dev",
+            shape=(0, n_components),
+            maxshape=(None, n_components),
+            dtype="f8",
+            chunks=True,
+        )
+        
+        self._field_index = 0
+        logger.debug("Electric field datasets configured for %d components", n_components)
 
     def write_point(self, data: Dict[str, Any]) -> None:
         """
@@ -185,6 +252,40 @@ class Hdf5ScanExportPort(IScanExportPort):
 
         self._index = new_size
 
+    def write_field_point(self, data: Dict[str, Any]) -> None:
+        """
+        Append a single electric field measurement point to the datasets.
+        
+        Expected keys in `data`:
+        - x, y (position)
+        - field_components: tuple of component values
+        - field_std_dev_components: tuple of standard deviations (or None)
+        """
+        if self._file is None or self._field_pos_dset is None:
+            raise RuntimeError("Hdf5ScanExportPort.start() and configure_field_data() must be called before write_field_point().")
+        
+        x = float(data["x"])
+        y = float(data["y"])
+        components = tuple(float(c) for c in data["field_components"])
+        std_dev_components = data.get("field_std_dev_components")
+        
+        # Convert std_dev_components to numpy array
+        if std_dev_components is not None:
+            std_devs = [np.nan if v is None else float(v) for v in std_dev_components]
+        else:
+            std_devs = [np.nan] * len(components)
+        
+        new_size = self._field_index + 1
+        self._field_pos_dset.resize((new_size, 2))
+        self._field_meas_dset.resize((new_size, self._field_n_components))
+        self._field_std_dset.resize((new_size, self._field_n_components))
+        
+        self._field_pos_dset[self._field_index, :] = [x, y]
+        self._field_meas_dset[self._field_index, :] = components
+        self._field_std_dset[self._field_index, :] = std_devs
+        
+        self._field_index = new_size
+
     def stop(self) -> None:
         """Close the HDF5 file."""
         if self._file is not None:
@@ -197,7 +298,12 @@ class Hdf5ScanExportPort(IScanExportPort):
         self._pos_dset = None
         self._meas_dset = None
         self._std_dset = None
+        self._field_pos_dset = None
+        self._field_meas_dset = None
+        self._field_std_dset = None
         self._file_path = None
         self._index = 0
+        self._field_index = 0
+        self._field_n_components = 0
 
 
