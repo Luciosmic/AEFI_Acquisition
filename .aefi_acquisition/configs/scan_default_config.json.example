@@ -9,11 +9,5 @@
     "scan_pattern": "SERPENTINE",
     "stabilization_delay_ms": 300,
     "averaging_per_position": 10
-  },
-  "export_config": {
-    "enabled": true,
-    "output_directory": "data_repository/",
-    "filename_base": "scan",
-    "format": "CSV"
   }
 }
