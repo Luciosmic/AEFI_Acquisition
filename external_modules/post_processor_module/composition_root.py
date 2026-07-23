@@ -1,12 +1,13 @@
 """
 Post-Processor Composition Root
 Orchestrates the full workflow:
-1. Scan '.aefi_acquisition/scans/raw_data' for raw CSVs.
-2. Compare with '.aefi_acquisition/scans/processed_data' to identify missing/outdated items.
+1. Scan the configured export directory (see `_export_output_directory`) for raw CSVs.
+2. Compare with its 'processed_data' subfolder to identify missing/outdated items.
 3. Run ProcessingPipeline on missing items.
 4. Launch Visualization App on the processed directory.
 """
 
+import json
 import sys
 import argparse
 from pathlib import Path
@@ -21,6 +22,20 @@ for p in (_external_modules, project_root):
     s = str(p)
     if s not in sys.path:
         sys.path.insert(0, s)
+
+_EXPORT_CONFIG_PATH = project_root / ".aefi_acquisition" / "configs" / "export_default_config.json"
+_DEFAULT_EXPORT_DIR = Path.home() / "Desktop" / "AEFI_Acquisition_Exports"
+
+
+def _export_output_directory() -> Path:
+    """Read `output_directory` from the export config; fall back to the app's own default."""
+    try:
+        config = json.loads(_EXPORT_CONFIG_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return _DEFAULT_EXPORT_DIR
+
+    directory = config.get("output_directory") or ""
+    return Path(directory) if directory else _DEFAULT_EXPORT_DIR
 
 from post_processor_module.processing.processing_pipeline import ProcessingPipeline
 from post_processor_module.visualisation.model import VisualisationModel
@@ -80,8 +95,8 @@ def main():
     parser.add_argument("--force", action="store_true", help="Force re-processing of all scans")
     args = parser.parse_args()
 
-    raw_dir = project_root / ".aefi_acquisition" / "scans" / "raw_data"
-    processed_dir = project_root / ".aefi_acquisition" / "scans" / "processed_data"
+    raw_dir = _export_output_directory()
+    processed_dir = raw_dir / "processed_data"
     
     # 1. Sync
     sync_scans(raw_dir, processed_dir, force=args.force)
