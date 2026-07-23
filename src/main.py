@@ -38,6 +38,7 @@ from infrastructure.mocks.adapter_mock_i_excitation_port import MockExcitationPo
 from infrastructure.mocks.adapter_mock_excitation_aware_acquisition import ExcitationAwareAcquisitionPort
 from infrastructure.mocks.adapter_mock_i_motion_port import MockMotionPort
 from infrastructure.mocks.adapter_mock_i_aefi_acquisition_executor import MockAefiAcquisitionExecutor
+from infrastructure.execution.electric_field_probe_acquisition_executor import ElectricFieldProbeAcquisitionExecutor
 from infrastructure.mocks.adapter_mock_i_hardware_initialization_port import MockHardwareInitializationPort
 from infrastructure.hardware.narda_ep600.adapter_electric_field_probe_port import NardaEP601ProbeAdapter
 from infrastructure.hardware.narda_ep600.fake.fake_electric_field_probe_adapter import FakeElectricFieldProbeAdapter
@@ -241,11 +242,12 @@ def main():
     # raw port.
     continuous_service = AefiAcquisitionService(continuous_executor, acquisition_port)
 
-    # Electric Field Probe Service (reuses the shared task_runner)
+    # Electric Field Probe Service
     # Same reasoning: built before ScanApplicationService, which subscribes
     # to its sample stream rather than pulling probe_port directly.
+    electric_field_probe_executor = ElectricFieldProbeAcquisitionExecutor(event_bus)
     electric_field_probe_service = ElectricFieldProbeService(
-        task_runner=task_runner,
+        executor=electric_field_probe_executor,
         probe_port=probe_port,
         event_bus=event_bus,
     )

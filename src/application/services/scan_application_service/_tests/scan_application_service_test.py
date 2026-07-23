@@ -11,6 +11,9 @@ from application.services.scan_application_service.dtos.scan_dtos import Scan2DC
 from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
 from application.services.aefi_acquisition_service.dtos.aefi_acquisition_dtos import AefiAcquisitionConfig
 from application.services.electric_field_probe_service.electric_field_probe_service import ElectricFieldProbeService
+from infrastructure.execution.electric_field_probe_acquisition_executor import (
+    ElectricFieldProbeAcquisitionExecutor,
+)
 from infrastructure.mocks.adapter_mock_i_motion_port import MockMotionPort
 from infrastructure.mocks.adapter_mock_i_acquisition_port import MockAcquisitionPort
 from infrastructure.mocks.adapter_mock_i_aefi_acquisition_executor import MockAefiAcquisitionExecutor
@@ -214,7 +217,9 @@ class TestScanApplicationService(DiagramFriendlyTest):
         # be fatal) — then the 3rd call succeeds and resets the counter.
         probe = _ScriptedFieldProbePort(script=[False, False, True])
         field_service = ElectricFieldProbeService(
-            task_runner=ThreadPoolTaskRunner(), probe_port=probe, event_bus=self.event_bus
+            executor=ElectricFieldProbeAcquisitionExecutor(self.event_bus),
+            probe_port=probe,
+            event_bus=self.event_bus,
         )
         narda_channel = make_electric_field_probe_channel(
             probe_port=probe,
@@ -254,7 +259,9 @@ class TestScanApplicationService(DiagramFriendlyTest):
         incomplete point."""
         probe = _ScriptedFieldProbePort(script=[False])  # always fails
         field_service = ElectricFieldProbeService(
-            task_runner=ThreadPoolTaskRunner(), probe_port=probe, event_bus=self.event_bus
+            executor=ElectricFieldProbeAcquisitionExecutor(self.event_bus),
+            probe_port=probe,
+            event_bus=self.event_bus,
         )
         narda_channel = make_electric_field_probe_channel(
             probe_port=probe,

@@ -3,7 +3,9 @@ from typing import List
 
 from tool.diagram_friendly_test import DiagramFriendlyTest
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
-from infrastructure.execution.thread_pool_task_runner import ThreadPoolTaskRunner
+from infrastructure.execution.electric_field_probe_acquisition_executor import (
+    ElectricFieldProbeAcquisitionExecutor,
+)
 
 from application.services.electric_field_probe_service.electric_field_probe_service import (
     ElectricFieldProbeService,
@@ -46,9 +48,9 @@ class TestElectricFieldProbeService(DiagramFriendlyTest):
             "electricfieldprobeconnectionchanged", self.connection_events.append
         )
 
-        task_runner = ThreadPoolTaskRunner()
+        executor = ElectricFieldProbeAcquisitionExecutor(self.event_bus)
         self.service = ElectricFieldProbeService(
-            task_runner=task_runner,
+            executor=executor,
             probe_port=self.probe_port,
             event_bus=self.event_bus,
         )
@@ -64,9 +66,9 @@ class TestElectricFieldProbeService(DiagramFriendlyTest):
         self,
     ) -> None:
         failing_port = FakeElectricFieldProbeAdapter(simulate_connection_failure=True)
-        task_runner = ThreadPoolTaskRunner()
+        executor = ElectricFieldProbeAcquisitionExecutor(self.event_bus)
         service = ElectricFieldProbeService(
-            task_runner=task_runner,
+            executor=executor,
             probe_port=failing_port,
             event_bus=self.event_bus,
         )
