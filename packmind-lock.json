@@ -198,48 +198,6 @@
         }
       ]
     },
-    "user:standard:branded-entity-id-pattern": {
-      "name": "Typed Entity ID Pattern",
-      "type": "standard",
-      "id": "05124db7-dd5b-4db3-87d6-dbe62722f2cc",
-      "version": 2,
-      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
-      "packageIds": [
-        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
-      ],
-      "source": "user",
-      "files": [
-        {
-          "path": ".claude/rules/packmind/standard-branded-entity-id-pattern.md",
-          "agent": "claude"
-        },
-        {
-          "path": ".packmind/standards/branded-entity-id-pattern.md",
-          "agent": "packmind"
-        }
-      ]
-    },
-    "user:standard:delayed-job-three-layer-pattern": {
-      "name": "Background Job Three-Layer Pattern",
-      "type": "standard",
-      "id": "5174a83d-abd0-4953-8120-1246f32b82e2",
-      "version": 2,
-      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
-      "packageIds": [
-        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
-      ],
-      "source": "user",
-      "files": [
-        {
-          "path": ".claude/rules/packmind/standard-delayed-job-three-layer-pattern.md",
-          "agent": "claude"
-        },
-        {
-          "path": ".packmind/standards/delayed-job-three-layer-pattern.md",
-          "agent": "packmind"
-        }
-      ]
-    },
     "user:standard:domain-error-structure": {
       "name": "Domain Error Structure",
       "type": "standard",
@@ -614,27 +572,6 @@
         },
         {
           "path": ".packmind/standards/typed-entity-id-pattern.md",
-          "agent": "packmind"
-        }
-      ]
-    },
-    "user:standard:typeorm-entity-schema-composition": {
-      "name": "Persistence Model Mixin Composition",
-      "type": "standard",
-      "id": "a9266f5e-520a-4b36-9714-426ca17f46c8",
-      "version": 2,
-      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
-      "packageIds": [
-        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
-      ],
-      "source": "user",
-      "files": [
-        {
-          "path": ".claude/rules/packmind/standard-typeorm-entity-schema-composition.md",
-          "agent": "claude"
-        },
-        {
-          "path": ".packmind/standards/typeorm-entity-schema-composition.md",
           "agent": "packmind"
         }
       ]
