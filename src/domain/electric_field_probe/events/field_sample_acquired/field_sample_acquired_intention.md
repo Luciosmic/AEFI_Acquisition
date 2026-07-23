@@ -1,10 +1,10 @@
-﻿# field_sample_acquired — Intention
+# field_sample_acquired — Intention
 
 ## Rationale
 
 Signaler qu'un nouvel échantillon de champ électrique est disponible, pour un
 flux d'acquisition continue piloté par une `ElectricFieldProbe` — miroir de
-`ContinuousAcquisitionSampleAcquired` mais côté `electric_field_probe`, pour
+`AefiVoltageSampleAcquired` mais côté `electric_field_probe`, pour
 ne pas coupler ce contexte à `AefiVoltageMeasurement`.
 
 ## Responsibility

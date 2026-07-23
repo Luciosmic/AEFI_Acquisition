@@ -1,4 +1,4 @@
-﻿import threading
+import threading
 import unittest
 import random
 import math
@@ -11,12 +11,12 @@ from domain.shared_kernel.value_objects.acquisition.aefi_voltage_measurement imp
 from application.services.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
 from application.services.scan_application_service.scan_application_service import ScanApplicationService
 from application.services.scan_application_service.dtos.scan_dtos import Scan2DConfigDTO
-from application.services.continuous_acquisition_service.continuous_acquisition_service import ContinuousAcquisitionService
+from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
 from infrastructure.execution.thread_pool_task_runner import ThreadPoolTaskRunner
 from infrastructure.execution.event_bus_motion_synchronizer import EventBusMotionSynchronizer
 from infrastructure.mocks.adapter_mock_i_motion_port import MockMotionPort
-from infrastructure.mocks.adapter_mock_i_continuous_acquisition_executor import MockContinuousAcquisitionExecutor
+from infrastructure.mocks.adapter_mock_i_aefi_acquisition_executor import MockAefiAcquisitionExecutor
 
 
 class NoisyAcquisitionPort(IAcquisitionPort):
@@ -74,8 +74,8 @@ class TestScanAveragingIntegration(unittest.TestCase):
         event_bus = InMemoryEventBus()
         motion_port = MockMotionPort(event_bus=event_bus, motion_delay_ms=1)
         acquisition_port = NoisyAcquisitionPort(motion_port)
-        continuous_service = ContinuousAcquisitionService(
-            MockContinuousAcquisitionExecutor(event_bus), acquisition_port
+        continuous_service = AefiAcquisitionService(
+            MockAefiAcquisitionExecutor(event_bus), acquisition_port
         )
         task_runner = ThreadPoolTaskRunner()
         motion_sync = EventBusMotionSynchronizer(event_bus)

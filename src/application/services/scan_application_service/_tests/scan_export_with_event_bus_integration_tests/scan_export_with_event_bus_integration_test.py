@@ -21,10 +21,10 @@ from infrastructure.persistence.hdf5_acquisition_repository import HDF5Acquisiti
 from application.handlers.acquisition_data_handler import AcquisitionDataHandler
 from application.services.scan_application_service.scan_application_service import ScanApplicationService
 from application.services.scan_application_service.dtos.scan_dtos import Scan2DConfigDTO
-from application.services.continuous_acquisition_service.continuous_acquisition_service import ContinuousAcquisitionService
+from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
 from infrastructure.mocks.adapter_mock_i_motion_port import MockMotionPort
 from infrastructure.mocks.adapter_mock_i_acquisition_port import MockAcquisitionPort
-from infrastructure.mocks.adapter_mock_i_continuous_acquisition_executor import MockContinuousAcquisitionExecutor
+from infrastructure.mocks.adapter_mock_i_aefi_acquisition_executor import MockAefiAcquisitionExecutor
 
 
 class ScanExportWithEventBusIntegrationTest(DiagramFriendlyTest):
@@ -65,8 +65,8 @@ class ScanExportWithEventBusIntegrationTest(DiagramFriendlyTest):
         self.log_interaction("Test", "CREATE", "ScanService", "Init with Ports & Bus")
         self.motion_port = MockMotionPort(event_bus=self.event_bus, motion_delay_ms=5)
         self.acquisition_port = MockAcquisitionPort()
-        self.continuous_service = ContinuousAcquisitionService(
-            MockContinuousAcquisitionExecutor(self.event_bus), self.acquisition_port
+        self.continuous_service = AefiAcquisitionService(
+            MockAefiAcquisitionExecutor(self.event_bus), self.acquisition_port
         )
         task_runner = ThreadPoolTaskRunner()
         motion_sync = EventBusMotionSynchronizer(self.event_bus)

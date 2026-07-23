@@ -1,4 +1,4 @@
-# adapter_i_continuous_acquisition_ads131a04 — Intention
+# adapter_aefi_acquisition_ads131a04 — Intention
 
 ## Rationale
 
@@ -12,4 +12,4 @@ Adaptateur Real pour l'acquisition continue (streaming) depuis l'ADS131A04. Cont
 ## Design
 
 - Distinct de l'adaptateur one-shot : le mode streaming de l'ADS131A04 utilise un protocole différent (DMA/interruption MCU).
-- Utilisé par `ContinuousAcquisitionExecutor`.
+- Utilisé par `AefiAcquisitionExecutor`.

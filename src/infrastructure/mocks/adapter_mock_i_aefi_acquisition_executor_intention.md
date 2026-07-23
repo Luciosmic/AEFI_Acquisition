@@ -1,8 +1,8 @@
-# adapter_mock_i_continuous_acquisition_executor — Intention
+# adapter_mock_i_aefi_acquisition_executor — Intention
 
 ## Rationale
 
-Mock de `IContinuousAcquisitionExecutor` pour les tests de `ContinuousAcquisitionService` sans thread ni hardware.
+Mock de `IAefiAcquisitionExecutor` pour les tests de `AefiAcquisitionService` sans thread ni hardware.
 
 ## Responsibility
 

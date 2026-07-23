@@ -1,4 +1,4 @@
-﻿"""
+"""
 Scan Application Service
 
 Responsibility:
@@ -43,11 +43,11 @@ from application.services.electric_field_probe_service.ports.i_electric_field_pr
 
 # Continuous acquisition streams (scan is a subscriber, not a puller — the
 # continuous worker owns the driver exclusively).
-from application.services.continuous_acquisition_service.i_api_continuous_acquisition_service import IApiContinuousAcquisitionService
-from application.services.continuous_acquisition_service.dtos.continuous_acquisition_dtos import ContinuousAcquisitionConfig
+from application.services.aefi_acquisition_service.i_api_aefi_acquisition_service import IApiAefiAcquisitionService
+from application.services.aefi_acquisition_service.dtos.aefi_acquisition_dtos import AefiAcquisitionConfig
 from application.services.electric_field_probe_service.i_api_electric_field_probe_service import IApiElectricFieldProbeService
 from application.services.electric_field_probe_service.dtos.electric_field_probe_dtos import ElectricFieldProbeAcquisitionConfig
-from domain.shared_kernel.events.continuous_acquisition_sample_acquired.continuous_acquisition_sample_acquired import ContinuousAcquisitionSampleAcquired
+from domain.shared_kernel.events.aefi_voltage_sample_acquired.aefi_voltage_sample_acquired import AefiVoltageSampleAcquired
 
 # Error union (cross-layer translation)
 from .errors.motion_sync_error import (
@@ -102,7 +102,7 @@ class AuxiliaryProbeChannel:
 
     service/acquisition_config are duck-typed on purpose: any service
     exposing start_acquisition(config)/stop_acquisition()/is_acquisition_running()
-    fits (IApiContinuousAcquisitionService and IApiElectricFieldProbeService
+    fits (IApiAefiAcquisitionService and IApiElectricFieldProbeService
     already share that shape).
     """
 
@@ -169,7 +169,7 @@ class ScanApplicationService:
     def __init__(
         self,
         motion_port: IMotionPort,
-        continuous_acquisition_service: IApiContinuousAcquisitionService,
+        aefi_acquisition_service: IApiAefiAcquisitionService,
         event_bus: IDomainEventBus,
         task_runner: IAsyncTaskRunner,
         motion_sync: IMotionSynchronizer,
@@ -177,7 +177,7 @@ class ScanApplicationService:
         output_port: Optional[IScanOutputPort] = None,
     ):
         self._motion_port = motion_port
-        self._continuous_acquisition_service = continuous_acquisition_service
+        self._aefi_acquisition_service = aefi_acquisition_service
         self._event_bus = event_bus
         self._task_runner = task_runner
         self._motion_sync = motion_sync
@@ -305,18 +305,18 @@ class ScanApplicationService:
         """
         adc_queue: "queue.Queue" = queue.Queue()
 
-        def _on_adc_sample(event: ContinuousAcquisitionSampleAcquired) -> None:
+        def _on_adc_sample(event: AefiVoltageSampleAcquired) -> None:
             adc_queue.put(event.sample)
 
-        self._event_bus.subscribe("continuousacquisitionsampleacquired", _on_adc_sample)
+        self._event_bus.subscribe("aefivoltagesampleacquired", _on_adc_sample)
 
         # Only start what isn't already running, and only stop what we
         # started — a live-view session running before the scan keeps
         # running, untouched, after it.
-        adc_started_by_scan = not self._continuous_acquisition_service.is_acquisition_running()
+        adc_started_by_scan = not self._aefi_acquisition_service.is_acquisition_running()
         if adc_started_by_scan:
-            self._continuous_acquisition_service.start_acquisition(
-                ContinuousAcquisitionConfig(sample_rate_hz=None)
+            self._aefi_acquisition_service.start_acquisition(
+                AefiAcquisitionConfig(sample_rate_hz=None)
             )
 
         # Active auxiliary channels: (channel, its queue). A channel that
@@ -454,11 +454,11 @@ class ScanApplicationService:
             self._publish_events(scan.domain_events)
 
         finally:
-            self._event_bus.unsubscribe("continuousacquisitionsampleacquired", _on_adc_sample)
+            self._event_bus.unsubscribe("aefivoltagesampleacquired", _on_adc_sample)
             for topic, handler in channel_handlers:
                 self._event_bus.unsubscribe(topic, handler)
             if adc_started_by_scan:
-                self._continuous_acquisition_service.stop_acquisition()
+                self._aefi_acquisition_service.stop_acquisition()
             for channel in channels_started_by_scan:
                 channel.service.stop_acquisition()
 

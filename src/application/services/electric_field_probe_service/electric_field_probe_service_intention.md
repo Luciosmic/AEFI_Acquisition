@@ -13,7 +13,7 @@ depuis l'UI, pas une étape du cycle de vie système.
 
 - Démarrer/arrêter/mettre à jour une acquisition continue en déléguant à
   `IElectricFieldProbeAcquisitionExecutor` (même pattern que
-  `ContinuousAcquisitionService`).
+  `AefiAcquisitionService`).
 - Piloter la connexion/déconnexion de la sonde via `IElectricFieldProbePort`,
   en absorbant toute exception matérielle (time-out, port série absent) :
   `connect_probe()` ne lève jamais, elle publie

@@ -8,12 +8,12 @@ from application.services.scan_application_service.scan_application_service impo
     make_electric_field_probe_channel,
 )
 from application.services.scan_application_service.dtos.scan_dtos import Scan2DConfigDTO
-from application.services.continuous_acquisition_service.continuous_acquisition_service import ContinuousAcquisitionService
-from application.services.continuous_acquisition_service.dtos.continuous_acquisition_dtos import ContinuousAcquisitionConfig
+from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
+from application.services.aefi_acquisition_service.dtos.aefi_acquisition_dtos import AefiAcquisitionConfig
 from application.services.electric_field_probe_service.electric_field_probe_service import ElectricFieldProbeService
 from infrastructure.mocks.adapter_mock_i_motion_port import MockMotionPort
 from infrastructure.mocks.adapter_mock_i_acquisition_port import MockAcquisitionPort
-from infrastructure.mocks.adapter_mock_i_continuous_acquisition_executor import MockContinuousAcquisitionExecutor
+from infrastructure.mocks.adapter_mock_i_aefi_acquisition_executor import MockAefiAcquisitionExecutor
 from domain.shared_kernel.events.domain_event import DomainEvent
 from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
 from domain.step_scan.events.scan_started.scan_started import ScanStarted
@@ -35,8 +35,8 @@ class TestScanApplicationService(DiagramFriendlyTest):
         self.event_bus = InMemoryEventBus()
         self.motion_port = MockMotionPort(event_bus=self.event_bus, motion_delay_ms=10)
         self.acquisition_port = MockAcquisitionPort()
-        self.continuous_acquisition_service = ContinuousAcquisitionService(
-            MockContinuousAcquisitionExecutor(self.event_bus), self.acquisition_port
+        self.aefi_acquisition_service = AefiAcquisitionService(
+            MockAefiAcquisitionExecutor(self.event_bus), self.acquisition_port
         )
         self.events: List[DomainEvent] = []
 
@@ -50,7 +50,7 @@ class TestScanApplicationService(DiagramFriendlyTest):
 
         self.service = ScanApplicationService(
             self.motion_port,
-            self.continuous_acquisition_service,
+            self.aefi_acquisition_service,
             self.event_bus,
             task_runner=task_runner,
             motion_sync=motion_sync,
@@ -126,12 +126,12 @@ class TestScanApplicationService(DiagramFriendlyTest):
 
         # The continuous acquisition stream was started by the scan (nothing
         # else was running it) — it must be stopped again once the scan ends.
-        self.assertFalse(self.continuous_acquisition_service.is_acquisition_running())
+        self.assertFalse(self.aefi_acquisition_service.is_acquisition_running())
 
     def test_scan_does_not_stop_a_continuous_stream_it_did_not_start(self):
         """A live-view session started before the scan must survive it."""
-        self.continuous_acquisition_service.start_acquisition(ContinuousAcquisitionConfig(sample_rate_hz=None))
-        self.assertTrue(self.continuous_acquisition_service.is_acquisition_running())
+        self.aefi_acquisition_service.start_acquisition(AefiAcquisitionConfig(sample_rate_hz=None))
+        self.assertTrue(self.aefi_acquisition_service.is_acquisition_running())
 
         scan_dto = Scan2DConfigDTO(
             x_min=0, x_max=1, x_nb_points=1,
@@ -144,8 +144,8 @@ class TestScanApplicationService(DiagramFriendlyTest):
         self.assertTrue(self.service.execute_scan(scan_dto))
         self.assertTrue(self._wait_for_scan_completion(timeout=5.0))
 
-        self.assertTrue(self.continuous_acquisition_service.is_acquisition_running())
-        self.continuous_acquisition_service.stop_acquisition()
+        self.assertTrue(self.aefi_acquisition_service.is_acquisition_running())
+        self.aefi_acquisition_service.stop_acquisition()
 
     def test_subscriptions(self):
         """Test the subscription methods."""
@@ -223,7 +223,7 @@ class TestScanApplicationService(DiagramFriendlyTest):
             sample_rate_hz=ScanApplicationService.NARDA_CONTINUOUS_SAMPLE_RATE_HZ,
         )
         service = ScanApplicationService(
-            self.motion_port, self.continuous_acquisition_service, self.event_bus,
+            self.motion_port, self.aefi_acquisition_service, self.event_bus,
             task_runner=ThreadPoolTaskRunner(),
             motion_sync=EventBusMotionSynchronizer(self.event_bus),
             auxiliary_probes=[narda_channel],
@@ -263,7 +263,7 @@ class TestScanApplicationService(DiagramFriendlyTest):
             sample_rate_hz=ScanApplicationService.NARDA_CONTINUOUS_SAMPLE_RATE_HZ,
         )
         service = ScanApplicationService(
-            self.motion_port, self.continuous_acquisition_service, self.event_bus,
+            self.motion_port, self.aefi_acquisition_service, self.event_bus,
             task_runner=ThreadPoolTaskRunner(),
             motion_sync=EventBusMotionSynchronizer(self.event_bus),
             auxiliary_probes=[narda_channel],

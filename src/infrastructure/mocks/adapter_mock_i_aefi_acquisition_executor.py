@@ -3,22 +3,22 @@ import time
 from typing import Optional
 from uuid import uuid4
 
-from application.services.continuous_acquisition_service.ports.i_continuous_acquisition_executor import (
-    IContinuousAcquisitionExecutor,
-    ContinuousAcquisitionConfig,
+from application.services.aefi_acquisition_service.ports.i_aefi_acquisition_executor import (
+    IAefiAcquisitionExecutor,
+    AefiAcquisitionConfig,
 )
 from application.services.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
 from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
-from domain.shared_kernel.events.continuous_acquisition_sample_acquired.continuous_acquisition_sample_acquired import (
-    ContinuousAcquisitionSampleAcquired,
+from domain.shared_kernel.events.aefi_voltage_sample_acquired.aefi_voltage_sample_acquired import (
+    AefiVoltageSampleAcquired,
 )
 from domain.shared_kernel.events.continuous_acquisition_stopped.continuous_acquisition_stopped import (
     ContinuousAcquisitionStopped,
 )
 
-class MockContinuousAcquisitionExecutor(IContinuousAcquisitionExecutor):
+class MockAefiAcquisitionExecutor(IAefiAcquisitionExecutor):
     """
-    Mock implementation of IContinuousAcquisitionExecutor.
+    Mock implementation of IAefiAcquisitionExecutor.
     
     Simulates a background thread that "acquires" data from the passed acquisition port.
     """
@@ -30,16 +30,16 @@ class MockContinuousAcquisitionExecutor(IContinuousAcquisitionExecutor):
         self._stop_event = threading.Event()
         self._current_acquisition_id = None
         
-    def start(self, config: ContinuousAcquisitionConfig, acquisition_port: IAcquisitionPort) -> None:
+    def start(self, config: AefiAcquisitionConfig, acquisition_port: IAcquisitionPort) -> None:
         """
         Starts a mock acquisition thread.
         """
         if self._is_running:
-            print("[MockContinuousAcquisitionExecutor] Already running, ignoring start.")
+            print("[MockAefiAcquisitionExecutor] Already running, ignoring start.")
             return
 
         self._current_acquisition_id = uuid4()
-        print(f"[MockContinuousAcquisitionExecutor] Starting continuous acquisition (ID={self._current_acquisition_id}). Rate: {config.sample_rate_hz if config.sample_rate_hz else 'MAX'} Hz")
+        print(f"[MockAefiAcquisitionExecutor] Starting continuous acquisition (ID={self._current_acquisition_id}). Rate: {config.sample_rate_hz if config.sample_rate_hz else 'MAX'} Hz")
         
         # Configure port only if uncertainty is provided
         if config.target_uncertainty:
@@ -62,7 +62,7 @@ class MockContinuousAcquisitionExecutor(IContinuousAcquisitionExecutor):
                 if acquisition_port.is_ready():
                     sample = acquisition_port.acquire_sample()
                     
-                    event = ContinuousAcquisitionSampleAcquired(
+                    event = AefiVoltageSampleAcquired(
                         acquisition_id=self._current_acquisition_id,
                         sample_index=sample_index,
                         sample=sample
@@ -73,7 +73,7 @@ class MockContinuousAcquisitionExecutor(IContinuousAcquisitionExecutor):
                 time.sleep(self._current_interval)
             
             self._is_running = False
-            print("[MockContinuousAcquisitionExecutor] Stopped.")
+            print("[MockAefiAcquisitionExecutor] Stopped.")
             event = ContinuousAcquisitionStopped(acquisition_id=self._current_acquisition_id)
             self._event_bus.publish(type(event).__name__.lower(), event)
 
@@ -84,16 +84,16 @@ class MockContinuousAcquisitionExecutor(IContinuousAcquisitionExecutor):
         """
         Signals the worker thread to stop.
         """
-        print("[MockContinuousAcquisitionExecutor] Stop requested.")
+        print("[MockAefiAcquisitionExecutor] Stop requested.")
         self._stop_event.set()
         if self._thread and self._thread.is_alive():
             self._thread.join(timeout=1.0)
 
-    def update_config(self, config: ContinuousAcquisitionConfig) -> None:
+    def update_config(self, config: AefiAcquisitionConfig) -> None:
         """
         Dynamically update configuration of running acquisition.
         """
-        print(f"[MockContinuousAcquisitionExecutor] Updating config. New Rate: {config.sample_rate_hz} Hz")
+        print(f"[MockAefiAcquisitionExecutor] Updating config. New Rate: {config.sample_rate_hz} Hz")
         if config.sample_rate_hz and config.sample_rate_hz > 0:
             self._current_interval = 1.0 / config.sample_rate_hz
         else:

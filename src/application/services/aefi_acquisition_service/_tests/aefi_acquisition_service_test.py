@@ -4,29 +4,29 @@ from typing import List
 from tool.diagram_friendly_test import DiagramFriendlyTest
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
 
-from application.services.continuous_acquisition_service.continuous_acquisition_service import (
-    ContinuousAcquisitionService,
+from application.services.aefi_acquisition_service.aefi_acquisition_service import (
+    AefiAcquisitionService,
 )
-from application.services.continuous_acquisition_service.dtos.continuous_acquisition_dtos import (
-    ContinuousAcquisitionConfig,
+from application.services.aefi_acquisition_service.dtos.aefi_acquisition_dtos import (
+    AefiAcquisitionConfig,
 )
-from application.services.continuous_acquisition_service.ports.i_continuous_acquisition_executor import (
-    IContinuousAcquisitionExecutor,
+from application.services.aefi_acquisition_service.ports.i_aefi_acquisition_executor import (
+    IAefiAcquisitionExecutor,
 )
 
-from infrastructure.execution.continuous_acquisition_executor import (
-    ContinuousAcquisitionExecutor,
+from infrastructure.execution.aefi_acquisition_executor import (
+    AefiAcquisitionExecutor,
 )
 from infrastructure.mocks.adapter_mock_i_acquisition_port import MockAcquisitionPort
 
-from domain.shared_kernel.events.continuous_acquisition_sample_acquired.continuous_acquisition_sample_acquired import (
-    ContinuousAcquisitionSampleAcquired,
+from domain.shared_kernel.events.aefi_voltage_sample_acquired.aefi_voltage_sample_acquired import (
+    AefiVoltageSampleAcquired,
 )
 
 
-class TestContinuousAcquisitionService(DiagramFriendlyTest):
+class TestAefiAcquisitionService(DiagramFriendlyTest):
     """
-    Diagram-friendly test for ContinuousAcquisitionService + Executor.
+    Diagram-friendly test for AefiAcquisitionService + Executor.
 
     Goal:
     - Show a short continuous acquisition burst with a noisy/synthetic signal.
@@ -39,17 +39,17 @@ class TestContinuousAcquisitionService(DiagramFriendlyTest):
         self.log_interaction(
             "Test",
             "CREATE",
-            "ContinuousAcquisitionService",
+            "AefiAcquisitionService",
             "Setup service, executor, ports and event bus",
         )
 
         # Infrastructure mocks / adapters
         self.acquisition_port = MockAcquisitionPort()
         self.event_bus = InMemoryEventBus()
-        self.samples: List[ContinuousAcquisitionSampleAcquired] = []
+        self.samples: List[AefiVoltageSampleAcquired] = []
 
         # Subscribe to continuous acquisition events
-        def on_sample(event: ContinuousAcquisitionSampleAcquired) -> None:
+        def on_sample(event: AefiVoltageSampleAcquired) -> None:
             data = {
                 "acquisition_id": str(event.acquisition_id),
                 "index": event.sample_index,
@@ -59,7 +59,7 @@ class TestContinuousAcquisitionService(DiagramFriendlyTest):
                 "EventBus",
                 "RECEIVE",
                 "Test",
-                "Received ContinuousAcquisitionSampleAcquired",
+                "Received AefiVoltageSampleAcquired",
                 data=data,
             )
             self.samples.append(event)
@@ -68,16 +68,16 @@ class TestContinuousAcquisitionService(DiagramFriendlyTest):
             "Test",
             "SUBSCRIBE",
             "EventBus",
-            "Subscribe to continuousacquisitionsampleacquired",
+            "Subscribe to aefivoltagesampleacquired",
         )
-        self.event_bus.subscribe("continuousacquisitionsampleacquired", on_sample)
+        self.event_bus.subscribe("aefivoltagesampleacquired", on_sample)
 
         # Real executor wired on mocks
-        self.executor = ContinuousAcquisitionExecutor(
+        self.executor = AefiAcquisitionExecutor(
             acquisition_port=self.acquisition_port,
             event_bus=self.event_bus,
         )
-        self.service = ContinuousAcquisitionService(self.executor, self.acquisition_port)
+        self.service = AefiAcquisitionService(self.executor, self.acquisition_port)
 
     def test_continuous_acquisition_short_burst(self) -> None:
         """
@@ -87,7 +87,7 @@ class TestContinuousAcquisitionService(DiagramFriendlyTest):
         Expect a small number of samples (> 0).
         """
 
-        config = ContinuousAcquisitionConfig(
+        config = AefiAcquisitionConfig(
             sample_rate_hz=20.0,
             max_duration_s=0.1,
             target_uncertainty=None,
@@ -96,7 +96,7 @@ class TestContinuousAcquisitionService(DiagramFriendlyTest):
         self.log_interaction(
             "Test",
             "CALL",
-            "ContinuousAcquisitionService",
+            "AefiAcquisitionService",
             "start_acquisition(sample_rate=20Hz, max_duration=0.1s)",
             data={"sample_rate_hz": config.sample_rate_hz, "max_duration_s": config.max_duration_s},
         )
@@ -108,7 +108,7 @@ class TestContinuousAcquisitionService(DiagramFriendlyTest):
         self.log_interaction(
             "Test",
             "CALL",
-            "ContinuousAcquisitionService",
+            "AefiAcquisitionService",
             "stop_acquisition()",
         )
         self.service.stop_acquisition()
@@ -118,7 +118,7 @@ class TestContinuousAcquisitionService(DiagramFriendlyTest):
         self.log_interaction(
             "Test",
             "ASSERT",
-            "ContinuousAcquisitionService",
+            "AefiAcquisitionService",
             "Verify that at least 1 sample was acquired",
             expect=">=1",
             got=nb_samples,

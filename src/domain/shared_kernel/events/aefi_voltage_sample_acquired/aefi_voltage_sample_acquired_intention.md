@@ -1,4 +1,4 @@
-﻿# continuous_acquisition_sample_acquired — Intention
+# aefi_voltage_sample_acquired — Intention
 
 ## Rationale
 

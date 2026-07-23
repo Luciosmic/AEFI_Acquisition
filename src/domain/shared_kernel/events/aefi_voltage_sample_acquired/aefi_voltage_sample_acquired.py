@@ -1,4 +1,4 @@
-﻿from dataclasses import dataclass
+from dataclasses import dataclass
 from uuid import UUID
 
 from domain.shared_kernel.events.domain_event import DomainEvent
@@ -6,7 +6,7 @@ from domain.shared_kernel.value_objects.acquisition.aefi_voltage_measurement imp
 
 
 @dataclass(frozen=True)
-class ContinuousAcquisitionSampleAcquired(DomainEvent):
+class AefiVoltageSampleAcquired(DomainEvent):
     """
     Event emitted when a new continuous acquisition sample is available.
     """

@@ -19,7 +19,7 @@ from application.services.scan_application_service.scan_application_service impo
     make_electric_field_probe_channel,
 )
 from application.services.excitation_configuration_service.excitation_configuration_service import ExcitationConfigurationService
-from application.services.continuous_acquisition_service.continuous_acquisition_service import ContinuousAcquisitionService
+from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
 from application.services.motion_control_service.motion_control_service import MotionControlService
 from application.services.electric_field_probe_service.electric_field_probe_service import ElectricFieldProbeService
 
@@ -37,7 +37,7 @@ from infrastructure.mocks.adapter_mock_i_acquisition_port import RandomNoiseAcqu
 from infrastructure.mocks.adapter_mock_i_excitation_port import MockExcitationPort
 from infrastructure.mocks.adapter_mock_excitation_aware_acquisition import ExcitationAwareAcquisitionPort
 from infrastructure.mocks.adapter_mock_i_motion_port import MockMotionPort
-from infrastructure.mocks.adapter_mock_i_continuous_acquisition_executor import MockContinuousAcquisitionExecutor
+from infrastructure.mocks.adapter_mock_i_aefi_acquisition_executor import MockAefiAcquisitionExecutor
 from infrastructure.mocks.adapter_mock_i_hardware_initialization_port import MockHardwareInitializationPort
 from infrastructure.hardware.narda_ep600.adapter_electric_field_probe_port import NardaEP601ProbeAdapter
 from infrastructure.hardware.narda_ep600.fake.fake_electric_field_probe_adapter import FakeElectricFieldProbeAdapter
@@ -170,13 +170,13 @@ def main():
         if continuous_executor is None:
             print("  [continuous] -> WARNING: Cannot use real continuous without MCU (acquisition=real required)")
             print("  [continuous] -> Falling back to mock")
-            continuous_executor = MockContinuousAcquisitionExecutor(event_bus)
+            continuous_executor = MockAefiAcquisitionExecutor(event_bus)
         else:
             print("  [continuous] -> real (from MCUCompositionRoot)")
     else:
         if continuous_executor is None:
             print("  [continuous] -> mock")
-            continuous_executor = MockContinuousAcquisitionExecutor(event_bus)
+            continuous_executor = MockAefiAcquisitionExecutor(event_bus)
     
     # --- Wrap acquisition port with excitation-aware wrapper (only for mocks) ---
     # This simulates the physical coupling between excitation and acquisition
@@ -239,7 +239,7 @@ def main():
     # through this service's stream (start/stop + subscribe) instead of
     # pulling acquisition_port directly, so it needs the service, not the
     # raw port.
-    continuous_service = ContinuousAcquisitionService(continuous_executor, acquisition_port)
+    continuous_service = AefiAcquisitionService(continuous_executor, acquisition_port)
 
     # Electric Field Probe Service (reuses the shared task_runner)
     # Same reasoning: built before ScanApplicationService, which subscribes

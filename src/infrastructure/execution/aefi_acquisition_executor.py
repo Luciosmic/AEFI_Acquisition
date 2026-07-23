@@ -1,5 +1,5 @@
 """
-ContinuousAcquisitionExecutor
+AefiAcquisitionExecutor
 
 Responsibility:
 - Run a continuous acquisition loop in a background worker thread
@@ -16,15 +16,15 @@ import threading
 import time
 from uuid import uuid4, UUID
 
-from application.services.continuous_acquisition_service.ports.i_continuous_acquisition_executor import (
-    IContinuousAcquisitionExecutor,
-    ContinuousAcquisitionConfig,
+from application.services.aefi_acquisition_service.ports.i_aefi_acquisition_executor import (
+    IAefiAcquisitionExecutor,
+    AefiAcquisitionConfig,
 )
 from application.services.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
 
 from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
-from domain.shared_kernel.events.continuous_acquisition_sample_acquired.continuous_acquisition_sample_acquired import (
-    ContinuousAcquisitionSampleAcquired,
+from domain.shared_kernel.events.aefi_voltage_sample_acquired.aefi_voltage_sample_acquired import (
+    AefiVoltageSampleAcquired,
 )
 from domain.shared_kernel.events.continuous_acquisition_failed.continuous_acquisition_failed import (
     ContinuousAcquisitionFailed,
@@ -34,19 +34,19 @@ from domain.shared_kernel.events.continuous_acquisition_stopped.continuous_acqui
 )
 
 
-class ContinuousAcquisitionExecutor(IContinuousAcquisitionExecutor):
+class AefiAcquisitionExecutor(IAefiAcquisitionExecutor):
     def __init__(self, event_bus: IDomainEventBus, acquisition_port: IAcquisitionPort | None = None) -> None:
         self._event_bus = event_bus
         self._thread: threading.Thread | None = None
         self._stop_flag = threading.Event()
         self._current_acquisition_id: UUID | None = None
-        self._config: ContinuousAcquisitionConfig | None = None
+        self._config: AefiAcquisitionConfig | None = None
 
-    def update_config(self, config: ContinuousAcquisitionConfig) -> None:
+    def update_config(self, config: AefiAcquisitionConfig) -> None:
         """Dynamically update configuration of a running acquisition."""
         self._config = config
 
-    def start(self, config: ContinuousAcquisitionConfig, acquisition_port: IAcquisitionPort) -> None:
+    def start(self, config: AefiAcquisitionConfig, acquisition_port: IAcquisitionPort) -> None:
         """
         Start a new continuous acquisition in the background.
 
@@ -80,7 +80,7 @@ class ContinuousAcquisitionExecutor(IContinuousAcquisitionExecutor):
     def _worker(
         self,
         acquisition_id: UUID,
-        config: ContinuousAcquisitionConfig,
+        config: AefiAcquisitionConfig,
         acquisition_port: IAcquisitionPort,
     ) -> None:
         """Background acquisition loop."""
@@ -98,12 +98,12 @@ class ContinuousAcquisitionExecutor(IContinuousAcquisitionExecutor):
 
                 sample = acquisition_port.acquire_sample()
 
-                event = ContinuousAcquisitionSampleAcquired(
+                event = AefiVoltageSampleAcquired(
                     acquisition_id=acquisition_id,
                     sample_index=index,
                     sample=sample,
                 )
-                self._event_bus.publish("continuousacquisitionsampleacquired", event)
+                self._event_bus.publish("aefivoltagesampleacquired", event)
 
                 index += 1
                 time.sleep(dt)

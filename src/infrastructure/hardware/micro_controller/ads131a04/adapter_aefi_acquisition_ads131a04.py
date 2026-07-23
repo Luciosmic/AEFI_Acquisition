@@ -2,7 +2,7 @@
 ADS131A04 Continuous Acquisition Adapter
 
 Responsibility:
-- Implement IContinuousAcquisitionExecutor for the ADS131A04 hardware.
+- Implement IAefiAcquisitionExecutor for the ADS131A04 hardware.
 - Manage the continuous acquisition loop using a background thread.
 - Publish events via the EventBus.
 
@@ -18,14 +18,14 @@ import time
 from uuid import uuid4, UUID
 from typing import Optional
 
-from application.services.continuous_acquisition_service.ports.i_continuous_acquisition_executor import (
-    IContinuousAcquisitionExecutor,
-    ContinuousAcquisitionConfig,
+from application.services.aefi_acquisition_service.ports.i_aefi_acquisition_executor import (
+    IAefiAcquisitionExecutor,
+    AefiAcquisitionConfig,
 )
 from application.services.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
 from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
-from domain.shared_kernel.events.continuous_acquisition_sample_acquired.continuous_acquisition_sample_acquired import (
-    ContinuousAcquisitionSampleAcquired,
+from domain.shared_kernel.events.aefi_voltage_sample_acquired.aefi_voltage_sample_acquired import (
+    AefiVoltageSampleAcquired,
 )
 from domain.shared_kernel.events.continuous_acquisition_failed.continuous_acquisition_failed import (
     ContinuousAcquisitionFailed,
@@ -34,7 +34,7 @@ from domain.shared_kernel.events.continuous_acquisition_stopped.continuous_acqui
     ContinuousAcquisitionStopped,
 )
 
-class AdapterIContinuousAcquisitionAds131a04(IContinuousAcquisitionExecutor):
+class AdapterAefiAcquisitionAds131a04(IAefiAcquisitionExecutor):
     """
     Adapter for continuous acquisition using ADS131A04.
     """
@@ -45,7 +45,7 @@ class AdapterIContinuousAcquisitionAds131a04(IContinuousAcquisitionExecutor):
         self._stop_flag = threading.Event()
         self._current_acquisition_id: Optional[UUID] = None
 
-    def start(self, config: ContinuousAcquisitionConfig, acquisition_port: IAcquisitionPort) -> None:
+    def start(self, config: AefiAcquisitionConfig, acquisition_port: IAcquisitionPort) -> None:
         """
         Start continuous acquisition.
         """
@@ -71,7 +71,7 @@ class AdapterIContinuousAcquisitionAds131a04(IContinuousAcquisitionExecutor):
             self._thread.join(timeout=2.0)
             self._thread = None
 
-    def update_config(self, config: ContinuousAcquisitionConfig) -> None:
+    def update_config(self, config: AefiAcquisitionConfig) -> None:
         """Update configuration (not fully supported in this simple version yet)."""
         # TODO: Implement dynamic config update if needed
         pass
@@ -82,7 +82,7 @@ class AdapterIContinuousAcquisitionAds131a04(IContinuousAcquisitionExecutor):
     def _worker(
         self,
         acquisition_id: UUID,
-        config: ContinuousAcquisitionConfig,
+        config: AefiAcquisitionConfig,
         acquisition_port: IAcquisitionPort,
     ) -> None:
         """Background acquisition loop."""
@@ -112,12 +112,12 @@ class AdapterIContinuousAcquisitionAds131a04(IContinuousAcquisitionExecutor):
                     raise e
 
                 # Publish event
-                event = ContinuousAcquisitionSampleAcquired(
+                event = AefiVoltageSampleAcquired(
                     acquisition_id=acquisition_id,
                     sample_index=index,
                     sample=sample,
                 )
-                self._event_bus.publish("continuousacquisitionsampleacquired", event)
+                self._event_bus.publish("aefivoltagesampleacquired", event)
 
                 index += 1
                 

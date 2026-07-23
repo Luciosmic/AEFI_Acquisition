@@ -1,12 +1,12 @@
 from abc import ABC, abstractmethod
 
-from application.services.continuous_acquisition_service.dtos.continuous_acquisition_dtos import ContinuousAcquisitionConfig
+from application.services.aefi_acquisition_service.dtos.aefi_acquisition_dtos import AefiAcquisitionConfig
 
 
-class IApiContinuousAcquisitionService(ABC):
+class IApiAefiAcquisitionService(ABC):
     """
     Responsibility:
-    - Inbound API contract for ContinuousAcquisitionService.
+    - Inbound API contract for AefiAcquisitionService.
     - Defines what UI adapters and controllers may call on this service.
 
     Rationale:
@@ -15,17 +15,17 @@ class IApiContinuousAcquisitionService(ABC):
 
     Design:
     - Pure ABC, no state.
-    - Implemented by ContinuousAcquisitionService.
+    - Implemented by AefiAcquisitionService.
     """
 
     @abstractmethod
-    def start_acquisition(self, config: ContinuousAcquisitionConfig) -> None: ...
+    def start_acquisition(self, config: AefiAcquisitionConfig) -> None: ...
 
     @abstractmethod
     def stop_acquisition(self) -> None: ...
 
     @abstractmethod
-    def update_acquisition_parameters(self, config: ContinuousAcquisitionConfig) -> None: ...
+    def update_acquisition_parameters(self, config: AefiAcquisitionConfig) -> None: ...
 
     @abstractmethod
     def is_acquisition_running(self) -> bool: ...

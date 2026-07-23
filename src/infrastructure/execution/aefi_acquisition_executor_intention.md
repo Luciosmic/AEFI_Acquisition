@@ -1,8 +1,8 @@
-# continuous_acquisition_executor — Intention
+# aefi_acquisition_executor — Intention
 
 ## Rationale
 
-Implémentation concrète de `IContinuousAcquisitionExecutor` qui gère le streaming d'acquisition en boucle continue à taux fixe (timer ou thread). Séparé de `StepScanExecutor` car la logique temporelle est différente : ici c'est un polling à fréquence fixe, pas une synchronisation event-based.
+Implémentation concrète de `IAefiAcquisitionExecutor` qui gère le streaming d'acquisition en boucle continue à taux fixe (timer ou thread). Séparé de `StepScanExecutor` car la logique temporelle est différente : ici c'est un polling à fréquence fixe, pas une synchronisation event-based.
 
 ## Responsibility
 

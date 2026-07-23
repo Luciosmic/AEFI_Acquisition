@@ -1,11 +1,11 @@
-﻿from dataclasses import dataclass
+from dataclasses import dataclass
 from typing import Optional
 
 from domain.shared_kernel.value_objects.measurement_uncertainty.measurement_uncertainty import MeasurementUncertainty
 
 
 @dataclass(frozen=True)
-class ContinuousAcquisitionConfig:
+class AefiAcquisitionConfig:
     """
     Configuration for continuous acquisition.
 
