@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from infrastructure.config.ui_config_store import UIConfigStore
+from interface.logic.ui_config_store import UIConfigStore
 
 
 class TestUIConfigStore(unittest.TestCase):

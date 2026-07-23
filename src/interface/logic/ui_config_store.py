@@ -8,8 +8,10 @@ Responsibility:
   `config_templates/` on first run.
 
 Rationale:
-- Keeps file I/O out of Qt widgets, consistent with how hardware configs
-  are handled in `infrastructure/hardware/*_advanced_configurator.py`.
+- Keeps file I/O out of Qt widgets. This is pure view-state (last folder
+  used, form defaults) with no domain/application meaning, so it stays a
+  thin interface-layer utility rather than a port+adapter pair — same
+  reasoning as `interface/logic/coordinate_transformer.py`.
 """
 
 from __future__ import annotations

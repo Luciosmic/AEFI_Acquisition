@@ -6,7 +6,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Signal
 from pathlib import Path
 
-from infrastructure.config.ui_config_store import UIConfigStore
+from interface.logic.ui_config_store import UIConfigStore
 
 
 class ScanControlPanel(QWidget):
