@@ -4,7 +4,7 @@ import numpy as np
 from pathlib import Path
 
 def inspect_baseline():
-    repo_dir = Path("tools/post_processor_modules/tests/synthetic_scans_data_repository")
+    repo_dir = Path("tools/aefi_post_processor_modules/tests/synthetic_scans_data_repository")
     # Find latest batch
     batches = sorted([d for d in repo_dir.iterdir() if d.is_dir() and d.name.startswith("batch_")])
     if not batches:

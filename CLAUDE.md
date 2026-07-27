@@ -23,7 +23,7 @@ src/
 
 _system/           # référence agents — lire en premier
 _docs/             # ADR, analyses architecturales, datasheets hardware
-external_modules/  # modules tiers (cube_visualizer 3D, post_processor_module)
+external_modules/  # modules tiers (cube_visualizer 3D, aefi_post_processor_module)
 .aefi_acquisition/ # données runtime (configs, scans, calibrations, logs) — gitignored
 ```
 

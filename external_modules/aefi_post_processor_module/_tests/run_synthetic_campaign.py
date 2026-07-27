@@ -13,7 +13,7 @@ from typing import Dict, Any
 project_root = Path(__file__).parent.parent.parent.parent
 sys.path.append(str(project_root))
 
-from tools.post_processor_modules.processing.processing_pipeline import ProcessingPipeline
+from tools.aefi_post_processor_modules.processing.processing_pipeline import ProcessingPipeline
 
 def get_latest_batch_dir(base_dir: Path) -> Path:
     batches = sorted([d for d in base_dir.iterdir() if d.is_dir() and d.name.startswith("batch_")])

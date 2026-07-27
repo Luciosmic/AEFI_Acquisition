@@ -37,10 +37,10 @@ def _export_output_directory() -> Path:
     directory = config.get("output_directory") or ""
     return Path(directory) if directory else _DEFAULT_EXPORT_DIR
 
-from post_processor_module.processing.processing_pipeline import ProcessingPipeline
-from post_processor_module.visualisation.model import VisualisationModel
-from post_processor_module.visualisation.view import VisualisationView
-from post_processor_module.visualisation.presenter import VisualisationPresenter
+from aefi_post_processor_module.processing.processing_pipeline import ProcessingPipeline
+from aefi_post_processor_module.visualisation.model import VisualisationModel
+from aefi_post_processor_module.visualisation.view import VisualisationView
+from aefi_post_processor_module.visualisation.presenter import VisualisationPresenter
 
 def sync_scans(raw_dir: Path, processed_dir: Path, force: bool = False):
     """

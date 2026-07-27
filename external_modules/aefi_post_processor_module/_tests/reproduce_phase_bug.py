@@ -1,7 +1,7 @@
 
 import unittest
 import numpy as np
-from tools.post_processor_modules.processing.primary_field_phase_calibrator import PrimaryFieldPhaseCalibrator
+from tools.aefi_post_processor_modules.processing.primary_field_phase_calibrator import PrimaryFieldPhaseCalibrator
 
 class TestPhaseCalibrationBug(unittest.TestCase):
     

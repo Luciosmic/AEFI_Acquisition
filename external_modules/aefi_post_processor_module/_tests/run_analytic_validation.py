@@ -8,7 +8,7 @@ import sys
 import os
 from pathlib import Path
 
-# Add 'tools/post_processor_modules' to path
+# Add 'tools/aefi_post_processor_modules' to path
 # This allows 'import processing' and 'import tests'
 sys.path.insert(0, str(Path(__file__).parent.parent))
 

@@ -124,7 +124,7 @@ def main():
     
     # Déterminer les répertoires
     script_dir = Path(__file__).parent
-    project_root = script_dir.parent.parent.parent  # sync_to_cloud/ -> post_processor_modules/ -> tools/ -> project root
+    project_root = script_dir.parent.parent.parent  # sync_to_cloud/ -> aefi_post_processor_modules/ -> tools/ -> project root
     source_dir = project_root / ".aefi_acquisition" / "scans" / "raw_data"
     
     # Répertoire de destination (cloud)
