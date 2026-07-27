@@ -1,0 +1,6 @@
+{
+  "enabled": true,
+  "output_directory": "",
+  "filename_base": "scan",
+  "format": "CSV"
+}

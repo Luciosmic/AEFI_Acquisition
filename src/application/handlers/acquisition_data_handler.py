@@ -29,7 +29,7 @@ class AcquisitionDataHandler:
             # Assuming event.measurement corresponds to AcquisitionSample structure
             # or we map it here.
             
-            # The event has 'measurement' which is 'VoltageMeasurement' (aliased as AcquisitionSample)
+            # The event has 'measurement' which is 'AefiVoltageMeasurement' (aliased as AcquisitionSample)
             # The event also needs a scan_id. 
             # Currently ScanPointAcquired might not have scan_id if it's just point data.
             # We might need to enrich the event or context.

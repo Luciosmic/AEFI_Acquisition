@@ -1,12 +1,12 @@
 ---
 name: 'SolidAI — Nomenclature : snake_case, Préfixes I/fake_, Dossier _tests/, Suffixe _test.py'
 alwaysApply: true
-description: 'Standardize SolidAI file, folder, and class naming with snake_case, _tests/ for test directories, _test.py (never .test.py) for Python tests, I-prefixed Domain interfaces, fake_-prefixed Fakes, and an invariant intention.md to enable deterministic O(1) navigation and avoid Python import-resolution issues.'
+description: 'SolidAI — Nomenclature : snake_case, Préfixes I/fake_, Dossier _tests/, Suffixe _test.py'
 ---
 
 # Standard: SolidAI — Nomenclature : snake_case, Préfixes I/fake_, Dossier _tests/, Suffixe _test.py
 
-Standardize SolidAI file, folder, and class naming with snake_case, _tests/ for test directories, _test.py (never .test.py) for Python tests, I-prefixed Domain interfaces, fake_-prefixed Fakes, and an invariant intention.md to enable deterministic O(1) navigation and avoid Python import-resolution issues. :
+Ce standard définit les conventions de nommage uniformes pour tous les fichiers, dossiers et classes de SolidAI. L'objectif est une navigation déterministe O(1) : connaître le type d'un élément permet... :
 * Nommer le dossier de tests _tests/ (avec underscore préfixe) pour le distinguer visuellement du code de production et le faire apparaître en premier dans le tri alphabétique
 * Nommer les fichiers de test avec le suffixe _test.py (underscore) et jamais .test.py (point) — le point dans un nom de fichier Python casse la résolution des imports de modules
 * Nommer tous les fichiers et dossiers Python en snake_case — jamais de camelCase, PascalCase ou tirets dans les noms de fichiers et dossiers

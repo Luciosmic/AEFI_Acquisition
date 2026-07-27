@@ -1,12 +1,12 @@
 ---
 name: 'Test Mock Placement and DTO Construction'
 alwaysApply: true
-description: 'Standardize Python test mock adapter placement in `src/infrastructure/mocks/` (using `adapter_mock_` file prefixes), event bus usage via `InMemoryEventBus`, and reusable DTO factories `make_<dto_name>(**overrides)` (with concise setup and `DiagramFriendlyTest` for service flows) to reduce duplication and keep tests stable and maintainable.'
+description: 'Test Mock Placement and DTO Construction'
 ---
 
 # Standard: Test Mock Placement and DTO Construction
 
-Standardize Python test mock adapter placement in `src/infrastructure/mocks/` (using `adapter_mock_` file prefixes), event bus usage via `InMemoryEventBus`, and reusable DTO factories `make_<dto_name>(**overrides)` (with concise setup and `DiagramFriendlyTest` for service flows) to reduce duplication and keep tests stable and maintainable. :
+Tests across multiple layers use shared mock adapters and construct domain DTOs inline. A consistent strategy for mock placement and DTO construction prevents duplication and brittle tests. :
 * Avoid `setUp` methods that exceed 20 lines — extract to named factory functions
 * For DTOs used in multiple tests, create a factory function `make_<dto_name>(**overrides)` in the test folder's `__init__.py`
 * Name mock files with the `adapter_mock_` prefix matching the port they implement (e.g., `adapter_mock_i_motion_port.py`)

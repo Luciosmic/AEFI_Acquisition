@@ -12,7 +12,7 @@ from infrastructure.hardware.micro_controller.mcu_composition_root import MCUCom
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
 from application.services.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
 from application.services.system_lifecycle_service.ports.i_hardware_initialization_port import IHardwareInitializationPort
-from application.services.continuous_acquisition_service.ports.i_continuous_acquisition_executor import IContinuousAcquisitionExecutor
+from application.services.aefi_acquisition_service.ports.i_aefi_acquisition_executor import IAefiAcquisitionExecutor
 
 class TestMCUCompositionRootSequence(DiagramFriendlyTest):
     def test_composition_root_wiring(self):
@@ -35,8 +35,8 @@ class TestMCUCompositionRootSequence(DiagramFriendlyTest):
         self.assertIsInstance(root.lifecycle, IHardwareInitializationPort)
         self.log_interaction("MCUCompositionRoot", "EXPOSE", "IHardwareInitializationPort", "root.lifecycle")
         
-        self.assertIsInstance(root.continuous, IContinuousAcquisitionExecutor)
-        self.log_interaction("MCUCompositionRoot", "EXPOSE", "IContinuousAcquisitionExecutor", "root.continuous")
+        self.assertIsInstance(root.continuous, IAefiAcquisitionExecutor)
+        self.log_interaction("MCUCompositionRoot", "EXPOSE", "IAefiAcquisitionExecutor", "root.continuous")
         
         # 4. Verify Internal Wiring (Shared Driver)
         self.log_divider("Internal Wiring Verification")
@@ -57,7 +57,7 @@ class TestMCUCompositionRootSequence(DiagramFriendlyTest):
         self.log_interaction("MCUCompositionRoot", "WIRE", "MCULifecycleAdapter", "Injected Shared Driver")
         
         # 5. Verify Continuous Adapter Wiring
-        self.log_interaction("Test", "INSPECT", "AdapterIContinuousAcquisitionAds131a04", "Check EventBus")
+        self.log_interaction("Test", "INSPECT", "AdapterAefiAcquisitionAds131a04", "Check EventBus")
         self.assertEqual(root.continuous._event_bus, event_bus)
         self.log_interaction("MCUCompositionRoot", "WIRE", "ContinuousAdapter", "Injected EventBus")
 

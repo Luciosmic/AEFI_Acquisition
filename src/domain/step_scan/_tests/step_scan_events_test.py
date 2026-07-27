@@ -1,4 +1,4 @@
-﻿import unittest
+import unittest
 from datetime import datetime
 
 from domain.step_scan.step_scan import StepScan
@@ -8,7 +8,7 @@ from domain.step_scan.value_objects.scan_pattern.scan_pattern import ScanPattern
 from domain.shared_kernel.value_objects.measurement_uncertainty.measurement_uncertainty import MeasurementUncertainty
 from domain.step_scan.value_objects.scan_point_result.scan_point_result import ScanPointResult
 from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
-from domain.shared_kernel.value_objects.acquisition.voltage_measurement import VoltageMeasurement
+from domain.shared_kernel.value_objects.acquisition.aefi_voltage_measurement import AefiVoltageMeasurement
 from domain.step_scan.events.scan_started.scan_started import ScanStarted
 from domain.step_scan.events.scan_point_acquired.scan_point_acquired import ScanPointAcquired
 from domain.step_scan.events.scan_completed.scan_completed import ScanCompleted
@@ -47,7 +47,7 @@ class TestStepScanEvents(unittest.TestCase):
         
         result = ScanPointResult(
             position=Position2D(x=1.0, y=2.0),
-            measurement=VoltageMeasurement(
+            measurement=AefiVoltageMeasurement(
                 voltage_x_in_phase=0.123, voltage_x_quadrature=0.001,
                 voltage_y_in_phase=0.456, voltage_y_quadrature=0.002,
                 voltage_z_in_phase=0.789, voltage_z_quadrature=0.003,

@@ -1,12 +1,12 @@
 ---
 name: 'Domain Events for Cross-Layer Communication'
 alwaysApply: true
-description: 'Standardize cross-layer state-change communication in the AEFI system by modeling each transition as a `DomainEvent` dataclass in `src/domain/events/`, publishing via `IDomainEventBus` with the lowercase class name as the topic, subscribing in application service `__init__`, and forwarding only to interface `present_*` methods to keep services and presenters decoupled and avoid leaking infrastructure events.'
+description: 'Domain Events for Cross-Layer Communication'
 ---
 
 # Standard: Domain Events for Cross-Layer Communication
 
-Standardize cross-layer state-change communication in the AEFI system by modeling each transition as a `DomainEvent` dataclass in `src/domain/events/`, publishing via `IDomainEventBus` with the lowercase class name as the topic, subscribing in application service `__init__`, and forwarding only to interface `present_*` methods to keep services and presenters decoupled and avoid leaking infrastructure events. :
+All significant state changes in the AEFI system are communicated across layers via domain events published on `IDomainEventBus`. This keeps services and presenters decoupled: the service does not kno... :
 * Application services subscribe to events in their `__init__` — never poll service state from the presenter
 * Define every new state transition as a dataclass in `src/domain/events/` — one file per domain concept (e.g., `scan_events.py`, `motion_events.py`)
 * Inherit from `DomainEvent` base class (`src/domain/events/domain_event.py`)

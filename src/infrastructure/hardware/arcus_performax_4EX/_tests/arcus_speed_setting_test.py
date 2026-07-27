@@ -34,6 +34,27 @@ class TestArcusSpeedSetting(unittest.TestCase):
         # Assert
         self.mock_controller.set_speed.assert_called_once_with(expected_hz)
 
+    def test_set_speed_mode_fast_applies_hs_and_acc(self):
+        self.adapter.set_speed_mode("fast")
+
+        self.mock_controller.set_speed.assert_called_once_with(3000)
+        self.mock_controller.set_acceleration.assert_called_once_with(500)
+
+    def test_set_speed_mode_slow_and_medium_share_acc(self):
+        self.adapter.set_speed_mode("slow")
+        self.mock_controller.set_speed.assert_called_once_with(800)
+        self.mock_controller.set_acceleration.assert_called_once_with(300)
+
+        self.mock_controller.reset_mock()
+
+        self.adapter.set_speed_mode("medium")
+        self.mock_controller.set_speed.assert_called_once_with(1500)
+        self.mock_controller.set_acceleration.assert_called_once_with(300)
+
+    def test_set_speed_mode_unknown_raises(self):
+        with self.assertRaises(ValueError):
+            self.adapter.set_speed_mode("ludicrous")
+
 
 if __name__ == '__main__':
     unittest.main()

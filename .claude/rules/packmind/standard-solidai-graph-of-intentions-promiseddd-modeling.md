@@ -1,12 +1,12 @@
 ---
 name: 'SolidAI — Graph of Intentions (Promise↔DDD) Modeling'
 alwaysApply: true
-description: 'Appliquer une taxonomie stable et traçable (sources, tags, mappings) pour faire émerger des fonctionnalités atomiques et guider leur projection en DDD.'
+description: 'SolidAI — Graph of Intentions (Promise↔DDD) Modeling'
 ---
 
 # Standard: SolidAI — Graph of Intentions (Promise↔DDD) Modeling
 
-Appliquer une taxonomie stable et traçable (sources, tags, mappings) pour faire émerger des fonctionnalités atomiques et guider leur projection en DDD. :
+Standard de modélisation pour transformer une intention utilisateur en graphe de notes traçables (thoughts_interface), la formaliser via Promise Theory (promise_model) puis la projeter en structures D... :
 * Appliquer la bijection Promise Theory ↔ DDD_Core (Agent↔Aggregate Root, +emit↔Domain Event, +expose/-accept↔Commands, Scope↔Bounded Context, Cooperation↔Use Case, Body↔Invariant, Assessment↔Tests).
 * Définir une fonctionnalité atomique (FA) par la cohésion irréductible de l’intention et son ordre d’atomicité N (nombre d’Aggregate Roots impliqués), plutôt que par une frontière technique.
 * Exiger une orchestration applicative explicite quand N>1 (Process Manager / Saga / Use Case multi-aggregates) et vérifier les invariants de chaque aggregate + invariants de liaison en fin d’opération.

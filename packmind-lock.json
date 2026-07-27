@@ -7,16 +7,16 @@
     "claude",
     "packmind"
   ],
-  "installedAt": "2026-06-19T18:28:26.586Z",
+  "installedAt": "2026-07-10T12:14:01.157Z",
   "artifacts": {
     "user:command:create-application-service": {
       "name": "Create application service",
       "type": "command",
-      "id": "f261337f-9da8-443a-a02a-444954ccd7c5",
+      "id": "2c36a570-18f6-414c-8454-bcaad7f9e43b",
       "version": 1,
-      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
+      "spaceId": "ece77158-227f-4106-8321-db6beba6054a",
       "packageIds": [
-        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
+        "c08434ec-f950-40fc-8a4f-480a22fb9585"
       ],
       "source": "user",
       "files": [
@@ -33,11 +33,11 @@
     "user:command:create-domain-event": {
       "name": "Create domain event",
       "type": "command",
-      "id": "c68bd42d-15dc-4c75-83d6-3b43e1bc4072",
+      "id": "1f209644-c26e-4e08-9568-2ad2ae01e38a",
       "version": 1,
-      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
+      "spaceId": "ece77158-227f-4106-8321-db6beba6054a",
       "packageIds": [
-        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
+        "c08434ec-f950-40fc-8a4f-480a22fb9585"
       ],
       "source": "user",
       "files": [
@@ -54,11 +54,11 @@
     "user:command:create-port-interface": {
       "name": "Create port interface",
       "type": "command",
-      "id": "40cac39c-d7c5-46bc-9870-726c990ac00d",
+      "id": "0937ac43-d8d9-435d-bbae-37931cb562f1",
       "version": 1,
-      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
+      "spaceId": "ece77158-227f-4106-8321-db6beba6054a",
       "packageIds": [
-        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
+        "c08434ec-f950-40fc-8a4f-480a22fb9585"
       ],
       "source": "user",
       "files": [
@@ -75,11 +75,11 @@
     "user:command:create-presenter": {
       "name": "Create presenter",
       "type": "command",
-      "id": "23516e41-95c5-48ba-968a-2b7451174f8c",
+      "id": "a5466bd6-a228-47a9-87c3-896dc42ed838",
       "version": 1,
-      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
+      "spaceId": "ece77158-227f-4106-8321-db6beba6054a",
       "packageIds": [
-        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
+        "c08434ec-f950-40fc-8a4f-480a22fb9585"
       ],
       "source": "user",
       "files": [
@@ -94,13 +94,13 @@
       ]
     },
     "user:command:document-an-atomic-functionality-fa-from-an-intention": {
-      "name": "Document an Atomic Functionality (FA) from an intention",
+      "name": "Document an atomic functionality fa from an intention",
       "type": "command",
-      "id": "908dd01f-e741-4774-b49f-5d95b7e42568",
+      "id": "95b86a4d-0046-40f9-9e31-614c1a8bc073",
       "version": 1,
-      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
+      "spaceId": "ece77158-227f-4106-8321-db6beba6054a",
       "packageIds": [
-        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
+        "c08434ec-f950-40fc-8a4f-480a22fb9585"
       ],
       "source": "user",
       "files": [
@@ -117,11 +117,11 @@
     "user:command:pre-pr-quality-check": {
       "name": "Pre pr quality check",
       "type": "command",
-      "id": "b64458b1-418a-4aa1-ae3d-c4d148a31db7",
+      "id": "3f79698f-b000-4821-94e3-3f3d57dfa1d2",
       "version": 1,
-      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
+      "spaceId": "ece77158-227f-4106-8321-db6beba6054a",
       "packageIds": [
-        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
+        "c08434ec-f950-40fc-8a4f-480a22fb9585"
       ],
       "source": "user",
       "files": [
@@ -136,13 +136,13 @@
       ]
     },
     "user:command:seed-graph-of-intentions-folder-scaffold": {
-      "name": "Seed Graph of Intentions (folder scaffold)",
+      "name": "Seed graph of intentions folder scaffold",
       "type": "command",
-      "id": "34146c00-3dc0-4080-9b90-a399416903ab",
+      "id": "c3a59af2-8290-4301-a3e0-1a1ead7a120c",
       "version": 1,
-      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
+      "spaceId": "ece77158-227f-4106-8321-db6beba6054a",
       "packageIds": [
-        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
+        "c08434ec-f950-40fc-8a4f-480a22fb9585"
       ],
       "source": "user",
       "files": [
@@ -159,11 +159,11 @@
     "user:standard:application-service-structure": {
       "name": "Application Service Structure",
       "type": "standard",
-      "id": "a2355748-e054-4418-bf4e-4134d394c6c9",
+      "id": "21a41d5c-eabb-404c-85bd-608ac1c61bc8",
       "version": 1,
-      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
+      "spaceId": "ece77158-227f-4106-8321-db6beba6054a",
       "packageIds": [
-        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
+        "c08434ec-f950-40fc-8a4f-480a22fb9585"
       ],
       "source": "user",
       "files": [
@@ -180,11 +180,11 @@
     "user:standard:background-job-three-layer-pattern": {
       "name": "Background Job Three-Layer Pattern",
       "type": "standard",
-      "id": "feaaca0a-1459-4b75-bfff-e04aefc7387a",
+      "id": "ff9d42b6-f727-4e1e-8304-0b87e1b752f7",
       "version": 1,
-      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
+      "spaceId": "ece77158-227f-4106-8321-db6beba6054a",
       "packageIds": [
-        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
+        "c08434ec-f950-40fc-8a4f-480a22fb9585"
       ],
       "source": "user",
       "files": [
@@ -198,56 +198,14 @@
         }
       ]
     },
-    "user:standard:branded-entity-id-pattern": {
-      "name": "Typed Entity ID Pattern",
-      "type": "standard",
-      "id": "05124db7-dd5b-4db3-87d6-dbe62722f2cc",
-      "version": 2,
-      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
-      "packageIds": [
-        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
-      ],
-      "source": "user",
-      "files": [
-        {
-          "path": ".claude/rules/packmind/standard-branded-entity-id-pattern.md",
-          "agent": "claude"
-        },
-        {
-          "path": ".packmind/standards/branded-entity-id-pattern.md",
-          "agent": "packmind"
-        }
-      ]
-    },
-    "user:standard:delayed-job-three-layer-pattern": {
-      "name": "Background Job Three-Layer Pattern",
-      "type": "standard",
-      "id": "5174a83d-abd0-4953-8120-1246f32b82e2",
-      "version": 2,
-      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
-      "packageIds": [
-        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
-      ],
-      "source": "user",
-      "files": [
-        {
-          "path": ".claude/rules/packmind/standard-delayed-job-three-layer-pattern.md",
-          "agent": "claude"
-        },
-        {
-          "path": ".packmind/standards/delayed-job-three-layer-pattern.md",
-          "agent": "packmind"
-        }
-      ]
-    },
     "user:standard:domain-error-structure": {
       "name": "Domain Error Structure",
       "type": "standard",
-      "id": "bbcd4122-bea4-4f4e-b162-6ac18c086312",
+      "id": "294df244-355b-47e9-ba1c-5c9d06885f27",
       "version": 1,
-      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
+      "spaceId": "ece77158-227f-4106-8321-db6beba6054a",
       "packageIds": [
-        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
+        "c08434ec-f950-40fc-8a4f-480a22fb9585"
       ],
       "source": "user",
       "files": [
@@ -264,11 +222,11 @@
     "user:standard:domain-events-for-cross-layer-communication": {
       "name": "Domain Events for Cross-Layer Communication",
       "type": "standard",
-      "id": "4690b9e8-94c2-4bd8-96f1-6d7d40aed515",
+      "id": "21fb54b0-7eae-49d5-946d-f8ea662ee2a2",
       "version": 1,
-      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
+      "spaceId": "ece77158-227f-4106-8321-db6beba6054a",
       "packageIds": [
-        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
+        "c08434ec-f950-40fc-8a4f-480a22fb9585"
       ],
       "source": "user",
       "files": [
@@ -285,11 +243,11 @@
     "user:standard:persistence-model-mixin-composition": {
       "name": "Persistence Model Mixin Composition",
       "type": "standard",
-      "id": "6f5cd0b9-4c45-4e77-ab54-fd70210092ac",
+      "id": "fbce651f-4057-4963-9d1c-7030a55ea7e4",
       "version": 1,
-      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
+      "spaceId": "ece77158-227f-4106-8321-db6beba6054a",
       "packageIds": [
-        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
+        "c08434ec-f950-40fc-8a4f-480a22fb9585"
       ],
       "source": "user",
       "files": [
@@ -306,11 +264,11 @@
     "user:standard:port-interface-naming-and-placement": {
       "name": "Port Interface Naming and Placement",
       "type": "standard",
-      "id": "50e9f3df-484e-408e-9d18-2bba4043ba18",
+      "id": "b42009c7-c9b5-47d9-9916-31bb7bb538bd",
       "version": 1,
-      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
+      "spaceId": "ece77158-227f-4106-8321-db6beba6054a",
       "packageIds": [
-        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
+        "c08434ec-f950-40fc-8a4f-480a22fb9585"
       ],
       "source": "user",
       "files": [
@@ -327,11 +285,11 @@
     "user:standard:presenter-responsibility-boundary": {
       "name": "Presenter Responsibility Boundary",
       "type": "standard",
-      "id": "82b226d3-113c-48b1-88c5-df8afe94a482",
+      "id": "cdb79ea0-3d3b-4dfc-8076-ab54c6f45dcf",
       "version": 1,
-      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
+      "spaceId": "ece77158-227f-4106-8321-db6beba6054a",
       "packageIds": [
-        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
+        "c08434ec-f950-40fc-8a4f-480a22fb9585"
       ],
       "source": "user",
       "files": [
@@ -348,11 +306,11 @@
     "user:standard:repository-aggregator-pattern": {
       "name": "Repository Aggregator Pattern",
       "type": "standard",
-      "id": "d80d2531-0d82-48dd-9f0e-4e8e4006b840",
+      "id": "5d9b46d8-5e8f-4eb4-9175-f8f42aa16a2d",
       "version": 1,
-      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
+      "spaceId": "ece77158-227f-4106-8321-db6beba6054a",
       "packageIds": [
-        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
+        "c08434ec-f950-40fc-8a4f-480a22fb9585"
       ],
       "source": "user",
       "files": [
@@ -369,11 +327,11 @@
     "user:standard:solidai-aggregate-domain-racine-entites-et-value-objects": {
       "name": "SolidAI — Aggregate Domain : Racine, Entités et Value Objects",
       "type": "standard",
-      "id": "86f1176e-4545-4ff0-a3d4-31e13635ac31",
-      "version": 3,
-      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
+      "id": "52927826-d96e-4857-a417-8ee1e3c21509",
+      "version": 1,
+      "spaceId": "ece77158-227f-4106-8321-db6beba6054a",
       "packageIds": [
-        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
+        "c08434ec-f950-40fc-8a4f-480a22fb9585"
       ],
       "source": "user",
       "files": [
@@ -390,11 +348,11 @@
     "user:standard:solidai-aggregate-domain-racine-entites-value-objects-et-events": {
       "name": "SolidAI — Aggregate Domain : Racine, Entités, Value Objects et Events",
       "type": "standard",
-      "id": "185a01aa-c19c-44e1-b3a9-155106cefdd7",
-      "version": 2,
-      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
+      "id": "8191a2ce-9c0f-463b-b188-04a719b997ef",
+      "version": 1,
+      "spaceId": "ece77158-227f-4106-8321-db6beba6054a",
       "packageIds": [
-        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
+        "c08434ec-f950-40fc-8a4f-480a22fb9585"
       ],
       "source": "user",
       "files": [
@@ -411,11 +369,11 @@
     "user:standard:solidai-architecture-fractale-trio-atomique-intention-code-tests-co-localises": {
       "name": "SolidAI — Architecture Fractale Trio Atomique : Intention, Code, Tests Co-localisés",
       "type": "standard",
-      "id": "3fa6d099-947d-47de-902c-5d0a2424a3e3",
-      "version": 4,
-      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
+      "id": "d4a605ff-0d93-42eb-ad38-bdd43688ce89",
+      "version": 1,
+      "spaceId": "ece77158-227f-4106-8321-db6beba6054a",
       "packageIds": [
-        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
+        "c08434ec-f950-40fc-8a4f-480a22fb9585"
       ],
       "source": "user",
       "files": [
@@ -429,14 +387,56 @@
         }
       ]
     },
+    "user:standard:solidai-ddd-plugin-layer-dependency-direction": {
+      "name": "SolidAI — DDD Plugin Layer Dependency Direction",
+      "type": "standard",
+      "id": "4b299947-b5f7-4f78-b3ab-33d0322e3805",
+      "version": 1,
+      "spaceId": "ece77158-227f-4106-8321-db6beba6054a",
+      "packageIds": [
+        "c08434ec-f950-40fc-8a4f-480a22fb9585"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/rules/packmind/standard-solidai-ddd-plugin-layer-dependency-direction.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".packmind/standards/solidai-ddd-plugin-layer-dependency-direction.md",
+          "agent": "packmind"
+        }
+      ]
+    },
+    "user:standard:solidai-domain-reference-via-wikilinks-in-skillmd": {
+      "name": "SolidAI — Domain Reference via Wikilinks in SKILL.md",
+      "type": "standard",
+      "id": "fc482d42-d3d2-4815-8a72-bc476b261bca",
+      "version": 1,
+      "spaceId": "ece77158-227f-4106-8321-db6beba6054a",
+      "packageIds": [
+        "c08434ec-f950-40fc-8a4f-480a22fb9585"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/rules/packmind/standard-solidai-domain-reference-via-wikilinks-in-skillmd.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".packmind/standards/solidai-domain-reference-via-wikilinks-in-skillmd.md",
+          "agent": "packmind"
+        }
+      ]
+    },
     "user:standard:solidai-graph-of-intentions-promiseddd-modeling": {
       "name": "SolidAI — Graph of Intentions (Promise↔DDD) Modeling",
       "type": "standard",
-      "id": "57674dea-f639-4832-8c54-6d375f3584ba",
+      "id": "5057598f-e4fa-43a6-a4c8-b1e3cc3b4d92",
       "version": 1,
-      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
+      "spaceId": "ece77158-227f-4106-8321-db6beba6054a",
       "packageIds": [
-        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
+        "c08434ec-f950-40fc-8a4f-480a22fb9585"
       ],
       "source": "user",
       "files": [
@@ -453,11 +453,11 @@
     "user:standard:solidai-graphe-de-pensee-ossature-ddd-crew-et-regles-de-traversal-experimental": {
       "name": "SolidAI — Graphe de Pensée : Ossature DDD-Crew et Règles de Traversal [EXPÉRIMENTAL]",
       "type": "standard",
-      "id": "7bc1d5d1-4aa6-40df-b80d-5751b711b210",
+      "id": "09bd4573-b570-44b1-8576-5769e78e9f7c",
       "version": 1,
-      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
+      "spaceId": "ece77158-227f-4106-8321-db6beba6054a",
       "packageIds": [
-        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
+        "c08434ec-f950-40fc-8a4f-480a22fb9585"
       ],
       "source": "user",
       "files": [
@@ -471,14 +471,77 @@
         }
       ]
     },
+    "user:standard:solidai-handler-pattern": {
+      "name": "SolidAI — Handler Pattern",
+      "type": "standard",
+      "id": "36c2c6b8-2908-40db-a3c9-42c768f39482",
+      "version": 1,
+      "spaceId": "ece77158-227f-4106-8321-db6beba6054a",
+      "packageIds": [
+        "c08434ec-f950-40fc-8a4f-480a22fb9585"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/rules/packmind/standard-solidai-handler-pattern.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".packmind/standards/solidai-handler-pattern.md",
+          "agent": "packmind"
+        }
+      ]
+    },
+    "user:standard:solidai-infrastructure-reference-via-relative-links-in-skillmd": {
+      "name": "SolidAI — Infrastructure Reference via Relative Links in SKILL.md",
+      "type": "standard",
+      "id": "8e6b8d64-a80a-4e75-a18f-369ba8d25632",
+      "version": 1,
+      "spaceId": "ece77158-227f-4106-8321-db6beba6054a",
+      "packageIds": [
+        "c08434ec-f950-40fc-8a4f-480a22fb9585"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/rules/packmind/standard-solidai-infrastructure-reference-via-relative-links-in-skillmd.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".packmind/standards/solidai-infrastructure-reference-via-relative-links-in-skillmd.md",
+          "agent": "packmind"
+        }
+      ]
+    },
+    "user:standard:solidai-layer-assignment-by-cause-of-change": {
+      "name": "SolidAI — Layer Assignment by Cause of Change",
+      "type": "standard",
+      "id": "f0d2bf65-9fc8-4094-871e-effadf1306a1",
+      "version": 1,
+      "spaceId": "ece77158-227f-4106-8321-db6beba6054a",
+      "packageIds": [
+        "c08434ec-f950-40fc-8a4f-480a22fb9585"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/rules/packmind/standard-solidai-layer-assignment-by-cause-of-change.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".packmind/standards/solidai-layer-assignment-by-cause-of-change.md",
+          "agent": "packmind"
+        }
+      ]
+    },
     "user:standard:solidai-navigation-agents-ia-placement-deterministe-fake-real-interface-atome": {
       "name": "SolidAI — Navigation Agents IA : Placement Déterministe Fake, Real, Interface, Atome",
       "type": "standard",
-      "id": "de2c2a19-626e-4ecb-91de-210ae95b188e",
-      "version": 2,
-      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
+      "id": "1c4456f5-5787-4795-a186-ee564dff2908",
+      "version": 1,
+      "spaceId": "ece77158-227f-4106-8321-db6beba6054a",
       "packageIds": [
-        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
+        "c08434ec-f950-40fc-8a4f-480a22fb9585"
       ],
       "source": "user",
       "files": [
@@ -495,11 +558,11 @@
     "user:standard:solidai-nomenclature-snakecase-prefixes-ifake-dossier-tests-suffixe-testpy": {
       "name": "SolidAI — Nomenclature : snake_case, Préfixes I/fake_, Dossier _tests/, Suffixe _test.py",
       "type": "standard",
-      "id": "edcce616-c673-4f15-b01f-63d6c8e18841",
-      "version": 3,
-      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
+      "id": "45087427-3c46-4350-84b9-94df3d3e07d6",
+      "version": 1,
+      "spaceId": "ece77158-227f-4106-8321-db6beba6054a",
       "packageIds": [
-        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
+        "c08434ec-f950-40fc-8a4f-480a22fb9585"
       ],
       "source": "user",
       "files": [
@@ -516,11 +579,11 @@
     "user:standard:solidai-regles-dimport-ddd-isolation-domain-application-infrastructure": {
       "name": "SolidAI — Règles d'Import DDD : Isolation Domain, Application, Infrastructure",
       "type": "standard",
-      "id": "55493d63-802b-40ae-ba05-bbd5472ae565",
-      "version": 2,
-      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
+      "id": "60feac3f-66e2-425e-84e5-dcfb21592aea",
+      "version": 1,
+      "spaceId": "ece77158-227f-4106-8321-db6beba6054a",
       "packageIds": [
-        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
+        "c08434ec-f950-40fc-8a4f-480a22fb9585"
       ],
       "source": "user",
       "files": [
@@ -534,23 +597,86 @@
         }
       ]
     },
-    "user:standard:solidai-services-applicatifs-structure-interfaces-et-ports-infrastructure-1": {
+    "user:standard:solidai-services-applicatifs-structure-interfaces-et-ports-infrastructure": {
       "name": "SolidAI — Services Applicatifs : Structure, Interfaces et Ports Infrastructure",
       "type": "standard",
-      "id": "7777889b-2f63-460a-b52a-6bff3cf8b23c",
+      "id": "d65d94ae-7083-473c-a96c-9dbe090cd328",
       "version": 1,
-      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
+      "spaceId": "ece77158-227f-4106-8321-db6beba6054a",
       "packageIds": [
-        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
+        "c08434ec-f950-40fc-8a4f-480a22fb9585"
       ],
       "source": "user",
       "files": [
         {
-          "path": ".claude/rules/packmind/standard-solidai-services-applicatifs-structure-interfaces-et-ports-infrastructure-1.md",
+          "path": ".claude/rules/packmind/standard-solidai-services-applicatifs-structure-interfaces-et-ports-infrastructure.md",
           "agent": "claude"
         },
         {
-          "path": ".packmind/standards/solidai-services-applicatifs-structure-interfaces-et-ports-infrastructure-1.md",
+          "path": ".packmind/standards/solidai-services-applicatifs-structure-interfaces-et-ports-infrastructure.md",
+          "agent": "packmind"
+        }
+      ]
+    },
+    "user:standard:solidai-shared-domain-concept-extraction": {
+      "name": "SolidAI — Shared Domain Concept Extraction",
+      "type": "standard",
+      "id": "0546e360-cf04-47f5-9f0c-d6b4ac26ed58",
+      "version": 1,
+      "spaceId": "ece77158-227f-4106-8321-db6beba6054a",
+      "packageIds": [
+        "c08434ec-f950-40fc-8a4f-480a22fb9585"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/rules/packmind/standard-solidai-shared-domain-concept-extraction.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".packmind/standards/solidai-shared-domain-concept-extraction.md",
+          "agent": "packmind"
+        }
+      ]
+    },
+    "user:standard:solidai-skillmd-application-layer-role": {
+      "name": "SolidAI — SKILL.md Application Layer Role",
+      "type": "standard",
+      "id": "93bc9ffe-7eaa-4973-b3f2-ae8daed4aa00",
+      "version": 1,
+      "spaceId": "ece77158-227f-4106-8321-db6beba6054a",
+      "packageIds": [
+        "c08434ec-f950-40fc-8a4f-480a22fb9585"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/rules/packmind/standard-solidai-skillmd-application-layer-role.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".packmind/standards/solidai-skillmd-application-layer-role.md",
+          "agent": "packmind"
+        }
+      ]
+    },
+    "user:standard:solidai-skillmd-containment-invariant": {
+      "name": "SolidAI — SKILL.md Containment Invariant",
+      "type": "standard",
+      "id": "c111ca13-2dd1-4bac-8fc4-22c4fc8f64b3",
+      "version": 1,
+      "spaceId": "ece77158-227f-4106-8321-db6beba6054a",
+      "packageIds": [
+        "c08434ec-f950-40fc-8a4f-480a22fb9585"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/rules/packmind/standard-solidai-skillmd-containment-invariant.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".packmind/standards/solidai-skillmd-containment-invariant.md",
           "agent": "packmind"
         }
       ]
@@ -558,11 +684,11 @@
     "user:standard:solidai-test-doubles-ddd-fake-in-memory-vs-mock-placement-infrastructure": {
       "name": "SolidAI — Test Doubles DDD : Fake In-Memory vs Mock, Placement Infrastructure",
       "type": "standard",
-      "id": "abc99ee4-aa7c-485f-8a8e-cdb4208655a3",
-      "version": 2,
-      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
+      "id": "14cdf7ab-3568-48d2-84f2-9cf7e370ad10",
+      "version": 1,
+      "spaceId": "ece77158-227f-4106-8321-db6beba6054a",
       "packageIds": [
-        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
+        "c08434ec-f950-40fc-8a4f-480a22fb9585"
       ],
       "source": "user",
       "files": [
@@ -576,14 +702,35 @@
         }
       ]
     },
+    "user:standard:solidai-use-case-vs-application-service-vocabulaires-et-couches": {
+      "name": "SolidAI — Use Case vs Application Service : Vocabulaires et Couches",
+      "type": "standard",
+      "id": "fdd25f7a-2829-44bf-844b-bf0e97eabf9d",
+      "version": 1,
+      "spaceId": "ece77158-227f-4106-8321-db6beba6054a",
+      "packageIds": [
+        "c08434ec-f950-40fc-8a4f-480a22fb9585"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/rules/packmind/standard-solidai-use-case-vs-application-service-vocabulaires-et-couches.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".packmind/standards/solidai-use-case-vs-application-service-vocabulaires-et-couches.md",
+          "agent": "packmind"
+        }
+      ]
+    },
     "user:standard:test-mock-placement-and-dto-construction": {
       "name": "Test Mock Placement and DTO Construction",
       "type": "standard",
-      "id": "45bd878e-e2e5-487a-8be7-864fba376135",
+      "id": "b3609c3c-67a9-4c37-81c6-866d117aed6e",
       "version": 1,
-      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
+      "spaceId": "ece77158-227f-4106-8321-db6beba6054a",
       "packageIds": [
-        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
+        "c08434ec-f950-40fc-8a4f-480a22fb9585"
       ],
       "source": "user",
       "files": [
@@ -593,48 +740,6 @@
         },
         {
           "path": ".packmind/standards/test-mock-placement-and-dto-construction.md",
-          "agent": "packmind"
-        }
-      ]
-    },
-    "user:standard:typed-entity-id-pattern": {
-      "name": "Typed Entity ID Pattern",
-      "type": "standard",
-      "id": "c4cabfde-a4cd-4ee4-8474-c1fa2db792ba",
-      "version": 1,
-      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
-      "packageIds": [
-        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
-      ],
-      "source": "user",
-      "files": [
-        {
-          "path": ".claude/rules/packmind/standard-typed-entity-id-pattern.md",
-          "agent": "claude"
-        },
-        {
-          "path": ".packmind/standards/typed-entity-id-pattern.md",
-          "agent": "packmind"
-        }
-      ]
-    },
-    "user:standard:typeorm-entity-schema-composition": {
-      "name": "Persistence Model Mixin Composition",
-      "type": "standard",
-      "id": "a9266f5e-520a-4b36-9714-426ca17f46c8",
-      "version": 2,
-      "spaceId": "70d91766-d243-4bcd-b284-9b9cbb0b3058",
-      "packageIds": [
-        "f0bf2046-0fe6-4682-930f-7a5711eeb22a"
-      ],
-      "source": "user",
-      "files": [
-        {
-          "path": ".claude/rules/packmind/standard-typeorm-entity-schema-composition.md",
-          "agent": "claude"
-        },
-        {
-          "path": ".packmind/standards/typeorm-entity-schema-composition.md",
           "agent": "packmind"
         }
       ]

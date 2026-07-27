@@ -384,6 +384,27 @@ class ArcusAdapter(IMotionPort):
         """
         self.stop(immediate=True)
 
+    # HS (Hz) / ACC (ms) presets — see i_motion_port.set_speed_mode.
+    SPEED_MODES = {
+        "slow": {"hs": 800, "acc": 300},
+        "medium": {"hs": 1500, "acc": 300},
+        "fast": {"hs": 3000, "acc": 500},
+    }
+
+    def set_speed_mode(self, mode: str) -> None:
+        """
+        COMMAND: Apply a named speed preset (HS + ACC) to both axes.
+        """
+        if not self._controller:
+            raise RuntimeError("Arcus controller not connected")
+
+        params = self.SPEED_MODES.get(mode)
+        if params is None:
+            raise ValueError(f"Unknown speed mode: {mode}")
+
+        self._controller.set_speed(params["hs"])
+        self._controller.set_acceleration(params["acc"])
+
     def set_speed(self, speed_mm_s: float) -> None:
         """
         COMMAND: Set speed for both axes.

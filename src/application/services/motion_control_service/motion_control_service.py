@@ -15,6 +15,8 @@ class MotionControlService:
     Uses event-based position updates instead of polling.
     """
 
+    SPEED_MODES = ("slow", "medium", "fast")
+
     def __init__(self, motion_port: IMotionPort, event_bus: IDomainEventBus):
         self._motion_port = motion_port
         self._event_bus = event_bus
@@ -140,6 +142,18 @@ class MotionControlService:
             return OperationResult.ok(None)
         except Exception as e:
             error_msg = f"Home XY failed: {str(e)}"
+            print(f"[MotionControlService] {error_msg}")
+            return OperationResult.fail(error_msg)
+
+    def set_speed_mode(self, mode: str) -> OperationResult[None, str]:
+        """Apply a named speed preset ('slow', 'medium', 'fast'). Returns Result for explicit error handling."""
+        if mode not in self.SPEED_MODES:
+            return OperationResult.fail(f"Invalid speed mode: {mode}. Must be one of {self.SPEED_MODES}")
+        try:
+            self._motion_port.set_speed_mode(mode)
+            return OperationResult.ok(None)
+        except Exception as e:
+            error_msg = f"Set speed mode failed: {str(e)}"
             print(f"[MotionControlService] {error_msg}")
             return OperationResult.fail(error_msg)
 
