@@ -1,7 +1,7 @@
 
 import numpy as np
-from tools.post_processor_modules.tests.synthetic_scan_generator import SyntheticScanGenerator
-from tools.post_processor_modules.processing.primary_field_phase_calibrator import PrimaryFieldPhaseCalibrator
+from tools.aefi_post_processor_modules.tests.synthetic_scan_generator import SyntheticScanGenerator
+from tools.aefi_post_processor_modules.processing.primary_field_phase_calibrator import PrimaryFieldPhaseCalibrator
 
 def verify_hypothesis():
     # 1. Generate Base Signal

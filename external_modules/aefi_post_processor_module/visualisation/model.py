@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import List, Tuple, Dict, Any
 import numpy as np
 
-from post_processor_module.processing.datahandler import DataHandler
+from aefi_post_processor_module.processing.datahandler import DataHandler
 
 class VisualisationModel:
     """

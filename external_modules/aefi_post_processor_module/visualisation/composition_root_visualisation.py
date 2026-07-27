@@ -16,9 +16,9 @@ for p in (_external_modules, project_root):
     if s not in sys.path:
         sys.path.insert(0, s)
 
-from post_processor_module.visualisation.model import VisualisationModel
-from post_processor_module.visualisation.view import VisualisationView
-from post_processor_module.visualisation.presenter import VisualisationPresenter
+from aefi_post_processor_module.visualisation.model import VisualisationModel
+from aefi_post_processor_module.visualisation.view import VisualisationView
+from aefi_post_processor_module.visualisation.presenter import VisualisationPresenter
 
 def main():
     parser = argparse.ArgumentParser(description="AEFI Data Visualization")
@@ -28,7 +28,7 @@ def main():
         default=str(
             project_root
             / "external_modules"
-            / "post_processor_module"
+            / "aefi_post_processor_module"
             / "_tests"
             / "synthetic_scans_data_repository"
         ),

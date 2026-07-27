@@ -3,7 +3,7 @@ import numpy as np
 import sys
 from pathlib import Path
 
-# Add post_processor_modules to path
+# Add aefi_post_processor_modules to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 try:

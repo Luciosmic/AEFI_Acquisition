@@ -374,7 +374,11 @@ def main():
     motion_presenter.status_updated.connect(motion_panel.update_status)
     motion_presenter.jog_enabled_changed.connect(motion_panel.set_jog_enabled)
     motion_presenter.limits_updated.connect(motion_panel.set_axis_limits)
-    
+
+    # Settings Panel -> Motion Panel (referential mode: limit-switch raw vs. centered/4-quadrants)
+    settings_panel = dashboard.panels["settings"]
+    settings_panel.motion_referential_changed.connect(motion_panel.set_referential_mode)
+
     # Initialize presenter to fetch limits
     motion_presenter.initialize()
     motion_presenter.on_speed_mode_requested(motion_panel.get_current_speed_mode())
