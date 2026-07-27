@@ -1,12 +1,12 @@
 ---
 name: 'Port Interface Naming and Placement'
 alwaysApply: true
-description: 'Enforce Hexagonal Architecture port interface naming and placement for Python `ABC` contracts under `src/application/` and `src/domain/` (use `i_*.py` beside consuming services, separate input/output ports, `@abstractmethod`-only methods with Responsibility/Rationale/Design docstrings, and no implementation logic) to keep service–adapter boundaries explicit and maintainable.'
+description: 'Port Interface Naming and Placement'
 ---
 
 # Standard: Port Interface Naming and Placement
 
-Enforce Hexagonal Architecture port interface naming and placement for Python `ABC` contracts under `src/application/` and `src/domain/` (use `i_*.py` beside consuming services, separate input/output ports, `@abstractmethod`-only methods with Responsibility/Rationale/Design docstrings, and no implementation logic) to keep service–adapter boundaries explicit and maintainable. :
+Port interfaces define the contract between application services and infrastructure adapters. They follow a strict naming and placement convention derived from Hexagonal Architecture. :
 * Include a docstring block explaining: Responsibility, Rationale, and Design
 * Inherit from `ABC` and mark every method with `@abstractmethod`
 * Input ports (service → infrastructure) and output ports (infrastructure → service) must be separate files
