@@ -5,7 +5,7 @@ Responsibility:
     Verify the end-to-end flow:
     Scan Execution -> Event Emission -> Handler -> Repository -> HDF5 Persistence.
 """
-import os
+import shutil
 import threading
 from pathlib import Path
 import sys
@@ -33,13 +33,11 @@ class ScanExportWithEventBusIntegrationTest(DiagramFriendlyTest):
         super().setUp()
 
         # 1. Setup Infrastructure (Persistence)
-        self.test_dir = Path(__file__).parent
-
-        for f in self.test_dir.glob("scan_*.h5"):
-            try:
-                os.remove(f)
-            except OSError:
-                pass
+        # Isolated in a subfolder (not directly in the test's own directory)
+        # so generated .h5 files never sit alongside test source files.
+        self.test_dir = Path(__file__).parent / "test_data"
+        if self.test_dir.exists():
+            shutil.rmtree(self.test_dir)
 
         try:
             rel_path = f"tests/{self.test_dir.name}"
@@ -80,6 +78,8 @@ class ScanExportWithEventBusIntegrationTest(DiagramFriendlyTest):
 
     def tearDown(self):
         super().tearDown()
+        if self.test_dir.exists():
+            shutil.rmtree(self.test_dir)
 
     def test_scan_export_flow(self):
         """Execute a scan and verify data is persisted via events."""
