@@ -1,5 +1,5 @@
 ---
-description: 'Guide pas-à-pas pour extraire une fonctionnalité atomique (mono/di/N-atomique) depuis une intention utilisateur, tracer ses sources, tisser le graphe, puis la projeter en Promise Model et en DDD (code_interface).'
+description: 'Document an atomic functionality fa from an intention'
 ---
 
 Guide pas-à-pas pour extraire une fonctionnalité atomique (mono/di/N-atomique) depuis une intention utilisateur, tracer ses sources, tisser le graphe, puis la projeter en Promise Model et en DDD (code_interface).

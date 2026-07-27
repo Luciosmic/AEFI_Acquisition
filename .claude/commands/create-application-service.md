@@ -1,5 +1,5 @@
 ---
-description: 'Scaffold a new DDD-style application service with constructor-injected ports, tests, and composition-root wiring to orchestrate hardware capabilities cleanly and keep infrastructure decoupled when adding new use-cases or extracting orchestration logic from presenters/adapters.'
+description: 'Create application service'
 ---
 
 # Create Application Service

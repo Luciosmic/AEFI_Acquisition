@@ -1,12 +1,12 @@
 ---
 name: 'SolidAI — Aggregate Domain : Racine, Entités, Value Objects et Events'
 alwaysApply: true
-description: 'Standardiser l’anatomie des modules domain SolidAI en structurant chaque agrégat avec un unique aggregate root Python dataclass à la racine (Trio Atomique <module>_intention.md + implémentation + _tests/), des entités/value objects/events isolés dans entities/, value_objects/ et events/ avec leur propre Trio Atomique, et des interfaces dans repositories/ sans imports hors domain/ ni logique d’infrastructure afin de préserver les invariants, éviter les collisions de noms et améliorer la maintenabilité.'
+description: 'SolidAI — Aggregate Domain : Racine, Entités, Value Objects et Events'
 ---
 
 # Standard: SolidAI — Aggregate Domain : Racine, Entités, Value Objects et Events
 
-Standardiser l’anatomie des modules domain SolidAI en structurant chaque agrégat avec un unique aggregate root Python dataclass à la racine (Trio Atomique <module>_intention.md + implémentation + _tests/), des entités/value objects/events isolés dans entities/, value_objects/ et events/ avec leur propre Trio Atomique, et des interfaces dans repositories/ sans imports hors domain/ ni logique d’infrastructure afin de préserver les invariants, éviter les collisions de noms et améliorer la maintenabilité. :
+Ce standard définit l'anatomie d'un module domain dans SolidAI. Chaque module domain représente un agrégat : le seul fichier de code à la racine est l'aggregate root, qui porte l'identité et les invar... :
 * Créer un sous-dossier repositories/ à la racine du module domain pour y placer les interfaces de repository de l'agrégat — ces interfaces expriment le contrat de persistance du domain sans dépendance infrastructure
 * Implémenter l'aggregate root comme dataclass Python portant les invariants métier et les méthodes de mutation — sans import hors domain/ et sans logique d'infrastructure
 * Isoler chaque entité de l'agrégat dans domain/X/entities/Y/ avec son propre Trio Atomique (<entity>_intention.md, <entity>.py, _tests/) — une entité a une identité propre mais n'est pas la racine de l'agrégat
