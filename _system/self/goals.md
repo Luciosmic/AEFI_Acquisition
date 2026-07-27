@@ -161,3 +161,131 @@ Panneau de visualisation de la config active avant lancement d'un scan.
 - [ ] L'UI affiche la config active avant de lancer un scan
 - [ ] Tests unitaires sur la validation et le snapshot (Fake repository en mémoire)
 - [x] `TestBench` et ses doublons clarifiés dans le domain
+
+---
+
+## Feature en cours : Scan 1D (ligne theta) & Scan Z
+
+> Branche dédiée `dev_scan` — worktree long-lived pour tous les développements
+> scan majeurs à venir (dont le futur flyscan). Cette section trace le plan
+> de départ ; voir le plan complet original (avec extraits de code, gabarits
+> `_intention.md`, et rapport d'exploration) dans l'historique de conversation
+> Claude Code du 2026-07-23/24 si besoin de retrouver le raisonnement détaillé.
+
+### Contexte
+
+Le banc ne fait aujourd'hui que des scans grille 2D (`StepScan`/`StepScanConfig`,
+patterns SERPENTINE/RASTER/COMB). Avant de développer le flyscan, on pose une
+fondation domaine indépendante :
+
+1. **Scan 1D en ligne** dans le plan XY, orientable par un angle theta.
+2. **Scan en Z seul** (x, y fixes).
+
+Le scan Z n'a pas de pilotage moteur automatique aujourd'hui (déplacement
+manuel opérateur entre points), mais **le domaine ne doit pas coder cette
+distinction** — c'est une préoccupation d'exécution (application/infra) future,
+pas une donnée domain.
+
+Cette passe est **strictement domain-only** : aucune modification de
+`ScanApplicationService`, `IMotionPort`, `StepScan`/`SpatialScan`, ou
+`ScanVisualizationPanel`.
+
+### Décisions actées
+
+- **Formule de rotation** (choisie après clarification utilisateur, une
+  formule `y=x·cos(theta)` initialement proposée ne pouvait pas représenter
+  un scan pur selon Y) :
+  `x(s) = center.x + s·cos(theta)`, `y(s) = center.y + s·sin(theta)`,
+  `s` échantillonné symétriquement sur `[-length/2, +length/2]`.
+  theta=0°→X pur, 90°→Y pur, 45°→diagonale.
+- **`PHYSICAL_Z_MAX_MM = 300.0`** : placeholder explicitement marqué TODO/à
+  confirmer hardware, même style que les constantes X/Y existantes (`1200.0`
+  hardcodées "pour le MVP" dans `scan_zone.py`).
+- **`LineScanConfig`/`ZAxisScanConfig` n'embarquent pas** `stabilization_delay_ms`,
+  `averaging_per_position`, `measurement_uncertainty` cette phase — préoccupations
+  d'exécution sans lecteur actuel (YAGNI). Ajout additif trivial plus tard.
+- **Nouveaux modules restent sous `src/domain/step_scan/`** (pas de nouveau
+  bounded context) — seul bounded context "scan spatial" existant, footprint
+  trop petit pour un découpage. Dette de nommage notée : le dossier s'appelle
+  `step_scan` mais héberge aussi ligne/Z — à trancher si un 3e type de scan
+  arrive.
+- **Constantes physiques extraites** de `scan_zone.py` vers un module partagé
+  `src/domain/shared_kernel/physical_bench_limits.py` (`PHYSICAL_X_MAX_MM`,
+  `PHYSICAL_Y_MAX_MM`, `PHYSICAL_Z_MAX_MM`) — 3 consommateurs (ScanZone,
+  LineScanConfig, ZAxisScanConfig) = règle des trois atteinte.
+- **Ligne à theta=90° ne doit PAS passer par `ScanZone`** : son invariant
+  `x_min < x_max` strict rejetterait à tort une ligne verticale (extension X
+  nulle). `LineScanConfig` valide sa propre bounding box directement.
+- **Convention point unique** (`n_points=1`) : échantillon pris au début de la
+  plage (`s=-length/2` pour la ligne, `z_min_mm` pour Z), cohérent avec le
+  `step=0` déjà utilisé par `ScanTrajectoryFactory` — pas le centre.
+
+### Fichiers à créer
+
+```
+src/domain/shared_kernel/
+    physical_bench_limits.py + _intention.md + _tests/
+
+src/domain/step_scan/value_objects/scan_zone/
+    scan_zone.py   [MODIFIÉ — import des constantes depuis physical_bench_limits.py,
+                     ré-export automatique, scan_zone_test.py ne change pas]
+
+src/domain/step_scan/value_objects/line_scan_config/
+    line_scan_config.py + _intention.md + _tests/
+    → center: Position2D, length_mm: float, n_points: int, theta_deg: float
+    → valide : n_points>=1, length_mm>0, bounding box de la ligne dans les
+      limites physiques X/Y (calculée via rotation, pas via ScanZone)
+
+src/domain/step_scan/value_objects/z_axis_scan_config/
+    z_axis_scan_config.py + _intention.md + _tests/
+    → xy_position: Position2D (fixe), z_min_mm, z_max_mm, n_points
+    → valide : xy_position dans limites X/Y, 0<=z_min<z_max<=PHYSICAL_Z_MAX_MM, n_points>=1
+
+src/domain/step_scan/value_objects/z_axis_trajectory/
+    z_axis_trajectory.py + _intention.md + _tests/
+    → xy_position: Position2D, z_values: List[float] — mêmes ergonomies que
+      ScanTrajectory (__iter__/__len__/__getitem__/total_points)
+
+src/domain/step_scan/services/line_scan_trajectory_factory/
+    line_scan_trajectory_factory.py + _intention.md + _tests/
+    → LineScanTrajectoryFactory.create_trajectory(config) -> ScanTrajectory
+      (réutilise ScanTrajectory/Position2D tels quels)
+
+src/domain/step_scan/services/z_axis_scan_trajectory_factory/
+    z_axis_scan_trajectory_factory.py + _intention.md + _tests/
+    → ZAxisScanTrajectoryFactory.create_trajectory(config) -> ZAxisTrajectory
+```
+
+Ne pas toucher : `step_scan.py`, `spatial_scan.py`, `scan_type.py` (mort — 0
+usage), `scan_pattern.py`, `scan_axis.py`, `scan_trajectory_factory.py`.
+
+### Vérification
+
+```bash
+uv run pytest src/domain/step_scan/value_objects/line_scan_config \
+              src/domain/step_scan/value_objects/z_axis_scan_config \
+              src/domain/step_scan/value_objects/z_axis_trajectory \
+              src/domain/step_scan/services/line_scan_trajectory_factory \
+              src/domain/step_scan/services/z_axis_scan_trajectory_factory \
+              src/domain/shared_kernel/_tests/physical_bench_limits_test.py -v
+
+uv run pytest src/ -v   # non-régression complète (149+ tests existants, dont scan_zone)
+```
+
+### Hors scope (phases futures)
+
+- Intégration dans `StepScan`/`SpatialScan` ou nouvel aggregate ligne/Z.
+- Stratégie d'exécution Z (manuelle aujourd'hui, auto plus tard) côté
+  application/infra.
+- Mode de visualisation 1D dans `ScanVisualizationPanel` (actuellement heatmap
+  2D `imshow` uniquement).
+- Ajout de `stabilization_delay_ms`/`averaging_per_position`/`measurement_uncertainty`
+  aux nouvelles configs.
+
+### Critères de done
+
+- [ ] `physical_bench_limits.py` créé, `scan_zone.py` migré sans régression
+- [ ] `LineScanConfig` + `LineScanTrajectoryFactory` + tests (theta=0/45/90/-90, n=1)
+- [ ] `ZAxisScanConfig` + `ZAxisTrajectory` + `ZAxisScanTrajectoryFactory` + tests
+- [ ] Tous les `_intention.md` rédigés (Trio Atomique)
+- [ ] Suite complète `uv run pytest src/` verte
