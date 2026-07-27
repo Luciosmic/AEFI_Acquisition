@@ -12,6 +12,8 @@ class MotionPanelCompact(QWidget):
     """
     SPEED_MODES = ("slow", "medium", "fast")
     DEFAULT_SPEED_MODE = "medium"
+    REFERENTIAL_MODES = ("limit_switch", "centered")
+    DEFAULT_REFERENTIAL_MODE = "limit_switch"
 
     # Signals to be connected to a Presenter
     jog_requested = Signal(float, float)  # dx, dy
@@ -26,6 +28,11 @@ class MotionPanelCompact(QWidget):
     def __init__(self, parent=None, config_store: UIConfigStore = None):
         super().__init__(parent)
         self._config_store = config_store or UIConfigStore()
+        self._max_x = 1270.0
+        self._max_y = 1270.0
+        self._last_x = 0.0
+        self._last_y = 0.0
+        self._referential_mode = self._load_referential_mode()
         self._build_ui()
         self._connect_signals()
         self._load_speed_mode()
@@ -241,14 +248,18 @@ class MotionPanelCompact(QWidget):
         
         v_layout.addLayout(bottom_layout)
         v_layout.addStretch()
-        
+
         layout.addWidget(group)
 
+        self._apply_axis_range()
+
     def _connect_signals(self):
-        # Absolute Moves
-        self.btn_go_x.clicked.connect(lambda: self.move_to_requested.emit('x', self.spin_to_x.value()))
-        self.btn_go_y.clicked.connect(lambda: self.move_to_requested.emit('y', self.spin_to_y.value()))
-        self.btn_go_both.clicked.connect(lambda: self.move_both_requested.emit(self.spin_to_x.value(), self.spin_to_y.value()))
+        # Absolute Moves (spinbox values are in the active referential; convert to raw before emitting)
+        self.btn_go_x.clicked.connect(lambda: self.move_to_requested.emit('x', self._display_to_raw_x(self.spin_to_x.value())))
+        self.btn_go_y.clicked.connect(lambda: self.move_to_requested.emit('y', self._display_to_raw_y(self.spin_to_y.value())))
+        self.btn_go_both.clicked.connect(lambda: self.move_both_requested.emit(
+            self._display_to_raw_x(self.spin_to_x.value()), self._display_to_raw_y(self.spin_to_y.value())
+        ))
         self.btn_to_center.clicked.connect(self.move_to_center_requested.emit)
         
         # Jogging
@@ -280,12 +291,60 @@ class MotionPanelCompact(QWidget):
 
     def _on_speed_mode_changed(self, text: str):
         mode = text.lower()
-        self._config_store.save_motion_config({"speed_mode": mode})
+        self._save_motion_config_key("speed_mode", mode)
         self.speed_mode_changed.emit(mode)
 
     def get_current_speed_mode(self) -> str:
         """Current speed mode ('slow', 'medium', or 'fast')."""
         return self.combo_speed_mode.currentText().lower()
+
+    def _save_motion_config_key(self, key: str, value: str):
+        """Merge a single key into motion_last_config.json (it's shared with other settings)."""
+        config = self._config_store.load_motion_config()
+        config[key] = value
+        self._config_store.save_motion_config(config)
+
+    def _load_referential_mode(self) -> str:
+        saved_mode = self._config_store.load_motion_config().get("referential_mode", self.DEFAULT_REFERENTIAL_MODE)
+        return saved_mode if saved_mode in self.REFERENTIAL_MODES else self.DEFAULT_REFERENTIAL_MODE
+
+    def set_referential_mode(self, mode: str):
+        """Switch between 'limit_switch' (raw, current behavior) and 'centered' (0,0 = bench center).
+
+        Persisted so the Settings panel choice survives restarts. Only the displayed labels and
+        the target spinbox range/values are affected — moves are always sent to the service in the
+        raw limit-switch referential.
+        """
+        if mode not in self.REFERENTIAL_MODES or mode == self._referential_mode:
+            return
+        self._referential_mode = mode
+        self._save_motion_config_key("referential_mode", mode)
+        self._apply_axis_range()
+        self.update_position(self._last_x, self._last_y)
+
+    def _center_offset(self):
+        return self._max_x / 2.0, self._max_y / 2.0
+
+    def _raw_to_display(self, x: float, y: float):
+        if self._referential_mode != "centered":
+            return x, y
+        cx, cy = self._center_offset()
+        return x - cx, y - cy
+
+    def _display_to_raw_x(self, x: float) -> float:
+        return x + self._center_offset()[0] if self._referential_mode == "centered" else x
+
+    def _display_to_raw_y(self, y: float) -> float:
+        return y + self._center_offset()[1] if self._referential_mode == "centered" else y
+
+    def _apply_axis_range(self):
+        if self._referential_mode == "centered":
+            half_x, half_y = self._center_offset()
+            self.spin_to_x.setRange(-half_x, half_x)
+            self.spin_to_y.setRange(-half_y, half_y)
+        else:
+            self.spin_to_x.setRange(0.0, self._max_x)
+            self.spin_to_y.setRange(0.0, self._max_y)
 
     def set_jog_enabled(self, enabled: bool):
         """Enable/disable jog buttons based on motion state."""
@@ -295,9 +354,12 @@ class MotionPanelCompact(QWidget):
         self.btn_right.setEnabled(enabled)
 
     def update_position(self, x: float, y: float):
-        self.lbl_x.setText(f"X: {x:.2f}")
-        self.lbl_y.setText(f"Y: {y:.2f}")
-        self.visualizer.update_position(x, y)
+        """x, y are raw (limit-switch referential), as reported by the presenter."""
+        self._last_x, self._last_y = x, y
+        disp_x, disp_y = self._raw_to_display(x, y)
+        self.lbl_x.setText(f"X: {disp_x:.2f}")
+        self.lbl_y.setText(f"Y: {disp_y:.2f}")
+        self.visualizer.update_position(x, y)  # visualizer always shows raw/physical position
 
     def update_status(self, is_moving: bool):
         self.lbl_status.setText("MOVING" if is_moving else "IDLE")
@@ -305,6 +367,6 @@ class MotionPanelCompact(QWidget):
 
     def set_axis_limits(self, max_x: float, max_y: float):
         """Update the maximum range for position spinboxes."""
-        self.spin_to_x.setRange(0.0, max_x)
-        self.spin_to_y.setRange(0.0, max_y)
+        self._max_x, self._max_y = max_x, max_y
+        self._apply_axis_range()
         self.visualizer.set_limits(max_x, max_y)

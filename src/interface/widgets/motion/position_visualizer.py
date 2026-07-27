@@ -65,10 +65,28 @@ class PositionVisualizer(QWidget):
         painter.setBrush(QBrush(QColor("#111")))
         painter.drawRect(workspace_rect)
         
-        # Draw Grid Lines (optional, maybe 4 quadrants)
+        # Draw Grid Lines (4 quadrants)
         painter.setPen(QPen(QColor("#333"), 1, Qt.DashLine))
         painter.drawLine(offset_x + draw_w/2, offset_y, offset_x + draw_w/2, offset_y + draw_h)
         painter.drawLine(offset_x, offset_y + draw_h/2, offset_x + draw_w, offset_y + draw_h/2)
+
+        # Draw Quadrant Labels (DDS spatial naming + Si electronic output, corner farthest from center)
+        # Screen top = physical y_pos (Y inverted for screen, see below); screen left = physical x_neg.
+        painter.setPen(QColor("#666"))
+        font = painter.font()
+        font.setPointSize(7)
+        painter.setFont(font)
+        margin = 3
+        label_h = 22  # 2 lines: "Si" + quadrant name
+        half_w, half_h = draw_w / 2, draw_h / 2
+        painter.drawText(QRectF(offset_x + margin, offset_y + margin, half_w - margin, label_h),
+                          Qt.AlignLeft | Qt.AlignTop | Qt.TextDontClip, "S1\nx_neg_y_pos")
+        painter.drawText(QRectF(offset_x + half_w, offset_y + margin, half_w - margin, label_h),
+                          Qt.AlignRight | Qt.AlignTop | Qt.TextDontClip, "S3\nx_pos_y_pos")
+        painter.drawText(QRectF(offset_x + margin, offset_y + draw_h - margin - label_h, half_w - margin, label_h),
+                          Qt.AlignLeft | Qt.AlignBottom | Qt.TextDontClip, "x_neg_y_neg\nS4")
+        painter.drawText(QRectF(offset_x + half_w, offset_y + draw_h - margin - label_h, half_w - margin, label_h),
+                          Qt.AlignRight | Qt.AlignBottom | Qt.TextDontClip, "x_pos_y_neg\nS2")
 
         # Draw Current Position
         # Coordinate system: usually (0,0) is bottom-left for physical, but top-left for screen.
