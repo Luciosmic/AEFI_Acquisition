@@ -744,27 +744,6 @@
         }
       ]
     },
-    "user:standard:typed-entity-id-pattern": {
-      "name": "Typed Entity ID Pattern",
-      "type": "standard",
-      "id": "4c4a8045-3813-4001-b200-a3c492a42ded",
-      "version": 1,
-      "spaceId": "ece77158-227f-4106-8321-db6beba6054a",
-      "packageIds": [
-        "c08434ec-f950-40fc-8a4f-480a22fb9585"
-      ],
-      "source": "user",
-      "files": [
-        {
-          "path": ".claude/rules/packmind/standard-typed-entity-id-pattern.md",
-          "agent": "claude"
-        },
-        {
-          "path": ".packmind/standards/typed-entity-id-pattern.md",
-          "agent": "packmind"
-        }
-      ]
-    },
     "default:skill:packmind-cli-list-commands": {
       "name": "Packmind CLI List Commands",
       "type": "skill",
