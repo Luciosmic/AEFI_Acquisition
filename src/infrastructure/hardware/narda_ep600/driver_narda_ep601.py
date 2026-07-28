@@ -48,6 +48,32 @@ FILTERS = {
 }
 RECOMMENDED_FILTER = 4
 
+# Panasonic ML621S, 3V nominal Li-Mn rechargeable (table 1-1/1-7, doc EP60XEN-30924-3.17).
+# Narda ne documente PAS de courbe tension->capacite (juste ces deux bornes + l'autonomie totale
+# a pleine charge) : le % ci-dessous est donc une interpolation LINEAIRE entre elles, pas une
+# courbe constructeur. Le Li-Mn a une decharge plutot plate puis une chute rapide en fin de vie —
+# ce modele lineaire sous-estime probablement le % en debut de charge et le surestime juste avant
+# la chute finale.
+BATTERY_VOLTAGE_EMPTY_V = 2.05  # seuil d'extinction auto documente, manuel §3.7 p.3-3
+BATTERY_VOLTAGE_FULL_V = 3.0  # tension nominale de la pile, table 1-1
+BATTERY_FULL_OPERATION_HOURS = 100.0  # autonomie documentee @ 0.4 S/s, filtre 28Hz (table 1-1)
+
+
+def estimate_battery_percentage(voltage):
+    """Pourcentage estime par interpolation lineaire entre BATTERY_VOLTAGE_EMPTY_V (seuil
+    d'extinction auto, 0%) et BATTERY_VOLTAGE_FULL_V (tension nominale, 100%). Voir
+    l'avertissement au-dessus des constantes : ce n'est pas une courbe constructeur."""
+    span = BATTERY_VOLTAGE_FULL_V - BATTERY_VOLTAGE_EMPTY_V
+    pct = (voltage - BATTERY_VOLTAGE_EMPTY_V) / span * 100
+    return max(0.0, min(100.0, pct))
+
+
+def estimate_battery_remaining_hours(voltage):
+    """Duree restante estimee = pourcentage * autonomie totale documentee (100h @ 0.4 S/s,
+    filtre 28Hz) — ne tient pas compte du debit reel de polling configure dans l'app, qui peut
+    consommer plus vite que les 0.4 ech/s testes par Narda (cf. table 1-6 du manuel)."""
+    return estimate_battery_percentage(voltage) / 100 * BATTERY_FULL_OPERATION_HOURS
+
 
 class NardaProbeTimeout(TimeoutError):
     """La sonde n'a pas repondu — probablement eteinte (auto-off) ou deconnectee."""

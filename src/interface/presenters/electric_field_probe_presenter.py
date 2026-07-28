@@ -151,6 +151,11 @@ class ElectricFieldProbePresenter(QObject):
         if event.connected and event.probe is not None:
             p = event.probe
             label = f"{p.brand} {p.model} (SN {p.serial_number})"
+            if p.battery_percentage is not None:
+                label += (
+                    f" — batt {p.battery_percentage:.0f}%"
+                    f" (~{p.battery_remaining_hours:.0f}h, {p.battery_voltage_v:.2f}V)"
+                )
             self._axis_labels = p.axis_labels
             self.probe_connection_changed.emit(True, label)
             self.probe_axes_defined.emit(p.axis_labels)

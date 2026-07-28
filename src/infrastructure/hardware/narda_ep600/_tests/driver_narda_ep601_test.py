@@ -8,7 +8,15 @@ src_path = Path(__file__).resolve().parent.parent.parent.parent.parent
 if str(src_path) not in sys.path:
     sys.path.append(str(src_path))
 
-from infrastructure.hardware.narda_ep600.driver_narda_ep601 import NardaEP601, NardaProbeTimeout
+from infrastructure.hardware.narda_ep600.driver_narda_ep601 import (
+    NardaEP601,
+    NardaProbeTimeout,
+    BATTERY_VOLTAGE_EMPTY_V,
+    BATTERY_VOLTAGE_FULL_V,
+    BATTERY_FULL_OPERATION_HOURS,
+    estimate_battery_percentage,
+    estimate_battery_remaining_hours,
+)
 
 
 class TestNardaEP601(unittest.TestCase):
@@ -160,6 +168,33 @@ class TestNardaEP601SlaveModeAndRetries(unittest.TestCase):
         self.assertEqual(len(events), 1)
         self.assertEqual(events[0]["value"], 4.0)
         self.assertEqual(events[0]["cmd"], "#00?T*")
+
+
+class TestBatteryEstimate(unittest.TestCase):
+    """Interpolation lineaire entre BATTERY_VOLTAGE_EMPTY_V (seuil d'extinction auto documente,
+    §3.7) et BATTERY_VOLTAGE_FULL_V (tension nominale) — pas une courbe constructeur, cf.
+    avertissement dans driver_narda_ep601.py."""
+
+    def test_full_voltage_is_100_percent(self):
+        self.assertAlmostEqual(estimate_battery_percentage(BATTERY_VOLTAGE_FULL_V), 100.0)
+
+    def test_empty_voltage_is_0_percent(self):
+        self.assertAlmostEqual(estimate_battery_percentage(BATTERY_VOLTAGE_EMPTY_V), 0.0)
+
+    def test_midpoint_voltage_is_50_percent(self):
+        midpoint = (BATTERY_VOLTAGE_FULL_V + BATTERY_VOLTAGE_EMPTY_V) / 2
+        self.assertAlmostEqual(estimate_battery_percentage(midpoint), 50.0)
+
+    def test_percentage_clamps_outside_documented_range(self):
+        self.assertEqual(estimate_battery_percentage(10.0), 100.0)
+        self.assertEqual(estimate_battery_percentage(0.0), 0.0)
+
+    def test_remaining_hours_scales_with_percentage(self):
+        self.assertAlmostEqual(
+            estimate_battery_remaining_hours(BATTERY_VOLTAGE_FULL_V),
+            BATTERY_FULL_OPERATION_HOURS,
+        )
+        self.assertAlmostEqual(estimate_battery_remaining_hours(BATTERY_VOLTAGE_EMPTY_V), 0.0)
 
 
 if __name__ == "__main__":

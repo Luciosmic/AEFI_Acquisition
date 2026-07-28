@@ -13,6 +13,12 @@ from application.services.electric_field_probe_service.ports.i_electric_field_pr
     IElectricFieldProbePort,
 )
 from domain.electric_field_probe.electric_field_probe import ElectricFieldProbe
+from infrastructure.hardware.narda_ep600.driver_narda_ep601 import (
+    estimate_battery_percentage,
+    estimate_battery_remaining_hours,
+)
+
+_FAKE_BATTERY_VOLTAGE_V = 2.7  # ~valeur mi-decharge plausible pour la pile Panasonic ML621S 3V
 
 
 class FakeElectricFieldProbeAdapter(IElectricFieldProbePort):
@@ -32,6 +38,9 @@ class FakeElectricFieldProbeAdapter(IElectricFieldProbePort):
             model="EP-000",
             serial_number="FAKE-0001",
             axis_labels=("X", "Y", "Z"),
+            battery_voltage_v=_FAKE_BATTERY_VOLTAGE_V,
+            battery_percentage=estimate_battery_percentage(_FAKE_BATTERY_VOLTAGE_V),
+            battery_remaining_hours=estimate_battery_remaining_hours(_FAKE_BATTERY_VOLTAGE_V),
         )
         self._connected = True
 
