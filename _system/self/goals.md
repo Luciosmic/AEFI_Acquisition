@@ -1,28 +1,35 @@
 # Objectifs — AEFI Acquisition
 
-## État actuel (2026-07-10)
+## État actuel (2026-07-28)
 
 ### Ce qui est opérationnel
 - `StepScan` agrégat complet — lifecycle, events, trajectoire, export
 - `ElectricFieldProbe` agrégat — identité, axes, mesure calibrée en V/m
-- Acquisition continue via le service probe — live view, export scan
+- Acquisition continue via `AefiAcquisitionService` (ex-`ContinuousAcquisitionService`) — live view, export scan
 - Compensation fréquence (NARDA EP-600) intégrée en infrastructure
 - Exécuteur scan déplacé en couche application (refactoring boundary scan-executor)
-- 149+ tests verts
+- 3 modes de vitesse motion (slow / medium / fast) sélectionnables depuis l'UI
+- Affichage batterie NARDA EP-600 (%, autonomie estimée) à la connexion + bouton refresh manuel
+- Référentiel XY translaté centré + étiquetage quadrants DDS
+- Chemin d'export scan par défaut sur le Bureau
+- `UIConfigStore` déplacé de `infrastructure/` vers `interface/logic/`
+- `ConfigBootstrapper` : seed automatique de `.aefi_acquisition/configs/` depuis `config_templates/` au démarrage (commits 386ecf5, 4e39cf7)
+- 236 tests verts
 
 ### Tensions domain identifiées (backlog technique)
 
-Ces tensions n'empêchent pas les features en cours mais devront être résorbées avant le fly-scan :
+Tensions ciblées par Phase D1 (branche `worktree-d1-shared-kernel-cleanup`) — **D1 non mergée dans `develop`** ; toutes encore présentes dans le code actuel :
 
-| Tension | Localisation | Impact |
-|---------|-------------|--------|
-| `VoltageMeasurement` dans `shared_kernel` | `shared_kernel/value_objects/acquisition/` | Couplage `ScanPointResult` au capteur ADC |
-| Events motion dans `shared_kernel` | `shared_kernel/events/motion_*` | Motion n'a pas de bounded context propre |
-| Events `continuous_acquisition_*` dans `shared_kernel` | `shared_kernel/events/` | Appartient à `electric_field_probe/` |
-| `is_fly_scan: bool` dans `SpatialScan` | `step_scan/entities/spatial_scan/` | Flag de type, pas un concept domain |
-| `results: List[Dict]` dans `SpatialScan` | `step_scan/entities/spatial_scan/` | Structure fantôme doublon de `_points` |
-| `ScanPointResult` couplé à `VoltageMeasurement` | `step_scan/value_objects/` | Bloque multi-capteurs |
-| `ExcitationParameters` dans `shared_kernel` | `shared_kernel/value_objects/excitation/` | Appartient au contexte excitation |
+| Tension | Cible D1 | État dans `develop` |
+|---------|----------|---------------------|
+| `aefi_voltage_measurement.py` dans `shared_kernel/value_objects/acquisition/` | `ProbeRawReading` dans `electric_field_probe/` | ⏳ renommé `AefiVoltageMeasurement` (commit fc4fc5b), encore dans `shared_kernel` |
+| Events motion dans `shared_kernel` | `domain/motion/events/` | ⏳ encore dans `shared_kernel` |
+| Events `continuous_acquisition_*` dans `shared_kernel` | `domain/electric_field_probe/events/` | ⏳ encore dans `shared_kernel` |
+| Events `system_*` dans `shared_kernel` | `domain/system/events/` | ⏳ encore dans `shared_kernel` |
+| `is_fly_scan: bool` dans `SpatialScan` | supprimé | ⏳ encore présent |
+| `results: List[Dict]` dans `SpatialScan` | supprimé | ⏳ encore présent |
+| `ScanPointResult` couplé à `VoltageMeasurement` | `raw_reading: ProbeRawReading` | ⏳ couplage encore actif |
+| VOs `excitation/*` dans `shared_kernel` | `domain/electric_field_excitation/value_objects/` | ⏳ encore dans `shared_kernel` |
 
 ---
 
@@ -126,32 +133,35 @@ Panneau de visualisation de la config active avant lancement d'un scan.
 
 L'ordre est imposé par les dépendances : AcquisitionConfiguration d'abord, puis nettoyage domain comme prérequis structurel au multi-capteurs et au fly-scan.
 
+**Prochaine étape architecturale après D1 + AcquisitionConfiguration :** Établir la Context Map (cf. IDDD ch.3). Le refactoring D1 a révélé les sous-domaines réels de l'application (electric_field_probe, motion, excitation, step_scan). Avant D2/D3, formaliser : (1) les frontières du unique Bounded Context "AEFI Acquisition", (2) les relations avec les systèmes externes (cube_visualizer, post_processor_module), (3) le rôle des adaptateurs infrastructure comme ACL implicite face au vocabulaire hardware (steps, pulses → mm, V/m).
+
 ---
 
-### Phase D1 — Nettoyage `shared_kernel` [après AcquisitionConfiguration]
+### Phase D1 — Nettoyage `shared_kernel` ✅ FAIT — EN ATTENTE DE MERGE
 
-**Objectif** : chaque concept domain vit dans le bounded context qui lui appartient. Le `shared_kernel` ne contient que des primitives vraiment partagées.
+**Branche worktree** : `worktree-d1-shared-kernel-cleanup` (commit `2ad1317`)  
+**Statut** : terminée sur la branche D1. **Non mergée dans `develop`** — les tensions listées ci-dessus restent ouvertes. Note : `develop` a renommé `VoltageMeasurement` en `AefiVoltageMeasurement` (commit fc4fc5b, 23 juillet) mais l'a conservé dans `shared_kernel` ; la cible D1 reste `ProbeRawReading` dans `electric_field_probe/`.
 
-**Contenu cible de `shared_kernel` après nettoyage :**
+**Contenu de `shared_kernel` après nettoyage (atteint) :**
 - `DomainEvent` base, `IDomainEventBus`
 - `OperationResult`, `ValidationResult`
 - `Position2D` (primitive géométrique partagée)
 - `MeasurementUncertainty`
 - `SensorReading` (protocole — introduit en D2)
 
-**Migrations :**
+**Migrations réalisées :**
 
-| Depuis | Vers | Notes |
-|--------|------|-------|
-| `shared_kernel/events/motion_*` | `domain/motion/events/` | Créer bounded context `motion/` |
-| `shared_kernel/events/position_updated` | `domain/motion/events/` | Idem |
-| `shared_kernel/events/emergency_stop_triggered` | `domain/motion/events/` | Idem |
-| `shared_kernel/events/continuous_acquisition_*` | `domain/electric_field_probe/events/` | Appartient à la probe |
-| `shared_kernel/events/sensor_transformation_angles_updated` | `domain/electric_field_probe/events/` | Idem |
-| `shared_kernel/events/system_*` | `domain/system/events/` | Créer bounded context `system/` |
-| `shared_kernel/value_objects/acquisition/VoltageMeasurement` | `domain/electric_field_probe/value_objects/ProbeRawReading` | Renommé + déplacé |
-| `shared_kernel/value_objects/excitation/*` | `domain/electric_field_excitation/value_objects/` | Créer bounded context `electric_field_excitation/` |
-| `shared_kernel/value_objects/hardware_configuration/*` | Application layer ou infra | Pas du domain |
+| Depuis | Vers | Statut |
+|--------|------|--------|
+| `shared_kernel/events/motion_*` | `domain/motion/events/` | ✅ |
+| `shared_kernel/events/position_updated` | `domain/motion/events/` | ✅ |
+| `shared_kernel/events/emergency_stop_triggered` | `domain/motion/events/` | ✅ |
+| `shared_kernel/events/continuous_acquisition_*` | `domain/electric_field_probe/events/` | ✅ |
+| `shared_kernel/events/sensor_transformation_angles_updated` | `domain/electric_field_probe/events/` | ✅ |
+| `shared_kernel/events/system_*` | `domain/system/events/` | ✅ |
+| `shared_kernel/value_objects/acquisition/VoltageMeasurement` | `domain/electric_field_probe/value_objects/ProbeRawReading` | ✅ |
+| `shared_kernel/value_objects/excitation/*` | `domain/electric_field_excitation/value_objects/` | ✅ |
+| `shared_kernel/value_objects/hardware_configuration/*` | Application layer | ✅ (`HardwareAdvancedParameterSchema`) |
 
 **Nettoyage structurel dans `step_scan/entities/spatial_scan/`** :
 - Supprimer `is_fly_scan: bool` (discriminant de type — inutile avec des agrégats séparés)
@@ -202,7 +212,7 @@ La `FieldMeasurement` (V/m) est dérivée à la demande : `probe.calibrate(point
 
 **Recalibration sans re-acquisition** : `scan.config_snapshot.sensor_calibration.apply(point.raw_reading)`.
 
-**Risque** : modéré — migration d'imports et renommage. Mitigation : faire par bounded context, un à la fois, tests verts après chaque migration.
+**Résultat (branche D1)** : 183 tests verts (177 baseline + 6 nouveaux : `ProbeRawReading`, `SensorCalibration`, `ElectricFieldProbe`). Shims supprimés. Branche en attente de merge dans `develop`. La suite `develop` compte 236 tests (features 23-28 juillet incluses).
 
 ---
 
