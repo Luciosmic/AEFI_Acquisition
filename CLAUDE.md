@@ -23,7 +23,7 @@ src/
 
 _system/           # référence agents — lire en premier
 _docs/             # ADR, analyses architecturales, datasheets hardware
-external_modules/  # modules tiers (cube_visualizer 3D, post_processor_module)
+external_modules/  # modules tiers (cube_visualizer 3D, aefi_post_processor_module)
 .aefi_acquisition/ # données runtime (configs, scans, calibrations, logs) — gitignored
 ```
 
@@ -44,6 +44,14 @@ Lire `_system/` avant toute décision architecturale :
 | `release/v1.0.1` | Worktree `AEFI_Acquisition/` — utilisé pour les acquisitions |
 | `release/v1.0.0` | Archive historique |
 | `archive/ddd-refactoring` | Refactoring DDD gelé — documentation uniquement, ne pas merger |
+
+## Contexte borné du worktree
+
+Avant toute modification, identifier le worktree courant (nom de dossier et/ou branche git, ex. `git worktree list`) pour en déduire le contexte borné de travail :
+
+- Worktree `_dev` (branche `develop`) → espace partagé, tout le codebase est modifiable.
+- Worktree `_dev_<contexte>` (branche `dev_<contexte>`) → le suffixe `<contexte>` définit le périmètre de travail autorisé. Ne développer QUE dans ce périmètre (domaine/fichiers concernés) ; ne pas toucher aux autres parties du système. C'est ce qui permet le développement parallèle entre worktrees sans conflits.
+- En cas de doute sur le périmètre exact d'un contexte borné, demander confirmation avant de modifier des fichiers hors de ce périmètre évident.
 
 ## Conventions
 

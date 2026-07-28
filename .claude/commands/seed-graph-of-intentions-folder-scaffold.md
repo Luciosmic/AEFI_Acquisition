@@ -1,5 +1,5 @@
 ---
-description: 'Crée la graine du dépôt `graph_of_intentions/` (thoughts_interface, promise_model, code_interface) avec la structure minimale et des placeholders pour démarrer la cristallisation.'
+description: 'Seed graph of intentions folder scaffold'
 ---
 
 Crée la graine du dépôt `graph_of_intentions/` (thoughts_interface, promise_model, code_interface) avec la structure minimale et des placeholders pour démarrer la cristallisation.

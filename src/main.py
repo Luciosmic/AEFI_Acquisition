@@ -14,9 +14,12 @@ from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtGui import QIcon
 
 # --- Domain & Application Services ---
-from application.services.scan_application_service.scan_application_service import ScanApplicationService
+from application.services.scan_application_service.scan_application_service import (
+    ScanApplicationService,
+    make_electric_field_probe_channel,
+)
 from application.services.excitation_configuration_service.excitation_configuration_service import ExcitationConfigurationService
-from application.services.continuous_acquisition_service.continuous_acquisition_service import ContinuousAcquisitionService
+from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
 from application.services.motion_control_service.motion_control_service import MotionControlService
 from application.services.electric_field_probe_service.electric_field_probe_service import ElectricFieldProbeService
 
@@ -34,7 +37,8 @@ from infrastructure.mocks.adapter_mock_i_acquisition_port import RandomNoiseAcqu
 from infrastructure.mocks.adapter_mock_i_excitation_port import MockExcitationPort
 from infrastructure.mocks.adapter_mock_excitation_aware_acquisition import ExcitationAwareAcquisitionPort
 from infrastructure.mocks.adapter_mock_i_motion_port import MockMotionPort
-from infrastructure.mocks.adapter_mock_i_continuous_acquisition_executor import MockContinuousAcquisitionExecutor
+from infrastructure.mocks.adapter_mock_i_aefi_acquisition_executor import MockAefiAcquisitionExecutor
+from infrastructure.execution.electric_field_probe_acquisition_executor import ElectricFieldProbeAcquisitionExecutor
 from infrastructure.mocks.adapter_mock_i_hardware_initialization_port import MockHardwareInitializationPort
 from infrastructure.hardware.narda_ep600.adapter_electric_field_probe_port import NardaEP601ProbeAdapter
 from infrastructure.hardware.narda_ep600.fake.fake_electric_field_probe_adapter import FakeElectricFieldProbeAdapter
@@ -178,13 +182,13 @@ def main():
         if continuous_executor is None:
             print("  [continuous] -> WARNING: Cannot use real continuous without MCU (acquisition=real required)")
             print("  [continuous] -> Falling back to mock")
-            continuous_executor = MockContinuousAcquisitionExecutor(event_bus)
+            continuous_executor = MockAefiAcquisitionExecutor(event_bus)
         else:
             print("  [continuous] -> real (from MCUCompositionRoot)")
     else:
         if continuous_executor is None:
             print("  [continuous] -> mock")
-            continuous_executor = MockContinuousAcquisitionExecutor(event_bus)
+            continuous_executor = MockAefiAcquisitionExecutor(event_bus)
     
     # --- Wrap acquisition port with excitation-aware wrapper (only for mocks) ---
     # This simulates the physical coupling between excitation and acquisition
@@ -242,35 +246,50 @@ def main():
     task_runner = ThreadPoolTaskRunner()
     motion_sync = EventBusMotionSynchronizer(event_bus)
 
-    # Scan Application Service
+    # Continuous Acquisition Service - PASS acquisition_port NOT event_bus!
+    # Built before ScanApplicationService: the scan drives its acquisition
+    # through this service's stream (start/stop + subscribe) instead of
+    # pulling acquisition_port directly, so it needs the service, not the
+    # raw port.
+    continuous_service = AefiAcquisitionService(continuous_executor, acquisition_port)
+
+    # Electric Field Probe Service
+    # Same reasoning: built before ScanApplicationService, which subscribes
+    # to its sample stream rather than pulling probe_port directly.
+    electric_field_probe_executor = ElectricFieldProbeAcquisitionExecutor(event_bus)
+    electric_field_probe_service = ElectricFieldProbeService(
+        executor=electric_field_probe_executor,
+        probe_port=probe_port,
+        event_bus=event_bus,
+    )
+
+    # Scan Application Service — auxiliary probes (currently: Narda EF probe)
+    # are registered as blocking channels; see AuxiliaryProbeChannel for what
+    # "blocking" means and make_electric_field_probe_channel for the Narda wiring.
+    narda_channel = make_electric_field_probe_channel(
+        probe_port=probe_port,
+        probe_service=electric_field_probe_service,
+        event_bus=event_bus,
+        sample_rate_hz=ScanApplicationService.NARDA_CONTINUOUS_SAMPLE_RATE_HZ,
+    )
     scan_service = ScanApplicationService(
-        motion_port, acquisition_port, event_bus,
+        motion_port, continuous_service, event_bus,
         task_runner=task_runner,
         motion_sync=motion_sync,
-        field_probe_port=probe_port,
+        auxiliary_probes=[narda_channel],
     )
-    
+
     # Scan Export Service
     csv_export_port = CsvScanExportPort()
     hdf5_export_port = Hdf5ScanExportPort()
     scan_export_service = ScanExportService(event_bus, csv_export_port, hdf5_export_port)
-    
+
     # Excitation Service
     excitation_service = ExcitationConfigurationService(excitation_port)
-    
-    # Continuous Acquisition Service - PASS acquisition_port NOT event_bus!
-    continuous_service = ContinuousAcquisitionService(continuous_executor, acquisition_port)
-    
+
     # Motion Control Service
     motion_control_service = MotionControlService(motion_port, event_bus)
 
-    # Electric Field Probe Service (reuses the shared task_runner)
-    electric_field_probe_service = ElectricFieldProbeService(
-        task_runner=task_runner,
-        probe_port=probe_port,
-        event_bus=event_bus,
-    )
-    
     # Transformation Service (Shared State)
     transformation_service = TransformationService(event_bus)
     
@@ -360,14 +379,20 @@ def main():
     motion_panel.home_requested.connect(motion_presenter.on_home_requested)
     motion_panel.stop_requested.connect(motion_presenter.on_stop_requested)
     motion_panel.estop_requested.connect(motion_presenter.on_estop_requested)
-    
+    motion_panel.speed_mode_changed.connect(motion_presenter.on_speed_mode_requested)
+
     motion_presenter.position_updated.connect(motion_panel.update_position)
     motion_presenter.status_updated.connect(motion_panel.update_status)
     motion_presenter.jog_enabled_changed.connect(motion_panel.set_jog_enabled)
     motion_presenter.limits_updated.connect(motion_panel.set_axis_limits)
-    
+
+    # Settings Panel -> Motion Panel (referential mode: limit-switch raw vs. centered/4-quadrants)
+    settings_panel = dashboard.panels["settings"]
+    settings_panel.motion_referential_changed.connect(motion_panel.set_referential_mode)
+
     # Initialize presenter to fetch limits
     motion_presenter.initialize()
+    motion_presenter.on_speed_mode_requested(motion_panel.get_current_speed_mode())
     print("  [motion] wired")
     
     # Excitation Panel
@@ -408,6 +433,7 @@ def main():
     electric_field_probe_panel = dashboard.panels["electric_field_probe"]
     electric_field_probe_panel.connect_requested.connect(electric_field_probe_presenter.on_connect_requested)
     electric_field_probe_panel.disconnect_requested.connect(electric_field_probe_presenter.on_disconnect_requested)
+    electric_field_probe_panel.refresh_battery_requested.connect(electric_field_probe_presenter.on_refresh_battery_requested)
     electric_field_probe_panel.acquisition_start_requested.connect(electric_field_probe_presenter.on_acquisition_start_requested)
     electric_field_probe_panel.acquisition_stop_requested.connect(electric_field_probe_presenter.on_acquisition_stop_requested)
     electric_field_probe_panel.parameters_updated.connect(electric_field_probe_presenter.on_parameters_updated)

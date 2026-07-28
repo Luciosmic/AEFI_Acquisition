@@ -6,7 +6,7 @@ Responsibility: Calculate statistical properties (mean, std dev) of a set of mea
 from typing import List
 import math
 from datetime import datetime
-from domain.shared_kernel.value_objects.acquisition.voltage_measurement import VoltageMeasurement
+from domain.shared_kernel.value_objects.acquisition.aefi_voltage_measurement import AefiVoltageMeasurement
 
 class MeasurementStatisticsService:
     """
@@ -14,15 +14,15 @@ class MeasurementStatisticsService:
     """
     
     @staticmethod
-    def calculate_statistics(measurements: List[VoltageMeasurement]) -> VoltageMeasurement:
+    def calculate_statistics(measurements: List[AefiVoltageMeasurement]) -> AefiVoltageMeasurement:
         """
         Calculate the mean and standard deviation of a list of measurements.
         
         Args:
-            measurements: List of VoltageMeasurement objects.
+            measurements: List of AefiVoltageMeasurement objects.
             
         Returns:
-            A new VoltageMeasurement object containing the mean values and 
+            A new AefiVoltageMeasurement object containing the mean values and 
             populated standard deviation fields.
             
         Raises:
@@ -36,7 +36,7 @@ class MeasurementStatisticsService:
             # If only one measurement, mean is the value, std dev is 0 (or undefined/None?)
             # Let's set it to 0.0 for consistency if we are doing "averaging" of 1 point.
             m = measurements[0]
-            return VoltageMeasurement(
+            return AefiVoltageMeasurement(
                 voltage_x_in_phase=m.voltage_x_in_phase,
                 voltage_x_quadrature=m.voltage_x_quadrature,
                 voltage_y_in_phase=m.voltage_y_in_phase,
@@ -108,7 +108,7 @@ class MeasurementStatisticsService:
         # Usually last or first. Let's use the last one to indicate when the averaging completed.
         last_timestamp = measurements[-1].timestamp
         
-        return VoltageMeasurement(
+        return AefiVoltageMeasurement(
             voltage_x_in_phase=mean_x_i,
             voltage_x_quadrature=mean_x_q,
             voltage_y_in_phase=mean_y_i,

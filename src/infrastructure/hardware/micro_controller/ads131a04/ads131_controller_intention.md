@@ -13,4 +13,4 @@ Controller bas-niveau de l'ADS131A04 (ADC 24-bit 4 canaux de Texas Instruments) 
 ## Design
 
 - **Couche hardware-specific** : connaît le jeu de registres ADS131A04 (datasheet TI).
-- Utilisé par les adaptateurs `adapter_i_acquistion_port_ads131a04` et `adapter_i_continuous_acquisition_ads131a04`.
+- Utilisé par les adaptateurs `adapter_i_acquistion_port_ads131a04` et `adapter_aefi_acquisition_ads131a04`.

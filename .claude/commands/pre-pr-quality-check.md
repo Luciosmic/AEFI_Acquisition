@@ -1,5 +1,5 @@
 ---
-description: 'Run chained local checks (black, flake8, mypy, and pytest via `uv run`) in the correct order to catch formatting, lint, type, and test failures early and avoid blocked PR reviews before opening a pull request to `develop` or `main`.'
+description: 'Pre pr quality check'
 ---
 
 # Pre-PR Quality Check

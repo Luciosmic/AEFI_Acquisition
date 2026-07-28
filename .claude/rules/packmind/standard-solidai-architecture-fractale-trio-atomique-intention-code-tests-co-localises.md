@@ -1,12 +1,12 @@
 ---
 name: 'SolidAI — Architecture Fractale Trio Atomique : Intention, Code, Tests Co-localisés'
 alwaysApply: true
-description: 'Enforce the SolidAI “Trio Atomique” fractal module layout—<module>_intention.md (Rationale/Responsibility/Design), <module>.py, and co-localized _tests/<module>_test.py at distance 1 (never .test.py)—to standardize DDD architecture, preserve Python import resolution, and make intent, implementation, and validation auditable while minimizing architectural debt.'
+description: 'SolidAI — Architecture Fractale Trio Atomique : Intention, Code, Tests Co-localisés'
 ---
 
 # Standard: SolidAI — Architecture Fractale Trio Atomique : Intention, Code, Tests Co-localisés
 
-Enforce the SolidAI “Trio Atomique” fractal module layout—<module>_intention.md (Rationale/Responsibility/Design), <module>.py, and co-localized _tests/<module>_test.py at distance 1 (never .test.py)—to standardize DDD architecture, preserve Python import resolution, and make intent, implementation, and validation auditable while minimizing architectural debt. :
+Ce standard formalise le Trio Atomique de SolidAI : chaque unité fonctionnelle (atome) regroupe dans le même dossier son intention (<module>\_intention.md), son implémentation (code source) et sa vali... :
 * Appliquer la structure du trio atomique (<module>_intention.md + <module>.py + _tests/) de manière uniforme à toutes les couches DDD sans exception
 * Créer un fichier intention.md pour chaque module en utilisant le template Rationale / Responsibility / Design, même si le contenu est vide au départ
 * Nommer les fichiers de test avec le suffixe _test.py (underscore) et jamais .test.py (point) — le point dans un nom de fichier Python casse la résolution des imports

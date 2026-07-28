@@ -3,15 +3,26 @@ import unittest
 from datetime import datetime
 from typing import List
 from uuid import uuid4
-from application.services.scan_application_service.scan_application_service import ScanApplicationService
+from application.services.scan_application_service.scan_application_service import (
+    ScanApplicationService,
+    make_electric_field_probe_channel,
+)
 from application.services.scan_application_service.dtos.scan_dtos import Scan2DConfigDTO
+from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
+from application.services.aefi_acquisition_service.dtos.aefi_acquisition_dtos import AefiAcquisitionConfig
+from application.services.electric_field_probe_service.electric_field_probe_service import ElectricFieldProbeService
+from infrastructure.execution.electric_field_probe_acquisition_executor import (
+    ElectricFieldProbeAcquisitionExecutor,
+)
 from infrastructure.mocks.adapter_mock_i_motion_port import MockMotionPort
 from infrastructure.mocks.adapter_mock_i_acquisition_port import MockAcquisitionPort
+from infrastructure.mocks.adapter_mock_i_aefi_acquisition_executor import MockAefiAcquisitionExecutor
 from domain.shared_kernel.events.domain_event import DomainEvent
 from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
 from domain.step_scan.events.scan_started.scan_started import ScanStarted
 from domain.step_scan.events.scan_point_acquired.scan_point_acquired import ScanPointAcquired
 from domain.step_scan.events.scan_completed.scan_completed import ScanCompleted
+from domain.step_scan.events.scan_failed.scan_failed import ScanFailed
 from domain.step_scan.events.electric_field_scan_point_acquired.electric_field_scan_point_acquired import ElectricFieldScanPointAcquired
 from domain.electric_field_probe.value_objects.field_measurement.field_measurement import FieldMeasurement
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
@@ -27,6 +38,9 @@ class TestScanApplicationService(DiagramFriendlyTest):
         self.event_bus = InMemoryEventBus()
         self.motion_port = MockMotionPort(event_bus=self.event_bus, motion_delay_ms=10)
         self.acquisition_port = MockAcquisitionPort()
+        self.aefi_acquisition_service = AefiAcquisitionService(
+            MockAefiAcquisitionExecutor(self.event_bus), self.acquisition_port
+        )
         self.events: List[DomainEvent] = []
 
         self.log_interaction("Test", "SUBSCRIBE", "EventBus", "Subscribe to scan events")
@@ -39,7 +53,7 @@ class TestScanApplicationService(DiagramFriendlyTest):
 
         self.service = ScanApplicationService(
             self.motion_port,
-            self.acquisition_port,
+            self.aefi_acquisition_service,
             self.event_bus,
             task_runner=task_runner,
             motion_sync=motion_sync,
@@ -113,6 +127,29 @@ class TestScanApplicationService(DiagramFriendlyTest):
         self.log_interaction("Test", "ASSERT", "MotionPort", "Verify move history", expect=4, got=len(self.motion_port.move_history))
         self.assertEqual(len(self.motion_port.move_history), 4)
 
+        # The continuous acquisition stream was started by the scan (nothing
+        # else was running it) — it must be stopped again once the scan ends.
+        self.assertFalse(self.aefi_acquisition_service.is_acquisition_running())
+
+    def test_scan_does_not_stop_a_continuous_stream_it_did_not_start(self):
+        """A live-view session started before the scan must survive it."""
+        self.aefi_acquisition_service.start_acquisition(AefiAcquisitionConfig(sample_rate_hz=None))
+        self.assertTrue(self.aefi_acquisition_service.is_acquisition_running())
+
+        scan_dto = Scan2DConfigDTO(
+            x_min=0, x_max=1, x_nb_points=1,
+            y_min=0, y_max=1, y_nb_points=1,
+            scan_pattern="RASTER",
+            stabilization_delay_ms=0,
+            averaging_per_position=1,
+            uncertainty_volts=1e-6,
+        )
+        self.assertTrue(self.service.execute_scan(scan_dto))
+        self.assertTrue(self._wait_for_scan_completion(timeout=5.0))
+
+        self.assertTrue(self.aefi_acquisition_service.is_acquisition_running())
+        self.aefi_acquisition_service.stop_acquisition()
+
     def test_subscriptions(self):
         """Test the subscription methods."""
         self.log_interaction("Test", "START", "ScanApplicationService", "Start subscription test")
@@ -171,6 +208,128 @@ class TestScanApplicationService(DiagramFriendlyTest):
         self.assertEqual(data["x"], 1.0)
         self.assertEqual(data["y"], 2.0)
         self.assertEqual(data["value"], {"component_0": 3.0, "component_1": 4.0, "norm": 5.0})
+
+    def test_field_probe_point_completed_once_stream_produces_a_sample(self):
+        """A point stays unvalidated across a sampling drought and is only
+        confirmed once the field-probe stream actually produces a sample."""
+        # First 2 reads fail — within ElectricFieldProbeService's tolerance
+        # (MAX_CONSECUTIVE_SAMPLE_FAILURES=2, a 3rd consecutive failure would
+        # be fatal) — then the 3rd call succeeds and resets the counter.
+        probe = _ScriptedFieldProbePort(script=[False, False, True])
+        field_service = ElectricFieldProbeService(
+            executor=ElectricFieldProbeAcquisitionExecutor(self.event_bus),
+            probe_port=probe,
+            event_bus=self.event_bus,
+        )
+        narda_channel = make_electric_field_probe_channel(
+            probe_port=probe,
+            probe_service=field_service,
+            event_bus=self.event_bus,
+            sample_rate_hz=ScanApplicationService.NARDA_CONTINUOUS_SAMPLE_RATE_HZ,
+        )
+        service = ScanApplicationService(
+            self.motion_port, self.aefi_acquisition_service, self.event_bus,
+            task_runner=ThreadPoolTaskRunner(),
+            motion_sync=EventBusMotionSynchronizer(self.event_bus),
+            auxiliary_probes=[narda_channel],
+        )
+        self.event_bus.subscribe('scanpointacquired', self.on_event)
+        self.event_bus.subscribe('scancompleted', self.on_event)
+
+        scan_dto = Scan2DConfigDTO(
+            x_min=0, x_max=1, x_nb_points=1,
+            y_min=0, y_max=1, y_nb_points=1,
+            scan_pattern="RASTER",
+            stabilization_delay_ms=0,
+            averaging_per_position=1,
+            uncertainty_volts=1e-6,
+        )
+        self.assertTrue(service.execute_scan(scan_dto))
+
+        deadline = threading.Event()
+        self.event_bus.subscribe('scancompleted', lambda e: deadline.set())
+        self.assertTrue(deadline.wait(timeout=5.0), "Scan did not complete within timeout")
+
+        self.assertTrue(any(isinstance(e, ScanCompleted) for e in self.events))
+        self.assertTrue(any(isinstance(e, ScanPointAcquired) for e in self.events))
+
+    def test_field_probe_stream_never_producing_a_sample_fails_scan(self):
+        """If the field-probe stream never produces a sample within the
+        collection budget, the scan fails instead of validating an
+        incomplete point."""
+        probe = _ScriptedFieldProbePort(script=[False])  # always fails
+        field_service = ElectricFieldProbeService(
+            executor=ElectricFieldProbeAcquisitionExecutor(self.event_bus),
+            probe_port=probe,
+            event_bus=self.event_bus,
+        )
+        narda_channel = make_electric_field_probe_channel(
+            probe_port=probe,
+            probe_service=field_service,
+            event_bus=self.event_bus,
+            sample_rate_hz=ScanApplicationService.NARDA_CONTINUOUS_SAMPLE_RATE_HZ,
+        )
+        service = ScanApplicationService(
+            self.motion_port, self.aefi_acquisition_service, self.event_bus,
+            task_runner=ThreadPoolTaskRunner(),
+            motion_sync=EventBusMotionSynchronizer(self.event_bus),
+            auxiliary_probes=[narda_channel],
+        )
+        # Speed up the test: no point in waiting the real 30s budget to see
+        # the collection time out.
+        service.POINT_ACQUISITION_TIMEOUT_S = 0.5
+
+        self.event_bus.subscribe('scanpointacquired', self.on_event)
+        self.event_bus.subscribe('scanfailed', self.on_event)
+
+        scan_dto = Scan2DConfigDTO(
+            x_min=0, x_max=1, x_nb_points=1,
+            y_min=0, y_max=1, y_nb_points=1,
+            scan_pattern="RASTER",
+            stabilization_delay_ms=0,
+            averaging_per_position=1,
+            uncertainty_volts=1e-6,
+        )
+        self.assertTrue(service.execute_scan(scan_dto))
+
+        deadline = threading.Event()
+        self.event_bus.subscribe('scanfailed', lambda e: deadline.set())
+        self.assertTrue(deadline.wait(timeout=5.0), "Scan did not fail within timeout")
+
+        self.assertTrue(any(isinstance(e, ScanFailed) for e in self.events))
+        self.assertFalse(any(isinstance(e, ScanPointAcquired) for e in self.events))
+
+
+class _ScriptedFieldProbePort:
+    """Minimal IElectricFieldProbePort fake — acquire_sample() follows a
+    scripted pass/fail sequence (cycled), plugged into a real
+    ElectricFieldProbeService to drive its streaming/retry behavior."""
+
+    def __init__(self, script: List[bool]):
+        self._script = script
+        self._call_count = 0
+
+    def is_ready(self) -> bool:
+        return True
+
+    def acquire_sample(self) -> FieldMeasurement:
+        outcome = self._script[self._call_count % len(self._script)]
+        self._call_count += 1
+        if not outcome:
+            raise RuntimeError("simulated Narda comm failure")
+        return FieldMeasurement(components=(1.0, 2.0, 3.0), timestamp=datetime.now())
+
+    def connect(self) -> None:
+        pass
+
+    def disconnect(self) -> None:
+        pass
+
+    def is_connected(self) -> bool:
+        return True
+
+    def get_probe(self):
+        return None
 
 
 class _RecordingOutputPort:

@@ -16,14 +16,14 @@ from typing import Optional
 
 from application.services.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
 from application.services.system_lifecycle_service.ports.i_hardware_initialization_port import IHardwareInitializationPort
-from application.services.continuous_acquisition_service.ports.i_continuous_acquisition_executor import IContinuousAcquisitionExecutor
+from application.services.aefi_acquisition_service.ports.i_aefi_acquisition_executor import IAefiAcquisitionExecutor
 from application.services.excitation_configuration_service.ports.i_excitation_port import IExcitationPort
 from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
 
 from infrastructure.hardware.micro_controller.MCU_serial_communicator import MCU_SerialCommunicator
 from infrastructure.hardware.micro_controller.ads131a04.adapter_i_acquistion_port_ads131a04 import ADS131A04Adapter
 from infrastructure.hardware.micro_controller.adapter_lifecycle_MCU import MCULifecycleAdapter
-from infrastructure.hardware.micro_controller.ads131a04.adapter_i_continuous_acquisition_ads131a04 import AdapterIContinuousAcquisitionAds131a04
+from infrastructure.hardware.micro_controller.ads131a04.adapter_aefi_acquisition_ads131a04 import AdapterAefiAcquisitionAds131a04
 from infrastructure.hardware.micro_controller.ad9106.ad9106_controller import AD9106Controller
 from infrastructure.hardware.micro_controller.ad9106.adapter_excitation_configuration_ad9106 import AdapterExcitationConfigurationAD9106
 from infrastructure.hardware.micro_controller.ad9106.ad9106_advanced_configurator import AD9106AdvancedConfigurator
@@ -43,7 +43,7 @@ class MCUCompositionRoot:
       - ADS131A04Adapter (acquisition)
       - AdapterExcitationConfigurationAD9106 (excitation)
       - MCULifecycleAdapter (lifecycle)
-      - AdapterIContinuousAcquisitionAds131a04 (continuous acquisition)
+      - AdapterAefiAcquisitionAds131a04 (continuous acquisition)
     """
 
     def __init__(self, event_bus: IDomainEventBus, port: str = "COM10", baudrate: int = 1500000):
@@ -92,7 +92,7 @@ class MCUCompositionRoot:
         
         # 5. Instantiate Continuous Acquisition Executor
         # Injects event bus
-        self.continuous: IContinuousAcquisitionExecutor = AdapterIContinuousAcquisitionAds131a04(event_bus)
+        self.continuous: IAefiAcquisitionExecutor = AdapterAefiAcquisitionAds131a04(event_bus)
         
         # 6. Load Configuration
         self._load_and_apply_config()

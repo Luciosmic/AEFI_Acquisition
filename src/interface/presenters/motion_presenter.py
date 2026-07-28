@@ -163,6 +163,14 @@ class MotionPresenter(QObject):
             if result.is_failure:
                 self.operation_failed.emit(result.error)
 
+    @Slot(str)
+    def on_speed_mode_requested(self, mode: str):
+        """Handle speed mode change request from panel ('slow', 'medium', 'fast')."""
+        if self._service:
+            result = self._service.set_speed_mode(mode)
+            if result.is_failure:
+                self.operation_failed.emit(result.error)
+
     @Slot()
     def on_stop_requested(self):
         """Handle normal stop request from panel."""

@@ -6,7 +6,7 @@ Définir le contrat outbound que `ScanApplicationService` utilise pour acquérir
 
 ## Responsibility
 
-- Déclarer `acquire_sample() → VoltageMeasurement` (ou équivalent) comme méthode abstraite.
+- Déclarer `acquire_sample() → AefiVoltageMeasurement` (ou équivalent) comme méthode abstraite.
 - Servir de frontière entre la couche Application et l'infrastructure d'acquisition.
 
 ## Design

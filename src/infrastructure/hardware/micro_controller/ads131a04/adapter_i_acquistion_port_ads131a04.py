@@ -5,7 +5,7 @@ Responsibility:
 - Implement IAcquisitionPort interface
 - Translate domain concepts (MeasurementUncertainty) into hardware configuration
 - Manage ADC hardware communication
-- Convert raw ADC data to domain VoltageMeasurement
+- Convert raw ADC data to domain AefiVoltageMeasurement
 
 Rationale:
 - Separates domain logic from hardware details
@@ -23,7 +23,7 @@ from typing import Dict, Optional, Any, List
 import math
 
 from application.services.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
-from domain.shared_kernel.value_objects.acquisition.voltage_measurement import VoltageMeasurement
+from domain.shared_kernel.value_objects.acquisition.aefi_voltage_measurement import AefiVoltageMeasurement
 import json
 import os
 
@@ -97,7 +97,7 @@ class ADS131A04Adapter(IAcquisitionPort):
             print(f"[ADS131Adapter] Failed to load config: {e}")
             raise e
     
-    def acquire_sample(self) -> VoltageMeasurement:
+    def acquire_sample(self) -> AefiVoltageMeasurement:
         """
         Acquire one voltage measurement sample via MCU.
         
@@ -106,7 +106,7 @@ class ADS131A04Adapter(IAcquisitionPort):
         This returns one averaged sample.
         
         Returns:
-            VoltageMeasurement in domain language
+            AefiVoltageMeasurement in domain language
             
         Raises:
             RuntimeError: If acquisition or parsing fails
@@ -151,7 +151,7 @@ class ADS131A04Adapter(IAcquisitionPort):
             raise RuntimeError(f"Failed to parse ADC data: {e}, response: '{response}'")
         
         # Convert raw codes to voltages
-        return VoltageMeasurement(
+        return AefiVoltageMeasurement(
             voltage_x_in_phase=self._convert_raw_to_volts(raw_codes[0], channel=1),
             voltage_x_quadrature=self._convert_raw_to_volts(raw_codes[1], channel=2),
             voltage_y_in_phase=self._convert_raw_to_volts(raw_codes[2], channel=3),

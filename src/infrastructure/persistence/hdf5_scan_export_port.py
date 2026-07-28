@@ -48,7 +48,7 @@ class Hdf5ScanExportPort(IScanExportPort):
     """
 
     base_output_dir: Path = field(
-        default_factory=lambda: Path(".aefi_acquisition") / "scans" / "raw_data"
+        default_factory=lambda: Path.home() / "Desktop" / "AEFI_Acquisition_Exports"
     )
 
     _file_path: Optional[Path] = field(init=False, default=None)

@@ -6,6 +6,7 @@ Responsibility:
 - The only Narda-brand-specific piece of the electric_field_probe chain.
 """
 
+import dataclasses
 from datetime import datetime
 from typing import Optional
 
@@ -13,7 +14,11 @@ from application.services.electric_field_probe_service.ports.i_electric_field_pr
     IElectricFieldProbePort,
 )
 from domain.electric_field_probe.electric_field_probe import ElectricFieldProbe
-from infrastructure.hardware.narda_ep600.driver_narda_ep601 import NardaEP601
+from infrastructure.hardware.narda_ep600.driver_narda_ep601 import (
+    NardaEP601,
+    estimate_battery_percentage,
+    estimate_battery_remaining_hours,
+)
 
 AXIS_LABELS = ("X", "Y", "Z")
 
@@ -27,6 +32,7 @@ class NardaEP601ProbeAdapter(IElectricFieldProbePort):
         self._driver.connect()
         try:
             serial_number = self._driver.get_serial_number()
+            battery_voltage = self._driver.get_battery_voltage()
         except Exception:
             self._driver.disconnect()
             raise
@@ -35,6 +41,9 @@ class NardaEP601ProbeAdapter(IElectricFieldProbePort):
             model="EP-601",
             serial_number=serial_number,
             axis_labels=AXIS_LABELS,
+            battery_voltage_v=battery_voltage,
+            battery_percentage=estimate_battery_percentage(battery_voltage),
+            battery_remaining_hours=estimate_battery_remaining_hours(battery_voltage),
         )
 
     def disconnect(self) -> None:
@@ -55,3 +64,14 @@ class NardaEP601ProbeAdapter(IElectricFieldProbePort):
 
     def is_ready(self) -> bool:
         return self._probe is not None
+
+    def refresh_battery(self) -> None:
+        if self._probe is None:
+            return
+        battery_voltage = self._driver.get_battery_voltage()
+        self._probe = dataclasses.replace(
+            self._probe,
+            battery_voltage_v=battery_voltage,
+            battery_percentage=estimate_battery_percentage(battery_voltage),
+            battery_remaining_hours=estimate_battery_remaining_hours(battery_voltage),
+        )

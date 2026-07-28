@@ -30,7 +30,7 @@ class ExternalModulesPanel(BasePanel):
         (
             "post",
             "Post-processing && visualisation",
-            ("external_modules", "post_processor_module", "composition_root.py"),
+            ("external_modules", "aefi_post_processor_module", "composition_root.py"),
             "#1976D2",
             "#1565C0",
         ),

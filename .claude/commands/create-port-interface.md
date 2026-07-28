@@ -1,5 +1,5 @@
 ---
-description: 'Scaffold a new ABC port interface (and mock adapter) to abstract hardware/infrastructure dependencies so services can be dependency-injected and tested without real devices when adding a new adapter, extracting a hard dependency, or defining a new output contract.'
+description: 'Create port interface'
 ---
 
 # Create Port Interface

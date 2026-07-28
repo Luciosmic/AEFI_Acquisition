@@ -44,3 +44,22 @@ def test_simulated_connection_failure_raises():
     with pytest.raises(TimeoutError):
         adapter.connect()
     assert not adapter.is_connected()
+
+
+def test_refresh_battery_noop_when_not_connected():
+    adapter = FakeElectricFieldProbeAdapter()
+    adapter.refresh_battery()  # must not raise
+    assert adapter.get_probe() is None
+
+
+def test_refresh_battery_updates_probe_battery_fields():
+    adapter = FakeElectricFieldProbeAdapter()
+    adapter.connect()
+    probe_before = adapter.get_probe()
+
+    adapter.refresh_battery()
+
+    probe_after = adapter.get_probe()
+    assert probe_after is not probe_before
+    assert probe_after.battery_voltage_v is not None
+    assert probe_after.serial_number == probe_before.serial_number

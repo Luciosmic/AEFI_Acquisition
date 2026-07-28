@@ -1,5 +1,5 @@
 ---
-description: 'Scaffold and publish a new domain event dataclass in the appropriate `src/domain/events/*_events.py` file to standardize cross-layer communication and ensure downstream consumers have all required state-change data when aggregates transition or new hardware lifecycle events are introduced.'
+description: 'Create domain event'
 ---
 
 # Create Domain Event

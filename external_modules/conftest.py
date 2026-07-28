@@ -1,4 +1,4 @@
-"""Pytest : imports `cube_visualizer.*` et `post_processor_module.*` depuis ce dossier."""
+"""Pytest : imports `cube_visualizer.*` et `aefi_post_processor_module.*` depuis ce dossier."""
 import sys
 from pathlib import Path
 

@@ -5,7 +5,7 @@ Responsibility:
     Verify the end-to-end flow:
     Scan Execution -> Event Emission -> Handler -> Repository -> HDF5 Persistence.
 """
-import os
+import shutil
 import threading
 from pathlib import Path
 import sys
@@ -21,8 +21,10 @@ from infrastructure.persistence.hdf5_acquisition_repository import HDF5Acquisiti
 from application.handlers.acquisition_data_handler import AcquisitionDataHandler
 from application.services.scan_application_service.scan_application_service import ScanApplicationService
 from application.services.scan_application_service.dtos.scan_dtos import Scan2DConfigDTO
+from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
 from infrastructure.mocks.adapter_mock_i_motion_port import MockMotionPort
 from infrastructure.mocks.adapter_mock_i_acquisition_port import MockAcquisitionPort
+from infrastructure.mocks.adapter_mock_i_aefi_acquisition_executor import MockAefiAcquisitionExecutor
 
 
 class ScanExportWithEventBusIntegrationTest(DiagramFriendlyTest):
@@ -31,13 +33,11 @@ class ScanExportWithEventBusIntegrationTest(DiagramFriendlyTest):
         super().setUp()
 
         # 1. Setup Infrastructure (Persistence)
-        self.test_dir = Path(__file__).parent
-
-        for f in self.test_dir.glob("scan_*.h5"):
-            try:
-                os.remove(f)
-            except OSError:
-                pass
+        # Isolated in a subfolder (not directly in the test's own directory)
+        # so generated .h5 files never sit alongside test source files.
+        self.test_dir = Path(__file__).parent / "test_data"
+        if self.test_dir.exists():
+            shutil.rmtree(self.test_dir)
 
         try:
             rel_path = f"tests/{self.test_dir.name}"
@@ -63,11 +63,14 @@ class ScanExportWithEventBusIntegrationTest(DiagramFriendlyTest):
         self.log_interaction("Test", "CREATE", "ScanService", "Init with Ports & Bus")
         self.motion_port = MockMotionPort(event_bus=self.event_bus, motion_delay_ms=5)
         self.acquisition_port = MockAcquisitionPort()
+        self.continuous_service = AefiAcquisitionService(
+            MockAefiAcquisitionExecutor(self.event_bus), self.acquisition_port
+        )
         task_runner = ThreadPoolTaskRunner()
         motion_sync = EventBusMotionSynchronizer(self.event_bus)
         self.scan_service = ScanApplicationService(
             self.motion_port,
-            self.acquisition_port,
+            self.continuous_service,
             self.event_bus,
             task_runner=task_runner,
             motion_sync=motion_sync,
@@ -75,6 +78,8 @@ class ScanExportWithEventBusIntegrationTest(DiagramFriendlyTest):
 
     def tearDown(self):
         super().tearDown()
+        if self.test_dir.exists():
+            shutil.rmtree(self.test_dir)
 
     def test_scan_export_flow(self):
         """Execute a scan and verify data is persisted via events."""

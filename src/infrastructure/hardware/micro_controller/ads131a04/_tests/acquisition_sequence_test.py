@@ -1,4 +1,4 @@
-﻿import sys
+import sys
 import os
 import unittest
 from datetime import datetime
@@ -90,7 +90,7 @@ class TestAcquisitionSequence(DiagramFriendlyTest):
             actor="ADS131A04Adapter",
             action="RETURN",
             target="TestAcquisition",
-            message="VoltageMeasurement",
+            message="AefiVoltageMeasurement",
             data={
                 "ch1": f"{measurement.voltage_x_in_phase:.6f}",
                 "timestamp": measurement.timestamp.isoformat()
@@ -106,8 +106,8 @@ class TestAcquisitionSequence(DiagramFriendlyTest):
             action="ASSERT",
             target="Measurement",
             message="Verify measurement is not None",
-            expect="VoltageMeasurement object",
-            got="VoltageMeasurement object"
+            expect="AefiVoltageMeasurement object",
+            got="AefiVoltageMeasurement object"
         )
         self.assertIsNotNone(measurement)
         

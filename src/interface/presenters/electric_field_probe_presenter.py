@@ -23,6 +23,9 @@ from domain.electric_field_probe.events.field_sample_acquired.field_sample_acqui
 from domain.electric_field_probe.events.electric_field_probe_connection_changed.electric_field_probe_connection_changed import (
     ElectricFieldProbeConnectionChanged,
 )
+from domain.electric_field_probe.events.electric_field_probe_battery_refreshed.electric_field_probe_battery_refreshed import (
+    ElectricFieldProbeBatteryRefreshed,
+)
 from domain.shared_kernel.events.continuous_acquisition_failed.continuous_acquisition_failed import (
     ContinuousAcquisitionFailed,
 )
@@ -32,8 +35,19 @@ from domain.shared_kernel.events.continuous_acquisition_stopped.continuous_acqui
 
 SAMPLE_ACQUIRED_TOPIC = "fieldsampleacquired"
 CONNECTION_CHANGED_TOPIC = "electricfieldprobeconnectionchanged"
+BATTERY_REFRESHED_TOPIC = "electricfieldprobebatteryrefreshed"
 ACQUISITION_FAILED_TOPIC = "electricfieldprobeacquisitionfailed"
 ACQUISITION_STOPPED_TOPIC = "electricfieldprobeacquisitionstopped"
+
+
+def _probe_label(probe) -> str:
+    label = f"{probe.brand} {probe.model} (SN {probe.serial_number})"
+    if probe.battery_percentage is not None:
+        label += (
+            f" — batt {probe.battery_percentage:.0f}%"
+            f" (~{probe.battery_remaining_hours:.0f}h, {probe.battery_voltage_v:.2f}V)"
+        )
+    return label
 
 
 class ElectricFieldProbePresenter(QObject):
@@ -69,6 +83,9 @@ class ElectricFieldProbePresenter(QObject):
         self._event_bus.subscribe(
             CONNECTION_CHANGED_TOPIC, self._on_connection_changed_event
         )
+        self._event_bus.subscribe(
+            BATTERY_REFRESHED_TOPIC, self._on_battery_refreshed_event
+        )
         self._event_bus.subscribe(ACQUISITION_FAILED_TOPIC, self._on_failed_event)
         self._event_bus.subscribe(ACQUISITION_STOPPED_TOPIC, self._on_stopped_event)
 
@@ -76,6 +93,9 @@ class ElectricFieldProbePresenter(QObject):
         self._event_bus.unsubscribe(SAMPLE_ACQUIRED_TOPIC, self._on_sample_event)
         self._event_bus.unsubscribe(
             CONNECTION_CHANGED_TOPIC, self._on_connection_changed_event
+        )
+        self._event_bus.unsubscribe(
+            BATTERY_REFRESHED_TOPIC, self._on_battery_refreshed_event
         )
         self._event_bus.unsubscribe(ACQUISITION_FAILED_TOPIC, self._on_failed_event)
         self._event_bus.unsubscribe(ACQUISITION_STOPPED_TOPIC, self._on_stopped_event)
@@ -91,6 +111,10 @@ class ElectricFieldProbePresenter(QObject):
     @Slot()
     def on_disconnect_requested(self):
         self._service.disconnect_probe()
+
+    @Slot()
+    def on_refresh_battery_requested(self):
+        self._service.refresh_battery()
 
     @Slot(dict)
     def on_acquisition_start_requested(self, params: Dict[str, Any]):
@@ -150,14 +174,16 @@ class ElectricFieldProbePresenter(QObject):
     def _on_connection_changed_event(self, event: ElectricFieldProbeConnectionChanged):
         if event.connected and event.probe is not None:
             p = event.probe
-            label = f"{p.brand} {p.model} (SN {p.serial_number})"
             self._axis_labels = p.axis_labels
-            self.probe_connection_changed.emit(True, label)
+            self.probe_connection_changed.emit(True, _probe_label(p))
             self.probe_axes_defined.emit(p.axis_labels)
         else:
             label = event.error or "Disconnected"
             self.probe_connection_changed.emit(False, label)
             self._last_raw_sample = {}
+
+    def _on_battery_refreshed_event(self, event: ElectricFieldProbeBatteryRefreshed):
+        self.probe_connection_changed.emit(True, _probe_label(event.probe))
 
     def _on_failed_event(self, event: ContinuousAcquisitionFailed):
         self.acquisition_failed.emit(str(event.reason))

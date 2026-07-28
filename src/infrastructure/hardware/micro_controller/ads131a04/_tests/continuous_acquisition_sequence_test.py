@@ -11,16 +11,16 @@ if str(src_path) not in sys.path:
 
 from tool.diagram_friendly_test import DiagramFriendlyTest
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
-from application.services.continuous_acquisition_service.continuous_acquisition_service import ContinuousAcquisitionService
-from application.services.continuous_acquisition_service.ports.i_continuous_acquisition_executor import ContinuousAcquisitionConfig
+from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
+from application.services.aefi_acquisition_service.ports.i_aefi_acquisition_executor import AefiAcquisitionConfig
 from application.services.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
-from domain.shared_kernel.value_objects.acquisition.voltage_measurement import VoltageMeasurement
+from domain.shared_kernel.value_objects.acquisition.aefi_voltage_measurement import AefiVoltageMeasurement
 from datetime import datetime
 import random
 
 class RandomNoiseAcquisitionPort(IAcquisitionPort):
-    def acquire_sample(self) -> VoltageMeasurement:
-        return VoltageMeasurement(
+    def acquire_sample(self) -> AefiVoltageMeasurement:
+        return AefiVoltageMeasurement(
             voltage_x_in_phase=random.uniform(-1, 1),
             voltage_x_quadrature=random.uniform(-1, 1),
             voltage_y_in_phase=random.uniform(-1, 1),
@@ -34,7 +34,7 @@ class RandomNoiseAcquisitionPort(IAcquisitionPort):
     def is_ready(self) -> bool:
         return True
 
-from infrastructure.hardware.micro_controller.ads131a04.adapter_i_continuous_acquisition_ads131a04 import AdapterIContinuousAcquisitionAds131a04
+from infrastructure.hardware.micro_controller.ads131a04.adapter_aefi_acquisition_ads131a04 import AdapterAefiAcquisitionAds131a04
 
 class TestContinuousAcquisitionSequence(DiagramFriendlyTest):
     def test_full_acquisition_cycle(self):
@@ -45,12 +45,12 @@ class TestContinuousAcquisitionSequence(DiagramFriendlyTest):
         self.log_interaction("Test", "CREATE", "AcquisitionPort", "Initialize Mock Port")
         mock_port = RandomNoiseAcquisitionPort()
 
-        self.log_interaction("Test", "CREATE", "AdapterIContinuousAcquisitionAds131a04", "Initialize Adapter")
-        executor = AdapterIContinuousAcquisitionAds131a04(event_bus)
+        self.log_interaction("Test", "CREATE", "AdapterAefiAcquisitionAds131a04", "Initialize Adapter")
+        executor = AdapterAefiAcquisitionAds131a04(event_bus)
 
         self.log_interaction("Test", "CREATE", "Service", "Initialize Service", 
-                             data={"dependency": "AdapterIContinuousAcquisitionAds131a04", "port": "AcquisitionPort"})
-        service = ContinuousAcquisitionService(executor, mock_port)
+                             data={"dependency": "AdapterAefiAcquisitionAds131a04", "port": "AcquisitionPort"})
+        service = AefiAcquisitionService(executor, mock_port)
 
         # 2. Subscribe to events to verify flow
         received_samples = []
@@ -59,11 +59,11 @@ class TestContinuousAcquisitionSequence(DiagramFriendlyTest):
                                  data={"index": event.sample_index})
             received_samples.append(event)
 
-        self.log_interaction("TestSubscriber", "SUBSCRIBE", "EventBus", "continuousacquisitionsampleacquired")
-        event_bus.subscribe("continuousacquisitionsampleacquired", on_sample)
+        self.log_interaction("TestSubscriber", "SUBSCRIBE", "EventBus", "aefivoltagesampleacquired")
+        event_bus.subscribe("aefivoltagesampleacquired", on_sample)
 
         # 3. Start Acquisition
-        config = ContinuousAcquisitionConfig(sample_rate_hz=10.0)
+        config = AefiAcquisitionConfig(sample_rate_hz=10.0)
         self.log_interaction("Test", "COMMAND", "Service", "start_acquisition", 
                              data={"rate": 10.0})
         service.start_acquisition(config)

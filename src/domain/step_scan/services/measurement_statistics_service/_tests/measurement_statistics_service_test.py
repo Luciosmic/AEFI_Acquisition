@@ -2,7 +2,7 @@ import unittest
 from datetime import datetime
 import math
 
-from domain.shared_kernel.value_objects.acquisition.voltage_measurement import VoltageMeasurement
+from domain.shared_kernel.value_objects.acquisition.aefi_voltage_measurement import AefiVoltageMeasurement
 from domain.step_scan.services.measurement_statistics_service.measurement_statistics_service import MeasurementStatisticsService
 
 class TestMeasurementStatisticsService(unittest.TestCase):
@@ -10,8 +10,8 @@ class TestMeasurementStatisticsService(unittest.TestCase):
         # Trace TDD : préfixe pour identifier l'origine
         print(f"[TestMeasurementStatisticsService] {msg}")
     
-    def create_measurement(self, val: float) -> VoltageMeasurement:
-        return VoltageMeasurement(
+    def create_measurement(self, val: float) -> AefiVoltageMeasurement:
+        return AefiVoltageMeasurement(
             voltage_x_in_phase=val, voltage_x_quadrature=val,
             voltage_y_in_phase=val, voltage_y_quadrature=val,
             voltage_z_in_phase=val, voltage_z_quadrature=val,

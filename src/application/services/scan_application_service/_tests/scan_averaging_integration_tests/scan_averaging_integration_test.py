@@ -7,14 +7,16 @@ import matplotlib.pyplot as plt
 from datetime import datetime
 
 from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
-from domain.shared_kernel.value_objects.acquisition.voltage_measurement import VoltageMeasurement
+from domain.shared_kernel.value_objects.acquisition.aefi_voltage_measurement import AefiVoltageMeasurement
 from application.services.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
 from application.services.scan_application_service.scan_application_service import ScanApplicationService
 from application.services.scan_application_service.dtos.scan_dtos import Scan2DConfigDTO
+from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
 from infrastructure.execution.thread_pool_task_runner import ThreadPoolTaskRunner
 from infrastructure.execution.event_bus_motion_synchronizer import EventBusMotionSynchronizer
 from infrastructure.mocks.adapter_mock_i_motion_port import MockMotionPort
+from infrastructure.mocks.adapter_mock_i_aefi_acquisition_executor import MockAefiAcquisitionExecutor
 
 
 class NoisyAcquisitionPort(IAcquisitionPort):
@@ -23,7 +25,7 @@ class NoisyAcquisitionPort(IAcquisitionPort):
         self.noise_std_dev = noise_std_dev
         self.random = random.Random(42)
 
-    def acquire_sample(self) -> VoltageMeasurement:
+    def acquire_sample(self) -> AefiVoltageMeasurement:
         pos = self.motion_port.get_current_position()
 
         # Signal Function: f(x, y) = x + y
@@ -35,7 +37,7 @@ class NoisyAcquisitionPort(IAcquisitionPort):
         noise = self.random.gauss(0, current_sigma)
         measured_value = true_signal + noise
 
-        return VoltageMeasurement(
+        return AefiVoltageMeasurement(
             voltage_x_in_phase=measured_value,
             voltage_x_quadrature=0.0,
             voltage_y_in_phase=0.0,
@@ -72,10 +74,13 @@ class TestScanAveragingIntegration(unittest.TestCase):
         event_bus = InMemoryEventBus()
         motion_port = MockMotionPort(event_bus=event_bus, motion_delay_ms=1)
         acquisition_port = NoisyAcquisitionPort(motion_port)
+        continuous_service = AefiAcquisitionService(
+            MockAefiAcquisitionExecutor(event_bus), acquisition_port
+        )
         task_runner = ThreadPoolTaskRunner()
         motion_sync = EventBusMotionSynchronizer(event_bus)
         service = ScanApplicationService(
-            motion_port, acquisition_port, event_bus,
+            motion_port, continuous_service, event_bus,
             task_runner=task_runner,
             motion_sync=motion_sync,
         )

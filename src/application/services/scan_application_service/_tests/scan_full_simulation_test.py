@@ -1,4 +1,4 @@
-﻿import unittest
+import unittest
 import random
 import time
 from datetime import datetime
@@ -9,7 +9,7 @@ from domain.step_scan.value_objects.scan_zone.scan_zone import ScanZone
 from domain.step_scan.value_objects.scan_mode.scan_mode import ScanMode
 from domain.shared_kernel.value_objects.measurement_uncertainty.measurement_uncertainty import MeasurementUncertainty
 from domain.step_scan.value_objects.scan_point_result.scan_point_result import ScanPointResult
-from domain.shared_kernel.value_objects.acquisition.voltage_measurement import VoltageMeasurement
+from domain.shared_kernel.value_objects.acquisition.aefi_voltage_measurement import AefiVoltageMeasurement
 from domain.step_scan.events.scan_started.scan_started import ScanStarted
 from domain.step_scan.events.scan_point_acquired.scan_point_acquired import ScanPointAcquired
 from domain.step_scan.events.scan_completed.scan_completed import ScanCompleted
@@ -67,7 +67,7 @@ class TestFullScanSimulation(unittest.TestCase):
             
             # Simulate Acquisition
             voltage = random.uniform(-5.0, 5.0)
-            measurement = VoltageMeasurement(
+            measurement = AefiVoltageMeasurement(
                 voltage_x_in_phase=voltage,
                 voltage_x_quadrature=random.uniform(-0.1, 0.1),
                 voltage_y_in_phase=random.uniform(-5.0, 5.0),
