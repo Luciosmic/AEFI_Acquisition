@@ -422,6 +422,7 @@ def main():
     electric_field_probe_panel = dashboard.panels["electric_field_probe"]
     electric_field_probe_panel.connect_requested.connect(electric_field_probe_presenter.on_connect_requested)
     electric_field_probe_panel.disconnect_requested.connect(electric_field_probe_presenter.on_disconnect_requested)
+    electric_field_probe_panel.refresh_battery_requested.connect(electric_field_probe_presenter.on_refresh_battery_requested)
     electric_field_probe_panel.acquisition_start_requested.connect(electric_field_probe_presenter.on_acquisition_start_requested)
     electric_field_probe_panel.acquisition_stop_requested.connect(electric_field_probe_presenter.on_acquisition_stop_requested)
     electric_field_probe_panel.parameters_updated.connect(electric_field_probe_presenter.on_parameters_updated)

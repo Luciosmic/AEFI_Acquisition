@@ -6,6 +6,7 @@ Responsibility:
 - The only Narda-brand-specific piece of the electric_field_probe chain.
 """
 
+import dataclasses
 from datetime import datetime
 from typing import Optional
 
@@ -63,3 +64,14 @@ class NardaEP601ProbeAdapter(IElectricFieldProbePort):
 
     def is_ready(self) -> bool:
         return self._probe is not None
+
+    def refresh_battery(self) -> None:
+        if self._probe is None:
+            return
+        battery_voltage = self._driver.get_battery_voltage()
+        self._probe = dataclasses.replace(
+            self._probe,
+            battery_voltage_v=battery_voltage,
+            battery_percentage=estimate_battery_percentage(battery_voltage),
+            battery_remaining_hours=estimate_battery_remaining_hours(battery_voltage),
+        )

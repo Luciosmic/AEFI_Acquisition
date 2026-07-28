@@ -31,8 +31,12 @@ from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
 from domain.electric_field_probe.events.electric_field_probe_connection_changed.electric_field_probe_connection_changed import (
     ElectricFieldProbeConnectionChanged,
 )
+from domain.electric_field_probe.events.electric_field_probe_battery_refreshed.electric_field_probe_battery_refreshed import (
+    ElectricFieldProbeBatteryRefreshed,
+)
 
 CONNECTION_CHANGED_TOPIC = "electricfieldprobeconnectionchanged"
+BATTERY_REFRESHED_TOPIC = "electricfieldprobebatteryrefreshed"
 
 
 class ElectricFieldProbeService(IApiElectricFieldProbeService):
@@ -90,3 +94,16 @@ class ElectricFieldProbeService(IApiElectricFieldProbeService):
 
     def is_acquisition_running(self) -> bool:
         return self._executor.is_running()
+
+    def refresh_battery(self) -> None:
+        # Le lien serie est partage avec l'acquisition en cours (get_battery_voltage
+        # entrelacerait ses propres trames avec celles du flux) : on refuse silencieusement
+        # plutot que de risquer de corrompre une acquisition en cours. Le bouton UI est deja
+        # desactive pendant l'acquisition (cf. panel) — cette garde est la protection de fond.
+        if not self._probe_port.is_connected() or self._executor.is_running():
+            return
+        self._probe_port.refresh_battery()
+        self._event_bus.publish(
+            BATTERY_REFRESHED_TOPIC,
+            ElectricFieldProbeBatteryRefreshed(probe=self._probe_port.get_probe()),
+        )

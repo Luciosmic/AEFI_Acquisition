@@ -5,6 +5,7 @@ Responsibility:
 - In-memory double of IElectricFieldProbePort for tests and mock hardware mode.
 """
 
+import dataclasses
 import random
 from datetime import datetime
 from typing import Optional
@@ -64,3 +65,16 @@ class FakeElectricFieldProbeAdapter(IElectricFieldProbePort):
 
     def is_ready(self) -> bool:
         return self._connected
+
+    def refresh_battery(self) -> None:
+        if self._probe is None:
+            return
+        # ponytail: valeur fixe rejouee telle quelle (pas de simulation de decharge) — suffisant
+        # pour exercer le cablage refresh sans hardware ; a enrichir si un test veut voir varier
+        # la valeur affichee.
+        self._probe = dataclasses.replace(
+            self._probe,
+            battery_voltage_v=_FAKE_BATTERY_VOLTAGE_V,
+            battery_percentage=estimate_battery_percentage(_FAKE_BATTERY_VOLTAGE_V),
+            battery_remaining_hours=estimate_battery_remaining_hours(_FAKE_BATTERY_VOLTAGE_V),
+        )
