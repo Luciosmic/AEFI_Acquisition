@@ -1,0 +1,128 @@
+active_model = "mistral-medium-3.5"
+disable_welcome_banner_animation = true
+autocopy_to_clipboard = false
+ask_confirmation_on_exit = true
+bypass_tool_permissions = false
+enable_telemetry = false
+enable_update_checks = true
+enable_notifications = true
+include_commit_signature = true
+include_model_info = true
+include_project_context = true
+include_prompt_detail = true
+applied_migrations = [
+    "bash_read_only_defaults_v1",
+]
+
+[session_logging]
+enabled = true
+save_dir = ""
+session_prefix = "session"
+
+[tools]
+enabled_tools = [
+    "bash",
+    "read",
+    "write_file",
+    "edit",
+    "grep",
+    "todo",
+    "task",
+]
+
+[tools.bash]
+allowlist = [
+    "basename",
+    "cat",
+    "cd",
+    "chmod",
+    "comm",
+    "curl",
+    "cut",
+    "date",
+    "diff",
+    "dirname",
+    "du",
+    "echo",
+    "file",
+    "find",
+    "fmt",
+    "fold",
+    "git diff",
+    "git log",
+    "git status",
+    "grep",
+    "head",
+    "join",
+    "less",
+    "ls",
+    "md5sum",
+    "more",
+    "nl",
+    "npm run build",
+    "npm run dev",
+    "npm test",
+    "od",
+    "paste",
+    "pkill",
+    "pwd",
+    "readlink",
+    "sha1sum",
+    "sha256sum",
+    "shasum",
+    "sleep",
+    "sort",
+    "stat",
+    "sum",
+    "tac",
+    "tail",
+    "tr",
+    "tree",
+    "uname",
+    "uniq",
+    "wc",
+    "which",
+    "whoami",
+]
+
+[skills]
+enabled_skills = [
+    "vibe",
+]
+
+# Add Claude Code plugins directory to skill search path
+# This allows Vibe to discover and use Claude skills with minimal coupling
+skill_paths = [
+    "/Users/luis/Library/CloudStorage/Dropbox/UTUKI/CONNAISSANCES/claude-code-plugins",
+]
+
+[[providers]]
+name = "mistral"
+api_base = "https://api.mistral.ai/v1"
+api_key_env_var = "MISTRAL_API_KEY"
+backend = "mistral"
+
+[[models]]
+name = "mistral-vibe-cli-latest"
+provider = "mistral"
+alias = "mistral-medium-3.5"
+temperature = 1.0
+thinking = "high"
+auto_compact_threshold = 200000
+supports_images = true
+
+[[models]]
+name = "devstral-small-latest"
+provider = "mistral"
+alias = "devstral-small"
+input_price = 0.1
+output_price = 0.3
+
+[[models]]
+name = "devstral"
+provider = "mistral"
+alias = "devstral"
+enable_connectors = false
+auto_compact_threshold = 200000
+api_timeout = 720.0
+api_retry_max_elapsed_time = 300.0

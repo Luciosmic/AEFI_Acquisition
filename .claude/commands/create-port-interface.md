@@ -17,6 +17,8 @@ Scaffold a new port interface (ABC) to abstract an infrastructure dependency. Po
 - What is the role of this port (e.g., `motion`, `acquisition`, `export`, `output`)?
 - Which service will consume this port?
 - Is it an input port (service calls infrastructure) or output port (infrastructure/service notifies UI)?
+- What are the technical failure modes this port exposes (the members of the port error union)?
+- Which third-party exceptions inside the Real adapter map to each variant?
 
 ## Steps
 
@@ -36,18 +38,21 @@ Responsibility:
 
 Rationale:
 - Hexagonal Architecture: application depends on ports, not concrete adapters
-- Enables testing with mock implementations
+- Enables testing with fake implementations
 
 Design:
 - Abstract Base Class (ABC)
 - Pure interface, no implementation
+- Methods return `Result[T, <Role>Error]` — never bare types for fallible operations
 """
 from abc import ABC, abstractmethod
 
 class I<Role>Port(ABC):
     @abstractmethod
-    def <primary_method>(self) -> <ReturnType>:
-        """<What this method does and what it returns>"""
+    def <primary_method>(self) -> Result[<T>, <Role>Error]:
+        """<What this method does and what it returns>."""
+        # No third-party exception (pyserial, PySide6, requests) may appear in this signature.
+        # Those are caught once inside the Real adapter and translated to a <Role>Error variant.
         pass
 
     @abstractmethod
@@ -56,10 +61,27 @@ class I<Role>Port(ABC):
         pass
 ```
 
-### 3. Create a mock adapter
+### 2.5. Declare the port-scoped error type
 
-Add `src/infrastructure/mocks/adapter_mock_i_<role>_port.py` implementing the new interface with predictable test behavior.
+For infrastructure-facing (outbound) ports, create `src/infrastructure/<adapter>/errors/<adapter>_errors.py` with a sealed union of technical failure modes:
+
+```python
+type <Role>Error = DeviceNotConnected | ProtocolTimeout | ChecksumMismatch
+```
+
+Rules:
+- The port's ABC methods return `Result[T, <Role>Error]` (never `Result[T, Exception]`, `Result[T, Any]`, or a `Result` typed with a domain/application error).
+- The union is closed: every technical failure mode of the underlying dependency is a named variant.
+- No third-party exception type appears in this union — variants are named after the *refused promise*, not the exception class.
+
+### 3. Create the Fake and align its failure modes with Real
+
+Create `src/infrastructure/<adapter>/fake/fake_<adapter>.py` implementing the port with predictable test behavior. The Fake MUST return the same `Result` variants under the same triggers as the Real adapter — this Fake↔Real failure-mode symmetry is the invariant that lets application tests using the Fake match production behavior.
 
 ### 4. Update the consuming service
 
-Inject the port via the service constructor and use only the abstract interface methods.
+Inject the port via the service constructor and use only the abstract interface methods. The consuming service is responsible for unwrapping `Result[T, <Role>Error]` and translating each variant into its own use-case error union.
+
+### 5. Document the failure-mode contract for Real and Fake
+
+In the port's `intention.md` (or module docstring), enumerate the failure modes both Real and Fake must reproduce. This documented contract is the acceptance criterion for both implementations.
