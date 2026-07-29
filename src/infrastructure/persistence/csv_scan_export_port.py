@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import os
 import csv
+import json
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -58,6 +59,8 @@ class CsvScanExportPort(IScanExportPort):
     _field_file: Optional[TextIO] = field(init=False, default=None)
     _field_writer: Optional[csv.DictWriter] = field(init=False, default=None)
     _field_fieldnames: Optional[List[str]] = field(init=False, default=None)
+    _field_axis_labels: Optional[List[str]] = field(init=False, default=None)
+    _scan_name: Optional[str] = field(init=False, default=None)
 
     def configure(
         self, directory: str, filename: str, metadata: Dict[str, Any]
@@ -67,11 +70,15 @@ class CsvScanExportPort(IScanExportPort):
 
         - `directory`: if absolute, used as-is; if relative or empty, it is
           resolved under `base_output_dir`.
-        - `filename`: logical base name (without date/time and extension);
-          a timestamped filename of the form
-          `YYYY-MM-DD_HHMMSS_<filename>.csv` is generated.
+        - `filename`: scan name (without date/time, device tag, or extension).
         - `metadata`: currently unused here but kept for API symmetry and
           potential future use (e.g. writing a sidecar JSON file).
+
+        One acquisition is one bounded context, so every file it produces
+        (this device's data + any probe sidecar file, see
+        `configure_field_data`) is written into a single acquisition folder
+        `<dir>/YYYY-MM-DD_HHMMSS_stepScan_<name>/`, with files named
+        `YYYY-MM-DD_HHMMSS_stepScan_<device>_<name>.csv`.
         """
         # Resolve base directory
         if directory:
@@ -82,18 +89,18 @@ class CsvScanExportPort(IScanExportPort):
             # Use the base_output_dir directly when no directory is provided.
             dir_path = self.base_output_dir
 
-        dir_path.mkdir(parents=True, exist_ok=True)
-
-        # Build timestamped filename to respect export naming convention.
         timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
         safe_base = "".join(
             c for c in filename if c.isalnum() or c in ("-", "_")
         )
-        final_name = f"{timestamp}_{safe_base}.csv"
 
-        self._dir_path = dir_path
+        acquisition_dir = dir_path / f"{timestamp}_stepScan_{safe_base}"
+        acquisition_dir.mkdir(parents=True, exist_ok=True)
+
+        self._dir_path = acquisition_dir
         self._timestamp = timestamp
-        self._configured_path = dir_path / final_name
+        self._scan_name = safe_base
+        self._configured_path = acquisition_dir / f"{timestamp}_stepScan_aefi_{safe_base}.csv"
         print(f"[CsvScanExportPort] CWD: {os.getcwd()}")
         print(f"[CsvScanExportPort] Configured export path (rel): {self._configured_path}")
         print(f"[CsvScanExportPort] Configured export path (abs): {self._configured_path.resolve()}")
@@ -143,10 +150,9 @@ class CsvScanExportPort(IScanExportPort):
 
     def configure_field_data(self, n_components: int, probe_info: Dict[str, Any]) -> None:
         """
-        Open a dedicated `<timestamp>_<probe_label>.csv` file for electric
-        field probe data — a separate file from the main aefi_device export,
-        named after the probe (`probe_info["probe_label"]`) rather than
-        suffixed onto the main file's name.
+        Open a dedicated `<timestamp>_stepScan_<probe_label>_<name>.csv` file
+        for electric field probe data — a separate file from the main
+        aefi_device export, landing in the same acquisition folder.
 
         Must be called before `write_field_point()`. Header is written on the
         first call to `write_field_point`, from that row's own keys.
@@ -155,11 +161,19 @@ class CsvScanExportPort(IScanExportPort):
             raise RuntimeError("CsvScanExportPort.configure() must be called before configure_field_data().")
 
         probe_label = (probe_info or {}).get("probe_label", "field_probe")
-        field_path = self._dir_path / f"{self._timestamp}_{probe_label}.csv"
+        field_path = self._dir_path / f"{self._timestamp}_stepScan_{probe_label}_{self._scan_name}.csv"
         print(f"[CsvScanExportPort] Field data export path: {field_path}")
         self._field_file = field_path.open(mode="w", newline="", encoding="utf-8")
         self._field_writer = csv.DictWriter(self._field_file, fieldnames=[])
         self._field_fieldnames = None
+        self._field_axis_labels = (probe_info or {}).get("axis_labels")
+
+    def _component_column(self, prefix: str, i: int) -> str:
+        """`field_x`/`field_std_dev_x` when the probe's axis_labels are known
+        (e.g. Narda EP-601's X/Y/Z), else the generic `field_component_0`."""
+        if self._field_axis_labels and i < len(self._field_axis_labels):
+            return f"{prefix}_{self._field_axis_labels[i]}"
+        return f"{prefix}_component_{i}"
 
     def write_field_point(self, data: Dict[str, Any]) -> None:
         """
@@ -174,11 +188,11 @@ class CsvScanExportPort(IScanExportPort):
 
         row = {k: v for k, v in data.items() if k not in ("field_components", "field_std_dev_components")}
         for i, c in enumerate(data.get("field_components", ())):
-            row[f"field_component_{i}"] = c
+            row[self._component_column("field", i)] = c
         std_devs = data.get("field_std_dev_components")
         if std_devs:
             for i, s in enumerate(std_devs):
-                row[f"field_std_dev_component_{i}"] = s
+                row[self._component_column("field_std_dev", i)] = s
 
         if self._field_fieldnames is None:
             self._field_fieldnames = list(row.keys())
@@ -188,6 +202,16 @@ class CsvScanExportPort(IScanExportPort):
         out_row = {k: row.get(k, "") for k in self._field_fieldnames}
         self._field_writer.writerow(out_row)
         self._field_file.flush()
+
+    def write_metadata(self, metadata: Dict[str, Any]) -> None:
+        """Write the acquisition's parameter snapshot as a JSON file in the
+        acquisition folder: `<timestamp>_stepScan_<name>.json`."""
+        if self._dir_path is None or self._timestamp is None:
+            raise RuntimeError("CsvScanExportPort.configure() must be called before write_metadata().")
+
+        metadata_path = self._dir_path / f"{self._timestamp}_stepScan_{self._scan_name}.json"
+        with metadata_path.open(mode="w", encoding="utf-8") as f:
+            json.dump(metadata, f, indent=2, ensure_ascii=False, default=str)
 
     def stop(self) -> None:
         """Close the CSV file(s) if open."""
@@ -203,6 +227,7 @@ class CsvScanExportPort(IScanExportPort):
         self._configured_path = None
         self._dir_path = None
         self._timestamp = None
+        self._scan_name = None
 
         if self._field_file is not None:
             try:
@@ -213,5 +238,6 @@ class CsvScanExportPort(IScanExportPort):
         self._field_file = None
         self._field_writer = None
         self._field_fieldnames = None
+        self._field_axis_labels = None
 
 

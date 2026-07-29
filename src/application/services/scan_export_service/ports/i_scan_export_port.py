@@ -27,6 +27,11 @@ class IScanExportPort(ABC):
         pass
     
     @abstractmethod
+    def write_metadata(self, metadata: Dict[str, Any]) -> None:
+        """Write a JSON snapshot of the acquisition's parameters, once per scan."""
+        pass
+
+    @abstractmethod
     def stop(self) -> None:
         """Stop export and close file."""
         pass

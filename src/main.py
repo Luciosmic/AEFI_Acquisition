@@ -30,6 +30,7 @@ from infrastructure.execution.thread_pool_task_runner import ThreadPoolTaskRunne
 from infrastructure.execution.event_bus_motion_synchronizer import EventBusMotionSynchronizer
 from infrastructure.persistence.csv_scan_export_port import CsvScanExportPort
 from infrastructure.persistence.hdf5_scan_export_port import Hdf5ScanExportPort
+from infrastructure.persistence.acquisition_snapshot_reader import AcquisitionSnapshotReader
 from application.services.scan_export_service.scan_export_service import ScanExportService
 
 # --- Adapters (Mocks) ---
@@ -267,13 +268,18 @@ def main():
         auxiliary_probes=[narda_channel],
     )
 
+    # Excitation Service
+    excitation_service = ExcitationConfigurationService(excitation_port)
+
     # Scan Export Service
     csv_export_port = CsvScanExportPort()
     hdf5_export_port = Hdf5ScanExportPort()
-    scan_export_service = ScanExportService(event_bus, csv_export_port, hdf5_export_port)
-
-    # Excitation Service
-    excitation_service = ExcitationConfigurationService(excitation_port)
+    acquisition_snapshot_port = AcquisitionSnapshotReader()
+    scan_export_service = ScanExportService(
+        event_bus, csv_export_port, hdf5_export_port,
+        excitation_service=excitation_service,
+        acquisition_snapshot_port=acquisition_snapshot_port,
+    )
 
     # Motion Control Service
     motion_control_service = MotionControlService(motion_port, event_bus)
