@@ -301,7 +301,7 @@ class Hdf5ScanExportPort(IScanExportPort):
         if self._file_path is None:
             raise RuntimeError("Hdf5ScanExportPort.configure() must be called before write_metadata().")
 
-        metadata_path = self._file_path.with_suffix(".json")
+        metadata_path = self._file_path.parent / f"{self._file_path.stem}_acquisition-parameters.json"
         with metadata_path.open(mode="w", encoding="utf-8") as f:
             json.dump(metadata, f, indent=2, ensure_ascii=False, default=str)
 

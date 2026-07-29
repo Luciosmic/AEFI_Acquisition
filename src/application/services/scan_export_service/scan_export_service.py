@@ -188,13 +188,11 @@ class ScanExportService:
         # Configure field data on first point if not already configured for this scan
         if self._field_n_components == 0 and hasattr(self._active_port, 'configure_field_data'):
             n_components = len(event.field_measurement.components)
+            probe = self._last_known_probe
             probe_info = {
-                # ponytail: Narda EP-601 is the only probe integrated today,
-                # hence hardcoded — derive from the connected probe's
-                # brand/model/axis_labels once a second probe type exists.
-                "probe_label": "narda_ep600",
+                "probe_label": self._probe_label(probe) if probe is not None else "field_probe",
                 "n_components": n_components,
-                "axis_labels": ("x", "y", "z"),
+                "axis_labels": tuple(a.lower() for a in probe.axis_labels) if probe is not None else None,
             }
             self._active_port.configure_field_data(n_components, probe_info)
             self._field_n_components = n_components
@@ -225,6 +223,13 @@ class ScanExportService:
     # ------------------------------------------------------------------ #
     # Helpers
     # ------------------------------------------------------------------ #
+
+    @staticmethod
+    def _probe_label(probe: ElectricFieldProbe) -> str:
+        """`Narda` + `EP-601` -> `narda-ep601`, used as the sidecar file's
+        device tag — derived from the actually-connected probe rather than
+        hardcoded, so a second probe model doesn't need a code change here."""
+        return f"{probe.brand}-{probe.model.replace('-', '')}".lower()
 
     def _build_metadata(self, event: ScanStarted) -> Dict[str, Any]:
         """Extract basic metadata from the scan configuration."""

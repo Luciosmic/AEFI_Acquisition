@@ -26,6 +26,11 @@ from domain.electric_field_probe.electric_field_probe import ElectricFieldProbe
 from domain.electric_field_probe.events.electric_field_probe_connection_changed.electric_field_probe_connection_changed import (
     ElectricFieldProbeConnectionChanged,
 )
+from domain.step_scan.events.electric_field_scan_point_acquired.electric_field_scan_point_acquired import (
+    ElectricFieldScanPointAcquired,
+)
+from domain.electric_field_probe.value_objects.field_measurement.field_measurement import FieldMeasurement
+from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
 
 
 class FakeExportPort(IScanExportPort):
@@ -35,6 +40,8 @@ class FakeExportPort(IScanExportPort):
         self.configured: Dict[str, Any] = {}
         self.points: List[Dict[str, Any]] = []
         self.metadata: Dict[str, Any] = None
+        self.field_data_config: Dict[str, Any] = None
+        self.field_points: List[Dict[str, Any]] = []
         self.started = False
         self.stopped = False
 
@@ -49,6 +56,12 @@ class FakeExportPort(IScanExportPort):
 
     def write_metadata(self, metadata):
         self.metadata = metadata
+
+    def configure_field_data(self, n_components, probe_info):
+        self.field_data_config = {"n_components": n_components, "probe_info": probe_info}
+
+    def write_field_point(self, data):
+        self.field_points.append(data)
 
     def stop(self):
         self.stopped = True
@@ -117,6 +130,28 @@ class TestScanExportServiceMetadata(unittest.TestCase):
         probe_metadata = self.export_port.metadata["electric_field_probe"]
         self.assertEqual(probe_metadata["serial_number"], "SN123")
         self.assertEqual(probe_metadata["axis_labels"], ["x", "y", "z"])
+
+    def test_field_sidecar_label_is_derived_from_connected_probe(self):
+        probe = ElectricFieldProbe(
+            brand="Narda", model="EP-601", serial_number="SN123",
+            axis_labels=("X", "Y", "Z"),
+        )
+        self.event_bus.publish(
+            "electricfieldprobeconnectionchanged",
+            ElectricFieldProbeConnectionChanged(connected=True, probe=probe),
+        )
+        self.event_bus.publish("scanstarted", _make_scan_started_event())
+
+        self.event_bus.publish(
+            "electricfieldscanpointacquired",
+            ElectricFieldScanPointAcquired(
+                scan_id=uuid4(), point_index=0, position=Position2D(x=1.0, y=2.0),
+                field_measurement=FieldMeasurement(components=(1.0, 2.0, 3.0), timestamp=None),
+            ),
+        )
+
+        self.assertEqual(self.export_port.field_data_config["probe_info"]["probe_label"], "narda-ep601")
+        self.assertEqual(self.export_port.field_data_config["probe_info"]["axis_labels"], ("x", "y", "z"))
 
 
 if __name__ == "__main__":

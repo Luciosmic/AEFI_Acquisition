@@ -34,9 +34,9 @@ class TestCsvScanExportPortFieldData(unittest.TestCase):
         self.port.stop()
 
         # Both files land in the same acquisition folder (one bounded context
-        # per acquisition), named timestamp_stepScan_<device>_<name>.
-        main_files = list(self.tmp_dir.glob("*_stepScan_*/*_stepScan_aefi_scan.csv"))
-        field_files = list(self.tmp_dir.glob("*_stepScan_*/*_stepScan_narda_ep600_scan.csv"))
+        # per acquisition), named timestamp_stepScan_<name>_<device>.
+        main_files = list(self.tmp_dir.glob("*_stepScan_*/*_stepScan_scan_aefi.csv"))
+        field_files = list(self.tmp_dir.glob("*_stepScan_*/*_stepScan_scan_narda_ep600.csv"))
         self.assertEqual(len(field_files), 1)
         # Field data must be a distinct file from the main aefi_device export.
         self.assertNotEqual(main_files, field_files)
@@ -70,7 +70,7 @@ class TestCsvScanExportPortMetadata(unittest.TestCase):
         self.port.write_metadata({"scan_id": "abc", "scan": {"pattern": "SERPENTINE"}})
         self.port.stop()
 
-        json_files = list(self.tmp_dir.glob("*_stepScan_*/*_stepScan_scan.json"))
+        json_files = list(self.tmp_dir.glob("*_stepScan_*/*_stepScan_scan_acquisition-parameters.json"))
         self.assertEqual(len(json_files), 1)
 
         with json_files[0].open(encoding="utf-8") as f:
