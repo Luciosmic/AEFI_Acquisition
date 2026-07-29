@@ -68,6 +68,25 @@ Suite de tests `src/` (149 tests) vérifiée verte après suppression.
 
 #### Phase 1 — Domain : Value Object `AcquisitionConfiguration` (additif)
 
+**Sous-partie `SourceGeometry` + DGP ✅ FAIT (2026-07-24)** — périmètre réduit à cette seule sous-partie pour l'instant (pas encore `AcquisitionConfiguration` ni les 4 autres sous-VOs).
+
+Implémenté dans un nouveau module domain dédié (pas sous `value_objects/acquisition_configuration/` comme esquissé plus bas — pas encore d'aggregate root justifiant ce regroupement) :
+
+```
+src/domain/source_geometry/
+├── value_objects/
+│   ├── source_geometry/          ← 6 distances centre-à-centre (d_12..d_34), validation positivité
+│   └── source_frame_geometry/    ← résultat DGP : positions P1-P4, centroïde, axes, rotation_matrix, is_coplanar/is_orthogonal
+└── services/
+    └── source_frame_solver/      ← SourceFrameSolver.solve() : algorithme DGP exact (NOTE - Source Frame Geometry.md §3-4)
+```
+
+Données réelles du banc (2026-07-24, converties depuis les mesures pied à coulisse extrémité-à-extrémité) intégrées dans `config_templates/aefi_device_config.json` ET utilisées comme cas de test (`test_real_device_measurement_2026_07_24`) — a révélé que la tolérance de coplanarité par défaut devait être bien plus large que l'idéal (1e-4 m², pas 1e-6) : le bruit du pied à coulisse (0,02mm) est amplifié par les équations DGP jusqu'à ~mm sur le banc réel. Voir commentaire `ponytail:` dans `source_frame_solver.py`.
+
+Reste à faire pour compléter Phase 1 : `acquisition_configuration.py` (VO racine) + les 4 autres sous-VOs (`sensor_calibration`, `acquisition_params`, `scan_params`, `bench_dimensions`) quand le besoin se précise.
+
+---
+
 Créer `src/domain/value_objects/acquisition_configuration/` :
 
 ```

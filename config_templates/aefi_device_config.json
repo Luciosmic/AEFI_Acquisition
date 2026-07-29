@@ -6,28 +6,29 @@
     "sources_geometry": {
 
       "sphere_labels": {
-        "_note": "S1=x+, S2=x-, S3=y+, S4=y-. See NOTE - Source Frame Geometry.md.",
-        "S1": "x+",
-        "S2": "x-",
-        "S3": "y+",
-        "S4": "y-"
+        "_note": "Quadrant convention (2026-07-24, corrects the earlier x+/x-/y+/y- half-axis labeling). S_i occupies a quadrant, not a half-axis. Source of truth: 'ImagerieElectrique - Correspondance Poupette Sortie DDS - Connexion Carte Amplification Excitation' and NOTE - Source Frame Geometry.md.",
+        "S1": "x_neg_y_pos",
+        "S2": "x_pos_y_neg",
+        "S3": "x_pos_y_pos",
+        "S4": "x_neg_y_neg"
       },
 
       "pairwise_distances": {
-        "_note": "6 center-to-center distances (m). Replaces scalar d_source (schema v1.0). 'uncertainty.expanded' = U = k·u_c (GUM); fill when physically measured.",
-        "d_S1_S2": { "value": 0.07, "unit": "m", "description": "x+ to x-", "uncertainty": { "expanded": null, "k": 2 } },
-        "d_S3_S4": { "value": null, "unit": "m", "description": "y+ to y-", "uncertainty": { "expanded": null, "k": 2 } },
-        "d_S1_S3": { "value": null, "unit": "m", "description": "x+ to y+", "uncertainty": { "expanded": null, "k": 2 } },
-        "d_S1_S4": { "value": null, "unit": "m", "description": "x+ to y-", "uncertainty": { "expanded": null, "k": 2 } },
-        "d_S2_S3": { "value": null, "unit": "m", "description": "x- to y+", "uncertainty": { "expanded": null, "k": 2 } },
-        "d_S2_S4": { "value": null, "unit": "m", "description": "x- to y-", "uncertainty": { "expanded": null, "k": 2 } }
+        "_note": "6 center-to-center distances (m), derived from caliper measurements taken 2026-07-24 (see mesures-dgp-pied-a-coulisse-4spheres). Caliper reads the total span between the outer extremities of the two spheres (D_ij), so center-to-center = D_ij - r_i - r_j. uncertainty.expanded = U = k*u_c (GUM), combining the D_ij and two radius readings in quadrature at the instrument resolution (0.02mm vernier, u = res/(2*sqrt(3)) per reading).",
+        "d_S1_S2": { "value": 0.09182, "unit": "m", "description": "S1 (x_neg_y_pos) to S2 (x_pos_y_neg)", "uncertainty": { "expanded": 2e-5, "k": 2 } },
+        "d_S3_S4": { "value": 0.08958, "unit": "m", "description": "S3 (x_pos_y_pos) to S4 (x_neg_y_neg)", "uncertainty": { "expanded": 2e-5, "k": 2 } },
+        "d_S1_S3": { "value": 0.06481, "unit": "m", "description": "S1 (x_neg_y_pos) to S3 (x_pos_y_pos)", "uncertainty": { "expanded": 2e-5, "k": 2 } },
+        "d_S1_S4": { "value": 0.06397, "unit": "m", "description": "S1 (x_neg_y_pos) to S4 (x_neg_y_neg)", "uncertainty": { "expanded": 2e-5, "k": 2 } },
+        "d_S2_S3": { "value": 0.06275, "unit": "m", "description": "S2 (x_pos_y_neg) to S3 (x_pos_y_pos)", "uncertainty": { "expanded": 2e-5, "k": 2 } },
+        "d_S2_S4": { "value": 0.06495, "unit": "m", "description": "S2 (x_pos_y_neg) to S4 (x_neg_y_neg)", "uncertainty": { "expanded": 2e-5, "k": 2 } }
       },
 
       "r_sphere": {
-        "value": 0.01,
-        "unit": "m",
-        "description": "Radius of each excitation sphere (identical by construction)",
-        "uncertainty": { "expanded": null, "k": 2 }
+        "_note": "Per-sphere radius (m). Replaces the single scalar r_sphere: the 2026-07-24 measurement changed method to measure phi_i per sphere instead of assuming an identical diameter for all four (see mesures-dgp-pied-a-coulisse-4spheres, changelog entry). uncertainty.expanded from a single diameter reading at 0.02mm vernier resolution, halved for the radius.",
+        "S1": { "value": 0.0098, "unit": "m", "uncertainty": { "expanded": 5.8e-6, "k": 2 } },
+        "S2": { "value": 0.0098, "unit": "m", "uncertainty": { "expanded": 5.8e-6, "k": 2 } },
+        "S3": { "value": 0.00975, "unit": "m", "uncertainty": { "expanded": 5.8e-6, "k": 2 } },
+        "S4": { "value": 0.00975, "unit": "m", "uncertainty": { "expanded": 5.8e-6, "k": 2 } }
       }
     },
 
