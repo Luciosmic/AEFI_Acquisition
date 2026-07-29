@@ -19,6 +19,7 @@ from __future__ import annotations
 import logging
 import threading
 import time
+from typing import Optional
 from uuid import UUID, uuid4
 
 from application.services.electric_field_probe_service.ports.i_electric_field_probe_acquisition_executor import (
@@ -34,6 +35,9 @@ from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
 from domain.electric_field_probe.events.field_sample_acquired.field_sample_acquired import (
     FieldSampleAcquired,
 )
+from domain.electric_field_probe.events.electric_field_probe_frequency_correction_changed.electric_field_probe_frequency_correction_changed import (
+    ElectricFieldProbeFrequencyCorrectionChanged,
+)
 from domain.shared_kernel.events.continuous_acquisition_failed.continuous_acquisition_failed import (
     ContinuousAcquisitionFailed,
 )
@@ -46,6 +50,7 @@ logger = logging.getLogger(__name__)
 SAMPLE_ACQUIRED_TOPIC = "fieldsampleacquired"
 ACQUISITION_FAILED_TOPIC = "electricfieldprobeacquisitionfailed"
 ACQUISITION_STOPPED_TOPIC = "electricfieldprobeacquisitionstopped"
+FREQUENCY_CORRECTION_CHANGED_TOPIC = "electricfieldprobefrequencycorrectionchanged"
 
 
 class ElectricFieldProbeAcquisitionExecutor(IElectricFieldProbeAcquisitionExecutor):
@@ -56,6 +61,7 @@ class ElectricFieldProbeAcquisitionExecutor(IElectricFieldProbeAcquisitionExecut
         self._thread: threading.Thread | None = None
         self._stop_flag = threading.Event()
         self._current_acquisition_id: UUID | None = None
+        self._pending_frequency_hz: Optional[float] = None
 
     def start(
         self,
@@ -82,6 +88,12 @@ class ElectricFieldProbeAcquisitionExecutor(IElectricFieldProbeAcquisitionExecut
     def is_running(self) -> bool:
         return self._thread is not None and self._thread.is_alive()
 
+    def request_frequency_correction(self, frequency_hz: float) -> None:
+        # Ecriture de reference unique (atomique sous le GIL) — le worker la lit a chaque
+        # iteration. Jamais reinitialisee a None : un read-then-clear introduirait une fenetre
+        # ou une requete concurrente serait silencieusement perdue.
+        self._pending_frequency_hz = frequency_hz
+
     # ------------------------------------------------------------------ #
     # Internal worker
     # ------------------------------------------------------------------ #
@@ -101,6 +113,7 @@ class ElectricFieldProbeAcquisitionExecutor(IElectricFieldProbeAcquisitionExecut
         probe = probe_port.get_probe()
         serial_number = probe.serial_number if probe else "unknown"
         consecutive_failures = 0
+        last_requested_frequency_hz: Optional[float] = None
 
         try:
             while not self._stop_flag.is_set():
@@ -109,6 +122,36 @@ class ElectricFieldProbeAcquisitionExecutor(IElectricFieldProbeAcquisitionExecut
                     and (time.time() - t0) > config.max_duration_s
                 ):
                     break
+
+                requested_frequency_hz = self._pending_frequency_hz
+                if (
+                    requested_frequency_hz is not None
+                    and requested_frequency_hz != last_requested_frequency_hz
+                ):
+                    last_requested_frequency_hz = requested_frequency_hz
+                    try:
+                        result = probe_port.apply_frequency_correction(
+                            requested_frequency_hz
+                        )
+                        self._event_bus.publish(
+                            FREQUENCY_CORRECTION_CHANGED_TOPIC,
+                            ElectricFieldProbeFrequencyCorrectionChanged(
+                                requested_hz=result.requested_hz,
+                                applied_hz=result.applied_hz,
+                                in_range=result.in_range,
+                                error=result.error,
+                            ),
+                        )
+                    except Exception as e:
+                        self._event_bus.publish(
+                            FREQUENCY_CORRECTION_CHANGED_TOPIC,
+                            ElectricFieldProbeFrequencyCorrectionChanged(
+                                requested_hz=requested_frequency_hz,
+                                applied_hz=None,
+                                in_range=True,
+                                error=str(e),
+                            ),
+                        )
 
                 try:
                     sample = probe_port.acquire_sample()

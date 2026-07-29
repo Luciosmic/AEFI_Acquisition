@@ -27,6 +27,12 @@ from domain.electric_field_probe.events.electric_field_probe_connection_changed.
 from domain.electric_field_probe.events.electric_field_probe_battery_refreshed.electric_field_probe_battery_refreshed import (
     ElectricFieldProbeBatteryRefreshed,
 )
+from domain.electric_field_probe.events.electric_field_probe_frequency_correction_changed.electric_field_probe_frequency_correction_changed import (
+    ElectricFieldProbeFrequencyCorrectionChanged,
+)
+from domain.shared_kernel.events.excitation_frequency_changed.excitation_frequency_changed import (
+    ExcitationFrequencyChanged,
+)
 
 
 class TestElectricFieldProbeService(DiagramFriendlyTest):
@@ -47,6 +53,9 @@ class TestElectricFieldProbeService(DiagramFriendlyTest):
         self.connection_events: List[ElectricFieldProbeConnectionChanged] = []
 
         self.battery_refreshed_events: List[ElectricFieldProbeBatteryRefreshed] = []
+        self.frequency_correction_events: List[
+            ElectricFieldProbeFrequencyCorrectionChanged
+        ] = []
 
         self.event_bus.subscribe("fieldsampleacquired", self.samples.append)
         self.event_bus.subscribe(
@@ -55,10 +64,14 @@ class TestElectricFieldProbeService(DiagramFriendlyTest):
         self.event_bus.subscribe(
             "electricfieldprobebatteryrefreshed", self.battery_refreshed_events.append
         )
+        self.event_bus.subscribe(
+            "electricfieldprobefrequencycorrectionchanged",
+            self.frequency_correction_events.append,
+        )
 
-        executor = ElectricFieldProbeAcquisitionExecutor(self.event_bus)
+        self.executor = ElectricFieldProbeAcquisitionExecutor(self.event_bus)
         self.service = ElectricFieldProbeService(
-            executor=executor,
+            executor=self.executor,
             probe_port=self.probe_port,
             event_bus=self.event_bus,
         )
@@ -127,6 +140,66 @@ class TestElectricFieldProbeService(DiagramFriendlyTest):
 
         assert len(self.samples) >= 1
         assert len(self.samples[0].sample.components) == 3
+
+    def test_connect_probe_applies_last_known_excitation_frequency(self) -> None:
+        # Aucune ExcitationFrequencyChanged recue avant connexion -> 0.0 Hz par defaut
+        # (miroir de ExcitationParameters.off().frequency), hors plage sonde (<10kHz).
+        self.service.connect_probe()
+
+        assert len(self.frequency_correction_events) == 1
+        assert self.frequency_correction_events[0].requested_hz == 0.0
+        assert self.frequency_correction_events[0].in_range is False
+
+    def test_excitation_frequency_change_applies_directly_when_idle(self) -> None:
+        self.service.connect_probe()
+        self.frequency_correction_events.clear()
+
+        self.event_bus.publish(
+            "excitationfrequencychanged",
+            ExcitationFrequencyChanged(frequency_hz=50_000.0),
+        )
+
+        assert len(self.frequency_correction_events) == 1
+        assert self.frequency_correction_events[0].in_range is True
+        assert self.frequency_correction_events[0].applied_hz == 50_000.0
+
+    def test_excitation_frequency_change_out_of_range_below_10khz(self) -> None:
+        self.service.connect_probe()
+        self.frequency_correction_events.clear()
+
+        self.event_bus.publish(
+            "excitationfrequencychanged",
+            ExcitationFrequencyChanged(frequency_hz=5_000.0),
+        )
+
+        assert len(self.frequency_correction_events) == 1
+        assert self.frequency_correction_events[0].in_range is False
+        assert self.frequency_correction_events[0].applied_hz is None
+
+    def test_excitation_frequency_change_during_acquisition_uses_executor_without_stopping_stream(
+        self,
+    ) -> None:
+        self.service.connect_probe()
+        config = ElectricFieldProbeAcquisitionConfig(
+            sample_rate_hz=50.0, max_duration_s=None
+        )
+        self.service.start_acquisition(config)
+        time.sleep(0.05)
+
+        self.event_bus.publish(
+            "excitationfrequencychanged",
+            ExcitationFrequencyChanged(frequency_hz=50_000.0),
+        )
+        time.sleep(0.1)
+
+        assert self.executor.is_running()
+        assert len(self.samples) >= 1
+
+        self.service.stop_acquisition()
+
+        assert any(
+            e.applied_hz == 50_000.0 for e in self.frequency_correction_events
+        )
 
 
 if __name__ == "__main__":

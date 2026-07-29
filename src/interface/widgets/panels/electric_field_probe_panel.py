@@ -22,6 +22,13 @@ import pyqtgraph as pg  # type: ignore[import]
 
 AXIS_COLORS = ["#4A90E2", "#F4D03F", "#E74C3C", "#9B59B6", "#2ECC71", "#E67E22"]
 
+FREQUENCY_CORRECTION_COLORS = {
+    "applied": "#2ECC71",
+    "out_of_range": "#F4D03F",
+    "error": "#E74C3C",
+    "unknown": "#888",
+}
+
 _TOGGLE_STYLE = (
     "QPushButton { color: #888; border: 1px solid #555; border-radius: 3px; padding: 2px 6px; }"
     "QPushButton:checked { background-color: #27AE60; color: white; border: 1px solid #27AE60; font-weight: bold; }"
@@ -74,10 +81,15 @@ class ElectricFieldProbePanel(QWidget):
         self.lbl_probe_status.setStyleSheet("color: #888; font-weight: bold;")
         self.lbl_data_status = QLabel("● No data")
         self.lbl_data_status.setStyleSheet("color: #888;")
+        self.lbl_frequency_correction = QLabel("● —")
+        self.lbl_frequency_correction.setStyleSheet(
+            f"color: {FREQUENCY_CORRECTION_COLORS['unknown']};"
+        )
         l_conn.addWidget(self.btn_connect)
         l_conn.addWidget(self.btn_refresh_battery)
         l_conn.addWidget(self.lbl_probe_status)
         l_conn.addWidget(self.lbl_data_status)
+        l_conn.addWidget(self.lbl_frequency_correction)
         controls_layout.addWidget(grp_conn)
 
         # --- Acquisition group ---
@@ -238,6 +250,11 @@ class ElectricFieldProbePanel(QWidget):
         for key, curve in self.curves.items():
             self.values.setdefault(key, []).append(data.get(key, 0.0))
             curve.setData(self.times, self.values[key])
+
+    def on_frequency_correction_changed(self, state: str, text: str):
+        color = FREQUENCY_CORRECTION_COLORS.get(state, FREQUENCY_CORRECTION_COLORS["unknown"])
+        self.lbl_frequency_correction.setText(f"● {text}")
+        self.lbl_frequency_correction.setStyleSheet(f"color: {color}; font-weight: bold;")
 
     def update_correction_states(self, enabled: bool, offset_str: str):
         self.btn_toggle_noise.blockSignals(True)
