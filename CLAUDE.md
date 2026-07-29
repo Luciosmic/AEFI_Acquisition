@@ -37,6 +37,7 @@ Lire `_system/` avant toute décision architecturale :
 
 - [`_system/self/goals.md`](_system/self/goals.md) — objectifs et features en cours
 - [`_system/ops/tasks.md`](_system/ops/tasks.md) — tâches actives
+- [`_system/ops/ponytail-debt.md`](_system/ops/ponytail-debt.md) — raccourcis délibérés (`ponytail:`) à surveiller/nettoyer
 
 ## Branches
 
