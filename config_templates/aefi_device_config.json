@@ -6,29 +6,29 @@
     "sources_geometry": {
 
       "sphere_labels": {
-        "_note": "Quadrant convention (2026-07-24, corrects the earlier x+/x-/y+/y- half-axis labeling). S_i occupies a quadrant, not a half-axis. Source of truth: 'ImagerieElectrique - Correspondance Poupette Sortie DDS - Connexion Carte Amplification Excitation' and NOTE - Source Frame Geometry.md.",
+        "_note": "Quadrant convention (2026-07-24, corrects the earlier x+/x-/y+/y- half-axis labeling). S_i occupies a quadrant, not a half-axis. Source of truth: 'ImagerieElectrique - Correspondance Poupette Sortie DDS - Connexion Carte Amplification Excitation' and the 'NOTE - Source Frame Geometry' (Luis Saluden's vault, not tracked in this repo).",
         "S1": "x_neg_y_pos",
         "S2": "x_pos_y_neg",
         "S3": "x_pos_y_pos",
         "S4": "x_neg_y_neg"
       },
 
-      "pairwise_distances": {
-        "_note": "6 center-to-center distances (m), derived from caliper measurements taken 2026-07-24 (see mesures-dgp-pied-a-coulisse-4spheres). Caliper reads the total span between the outer extremities of the two spheres (D_ij), so center-to-center = D_ij - r_i - r_j. uncertainty.expanded = U = k*u_c (GUM), combining the D_ij and two radius readings in quadrature at the instrument resolution (0.02mm vernier, u = res/(2*sqrt(3)) per reading).",
-        "d_S1_S2": { "value": 0.09182, "unit": "m", "description": "S1 (x_neg_y_pos) to S2 (x_pos_y_neg)", "uncertainty": { "expanded": 2e-5, "k": 2 } },
-        "d_S3_S4": { "value": 0.08958, "unit": "m", "description": "S3 (x_pos_y_pos) to S4 (x_neg_y_neg)", "uncertainty": { "expanded": 2e-5, "k": 2 } },
-        "d_S1_S3": { "value": 0.06481, "unit": "m", "description": "S1 (x_neg_y_pos) to S3 (x_pos_y_pos)", "uncertainty": { "expanded": 2e-5, "k": 2 } },
-        "d_S1_S4": { "value": 0.06397, "unit": "m", "description": "S1 (x_neg_y_pos) to S4 (x_neg_y_neg)", "uncertainty": { "expanded": 2e-5, "k": 2 } },
-        "d_S2_S3": { "value": 0.06275, "unit": "m", "description": "S2 (x_pos_y_neg) to S3 (x_pos_y_pos)", "uncertainty": { "expanded": 2e-5, "k": 2 } },
-        "d_S2_S4": { "value": 0.06495, "unit": "m", "description": "S2 (x_pos_y_neg) to S4 (x_neg_y_neg)", "uncertainty": { "expanded": 2e-5, "k": 2 } }
+      "sphere_diameters": {
+        "_note": "Diameter phi_i (m) per sphere, measured individually at the caliper 2026-07-24 (mesures-dgp-pied-a-coulisse-4spheres). Sphere centers are not physically accessible to the caliper, so this and pairwise_distances_ext below are what's actually measured; center-to-center distances (r_i = phi_i/2, d_ij = D_ij - r_i - r_j) are derived in code, not stored here. uncertainty.expanded = U = k*u_c (GUM) for a single reading at the instrument resolution (0.02mm vernier, u_c = res/(2*sqrt(3))).",
+        "S1": { "value": 0.0196, "unit": "m", "uncertainty": { "expanded": 1.15e-5, "k": 2 } },
+        "S2": { "value": 0.0196, "unit": "m", "uncertainty": { "expanded": 1.15e-5, "k": 2 } },
+        "S3": { "value": 0.0195, "unit": "m", "uncertainty": { "expanded": 1.15e-5, "k": 2 } },
+        "S4": { "value": 0.0195, "unit": "m", "uncertainty": { "expanded": 1.15e-5, "k": 2 } }
       },
 
-      "r_sphere": {
-        "_note": "Per-sphere radius (m). Replaces the single scalar r_sphere: the 2026-07-24 measurement changed method to measure phi_i per sphere instead of assuming an identical diameter for all four (see mesures-dgp-pied-a-coulisse-4spheres, changelog entry). uncertainty.expanded from a single diameter reading at 0.02mm vernier resolution, halved for the radius.",
-        "S1": { "value": 0.0098, "unit": "m", "uncertainty": { "expanded": 5.8e-6, "k": 2 } },
-        "S2": { "value": 0.0098, "unit": "m", "uncertainty": { "expanded": 5.8e-6, "k": 2 } },
-        "S3": { "value": 0.00975, "unit": "m", "uncertainty": { "expanded": 5.8e-6, "k": 2 } },
-        "S4": { "value": 0.00975, "unit": "m", "uncertainty": { "expanded": 5.8e-6, "k": 2 } }
+      "pairwise_distances_ext": {
+        "_note": "6 extremity-to-extremity distances D_ij (m), measured at the caliper 2026-07-24 (mesures-dgp-pied-a-coulisse-4spheres): the caliper spans the outer extremities of the two spheres, i.e. D_ij = center-to-center + r_i + r_j. Center-to-center distance is derived in code as d_ij = D_ij - r_i - r_j, not stored here. uncertainty.expanded as above (single caliper reading, 0.02mm vernier resolution).",
+        "D_S1_S2": { "value": 0.11142, "unit": "m", "description": "S1 (x_neg_y_pos) to S2 (x_pos_y_neg)", "uncertainty": { "expanded": 1.15e-5, "k": 2 } },
+        "D_S3_S4": { "value": 0.10908, "unit": "m", "description": "S3 (x_pos_y_pos) to S4 (x_neg_y_neg)", "uncertainty": { "expanded": 1.15e-5, "k": 2 } },
+        "D_S1_S3": { "value": 0.08436, "unit": "m", "description": "S1 (x_neg_y_pos) to S3 (x_pos_y_pos)", "uncertainty": { "expanded": 1.15e-5, "k": 2 } },
+        "D_S1_S4": { "value": 0.08352, "unit": "m", "description": "S1 (x_neg_y_pos) to S4 (x_neg_y_neg)", "uncertainty": { "expanded": 1.15e-5, "k": 2 } },
+        "D_S2_S3": { "value": 0.08230, "unit": "m", "description": "S2 (x_pos_y_neg) to S3 (x_pos_y_pos)", "uncertainty": { "expanded": 1.15e-5, "k": 2 } },
+        "D_S2_S4": { "value": 0.08450, "unit": "m", "description": "S2 (x_pos_y_neg) to S4 (x_neg_y_neg)", "uncertainty": { "expanded": 1.15e-5, "k": 2 } }
       }
     },
 
