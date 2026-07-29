@@ -32,12 +32,6 @@ class IAefiAcquisitionExecutor(ABC):
         """Request graceful stop of the continuous acquisition."""
 
     @abstractmethod
-    def update_config(self, config: AefiAcquisitionConfig) -> None:
-        """
-        Dynamically update configuration of running acquisition.
-        """
-
-    @abstractmethod
     def is_running(self) -> bool:
         """True if the acquisition worker is currently active."""
 

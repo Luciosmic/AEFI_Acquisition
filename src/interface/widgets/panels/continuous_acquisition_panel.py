@@ -26,7 +26,7 @@ class ContinuousAcquisitionPanel(QWidget):
     Single panel for continuous acquisition with controls and time series visualization.
     
     Features:
-    - Control panel (sample rate, duration, display window)
+    - Control panel (display window)
     - Start/Stop buttons
     - Pyqtgraph time series plot for 6 channels
     - Channel visibility toggles
@@ -35,7 +35,6 @@ class ContinuousAcquisitionPanel(QWidget):
     # Signals (passive view pattern)
     acquisition_start_requested = Signal(dict)  # parameters
     acquisition_stop_requested = Signal()
-    parameters_updated = Signal(dict)  # live parameter changes
 
     CHANNELS = [
         # X Axis
@@ -73,13 +72,6 @@ class ContinuousAcquisitionPanel(QWidget):
         grp_params = QGroupBox("Acquisition")
         l_params = QFormLayout(grp_params)
         l_params.setContentsMargins(5, 5, 5, 5)
-        
-        self.sample_rate_spin = QDoubleSpinBox()
-        self.sample_rate_spin.setRange(0.1, 1000.0)
-        self.sample_rate_spin.setValue(20.0)
-        self.sample_rate_spin.setSuffix(" Hz")
-        self.sample_rate_spin.valueChanged.connect(self._on_parameter_changed)
-        l_params.addRow("Rate:", self.sample_rate_spin)
 
         # Remove fixed Duration control - use infinite by default
         # Add Window Display Control
@@ -306,7 +298,6 @@ class ContinuousAcquisitionPanel(QWidget):
     def _on_start_clicked(self):
         """Gather parameters and emit signal."""
         params = {
-            "sample_rate_hz": self.sample_rate_spin.value(),
             "max_duration_s": None,  # Infinite duration
         }
         self.lbl_status.setText("Running...")
@@ -377,15 +368,6 @@ class ContinuousAcquisitionPanel(QWidget):
         """Update the read-only angles label."""
         self.lbl_angles_info.setText(f"Angles: [{angles[0]:.1f}, {angles[1]:.1f}, {angles[2]:.1f}]")
 
-
-    def _on_parameter_changed(self):
-        """Called when user modifies rate while running."""
-        if self.btn_stop.isEnabled():
-            params = {
-                "sample_rate_hz": self.sample_rate_spin.value(),
-                "max_duration_s": None,  # Infinite duration
-            }
-            self.parameters_updated.emit(params)
 
     def on_acquisition_started(self, acquisition_id: str):
         """Called when acquisition starts (from presenter)."""

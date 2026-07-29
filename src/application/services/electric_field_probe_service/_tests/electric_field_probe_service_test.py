@@ -102,9 +102,7 @@ class TestElectricFieldProbeService(DiagramFriendlyTest):
 
     def test_refresh_battery_refused_while_acquisition_running(self) -> None:
         self.service.connect_probe()
-        config = ElectricFieldProbeAcquisitionConfig(
-            sample_rate_hz=20.0, max_duration_s=None
-        )
+        config = ElectricFieldProbeAcquisitionConfig(max_duration_s=None)
         self.service.start_acquisition(config)
 
         self.service.refresh_battery()
@@ -116,9 +114,7 @@ class TestElectricFieldProbeService(DiagramFriendlyTest):
     def test_continuous_acquisition_short_burst(self) -> None:
         self.service.connect_probe()
 
-        config = ElectricFieldProbeAcquisitionConfig(
-            sample_rate_hz=20.0, max_duration_s=0.1
-        )
+        config = ElectricFieldProbeAcquisitionConfig(max_duration_s=0.1)
         self.service.start_acquisition(config)
 
         time.sleep(0.2)

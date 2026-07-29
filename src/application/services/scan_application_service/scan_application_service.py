@@ -118,7 +118,6 @@ def make_electric_field_probe_channel(
     probe_port: IElectricFieldProbePort,
     probe_service: IApiElectricFieldProbeService,
     event_bus: IDomainEventBus,
-    sample_rate_hz: float,
 ) -> AuxiliaryProbeChannel:
     """Build the Narda EF probe's auxiliary channel registration."""
 
@@ -138,7 +137,7 @@ def make_electric_field_probe_channel(
         name="Narda probe",
         event_topic="fieldsampleacquired",
         service=probe_service,
-        acquisition_config=ElectricFieldProbeAcquisitionConfig(sample_rate_hz=sample_rate_hz),
+        acquisition_config=ElectricFieldProbeAcquisitionConfig(),
         is_ready=probe_port.is_ready,
         publish_point_result=_publish,
     )
@@ -153,12 +152,6 @@ class ScanApplicationService:
     logic); the task runner and motion synchronizer are thin infrastructure
     adapters that own only concurrency/protocol concerns.
     """
-
-    # Ceiling above the Narda probe's fastest filter response (~33 Hz at F1;
-    # RECOMMENDED_FILTER=F4/F5 in driver_narda_ep601.py is slower). The
-    # continuous worker's inter-sample sleep barely adds delay once real
-    # acquire latency dominates — this is a safe upper bound, not a tuned rate.
-    NARDA_CONTINUOUS_SAMPLE_RATE_HZ = 50.0
 
     # Total budget to collect one point's averaging window from a sample
     # stream (ADC or EF probe) before giving up. Same order of magnitude as
@@ -315,9 +308,7 @@ class ScanApplicationService:
         # running, untouched, after it.
         adc_started_by_scan = not self._aefi_acquisition_service.is_acquisition_running()
         if adc_started_by_scan:
-            self._aefi_acquisition_service.start_acquisition(
-                AefiAcquisitionConfig(sample_rate_hz=None)
-            )
+            self._aefi_acquisition_service.start_acquisition(AefiAcquisitionConfig())
 
         # Active auxiliary channels: (channel, its queue). A channel that
         # isn't ready (probe not connected) is simply skipped for this scan.

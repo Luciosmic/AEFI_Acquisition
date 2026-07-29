@@ -10,8 +10,14 @@ infrastructure. Même rôle que `AefiAcquisitionExecutor` pour le canal AEFI.
 ## Responsibility
 
 - Implémenter `IElectricFieldProbeAcquisitionExecutor`.
-- Faire tourner la boucle d'acquisition dans un thread daemon : rate control
-  (`sample_rate_hz`), `max_duration_s`, publication de `FieldSampleAcquired`.
+- Faire tourner la boucle d'acquisition dans un thread daemon, best-effort :
+  `max_duration_s`, publication de `FieldSampleAcquired`. Un délai interne
+  fixe (`_SAMPLE_INTERVAL_S` = 50Hz, non configurable) protège le mode
+  mock/fake (acquisition quasi instantanée) d'un flood de l'event bus / UI
+  Qt, tout en restant réaliste : 50Hz mirrore le plafond physique de la
+  sonde réelle (réponse de filtre la plus rapide ~33Hz à F1). Contre la
+  sonde réelle, le round-trip série domine déjà et ce délai n'ajoute
+  presque rien.
 - Tolérer jusqu'à `MAX_CONSECUTIVE_SAMPLE_FAILURES` (2) échecs consécutifs de
   `probe_port.acquire_sample()` avant de publier `ContinuousAcquisitionFailed`
   — la sonde Narda est connue pour être flaky (erreurs USB/série
@@ -23,5 +29,5 @@ infrastructure. Même rôle que `AefiAcquisitionExecutor` pour le canal AEFI.
 
 - Thread + `threading.Event` pour le stop flag, `join(timeout=2.0)` — même
   squelette que `AefiAcquisitionExecutor`.
-- Contrairement à `AefiAcquisitionExecutor`, pas de `update_config()` : voir
-  `i_electric_field_probe_acquisition_executor_intention.md`.
+- Pas de `update_config()` ni de `sample_rate_hz` : les deux canaux
+  d'acquisition continue (AEFI et sonde) sont best-effort.

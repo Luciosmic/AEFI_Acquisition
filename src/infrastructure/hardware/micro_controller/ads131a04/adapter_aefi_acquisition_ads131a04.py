@@ -71,11 +71,6 @@ class AdapterAefiAcquisitionAds131a04(IAefiAcquisitionExecutor):
             self._thread.join(timeout=2.0)
             self._thread = None
 
-    def update_config(self, config: AefiAcquisitionConfig) -> None:
-        """Update configuration (not fully supported in this simple version yet)."""
-        # TODO: Implement dynamic config update if needed
-        pass
-
     def is_running(self) -> bool:
         return self._thread is not None and self._thread.is_alive()
 
@@ -88,10 +83,10 @@ class AdapterAefiAcquisitionAds131a04(IAefiAcquisitionExecutor):
         """Background acquisition loop."""
         print(f"[ContinuousAcquisition] Worker started. ID: {acquisition_id}")
 
-        # sample_rate_hz=None means best-effort: acquire back-to-back at
-        # whatever rate the serial link allows, matching the previous
-        # scan-loop pull throughput (no artificial pacing).
-        dt = 1.0 / config.sample_rate_hz if config.sample_rate_hz and config.sample_rate_hz > 0 else 0.0
+        # Best-effort: acquire back-to-back at whatever rate the serial link
+        # allows. The ADC round-trip (OSR x n_avg, set in hardware advanced
+        # config) dominates timing by orders of magnitude, so no software
+        # pacing is added here.
         t0 = time.time()
         index = 0
 
@@ -120,11 +115,7 @@ class AdapterAefiAcquisitionAds131a04(IAefiAcquisitionExecutor):
                 self._event_bus.publish("aefivoltagesampleacquired", event)
 
                 index += 1
-                
-                # Simple timing control (drift prone but sufficient for basic polling)
-                # For high precision, we would rely on hardware timing.
-                time.sleep(dt)
-                
+
         except Exception as e:
             print(f"[ContinuousAcquisition] Loop failed: {e}")
             error_event = ContinuousAcquisitionFailed(

@@ -259,7 +259,6 @@ def main():
         probe_port=probe_port,
         probe_service=electric_field_probe_service,
         event_bus=event_bus,
-        sample_rate_hz=ScanApplicationService.NARDA_CONTINUOUS_SAMPLE_RATE_HZ,
     )
     scan_service = ScanApplicationService(
         motion_port, continuous_service, event_bus,
@@ -394,7 +393,6 @@ def main():
     continuous_panel = dashboard.panels["continuous"]
     continuous_panel.acquisition_start_requested.connect(continuous_presenter.on_acquisition_start_requested)
     continuous_panel.acquisition_stop_requested.connect(continuous_presenter.on_acquisition_stop_requested)
-    continuous_panel.parameters_updated.connect(continuous_presenter.on_parameters_updated)
     
     # Calibration & Transformation Wiring
     continuous_panel.calibrate_noise_requested.connect(continuous_presenter.calibrate_noise)
@@ -425,7 +423,6 @@ def main():
     electric_field_probe_panel.refresh_battery_requested.connect(electric_field_probe_presenter.on_refresh_battery_requested)
     electric_field_probe_panel.acquisition_start_requested.connect(electric_field_probe_presenter.on_acquisition_start_requested)
     electric_field_probe_panel.acquisition_stop_requested.connect(electric_field_probe_presenter.on_acquisition_stop_requested)
-    electric_field_probe_panel.parameters_updated.connect(electric_field_probe_presenter.on_parameters_updated)
     electric_field_probe_panel.calibrate_noise_requested.connect(electric_field_probe_presenter.calibrate_noise)
     electric_field_probe_panel.reset_calibration_requested.connect(electric_field_probe_presenter.reset_calibration)
     electric_field_probe_panel.noise_toggled.connect(electric_field_probe_presenter.on_noise_toggled)
