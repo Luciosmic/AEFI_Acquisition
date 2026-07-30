@@ -25,6 +25,7 @@ aefi_64bit_py311_venv/
 .vscode/
 .claude/
 .packmind/
+
 *.swp
 *.bak
 .DS_Store

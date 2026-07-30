@@ -90,7 +90,7 @@ class ArcusAdapter(IMotionPort):
     def _load_calibration(self):
         """Load calibration from config file."""
         try:
-            config_path = Path(__file__).parent / "arcus_default_config.json"
+            config_path = Path(".aefi_acquisition") / "configs" / "arcus_default_config.json"
             if config_path.exists():
                 with open(config_path, 'r') as f:
                     config = json.load(f)

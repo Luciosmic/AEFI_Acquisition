@@ -127,7 +127,7 @@ class ADS131A04AdvancedConfigurator(IHardwareAdvancedConfigurator):
         # Load default config if exists
         updated_specs = []
         try:
-            config_path = os.path.join(os.path.dirname(__file__), "ads131a04_default_config.json")
+            config_path = os.path.join(".aefi_acquisition", "configs", "ads131a04_default_config.json")
             default_config = {}
             if os.path.exists(config_path):
                 with open(config_path, 'r') as f:
@@ -249,7 +249,7 @@ class ADS131A04AdvancedConfigurator(IHardwareAdvancedConfigurator):
         
         # 3. Persist to JSON file
         try:
-            config_path = os.path.join(os.path.dirname(__file__), "ads131a04_last_config.json")
+            config_path = os.path.join(".aefi_acquisition", "configs", "ads131a04_last_config.json")
             with open(config_path, 'w') as f:
                 json.dump(json_config, f, indent=4)
             print(f"[ADS131Configurator] Config saved to {config_path}")
@@ -297,7 +297,7 @@ class ADS131A04AdvancedConfigurator(IHardwareAdvancedConfigurator):
             
         # 2. Persist to DEFAULT JSON file
         try:
-            config_path = os.path.join(os.path.dirname(__file__), "ads131a04_default_config.json")
+            config_path = os.path.join(".aefi_acquisition", "configs", "ads131a04_default_config.json")
             with open(config_path, 'w') as f:
                 json.dump(json_config, f, indent=4)
             print(f"[ADS131Configurator] Default config saved to {config_path}")
@@ -320,7 +320,7 @@ class ADS131A04AdvancedConfigurator(IHardwareAdvancedConfigurator):
         """
         # Try to get current config from adapter or last saved config
         try:
-            config_path = os.path.join(os.path.dirname(__file__), "ads131a04_last_config.json")
+            config_path = os.path.join(".aefi_acquisition", "configs", "ads131a04_last_config.json")
             if os.path.exists(config_path):
                 with open(config_path, 'r') as f:
                     saved_config = json.load(f)

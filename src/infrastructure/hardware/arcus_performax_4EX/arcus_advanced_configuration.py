@@ -269,7 +269,7 @@ class ArcusPerformax4EXAdvancedConfigurator(IHardwareAdvancedConfigurator):
         updated_specs = []
         
         try:
-            config_path = os.path.join(os.path.dirname(__file__), "arcus_default_config.json")
+            config_path = os.path.join(".aefi_acquisition", "configs", "arcus_default_config.json")
             default_config = {}
             if os.path.exists(config_path):
                 with open(config_path, 'r') as f:
@@ -327,7 +327,7 @@ class ArcusPerformax4EXAdvancedConfigurator(IHardwareAdvancedConfigurator):
         import os
         
         try:
-            config_path = os.path.join(os.path.dirname(__file__), "arcus_default_config.json")
+            config_path = os.path.join(".aefi_acquisition", "configs", "arcus_default_config.json")
             with open(config_path, 'w') as f:
                 json.dump(config, f, indent=4)
             print(f"[ArcusConfigurator] Default config saved to {config_path}")

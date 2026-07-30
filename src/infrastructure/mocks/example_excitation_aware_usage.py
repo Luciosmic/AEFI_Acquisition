@@ -203,14 +203,15 @@ def example_integration_with_services():
     from application.services.excitation_configuration_service.excitation_configuration_service import (
         ExcitationConfigurationService
     )
-    
+    from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+
     # Create ports
     base_port = RandomNoiseAcquisitionPort(noise_std=0.1, seed=42)
     excitation_port = MockExcitationPort()
     aware_port = ExcitationAwareAcquisitionPort(base_port, excitation_port)
-    
+
     # Create excitation service
-    excitation_service = ExcitationConfigurationService(excitation_port)
+    excitation_service = ExcitationConfigurationService(excitation_port, InMemoryEventBus())
     
     # Set excitation via service
     excitation_service.set_excitation(

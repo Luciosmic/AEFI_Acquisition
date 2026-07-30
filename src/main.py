@@ -77,6 +77,17 @@ def main():
     Main entry point for Interface V2.
     Composition root that builds the dependency graph.
     """
+    # 0. Bootstrap runtime configs (.aefi_acquisition/configs/ ← config_templates/)
+    from infrastructure.config.config_bootstrapper import ConfigBootstrapper
+    repo_root = root_dir.parent
+    bootstrapper = ConfigBootstrapper(
+        templates_dir=repo_root / "config_templates",
+        runtime_dir=repo_root / ".aefi_acquisition" / "configs",
+    )
+    seeded = bootstrapper.ensure_configs_exist()
+    if seeded:
+        print(f"[bootstrap] Configs initialisées depuis templates : {seeded}")
+
     # 1. Create QApplication
     app = QApplication(sys.argv)
     app.setApplicationName("AEFI Acquisition - Interface V2")
@@ -269,7 +280,7 @@ def main():
     )
 
     # Excitation Service
-    excitation_service = ExcitationConfigurationService(excitation_port)
+    excitation_service = ExcitationConfigurationService(excitation_port, event_bus)
 
     # Scan Export Service
     csv_export_port = CsvScanExportPort()
@@ -439,6 +450,7 @@ def main():
     electric_field_probe_presenter.acquisition_stopped.connect(electric_field_probe_panel.on_acquisition_stopped)
     electric_field_probe_presenter.sample_acquired.connect(electric_field_probe_panel.on_sample_acquired)
     electric_field_probe_presenter.noise_state_updated.connect(electric_field_probe_panel.update_correction_states)
+    electric_field_probe_presenter.frequency_correction_changed.connect(electric_field_probe_panel.on_frequency_correction_changed)
     print("  [electric_field_probe] wired")
 
     # Scan Panels Wiring

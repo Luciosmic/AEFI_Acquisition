@@ -65,7 +65,7 @@ class MCUAdvancedConfigurator(IHardwareAdvancedConfigurator):
         # Load default config if exists
         updated_specs = []
         try:
-            config_path = os.path.join(os.path.dirname(__file__), "mcu_default_config.json")
+            config_path = os.path.join(".aefi_acquisition", "configs", "mcu_default_config.json")
             default_config = {}
             if os.path.exists(config_path):
                 with open(config_path, 'r') as f:
@@ -103,7 +103,7 @@ class MCUAdvancedConfigurator(IHardwareAdvancedConfigurator):
         
         # 3. Persist to JSON file
         try:
-            config_path = os.path.join(os.path.dirname(__file__), "mcu_last_config.json")
+            config_path = os.path.join(".aefi_acquisition", "configs", "mcu_last_config.json")
             with open(config_path, 'w') as f:
                 json.dump(json_config, f, indent=4)
             print(f"[MCUConfigurator] Config saved to {config_path}: n_avg={n_avg}")
@@ -125,7 +125,7 @@ class MCUAdvancedConfigurator(IHardwareAdvancedConfigurator):
         }
         
         try:
-            config_path = os.path.join(os.path.dirname(__file__), "mcu_default_config.json")
+            config_path = os.path.join(".aefi_acquisition", "configs", "mcu_default_config.json")
             with open(config_path, 'w') as f:
                 json.dump(json_config, f, indent=4)
             print(f"[MCUConfigurator] Default config saved to {config_path}: n_avg={n_avg}")
@@ -141,7 +141,7 @@ class MCUAdvancedConfigurator(IHardwareAdvancedConfigurator):
             Current n_avg value (default: 1)
         """
         try:
-            config_path = os.path.join(os.path.dirname(__file__), "mcu_last_config.json")
+            config_path = os.path.join(".aefi_acquisition", "configs", "mcu_last_config.json")
             if os.path.exists(config_path):
                 with open(config_path, 'r') as f:
                     saved_config = json.load(f)
