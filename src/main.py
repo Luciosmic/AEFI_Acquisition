@@ -31,6 +31,7 @@ from infrastructure.execution.event_bus_motion_synchronizer import EventBusMotio
 from infrastructure.persistence.csv_scan_export_port import CsvScanExportPort
 from infrastructure.persistence.hdf5_scan_export_port import Hdf5ScanExportPort
 from infrastructure.persistence.acquisition_snapshot_reader import AcquisitionSnapshotReader
+from infrastructure.post_processing.aefi_post_processor_port import AefiPostProcessorPort
 from application.services.scan_export_service.scan_export_service import ScanExportService
 
 # --- Adapters (Mocks) ---
@@ -286,10 +287,13 @@ def main():
     csv_export_port = CsvScanExportPort()
     hdf5_export_port = Hdf5ScanExportPort()
     acquisition_snapshot_port = AcquisitionSnapshotReader()
+    post_processing_port = AefiPostProcessorPort()
     scan_export_service = ScanExportService(
         event_bus, csv_export_port, hdf5_export_port,
         excitation_service=excitation_service,
         acquisition_snapshot_port=acquisition_snapshot_port,
+        post_processing_port=post_processing_port,
+        task_runner=task_runner,
     )
 
     # Motion Control Service

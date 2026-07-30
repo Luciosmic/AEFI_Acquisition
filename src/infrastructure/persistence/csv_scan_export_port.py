@@ -63,7 +63,7 @@ class CsvScanExportPort(IScanExportPort):
     _scan_name: Optional[str] = field(init=False, default=None)
 
     def configure(
-        self, directory: str, filename: str, metadata: Dict[str, Any]
+        self, directory: str, filename: str, metadata: Dict[str, Any], timestamp: Optional[str] = None
     ) -> None:
         """
         Configure the export destination and filename.
@@ -73,6 +73,9 @@ class CsvScanExportPort(IScanExportPort):
         - `filename`: scan name (without date/time, device tag, or extension).
         - `metadata`: currently unused here but kept for API symmetry and
           potential future use (e.g. writing a sidecar JSON file).
+        - `timestamp`: reuse a caller-supplied stamp instead of generating
+          one, so this port lands in the same acquisition folder as a
+          sibling port configured for the same scan.
 
         One acquisition is one bounded context, so every file it produces
         (this device's data + any probe sidecar file, see
@@ -89,7 +92,7 @@ class CsvScanExportPort(IScanExportPort):
             # Use the base_output_dir directly when no directory is provided.
             dir_path = self.base_output_dir
 
-        timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+        timestamp = timestamp or datetime.now().strftime("%Y-%m-%d_%H%M%S")
         safe_base = "".join(
             c for c in filename if c.isalnum() or c in ("-", "_")
         )
@@ -212,6 +215,10 @@ class CsvScanExportPort(IScanExportPort):
         metadata_path = self._dir_path / f"{self._timestamp}_stepScan_{self._scan_name}_acquisition-parameters.json"
         with metadata_path.open(mode="w", encoding="utf-8") as f:
             json.dump(metadata, f, indent=2, ensure_ascii=False, default=str)
+
+    def get_output_path(self) -> Optional[Path]:
+        """Path to the main `_aefi.csv` file, once configured."""
+        return self._configured_path
 
     def stop(self) -> None:
         """Close the CSV file(s) if open."""

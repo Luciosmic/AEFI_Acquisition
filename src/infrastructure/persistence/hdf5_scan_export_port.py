@@ -65,7 +65,7 @@ class Hdf5ScanExportPort(IScanExportPort):
     _index: int = field(init=False, default=0)
 
     def configure(
-        self, directory: str, filename: str, metadata: Dict[str, Any]
+        self, directory: str, filename: str, metadata: Dict[str, Any], timestamp: Optional[str] = None
     ) -> None:
         """
         Configure the export destination.
@@ -74,6 +74,9 @@ class Hdf5ScanExportPort(IScanExportPort):
           resolved under `base_output_dir`.
         - `filename`: scan name (without date/time or extension).
         - `metadata`: persisted as root attributes when file is opened.
+        - `timestamp`: reuse a caller-supplied stamp instead of generating
+          one, so this port lands in the same acquisition folder as a
+          sibling port configured for the same scan.
 
         One acquisition is one bounded context: the file lands in its own
         acquisition folder `<dir>/YYYY-MM-DD_HHMMSS_stepScan_<name>/`, named
@@ -88,7 +91,7 @@ class Hdf5ScanExportPort(IScanExportPort):
         else:
             dir_path = self.base_output_dir
 
-        timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+        timestamp = timestamp or datetime.now().strftime("%Y-%m-%d_%H%M%S")
         safe_base = "".join(c for c in filename if c.isalnum() or c in ("-", "_"))
 
         acquisition_dir = dir_path / f"{timestamp}_stepScan_{safe_base}"
@@ -304,6 +307,10 @@ class Hdf5ScanExportPort(IScanExportPort):
         metadata_path = self._file_path.parent / f"{self._file_path.stem}_acquisition-parameters.json"
         with metadata_path.open(mode="w", encoding="utf-8") as f:
             json.dump(metadata, f, indent=2, ensure_ascii=False, default=str)
+
+    def get_output_path(self) -> Optional[Path]:
+        """Path to the `.h5` file, once configured."""
+        return self._file_path
 
     def stop(self) -> None:
         """Close the HDF5 file."""

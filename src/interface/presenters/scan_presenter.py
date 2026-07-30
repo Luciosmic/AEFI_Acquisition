@@ -152,7 +152,6 @@ class ScanPresenter(QObject, IScanOutputPort, metaclass=QABCMeta):
                 enabled=params.get("export_enabled", False),
                 output_directory=params.get("export_output_directory", ""),
                 filename_base=params.get("export_filename_base", "scan"),
-                format=params.get("export_format", "CSV")
             )
             self._export_service.configure_export(export_dto)
             

@@ -144,15 +144,11 @@ class ScanControlPanel(QWidget):
         directory_row.addWidget(self.input_export_directory)
         directory_row.addWidget(self.btn_browse_export_directory)
 
-        self.combo_export_format = QComboBox()
-        self.combo_export_format.addItems(["CSV", "HDF5"])
-
         self.btn_save_export_defaults = QPushButton("Set as default")
 
         export_layout.addRow(self.checkbox_export_enabled)
         export_layout.addRow("Filename base:", self.input_export_filename)
         export_layout.addRow("Output directory:", directory_row)
-        export_layout.addRow("Format:", self.combo_export_format)
         export_layout.addRow(self.btn_save_export_defaults)
 
         export_group.setLayout(export_layout)
@@ -220,7 +216,6 @@ class ScanControlPanel(QWidget):
             "export_enabled": self.checkbox_export_enabled.isChecked(),
             "export_output_directory": self.input_export_directory.text(),
             "export_filename_base": self.input_export_filename.text(),
-            "export_format": self.combo_export_format.currentText(),
         }
         self.scan_start_requested.emit(params)
 
@@ -300,17 +295,12 @@ class ScanControlPanel(QWidget):
             self.input_export_filename.setText(export_config.get("filename_base", "scan"))
             self.input_export_directory.setText(export_config.get("output_directory", ""))
 
-            format_index = self.combo_export_format.findText(export_config.get("format", "CSV"))
-            if format_index >= 0:
-                self.combo_export_format.setCurrentIndex(format_index)
-
     def _save_export_defaults(self):
         """Persist the current export settings as the new defaults."""
         export_config = {
             "enabled": self.checkbox_export_enabled.isChecked(),
             "filename_base": self.input_export_filename.text(),
             "output_directory": self.input_export_directory.text(),
-            "format": self.combo_export_format.currentText(),
         }
         try:
             self._config_store.save_export_config(export_config)

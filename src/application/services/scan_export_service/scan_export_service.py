@@ -15,11 +15,13 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 
 from .dtos.scan_export_dtos import ExportConfigDTO
 from .ports.i_scan_export_port import IScanExportPort
 from .ports.i_acquisition_snapshot_port import IAcquisitionSnapshotPort
+from .ports.i_post_processing_port import IPostProcessingPort
+from application._shared.ports.i_async_task_runner import IAsyncTaskRunner
 
 from domain.step_scan.events.scan_started.scan_started import ScanStarted
 from domain.step_scan.events.scan_point_acquired.scan_point_acquired import ScanPointAcquired
@@ -56,6 +58,8 @@ class ScanExportService:
         hdf5_export_port: IScanExportPort,
         excitation_service: ExcitationConfigurationService,
         acquisition_snapshot_port: IAcquisitionSnapshotPort,
+        post_processing_port: Optional[IPostProcessingPort] = None,
+        task_runner: Optional[IAsyncTaskRunner] = None,
     ) -> None:
         self._event_bus = event_bus
         self._csv_export_port = csv_export_port
@@ -67,7 +71,9 @@ class ScanExportService:
         # Replace with an event subscription once that event exists.
         self._excitation_service = excitation_service
         self._acquisition_snapshot_port = acquisition_snapshot_port
-        self._active_port: Optional[IScanExportPort] = None
+        self._post_processing_port = post_processing_port
+        self._task_runner = task_runner
+        self._active_ports: List[IScanExportPort] = []
 
         self._config: Optional[ExportConfigDTO] = None
         self._export_active: bool = False  # True between ScanStarted and completion/failure/cancel
@@ -135,17 +141,17 @@ class ScanExportService:
             self._field_export_active = False
             return
 
-        # Select the appropriate export port based on configuration.
-        fmt = (self._config.format or "CSV").upper()
-        if fmt == "HDF5":
-            self._active_port = self._hdf5_export_port
-        else:
-            self._active_port = self._csv_export_port
+        # Every scan is exported to both formats simultaneously.
+        self._active_ports = [self._csv_export_port, self._hdf5_export_port]
 
         directory = self._config.output_directory
-        # Scan name only — the export port builds the acquisition folder and
-        # the per-device filenames (timestamp_stepScan_<device>_<name>) from it.
+        # Scan name only — each export port builds its own acquisition folder
+        # and per-device filenames (timestamp_stepScan_<device>_<name>) from it.
         filename_base = self._config.filename_base
+        # Shared across both ports so CSV and HDF5 land in the same
+        # acquisition folder (the post-processing trigger needs both files
+        # side by side — see _handle_scan_finished).
+        timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
 
         metadata = self._build_metadata(event)
 
@@ -157,19 +163,21 @@ class ScanExportService:
             filename_base,
         )
 
-        self._active_port.configure(directory, filename_base, metadata)
-        self._active_port.start()
-        self._active_port.write_metadata(self._build_acquisition_metadata(event))
+        acquisition_metadata = self._build_acquisition_metadata(event)
+        for port in self._active_ports:
+            port.configure(directory, filename_base, metadata, timestamp=timestamp)
+            port.start()
+            port.write_metadata(acquisition_metadata)
         self._export_active = True
         # Reset per-scan field-export state — must not leak into a new scan
         # (would otherwise skip re-calling configure_field_data below).
         self._field_n_components = 0
 
-        # Field export rides on whichever port is active (CSV or HDF5), as
-        # long as it supports it — field data is configured lazily on the
-        # first electric field point (see _handle_electric_field_scan_point_acquired),
-        # once the probe's component count is known from the actual event.
-        if hasattr(self._active_port, 'configure_field_data'):
+        # Field export rides on every active port that supports it — field
+        # data is configured lazily on the first electric field point (see
+        # _handle_electric_field_scan_point_acquired), once the probe's
+        # component count is known from the actual event.
+        if any(hasattr(port, 'configure_field_data') for port in self._active_ports):
             self._field_export_active = True
 
     def _handle_scan_point_acquired(self, event: ScanPointAcquired) -> None:
@@ -177,8 +185,8 @@ class ScanExportService:
             return
 
         data = self._flatten_point(event)
-        if self._active_port is not None:
-            self._active_port.write_point(data)
+        for port in self._active_ports:
+            port.write_point(data)
 
     def _handle_electric_field_scan_point_acquired(self, event: ElectricFieldScanPointAcquired) -> None:
         """Handle electric field scan point acquired events."""
@@ -186,7 +194,7 @@ class ScanExportService:
             return
 
         # Configure field data on first point if not already configured for this scan
-        if self._field_n_components == 0 and hasattr(self._active_port, 'configure_field_data'):
+        if self._field_n_components == 0:
             n_components = len(event.field_measurement.components)
             probe = self._last_known_probe
             probe_info = {
@@ -194,15 +202,18 @@ class ScanExportService:
                 "n_components": n_components,
                 "axis_labels": tuple(a.lower() for a in probe.axis_labels) if probe is not None else None,
             }
-            self._active_port.configure_field_data(n_components, probe_info)
+            for port in self._active_ports:
+                if hasattr(port, 'configure_field_data'):
+                    port.configure_field_data(n_components, probe_info)
             self._field_n_components = n_components
 
         # Flatten the electric field point
         data = self._flatten_electric_field_point(event)
-        
-        # Write to the active port if it supports field data
-        if hasattr(self._active_port, 'write_field_point'):
-            self._active_port.write_field_point(data)
+
+        # Write to every active port that supports field data
+        for port in self._active_ports:
+            if hasattr(port, 'write_field_point'):
+                port.write_field_point(data)
 
     def _handle_probe_connection_changed(self, event: ElectricFieldProbeConnectionChanged) -> None:
         """Cache the connected probe's identity for the next scan's metadata JSON."""
@@ -213,12 +224,29 @@ class ScanExportService:
             return
 
         logger.debug("Stopping scan export after event: %s", type(event).__name__)
+        # Output paths must be read before stop() — both ports clear their
+        # path once closed.
+        csv_path = self._csv_export_port.get_output_path()
+        hdf5_path = self._hdf5_export_port.get_output_path()
         try:
-            if self._active_port is not None:
-                self._active_port.stop()
+            for port in self._active_ports:
+                port.stop()
         finally:
             self._export_active = False
-            self._active_port = None
+            self._active_ports = []
+
+        if (
+            isinstance(event, ScanCompleted)
+            and self._post_processing_port is not None
+            and self._task_runner is not None
+            and csv_path is not None
+            and hdf5_path is not None
+        ):
+            # Fire-and-forget: this service's promise is "exported, and
+            # post-processing was triggered" — the pipeline is a downstream
+            # consumer of the export, not something this service waits on.
+            post_processing_port = self._post_processing_port
+            self._task_runner.submit(lambda: post_processing_port.run(csv_path, hdf5_path))
 
     # ------------------------------------------------------------------ #
     # Helpers
@@ -282,12 +310,13 @@ class ScanExportService:
             "generated_at": datetime.now().isoformat(),
             "scan": scan,
             "export": {
-                "format": self._config.format,
+                "formats": ["CSV", "HDF5"],
                 "filename_base": self._config.filename_base,
             },
             "excitation": {
                 "mode": excitation_params.mode.name,
-                "level_percent": excitation_params.level.value,
+                "level_s1_s2_percent": excitation_params.level_s1_s2.value,
+                "level_s3_s4_percent": excitation_params.level_s3_s4.value,
                 "frequency_hz": excitation_params.frequency,
             },
             "electric_field_probe": probe,

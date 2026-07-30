@@ -93,14 +93,24 @@ def sync_scans(raw_dir: Path, processed_dir: Path, force: bool = False):
 def main():
     parser = argparse.ArgumentParser(description="AEFI Post-Processor Composition Root")
     parser.add_argument("--force", action="store_true", help="Force re-processing of all scans")
+    parser.add_argument(
+        "--repo-path",
+        type=Path,
+        default=None,
+        help="Open the visualizer directly on this folder, skipping the sync step "
+             "(e.g. a single acquisition folder already post-processed).",
+    )
     args = parser.parse_args()
 
-    raw_dir = _export_output_directory()
-    processed_dir = raw_dir / "processed_data"
-    
-    # 1. Sync
-    sync_scans(raw_dir, processed_dir, force=args.force)
-    
+    if args.repo_path is not None:
+        processed_dir = args.repo_path
+    else:
+        raw_dir = _export_output_directory()
+        processed_dir = raw_dir / "processed_data"
+
+        # 1. Sync
+        sync_scans(raw_dir, processed_dir, force=args.force)
+
     # 2. Launch Visualization
     print("Launching Visualization App...")
     app = QApplication(sys.argv)
