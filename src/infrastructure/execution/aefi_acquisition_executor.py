@@ -40,11 +40,6 @@ class AefiAcquisitionExecutor(IAefiAcquisitionExecutor):
         self._thread: threading.Thread | None = None
         self._stop_flag = threading.Event()
         self._current_acquisition_id: UUID | None = None
-        self._config: AefiAcquisitionConfig | None = None
-
-    def update_config(self, config: AefiAcquisitionConfig) -> None:
-        """Dynamically update configuration of a running acquisition."""
-        self._config = config
 
     def start(self, config: AefiAcquisitionConfig, acquisition_port: IAcquisitionPort) -> None:
         """
@@ -83,11 +78,7 @@ class AefiAcquisitionExecutor(IAefiAcquisitionExecutor):
         config: AefiAcquisitionConfig,
         acquisition_port: IAcquisitionPort,
     ) -> None:
-        """Background acquisition loop."""
-        if config.sample_rate_hz <= 0:
-            return
-
-        dt = 1.0 / config.sample_rate_hz
+        """Background acquisition loop. Best-effort: no software pacing."""
         t0 = time.time()
         index = 0
 
@@ -106,7 +97,6 @@ class AefiAcquisitionExecutor(IAefiAcquisitionExecutor):
                 self._event_bus.publish("aefivoltagesampleacquired", event)
 
                 index += 1
-                time.sleep(dt)
         except Exception as e:
             error_event = ContinuousAcquisitionFailed(
                 acquisition_id=acquisition_id,

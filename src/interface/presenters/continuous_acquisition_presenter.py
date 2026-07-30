@@ -153,12 +153,11 @@ class ContinuousAcquisitionPresenter(QObject):
     def on_acquisition_start_requested(self, params: Dict[str, Any]):
         """
         Handle start request from panel.
-        
+
         Args:
-            params: {sample_rate_hz, max_duration_s (optional)}
+            params: {max_duration_s (optional)}
         """
         config = AefiAcquisitionConfig(
-            sample_rate_hz=float(params.get("sample_rate_hz", 20.0)),
             max_duration_s=params.get("max_duration_s", None),
             target_uncertainty=None,
         )
@@ -171,16 +170,6 @@ class ContinuousAcquisitionPresenter(QObject):
         if self._current_acquisition_id is not None:
             self.acquisition_stopped.emit(self._current_acquisition_id)
 
-    @Slot(dict)
-    def on_parameters_updated(self, params: Dict[str, Any]):
-        """Handle live parameter updates from panel."""
-        config = AefiAcquisitionConfig(
-            sample_rate_hz=float(params.get("sample_rate_hz", 20.0)),
-            max_duration_s=params.get("max_duration_s", None),
-            target_uncertainty=None,
-        )
-        self._service.update_acquisition_parameters(config)
-    
     @Slot(bool)
     def on_rotation_toggled(self, enabled: bool):
         """Enable/Disable rotation in the service."""

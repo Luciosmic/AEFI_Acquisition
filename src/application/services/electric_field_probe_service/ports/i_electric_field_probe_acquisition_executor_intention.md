@@ -21,9 +21,9 @@ délégateur, testable sans thread réel — même rôle que
   applicative propre à la sonde Narda (connue pour être flaky) — elle vit
   dans l'implémentation infra de ce port, pas dans le contrat lui-même, et
   n'existe pas côté `AefiAcquisitionExecutor`.
-- Pas de `update_config()` : contrairement à `IAefiAcquisitionExecutor`
-  (où `update_config` existe mais n'est jamais relu par le worker — mort
-  depuis l'origine), `ElectricFieldProbeService.update_acquisition_parameters`
-  a un vrai besoin de redémarrage (dt recalculé à l'entrée de boucle), donc
-  il fait `stop()` puis `start(config, ...)` directement plutôt que de
-  passer par une méthode d'update qui n'aurait jamais été appliquée.
+- Pas de `update_config()` : l'acquisition est best-effort des deux côtés
+  (AEFI et sonde), donc il n'y a plus de paramètre de rate à mettre à jour
+  à chaud. Historique : `IAefiAcquisitionExecutor` avait un `update_config`
+  qui n'était jamais relu par son worker (mort depuis l'origine) — les deux
+  ports ont depuis convergé en retirant le concept entièrement plutôt que de
+  le réparer.

@@ -56,3 +56,15 @@ class IElectricFieldProbePort(ABC):
     @abstractmethod
     def is_ready(self) -> bool:
         """True if the probe is connected and ready to acquire."""
+
+    @abstractmethod
+    def refresh_battery(self) -> None:
+        """
+        Re-query the battery level from hardware and update the held probe's
+        battery fields (battery_voltage_v/battery_percentage/battery_remaining_hours).
+
+        No-op if not connected. Caller (application service) is responsible
+        for not invoking this while an acquisition is running — the query
+        shares the same physical link as sample acquisition and could
+        perturb it.
+        """

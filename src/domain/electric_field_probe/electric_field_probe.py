@@ -26,6 +26,9 @@ class ElectricFieldProbe:
     model: str
     serial_number: str
     axis_labels: Tuple[str, ...]
+    battery_voltage_v: Optional[float] = None
+    battery_percentage: Optional[float] = None
+    battery_remaining_hours: Optional[float] = None
 
     def record_measurement(
         self,
