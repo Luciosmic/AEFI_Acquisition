@@ -12,10 +12,9 @@ from infrastructure.hardware.micro_controller.ads131a04.ads131a04_advanced_confi
 
 class TestConfigPersistence(unittest.TestCase):
     def setUp(self):
-        # Paths
-        self.base_dir = os.path.join(os.path.dirname(__file__), "../infrastructure/hardware/micro_controller/ads131a04")
-        self.default_config_path = os.path.join(self.base_dir, "ads131a04_default_config.json")
-        self.last_config_path = os.path.join(self.base_dir, "ads131a04_last_config.json")
+        # Paths — configs live in .aefi_acquisition/configs/ (seeded from config_templates/)
+        self.default_config_path = os.path.join(".aefi_acquisition", "configs", "ads131a04_default_config.json")
+        self.last_config_path = os.path.join(".aefi_acquisition", "configs", "ads131a04_last_config.json")
         
         # Backup existing files to restore later
         self.backup_last_config = None

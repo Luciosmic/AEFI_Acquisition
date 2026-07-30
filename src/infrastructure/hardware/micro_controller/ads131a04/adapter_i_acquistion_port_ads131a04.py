@@ -119,8 +119,7 @@ class ADS131A04Adapter(IAcquisitionPort):
         n_avg = 1
         try:
             mcu_config_path = os.path.join(
-                os.path.dirname(os.path.dirname(__file__)), 
-                "mcu_last_config.json"
+                ".aefi_acquisition", "configs", "mcu_last_config.json"
             )
             if os.path.exists(mcu_config_path):
                 with open(mcu_config_path, 'r') as f:

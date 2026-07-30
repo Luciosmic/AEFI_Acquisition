@@ -77,6 +77,17 @@ def main():
     Main entry point for Interface V2.
     Composition root that builds the dependency graph.
     """
+    # 0. Bootstrap runtime configs (.aefi_acquisition/configs/ ← config_templates/)
+    from infrastructure.config.config_bootstrapper import ConfigBootstrapper
+    repo_root = root_dir.parent
+    bootstrapper = ConfigBootstrapper(
+        templates_dir=repo_root / "config_templates",
+        runtime_dir=repo_root / ".aefi_acquisition" / "configs",
+    )
+    seeded = bootstrapper.ensure_configs_exist()
+    if seeded:
+        print(f"[bootstrap] Configs initialisées depuis templates : {seeded}")
+
     # 1. Create QApplication
     app = QApplication(sys.argv)
     app.setApplicationName("AEFI Acquisition - Interface V2")
