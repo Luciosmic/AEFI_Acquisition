@@ -22,6 +22,9 @@ from domain.electric_field_probe.electric_field_probe import ElectricFieldProbe
 from domain.electric_field_probe.value_objects.field_measurement.field_measurement import (
     FieldMeasurement,
 )
+from application.services.electric_field_probe_service.dtos.electric_field_probe_dtos import (
+    FrequencyCorrectionResult,
+)
 
 
 class IElectricFieldProbePort(ABC):
@@ -67,4 +70,17 @@ class IElectricFieldProbePort(ABC):
         for not invoking this while an acquisition is running — the query
         shares the same physical link as sample acquisition and could
         perturb it.
+        """
+
+    @abstractmethod
+    def apply_frequency_correction(self, frequency_hz: float) -> FrequencyCorrectionResult:
+        """
+        Apply the probe's frequency-dependent factory calibration correction
+        for frequency_hz.
+
+        No concurrent call while an acquisition is running — the correction
+        shares the same physical link as sample acquisition (route through
+        the executor's request_frequency_correction instead). Never raises
+        for a hardware failure: captured and returned as
+        FrequencyCorrectionResult.error.
         """

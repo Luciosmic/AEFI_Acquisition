@@ -230,7 +230,7 @@ from application.services.excitation_configuration_service.excitation_configurat
 )
 
 # Create excitation service
-excitation_service = ExcitationConfigurationService(excitation_port)
+excitation_service = ExcitationConfigurationService(excitation_port, event_bus)
 
 # Set excitation (will be observed by aware_port)
 excitation_service.set_excitation(

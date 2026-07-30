@@ -86,7 +86,7 @@ class TestScanExportServiceMetadata(unittest.TestCase):
     def setUp(self):
         self.event_bus = InMemoryEventBus()
         self.export_port = FakeExportPort()
-        excitation_service = ExcitationConfigurationService(MockExcitationPort())
+        excitation_service = ExcitationConfigurationService(MockExcitationPort(), self.event_bus)
         excitation_service.set_excitation(mode=ExcitationMode.X_DIR, level_percent=80.0, frequency=1000.0)
 
         class FakeSnapshotPort(IAcquisitionSnapshotPort):

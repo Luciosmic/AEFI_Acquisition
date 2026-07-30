@@ -13,9 +13,13 @@ from typing import Optional
 from application.services.electric_field_probe_service.ports.i_electric_field_probe_port import (
     IElectricFieldProbePort,
 )
+from application.services.electric_field_probe_service.dtos.electric_field_probe_dtos import (
+    FrequencyCorrectionResult,
+)
 from domain.electric_field_probe.electric_field_probe import ElectricFieldProbe
 from infrastructure.hardware.narda_ep600.driver_narda_ep601 import (
     NardaEP601,
+    RF_SENSING_RANGE_HZ,
     estimate_battery_percentage,
     estimate_battery_remaining_hours,
 )
@@ -74,4 +78,21 @@ class NardaEP601ProbeAdapter(IElectricFieldProbePort):
             battery_voltage_v=battery_voltage,
             battery_percentage=estimate_battery_percentage(battery_voltage),
             battery_remaining_hours=estimate_battery_remaining_hours(battery_voltage),
+        )
+
+    def apply_frequency_correction(self, frequency_hz: float) -> FrequencyCorrectionResult:
+        if frequency_hz < RF_SENSING_RANGE_HZ[0]:
+            # Limite physique permanente de la sonde (diode/antenne non qualifiee sous
+            # 10kHz), pas une panne — aucun round-trip serie, pas de clamp.
+            return FrequencyCorrectionResult(
+                requested_hz=frequency_hz, applied_hz=None, in_range=False
+            )
+        try:
+            applied_hz = self._driver.set_frequency_correction(frequency_hz)
+        except (ValueError, IOError) as e:
+            return FrequencyCorrectionResult(
+                requested_hz=frequency_hz, applied_hz=None, in_range=True, error=str(e)
+            )
+        return FrequencyCorrectionResult(
+            requested_hz=frequency_hz, applied_hz=applied_hz, in_range=True
         )
