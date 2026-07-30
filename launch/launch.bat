@@ -1,6 +1,6 @@
 @echo off
 setlocal
-cd /d %~dp0
+cd /d "%~dp0.."
 
 REM Check if uv is installed
 where uv >nul 2>nul
