@@ -1,5 +1,5 @@
 """
-Domain: Source Geometry
+Source Geometry
 
 Responsibility:
     Raw, physically-measurable geometry of the 4 excitation spheres. Sphere

@@ -1,7 +1,7 @@
 """Tests for SourceGeometry value object."""
 import pytest
 
-from domain.shared_kernel.value_objects.source_geometry.source_geometry import SourceGeometry
+from source_geometry.source_geometry import SourceGeometry
 
 RAW_FIELDS = ("D_12", "D_13", "D_14", "D_23", "D_24", "D_34", "phi_1", "phi_2", "phi_3", "phi_4")
 

@@ -3,10 +3,8 @@ import math
 
 import pytest
 
-from domain.shared_kernel.value_objects.source_geometry.source_geometry import SourceGeometry
-from domain.shared_kernel.services.source_frame_solver.source_frame_solver import (
-    SourceFrameSolver,
-)
+from source_geometry.source_geometry import SourceGeometry
+from source_geometry.source_frame_solver import SourceFrameSolver
 
 PAIRS = {
     "d_12": (0, 1), "d_13": (0, 2), "d_14": (0, 3),

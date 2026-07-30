@@ -1,9 +1,7 @@
 """Smoke test for SourceFrameGeometry value object (pure data holder)."""
 import pytest
 
-from domain.shared_kernel.value_objects.source_frame_geometry.source_frame_geometry import (
-    SourceFrameGeometry,
-)
+from source_geometry.source_frame_geometry import SourceFrameGeometry
 
 
 def test_immutable():

@@ -66,19 +66,11 @@ Supprimé : doublons `TestBench`, `AefiDevice`, modules morts `aefi_physics_engi
 
 #### Phase 1 — Domain : Value Object `AcquisitionConfiguration` (additif)
 
-**Sous-partie `SourceGeometry` + DGP ✅ FAIT (2026-07-24, corrigé 2026-07-29)** — périmètre réduit à cette seule sous-partie pour l'instant (pas encore `AcquisitionConfiguration` ni les 4 autres sous-VOs).
+**Sous-partie `SourceGeometry` + DGP — extraite hors de `src/` (2026-07-29)**, ne fait plus partie de cette Phase 1 (pas encore `AcquisitionConfiguration` ni les 4 autres sous-VOs).
 
-Implémenté dans `shared_kernel` (pas un module domain dédié `source_geometry/` : ce n'est pas un aggregate — pas de racine, pas d'invariant propre à protéger derrière une identité — juste des VOs/service de calcul réutilisables ; et pas non plus sous `value_objects/acquisition_configuration/` comme esquissé plus bas, pas encore d'aggregate root justifiant ce regroupement) :
+Implémentée et validée dans `shared_kernel` (2026-07-24 → 2026-07-29), puis **déplacée vers `external_modules/source_geometry/`** : ce n'est pas un aggregate DDD (pas de racine, pas d'identité, pas d'invariant propre à protéger derrière un cycle de vie) — juste des calculs purs + une visualisation, en aval de l'appli. La sortir de `src/` maintenant ne coûte rien et laisse le développement itérer librement. Une intégration plus poussée (API appelée depuis l'appli, pour l'export/positionnement évoqués en tête de cette feature) pourra venir plus tard si le besoin se confirme — voir `external_modules/source_geometry/README.md` pour le contenu, l'historique des corrections (coplanarité, sens de rotation du fit carré, repère physique quadrant-aligné) et l'usage.
 
-```
-src/domain/shared_kernel/
-├── value_objects/
-│   ├── source_geometry/          ← grandeurs BRUTES mesurées (D_12..D_34 extrémité-à-extrémité, phi_1..phi_4),
-│   │                                 r_i et d_ij (centre-à-centre) exposés en @property dérivées, pas stockées
-│   └── source_frame_geometry/    ← résultat DGP : positions P1-P4 (z=0), centroïde, axes, rotation_matrix, is_orthogonal
-└── services/
-    └── source_frame_solver/      ← SourceFrameSolver.solve() : DGP coplanaire (NOTE - Source Frame Geometry §3-4)
-```
+Si `AcquisitionConfiguration` a un jour besoin de la géométrie source (pour le snapshot/export), il faudra soit rappatrier ce module dans `src/`, soit l'appeler comme les autres `external_modules/` (sous-processus lancé par `ExternalModulesPanel`, pas d'import direct depuis `src/`).
 
 **Correction 2026-07-29 — le problème était mal posé :** la 1ère version traitait z4 (hauteur de S4) comme une inconnue libre résolue par $z_4=\sqrt{d_{14}^2-x_4^2-y_4^2}$, censée valider la coplanarité après coup. Avec les mesures réelles du banc, ce discriminant devenait négatif — pas un vrai signe de non-planéité, mais l'artefact d'un problème mal posé : les 4 sphères sont coplanaires **par construction du banc** (contrainte connue a priori, pas une hypothèse à tester), donc S4 a 3 distances mesurées ($d_{14},d_{24},d_{34}$) pour seulement 2 inconnues ($x_4,y_4$) — un système réellement sur-déterminé en 2D, pas un problème 3D. Fix : toutes les positions sont résolues avec z=0 imposé ; S4 est résolu par moindres carrés non linéaires (`scipy.optimize.least_squares`) sur les 3 équations de distance, qui distribue correctement le bruit de mesure au lieu de l'injecter dans une hauteur fictive. Plus de flag `is_coplanar` (toujours vrai par construction), plus de `degeneracy_tolerance` sur S4 (le moindres carrés n'a jamais de discriminant à faire échouer).
 

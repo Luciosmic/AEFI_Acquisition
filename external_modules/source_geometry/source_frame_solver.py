@@ -1,5 +1,5 @@
 """
-Source Frame Solver - Domain Service
+Source Frame Solver
 
 Responsibility:
 - Reconstruct the 4 excitation sphere positions from the 6 measured
@@ -28,10 +28,8 @@ import math
 import numpy as np
 from scipy.optimize import least_squares
 
-from domain.shared_kernel.value_objects.source_geometry.source_geometry import SourceGeometry
-from domain.shared_kernel.value_objects.source_frame_geometry.source_frame_geometry import (
-    SourceFrameGeometry,
-)
+from source_geometry.source_geometry import SourceGeometry
+from source_geometry.source_frame_geometry import SourceFrameGeometry
 
 
 class SourceFrameSolver:

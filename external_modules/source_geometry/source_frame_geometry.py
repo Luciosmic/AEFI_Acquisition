@@ -1,5 +1,5 @@
 """
-Domain: Source Frame Geometry
+Source Frame Geometry
 
 Responsibility:
     Immutable result of the DGP reconstruction: the cartesian positions of
