@@ -98,17 +98,6 @@ class ElectricFieldProbeService(IApiElectricFieldProbeService):
     def stop_acquisition(self) -> None:
         self._executor.stop()
 
-    def update_acquisition_parameters(
-        self, config: ElectricFieldProbeAcquisitionConfig
-    ) -> None:
-        # Unlike AefiAcquisitionExecutor.update_config (applied on the next
-        # start, since the worker closure never re-reads self._config), a
-        # running Narda stream must be restarted for a new sample_rate_hz to
-        # take effect — dt is computed once at loop entry.
-        if self._executor.is_running():
-            self._executor.stop()
-        self._executor.start(config, self._probe_port)
-
     def is_acquisition_running(self) -> bool:
         return self._executor.is_running()
 

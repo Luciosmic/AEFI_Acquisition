@@ -30,6 +30,7 @@ from infrastructure.execution.thread_pool_task_runner import ThreadPoolTaskRunne
 from infrastructure.execution.event_bus_motion_synchronizer import EventBusMotionSynchronizer
 from infrastructure.persistence.csv_scan_export_port import CsvScanExportPort
 from infrastructure.persistence.hdf5_scan_export_port import Hdf5ScanExportPort
+from infrastructure.persistence.acquisition_snapshot_reader import AcquisitionSnapshotReader
 from application.services.scan_export_service.scan_export_service import ScanExportService
 
 # --- Adapters (Mocks) ---
@@ -259,7 +260,6 @@ def main():
         probe_port=probe_port,
         probe_service=electric_field_probe_service,
         event_bus=event_bus,
-        sample_rate_hz=ScanApplicationService.NARDA_CONTINUOUS_SAMPLE_RATE_HZ,
     )
     scan_service = ScanApplicationService(
         motion_port, continuous_service, event_bus,
@@ -268,13 +268,18 @@ def main():
         auxiliary_probes=[narda_channel],
     )
 
+    # Excitation Service
+    excitation_service = ExcitationConfigurationService(excitation_port, event_bus)
+
     # Scan Export Service
     csv_export_port = CsvScanExportPort()
     hdf5_export_port = Hdf5ScanExportPort()
-    scan_export_service = ScanExportService(event_bus, csv_export_port, hdf5_export_port)
-
-    # Excitation Service
-    excitation_service = ExcitationConfigurationService(excitation_port, event_bus)
+    acquisition_snapshot_port = AcquisitionSnapshotReader()
+    scan_export_service = ScanExportService(
+        event_bus, csv_export_port, hdf5_export_port,
+        excitation_service=excitation_service,
+        acquisition_snapshot_port=acquisition_snapshot_port,
+    )
 
     # Motion Control Service
     motion_control_service = MotionControlService(motion_port, event_bus)
@@ -394,7 +399,6 @@ def main():
     continuous_panel = dashboard.panels["continuous"]
     continuous_panel.acquisition_start_requested.connect(continuous_presenter.on_acquisition_start_requested)
     continuous_panel.acquisition_stop_requested.connect(continuous_presenter.on_acquisition_stop_requested)
-    continuous_panel.parameters_updated.connect(continuous_presenter.on_parameters_updated)
     
     # Calibration & Transformation Wiring
     continuous_panel.calibrate_noise_requested.connect(continuous_presenter.calibrate_noise)
@@ -425,7 +429,6 @@ def main():
     electric_field_probe_panel.refresh_battery_requested.connect(electric_field_probe_presenter.on_refresh_battery_requested)
     electric_field_probe_panel.acquisition_start_requested.connect(electric_field_probe_presenter.on_acquisition_start_requested)
     electric_field_probe_panel.acquisition_stop_requested.connect(electric_field_probe_presenter.on_acquisition_stop_requested)
-    electric_field_probe_panel.parameters_updated.connect(electric_field_probe_presenter.on_parameters_updated)
     electric_field_probe_panel.calibrate_noise_requested.connect(electric_field_probe_presenter.calibrate_noise)
     electric_field_probe_panel.reset_calibration_requested.connect(electric_field_probe_presenter.reset_calibration)
     electric_field_probe_panel.noise_toggled.connect(electric_field_probe_presenter.on_noise_toggled)

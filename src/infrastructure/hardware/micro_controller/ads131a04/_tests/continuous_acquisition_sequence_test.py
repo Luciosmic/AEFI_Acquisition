@@ -63,13 +63,17 @@ class TestContinuousAcquisitionSequence(DiagramFriendlyTest):
         event_bus.subscribe("aefivoltagesampleacquired", on_sample)
 
         # 3. Start Acquisition
-        config = AefiAcquisitionConfig(sample_rate_hz=10.0)
-        self.log_interaction("Test", "COMMAND", "Service", "start_acquisition", 
-                             data={"rate": 10.0})
+        config = AefiAcquisitionConfig()
+        self.log_interaction("Test", "COMMAND", "Service", "start_acquisition",
+                             data={"mode": "best-effort"})
         service.start_acquisition(config)
 
-        # 4. Wait for execution (simulating runtime)
-        time.sleep(0.5)
+        # 4. Wait for execution (simulating runtime).
+        # Short window: best-effort + an instant mock port means the worker
+        # loop is unpaced, so a longer window would flood this test's
+        # diagram trace (log_interaction prints + JSON dump) with tens of
+        # thousands of entries for no added assertion value.
+        time.sleep(0.05)
 
         # 5. Stop Acquisition
         self.log_interaction("Test", "COMMAND", "Service", "stop_acquisition")

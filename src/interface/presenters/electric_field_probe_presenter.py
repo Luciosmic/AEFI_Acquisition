@@ -136,7 +136,6 @@ class ElectricFieldProbePresenter(QObject):
     @Slot(dict)
     def on_acquisition_start_requested(self, params: Dict[str, Any]):
         config = ElectricFieldProbeAcquisitionConfig(
-            sample_rate_hz=float(params.get("sample_rate_hz", 20.0)),
             max_duration_s=params.get("max_duration_s", None),
         )
         self._service.start_acquisition(config)
@@ -147,14 +146,6 @@ class ElectricFieldProbePresenter(QObject):
         if self._current_acquisition_id is not None:
             self.acquisition_stopped.emit(self._current_acquisition_id)
             self._current_acquisition_id = None
-
-    @Slot(dict)
-    def on_parameters_updated(self, params: Dict[str, Any]):
-        config = ElectricFieldProbeAcquisitionConfig(
-            sample_rate_hz=float(params.get("sample_rate_hz", 20.0)),
-            max_duration_s=params.get("max_duration_s", None),
-        )
-        self._service.update_acquisition_parameters(config)
 
     @Slot()
     def calibrate_noise(self):

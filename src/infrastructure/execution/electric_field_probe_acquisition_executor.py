@@ -56,6 +56,17 @@ FREQUENCY_CORRECTION_CHANGED_TOPIC = "electricfieldprobefrequencycorrectionchang
 class ElectricFieldProbeAcquisitionExecutor(IElectricFieldProbeAcquisitionExecutor):
     MAX_CONSECUTIVE_SAMPLE_FAILURES = 2
 
+    # ponytail: fixed inter-sample delay, not a configurable rate. Acquisition
+    # is best-effort — against the real Narda probe, its own serial
+    # round-trip already paces the loop and this sleep barely adds delay on
+    # top. But this same executor also drives FakeElectricFieldProbeAdapter
+    # in mock hardware mode, whose acquire_sample() is near-instant pure
+    # Python — without this floor the loop would flood the event bus / Qt UI
+    # with samples. 50Hz mirrors the real probe's own physical ceiling (its
+    # fastest filter response is ~33Hz at F1), so the simulated cadence stays
+    # realistic rather than an arbitrary throttle.
+    _SAMPLE_INTERVAL_S = 0.02
+
     def __init__(self, event_bus: IDomainEventBus) -> None:
         self._event_bus = event_bus
         self._thread: threading.Thread | None = None
@@ -104,10 +115,6 @@ class ElectricFieldProbeAcquisitionExecutor(IElectricFieldProbeAcquisitionExecut
         config: ElectricFieldProbeAcquisitionConfig,
         probe_port: IElectricFieldProbePort,
     ) -> None:
-        if config.sample_rate_hz <= 0:
-            return
-
-        dt = 1.0 / config.sample_rate_hz
         t0 = time.time()
         index = 0
         probe = probe_port.get_probe()
@@ -169,7 +176,7 @@ class ElectricFieldProbeAcquisitionExecutor(IElectricFieldProbeAcquisitionExecut
                         )
                         self._event_bus.publish(ACQUISITION_FAILED_TOPIC, error_event)
                         return
-                    time.sleep(dt)
+                    time.sleep(self._SAMPLE_INTERVAL_S)
                     continue
 
                 consecutive_failures = 0
@@ -182,7 +189,7 @@ class ElectricFieldProbeAcquisitionExecutor(IElectricFieldProbeAcquisitionExecut
                 self._event_bus.publish(SAMPLE_ACQUIRED_TOPIC, event)
 
                 index += 1
-                time.sleep(dt)
+                time.sleep(self._SAMPLE_INTERVAL_S)
 
         except Exception as e:
             logger.error("Acquisition loop raised unexpectedly: %s", e)

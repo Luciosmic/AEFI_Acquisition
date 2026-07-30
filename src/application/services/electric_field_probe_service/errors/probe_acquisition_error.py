@@ -39,10 +39,3 @@ class SampleAcquisitionFailed(ProbeAcquisitionError):
 
     sample_index: int
     error_detail: str
-
-
-@dataclass(frozen=True)
-class InvalidAcquisitionRate(ProbeAcquisitionError):
-    """The requested sample_rate_hz is non-positive; the loop cannot start."""
-
-    requested_rate_hz: float

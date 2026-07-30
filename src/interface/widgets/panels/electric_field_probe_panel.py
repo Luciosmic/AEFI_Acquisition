@@ -13,9 +13,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QPushButton,
-    QDoubleSpinBox,
     QGroupBox,
-    QFormLayout,
 )
 from PySide6.QtCore import Qt, Signal
 import pyqtgraph as pg  # type: ignore[import]
@@ -44,7 +42,6 @@ class ElectricFieldProbePanel(QWidget):
     refresh_battery_requested = Signal()
     acquisition_start_requested = Signal(dict)
     acquisition_stop_requested = Signal()
-    parameters_updated = Signal(dict)
     calibrate_noise_requested = Signal()
     reset_calibration_requested = Signal()
     noise_toggled = Signal(bool)
@@ -91,17 +88,6 @@ class ElectricFieldProbePanel(QWidget):
         l_conn.addWidget(self.lbl_data_status)
         l_conn.addWidget(self.lbl_frequency_correction)
         controls_layout.addWidget(grp_conn)
-
-        # --- Acquisition group ---
-        grp_params = QGroupBox("Acquisition")
-        l_params = QFormLayout(grp_params)
-        self.sample_rate_spin = QDoubleSpinBox()
-        self.sample_rate_spin.setRange(0.1, 1000.0)
-        self.sample_rate_spin.setValue(20.0)
-        self.sample_rate_spin.setSuffix(" Hz")
-        self.sample_rate_spin.valueChanged.connect(self._on_parameter_changed)
-        l_params.addRow("Rate:", self.sample_rate_spin)
-        controls_layout.addWidget(grp_params)
 
         grp_ctrl = QGroupBox("Control")
         l_ctrl = QVBoxLayout(grp_ctrl)
@@ -169,7 +155,6 @@ class ElectricFieldProbePanel(QWidget):
 
     def _on_start_clicked(self):
         params = {
-            "sample_rate_hz": self.sample_rate_spin.value(),
             "max_duration_s": None,
         }
         self.btn_start.setEnabled(False)
@@ -178,15 +163,6 @@ class ElectricFieldProbePanel(QWidget):
 
     def _on_stop_clicked(self):
         self.acquisition_stop_requested.emit()
-
-    def _on_parameter_changed(self):
-        if self.btn_stop.isEnabled():
-            self.parameters_updated.emit(
-                {
-                    "sample_rate_hz": self.sample_rate_spin.value(),
-                    "max_duration_s": None,
-                }
-            )
 
     # ------------------------------------------------------------------ #
     # Presenter -> Panel

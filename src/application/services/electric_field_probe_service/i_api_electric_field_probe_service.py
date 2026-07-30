@@ -36,11 +36,6 @@ class IApiElectricFieldProbeService(ABC):
     def stop_acquisition(self) -> None: ...
 
     @abstractmethod
-    def update_acquisition_parameters(
-        self, config: ElectricFieldProbeAcquisitionConfig
-    ) -> None: ...
-
-    @abstractmethod
     def is_acquisition_running(self) -> bool: ...
 
     @abstractmethod

@@ -12,9 +12,8 @@ Rationale:
 
 Design:
 - Abstract Base Class (ABC), pure interface.
-- start()/stop()/update_config()/is_running() — same shape as
-  IAefiAcquisitionExecutor so both continuous-acquisition channels read the
-  same way.
+- start()/stop()/is_running() — same shape as IAefiAcquisitionExecutor so
+  both continuous-acquisition channels read the same way.
 """
 
 from abc import ABC, abstractmethod

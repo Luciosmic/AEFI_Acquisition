@@ -7,7 +7,10 @@ Responsibility:
     (centroid, axes, rotation matrix).
 
 Rationale:
-    See config_templates/NOTE - Source Frame Geometry.md §3-4.
+    See "NOTE - Source Frame Geometry" (Luis Saluden's vault, not tracked in
+    this repo) sections 3-4. The 4 spheres are coplanar by construction of
+    the bench (a known constraint, not something to verify after the fact),
+    so all positions carry z=0 — there is no is_coplanar flag to report.
 
 Design:
     - Frozen dataclass, pure data, no computation.
@@ -26,7 +29,8 @@ class SourceFrameGeometry:
 
     Positions are expressed in the solver's anchoring frame (S1 at the
     origin, S2 on the x axis) — not yet in the canonical centroid-centered
-    frame, which is `centroid` + `rotation_matrix` applied on top.
+    frame, which is `centroid` + `rotation_matrix` applied on top. All
+    positions have z=0 (the 4 spheres are coplanar by construction).
     """
 
     positions: Tuple[Point3D, Point3D, Point3D, Point3D]  # P1, P2, P3, P4
@@ -35,5 +39,4 @@ class SourceFrameGeometry:
     y_axis: Point3D
     z_axis: Point3D
     rotation_matrix: Tuple[Point3D, Point3D, Point3D]  # rows; columns = axes
-    is_coplanar: bool
     is_orthogonal: bool

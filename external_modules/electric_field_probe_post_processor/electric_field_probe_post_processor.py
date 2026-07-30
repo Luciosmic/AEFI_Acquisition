@@ -9,7 +9,7 @@ path = sys.argv[1] if len(sys.argv) > 1 else r"C:\Users\manip\Desktop\AEFI_Acqui
 fill_path = sys.argv[2] if len(sys.argv) > 2 else None  # optional: complete a cut-short fine scan with a coarse one
 
 df = pd.read_csv(path)
-components = [c for c in df.columns if c.startswith("field_component_")]
+components = [c for c in df.columns if c.startswith("field_") and "std_dev" not in c]
 
 ok = (df[components].abs() < 500).all(axis=1)
 print(f"{(~ok).sum()} outliers dropped / {len(df)} points ({path.split(chr(92))[-1]})")
@@ -83,20 +83,6 @@ if fill_path:
 x_ok, y_ok = fine_ok.x, fine_ok.y
 lo, hi = min(x_ok.min(), y_ok.min()), max(x_ok.max(), y_ok.max())  # square range covering both axes
 
-fig, axes = plt.subplots(1, len(components), figsize=(5 * len(components), 4.5))
-for ax, comp in zip(axes.flat, components):
-    sc = ax.scatter(x_ok, y_ok, c=fine_ok[comp], cmap="viridis", s=20)
-    plt.colorbar(sc, ax=ax)
-    ax.set_title(comp)
-    ax.set_xlabel("x")
-    ax.set_ylabel("y")
-    ax.set_xlim(lo, hi)
-    ax.set_ylim(lo, hi)
-    ax.set_aspect("equal")
-
-fig.suptitle(path.split("\\")[-1])
-plt.tight_layout()
-
 xi = np.linspace(lo, hi, 200)
 yi = np.linspace(lo, hi, 200)
 XI, YI = np.meshgrid(xi, yi)
@@ -112,28 +98,49 @@ def fill_nan_with_border_mean(Z):
     return Z
 
 
-fig2, axes2 = plt.subplots(1, len(components), figsize=(5 * len(components), 4.5))
-for ax, comp in zip(axes2.flat, components):
-    ZI = griddata((x_ok, y_ok), fine_ok[comp], (XI, YI), method="cubic")
-    ZI = fill_nan_with_border_mean(ZI)
-    im = ax.imshow(ZI, extent=(lo, hi, lo, hi), origin="lower", cmap="viridis", aspect="equal")
-    plt.colorbar(im, ax=ax)
-    ax.set_title(f"{comp} (interpolated)")
-    ax.set_xlabel("x")
-    ax.set_ylabel("y")
+def plot_component_set(cols, suffix):
+    fname = path.split("\\")[-1]
 
-fig2.suptitle(path.split("\\")[-1] + " — interpolated")
-plt.tight_layout()
+    fig, axes = plt.subplots(1, len(cols), figsize=(5 * len(cols), 4.5))
+    for ax, comp in zip(np.atleast_1d(axes).flat, cols):
+        sc = ax.scatter(x_ok, y_ok, c=fine_ok[comp], cmap="viridis", s=20)
+        plt.colorbar(sc, ax=ax)
+        ax.set_title(comp)
+        ax.set_xlabel("x")
+        ax.set_ylabel("y")
+        ax.set_xlim(lo, hi)
+        ax.set_ylim(lo, hi)
+        ax.set_aspect("equal")
+    fig.suptitle(fname + suffix)
+    plt.tight_layout()
 
-fig3, axes3 = plt.subplots(1, len(components), figsize=(5 * len(components), 4.5))
-for ax, comp in zip(axes3.flat, components):
-    pivot = fine_ok.pivot(index="y", columns="x", values=comp)
-    im = ax.imshow(pivot.values, extent=(lo, hi, lo, hi), origin="lower", cmap="viridis", aspect="equal")
-    plt.colorbar(im, ax=ax)
-    ax.set_title(f"{comp} (raw grid)")
-    ax.set_xlabel("x")
-    ax.set_ylabel("y")
+    fig2, axes2 = plt.subplots(1, len(cols), figsize=(5 * len(cols), 4.5))
+    for ax, comp in zip(np.atleast_1d(axes2).flat, cols):
+        ZI = griddata((x_ok, y_ok), fine_ok[comp], (XI, YI), method="cubic")
+        ZI = fill_nan_with_border_mean(ZI)
+        im = ax.imshow(ZI, extent=(lo, hi, lo, hi), origin="lower", cmap="viridis", aspect="equal")
+        plt.colorbar(im, ax=ax)
+        ax.set_title(f"{comp} (interpolated)")
+        ax.set_xlabel("x")
+        ax.set_ylabel("y")
+    fig2.suptitle(fname + suffix + " — interpolated")
+    plt.tight_layout()
 
-fig3.suptitle(path.split("\\")[-1] + " — raw grid pixels")
-plt.tight_layout()
+    fig3, axes3 = plt.subplots(1, len(cols), figsize=(5 * len(cols), 4.5))
+    for ax, comp in zip(np.atleast_1d(axes3).flat, cols):
+        pivot = fine_ok.pivot(index="y", columns="x", values=comp)
+        im = ax.imshow(pivot.values, extent=(lo, hi, lo, hi), origin="lower", cmap="viridis", aspect="equal")
+        plt.colorbar(im, ax=ax)
+        ax.set_title(f"{comp} (raw grid)")
+        ax.set_xlabel("x")
+        ax.set_ylabel("y")
+    fig3.suptitle(fname + suffix + " — raw grid pixels")
+    plt.tight_layout()
+
+
+plot_component_set(components, "")
+
+std_components = [c for c in df.columns if c.startswith("field_std_dev_")]
+plot_component_set(std_components, " — std dev")
+
 plt.show()

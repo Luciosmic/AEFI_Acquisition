@@ -11,6 +11,7 @@ Rationale:
 
 from __future__ import annotations
 
+import json
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -71,9 +72,14 @@ class Hdf5ScanExportPort(IScanExportPort):
 
         - `directory`: if absolute, used as-is; if relative or empty,
           resolved under `base_output_dir`.
-        - `filename`: logical base name; this implementation prepends
-          a timestamp and appends `.h5`.
+        - `filename`: scan name (without date/time or extension).
         - `metadata`: persisted as root attributes when file is opened.
+
+        One acquisition is one bounded context: the file lands in its own
+        acquisition folder `<dir>/YYYY-MM-DD_HHMMSS_stepScan_<name>/`, named
+        `YYYY-MM-DD_HHMMSS_stepScan_<name>.h5` (same convention as the CSV
+        port's acquisition folder, minus the per-device split since HDF5
+        bundles device + probe data into one file).
         """
         if directory:
             dir_path = Path(directory)
@@ -82,13 +88,14 @@ class Hdf5ScanExportPort(IScanExportPort):
         else:
             dir_path = self.base_output_dir
 
-        dir_path.mkdir(parents=True, exist_ok=True)
-
         timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
         safe_base = "".join(c for c in filename if c.isalnum() or c in ("-", "_"))
-        final_name = f"{timestamp}_{safe_base}.h5"
 
-        self._file_path = dir_path / final_name
+        acquisition_dir = dir_path / f"{timestamp}_stepScan_{safe_base}"
+        acquisition_dir.mkdir(parents=True, exist_ok=True)
+        final_name = f"{timestamp}_stepScan_{safe_base}.h5"
+
+        self._file_path = acquisition_dir / final_name
         self._metadata = metadata or {}
         logger.debug("HDF5 scan export configured at %s", self._file_path)
 
@@ -285,6 +292,18 @@ class Hdf5ScanExportPort(IScanExportPort):
         self._field_std_dset[self._field_index, :] = std_devs
         
         self._field_index = new_size
+
+    def write_metadata(self, metadata: Dict[str, Any]) -> None:
+        """Write the acquisition's parameter snapshot as a JSON file next to
+        the `.h5` file, in the same acquisition folder (kept as a real file
+        rather than only root attrs, so a JSON manifest always exists
+        regardless of the chosen export format)."""
+        if self._file_path is None:
+            raise RuntimeError("Hdf5ScanExportPort.configure() must be called before write_metadata().")
+
+        metadata_path = self._file_path.parent / f"{self._file_path.stem}_acquisition-parameters.json"
+        with metadata_path.open(mode="w", encoding="utf-8") as f:
+            json.dump(metadata, f, indent=2, ensure_ascii=False, default=str)
 
     def stop(self) -> None:
         """Close the HDF5 file."""

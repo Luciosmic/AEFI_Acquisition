@@ -19,10 +19,21 @@ from domain.shared_kernel.events.continuous_acquisition_stopped.continuous_acqui
 class MockAefiAcquisitionExecutor(IAefiAcquisitionExecutor):
     """
     Mock implementation of IAefiAcquisitionExecutor.
-    
+
     Simulates a background thread that "acquires" data from the passed acquisition port.
     """
-    
+
+    # ponytail: fixed simulation cadence, not a configurable rate. Real
+    # hardware acquisition is best-effort (no sample_rate_hz) because the ADC
+    # round-trip dominates timing on its own — but this mock's
+    # acquire_sample() is a few microseconds of pure Python, so an unpaced
+    # loop would flood the event bus / Qt UI with tens of thousands of
+    # samples per second. 1kHz is a realistic simulated acquisition rate
+    # (this mock has no per-instrument physical ceiling to mirror, unlike
+    # the Narda probe's own executor) and stays comfortably fast for
+    # averaging-heavy scan integration tests.
+    _SIMULATION_INTERVAL_S = 0.001
+
     def __init__(self, event_bus: IDomainEventBus):
         self._event_bus = event_bus
         self._is_running = False
@@ -39,23 +50,15 @@ class MockAefiAcquisitionExecutor(IAefiAcquisitionExecutor):
             return
 
         self._current_acquisition_id = uuid4()
-        print(f"[MockAefiAcquisitionExecutor] Starting continuous acquisition (ID={self._current_acquisition_id}). Rate: {config.sample_rate_hz if config.sample_rate_hz else 'MAX'} Hz")
-        
+        print(f"[MockAefiAcquisitionExecutor] Starting continuous acquisition (ID={self._current_acquisition_id}).")
+
         # Configure port only if uncertainty is provided
         if config.target_uncertainty:
              acquisition_port.configure_for_uncertainty(config.target_uncertainty)
-             
+
         self._stop_event.clear()
         self._is_running = True
-        
-        # Determine sleep time (0.0 means run as fast as possible/yield)
-        if config.sample_rate_hz and config.sample_rate_hz > 0:
-            interval = 1.0 / config.sample_rate_hz
-        else:
-            interval = 0.0 # Best effort / max speed
-        
-        self._current_interval = interval
-        
+
         def _worker():
             sample_index = 0
             while not self._stop_event.is_set():
@@ -69,9 +72,9 @@ class MockAefiAcquisitionExecutor(IAefiAcquisitionExecutor):
                     )
                     self._event_bus.publish(type(event).__name__.lower(), event)
                     sample_index += 1
-                
-                time.sleep(self._current_interval)
-            
+
+                time.sleep(self._SIMULATION_INTERVAL_S)
+
             self._is_running = False
             print("[MockAefiAcquisitionExecutor] Stopped.")
             event = ContinuousAcquisitionStopped(acquisition_id=self._current_acquisition_id)
@@ -88,16 +91,6 @@ class MockAefiAcquisitionExecutor(IAefiAcquisitionExecutor):
         self._stop_event.set()
         if self._thread and self._thread.is_alive():
             self._thread.join(timeout=1.0)
-
-    def update_config(self, config: AefiAcquisitionConfig) -> None:
-        """
-        Dynamically update configuration of running acquisition.
-        """
-        print(f"[MockAefiAcquisitionExecutor] Updating config. New Rate: {config.sample_rate_hz} Hz")
-        if config.sample_rate_hz and config.sample_rate_hz > 0:
-            self._current_interval = 1.0 / config.sample_rate_hz
-        else:
-            self._current_interval = 0.0
 
     def is_running(self) -> bool:
         return self._is_running

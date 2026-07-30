@@ -89,17 +89,18 @@ class TestScanAveragingIntegration(unittest.TestCase):
         done = threading.Event()
         event_bus.subscribe("scancompleted", lambda e: done.set())
 
-        # 2. Configure Scan — 5×5 grid, 1000 samples/point for statistical quality
+        # 2. Configure Scan — 5×5 grid, 10 samples/point (matches real AEFI
+        # usage; the mock's 1kHz simulated rate makes this near-instant)
         config_dto = Scan2DConfigDTO(
             x_min=0, x_max=4, x_nb_points=5,
             y_min=0, y_max=4, y_nb_points=5,
             scan_pattern=pattern_name,
             stabilization_delay_ms=0,
-            averaging_per_position=1000,
+            averaging_per_position=10,
             uncertainty_volts=1e-6,
         )
 
-        print(f"    Configuration: 5x5 Grid, 1000 samples/point")
+        print(f"    Configuration: 5x5 Grid, 10 samples/point")
         print(f"    Signal Model: V = x + y")
         print(f"    Noise Model: Sigma = 0.1 + 0.05 * Index")
 
@@ -135,11 +136,17 @@ class TestScanAveragingIntegration(unittest.TestCase):
             std_error = abs(measured.std_dev_x_in_phase - expected_std)
             errors_std.append(std_error)
 
-            self.assertLess(mean_error, 0.5, f"Mean error too high at {pos} (idx {index}): {mean_error:.3f}")
-            self.assertLess(std_error, 0.4, f"Std Dev error too high at {pos} (idx {index}): {std_error:.3f}")
+            # Tolerances sized for N=10 (real AEFI averaging count), not the
+            # old N=1000: with only 10 samples, the mean's standard error is
+            # sigma/sqrt(10) and the sample-std estimator's own noise is
+            # sigma/sqrt(2*9) — at the worst index (24, sigma=1.3) that's
+            # ~0.41 and ~0.31 respectively, so tolerances need a 3-sigma-ish
+            # margin above that rather than the old N=1000 tight bounds.
+            self.assertLess(mean_error, 1.5, f"Mean error too high at {pos} (idx {index}): {mean_error:.3f}")
+            self.assertLess(std_error, 1.0, f"Std Dev error too high at {pos} (idx {index}): {std_error:.3f}")
 
-        print(f"    Max Mean Error: {max(errors_mean):.4f} (Tolerance: 0.5)")
-        print(f"    Max Std Dev Error: {max(errors_std):.4f} (Tolerance: 0.4)")
+        print(f"    Max Mean Error: {max(errors_mean):.4f} (Tolerance: 1.5)")
+        print(f"    Max Std Dev Error: {max(errors_std):.4f} (Tolerance: 1.0)")
 
         # 5. Plotting
         print("\n    Generating Plots...")

@@ -1,6 +1,6 @@
 @echo off
 setlocal
-cd /d %~dp0
+cd /d "%~dp0.."
 
 REM Check if uv is installed
 where uv >nul 2>nul
@@ -16,11 +16,10 @@ if not exist .venv (
     uv sync
 )
 
-echo Starting AEFI Acquisition Interface...
-uv run python src/main.py
+echo Starting AEFI Post-Processor...
+uv run python external_modules\aefi_post_processor_module\composition_root.py
 
 if %ERRORLEVEL% neq 0 (
     echo Application exited with error code %ERRORLEVEL%
     pause
 )
-
