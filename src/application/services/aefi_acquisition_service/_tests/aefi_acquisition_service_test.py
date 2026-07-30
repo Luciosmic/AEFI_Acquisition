@@ -81,15 +81,12 @@ class TestAefiAcquisitionService(DiagramFriendlyTest):
 
     def test_continuous_acquisition_short_burst(self) -> None:
         """
-        Short burst acquisition:
-        - sample_rate = 20 Hz
-        - duration ~0.1 s
-        Expect a small number of samples (> 0).
+        Short burst acquisition (best-effort, capped at ~0.02 s).
+        Expect at least one sample.
         """
 
         config = AefiAcquisitionConfig(
-            sample_rate_hz=20.0,
-            max_duration_s=0.1,
+            max_duration_s=0.02,
             target_uncertainty=None,
         )
 
@@ -97,13 +94,18 @@ class TestAefiAcquisitionService(DiagramFriendlyTest):
             "Test",
             "CALL",
             "AefiAcquisitionService",
-            "start_acquisition(sample_rate=20Hz, max_duration=0.1s)",
-            data={"sample_rate_hz": config.sample_rate_hz, "max_duration_s": config.max_duration_s},
+            "start_acquisition(best-effort, max_duration=0.02s)",
+            data={"max_duration_s": config.max_duration_s},
         )
         self.service.start_acquisition(config)
 
-        # Wait slightly longer than max_duration to ensure worker finishes
-        time.sleep(0.2)
+        # Wait slightly longer than max_duration to ensure worker finishes.
+        # Short window: best-effort + an instant mock port means the worker
+        # loop is unpaced, so a longer window would flood this test's
+        # diagram trace (log_interaction prints + JSON dump per received
+        # sample) with a large number of entries for no added assertion
+        # value.
+        time.sleep(0.05)
 
         self.log_interaction(
             "Test",

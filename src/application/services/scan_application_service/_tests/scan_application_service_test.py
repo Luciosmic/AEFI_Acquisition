@@ -133,7 +133,7 @@ class TestScanApplicationService(DiagramFriendlyTest):
 
     def test_scan_does_not_stop_a_continuous_stream_it_did_not_start(self):
         """A live-view session started before the scan must survive it."""
-        self.aefi_acquisition_service.start_acquisition(AefiAcquisitionConfig(sample_rate_hz=None))
+        self.aefi_acquisition_service.start_acquisition(AefiAcquisitionConfig())
         self.assertTrue(self.aefi_acquisition_service.is_acquisition_running())
 
         scan_dto = Scan2DConfigDTO(
@@ -225,7 +225,6 @@ class TestScanApplicationService(DiagramFriendlyTest):
             probe_port=probe,
             probe_service=field_service,
             event_bus=self.event_bus,
-            sample_rate_hz=ScanApplicationService.NARDA_CONTINUOUS_SAMPLE_RATE_HZ,
         )
         service = ScanApplicationService(
             self.motion_port, self.aefi_acquisition_service, self.event_bus,
@@ -267,7 +266,6 @@ class TestScanApplicationService(DiagramFriendlyTest):
             probe_port=probe,
             probe_service=field_service,
             event_bus=self.event_bus,
-            sample_rate_hz=ScanApplicationService.NARDA_CONTINUOUS_SAMPLE_RATE_HZ,
         )
         service = ScanApplicationService(
             self.motion_port, self.aefi_acquisition_service, self.event_bus,

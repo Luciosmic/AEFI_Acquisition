@@ -36,9 +36,13 @@ class IApiElectricFieldProbeService(ABC):
     def stop_acquisition(self) -> None: ...
 
     @abstractmethod
-    def update_acquisition_parameters(
-        self, config: ElectricFieldProbeAcquisitionConfig
-    ) -> None: ...
+    def is_acquisition_running(self) -> bool: ...
 
     @abstractmethod
-    def is_acquisition_running(self) -> bool: ...
+    def refresh_battery(self) -> None:
+        """
+        Re-read the probe's battery level on demand. No-op if not connected
+        or if an acquisition is currently running — the battery query shares
+        the probe's physical link with sample acquisition and could perturb
+        an in-progress stream.
+        """

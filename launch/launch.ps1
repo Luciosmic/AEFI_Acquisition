@@ -1,6 +1,6 @@
 # Launch script for AEFI Acquisition Interface (PowerShell)
 
-Set-Location $PSScriptRoot
+Set-Location (Split-Path $PSScriptRoot -Parent)
 
 # Check if uv is installed
 if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {

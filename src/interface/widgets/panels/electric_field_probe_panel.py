@@ -13,9 +13,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QPushButton,
-    QDoubleSpinBox,
     QGroupBox,
-    QFormLayout,
 )
 from PySide6.QtCore import Qt, Signal
 import pyqtgraph as pg  # type: ignore[import]
@@ -34,9 +32,9 @@ class ElectricFieldProbePanel(QWidget):
 
     connect_requested = Signal()
     disconnect_requested = Signal()
+    refresh_battery_requested = Signal()
     acquisition_start_requested = Signal(dict)
     acquisition_stop_requested = Signal()
-    parameters_updated = Signal(dict)
     calibrate_noise_requested = Signal()
     reset_calibration_requested = Signal()
     noise_toggled = Signal(bool)
@@ -48,6 +46,8 @@ class ElectricFieldProbePanel(QWidget):
         self.times: List[float] = []
         self.values: Dict[str, List[float]] = {}
         self._t0: Optional[float] = None
+        self._probe_connected = False
+        self._acquiring = False
 
         vlayout = QVBoxLayout(self)
         vlayout.setContentsMargins(5, 5, 5, 5)
@@ -60,25 +60,22 @@ class ElectricFieldProbePanel(QWidget):
         l_conn = QVBoxLayout(grp_conn)
         self.btn_connect = QPushButton("Connect")
         self.btn_connect.clicked.connect(self._on_connect_clicked)
+        self.btn_refresh_battery = QPushButton("Refresh battery")
+        self.btn_refresh_battery.setEnabled(False)
+        self.btn_refresh_battery.setToolTip(
+            "Re-read battery level. Disabled during acquisition — shares the "
+            "probe's serial link with sample acquisition."
+        )
+        self.btn_refresh_battery.clicked.connect(self.refresh_battery_requested.emit)
         self.lbl_probe_status = QLabel("● Not connected")
         self.lbl_probe_status.setStyleSheet("color: #888; font-weight: bold;")
         self.lbl_data_status = QLabel("● No data")
         self.lbl_data_status.setStyleSheet("color: #888;")
         l_conn.addWidget(self.btn_connect)
+        l_conn.addWidget(self.btn_refresh_battery)
         l_conn.addWidget(self.lbl_probe_status)
         l_conn.addWidget(self.lbl_data_status)
         controls_layout.addWidget(grp_conn)
-
-        # --- Acquisition group ---
-        grp_params = QGroupBox("Acquisition")
-        l_params = QFormLayout(grp_params)
-        self.sample_rate_spin = QDoubleSpinBox()
-        self.sample_rate_spin.setRange(0.1, 1000.0)
-        self.sample_rate_spin.setValue(20.0)
-        self.sample_rate_spin.setSuffix(" Hz")
-        self.sample_rate_spin.valueChanged.connect(self._on_parameter_changed)
-        l_params.addRow("Rate:", self.sample_rate_spin)
-        controls_layout.addWidget(grp_params)
 
         grp_ctrl = QGroupBox("Control")
         l_ctrl = QVBoxLayout(grp_ctrl)
@@ -146,7 +143,6 @@ class ElectricFieldProbePanel(QWidget):
 
     def _on_start_clicked(self):
         params = {
-            "sample_rate_hz": self.sample_rate_spin.value(),
             "max_duration_s": None,
         }
         self.btn_start.setEnabled(False)
@@ -156,20 +152,12 @@ class ElectricFieldProbePanel(QWidget):
     def _on_stop_clicked(self):
         self.acquisition_stop_requested.emit()
 
-    def _on_parameter_changed(self):
-        if self.btn_stop.isEnabled():
-            self.parameters_updated.emit(
-                {
-                    "sample_rate_hz": self.sample_rate_spin.value(),
-                    "max_duration_s": None,
-                }
-            )
-
     # ------------------------------------------------------------------ #
     # Presenter -> Panel
     # ------------------------------------------------------------------ #
 
     def on_probe_connection_changed(self, connected: bool, label: str):
+        self._probe_connected = connected
         if connected:
             self.btn_connect.setText("Disconnect")
             self.lbl_probe_status.setText(f"● {label}")
@@ -184,6 +172,7 @@ class ElectricFieldProbePanel(QWidget):
             self.btn_stop.setEnabled(False)
             self.lbl_data_status.setText("● No data")
             self.lbl_data_status.setStyleSheet("color: #888;")
+        self._update_refresh_battery_enabled()
 
     def on_probe_axes_defined(self, axis_labels: tuple):
         self.axis_labels = axis_labels
@@ -199,9 +188,13 @@ class ElectricFieldProbePanel(QWidget):
         self.curves["Norm"] = self.plot.plot([], [], pen=norm_pen, name="Norm")
 
     def on_acquisition_started(self, acquisition_id: str):
+        self._acquiring = True
+        self._update_refresh_battery_enabled()
         self._reset_buffers()
 
     def on_acquisition_stopped(self, acquisition_id: str):
+        self._acquiring = False
+        self._update_refresh_battery_enabled()
         self.btn_start.setEnabled(self.btn_connect.text() == "Disconnect")
         self.btn_stop.setEnabled(False)
         self.lbl_data_status.setText("● No data")
@@ -228,6 +221,9 @@ class ElectricFieldProbePanel(QWidget):
         self.btn_toggle_noise.setChecked(enabled)
         self.btn_toggle_noise.blockSignals(False)
         self.lbl_noise_offset.setText(offset_str)
+
+    def _update_refresh_battery_enabled(self):
+        self.btn_refresh_battery.setEnabled(self._probe_connected and not self._acquiring)
 
     def _reset_buffers(self):
         self.times = []

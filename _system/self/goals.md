@@ -68,6 +68,28 @@ Suite de tests `src/` (149 tests) vérifiée verte après suppression.
 
 #### Phase 1 — Domain : Value Object `AcquisitionConfiguration` (additif)
 
+**Sous-partie `SourceGeometry` + DGP ✅ FAIT (2026-07-24, corrigé 2026-07-29)** — périmètre réduit à cette seule sous-partie pour l'instant (pas encore `AcquisitionConfiguration` ni les 4 autres sous-VOs).
+
+Implémenté dans `shared_kernel` (pas un module domain dédié `source_geometry/` : ce n'est pas un aggregate — pas de racine, pas d'invariant propre à protéger derrière une identité — juste des VOs/service de calcul réutilisables ; et pas non plus sous `value_objects/acquisition_configuration/` comme esquissé plus bas, pas encore d'aggregate root justifiant ce regroupement) :
+
+```
+src/domain/shared_kernel/
+├── value_objects/
+│   ├── source_geometry/          ← grandeurs BRUTES mesurées (D_12..D_34 extrémité-à-extrémité, phi_1..phi_4),
+│   │                                 r_i et d_ij (centre-à-centre) exposés en @property dérivées, pas stockées
+│   └── source_frame_geometry/    ← résultat DGP : positions P1-P4 (z=0), centroïde, axes, rotation_matrix, is_orthogonal
+└── services/
+    └── source_frame_solver/      ← SourceFrameSolver.solve() : DGP coplanaire (NOTE - Source Frame Geometry §3-4)
+```
+
+**Correction 2026-07-29 — le problème était mal posé :** la 1ère version traitait z4 (hauteur de S4) comme une inconnue libre résolue par $z_4=\sqrt{d_{14}^2-x_4^2-y_4^2}$, censée valider la coplanarité après coup. Avec les mesures réelles du banc, ce discriminant devenait négatif — pas un vrai signe de non-planéité, mais l'artefact d'un problème mal posé : les 4 sphères sont coplanaires **par construction du banc** (contrainte connue a priori, pas une hypothèse à tester), donc S4 a 3 distances mesurées ($d_{14},d_{24},d_{34}$) pour seulement 2 inconnues ($x_4,y_4$) — un système réellement sur-déterminé en 2D, pas un problème 3D. Fix : toutes les positions sont résolues avec z=0 imposé ; S4 est résolu par moindres carrés non linéaires (`scipy.optimize.least_squares`) sur les 3 équations de distance, qui distribue correctement le bruit de mesure au lieu de l'injecter dans une hauteur fictive. Plus de flag `is_coplanar` (toujours vrai par construction), plus de `degeneracy_tolerance` sur S4 (le moindres carrés n'a jamais de discriminant à faire échouer).
+
+**Schéma config aligné sur la note (2026-07-29) :** `aefi_device_config.json` stocke maintenant les grandeurs brutes mesurées au pied à coulisse — `sphere_diameters` (phi_i) et `pairwise_distances_ext` (D_ij, extrémité-à-extrémité) — et non plus des distances centre-à-centre pré-calculées à la main. La conversion ($r_i=\phi_i/2$, $d_{ij}=D_{ij}-r_i-r_j$) est déportée dans `SourceGeometry` (properties). **Rappel :** la note "NOTE - Source Frame Geometry" vit uniquement dans le vault Obsidian de Luis (`0_inbox/`) — ce n'est plus dupliqué dans ce dépôt (`config_templates/NOTE - Source Frame Geometry.md` supprimé), c'est la seule source de vérité.
+
+Reste à faire pour compléter Phase 1 : `acquisition_configuration.py` (VO racine) + les 4 autres sous-VOs (`sensor_calibration`, `acquisition_params`, `scan_params`, `bench_dimensions`) quand le besoin se précise.
+
+---
+
 Créer `src/domain/value_objects/acquisition_configuration/` :
 
 ```

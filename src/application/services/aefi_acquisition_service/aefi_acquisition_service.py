@@ -27,19 +27,10 @@ class AefiAcquisitionService:
         self._acquisition_port = acquisition_port
 
     def start_acquisition(self, config: AefiAcquisitionConfig) -> None:
-        # TODO: add basic validation (sample_rate_hz > 0, etc.)
         self._executor.start(config, self._acquisition_port)
 
     def stop_acquisition(self) -> None:
         self._executor.stop()
-
-    def update_acquisition_parameters(self, config: AefiAcquisitionConfig) -> None:
-        """Updates the running acquisition parameters on the fly."""
-        # Simple validation: ensure we aren't trying to set invalid rates
-        if config.sample_rate_hz is not None and config.sample_rate_hz <= 0:
-             # Just a basic check, in reality we might raise an error
-             pass
-        self._executor.update_config(config)
 
     def is_acquisition_running(self) -> bool:
         return self._executor.is_running()

@@ -2,16 +2,20 @@
 
 ## Rationale
 
-Implémentation concrète de `IAefiAcquisitionExecutor` qui gère le streaming d'acquisition en boucle continue à taux fixe (timer ou thread). Séparé de `StepScanExecutor` car la logique temporelle est différente : ici c'est un polling à fréquence fixe, pas une synchronisation event-based.
+Implémentation concrète de `IAefiAcquisitionExecutor` qui gère le streaming d'acquisition en boucle continue best-effort (thread). Séparé de `StepScanExecutor` car la logique temporelle est différente : ici c'est un polling back-to-back, pas une synchronisation event-based.
+
+Note : ce fichier n'est actuellement câblé nulle part en production (le canal
+AEFI réel utilise `AdapterAefiAcquisitionAds131a04`) — seul son propre test
+l'instancie.
 
 ## Responsibility
 
-- Démarrer une boucle d'acquisition à `sample_rate_hz` dans un thread séparé.
-- Appeler `IAcquisitionPort.acquire_sample()` à chaque tick et publier/callback le résultat.
-- Permettre la mise à jour des paramètres en cours d'exécution (`update_config`).
+- Démarrer une boucle d'acquisition best-effort dans un thread séparé.
+- Appeler `IAcquisitionPort.acquire_sample()` en boucle et publier/callback le résultat.
 - Arrêter proprement la boucle sur `stop()`.
 
 ## Design
 
 - **Thread daemon + flag d'arrêt** : stopper proprement sans join bloquant.
-- **Config mutable thread-safe** : `update_config()` protégé par lock si la fréquence change en cours d'exécution.
+- **Pas de rate configurable** : le round-trip du port d'acquisition (matériel
+  ou simulé) domine le timing ; aucun pacing logiciel n'est ajouté ici.

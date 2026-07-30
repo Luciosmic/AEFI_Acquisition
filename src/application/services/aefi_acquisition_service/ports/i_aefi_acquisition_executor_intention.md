@@ -8,7 +8,6 @@ Abstraire la mécanique d'exécution de l'acquisition continue (threads, timers,
 
 - Déclarer `start(config: AefiAcquisitionConfig, acquisition_port: IAcquisitionPort)`.
 - Déclarer `stop()`.
-- Déclarer `update_config(config: AefiAcquisitionConfig)` pour la mise à jour à chaud.
 - Déclarer `AefiAcquisitionConfig` comme dataclass co-localisée dans ce fichier.
 
 ## Design

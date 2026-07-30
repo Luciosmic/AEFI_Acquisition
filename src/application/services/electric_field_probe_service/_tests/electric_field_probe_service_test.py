@@ -24,6 +24,9 @@ from domain.electric_field_probe.events.field_sample_acquired.field_sample_acqui
 from domain.electric_field_probe.events.electric_field_probe_connection_changed.electric_field_probe_connection_changed import (
     ElectricFieldProbeConnectionChanged,
 )
+from domain.electric_field_probe.events.electric_field_probe_battery_refreshed.electric_field_probe_battery_refreshed import (
+    ElectricFieldProbeBatteryRefreshed,
+)
 
 
 class TestElectricFieldProbeService(DiagramFriendlyTest):
@@ -43,9 +46,14 @@ class TestElectricFieldProbeService(DiagramFriendlyTest):
         self.samples: List[FieldSampleAcquired] = []
         self.connection_events: List[ElectricFieldProbeConnectionChanged] = []
 
+        self.battery_refreshed_events: List[ElectricFieldProbeBatteryRefreshed] = []
+
         self.event_bus.subscribe("fieldsampleacquired", self.samples.append)
         self.event_bus.subscribe(
             "electricfieldprobeconnectionchanged", self.connection_events.append
+        )
+        self.event_bus.subscribe(
+            "electricfieldprobebatteryrefreshed", self.battery_refreshed_events.append
         )
 
         executor = ElectricFieldProbeAcquisitionExecutor(self.event_bus)
@@ -79,12 +87,34 @@ class TestElectricFieldProbeService(DiagramFriendlyTest):
         assert self.connection_events[0].connected is False
         assert self.connection_events[0].error is not None
 
+    def test_refresh_battery_publishes_event_when_connected_and_idle(self) -> None:
+        self.service.connect_probe()
+
+        self.service.refresh_battery()
+
+        assert len(self.battery_refreshed_events) == 1
+        assert self.battery_refreshed_events[0].probe is not None
+
+    def test_refresh_battery_noop_when_not_connected(self) -> None:
+        self.service.refresh_battery()
+
+        assert len(self.battery_refreshed_events) == 0
+
+    def test_refresh_battery_refused_while_acquisition_running(self) -> None:
+        self.service.connect_probe()
+        config = ElectricFieldProbeAcquisitionConfig(max_duration_s=None)
+        self.service.start_acquisition(config)
+
+        self.service.refresh_battery()
+
+        assert len(self.battery_refreshed_events) == 0
+
+        self.service.stop_acquisition()
+
     def test_continuous_acquisition_short_burst(self) -> None:
         self.service.connect_probe()
 
-        config = ElectricFieldProbeAcquisitionConfig(
-            sample_rate_hz=20.0, max_duration_s=0.1
-        )
+        config = ElectricFieldProbeAcquisitionConfig(max_duration_s=0.1)
         self.service.start_acquisition(config)
 
         time.sleep(0.2)
