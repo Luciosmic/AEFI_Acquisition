@@ -136,6 +136,7 @@ def make_electric_field_probe_channel(
             if baseline_samples
             else None
         )
+        probe = probe_port.get_probe()
         event_bus.publish(
             "electricfieldscanpointacquired",
             ElectricFieldScanPointAcquired(
@@ -144,6 +145,7 @@ def make_electric_field_probe_channel(
                 position=position,
                 field_measurement=field_measurement,
                 baseline_field_measurement=baseline_field_measurement,
+                axis_labels=probe.axis_labels if probe is not None else None,
             ),
         )
 
@@ -646,7 +648,8 @@ class ScanApplicationService:
 
         elif isinstance(event, ElectricFieldScanPointAcquired):
             fm = event.field_measurement
-            value = {f"component_{i}": c for i, c in enumerate(fm.components)}
+            labels = event.axis_labels or tuple(str(i) for i in range(len(fm.components)))
+            value = {f"field_{label.lower()}": c for label, c in zip(labels, fm.components)}
             value["norm"] = fm.norm
             data = {
                 "x": event.position.x,

@@ -20,6 +20,9 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, Signal
 import pyqtgraph as pg  # type: ignore[import]
 
+from interface.widgets.scope.scope_window_control import ScopeWindowControl
+from interface.widgets.scope.scope_cursors import ScopeCursors
+
 
 class AefiContinuousReadingPanel(QWidget):
     """
@@ -72,22 +75,6 @@ class AefiContinuousReadingPanel(QWidget):
         grp_params = QGroupBox("Acquisition")
         l_params = QFormLayout(grp_params)
         l_params.setContentsMargins(5, 5, 5, 5)
-
-        # Remove fixed Duration control - use infinite by default
-        # Add Window Display Control
-        self.window_mode_combo = QComboBox()
-        self.window_mode_combo.addItems(["From start", "Sliding window"])
-        self.window_mode_combo.currentTextChanged.connect(self._on_window_mode_changed)
-        l_params.addRow("Display:", self.window_mode_combo)
-
-
-        self.lbl_time_slot = QLabel("Sliding duration (s)") # Stored so we can hide it
-        self.window_length_spin = QDoubleSpinBox()
-        self.window_length_spin.setRange(1.0, 600.0)
-        self.window_length_spin.setValue(10.0)
-        self.window_length_spin.setSuffix(" s")
-        self.window_length_spin.valueChanged.connect(self._update_plot) # Only updates view
-        l_params.addRow(self.lbl_time_slot, self.window_length_spin)
 
         # Scale Control
         self.cbo_scale = QComboBox()
@@ -265,7 +252,15 @@ class AefiContinuousReadingPanel(QWidget):
         l_trans.addWidget(self.lbl_angles_info)
         
         controls_layout.addWidget(grp_trans)
-        
+
+        # 6. Sliding window / cursors (shared, composed) — always rightmost
+        self.window_control = ScopeWindowControl(default_window_s=10.0)
+        self.window_control.changed.connect(self._update_plot)
+        controls_layout.addWidget(self.window_control)
+
+        self.cursors = ScopeCursors(y_unit=" V")
+        controls_layout.addWidget(self.cursors)
+
         controls_layout.addStretch() # Add stretch to push groups to left
         vlayout.addLayout(controls_layout)
 
@@ -285,14 +280,12 @@ class AefiContinuousReadingPanel(QWidget):
             self.curves[ch["name"]] = curve
 
         vlayout.addWidget(self.plot)
+        self.cursors.attach(self.plot)
 
         # pyqtgraph's built-in "A" (autorange) button forces autorange on both axes,
         # bypassing our Oscillo fixed calibre. Reflect that back into the Mode selector
         # so the switch to Auto stays visible instead of silently overriding Oscillo.
         self.plot.getPlotItem().autoBtn.clicked.connect(self._on_autorange_btn_clicked)
-
-        # Initialize time slot visibility based on default window mode
-        self._update_time_slot_visibility(self.window_mode_combo.currentText())
 
 
     def _on_start_clicked(self):
@@ -411,37 +404,12 @@ class AefiContinuousReadingPanel(QWidget):
         if not self.times:
             return
 
-        window = self.window_length_spin.value()
-        mode_text = self.window_mode_combo.currentText() if self.window_mode_combo is not None else "Sliding window"
+        t_plot, values_plot = self.window_control.visible_slice(self.times, self.values)
+        self.cursors.sync_to_window(t_plot, self.window_control.is_sliding())
 
-        t = self.times
         for name, curve in self.curves.items():
-            ys_full = self.values.get(name, [])
-            if not ys_full:
-                curve.setData([], [])
-                continue
-
-            t_plot = []
-            y_plot = []
-
-            # No window or "From start" mode: show all
-            if window <= 0.0 or mode_text == "From start":
-                t_plot = t
-                y_plot = ys_full
-            
-            # Sliding window mode
-            elif mode_text.startswith("Sliding"):
-                t_min = t[-1] - window
-                idx_start = 0
-                for i, ti in enumerate(t):
-                    if ti >= t_min:
-                        idx_start = i
-                        break
-                t_plot = t[idx_start:]
-                y_plot = ys_full[idx_start:]
-            
-            # Apply Scale
-            y_scaled = [val * self._scale_factor for val in y_plot]
+            ys = values_plot.get(name, [])
+            y_scaled = [val * self._scale_factor for val in ys]
             curve.setData(t_plot, y_scaled)
 
     def _on_channel_toggled(self):
@@ -450,11 +418,6 @@ class AefiContinuousReadingPanel(QWidget):
             visible = btn.isChecked()
             if name in self.curves:
                 self.curves[name].setVisible(visible)
-    
-    def _on_window_mode_changed(self, mode_text: str):
-        """Handle window mode changes and update plot."""
-        self._update_time_slot_visibility(mode_text)
-        self._update_plot()
 
     def _on_scale_changed(self, unit: str):
         """Update scale factor and Y-axis label."""
@@ -466,14 +429,9 @@ class AefiContinuousReadingPanel(QWidget):
             self._scale_factor = 1.0
 
         self.plot.setLabel("left", f"Voltage ({unit})")
+        self.cursors.set_y_unit(f" {unit}")
         self._update_plot()
         self._apply_view_mode()
-
-    def _update_time_slot_visibility(self, mode_text: str):
-        """Show/hide Time Slot controls based on window mode."""
-        is_sliding = mode_text.startswith("Sliding")
-        self.lbl_time_slot.setVisible(is_sliding)
-        self.window_length_spin.setVisible(is_sliding)
 
     def _on_mode_changed(self, mode_text: str):
         """Switch between Auto (fit to data) and Oscillo (fixed calibre)."""

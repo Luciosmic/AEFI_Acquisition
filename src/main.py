@@ -34,24 +34,17 @@ from infrastructure.persistence.acquisition_snapshot_reader import AcquisitionSn
 from infrastructure.post_processing.aefi_post_processor_port import AefiPostProcessorPort
 from application.services.scan_export_service.scan_export_service import ScanExportService
 
-# --- Adapters (Mocks) ---
-from infrastructure.mocks.adapter_mock_excitation_aware_acquisition import ExcitationAwareAcquisitionPort
+# --- Adapters (Real) ---
+# Mock/Fake counterparts are imported locally, inside the "mock" branches below,
+# so a real-only launch never pulls infrastructure/*/fake code into the import graph.
 from infrastructure.execution.electric_field_probe_acquisition_executor import ElectricFieldProbeAcquisitionExecutor
-from infrastructure.mocks.adapter_mock_i_hardware_initialization_port import MockHardwareInitializationPort
 from infrastructure.hardware.narda_ep600.adapter_electric_field_probe_port import NardaEP601ProbeAdapter
-from infrastructure.hardware.narda_ep600.fake.fake_electric_field_probe_adapter import FakeElectricFieldProbeAdapter
 
-# --- "Mock" hardware modes reuse the REAL composition roots/adapters, only the
+# --- "Mock" hardware modes reuse these REAL composition roots/adapters, only the
 # transport is faked (see FakeMCUSerialCommunicator / FakeArcusPerformax4EXController
 # intention.md) — Hardware Config, lifecycle, and event sync all behave like real hardware.
 from infrastructure.hardware.arcus_performax_4EX.composition_root_arcus import ArcusCompositionRoot
-from infrastructure.hardware.arcus_performax_4EX.fake.fake_arcus_performax4ex_controller import (
-    FakeArcusPerformax4EXController,
-)
 from infrastructure.hardware.micro_controller.mcu_composition_root import MCUCompositionRoot
-from infrastructure.hardware.micro_controller.fake.fake_mcu_serial_communicator import (
-    FakeMCUSerialCommunicator,
-)
 
 # --- System Lifecycle ---
 from application.services.system_lifecycle_service.system_lifecycle_service import (
@@ -81,10 +74,14 @@ from application.services.hardware_configuration_service.ports.i_hardware_advanc
 from interface.presenters.hardware_advanced_config_presenter import HardwareAdvancedConfigPresenter
 from interface.styles.theme import apply_dark_theme
 
-def main():
+def main(hardware_config: dict | None = None):
     """
     Main entry point for Interface V2.
     Composition root that builds the dependency graph.
+
+    hardware_config defaults to all-"real" — this is the launcher that ships
+    on main. For an all-mock dev launch, use main_mock.py instead of editing
+    this default.
     """
     # 0. Bootstrap runtime configs (.aefi_acquisition/configs/ ← config_templates/)
     from infrastructure.config.config_bootstrapper import ConfigBootstrapper
@@ -127,14 +124,15 @@ def main():
     # bare stub — so Hardware Config, lifecycle, and event sync all behave
     # like real hardware. Excitation/continuous always follow "aefi_device"
     # (same MCUCompositionRoot, real or simulated) — no separate entry.
-    HARDWARE_CONFIG = {
-        "motion": "real",        # "mock" | "real"
-        "aefi_device": "real",   # "mock" | "real" — whole MCU stack (ADS131A04 acquisition + AD9106 excitation + lifecycle + continuous)
-        "electric_field_probe": "real",  # "mock" | "real" — picks the adapter only, connection is manual (cf. panel)
-    }
+    if hardware_config is None:
+        hardware_config = {
+            "motion": "real",
+            "aefi_device": "real",   # whole MCU stack (ADS131A04 acquisition + AD9106 excitation + lifecycle + continuous)
+            "electric_field_probe": "real",  # picks the adapter only, connection is manual (cf. panel)
+        }
     NARDA_COM_PORT = "COM8"  # cf. config_templates/electric_field_probe_config.json
     print("--- Starting Interface V2 ---")
-    print(f"Hardware Config: {HARDWARE_CONFIG}")
+    print(f"Hardware Config: {hardware_config}")
     
     # 3. Infrastructure Setup (Event Bus)
     event_bus = InMemoryEventBus()
@@ -157,10 +155,13 @@ def main():
     # controller instead of the real DLL/USB one — so Hardware Config, the
     # startup/shutdown lifecycle, and ArcusAdapter's real worker/monitor
     # threads all run identically to the real-hardware path.
-    if HARDWARE_CONFIG["motion"] == "real":
+    if hardware_config["motion"] == "real":
         print("  [motion] -> real (ArcusCompositionRoot)")
         arcus_root = ArcusCompositionRoot(event_bus=event_bus)
     else:
+        from infrastructure.hardware.arcus_performax_4EX.fake.fake_arcus_performax4ex_controller import (
+            FakeArcusPerformax4EXController,
+        )
         print("  [motion] -> mock (ArcusCompositionRoot, simulated controller)")
         arcus_root = ArcusCompositionRoot(event_bus=event_bus, controller=FakeArcusPerformax4EXController())
     motion_port = arcus_root.motion
@@ -171,10 +172,13 @@ def main():
     # serial transport, so AD9106/ADS131 controllers, configurators (Hardware
     # Config entries), and the excitation frequency-sync event all behave
     # exactly like real hardware.
-    if HARDWARE_CONFIG["aefi_device"] == "real":
+    if hardware_config["aefi_device"] == "real":
         print("  [acquisition] -> real (MCUCompositionRoot)")
         mcu_root = MCUCompositionRoot(event_bus=event_bus)
     else:
+        from infrastructure.hardware.micro_controller.fake.fake_mcu_serial_communicator import (
+            FakeMCUSerialCommunicator,
+        )
         print("  [acquisition] -> mock (MCUCompositionRoot, simulated communicator)")
         mcu_root = MCUCompositionRoot(event_bus=event_bus, communicator=FakeMCUSerialCommunicator())
 
@@ -182,14 +186,15 @@ def main():
     excitation_port = mcu_root.excitation
     continuous_executor = mcu_root.continuous
     lifecycle_adapters.append(mcu_root.lifecycle)
-    print(f"  [excitation] -> {HARDWARE_CONFIG['aefi_device']} (from MCUCompositionRoot)")
-    print(f"  [continuous] -> {HARDWARE_CONFIG['aefi_device']} (from MCUCompositionRoot)")
+    print(f"  [excitation] -> {hardware_config['aefi_device']} (from MCUCompositionRoot)")
+    print(f"  [continuous] -> {hardware_config['aefi_device']} (from MCUCompositionRoot)")
 
     # --- Wrap acquisition port with excitation-aware wrapper (only in mock mode) ---
     # This simulates the physical coupling between excitation and acquisition —
     # the fake serial transport itself only returns noise, it doesn't model this.
     # For real hardware, the coupling is physical and doesn't need simulation.
-    if HARDWARE_CONFIG["aefi_device"] == "mock":
+    if hardware_config["aefi_device"] == "mock":
+        from infrastructure.mocks.adapter_mock_excitation_aware_acquisition import ExcitationAwareAcquisitionPort
         # Field simulation (4-sphere point-charge model + 8mm cube sensor,
         # empty-bench baseline) loads its geometry/gain/orientation from
         # .aefi_acquisition/configs/aefi_device_config.json — including the
@@ -204,15 +209,16 @@ def main():
         # Use base acquisition port directly for real hardware
         acquisition_port = base_acquisition_port
         print("  [acquisition] -> using base port directly (real hardware)")
-    
+
     # --- Electric Field Probe (Narda EP-601) ---
     # Deliberately NOT added to lifecycle_adapters: this probe is auto-off and
     # times out often, so it must never block or fail app startup. Connection
     # is a manual action from the panel (Connect button), not a startup step.
-    if HARDWARE_CONFIG["electric_field_probe"] == "real":
+    if hardware_config["electric_field_probe"] == "real":
         print(f"  [electric_field_probe] -> real (Narda EP-601 on {NARDA_COM_PORT})")
         probe_port = NardaEP601ProbeAdapter(port=NARDA_COM_PORT)
     else:
+        from infrastructure.hardware.narda_ep600.fake.fake_electric_field_probe_adapter import FakeElectricFieldProbeAdapter
         print("  [electric_field_probe] -> mock")
         probe_port = FakeElectricFieldProbeAdapter()
 
@@ -221,6 +227,7 @@ def main():
         from infrastructure.hardware.composite_hardware_initialization_port import CompositeHardwareInitializationPort
         init_port = CompositeHardwareInitializationPort(lifecycle_adapters)
     else:
+        from infrastructure.mocks.adapter_mock_i_hardware_initialization_port import MockHardwareInitializationPort
         init_port = MockHardwareInitializationPort()
     
     # 6. Create Application Services
