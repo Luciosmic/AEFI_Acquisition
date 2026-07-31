@@ -128,25 +128,24 @@ class ExcitationConfigurationService:
     def mute(self) -> None:
         """
         Cut the DDS gain to 0% for the differential-measurement baseline
-        window, keeping mode/frequency untouched. Transient hardware toggle
-        for the scan loop — not a user-facing config change, so it neither
-        updates `_current_params` (still reflects the "real" excitation the
-        user configured) nor publishes events.
+        window, keeping mode/phase/frequency untouched — set_gain() only
+        writes the gain registers. Transient hardware toggle for the scan
+        loop — not a user-facing config change, so it neither updates
+        `_current_params` (still reflects the "real" excitation the user
+        configured) nor publishes events (unlike apply_excitation(), which
+        would sync the Hardware Config tab to every mute/unmute blip).
         """
         if self._muted_params is not None:
             return  # already muted — avoid overwriting the pre-mute levels
         self._muted_params = self._current_params
-        self._port.apply_excitation(
-            replace(
-                self._current_params,
-                level_s1_s2=ExcitationLevel.off(),
-                level_s3_s4=ExcitationLevel.off(),
-            )
-        )
+        self._port.set_gain(ExcitationLevel.off().value, ExcitationLevel.off().value)
 
     def unmute(self) -> None:
         """Restore the levels active before the last mute(). No-op if not muted."""
         if self._muted_params is None:
             return
-        self._port.apply_excitation(self._muted_params)
+        self._port.set_gain(
+            self._muted_params.level_s1_s2.value,
+            self._muted_params.level_s3_s4.value,
+        )
         self._muted_params = None

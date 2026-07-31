@@ -75,12 +75,10 @@ class TestExcitationConfigurationService(DiagramFriendlyTest):
 
         self.service.mute()
 
-        self.port.apply_excitation.assert_called_once()
-        applied = self.port.apply_excitation.call_args[0][0]
-        self.assertEqual(applied.mode, ExcitationMode.Y_DIR)
-        self.assertAlmostEqual(applied.frequency, 2000.0)
-        self.assertAlmostEqual(applied.level_s1_s2.value, 0.0)
-        self.assertAlmostEqual(applied.level_s3_s4.value, 0.0)
+        # mute() calls set_gain(), never apply_excitation() — it must not
+        # touch mode/phase/frequency, only gain (see set_gain docstring).
+        self.port.apply_excitation.assert_not_called()
+        self.port.set_gain.assert_called_once_with(0.0, 0.0)
 
     def test_mute_does_not_change_current_parameters(self):
         # Baseline for downstream callers (e.g. ScanExportService metadata) —
@@ -108,12 +106,8 @@ class TestExcitationConfigurationService(DiagramFriendlyTest):
 
         self.service.unmute()
 
-        self.port.apply_excitation.assert_called_once()
-        applied = self.port.apply_excitation.call_args[0][0]
-        self.assertEqual(applied.mode, ExcitationMode.Y_DIR)
-        self.assertAlmostEqual(applied.frequency, 2000.0)
-        self.assertAlmostEqual(applied.level_s1_s2.value, 40.0)
-        self.assertAlmostEqual(applied.level_s3_s4.value, 60.0)
+        self.port.apply_excitation.assert_not_called()
+        self.port.set_gain.assert_called_once_with(40.0, 60.0)
 
     def test_unmute_without_prior_mute_is_a_noop(self):
         self.service.set_excitation(ExcitationMode.Y_DIR, 40.0, 60.0, 2000.0)
@@ -122,6 +116,7 @@ class TestExcitationConfigurationService(DiagramFriendlyTest):
         self.service.unmute()
 
         self.port.apply_excitation.assert_not_called()
+        self.port.set_gain.assert_not_called()
 
     def test_unmute_does_not_publish_events(self):
         self.service.set_excitation(ExcitationMode.Y_DIR, 40.0, 60.0, 2000.0)

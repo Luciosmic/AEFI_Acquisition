@@ -18,10 +18,12 @@ Design:
 """
 
 # EXTERNAL PYTHON LIBS
+from dataclasses import replace
 from typing import Optional
 
 # DOMAIN VALUE OBJECTS
 from domain.shared_kernel.excitation.value_objects.excitation_parameters import ExcitationParameters
+from domain.shared_kernel.excitation.value_objects.excitation_level import ExcitationLevel
 from domain.shared_kernel.excitation.value_objects.excitation_mode import ExcitationMode
 from domain.shared_kernel.operation_result import OperationResult
 from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
@@ -124,15 +126,19 @@ class AdapterExcitationConfigurationAD9106(IExcitationPort):
 
         # 1. Handle full OFF (both DDS levels at 0)
         if params.level_s1_s2.value == 0 and params.level_s3_s4.value == 0:
-            # Set DDS1 and DDS2 gains to 0, phases to 0
+            # Zero gain only — amplitude is what "off" means, phase is
+            # irrelevant once gain is 0 and not worth touching (it used to
+            # get reset to 0 here too, which scrambled the excitation
+            # direction on every point of a differential scan, since mute()
+            # goes through this same branch).
             for channel in [1, 2]:
                 result = self._controller.set_dds_gain(channel, 0)
                 if result.is_failure:
                     raise RuntimeError(f"Failed to set DDS{channel} gain to 0: {result.error}")
-                result = self._controller.set_dds_phase(channel, 0)
-                if result.is_failure:
-                    raise RuntimeError(f"Failed to set DDS{channel} phase to 0: {result.error}")
-            self._publish_channel_config_changed({1: 0, 2: 0}, {1: 0, 2: 0})
+            current_phase = self._controller.get_memory_state()["DDS"]["Phase"]
+            self._publish_channel_config_changed(
+                {1: 0, 2: 0}, {1: current_phase[1], 2: current_phase[2]}
+            )
             # Store current parameters and return
             self._current_params = params
             return
@@ -211,6 +217,33 @@ class AdapterExcitationConfigurationAD9106(IExcitationPort):
 
         # Store current parameters
         self._current_params = params
+
+    def set_gain(self, level_s1_s2_percent: float, level_s3_s4_percent: float) -> None:
+        """
+        Write only the DDS gain registers, leaving phase/frequency untouched
+        — see IExcitationPort.set_gain. Doesn't publish DdsChannelConfigChanged:
+        this is a transient scan-internal toggle, not a user-facing config
+        change the Hardware Config tab should sync to.
+        """
+        if self._current_params is None:
+            return  # nothing configured yet — nothing to mute/restore
+
+        dds_config = self._map_excitation_mode_to_dds(self._current_params.mode)
+        active_channels = dds_config["active_channels"]
+        gain_by_channel = {
+            1: int((level_s3_s4_percent / 100.0) * self.MAX_EXCITATION_GAIN) if 1 in active_channels else 0,
+            2: int((level_s1_s2_percent / 100.0) * self.MAX_EXCITATION_GAIN) if 2 in active_channels else 0,
+        }
+        for channel in (1, 2):
+            result = self._controller.set_dds_gain(channel, gain_by_channel[channel])
+            if result.is_failure:
+                raise RuntimeError(f"Failed to set DDS{channel} gain to {gain_by_channel[channel]}: {result.error}")
+
+        self._current_params = replace(
+            self._current_params,
+            level_s1_s2=ExcitationLevel(level_s1_s2_percent),
+            level_s3_s4=ExcitationLevel(level_s3_s4_percent),
+        )
 
     def _publish_channel_config_changed(self, gain_by_channel: dict, phase_by_channel: dict) -> None:
         """Notify sync consumers (e.g. the Hardware Config tab) with the
