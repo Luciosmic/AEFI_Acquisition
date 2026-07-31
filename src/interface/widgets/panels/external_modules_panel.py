@@ -61,6 +61,13 @@ class ExternalModulesPanel(BasePanel):
 
         self.layout.addStretch()
 
+    def launch(self, key: str) -> None:
+        """Launch a module by its _LAUNCHERS key (used by the taskbar's launcher dropdown)."""
+        for k, label, script_parts, *_ in self._LAUNCHERS:
+            if k == key:
+                self._launch(k, script_parts, label)
+                return
+
     @staticmethod
     def _repo_root() -> str:
         # panels/ -> widgets/ -> interface/ -> src/ -> repo root
