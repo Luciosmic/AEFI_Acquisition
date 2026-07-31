@@ -186,6 +186,16 @@ Panneau de visualisation de la config active avant lancement d'un scan.
 
 ---
 
+## À trier : analyse scan carré/rectangle centré
+
+`_system/documentation/agent_analysis/06_Scan_Config_Centered_UI_vs_Domain_Analysis.md`
+propose des factory methods `ScanZone.centered_square()`/`centered_rect()` (domain)
+pour configurer un scan par centre+côté/largeur/hauteur, à coordonner avec
+l'extraction `physical_bench_limits.py` prévue ci-dessous. Lire et reprendre ce qui
+est pertinent au moment d'implémenter la feature centrée ; sinon archiver la note.
+
+---
+
 ## Feature en cours : Scan 1D (ligne theta) & Scan Z
 
 > Branche dédiée `dev_scan` — worktree long-lived pour tous les développements
