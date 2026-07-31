@@ -25,7 +25,7 @@ from application.services.electric_field_probe_service.electric_field_probe_serv
 
 # --- Infrastructure ---
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.events.event_audit_log import EventAuditLog
 from infrastructure.execution.thread_pool_task_runner import ThreadPoolTaskRunner
 from infrastructure.execution.event_bus_motion_synchronizer import EventBusMotionSynchronizer
 from infrastructure.persistence.csv_scan_export_port import CsvScanExportPort
@@ -127,7 +127,12 @@ def main():
     
     # 3. Infrastructure Setup (Event Bus)
     event_bus = InMemoryEventBus()
-    
+
+    # 3bis. Event audit log — persists every domain event to JSONL, for later
+    # traceability/audit (see _system/self/event_store.md).
+    audit_log = EventAuditLog(repo_root / ".aefi_acquisition" / "logs" / "events")
+    event_bus.subscribe("*", audit_log.record)
+
     # 4. Instantiate Adapters
     print("\n--- Initializing Hardware Adapters ---")
     motion_port = None

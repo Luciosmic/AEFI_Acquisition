@@ -19,11 +19,17 @@ class InMemoryEventBus(IDomainEventBus):
     
     def publish(self, event_type: str, data: Any) -> None:
         logger.debug(f"[InMemoryEventBus] Publishing '{event_type}' with data: {data}")
-        
+
         handlers = self._subscribers.get(event_type, [])
         if not handlers:
             logger.warning(f"[InMemoryEventBus] No subscribers for event '{event_type}'")
-        
+
+        self._dispatch(handlers, data, event_type)
+        # "*" is the wildcard convention for catch-all subscribers (e.g. the event audit log)
+        # that need to see every event without being edited each time a new event type is added.
+        self._dispatch(self._subscribers.get("*", []), data, event_type)
+
+    def _dispatch(self, handlers: List[Callable[[Any], None]], data: Any, event_type: str) -> None:
         for handler in handlers:
             try:
                 handler(data)

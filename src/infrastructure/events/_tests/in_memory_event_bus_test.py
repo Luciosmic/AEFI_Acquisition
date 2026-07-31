@@ -167,6 +167,26 @@ class TestInMemoryEventBus(DiagramFriendlyTest):
         self.log_interaction("Test", "ASSERT", "InMemoryEventBus", "Verify calls", expect=expected, got=calls)
         self.assertEqual(calls, expected)
 
+    def test_wildcard_subscriber_receives_every_event_type(self):
+        """Test that a '*' subscriber (e.g. audit log) sees all event types."""
+        calls = []
+
+        def catch_all(data):
+            self.log_interaction("CatchAll", "RECEIVE", "Test", "Wildcard handler called", {"data": data})
+            calls.append(data)
+
+        self.log_interaction("Test", "SUBSCRIBE", "InMemoryEventBus", "Subscribe wildcard handler", {"event": "*"})
+        self.bus.subscribe('*', catch_all)
+
+        self.log_interaction("Test", "PUBLISH", "InMemoryEventBus", "Publish event_a", {"event": "event_a", "data": "A"})
+        self.bus.publish('event_a', 'A')
+        self.log_interaction("Test", "PUBLISH", "InMemoryEventBus", "Publish event_b", {"event": "event_b", "data": "B"})
+        self.bus.publish('event_b', 'B')
+
+        expected = ['A', 'B']
+        self.log_interaction("Test", "ASSERT", "InMemoryEventBus", "Verify calls", expect=expected, got=calls)
+        self.assertEqual(calls, expected)
+
     def test_digest_orchestration_flow(self):
         """Demonstration of orchestration flow."""
         # Setup is already done in setUp()
