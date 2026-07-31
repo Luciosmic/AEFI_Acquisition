@@ -91,6 +91,12 @@ class ElectricFieldProbeAcquisitionExecutor(IElectricFieldProbeAcquisitionExecut
         if self._thread and self._thread.is_alive():
             return
 
+        # Clear any stale request left over from a previous run — the correct
+        # frequency is already applied on the probe via the not-running path
+        # (ElectricFieldProbeService._on_excitation_frequency_changed), so a
+        # fresh worker must not blindly replay an old request_frequency_correction()
+        # call from a prior start/stop cycle.
+        self._pending_frequency_hz = None
         self._stop_flag.clear()
         self._current_acquisition_id = uuid4()
         self._thread = threading.Thread(

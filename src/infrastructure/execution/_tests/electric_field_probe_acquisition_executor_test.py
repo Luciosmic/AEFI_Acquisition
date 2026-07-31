@@ -51,6 +51,22 @@ class TestElectricFieldProbeAcquisitionExecutorFrequencyCorrection(unittest.Test
 
         self.executor.stop()
 
+    def test_stale_pending_frequency_not_replayed_on_restart(self) -> None:
+        """A request made during a first run must not leak into a later
+        start()/stop() cycle where nothing new was requested — see the
+        70kHz-reverting-to-30kHz bug this guards against."""
+        self.executor.start(self.config, self.probe_port)
+        self.executor.request_frequency_correction(30_000.0)
+        time.sleep(0.2)
+        self.executor.stop()
+        self.events.clear()
+
+        self.executor.start(self.config, self.probe_port)
+        time.sleep(0.2)
+        self.executor.stop()
+
+        assert len(self.events) == 0
+
     def test_event_published_with_expected_fields(self) -> None:
         self.executor.start(self.config, self.probe_port)
 
