@@ -1,0 +1,41 @@
+{
+    "frequency_hz": 1000,
+    "mode_dds1_dds2": "AC+AC",
+    "mode_dds3_dds4": "AC+AC",
+    "channels": {
+        "1": {
+            "gain": 0,
+            "phase": 0,
+            "offset": 0
+        },
+        "2": {
+            "gain": 0,
+            "phase": 32768,
+            "offset": 0
+        },
+        "3": {
+            "gain": 10000,
+            "phase": 16384,
+            "offset": 0
+        },
+        "4": {
+            "gain": 10000,
+            "phase": 0,
+            "offset": 0
+        }
+    },
+    "dacs": {
+        "1": {
+            "offset": 0
+        },
+        "2": {
+            "offset": 0
+        },
+        "3": {
+            "offset": 0
+        },
+        "4": {
+            "offset": 0
+        }
+    }
+}
