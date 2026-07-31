@@ -128,9 +128,9 @@ def main():
     # like real hardware. Excitation/continuous always follow "aefi_device"
     # (same MCUCompositionRoot, real or simulated) — no separate entry.
     HARDWARE_CONFIG = {
-        "motion": "mock",        # "mock" | "real"
-        "aefi_device": "mock",   # "mock" | "real" — whole MCU stack (ADS131A04 acquisition + AD9106 excitation + lifecycle + continuous)
-        "electric_field_probe": "mock",  # "mock" | "real" — picks the adapter only, connection is manual (cf. panel)
+        "motion": "real",        # "mock" | "real"
+        "aefi_device": "real",   # "mock" | "real" — whole MCU stack (ADS131A04 acquisition + AD9106 excitation + lifecycle + continuous)
+        "electric_field_probe": "real",  # "mock" | "real" — picks the adapter only, connection is manual (cf. panel)
     }
     NARDA_COM_PORT = "COM8"  # cf. config_templates/electric_field_probe_config.json
     print("--- Starting Interface V2 ---")
