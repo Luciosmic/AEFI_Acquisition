@@ -41,10 +41,19 @@ class Hdf5ScanExportPort(IScanExportPort):
         * positions: shape (N, 2)   -> columns: [x, y]
         * measurements: shape (N, 6)-> mean voltages
         * std_dev: shape (N, 6)     -> standard deviations
+        * baseline_measurements: shape (N, 6) -> excitation-muted baseline
+          voltages (differential mode only; NaN-filled rows for a
+          non-differential scan — no baseline_std_dev counterpart since
+          ScanExportService never computes/forwards one)
     - Datasets under `/electric_field_data` (if field probe is used):
         * field_positions: shape (M, 2) -> columns: [x, y]
         * field_measurements: shape (M, P) -> P components (varies by probe)
         * field_std_dev: shape (M, P) -> standard deviations for each component
+        * baseline_field_measurements: shape (M, P) -> excitation-muted
+          baseline field components (differential mode only; NaN-filled
+          otherwise)
+        * baseline_field_std_dev: shape (M, P) -> standard deviations for
+          the baseline field components (NaN-filled otherwise)
         * probe_info: attributes with probe metadata (brand, model, serial, axes)
     """
 
@@ -57,9 +66,12 @@ class Hdf5ScanExportPort(IScanExportPort):
     _pos_dset = None
     _meas_dset = None
     _std_dset = None
+    _baseline_meas_dset = None
     _field_pos_dset = None
     _field_meas_dset = None
     _field_std_dset = None
+    _field_baseline_meas_dset = None
+    _field_baseline_std_dset = None
     _field_index: int = field(init=False, default=0)
     _field_n_components: int = field(init=False, default=0)
     _index: int = field(init=False, default=0)
@@ -151,6 +163,18 @@ class Hdf5ScanExportPort(IScanExportPort):
             chunks=True,
         )
 
+        # Differential-mode baseline (excitation muted): 6 components.
+        # Always created, NaN-filled per point when the scan isn't
+        # differential — mirrors measurements/std_dev rather than being
+        # conditionally present, so downstream readers can rely on the key.
+        self._baseline_meas_dset = scan_group.create_dataset(
+            "baseline_measurements",
+            shape=(0, 6),
+            maxshape=(None, 6),
+            dtype="f8",
+            chunks=True,
+        )
+
         self._index = 0
         self._field_index = 0
         self._field_n_components = 0
@@ -206,7 +230,25 @@ class Hdf5ScanExportPort(IScanExportPort):
             dtype="f8",
             chunks=True,
         )
-        
+
+        # Differential-mode baseline (excitation muted), always created —
+        # NaN-filled per point when the scan isn't differential.
+        self._field_baseline_meas_dset = ef_group.create_dataset(
+            "baseline_field_measurements",
+            shape=(0, n_components),
+            maxshape=(None, n_components),
+            dtype="f8",
+            chunks=True,
+        )
+
+        self._field_baseline_std_dset = ef_group.create_dataset(
+            "baseline_field_std_dev",
+            shape=(0, n_components),
+            maxshape=(None, n_components),
+            dtype="f8",
+            chunks=True,
+        )
+
         self._field_index = 0
         logger.debug("Electric field datasets configured for %d components", n_components)
 
@@ -251,14 +293,31 @@ class Hdf5ScanExportPort(IScanExportPort):
             dtype="f8",
         )
 
+        # Baseline (excitation muted) may be entirely absent for a
+        # non-differential scan — NaN-fill rather than skipping the row.
+        baseline_vals = [
+            data.get("baseline_voltage_x_in_phase"),
+            data.get("baseline_voltage_x_quadrature"),
+            data.get("baseline_voltage_y_in_phase"),
+            data.get("baseline_voltage_y_quadrature"),
+            data.get("baseline_voltage_z_in_phase"),
+            data.get("baseline_voltage_z_quadrature"),
+        ]
+        baseline = np.array(
+            [np.nan if v is None else float(v) for v in baseline_vals],
+            dtype="f8",
+        )
+
         new_size = self._index + 1
         self._pos_dset.resize((new_size, 2))
         self._meas_dset.resize((new_size, 6))
         self._std_dset.resize((new_size, 6))
+        self._baseline_meas_dset.resize((new_size, 6))
 
         self._pos_dset[self._index, :] = [x, y]
         self._meas_dset[self._index, :] = meas
         self._std_dset[self._index, :] = std
+        self._baseline_meas_dset[self._index, :] = baseline
 
         self._index = new_size
 
@@ -284,16 +343,34 @@ class Hdf5ScanExportPort(IScanExportPort):
             std_devs = [np.nan if v is None else float(v) for v in std_dev_components]
         else:
             std_devs = [np.nan] * len(components)
-        
+
+        # Baseline (excitation muted) may be entirely absent for a
+        # non-differential scan — NaN-fill rather than skipping the row.
+        baseline_components = data.get("baseline_field_components")
+        if baseline_components is not None:
+            baseline_meas = [float(c) for c in baseline_components]
+        else:
+            baseline_meas = [np.nan] * self._field_n_components
+
+        baseline_std_dev_components = data.get("baseline_field_std_dev_components")
+        if baseline_std_dev_components is not None:
+            baseline_std_devs = [np.nan if v is None else float(v) for v in baseline_std_dev_components]
+        else:
+            baseline_std_devs = [np.nan] * self._field_n_components
+
         new_size = self._field_index + 1
         self._field_pos_dset.resize((new_size, 2))
         self._field_meas_dset.resize((new_size, self._field_n_components))
         self._field_std_dset.resize((new_size, self._field_n_components))
-        
+        self._field_baseline_meas_dset.resize((new_size, self._field_n_components))
+        self._field_baseline_std_dset.resize((new_size, self._field_n_components))
+
         self._field_pos_dset[self._field_index, :] = [x, y]
         self._field_meas_dset[self._field_index, :] = components
         self._field_std_dset[self._field_index, :] = std_devs
-        
+        self._field_baseline_meas_dset[self._field_index, :] = baseline_meas
+        self._field_baseline_std_dset[self._field_index, :] = baseline_std_devs
+
         self._field_index = new_size
 
     def write_metadata(self, metadata: Dict[str, Any]) -> None:
@@ -324,9 +401,12 @@ class Hdf5ScanExportPort(IScanExportPort):
         self._pos_dset = None
         self._meas_dset = None
         self._std_dset = None
+        self._baseline_meas_dset = None
         self._field_pos_dset = None
         self._field_meas_dset = None
         self._field_std_dset = None
+        self._field_baseline_meas_dset = None
+        self._field_baseline_std_dset = None
         self._file_path = None
         self._index = 0
         self._field_index = 0

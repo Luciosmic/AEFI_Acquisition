@@ -53,6 +53,60 @@ class TestCsvScanExportPortFieldData(unittest.TestCase):
         self.assertEqual(row["field_std_dev_component_1"], "0.2")
         self.assertNotIn("field_components", row)
 
+    def test_write_field_point_expands_baseline_components(self):
+        self.port.configure(str(self.tmp_dir), "scan", metadata={})
+        self.port.start()
+        self.port.configure_field_data(n_components=1, probe_info={"probe_label": "narda_ep600", "n_components": 1})
+
+        self.port.write_field_point({
+            "scan_id": "abc",
+            "point_index": 0,
+            "x": 1.0,
+            "y": 2.0,
+            "field_components": (0.9,),
+            "field_std_dev_components": None,
+            "baseline_field_components": (0.1,),
+            "baseline_field_std_dev_components": None,
+        })
+        self.port.stop()
+
+        field_files = list(self.tmp_dir.glob("*_stepScan_*/*_stepScan_scan_narda_ep600.csv"))
+        with field_files[0].open(newline="", encoding="utf-8") as f:
+            rows = list(csv.DictReader(f))
+
+        row = rows[0]
+        self.assertEqual(row["field_component_0"], "0.9")
+        self.assertEqual(row["baseline_field_component_0"], "0.1")
+        self.assertNotIn("baseline_field_components", row)
+
+    def test_write_field_point_no_baseline_columns_when_not_differential(self):
+        # ponytail: no baseline_field_component_N column when the scan never
+        # provides baseline data — first-row-establishes-columns, same as
+        # every other dynamic field on this port. Upgrade to always-present
+        # empty columns if a downstream consumer needs a stable schema
+        # across differential/non-differential exports.
+        self.port.configure(str(self.tmp_dir), "scan", metadata={})
+        self.port.start()
+        self.port.configure_field_data(n_components=1, probe_info={"probe_label": "narda_ep600", "n_components": 1})
+
+        self.port.write_field_point({
+            "scan_id": "abc",
+            "point_index": 0,
+            "x": 1.0,
+            "y": 2.0,
+            "field_components": (0.9,),
+            "field_std_dev_components": None,
+            "baseline_field_components": None,
+            "baseline_field_std_dev_components": None,
+        })
+        self.port.stop()
+
+        field_files = list(self.tmp_dir.glob("*_stepScan_*/*_stepScan_scan_narda_ep600.csv"))
+        with field_files[0].open(newline="", encoding="utf-8") as f:
+            rows = list(csv.DictReader(f))
+
+        self.assertNotIn("baseline_field_component_0", rows[0])
+
 
 class TestCsvScanExportPortMetadata(unittest.TestCase):
     """Acquisition metadata must land as a readable JSON in the acquisition folder."""

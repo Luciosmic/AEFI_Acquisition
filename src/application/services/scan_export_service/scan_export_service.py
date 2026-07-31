@@ -14,6 +14,7 @@ Rationale:
 from __future__ import annotations
 
 import logging
+import shutil
 from datetime import datetime
 from typing import Optional, Dict, Any, List
 
@@ -77,6 +78,7 @@ class ScanExportService:
 
         self._config: Optional[ExportConfigDTO] = None
         self._export_active: bool = False  # True between ScanStarted and completion/failure/cancel
+        self._points_written: int = 0  # reset per scan — see _handle_scan_finished cleanup
         self._field_export_active: bool = False  # True if electric field export is configured
         self._field_probe_info: Optional[Dict[str, Any]] = None
         self._field_n_components: int = 0
@@ -169,6 +171,7 @@ class ScanExportService:
             port.start()
             port.write_metadata(acquisition_metadata)
         self._export_active = True
+        self._points_written = 0
         # Reset per-scan field-export state — must not leak into a new scan
         # (would otherwise skip re-calling configure_field_data below).
         self._field_n_components = 0
@@ -187,6 +190,7 @@ class ScanExportService:
         data = self._flatten_point(event)
         for port in self._active_ports:
             port.write_point(data)
+        self._points_written += 1
 
     def _handle_electric_field_scan_point_acquired(self, event: ElectricFieldScanPointAcquired) -> None:
         """Handle electric field scan point acquired events."""
@@ -228,12 +232,22 @@ class ScanExportService:
         # path once closed.
         csv_path = self._csv_export_port.get_output_path()
         hdf5_path = self._hdf5_export_port.get_output_path()
+        points_written = self._points_written
         try:
             for port in self._active_ports:
                 port.stop()
         finally:
             self._export_active = False
             self._active_ports = []
+
+        if points_written == 0:
+            # A scan that failed/was cancelled before any point was
+            # acquired leaves nothing worth keeping (0-row CSV, near-empty
+            # HDF5) — remove the acquisition folder instead of littering
+            # the exports directory. stop() already closed the file
+            # handles above, so this is safe on Windows.
+            for folder in {p.parent for p in (csv_path, hdf5_path) if p is not None}:
+                shutil.rmtree(folder, ignore_errors=True)
 
         if (
             isinstance(event, ScanCompleted)
@@ -336,6 +350,7 @@ class ScanExportService:
         """
         pos = event.position
         m = event.measurement
+        b = event.baseline_measurement  # None unless the scan ran in differential mode
 
         return {
             "scan_id": str(event.scan_id),
@@ -356,6 +371,13 @@ class ScanExportService:
             "std_dev_y_quadrature": getattr(m, "std_dev_y_quadrature", None),
             "std_dev_z_in_phase": getattr(m, "std_dev_z_in_phase", None),
             "std_dev_z_quadrature": getattr(m, "std_dev_z_quadrature", None),
+            # Baseline (excitation muted) — empty/None columns when not differential
+            "baseline_voltage_x_in_phase": b.voltage_x_in_phase if b else None,
+            "baseline_voltage_x_quadrature": b.voltage_x_quadrature if b else None,
+            "baseline_voltage_y_in_phase": b.voltage_y_in_phase if b else None,
+            "baseline_voltage_y_quadrature": b.voltage_y_quadrature if b else None,
+            "baseline_voltage_z_in_phase": b.voltage_z_in_phase if b else None,
+            "baseline_voltage_z_quadrature": b.voltage_z_quadrature if b else None,
         }
 
     def _flatten_electric_field_point(self, event: ElectricFieldScanPointAcquired) -> Dict[str, Any]:
@@ -370,6 +392,7 @@ class ScanExportService:
         """
         pos = event.position
         fm = event.field_measurement
+        bfm = event.baseline_field_measurement  # None unless the scan ran in differential mode
 
         return {
             "scan_id": str(event.scan_id),
@@ -380,6 +403,9 @@ class ScanExportService:
             "field_components": fm.components,
             # Standard deviations (may be None if not provided)
             "field_std_dev_components": fm.std_dev_components,
+            # Baseline (excitation muted) — empty/None columns when not differential
+            "baseline_field_components": bfm.components if bfm else None,
+            "baseline_field_std_dev_components": bfm.std_dev_components if bfm else None,
         }
 
 

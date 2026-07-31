@@ -189,13 +189,27 @@ class CsvScanExportPort(IScanExportPort):
         if self._field_file is None or self._field_writer is None:
             raise RuntimeError("CsvScanExportPort.configure_field_data() must be called before write_field_point().")
 
-        row = {k: v for k, v in data.items() if k not in ("field_components", "field_std_dev_components")}
+        row = {
+            k: v for k, v in data.items()
+            if k not in (
+                "field_components", "field_std_dev_components",
+                "baseline_field_components", "baseline_field_std_dev_components",
+            )
+        }
         for i, c in enumerate(data.get("field_components", ())):
             row[self._component_column("field", i)] = c
         std_devs = data.get("field_std_dev_components")
         if std_devs:
             for i, s in enumerate(std_devs):
                 row[self._component_column("field_std_dev", i)] = s
+        baseline_components = data.get("baseline_field_components")
+        if baseline_components:
+            for i, c in enumerate(baseline_components):
+                row[self._component_column("baseline_field", i)] = c
+        baseline_std_devs = data.get("baseline_field_std_dev_components")
+        if baseline_std_devs:
+            for i, s in enumerate(baseline_std_devs):
+                row[self._component_column("baseline_field_std_dev", i)] = s
 
         if self._field_fieldnames is None:
             self._field_fieldnames = list(row.keys())

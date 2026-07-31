@@ -1,3 +1,5 @@
+import shutil
+import tempfile
 import unittest
 from datetime import datetime
 from pathlib import Path
@@ -19,6 +21,7 @@ from infrastructure.execution.fake.fake_thread_pool_task_runner import FakeThrea
 
 from domain.step_scan.events.scan_started.scan_started import ScanStarted
 from domain.step_scan.events.scan_completed.scan_completed import ScanCompleted
+from domain.step_scan.events.scan_failed.scan_failed import ScanFailed
 from domain.step_scan.events.scan_cancelled.scan_cancelled import ScanCancelled
 from domain.step_scan.events.scan_point_acquired.scan_point_acquired import ScanPointAcquired
 from domain.shared_kernel.value_objects.acquisition.aefi_voltage_measurement import AefiVoltageMeasurement
@@ -230,6 +233,114 @@ class TestScanExportServiceMetadata(unittest.TestCase):
 
         self.assertEqual(self.post_processing_port.calls, [])
         self.assertTrue(self.export_port.stopped)
+
+    def test_non_differential_point_has_empty_baseline_columns(self):
+        self.event_bus.publish("scanstarted", _make_scan_started_event())
+        self.event_bus.publish("scanpointacquired", _make_scan_point_acquired_event())
+
+        row = self.export_port.points[0]
+        self.assertIsNone(row["baseline_voltage_x_in_phase"])
+
+    def test_differential_point_carries_baseline_columns(self):
+        self.event_bus.publish("scanstarted", _make_scan_started_event())
+        event = ScanPointAcquired(
+            scan_id=uuid4(),
+            point_index=0,
+            position=Position2D(x=1.0, y=2.0),
+            measurement=AefiVoltageMeasurement(
+                voltage_x_in_phase=0.9, voltage_x_quadrature=0.0,
+                voltage_y_in_phase=0.0, voltage_y_quadrature=0.0,
+                voltage_z_in_phase=0.0, voltage_z_quadrature=0.0,
+                timestamp=datetime.now(),
+            ),
+            baseline_measurement=AefiVoltageMeasurement(
+                voltage_x_in_phase=0.1, voltage_x_quadrature=0.0,
+                voltage_y_in_phase=0.0, voltage_y_quadrature=0.0,
+                voltage_z_in_phase=0.0, voltage_z_quadrature=0.0,
+                timestamp=datetime.now(),
+            ),
+        )
+        self.event_bus.publish("scanpointacquired", event)
+
+        row = self.export_port.points[0]
+        self.assertEqual(row["baseline_voltage_x_in_phase"], 0.1)
+        self.assertEqual(row["voltage_x_in_phase"], 0.9)
+
+    def test_differential_field_point_carries_baseline_columns(self):
+        self.event_bus.publish("scanstarted", _make_scan_started_event())
+        event = ElectricFieldScanPointAcquired(
+            scan_id=uuid4(), point_index=0, position=Position2D(x=1.0, y=2.0),
+            field_measurement=FieldMeasurement(components=(0.9,), timestamp=None),
+            baseline_field_measurement=FieldMeasurement(components=(0.1,), timestamp=None),
+        )
+        self.event_bus.publish("electricfieldscanpointacquired", event)
+
+        row = self.export_port.field_points[0]
+        self.assertEqual(row["baseline_field_components"], (0.1,))
+
+
+class TestScanExportServiceZeroPointCleanup(unittest.TestCase):
+    """A scan that fails/is cancelled before any point is acquired must not
+    leave an empty acquisition folder (0-row CSV, near-empty HDF5) behind —
+    see _system/ops/tasks.md discussion on export-folder clutter."""
+
+    def setUp(self):
+        self.tmp_dir = Path(tempfile.mkdtemp())
+        self.acquisition_dir = self.tmp_dir / "2024-01-01_000000_stepScan_scan"
+        self.acquisition_dir.mkdir(parents=True)
+        self.csv_path = self.acquisition_dir / "2024-01-01_000000_stepScan_scan_aefi.csv"
+        self.hdf5_path = self.acquisition_dir / "2024-01-01_000000_stepScan_scan.h5"
+        self.csv_path.write_text("")
+        self.hdf5_path.write_bytes(b"")
+        (self.acquisition_dir / "2024-01-01_000000_stepScan_scan_acquisition-parameters.json").write_text("{}")
+
+        self.event_bus = InMemoryEventBus()
+        self.csv_port = FakeExportPort(output_path=self.csv_path)
+        self.hdf5_port = FakeExportPort(output_path=self.hdf5_path)
+        excitation_service = ExcitationConfigurationService(MockExcitationPort(), self.event_bus)
+
+        class FakeSnapshotPort(IAcquisitionSnapshotPort):
+            def read(self) -> Dict[str, Any]:
+                return {}
+
+        self.service = ScanExportService(
+            self.event_bus,
+            csv_export_port=self.csv_port,
+            hdf5_export_port=self.hdf5_port,
+            excitation_service=excitation_service,
+            acquisition_snapshot_port=FakeSnapshotPort(),
+        )
+        self.service.configure_export(
+            ExportConfigDTO(enabled=True, output_directory="", filename_base="scan")
+        )
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp_dir, ignore_errors=True)
+
+    def test_zero_point_scan_removes_acquisition_folder_on_fail(self):
+        started = _make_scan_started_event()
+        self.event_bus.publish("scanstarted", started)
+        # No ScanPointAcquired published — scan failed before any point.
+        self.event_bus.publish(
+            "scanfailed", ScanFailed(scan_id=started.scan_id, reason="motion error")
+        )
+
+        self.assertFalse(self.acquisition_dir.exists())
+
+    def test_zero_point_scan_removes_acquisition_folder_on_cancel(self):
+        started = _make_scan_started_event()
+        self.event_bus.publish("scanstarted", started)
+        self.event_bus.publish("scancancelled", ScanCancelled(scan_id=started.scan_id))
+
+        self.assertFalse(self.acquisition_dir.exists())
+
+    def test_scan_with_points_keeps_acquisition_folder_on_cancel(self):
+        started = _make_scan_started_event()
+        self.event_bus.publish("scanstarted", started)
+        self.event_bus.publish("scanpointacquired", _make_scan_point_acquired_event())
+        self.event_bus.publish("scancancelled", ScanCancelled(scan_id=started.scan_id))
+
+        self.assertTrue(self.acquisition_dir.exists())
 
 
 if __name__ == "__main__":

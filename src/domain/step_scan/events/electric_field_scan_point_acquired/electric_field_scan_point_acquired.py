@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Optional
 from uuid import UUID
 
 from domain.shared_kernel.events.domain_event import DomainEvent
@@ -10,8 +11,13 @@ from domain.electric_field_probe.value_objects.field_measurement.field_measureme
 
 @dataclass(frozen=True)
 class ElectricFieldScanPointAcquired(DomainEvent):
-    """Event emitted when an electric field measurement is acquired at a scan point."""
+    """Event emitted when an electric field measurement is acquired at a scan point.
+
+    `baseline_field_measurement` is set only in differential mode (same
+    point, excitation muted). None otherwise.
+    """
     scan_id: UUID
     point_index: int
     position: Position2D
     field_measurement: FieldMeasurement
+    baseline_field_measurement: Optional[FieldMeasurement] = None

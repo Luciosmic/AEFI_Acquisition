@@ -15,7 +15,7 @@ Rationale:
 """
 
 from dataclasses import dataclass
-from typing import Any, Optional, Callable, List
+from typing import Any, Optional, Callable, List, Dict
 import logging
 import queue
 import time
@@ -40,6 +40,12 @@ from application._shared.ports.i_async_task_runner import IAsyncTaskRunner
 from .ports.i_motion_synchronizer import IMotionSynchronizer
 from .ports.i_scan_output_port import IScanOutputPort
 from application.services.electric_field_probe_service.ports.i_electric_field_probe_port import IElectricFieldProbePort
+# ponytail: direct Application-Service-to-Application-Service dependency,
+# same precedent as ScanExportService's excitation_service coupling (see
+# that file's __init__ comment) — no domain event exists yet for
+# "excitation control requested", so the scan loop calls mute()/unmute()
+# directly. Replace with an event-driven handoff if that ever exists.
+from application.services.excitation_configuration_service.excitation_configuration_service import ExcitationConfigurationService
 
 # Continuous acquisition streams (scan is a subscriber, not a puller — the
 # continuous worker owns the driver exclusively).
@@ -111,7 +117,7 @@ class AuxiliaryProbeChannel:
     service: Any
     acquisition_config: Any
     is_ready: Callable[[], bool]
-    publish_point_result: Callable[[Any, int, Any, List], None]
+    publish_point_result: Callable[[Any, int, Any, List, Optional[List]], None]
 
 
 def make_electric_field_probe_channel(
@@ -121,8 +127,15 @@ def make_electric_field_probe_channel(
 ) -> AuxiliaryProbeChannel:
     """Build the Narda EF probe's auxiliary channel registration."""
 
-    def _publish(scan: StepScan, point_index: int, position, samples: List) -> None:
+    def _publish(
+        scan: StepScan, point_index: int, position, samples: List, baseline_samples: Optional[List] = None
+    ) -> None:
         field_measurement = FieldMeasurementStatisticsService.calculate_statistics(samples)
+        baseline_field_measurement = (
+            FieldMeasurementStatisticsService.calculate_statistics(baseline_samples)
+            if baseline_samples
+            else None
+        )
         event_bus.publish(
             "electricfieldscanpointacquired",
             ElectricFieldScanPointAcquired(
@@ -130,6 +143,7 @@ def make_electric_field_probe_channel(
                 point_index=point_index,
                 position=position,
                 field_measurement=field_measurement,
+                baseline_field_measurement=baseline_field_measurement,
             ),
         )
 
@@ -168,6 +182,7 @@ class ScanApplicationService:
         motion_sync: IMotionSynchronizer,
         auxiliary_probes: Optional[List[AuxiliaryProbeChannel]] = None,
         output_port: Optional[IScanOutputPort] = None,
+        excitation_service: Optional[ExcitationConfigurationService] = None,
     ):
         self._motion_port = motion_port
         self._aefi_acquisition_service = aefi_acquisition_service
@@ -176,6 +191,7 @@ class ScanApplicationService:
         self._motion_sync = motion_sync
         self._auxiliary_probes: List[AuxiliaryProbeChannel] = list(auxiliary_probes or [])
         self._output_port = output_port
+        self._excitation_service = excitation_service
 
         self._current_scan: Optional[StepScan] = None
 
@@ -203,6 +219,8 @@ class ScanApplicationService:
             validation = config.validate()
             if not validation.is_valid:
                 raise ValueError(f"Invalid configuration: {validation.errors}")
+            if config.differential_mode and self._excitation_service is None:
+                raise ValueError("differential_mode requires an ExcitationConfigurationService")
 
             scan = StepScan()
             scan.start(config)
@@ -395,6 +413,71 @@ class ScanApplicationService:
                     if scan.status == ScanStatus.CANCELLED:
                         return
 
+                # --- Differential baseline (excitation muted) ---
+                # Mute is electronic and shared: toggled once per point, not
+                # once per channel — the primary ADC and every active
+                # auxiliary probe read their baseline window off the same
+                # muted excitation state.
+                baseline_measurement = None
+                channel_baseline_samples: Dict[str, List] = {}
+                if config.differential_mode:
+                    self._excitation_service.mute()
+                    try:
+                        if config.differential_settle_delay_ms > 0:
+                            time.sleep(config.differential_settle_delay_ms / 1000.0)
+
+                        if scan.status == ScanStatus.CANCELLED:
+                            return
+                        while scan.status == ScanStatus.PAUSED:
+                            time.sleep(0.1)
+                            if scan.status == ScanStatus.CANCELLED:
+                                return
+
+                        _drain_queue(adc_queue)
+                        baseline_samples = self._collect_samples(adc_queue, config.averaging_per_position, scan)
+                        if baseline_samples is None:
+                            return
+                        if len(baseline_samples) < config.averaging_per_position:
+                            scan.fail(
+                                f"AEFI baseline acquisition: point {i} timed out after "
+                                f"{self.POINT_ACQUISITION_TIMEOUT_S}s "
+                                f"({len(baseline_samples)}/{config.averaging_per_position} samples)"
+                            )
+                            _release_streams()
+                            self._publish_events(scan.domain_events)
+                            return
+                        baseline_measurement = MeasurementStatisticsService.calculate_statistics(baseline_samples)
+
+                        for channel, channel_queue in active_channels:
+                            _drain_queue(channel_queue)
+                            samples = self._collect_samples(channel_queue, config.averaging_per_position, scan)
+                            if samples is None:
+                                return
+                            if len(samples) < config.averaging_per_position:
+                                scan.fail(
+                                    f"{channel.name} baseline: point {i} timed out after "
+                                    f"{self.POINT_ACQUISITION_TIMEOUT_S}s "
+                                    f"({len(samples)}/{config.averaging_per_position} samples) "
+                                    "— aborting scan rather than validating an incomplete point"
+                                )
+                                _release_streams()
+                                self._publish_events(scan.domain_events)
+                                return
+                            channel_baseline_samples[channel.name] = samples
+                    finally:
+                        # Always restore the pre-scan excitation state, even
+                        # on a failure/cancel return above.
+                        self._excitation_service.unmute()
+
+                    if config.differential_settle_delay_ms > 0:
+                        time.sleep(config.differential_settle_delay_ms / 1000.0)
+                    if scan.status == ScanStatus.CANCELLED:
+                        return
+                    while scan.status == ScanStatus.PAUSED:
+                        time.sleep(0.1)
+                        if scan.status == ScanStatus.CANCELLED:
+                            return
+
                 # --- AEFI Acquisition ---
                 # Samples accumulated in the queue while moving/stabilizing
                 # don't correspond to the settled position — drop them before
@@ -439,13 +522,16 @@ class ScanApplicationService:
                         self._publish_events(scan.domain_events)
                         return
 
-                    channel.publish_point_result(scan, i, position, channel_samples)
+                    channel.publish_point_result(
+                        scan, i, position, channel_samples, channel_baseline_samples.get(channel.name)
+                    )
 
                 # --- Add result to aggregate ---
                 point_result = ScanPointResult(
                     position=position,
                     measurement=averaged_measurement,
                     point_index=i,
+                    baseline_measurement=baseline_measurement,
                 )
                 scan.add_point_result(point_result)
                 # add_point_result() auto-completes the aggregate (and queues
@@ -586,6 +672,8 @@ class ScanApplicationService:
             averaging_per_position=dto.averaging_per_position,
             measurement_uncertainty=MeasurementUncertainty(max_uncertainty_volts=dto.uncertainty_volts),
             scan_axis=ScanAxis[dto.scan_axis],
+            differential_mode=dto.differential_mode,
+            differential_settle_delay_ms=dto.differential_settle_delay_ms,
         )
 
     def _extract_metadata(self, dto: Scan2DConfigDTO) -> dict:

@@ -27,6 +27,8 @@ class Scan2DConfigDTO:
     uncertainty_volts: float
     scan_axis: str = "Y"  # 'Y' (columns-first, default) or 'X' (rows-first)
     motion_speed_mm_s: Optional[float] = None
+    differential_mode: bool = False
+    differential_settle_delay_ms: float = 50.0
 
 
 @dataclass(frozen=True)

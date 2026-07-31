@@ -50,20 +50,42 @@ class StepScanConfig:
 
     # Scan orientation â€” must come after all required fields (dataclass constraint)
     scan_axis: ScanAxis = ScanAxis.Y  # fast axis: Y=columns-first (preferred), X=rows-first (legacy)
-    
+
+    # Differential measurement (baseline without excitation + normal measurement)
+    differential_mode: bool = False
+    # ponytail: 50.0 ms is an unvalidated placeholder — never measured against
+    # real hardware (AD9106 gain-register propagation delay, ADS131A04 /
+    # synchronous-detection filter settling time both unknown). The real
+    # single source of truth is now config_templates/scan_default_config.json
+    # (bootstrapped to .aefi_acquisition/configs/, editable via the "Set as
+    # default" button in the scan panel) — this literal, and the matching
+    # ones in scan_dtos.py/scan_control_panel.py/scan_presenter.py, are only
+    # the last-resort fallback used if that config is missing/corrupted, so
+    # they're expected to stay in sync with the template's value rather than
+    # be collapsed into one Python constant. Ceiling: fine for mock-stack
+    # tests, not validated for a real differential scan. Upgrade: once
+    # bench-validated on real hardware, update the value here, in the
+    # template, and in every fallback site together.
+    differential_settle_delay_ms: float = 50.0  # electronic mute settle time, distinct from motor stabilization_delay_ms
+
     def __post_init__(self):
         """Validate configuration parameters."""
         if self.x_nb_points < 1:
             raise ValueError(f"x_nb_points must be >= 1, got {self.x_nb_points}")
-        
+
         if self.y_nb_points < 1:
             raise ValueError(f"y_nb_points must be >= 1, got {self.y_nb_points}")
-        
+
         if self.stabilization_delay_ms < 0:
             raise ValueError(f"stabilization_delay_ms must be >= 0, got {self.stabilization_delay_ms}")
-        
+
         if self.averaging_per_position < 1:
             raise ValueError(f"averaging_per_position must be >= 1, got {self.averaging_per_position}")
+
+        if self.differential_settle_delay_ms < 0:
+            raise ValueError(
+                f"differential_settle_delay_ms must be >= 0, got {self.differential_settle_delay_ms}"
+            )
     
     def total_points(self) -> int:
         """Calculate total number of scan points."""

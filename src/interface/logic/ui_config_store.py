@@ -24,17 +24,24 @@ from typing import Any, Dict
 
 class UIConfigStore:
     SCAN_CONFIG_PATH = os.path.join(".aefi_acquisition", "configs", "scan_default_config.json")
+    SCAN_CONFIG_TEMPLATE_PATH = os.path.join("config_templates", "scan_default_config.json")
     EXPORT_CONFIG_PATH = os.path.join(".aefi_acquisition", "configs", "export_default_config.json")
     EXPORT_CONFIG_TEMPLATE_PATH = os.path.join("config_templates", "export_default_config.json")
     MOTION_CONFIG_PATH = os.path.join(".aefi_acquisition", "configs", "motion_last_config.json")
 
     def load_scan_config(self) -> Dict[str, Any]:
-        """Return the `scan_config` section, or {} if missing/invalid."""
+        """Return the `scan_config` section, seeding the runtime file from the template on first run."""
+        self._init_scan_config_from_template()
         try:
             with open(self.SCAN_CONFIG_PATH, "r", encoding="utf-8") as f:
                 return json.load(f).get("scan_config", {})
         except (OSError, json.JSONDecodeError):
             return {}
+
+    def save_scan_config(self, scan_config: Dict[str, Any]) -> None:
+        os.makedirs(os.path.dirname(self.SCAN_CONFIG_PATH), exist_ok=True)
+        with open(self.SCAN_CONFIG_PATH, "w", encoding="utf-8") as f:
+            json.dump({"scan_config": scan_config}, f, indent=2, ensure_ascii=False)
 
     def load_export_config(self) -> Dict[str, Any]:
         """Return export defaults, seeding the runtime file from the template on first run."""
@@ -68,3 +75,9 @@ class UIConfigStore:
             return
         os.makedirs(os.path.dirname(self.EXPORT_CONFIG_PATH), exist_ok=True)
         shutil.copyfile(self.EXPORT_CONFIG_TEMPLATE_PATH, self.EXPORT_CONFIG_PATH)
+
+    def _init_scan_config_from_template(self) -> None:
+        if os.path.exists(self.SCAN_CONFIG_PATH) or not os.path.exists(self.SCAN_CONFIG_TEMPLATE_PATH):
+            return
+        os.makedirs(os.path.dirname(self.SCAN_CONFIG_PATH), exist_ok=True)
+        shutil.copyfile(self.SCAN_CONFIG_TEMPLATE_PATH, self.SCAN_CONFIG_PATH)

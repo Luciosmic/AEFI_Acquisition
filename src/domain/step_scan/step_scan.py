@@ -72,7 +72,8 @@ class StepScan(SpatialScan):
             scan_id=self.id,
             point_index=result.point_index,
             position=result.position,
-            measurement=result.measurement
+            measurement=result.measurement,
+            baseline_measurement=result.baseline_measurement,
         ))
         
         # Auto-complete if we reached expected points

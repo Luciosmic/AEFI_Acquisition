@@ -72,3 +72,19 @@ def test_step_scan_config_estimated_duration(valid_scan_zone):
 def test_step_scan_config_accepts_zero_stabilization(valid_scan_zone):
     config = _make_config(valid_scan_zone, stabilization_delay_ms=0)
     assert config.stabilization_delay_ms == 0
+
+
+def test_step_scan_config_differential_mode_defaults_to_disabled(valid_scan_zone):
+    config = _make_config(valid_scan_zone)
+    assert config.differential_mode is False
+
+
+def test_step_scan_config_differential_settle_delay_can_be_set(valid_scan_zone):
+    config = _make_config(valid_scan_zone, differential_mode=True, differential_settle_delay_ms=25.0)
+    assert config.differential_mode is True
+    assert config.differential_settle_delay_ms == 25.0
+
+
+def test_step_scan_config_rejects_negative_differential_settle_delay(valid_scan_zone):
+    with pytest.raises(ValueError, match="differential_settle_delay_ms must be >= 0"):
+        _make_config(valid_scan_zone, differential_settle_delay_ms=-1.0)
