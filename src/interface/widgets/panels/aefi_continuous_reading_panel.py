@@ -1,5 +1,5 @@
 """
-Continuous Acquisition Panel - Interface V2
+AEFI Continuous Reading Panel - Interface V2
 Combines controls and visualization in a single panel (passive view pattern).
 """
 
@@ -21,9 +21,9 @@ from PySide6.QtCore import Qt, Signal
 import pyqtgraph as pg  # type: ignore[import]
 
 
-class ContinuousAcquisitionPanel(QWidget):
+class AefiContinuousReadingPanel(QWidget):
     """
-    Single panel for continuous acquisition with controls and time series visualization.
+    Single panel for continuous AEFI voltage reading with controls and time series visualization.
     
     Features:
     - Control panel (display window)

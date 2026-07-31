@@ -16,7 +16,7 @@ from interface.widgets.panels.scan_control_panel import ScanControlPanel
 from interface.widgets.panels.scan_visualization_panel import ScanVisualizationPanel
 from interface.widgets.panels.motion_panel_compact import MotionPanelCompact
 from interface.widgets.panels.excitation_panel import ExcitationPanel
-from interface.widgets.panels.continuous_acquisition_panel import ContinuousAcquisitionPanel
+from interface.widgets.panels.aefi_continuous_reading_panel import AefiContinuousReadingPanel
 from interface.widgets.panels.electric_field_probe_panel import ElectricFieldProbePanel
 from interface.widgets.panels.hardware_advanced_config_panel import HardwareAdvancedConfigPanel
 from interface.widgets.panels.sensor_transformation_panel import SensorTransformationPanel
@@ -73,9 +73,9 @@ class Dashboard(QWidget):
 
         self.panels = {
             "scan_control": ScanControlPanel(),
-            "scan_viz": ScanVisualizationPanel(),
-            "field_scan_viz": ScanVisualizationPanel(enable_grid_view=False),
-            "continuous": ContinuousAcquisitionPanel(),
+            "aefi_voltage_map": ScanVisualizationPanel(),
+            "electric_field_map": ScanVisualizationPanel(enable_grid_view=False),
+            "aefi_continuous_reading": AefiContinuousReadingPanel(),
             "electric_field_probe": ElectricFieldProbePanel(),
             "motion": MotionPanelCompact(),
             "excitation": ExcitationPanel(),
@@ -108,25 +108,37 @@ class Dashboard(QWidget):
         self.taskbar_view = ModernTaskbar()
         self.taskbar_presenter = TaskbarPresenter(self.taskbar_model, self.taskbar_view)
         
-        # Register panels
+        # Register panels — (label, group). Group order here also drives the taskbar's visual grouping.
+        # external_modules is excluded below: it isn't a dock to toggle, it gets its own
+        # standalone launcher dropdown (see add_action_group call further down).
         panel_metadata = {
-            "scan_control": "Scan Control",
-            "scan_viz": "Visualization",
-            "field_scan_viz": "Field Scan Viz",
-            "continuous": "Continuous Acq.",
-            "electric_field_probe": "Electric Field Probe",
-            "motion": "Motion Control",
-            "excitation": "Excitation",
-            "hardware_config": "Hardware Config",
-            "transformation": "Ref. Transform",
-            "external_modules": "External Modules",
-            "logs": "Logs",
-            "settings": "Settings"
+            "scan_control": ("Scan Configuration", "Scan"),
+            "aefi_voltage_map": ("AEFI Voltage Map", "Scan"),
+            "electric_field_map": ("Electric Field Map", "Scan"),
+            "aefi_continuous_reading": ("AEFI Continuous Reading", "Continuous Reading"),
+            "electric_field_probe": ("Electric Field Continuous Reading", "Continuous Reading"),
+            "motion": ("Motion Control", "Hardware"),
+            "excitation": ("Excitation", "Hardware"),
+            "hardware_config": ("Hardware Advanced Config", "Hardware"),
+            "transformation": ("Sensor Transformation", "Hardware"),
+            "external_modules": ("External Modules", "Système"),
+            "logs": ("Logs", "Système"),
+            "settings": ("Settings", "Système"),
         }
-        
-        for pid, title in panel_metadata.items():
-            self.taskbar_presenter.register_panel(pid, title)
-            
+
+        for pid, (title, group) in panel_metadata.items():
+            if pid == "external_modules":
+                continue
+            self.taskbar_presenter.register_panel(pid, title, group=group)
+
+        # External Modules: its own standalone dropdown, listing the actual external
+        # modules — clicking one launches it directly (QProcess), no dock to toggle.
+        self.taskbar_view.add_action_group(
+            "External Modules",
+            [(key, label) for key, label, *_ in ExternalModulesPanel._LAUNCHERS],
+            self._launch_external_module,
+        )
+
         # Add taskbar at the bottom
         self.taskbar_view.setFixedHeight(60) # Ensure fixed height
         main_layout.addWidget(self.taskbar_view)
@@ -135,7 +147,7 @@ class Dashboard(QWidget):
         self.taskbar_presenter.panel_toggle_requested.connect(self.on_panel_toggle_requested)
 
         # Register panels to Carrier (Docks)
-        for pid, title in panel_metadata.items():
+        for pid, (title, _group) in panel_metadata.items():
             if pid in self.panels:
                 widget = self.panels[pid]
                 self.carrier_view.register_panel(pid, widget, title)
@@ -173,6 +185,10 @@ class Dashboard(QWidget):
         # 2. Taskbar at bottom
         self.taskbar_view.setFixedHeight(60)
         layout.addWidget(self.taskbar_view)
+
+    def _launch_external_module(self, key: str):
+        """Launch an external module (see ExternalModulesPanel._LAUNCHERS) from the taskbar dropdown."""
+        self.panels["external_modules"].launch(key)
 
     def on_panel_toggle_requested(self, panel_id: str):
         """

@@ -1,7 +1,7 @@
 """
-Continuous Acquisition Presenter - Interface V2
+AEFI Continuous Reading Presenter - Interface V2
 
-Bridges between AefiAcquisitionService and ContinuousAcquisitionPanel.
+Bridges between AefiAcquisitionService and AefiContinuousReadingPanel.
 Adapted from interface v1 for PySide6.
 """
 
@@ -26,9 +26,9 @@ from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
 from application.services.transformation_service.transformation_service import TransformationService
 from interface.presenters.signal_processor import SignalPostProcessor
 
-class ContinuousAcquisitionPresenter(QObject):
+class AefiContinuousReadingPresenter(QObject):
     """
-    Presenter for Continuous Acquisition Panel.
+    Presenter for AefiContinuousReadingPanel.
     - Translates UI interactions to service calls
     - Subscribes to domain events and emits Qt signals
     - Handles post-processing (Noise, Phase, Primary) via SignalPostProcessor

@@ -35,15 +35,23 @@ from infrastructure.post_processing.aefi_post_processor_port import AefiPostProc
 from application.services.scan_export_service.scan_export_service import ScanExportService
 
 # --- Adapters (Mocks) ---
-from infrastructure.mocks.adapter_mock_i_acquisition_port import RandomNoiseAcquisitionPort
-from infrastructure.mocks.adapter_mock_i_excitation_port import MockExcitationPort
 from infrastructure.mocks.adapter_mock_excitation_aware_acquisition import ExcitationAwareAcquisitionPort
-from infrastructure.mocks.adapter_mock_i_motion_port import MockMotionPort
-from infrastructure.mocks.adapter_mock_i_aefi_acquisition_executor import MockAefiAcquisitionExecutor
 from infrastructure.execution.electric_field_probe_acquisition_executor import ElectricFieldProbeAcquisitionExecutor
 from infrastructure.mocks.adapter_mock_i_hardware_initialization_port import MockHardwareInitializationPort
 from infrastructure.hardware.narda_ep600.adapter_electric_field_probe_port import NardaEP601ProbeAdapter
 from infrastructure.hardware.narda_ep600.fake.fake_electric_field_probe_adapter import FakeElectricFieldProbeAdapter
+
+# --- "Mock" hardware modes reuse the REAL composition roots/adapters, only the
+# transport is faked (see FakeMCUSerialCommunicator / FakeArcusPerformax4EXController
+# intention.md) — Hardware Config, lifecycle, and event sync all behave like real hardware.
+from infrastructure.hardware.arcus_performax_4EX.composition_root_arcus import ArcusCompositionRoot
+from infrastructure.hardware.arcus_performax_4EX.fake.fake_arcus_performax4ex_controller import (
+    FakeArcusPerformax4EXController,
+)
+from infrastructure.hardware.micro_controller.mcu_composition_root import MCUCompositionRoot
+from infrastructure.hardware.micro_controller.fake.fake_mcu_serial_communicator import (
+    FakeMCUSerialCommunicator,
+)
 
 # --- System Lifecycle ---
 from application.services.system_lifecycle_service.system_lifecycle_service import (
@@ -59,7 +67,7 @@ from interface.shell.dashboard import Dashboard
 from interface.widgets.panels.logs_panel import LogsPanel, install_console_capture
 from interface.presenters.motion_presenter import MotionPresenter
 from interface.presenters.excitation_presenter import ExcitationPresenter
-from interface.presenters.continuous_acquisition_presenter import ContinuousAcquisitionPresenter
+from interface.presenters.aefi_continuous_reading_presenter import AefiContinuousReadingPresenter
 from interface.presenters.electric_field_probe_presenter import ElectricFieldProbePresenter
 from interface.presenters.sensor_transformation_presenter import SensorTransformationPresenter
 from interface.presenters.scan_presenter import ScanPresenter
@@ -114,12 +122,15 @@ def main():
 
     # 2. Configuration: Hardware Adapter Registry
     # Simple dict-based configuration: port_name -> adapter_type ("mock" | "real")
+    # "mock" builds the REAL composition root/adapters with a faked transport
+    # (FakeMCUSerialCommunicator / FakeArcusPerformax4EXController) — not a
+    # bare stub — so Hardware Config, lifecycle, and event sync all behave
+    # like real hardware. Excitation/continuous always follow "aefi_device"
+    # (same MCUCompositionRoot, real or simulated) — no separate entry.
     HARDWARE_CONFIG = {
-        "motion": "real",        # "mock" | "real"
-        "acquisition": "real",   # "mock" | "real"
-        "excitation": "real",    # "mock" | "real"
-        "continuous": "real",    # "mock" | "real"
-        "electric_field_probe": "real",  # "mock" | "real" — picks the adapter only, connection is manual (cf. panel)
+        "motion": "mock",        # "mock" | "real"
+        "aefi_device": "mock",   # "mock" | "real" — whole MCU stack (ADS131A04 acquisition + AD9106 excitation + lifecycle + continuous)
+        "electric_field_probe": "mock",  # "mock" | "real" — picks the adapter only, connection is manual (cf. panel)
     }
     NARDA_COM_PORT = "COM8"  # cf. config_templates/electric_field_probe_config.json
     print("--- Starting Interface V2 ---")
@@ -142,84 +153,52 @@ def main():
     lifecycle_adapters = []
     
     # --- Motion (Arcus) ---
+    # "mock" still builds a real ArcusCompositionRoot — just with a faked
+    # controller instead of the real DLL/USB one — so Hardware Config, the
+    # startup/shutdown lifecycle, and ArcusAdapter's real worker/monitor
+    # threads all run identically to the real-hardware path.
     if HARDWARE_CONFIG["motion"] == "real":
-        from infrastructure.hardware.arcus_performax_4EX.composition_root_arcus import ArcusCompositionRoot
         print("  [motion] -> real (ArcusCompositionRoot)")
         arcus_root = ArcusCompositionRoot(event_bus=event_bus)
-        motion_port = arcus_root.motion
-        lifecycle_adapters.append(arcus_root.lifecycle)
     else:
-        print("  [motion] -> mock")
-        motion_port = MockMotionPort(event_bus=event_bus, motion_delay_ms=50.0)
-    
-    # --- Acquisition (ADS131) ---
-    mcu_root = None
-    if HARDWARE_CONFIG["acquisition"] == "real":
-        from infrastructure.hardware.micro_controller.mcu_composition_root import MCUCompositionRoot
+        print("  [motion] -> mock (ArcusCompositionRoot, simulated controller)")
+        arcus_root = ArcusCompositionRoot(event_bus=event_bus, controller=FakeArcusPerformax4EXController())
+    motion_port = arcus_root.motion
+    lifecycle_adapters.append(arcus_root.lifecycle)
+
+    # --- Acquisition (ADS131) + Excitation (AD9106) + Continuous — all part of MCU ---
+    # Same principle: "mock" builds a real MCUCompositionRoot with a faked
+    # serial transport, so AD9106/ADS131 controllers, configurators (Hardware
+    # Config entries), and the excitation frequency-sync event all behave
+    # exactly like real hardware.
+    if HARDWARE_CONFIG["aefi_device"] == "real":
         print("  [acquisition] -> real (MCUCompositionRoot)")
-        # Note: MCUCompositionRoot needs event_bus for continuous acquisition
         mcu_root = MCUCompositionRoot(event_bus=event_bus)
-        base_acquisition_port = mcu_root.acquisition
-        lifecycle_adapters.append(mcu_root.lifecycle)
-        continuous_executor = mcu_root.continuous
-        
-        # --- Excitation (AD9106 - part of MCU) ---
-        if HARDWARE_CONFIG["excitation"] == "real":
-            excitation_port = mcu_root.excitation
-            print("  [excitation] -> real (from MCUCompositionRoot)")
     else:
-        print("  [acquisition] -> mock")
-        # Noise std = 0.01 (1% of typical signal amplitude of 1.0)
-        base_acquisition_port = RandomNoiseAcquisitionPort(noise_std=0.01)
-    
-    # --- Excitation (Fallback / Mock) ---
-    if HARDWARE_CONFIG["excitation"] == "real":
-        # If we are here, it means we wanted real excitation but didn't get it from MCU (e.g. acquisition=mock)
-        if excitation_port is None:
-            print("  [excitation] -> WARNING: Cannot use real excitation without MCU (acquisition=real required)")
-            print("  [excitation] -> Falling back to mock")
-            excitation_port = MockExcitationPort()
-    else:
-        if excitation_port is None:
-            print("  [excitation] -> mock")
-            excitation_port = MockExcitationPort()
-    
-    # --- Continuous Acquisition ---
-    if HARDWARE_CONFIG["continuous"] == "real":
-        if continuous_executor is None:
-            print("  [continuous] -> WARNING: Cannot use real continuous without MCU (acquisition=real required)")
-            print("  [continuous] -> Falling back to mock")
-            continuous_executor = MockAefiAcquisitionExecutor(event_bus)
-        else:
-            print("  [continuous] -> real (from MCUCompositionRoot)")
-    else:
-        if continuous_executor is None:
-            print("  [continuous] -> mock")
-            continuous_executor = MockAefiAcquisitionExecutor(event_bus)
-    
-    # --- Wrap acquisition port with excitation-aware wrapper (only for mocks) ---
-    # This simulates the physical coupling between excitation and acquisition
-    # For real hardware, the coupling is physical and doesn't need simulation
-    if HARDWARE_CONFIG["acquisition"] == "mock" and HARDWARE_CONFIG["excitation"] == "mock":
-        # phase_default_ratio: ratio between real (in-phase) and imaginary (quadrature) components
-        # 0.9 = 90% real, 10% quadrature (default)
-        # 1.0 = 100% real, 0% quadrature (all offset on in-phase)
-        # 0.5 = 50% real, 50% quadrature (equal distribution)
+        print("  [acquisition] -> mock (MCUCompositionRoot, simulated communicator)")
+        mcu_root = MCUCompositionRoot(event_bus=event_bus, communicator=FakeMCUSerialCommunicator())
+
+    base_acquisition_port = mcu_root.acquisition
+    excitation_port = mcu_root.excitation
+    continuous_executor = mcu_root.continuous
+    lifecycle_adapters.append(mcu_root.lifecycle)
+    print(f"  [excitation] -> {HARDWARE_CONFIG['aefi_device']} (from MCUCompositionRoot)")
+    print(f"  [continuous] -> {HARDWARE_CONFIG['aefi_device']} (from MCUCompositionRoot)")
+
+    # --- Wrap acquisition port with excitation-aware wrapper (only in mock mode) ---
+    # This simulates the physical coupling between excitation and acquisition —
+    # the fake serial transport itself only returns noise, it doesn't model this.
+    # For real hardware, the coupling is physical and doesn't need simulation.
+    if HARDWARE_CONFIG["aefi_device"] == "mock":
+        # Field simulation (4-sphere point-charge model + 8mm cube sensor,
+        # empty-bench baseline) loads its geometry/gain/orientation from
+        # .aefi_acquisition/configs/aefi_device_config.json — including the
+        # real measured sensor.calibration.sensor_to_lab_rotation, not an
+        # arbitrary demo angle.
         acquisition_port = ExcitationAwareAcquisitionPort(
             base_acquisition_port=base_acquisition_port,
             excitation_port=excitation_port,
-            real_ratio=0.9,
-            offset_scale=1.0  # Adjust magnitude of signal
         )
-        
-        # --- SIMULATION CONFIGURATION ---
-        # Simulate a physically rotated sensor (cube orientation)
-        # Rotation: arctan(1/sqrt(2)) on fixed X axis, 45° on fixed Y axis
-        import math
-        theta_x_deg = math.degrees(math.atan(1 / math.sqrt(2)))  # ~35.26°
-        theta_y_deg = 45.0
-        acquisition_port.set_sensor_orientation(theta_x_deg, theta_y_deg, 0.0)
-        # --------------------------------
         print("  [acquisition] -> wrapped with ExcitationAwareAcquisitionPort (simulation)")
     else:
         # Use base acquisition port directly for real hardware
@@ -278,15 +257,16 @@ def main():
         probe_service=electric_field_probe_service,
         event_bus=event_bus,
     )
+    # Excitation Service
+    excitation_service = ExcitationConfigurationService(excitation_port, event_bus)
+
     scan_service = ScanApplicationService(
         motion_port, continuous_service, event_bus,
         task_runner=task_runner,
         motion_sync=motion_sync,
         auxiliary_probes=[narda_channel],
+        excitation_service=excitation_service,
     )
-
-    # Excitation Service
-    excitation_service = ExcitationConfigurationService(excitation_port, event_bus)
 
     # Scan Export Service
     csv_export_port = CsvScanExportPort()
@@ -311,14 +291,13 @@ def main():
     print("\n--- Creating Hardware Configuration Service ---")
     configurators: list[IHardwareAdvancedConfigurator] = []
     
-    # Add configurators from composition roots if real hardware is used
-    if HARDWARE_CONFIG["motion"] == "real" and 'arcus_root' in locals():
-        configurators.append(arcus_root.config)
-        print("  [config] -> added Arcus configurator")
-    
-    if HARDWARE_CONFIG["acquisition"] == "real" and mcu_root:
-        configurators.extend(mcu_root.configurators)
-        print(f"  [config] -> added {len(mcu_root.configurators)} MCU configurator(s)")
+    # arcus_root/mcu_root always exist now (mock mode = same composition
+    # roots, simulated transport) — Hardware Config lists everything either way.
+    configurators.append(arcus_root.config)
+    print("  [config] -> added Arcus configurator")
+
+    configurators.extend(mcu_root.configurators)
+    print(f"  [config] -> added {len(mcu_root.configurators)} MCU configurator(s)")
     
     hardware_config_service = HardwareConfigurationService(configurators)
     print(f"  [config] -> service created with {len(configurators)} configurator(s)")
@@ -358,15 +337,15 @@ def main():
     # 9. Create UI Presenters (Interface V2)
     # Note: Presenters now depend on Services AND Dashboard panels (Views)
     # But some Presenters are View-agnostic? 
-    # ContinuousAcquisitionPresenter is View-Agnostic regarding instantiation, but needs wiring later.
+    # AefiContinuousReadingPresenter is View-Agnostic regarding instantiation, but needs wiring later.
     # SensorTransformationPresenter NEEDS the panel in constructor.
     print("\n--- Creating UI Presenters ---")
     
     motion_presenter = MotionPresenter(motion_control_service, event_bus)
-    excitation_presenter = ExcitationPresenter(excitation_service)
+    excitation_presenter = ExcitationPresenter(excitation_service, event_bus)
     
     # Continuous Presenter needs Transformation Service now
-    continuous_presenter = ContinuousAcquisitionPresenter(continuous_service, event_bus, transformation_service)
+    aefi_continuous_reading_presenter = AefiContinuousReadingPresenter(continuous_service, event_bus, transformation_service)
 
     # Electric Field Probe Presenter
     electric_field_probe_presenter = ElectricFieldProbePresenter(electric_field_probe_service, event_bus)
@@ -379,7 +358,7 @@ def main():
     scan_presenter = ScanPresenter(scan_service, scan_export_service, event_bus)
     
     # Hardware Advanced Config Presenter
-    hardware_config_presenter = HardwareAdvancedConfigPresenter(hardware_config_service)
+    hardware_config_presenter = HardwareAdvancedConfigPresenter(hardware_config_service, event_bus)
     
     # 10. Wire Presenters to Panels
     print("--- Wiring Presenters to Panels ---")
@@ -413,33 +392,35 @@ def main():
     excitation_panel = dashboard.panels["excitation"]
     print(f"  [excitation] Connecting signal: excitation_panel.excitation_changed -> excitation_presenter.on_excitation_changed")
     excitation_panel.excitation_changed.connect(excitation_presenter.on_excitation_changed)
+    excitation_presenter.excitation_updated.connect(excitation_panel.set_state)
+    excitation_presenter.refresh_state()
     print("  [excitation] wired")
     
     # Continuous Acquisition Panel
-    continuous_panel = dashboard.panels["continuous"]
-    continuous_panel.acquisition_start_requested.connect(continuous_presenter.on_acquisition_start_requested)
-    continuous_panel.acquisition_stop_requested.connect(continuous_presenter.on_acquisition_stop_requested)
+    aefi_continuous_reading_panel = dashboard.panels["aefi_continuous_reading"]
+    aefi_continuous_reading_panel.acquisition_start_requested.connect(aefi_continuous_reading_presenter.on_acquisition_start_requested)
+    aefi_continuous_reading_panel.acquisition_stop_requested.connect(aefi_continuous_reading_presenter.on_acquisition_stop_requested)
     
     # Calibration & Transformation Wiring
-    continuous_panel.calibrate_noise_requested.connect(continuous_presenter.calibrate_noise)
-    continuous_panel.calibrate_phase_requested.connect(continuous_presenter.calibrate_phase)
-    continuous_panel.calibrate_primary_requested.connect(continuous_presenter.calibrate_primary)
-    continuous_panel.reset_calibration_requested.connect(continuous_presenter.reset_calibration)
+    aefi_continuous_reading_panel.calibrate_noise_requested.connect(aefi_continuous_reading_presenter.calibrate_noise)
+    aefi_continuous_reading_panel.calibrate_phase_requested.connect(aefi_continuous_reading_presenter.calibrate_phase)
+    aefi_continuous_reading_panel.calibrate_primary_requested.connect(aefi_continuous_reading_presenter.calibrate_primary)
+    aefi_continuous_reading_panel.reset_calibration_requested.connect(aefi_continuous_reading_presenter.reset_calibration)
 
     # Correction toggles (panel -> presenter)
-    continuous_panel.noise_toggled.connect(continuous_presenter.on_noise_toggled)
-    continuous_panel.phase_toggled.connect(continuous_presenter.on_phase_toggled)
-    continuous_panel.primary_toggled.connect(continuous_presenter.on_primary_toggled)
+    aefi_continuous_reading_panel.noise_toggled.connect(aefi_continuous_reading_presenter.on_noise_toggled)
+    aefi_continuous_reading_panel.phase_toggled.connect(aefi_continuous_reading_presenter.on_phase_toggled)
+    aefi_continuous_reading_panel.primary_toggled.connect(aefi_continuous_reading_presenter.on_primary_toggled)
 
     # Correction state feedback (presenter -> panel)
-    continuous_presenter.correction_states_updated.connect(continuous_panel.update_correction_states)
+    aefi_continuous_reading_presenter.correction_states_updated.connect(aefi_continuous_reading_panel.update_correction_states)
 
-    continuous_panel.apply_rotation_toggled.connect(continuous_presenter.on_rotation_toggled)
+    aefi_continuous_reading_panel.apply_rotation_toggled.connect(aefi_continuous_reading_presenter.on_rotation_toggled)
     
-    continuous_presenter.acquisition_started.connect(continuous_panel.on_acquisition_started)
-    continuous_presenter.acquisition_stopped.connect(continuous_panel.on_acquisition_stopped)
-    continuous_presenter.sample_acquired.connect(continuous_panel.on_sample_acquired)
-    continuous_presenter.angles_updated.connect(continuous_panel.update_angles_display)
+    aefi_continuous_reading_presenter.acquisition_started.connect(aefi_continuous_reading_panel.on_acquisition_started)
+    aefi_continuous_reading_presenter.acquisition_stopped.connect(aefi_continuous_reading_panel.on_acquisition_stopped)
+    aefi_continuous_reading_presenter.sample_acquired.connect(aefi_continuous_reading_panel.on_sample_acquired)
+    aefi_continuous_reading_presenter.angles_updated.connect(aefi_continuous_reading_panel.update_angles_display)
     print("  [continuous] wired")
 
     # Electric Field Probe Panel
@@ -464,8 +445,8 @@ def main():
 
     # Scan Panels Wiring
     scan_control_panel = dashboard.panels["scan_control"]
-    scan_visualization_panel = dashboard.panels["scan_viz"]
-    field_scan_visualization_panel = dashboard.panels["field_scan_viz"]
+    aefi_voltage_map_panel = dashboard.panels["aefi_voltage_map"]
+    electric_field_map_panel = dashboard.panels["electric_field_map"]
     
     # Control -> Presenter
     scan_control_panel.scan_start_requested.connect(scan_presenter.on_scan_start_requested)
@@ -484,13 +465,13 @@ def main():
     
     # Presenter -> Visualization
     def on_scan_started_viz(scan_id, config):
-        scan_visualization_panel.initialize_scan(
+        aefi_voltage_map_panel.initialize_scan(
             config["x_min"], config["x_max"], config["x_nb_points"],
             config["y_min"], config["y_max"], config["y_nb_points"]
         )
         # Channel set depends on the connected probe (mono/bi/tri-axial),
         # so it's left empty here and populated lazily from the first point.
-        field_scan_visualization_panel.initialize_scan(
+        electric_field_map_panel.initialize_scan(
             config["x_min"], config["x_max"], config["x_nb_points"],
             config["y_min"], config["y_max"], config["y_nb_points"],
             channels=[]
@@ -498,12 +479,12 @@ def main():
 
     def on_scan_progress_viz(current, total, data):
         # data has 'x', 'y', 'value'
-        scan_visualization_panel.update_data_point_from_position(
+        aefi_voltage_map_panel.update_data_point_from_position(
             data["x"], data["y"], data["value"]
         )
 
     def on_field_scan_progress_viz(current, total, data):
-        field_scan_visualization_panel.update_data_point_from_position(
+        electric_field_map_panel.update_data_point_from_position(
             data["x"], data["y"], data["value"]
         )
 
