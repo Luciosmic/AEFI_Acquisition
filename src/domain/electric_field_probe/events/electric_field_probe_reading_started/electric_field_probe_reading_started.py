@@ -5,10 +5,9 @@ from domain.shared_kernel.events.domain_event import DomainEvent
 
 
 @dataclass(frozen=True)
-class ContinuousAcquisitionFailed(DomainEvent):
+class ElectricFieldProbeReadingStarted(DomainEvent):
     """
-    Event emitted when the continuous acquisition loop fails (exception).
+    Event emitted when a continuous electric field probe reading starts.
     """
 
     acquisition_id: UUID
-    reason: str

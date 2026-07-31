@@ -12,8 +12,11 @@ from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
 from domain.shared_kernel.events.aefi_voltage_sample_acquired.aefi_voltage_sample_acquired import (
     AefiVoltageSampleAcquired,
 )
-from domain.shared_kernel.events.continuous_acquisition_stopped.continuous_acquisition_stopped import (
-    ContinuousAcquisitionStopped,
+from domain.shared_kernel.events.aefi_voltage_reading_started.aefi_voltage_reading_started import (
+    AefiVoltageReadingStarted,
+)
+from domain.shared_kernel.events.aefi_voltage_reading_stopped.aefi_voltage_reading_stopped import (
+    AefiVoltageReadingStopped,
 )
 
 class MockAefiAcquisitionExecutor(IAefiAcquisitionExecutor):
@@ -60,6 +63,9 @@ class MockAefiAcquisitionExecutor(IAefiAcquisitionExecutor):
         self._is_running = True
 
         def _worker():
+            started_event = AefiVoltageReadingStarted(acquisition_id=self._current_acquisition_id)
+            self._event_bus.publish(type(started_event).__name__.lower(), started_event)
+
             sample_index = 0
             while not self._stop_event.is_set():
                 if acquisition_port.is_ready():
@@ -77,7 +83,7 @@ class MockAefiAcquisitionExecutor(IAefiAcquisitionExecutor):
 
             self._is_running = False
             print("[MockAefiAcquisitionExecutor] Stopped.")
-            event = ContinuousAcquisitionStopped(acquisition_id=self._current_acquisition_id)
+            event = AefiVoltageReadingStopped(acquisition_id=self._current_acquisition_id)
             self._event_bus.publish(type(event).__name__.lower(), event)
 
         self._thread = threading.Thread(target=_worker, daemon=True)

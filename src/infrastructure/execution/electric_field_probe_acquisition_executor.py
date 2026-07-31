@@ -38,22 +38,31 @@ from domain.electric_field_probe.events.field_sample_acquired.field_sample_acqui
 from domain.electric_field_probe.events.electric_field_probe_frequency_correction_changed.electric_field_probe_frequency_correction_changed import (
     ElectricFieldProbeFrequencyCorrectionChanged,
 )
-from domain.shared_kernel.events.continuous_acquisition_failed.continuous_acquisition_failed import (
-    ContinuousAcquisitionFailed,
+from domain.electric_field_probe.events.electric_field_probe_reading_started.electric_field_probe_reading_started import (
+    ElectricFieldProbeReadingStarted,
 )
-from domain.shared_kernel.events.continuous_acquisition_stopped.continuous_acquisition_stopped import (
-    ContinuousAcquisitionStopped,
+from domain.electric_field_probe.events.electric_field_probe_reading_failed.electric_field_probe_reading_failed import (
+    ElectricFieldProbeReadingFailed,
+)
+from domain.electric_field_probe.events.electric_field_probe_reading_stopped.electric_field_probe_reading_stopped import (
+    ElectricFieldProbeReadingStopped,
 )
 
 logger = logging.getLogger(__name__)
 
 SAMPLE_ACQUIRED_TOPIC = "fieldsampleacquired"
-ACQUISITION_FAILED_TOPIC = "electricfieldprobeacquisitionfailed"
-ACQUISITION_STOPPED_TOPIC = "electricfieldprobeacquisitionstopped"
+ACQUISITION_STARTED_TOPIC = "electricfieldprobereadingstarted"
+ACQUISITION_FAILED_TOPIC = "electricfieldprobereadingfailed"
+ACQUISITION_STOPPED_TOPIC = "electricfieldprobereadingstopped"
 FREQUENCY_CORRECTION_CHANGED_TOPIC = "electricfieldprobefrequencycorrectionchanged"
 
 
 class ElectricFieldProbeAcquisitionExecutor(IElectricFieldProbeAcquisitionExecutor):
+    # ponytail: events renamed Acquisition->Reading (ElectricFieldProbeReadingStarted/
+    # Stopped/Failed) but this class/its port (IElectricFieldProbeAcquisitionExecutor)
+    # and the DTOs (ElectricFieldProbeAcquisitionConfig) still say "Acquisition" —
+    # cascade deliberately scoped out. Upgrade: rename those too if the
+    # vocabulary mismatch causes real confusion.
     MAX_CONSECUTIVE_SAMPLE_FAILURES = 2
 
     # ponytail: fixed inter-sample delay, not a configurable rate. Acquisition
@@ -115,6 +124,9 @@ class ElectricFieldProbeAcquisitionExecutor(IElectricFieldProbeAcquisitionExecut
         config: ElectricFieldProbeAcquisitionConfig,
         probe_port: IElectricFieldProbePort,
     ) -> None:
+        started_event = ElectricFieldProbeReadingStarted(acquisition_id=acquisition_id)
+        self._event_bus.publish(ACQUISITION_STARTED_TOPIC, started_event)
+
         t0 = time.time()
         index = 0
         probe = probe_port.get_probe()
@@ -171,7 +183,7 @@ class ElectricFieldProbeAcquisitionExecutor(IElectricFieldProbeAcquisitionExecut
                         e,
                     )
                     if consecutive_failures > self.MAX_CONSECUTIVE_SAMPLE_FAILURES:
-                        error_event = ContinuousAcquisitionFailed(
+                        error_event = ElectricFieldProbeReadingFailed(
                             acquisition_id=acquisition_id, reason=str(e)
                         )
                         self._event_bus.publish(ACQUISITION_FAILED_TOPIC, error_event)
@@ -193,10 +205,10 @@ class ElectricFieldProbeAcquisitionExecutor(IElectricFieldProbeAcquisitionExecut
 
         except Exception as e:
             logger.error("Acquisition loop raised unexpectedly: %s", e)
-            error_event = ContinuousAcquisitionFailed(
+            error_event = ElectricFieldProbeReadingFailed(
                 acquisition_id=acquisition_id, reason=str(e)
             )
             self._event_bus.publish(ACQUISITION_FAILED_TOPIC, error_event)
         finally:
-            stop_event = ContinuousAcquisitionStopped(acquisition_id=acquisition_id)
+            stop_event = ElectricFieldProbeReadingStopped(acquisition_id=acquisition_id)
             self._event_bus.publish(ACQUISITION_STOPPED_TOPIC, stop_event)

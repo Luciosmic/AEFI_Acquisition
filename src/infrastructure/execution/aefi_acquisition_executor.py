@@ -26,15 +26,23 @@ from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
 from domain.shared_kernel.events.aefi_voltage_sample_acquired.aefi_voltage_sample_acquired import (
     AefiVoltageSampleAcquired,
 )
-from domain.shared_kernel.events.continuous_acquisition_failed.continuous_acquisition_failed import (
-    ContinuousAcquisitionFailed,
+from domain.shared_kernel.events.aefi_voltage_reading_started.aefi_voltage_reading_started import (
+    AefiVoltageReadingStarted,
 )
-from domain.shared_kernel.events.continuous_acquisition_stopped.continuous_acquisition_stopped import (
-    ContinuousAcquisitionStopped,
+from domain.shared_kernel.events.aefi_voltage_reading_failed.aefi_voltage_reading_failed import (
+    AefiVoltageReadingFailed,
+)
+from domain.shared_kernel.events.aefi_voltage_reading_stopped.aefi_voltage_reading_stopped import (
+    AefiVoltageReadingStopped,
 )
 
 
 class AefiAcquisitionExecutor(IAefiAcquisitionExecutor):
+    # ponytail: events renamed Acquisition->Reading (AefiVoltageReadingStarted/
+    # Stopped/Failed) but this class/its port (IAefiAcquisitionExecutor) and
+    # the application-layer AefiAcquisitionService/AefiAcquisitionConfig still
+    # say "Acquisition" — cascade deliberately scoped out. Upgrade: rename
+    # those too if the vocabulary mismatch causes real confusion.
     def __init__(self, event_bus: IDomainEventBus, acquisition_port: IAcquisitionPort | None = None) -> None:
         self._event_bus = event_bus
         self._thread: threading.Thread | None = None
@@ -79,6 +87,9 @@ class AefiAcquisitionExecutor(IAefiAcquisitionExecutor):
         acquisition_port: IAcquisitionPort,
     ) -> None:
         """Background acquisition loop. Best-effort: no software pacing."""
+        started_event = AefiVoltageReadingStarted(acquisition_id=acquisition_id)
+        self._event_bus.publish("aefivoltagereadingstarted", started_event)
+
         t0 = time.time()
         index = 0
 
@@ -98,13 +109,13 @@ class AefiAcquisitionExecutor(IAefiAcquisitionExecutor):
 
                 index += 1
         except Exception as e:
-            error_event = ContinuousAcquisitionFailed(
+            error_event = AefiVoltageReadingFailed(
                 acquisition_id=acquisition_id,
                 reason=str(e)
             )
-            self._event_bus.publish("continuousacquisitionfailed", error_event)
+            self._event_bus.publish("aefivoltagereadingfailed", error_event)
         finally:
-            stop_event = ContinuousAcquisitionStopped(acquisition_id=acquisition_id)
-            self._event_bus.publish("continuousacquisitionstopped", stop_event)
+            stop_event = AefiVoltageReadingStopped(acquisition_id=acquisition_id)
+            self._event_bus.publish("aefivoltagereadingstopped", stop_event)
 
 

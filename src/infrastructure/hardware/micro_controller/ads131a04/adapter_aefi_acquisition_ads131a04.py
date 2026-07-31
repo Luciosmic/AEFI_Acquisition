@@ -27,11 +27,14 @@ from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
 from domain.shared_kernel.events.aefi_voltage_sample_acquired.aefi_voltage_sample_acquired import (
     AefiVoltageSampleAcquired,
 )
-from domain.shared_kernel.events.continuous_acquisition_failed.continuous_acquisition_failed import (
-    ContinuousAcquisitionFailed,
+from domain.shared_kernel.events.aefi_voltage_reading_started.aefi_voltage_reading_started import (
+    AefiVoltageReadingStarted,
 )
-from domain.shared_kernel.events.continuous_acquisition_stopped.continuous_acquisition_stopped import (
-    ContinuousAcquisitionStopped,
+from domain.shared_kernel.events.aefi_voltage_reading_failed.aefi_voltage_reading_failed import (
+    AefiVoltageReadingFailed,
+)
+from domain.shared_kernel.events.aefi_voltage_reading_stopped.aefi_voltage_reading_stopped import (
+    AefiVoltageReadingStopped,
 )
 
 class AdapterAefiAcquisitionAds131a04(IAefiAcquisitionExecutor):
@@ -82,6 +85,8 @@ class AdapterAefiAcquisitionAds131a04(IAefiAcquisitionExecutor):
     ) -> None:
         """Background acquisition loop."""
         print(f"[ContinuousAcquisition] Worker started. ID: {acquisition_id}")
+        started_event = AefiVoltageReadingStarted(acquisition_id=acquisition_id)
+        self._event_bus.publish("aefivoltagereadingstarted", started_event)
 
         # Best-effort: acquire back-to-back at whatever rate the serial link
         # allows. The ADC round-trip (OSR x n_avg, set in hardware advanced
@@ -118,12 +123,12 @@ class AdapterAefiAcquisitionAds131a04(IAefiAcquisitionExecutor):
 
         except Exception as e:
             print(f"[ContinuousAcquisition] Loop failed: {e}")
-            error_event = ContinuousAcquisitionFailed(
+            error_event = AefiVoltageReadingFailed(
                 acquisition_id=acquisition_id,
                 reason=str(e)
             )
-            self._event_bus.publish("continuousacquisitionfailed", error_event)
+            self._event_bus.publish("aefivoltagereadingfailed", error_event)
         finally:
             print("[ContinuousAcquisition] Worker stopping.")
-            stop_event = ContinuousAcquisitionStopped(acquisition_id=acquisition_id)
-            self._event_bus.publish("continuousacquisitionstopped", stop_event)
+            stop_event = AefiVoltageReadingStopped(acquisition_id=acquisition_id)
+            self._event_bus.publish("aefivoltagereadingstopped", stop_event)

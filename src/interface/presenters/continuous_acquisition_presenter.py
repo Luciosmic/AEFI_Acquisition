@@ -13,11 +13,11 @@ from application.services.aefi_acquisition_service.ports.i_aefi_acquisition_exec
 from domain.shared_kernel.events.aefi_voltage_sample_acquired.aefi_voltage_sample_acquired import (
     AefiVoltageSampleAcquired,
 )
-from domain.shared_kernel.events.continuous_acquisition_failed.continuous_acquisition_failed import (
-    ContinuousAcquisitionFailed,
+from domain.shared_kernel.events.aefi_voltage_reading_failed.aefi_voltage_reading_failed import (
+    AefiVoltageReadingFailed,
 )
-from domain.shared_kernel.events.continuous_acquisition_stopped.continuous_acquisition_stopped import (
-    ContinuousAcquisitionStopped,
+from domain.shared_kernel.events.aefi_voltage_reading_stopped.aefi_voltage_reading_stopped import (
+    AefiVoltageReadingStopped,
 )
 from domain.shared_kernel.events.sensor_transformation_angles_updated.sensor_transformation_angles_updated import (
     SensorTransformationAnglesUpdated,
@@ -56,8 +56,8 @@ class ContinuousAcquisitionPresenter(QObject):
 
         # Subscribe to domain events - USE LOWERCASE EVENT NAMES (matching publish calls)
         self._event_bus.subscribe("aefivoltagesampleacquired", self._on_sample_event)
-        self._event_bus.subscribe("continuousacquisitionfailed", self._on_failed_event)
-        self._event_bus.subscribe("continuousacquisitionstopped", self._on_stopped_event)
+        self._event_bus.subscribe("aefivoltagereadingfailed", self._on_failed_event)
+        self._event_bus.subscribe("aefivoltagereadingstopped", self._on_stopped_event)
         self._event_bus.subscribe("sensortransformationanglesupdated", self._on_angles_updated_event)
 
     def _on_angles_updated_event(self, event: SensorTransformationAnglesUpdated):
@@ -181,11 +181,11 @@ class ContinuousAcquisitionPresenter(QObject):
 
 
     
-    def _on_failed_event(self, event: ContinuousAcquisitionFailed):
+    def _on_failed_event(self, event: AefiVoltageReadingFailed):
         """Handle acquisition failure."""
         self.acquisition_failed.emit(str(event.reason))
 
-    def _on_stopped_event(self, event: ContinuousAcquisitionStopped):
+    def _on_stopped_event(self, event: AefiVoltageReadingStopped):
         """Handle acquisition stop."""
         if self._current_acquisition_id is not None:
             self.acquisition_stopped.emit(str(event.acquisition_id))
@@ -266,6 +266,6 @@ class ContinuousAcquisitionPresenter(QObject):
         # by subscribe() (InMemoryEventBus keys are exact string matches).
         if self._event_bus:
             self._event_bus.unsubscribe("aefivoltagesampleacquired", self._on_sample_event)
-            self._event_bus.unsubscribe("continuousacquisitionfailed", self._on_failed_event)
-            self._event_bus.unsubscribe("continuousacquisitionstopped", self._on_stopped_event)
+            self._event_bus.unsubscribe("aefivoltagereadingfailed", self._on_failed_event)
+            self._event_bus.unsubscribe("aefivoltagereadingstopped", self._on_stopped_event)
             self._event_bus.unsubscribe("sensortransformationanglesupdated", self._on_angles_updated_event)

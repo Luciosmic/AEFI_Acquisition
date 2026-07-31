@@ -5,9 +5,10 @@ from domain.shared_kernel.events.domain_event import DomainEvent
 
 
 @dataclass(frozen=True)
-class ContinuousAcquisitionStopped(DomainEvent):
+class AefiVoltageReadingFailed(DomainEvent):
     """
-    Event emitted when the continuous acquisition stops (normally or after failure).
+    Event emitted when a continuous AEFI voltage reading loop fails (exception).
     """
 
     acquisition_id: UUID
+    reason: str
