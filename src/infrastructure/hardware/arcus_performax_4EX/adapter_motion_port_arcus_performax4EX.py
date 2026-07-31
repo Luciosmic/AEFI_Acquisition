@@ -24,7 +24,6 @@ import queue
 from uuid import uuid4
 from datetime import datetime
 from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
-from domain.shared_kernel.events.motion_started.motion_started import MotionStarted
 from domain.shared_kernel.events.motion_completed.motion_completed import MotionCompleted
 from domain.shared_kernel.events.motion_failed.motion_failed import MotionFailed
 from domain.shared_kernel.events.position_updated.position_updated import PositionUpdated
@@ -347,10 +346,6 @@ class ArcusAdapter(IMotionPort):
         motion_id = str(uuid4())
         
         if self._event_bus:
-            self._event_bus.publish("motionstarted", MotionStarted(
-                motion_id=motion_id,
-                target_position=position
-            ))
             # Publish position update (is_moving=True)
             current_pos = self.get_current_position()
             self._event_bus.publish("positionupdated", PositionUpdated(
