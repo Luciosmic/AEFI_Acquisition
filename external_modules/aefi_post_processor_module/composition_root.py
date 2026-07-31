@@ -1,10 +1,13 @@
 """
 Post-Processor Composition Root
 Orchestrates the full workflow:
-1. Scan the configured export directory (see `_export_output_directory`) for raw CSVs.
-2. Compare with its 'processed_data' subfolder to identify missing/outdated items.
-3. Run ProcessingPipeline on missing items.
-4. Launch Visualization App on the processed directory.
+1. Scan the configured export directory (see `_export_output_directory`) for
+   per-acquisition subfolders (`<timestamp>_stepScan_<name>/`), each holding
+   the device's `*_aefi.csv`.
+2. For each subfolder, check if its `.h5` (written alongside the CSV) is
+   missing or outdated.
+3. Run ProcessingPipeline on missing/outdated items.
+4. Launch Visualization App on the export directory.
 """
 
 import json
@@ -42,25 +45,27 @@ from aefi_post_processor_module.visualisation.model import VisualisationModel
 from aefi_post_processor_module.visualisation.view import VisualisationView
 from aefi_post_processor_module.visualisation.presenter import VisualisationPresenter
 
-def sync_scans(raw_dir: Path, processed_dir: Path, force: bool = False):
+def sync_scans(raw_dir: Path, force: bool = False):
     """
-    Compare raw and processed directories. Run pipeline on missing/outdated files.
+    Run pipeline on missing/outdated scans.
+
+    Each scan lives in its own acquisition subfolder (`<raw_dir>/<timestamp>_stepScan_<name>/`);
+    the device CSV is found via `<subfolder>/*_aefi.csv` and the processed `.h5`
+    is written into that same subfolder.
     """
-    print(f"Syncing scans from {raw_dir} to {processed_dir}...")
-    
+    print(f"Syncing scans in {raw_dir}...")
+
     if not raw_dir.exists():
         print(f"Error: Raw directory not found: {raw_dir}")
         return
 
-    processed_dir.mkdir(parents=True, exist_ok=True)
-    
-    csv_files = sorted(raw_dir.glob("*.csv"))
-    
+    csv_files = sorted(raw_dir.glob("*_stepScan_*/*_aefi.csv"))
+
     files_processed_count = 0
-    
+
     for csv_path in csv_files:
-        scan_name = csv_path.stem
-        expected_output = processed_dir / f"{scan_name}.h5"
+        scan_name = csv_path.parent.name
+        expected_output = csv_path.parent / f"{scan_name}.h5"
         
         # Check if up to date
         if expected_output.exists() and not force:
@@ -98,26 +103,25 @@ def main():
         type=Path,
         default=None,
         help="Open the visualizer directly on this folder, skipping the sync step "
-             "(e.g. a single acquisition folder already post-processed).",
+             "(e.g. an export directory already fully post-processed).",
     )
     args = parser.parse_args()
 
     if args.repo_path is not None:
-        processed_dir = args.repo_path
+        raw_dir = args.repo_path
     else:
         raw_dir = _export_output_directory()
-        processed_dir = raw_dir / "processed_data"
 
         # 1. Sync
-        sync_scans(raw_dir, processed_dir, force=args.force)
+        sync_scans(raw_dir, force=args.force)
 
     # 2. Launch Visualization
     print("Launching Visualization App...")
     app = QApplication(sys.argv)
     app.setApplicationName("AEFI Visualisation")
-    
-    # Point model to the processed directory
-    model = VisualisationModel(processed_dir)
+
+    # Point model to the export directory (recurses into acquisition subfolders)
+    model = VisualisationModel(raw_dir)
     view = VisualisationView()
     presenter = VisualisationPresenter(view, model)
     
