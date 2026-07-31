@@ -13,6 +13,7 @@ from application.services.hardware_configuration_service.hardware_configuration_
 from domain.shared_kernel.value_objects.hardware_configuration.hardware_advanced_parameter_schema import (
     NumberParameterSchema, EnumParameterSchema
 )
+from infrastructure.events.in_memory_event_bus import InMemoryEventBus
 
 print("=== Test AD9106 Conversion Logic (Presenter logic without PyQt6) ===\n")
 
@@ -24,7 +25,7 @@ controller = AD9106Controller(None) # Mock communicator inside if needed, or Non
 # Wait, get_parameter_specs is static, so we don't even need an instance for that part, 
 # but HardwareConfigurationService expects instances.
 
-configurator = AD9106AdvancedConfigurator(controller)
+configurator = AD9106AdvancedConfigurator(controller, InMemoryEventBus())
 service = HardwareConfigurationService([configurator])
 
 # Test 1: Get domain specs

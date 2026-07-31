@@ -147,7 +147,7 @@ def print_report(geometry: SourceGeometry, result) -> None:
         print(f"  {label}: ecart = ({rx*1e6:+.1f}, {ry*1e6:+.1f}) um, norme = {math.hypot(rx,ry)*1e6:.1f} um")
 
 
-def plot_geometry(geometry: SourceGeometry, result, labels: dict) -> None:
+def plot_geometry(geometry: SourceGeometry, result, labels: dict, save_path: str | None = None) -> None:
     mm = 1000
     fig, ax = plt.subplots(figsize=(7, 7))
 
@@ -180,11 +180,16 @@ def plot_geometry(geometry: SourceGeometry, result, labels: dict) -> None:
     ax.grid(True, linestyle=":")
     ax.legend(loc="upper right", fontsize=8)
     plt.tight_layout()
-    plt.show()
+    if save_path:
+        plt.savefig(save_path, dpi=150)
+    else:
+        plt.show()
 
 
 if __name__ == "__main__":
+    # ponytail: no argparse for one optional positional arg
+    save_path = sys.argv[1] if len(sys.argv) > 1 else None
     geometry, labels = load_geometry(CONFIG_PATH)
     result = SourceFrameSolver.solve(geometry)
     print_report(geometry, result)
-    plot_geometry(geometry, result, labels)
+    plot_geometry(geometry, result, labels, save_path=save_path)

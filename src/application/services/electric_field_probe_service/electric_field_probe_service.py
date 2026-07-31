@@ -29,7 +29,7 @@ from application.services.electric_field_probe_service.dtos.electric_field_probe
     FrequencyCorrectionResult,
 )
 from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
-from domain.shared_kernel.events.excitation_frequency_changed.excitation_frequency_changed import (
+from domain.shared_kernel.excitation.events.excitation_frequency_changed.excitation_frequency_changed import (
     ExcitationFrequencyChanged,
 )
 from domain.electric_field_probe.events.electric_field_probe_connection_changed.electric_field_probe_connection_changed import (

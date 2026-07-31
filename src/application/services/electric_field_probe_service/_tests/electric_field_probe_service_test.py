@@ -30,7 +30,7 @@ from domain.electric_field_probe.events.electric_field_probe_battery_refreshed.e
 from domain.electric_field_probe.events.electric_field_probe_frequency_correction_changed.electric_field_probe_frequency_correction_changed import (
     ElectricFieldProbeFrequencyCorrectionChanged,
 )
-from domain.shared_kernel.events.excitation_frequency_changed.excitation_frequency_changed import (
+from domain.shared_kernel.excitation.events.excitation_frequency_changed.excitation_frequency_changed import (
     ExcitationFrequencyChanged,
 )
 

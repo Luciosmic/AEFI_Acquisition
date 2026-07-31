@@ -33,7 +33,13 @@ class ArcusCompositionRoot:
     - Adapters: ArcusAdapter, ArcusPerformaxLifecycleAdapter, ArcusPerformax4EXAdvancedConfigurator
     """
 
-    def __init__(self, port: Optional[str] = None, dll_path: Optional[str] = None, event_bus: Optional[IDomainEventBus] = None):
+    def __init__(
+        self,
+        port: Optional[str] = None,
+        dll_path: Optional[str] = None,
+        event_bus: Optional[IDomainEventBus] = None,
+        controller: Optional[ArcusPerformax4EXController] = None,
+    ):
         """
         Initialize the Arcus hardware stack.
 
@@ -41,14 +47,18 @@ class ArcusCompositionRoot:
             port: Serial port (e.g., 'COM3'). If None, auto-detect.
             dll_path: Path to Arcus DLL files. If None, use default.
             event_bus: Domain event bus for publishing motion events.
+            controller: Optional injected controller (e.g. FakeArcusPerformax4EXController
+                for a simulated stack). Defaults to the real ArcusPerformax4EXController.
         """
-        # 1. Instantiate Driver (Private)
-        # If dll_path is not provided, try to find it relative to this file
-        if not dll_path:
-            # Assuming DLL64 is in the same directory as this file
-            dll_path = str(Path(__file__).parent / "DLL64")
-            
-        self._driver = ArcusPerformax4EXController(dll_path=dll_path)
+        if controller is not None:
+            self._driver = controller
+        else:
+            # If dll_path is not provided, try to find it relative to this file
+            if not dll_path:
+                # Assuming DLL64 is in the same directory as this file
+                dll_path = str(Path(__file__).parent / "DLL64")
+
+            self._driver = ArcusPerformax4EXController(dll_path=dll_path)
         
         # 2. Instantiate Motion Adapter
         # We pass the event_bus to the adapter so it can publish events

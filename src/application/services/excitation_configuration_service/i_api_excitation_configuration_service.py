@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
-from domain.shared_kernel.value_objects.excitation.excitation_mode import ExcitationMode
-from domain.shared_kernel.value_objects.excitation.excitation_parameters import ExcitationParameters
+from domain.shared_kernel.excitation.value_objects.excitation_mode import ExcitationMode
+from domain.shared_kernel.excitation.value_objects.excitation_parameters import ExcitationParameters
 
 
 class IApiExcitationConfigurationService(ABC):
@@ -20,7 +20,13 @@ class IApiExcitationConfigurationService(ABC):
     """
 
     @abstractmethod
-    def set_excitation(self, mode: ExcitationMode, level_percent: float, frequency: float) -> None: ...
+    def set_excitation(
+        self,
+        mode: ExcitationMode,
+        level_s1_s2_percent: float,
+        level_s3_s4_percent: float,
+        frequency: float,
+    ) -> None: ...
 
     @abstractmethod
     def get_current_parameters(self) -> ExcitationParameters: ...
