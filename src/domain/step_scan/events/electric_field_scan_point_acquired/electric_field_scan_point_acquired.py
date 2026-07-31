@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Tuple
 from uuid import UUID
 
 from domain.shared_kernel.events.domain_event import DomainEvent
@@ -21,3 +21,4 @@ class ElectricFieldScanPointAcquired(DomainEvent):
     position: Position2D
     field_measurement: FieldMeasurement
     baseline_field_measurement: Optional[FieldMeasurement] = None
+    axis_labels: Optional[Tuple[str, ...]] = None

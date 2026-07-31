@@ -258,7 +258,9 @@ class ScanVisualizationPanel(QWidget):
             ax.set_title(title, color=color, fontweight='bold')
             ax.set_xlabel('X (mm)', color='white')
             ax.set_ylabel('Y (mm)', color='white')
-            self.figure.colorbar(im, ax=ax, label='Value')
+            cbar = self.figure.colorbar(im, ax=ax, label='Value')
+            cbar.ax.tick_params(colors='white')
+            cbar.set_label('Value', color='white')
             self.ims_dict['single'] = im
         
         im = self.ims_dict['single']
@@ -309,20 +311,22 @@ class ScanVisualizationPanel(QWidget):
         """Return (Title, Color) for a channel."""
         # Parse axis
         axis = None
-        if channel.startswith('x_'):
+        if channel.startswith('x_') or channel == 'field_x':
             axis = 'X'
-        elif channel.startswith('y_'):
+        elif channel.startswith('y_') or channel == 'field_y':
             axis = 'Y'
-        elif channel.startswith('z_'):
+        elif channel.startswith('z_') or channel == 'field_z':
             axis = 'Z'
-        
+
         # Parse type
         m_type = ""
         if 'in_phase' in channel:
             m_type = "In-Phase"
         elif 'quadrature' in channel:
             m_type = "In-Quadrature"
-        
+        elif channel.startswith('field_'):
+            m_type = "Field"
+
         title = f"{axis} {m_type}" if axis and m_type else channel.replace('_', ' ').title()
         
         # Color mapping
