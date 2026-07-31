@@ -136,6 +136,36 @@ class TestScanDifferentialModeIntegration(unittest.TestCase):
         # lingering mute) — mute()/unmute() must be balanced.
         self.assertAlmostEqual(self.mock_excitation_port.last_parameters.level_s1_s2.value, self.EXCITATION_LEVEL_PERCENT)
 
+    def test_baseline_is_forwarded_to_output_port_as_its_own_channel(self):
+        """The live plot only showed the excited sample — mute/unmute is too
+        fast to see on hardware (~0.4s), so the baseline needs to be visible
+        on screen too, not just recorded for export. Guards the
+        `baseline_<axis>_<component>` keys scan_application_service.py adds
+        to the ScanPointAcquired progress payload."""
+        received = []
+        self.service.set_output_port(_RecordingOutputPort(received))
+
+        scan_dto = Scan2DConfigDTO(
+            x_min=0, x_max=1, x_nb_points=1,
+            y_min=0, y_max=1, y_nb_points=1,
+            scan_pattern="RASTER",
+            stabilization_delay_ms=0,
+            averaging_per_position=5,
+            uncertainty_volts=1e-6,
+            differential_mode=True,
+            differential_settle_delay_ms=20,
+        )
+
+        self.assertTrue(self.service.execute_scan(scan_dto))
+        self.assertTrue(self._wait_for_completion(), "Scan did not complete within timeout")
+
+        self.assertEqual(len(received), 1)
+        _, _, data = received[0]
+        point = self.service._current_scan.points[0]
+        self.assertEqual(data["value"]["baseline_x_in_phase"], point.baseline_measurement.voltage_x_in_phase)
+        self.assertEqual(data["value"]["baseline_y_in_phase"], point.baseline_measurement.voltage_y_in_phase)
+        self.assertEqual(data["value"]["x_in_phase"], point.measurement.voltage_x_in_phase)
+
     def test_non_differential_scan_has_no_baseline(self):
         scan_dto = Scan2DConfigDTO(
             x_min=0, x_max=1, x_nb_points=1,
@@ -152,6 +182,19 @@ class TestScanDifferentialModeIntegration(unittest.TestCase):
 
         point = self.service._current_scan.points[0]
         self.assertIsNone(point.baseline_measurement)
+
+
+class _RecordingOutputPort:
+    """Minimal IScanOutputPort fake — records present_scan_progress calls only."""
+
+    def __init__(self, sink: list):
+        self._sink = sink
+
+    def present_scan_progress(self, current_point_index, total_points, point_data):
+        self._sink.append((current_point_index, total_points, point_data))
+
+    def __getattr__(self, name):
+        return lambda *a, **k: None
 
 
 if __name__ == "__main__":

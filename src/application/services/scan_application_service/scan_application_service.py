@@ -379,52 +379,62 @@ class ScanApplicationService:
                     if scan.status == ScanStatus.CANCELLED:
                         return
 
-                # --- Motion ---
-                motion_id = self._motion_port.move_to(position)
-                sync_result = self._motion_sync.wait_for_motion(motion_id, timeout_seconds=30.0)
-
-                if sync_result.is_failure:
-                    error = sync_result.error
-                    if isinstance(error, MotionTimeout):
-                        reason = f"Motion timeout ({error.timeout_seconds}s) at point {i}"
-                    elif isinstance(error, MotionHardwareFailed):
-                        reason = f"Motion hardware failure at point {i}: {error.error_detail}"
-                    elif isinstance(error, EmergencyStop):
-                        reason = f"Emergency stop at point {i}"
-                    else:
-                        reason = f"Motion stopped externally at point {i}: {error.reason}"  # type: ignore[union-attr]
-                    scan.fail(reason)
-                    _release_streams()
-                    self._publish_events(scan.domain_events)
-                    return
-
-                # Safe pause point after motion completes
-                while scan.status == ScanStatus.PAUSED:
-                    time.sleep(0.1)
-                    if scan.status == ScanStatus.CANCELLED:
-                        return
-
-                # --- Stabilization ---
-                if config.stabilization_delay_ms > 0:
-                    time.sleep(config.stabilization_delay_ms / 1000.0)
-
-                if scan.status == ScanStatus.CANCELLED:
-                    return
-                while scan.status == ScanStatus.PAUSED:
-                    time.sleep(0.1)
-                    if scan.status == ScanStatus.CANCELLED:
-                        return
-
                 # --- Differential baseline (excitation muted) ---
                 # Mute is electronic and shared: toggled once per point, not
                 # once per channel — the primary ADC and every active
                 # auxiliary probe read their baseline window off the same
                 # muted excitation state.
+                #
+                # Muted *before* motion starts rather than after stabilization:
+                # motion + stabilization normally take far longer than the DDS
+                # needs to settle at 0 gain, so the baseline window is already
+                # stable by the time we'd collect it — the settle delay below
+                # becomes a no-op floor instead of dead time. The try/finally
+                # now spans motion too, so a motion failure/cancel while muted
+                # still restores excitation before this point gives up.
                 baseline_measurement = None
                 channel_baseline_samples: Dict[str, List] = {}
                 if config.differential_mode:
                     self._excitation_service.mute()
-                    try:
+
+                try:
+                    # --- Motion ---
+                    motion_id = self._motion_port.move_to(position)
+                    sync_result = self._motion_sync.wait_for_motion(motion_id, timeout_seconds=30.0)
+
+                    if sync_result.is_failure:
+                        error = sync_result.error
+                        if isinstance(error, MotionTimeout):
+                            reason = f"Motion timeout ({error.timeout_seconds}s) at point {i}"
+                        elif isinstance(error, MotionHardwareFailed):
+                            reason = f"Motion hardware failure at point {i}: {error.error_detail}"
+                        elif isinstance(error, EmergencyStop):
+                            reason = f"Emergency stop at point {i}"
+                        else:
+                            reason = f"Motion stopped externally at point {i}: {error.reason}"  # type: ignore[union-attr]
+                        scan.fail(reason)
+                        _release_streams()
+                        self._publish_events(scan.domain_events)
+                        return
+
+                    # Safe pause point after motion completes
+                    while scan.status == ScanStatus.PAUSED:
+                        time.sleep(0.1)
+                        if scan.status == ScanStatus.CANCELLED:
+                            return
+
+                    # --- Stabilization ---
+                    if config.stabilization_delay_ms > 0:
+                        time.sleep(config.stabilization_delay_ms / 1000.0)
+
+                    if scan.status == ScanStatus.CANCELLED:
+                        return
+                    while scan.status == ScanStatus.PAUSED:
+                        time.sleep(0.1)
+                        if scan.status == ScanStatus.CANCELLED:
+                            return
+
+                    if config.differential_mode:
                         if config.differential_settle_delay_ms > 0:
                             time.sleep(config.differential_settle_delay_ms / 1000.0)
 
@@ -466,11 +476,14 @@ class ScanApplicationService:
                                 self._publish_events(scan.domain_events)
                                 return
                             channel_baseline_samples[channel.name] = samples
-                    finally:
-                        # Always restore the pre-scan excitation state, even
-                        # on a failure/cancel return above.
+                finally:
+                    # Always restore the pre-scan excitation state, even on a
+                    # failure/cancel return above (including a motion failure
+                    # while still muted).
+                    if config.differential_mode:
                         self._excitation_service.unmute()
 
+                if config.differential_mode:
                     if config.differential_settle_delay_ms > 0:
                         time.sleep(config.differential_settle_delay_ms / 1000.0)
                     if scan.status == ScanStatus.CANCELLED:
@@ -615,17 +628,32 @@ class ScanApplicationService:
             })
 
         elif isinstance(event, ScanPointAcquired):
+            value = {
+                "x_in_phase": event.measurement.voltage_x_in_phase,
+                "x_quadrature": event.measurement.voltage_x_quadrature,
+                "y_in_phase": event.measurement.voltage_y_in_phase,
+                "y_quadrature": event.measurement.voltage_y_quadrature,
+                "z_in_phase": event.measurement.voltage_z_in_phase,
+                "z_quadrature": event.measurement.voltage_z_quadrature,
+            }
+            b = event.baseline_measurement
+            if b is not None:
+                # Differential mode only — exposed as its own channel so the
+                # live plot shows the excitation-muted sample too, not just
+                # the excited one (mute/unmute is too fast to see on hardware
+                # otherwise, see _system/ops/tasks.md "Mesure différentielle").
+                value.update({
+                    "baseline_x_in_phase": b.voltage_x_in_phase,
+                    "baseline_x_quadrature": b.voltage_x_quadrature,
+                    "baseline_y_in_phase": b.voltage_y_in_phase,
+                    "baseline_y_quadrature": b.voltage_y_quadrature,
+                    "baseline_z_in_phase": b.voltage_z_in_phase,
+                    "baseline_z_quadrature": b.voltage_z_quadrature,
+                })
             data = {
                 "x": event.position.x,
                 "y": event.position.y,
-                "value": {
-                    "x_in_phase": event.measurement.voltage_x_in_phase,
-                    "x_quadrature": event.measurement.voltage_x_quadrature,
-                    "y_in_phase": event.measurement.voltage_y_in_phase,
-                    "y_quadrature": event.measurement.voltage_y_quadrature,
-                    "z_in_phase": event.measurement.voltage_z_in_phase,
-                    "z_quadrature": event.measurement.voltage_z_quadrature,
-                },
+                "value": value,
                 "index": event.point_index,
             }
             total = self._current_scan.expected_points if self._current_scan else 0
@@ -651,6 +679,11 @@ class ScanApplicationService:
             labels = event.axis_labels or tuple(str(i) for i in range(len(fm.components)))
             value = {f"field_{label.lower()}": c for label, c in zip(labels, fm.components)}
             value["norm"] = fm.norm
+            bfm = event.baseline_field_measurement
+            if bfm is not None:
+                value.update(
+                    {f"baseline_field_{label.lower()}": c for label, c in zip(labels, bfm.components)}
+                )
             data = {
                 "x": event.position.x,
                 "y": event.position.y,

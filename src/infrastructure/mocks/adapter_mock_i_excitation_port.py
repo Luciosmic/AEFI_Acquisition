@@ -1,5 +1,8 @@
+from dataclasses import replace
+
 from application.services.excitation_configuration_service.ports.i_excitation_port import IExcitationPort
 from domain.shared_kernel.excitation.value_objects.excitation_parameters import ExcitationParameters
+from domain.shared_kernel.excitation.value_objects.excitation_level import ExcitationLevel
 
 class MockExcitationPort(IExcitationPort):
     """
@@ -19,3 +22,13 @@ class MockExcitationPort(IExcitationPort):
         if old_params:
             print(f"[MockExcitationPort] Previous: {old_params.mode.name} -> New: {params.mode.name}")
         print(f"[MockExcitationPort] last_parameters updated, ready for next acquisition")
+
+    def set_gain(self, level_s1_s2_percent: float, level_s3_s4_percent: float) -> None:
+        if self.last_parameters is None:
+            return
+        self.last_parameters = replace(
+            self.last_parameters,
+            level_s1_s2=ExcitationLevel(level_s1_s2_percent),
+            level_s3_s4=ExcitationLevel(level_s3_s4_percent),
+        )
+        print(f"[MockExcitationPort] set_gain: S1-S2={level_s1_s2_percent}%, S3-S4={level_s3_s4_percent}%")

@@ -222,22 +222,32 @@ class TestAD9106Adapter(DiagramFriendlyTest):
         self.assertEqual(memory_state["DDS"]["Phase"][2], 0)  # DDS2: 0 (User defined)
     
     def test_apply_excitation_off(self):
-        """Test applying OFF excitation (level=0)."""
+        """OFF (level=0) zeroes gain only — "off" means zero amplitude, not
+        zero phase, and phase is meaningless once gain is 0 anyway. Starts
+        from a real X_DIR excitation (asymmetric phases 0/32768) so a
+        regression that resets phase would be visible, not masked."""
         self.log_divider("Setup Phase")
-        
+
         self.communicator = MCU_SerialCommunicator()
         self.controller = AD9106Controller(self.communicator)
         self.adapter = AdapterExcitationConfigurationAD9106(self.controller, self.communicator)
-        
+
+        self.adapter.apply_excitation(ExcitationParameters(
+            mode=ExcitationMode.X_DIR,
+            level_s1_s2=ExcitationLevel(40.0),
+            level_s3_s4=ExcitationLevel(60.0),
+            frequency=1000.0,
+        ))
+
         self.log_divider("Execution Phase - Apply OFF Excitation")
-        
+
         params = ExcitationParameters(
-            mode=ExcitationMode.X_DIR,  # Mode doesn't matter when level=0
+            mode=ExcitationMode.X_DIR,
             level_s1_s2=ExcitationLevel(0.0),  # 0% = OFF
             level_s3_s4=ExcitationLevel(0.0),
             frequency=1000.0
         )
-        
+
         self.log_interaction(
             actor="TestAD9106Adapter",
             action="CALL",
@@ -245,7 +255,7 @@ class TestAD9106Adapter(DiagramFriendlyTest):
             message="apply_excitation() - Apply OFF excitation (level=0)",
             data={"mode": "X_DIR", "level": 0.0}
         )
-        
+
         try:
             self.adapter.apply_excitation(params)
             self.log_interaction(
@@ -264,11 +274,11 @@ class TestAD9106Adapter(DiagramFriendlyTest):
                 data={"error": str(e)}
             )
             raise
-        
+
         self.log_divider("Verification Phase")
-        
+
         memory_state = self.controller.get_memory_state()
-        
+
         self.log_interaction(
             actor="TestAD9106Adapter",
             action="ASSERT",
@@ -279,17 +289,17 @@ class TestAD9106Adapter(DiagramFriendlyTest):
         )
         self.assertEqual(memory_state["DDS"]["Gain"][1], 0)
         self.assertEqual(memory_state["DDS"]["Gain"][2], 0)
-        
+
         self.log_interaction(
             actor="TestAD9106Adapter",
             action="ASSERT",
             target="AD9106Adapter",
-            message="Verify phases reset to 0 for OFF mode",
-            expect={"phase_dds1": 0, "phase_dds2": 0},
+            message="Verify phase is left untouched by OFF (only amplitude matters)",
+            expect={"phase_dds1": 0, "phase_dds2": 32768},
             got={"phase_dds1": memory_state["DDS"]["Phase"][1], "phase_dds2": memory_state["DDS"]["Phase"][2]}
         )
         self.assertEqual(memory_state["DDS"]["Phase"][1], 0)
-        self.assertEqual(memory_state["DDS"]["Phase"][2], 0)
+        self.assertEqual(memory_state["DDS"]["Phase"][2], 32768)
 
     def test_apply_excitation_asymmetric_levels(self):
         """S1/S2 (channel 2, DDS2 generator) and S3/S4 (channel 1, DDS1
@@ -335,6 +345,39 @@ class TestAD9106Adapter(DiagramFriendlyTest):
         self.assertEqual(memory_state["DDS"]["Phase"][1], 0)
         self.assertEqual(memory_state["DDS"]["Phase"][2], 32768)
 
+    def test_set_gain_preserves_phase_across_a_mute_unmute_round_trip(self):
+        """set_gain(0,0) then set_gain(real) — the differential-scan mute/
+        unmute cycle — must never touch phase, unlike apply_excitation's
+        "full OFF" path which resets both DDS phases to 0 (see
+        test_apply_excitation_off). X_DIR is asymmetric (phases 0/32768) so
+        a phase reset here would be visible, not accidentally masked like
+        it would be with Y_DIR's symmetric (0,0)."""
+        self.communicator = MCU_SerialCommunicator()
+        self.controller = AD9106Controller(self.communicator)
+        self.adapter = AdapterExcitationConfigurationAD9106(self.controller, self.communicator)
+
+        params = ExcitationParameters(
+            mode=ExcitationMode.X_DIR,
+            level_s1_s2=ExcitationLevel(40.0),
+            level_s3_s4=ExcitationLevel(60.0),
+            frequency=1000.0,
+        )
+        self.adapter.apply_excitation(params)
+
+        self.adapter.set_gain(0.0, 0.0)
+        memory_state = self.controller.get_memory_state()
+        self.assertEqual(memory_state["DDS"]["Gain"][1], 0)
+        self.assertEqual(memory_state["DDS"]["Gain"][2], 0)
+        self.assertEqual(memory_state["DDS"]["Phase"][1], 0)
+        self.assertEqual(memory_state["DDS"]["Phase"][2], 32768)
+
+        self.adapter.set_gain(40.0, 60.0)
+        memory_state = self.controller.get_memory_state()
+        self.assertEqual(memory_state["DDS"]["Gain"][2], int((40.0 / 100.0) * 5500))
+        self.assertEqual(memory_state["DDS"]["Gain"][1], int((60.0 / 100.0) * 5500))
+        self.assertEqual(memory_state["DDS"]["Phase"][1], 0)
+        self.assertEqual(memory_state["DDS"]["Phase"][2], 32768)
+
     def test_apply_excitation_publishes_dds_channel_config_changed_for_hardware_config_sync(self):
         """The Hardware Config tab (HardwareAdvancedConfigPresenter) listens
         for this event to stay in sync when level/mode change from the
@@ -362,7 +405,10 @@ class TestAD9106Adapter(DiagramFriendlyTest):
         self.assertEqual(by_channel[1].phase, 0)
         self.assertEqual(by_channel[2].phase, 32768)
 
-    def test_apply_excitation_off_publishes_zeroed_dds_channel_config_changed(self):
+    def test_apply_excitation_off_publishes_zeroed_gain_and_unchanged_phase(self):
+        """OFF only zeroes gain — the phase reported in the sync event must
+        be whatever's actually on the wire, not a hardcoded 0 (which would
+        misinform the Hardware Config tab that phase changed when it didn't)."""
         event_bus = InMemoryEventBus()
         received = []
         event_bus.subscribe("ddschannelconfigchanged", received.append)
@@ -370,6 +416,7 @@ class TestAD9106Adapter(DiagramFriendlyTest):
         communicator = MCU_SerialCommunicator()
         controller = AD9106Controller(communicator)
         adapter = AdapterExcitationConfigurationAD9106(controller, communicator, event_bus=event_bus)
+        phase_before = controller.get_memory_state()["DDS"]["Phase"]
 
         params = ExcitationParameters(
             mode=ExcitationMode.X_DIR,
@@ -380,7 +427,10 @@ class TestAD9106Adapter(DiagramFriendlyTest):
         adapter.apply_excitation(params)
 
         self.assertEqual({e.channel for e in received}, {1, 2})
-        self.assertTrue(all(e.gain == 0 and e.phase == 0 for e in received))
+        self.assertTrue(all(e.gain == 0 for e in received))
+        by_channel = {e.channel: e.phase for e in received}
+        self.assertEqual(by_channel[1], phase_before[1])
+        self.assertEqual(by_channel[2], phase_before[2])
 
 
 if __name__ == '__main__':
