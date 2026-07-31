@@ -70,9 +70,10 @@ prouver le mécanisme de mute de façon déterministe, sans hardware :
   niveau est à 0** (`DEFAULT_EXCITATION_OFFSET_MAP`, l.88-94 et check `avg_level > 0`,
   l.163). C'est exactement le point qui prouve que le mute fonctionne : offset=0 pendant
   la fenêtre mutée, offset≠0 pendant la fenêtre normale.
-- Wiring de référence : `src/main.py:150-222` — c'est ainsi que ces trois mocks sont déjà
-  composés ensemble quand `HARDWARE_CONFIG["acquisition"] == "mock"` et
-  `HARDWARE_CONFIG["excitation"] == "mock"`.
+- Wiring de référence : `src/main.py::main()` (branches `hardware_config["aefi_device"] ==
+  "mock"`) — c'est ainsi que ces trois mocks sont déjà composés ensemble. Lancer
+  `src/main_mock.py` pour ce mode sans éditer `main.py` (le launcher réel ne doit pas
+  dépendre des mocks).
 
 Test à écrire (application ou scan_application_service niveau intégration, avec les
 fakes) : construire ce même stack (`RandomNoiseAcquisitionPort(noise_std=0.0, seed=...)`
