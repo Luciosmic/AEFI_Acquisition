@@ -12,7 +12,7 @@ Rationale:
 - The Configurator focuses on User -> Hardware tuning (Advanced Config).
 """
 
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 import json
 import os
 from dataclasses import replace
@@ -21,7 +21,17 @@ from application.services.hardware_configuration_service.ports.i_hardware_advanc
 from domain.shared_kernel.value_objects.hardware_configuration.hardware_advanced_parameter_schema import (
     HardwareAdvancedParameterSchema, NumberParameterSchema
 )
+from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from domain.shared_kernel.excitation.events.excitation_frequency_changed.excitation_frequency_changed import (
+    ExcitationFrequencyChanged,
+)
+from domain.shared_kernel.excitation.events.dds_channel_config_changed.dds_channel_config_changed import (
+    DdsChannelConfigChanged,
+)
 from infrastructure.hardware.micro_controller.ad9106.ad9106_controller import AD9106Controller
+
+EXCITATION_FREQUENCY_CHANGED_TOPIC = "excitationfrequencychanged"
+DDS_CHANNEL_CONFIG_CHANGED_TOPIC = "ddschannelconfigchanged"
 
 
 class AD9106AdvancedConfigurator(IHardwareAdvancedConfigurator):
@@ -30,14 +40,24 @@ class AD9106AdvancedConfigurator(IHardwareAdvancedConfigurator):
     Allows manual tuning of registers via the UI.
     """
 
-    def __init__(self, controller: AD9106Controller):
+    def __init__(self, controller: AD9106Controller, event_bus: IDomainEventBus):
         """
         Initialize configurator with shared controller.
-        
+
         Args:
             controller: AD9106Controller instance (shared with Adapter).
+            event_bus: Domain event bus — publishes ExcitationFrequencyChanged so the
+                Excitation tab (and its subscribers) stay in sync when frequency is
+                changed from this Advanced Config tab instead. Also publishes
+                DdsChannelConfigChanged for channels 1/2 (gain/phase) — same event
+                AdapterExcitationConfigurationAD9106 publishes in the other
+                direction — so ExcitationConfigurationService can detect a
+                non-standard phase pair and fall back to ExcitationMode.CUSTOM.
         """
         self._controller = controller
+        self._event_bus = event_bus
+        self._last_published_frequency_hz: Optional[float] = None
+        self._last_published_channel_config: Dict[int, tuple] = {}
 
     @property
     def hardware_id(self) -> str:
@@ -151,8 +171,20 @@ class AD9106AdvancedConfigurator(IHardwareAdvancedConfigurator):
         try:
             # Frequency
             if "frequency_hz" in config:
-                self._controller.set_dds_frequency(float(config["frequency_hz"]))
-                
+                new_frequency_hz = float(config["frequency_hz"])
+                self._controller.set_dds_frequency(new_frequency_hz)
+
+                # Notify other consumers (Excitation tab cache, probe demodulation, scan
+                # export snapshot) that the shared DDS frequency register changed — the
+                # panel re-sends the full config dict on every "Apply", so guard on the
+                # actual value to avoid publishing on unrelated gain/phase edits.
+                if new_frequency_hz != self._last_published_frequency_hz:
+                    self._event_bus.publish(
+                        EXCITATION_FREQUENCY_CHANGED_TOPIC,
+                        ExcitationFrequencyChanged(frequency_hz=new_frequency_hz),
+                    )
+                    self._last_published_frequency_hz = new_frequency_hz
+
 
             # Channels (Restricted to DDS1 and DDS2)
             # Channels (Expanded to all 4 channels)
@@ -164,7 +196,22 @@ class AD9106AdvancedConfigurator(IHardwareAdvancedConfigurator):
                     self._controller.set_dds_phase(ch, int(config[f"ch{ch}_phase"]))
                 if f"ch{ch}_offset" in config:
                     self._controller.set_dds_offset(ch, int(config[f"ch{ch}_offset"]))
-                    
+
+                # Channels 1/2 drive excitation (3/4 are synchronous detection) —
+                # notify ExcitationConfigurationService so it can recompute
+                # level and detect a non-standard phase pair (-> CUSTOM mode).
+                if ch in (1, 2) and (f"ch{ch}_gain" in config or f"ch{ch}_phase" in config):
+                    new_gain = int(config.get(f"ch{ch}_gain", 0))
+                    new_phase = int(config.get(f"ch{ch}_phase", 0))
+                    new_channel_config = (new_gain, new_phase)
+                    if new_channel_config != self._last_published_channel_config.get(ch):
+                        self._event_bus.publish(
+                            DDS_CHANNEL_CONFIG_CHANGED_TOPIC,
+                            DdsChannelConfigChanged(channel=ch, gain=new_gain, phase=new_phase),
+                        )
+                        self._last_published_channel_config[ch] = new_channel_config
+
+
         except Exception as e:
             print(f"[AD9106AdvancedConfigurator] Failed to apply config to hardware: {e}")
             raise e

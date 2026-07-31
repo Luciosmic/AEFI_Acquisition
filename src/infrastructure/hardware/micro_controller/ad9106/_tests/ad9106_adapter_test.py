@@ -18,9 +18,10 @@ from tool.diagram_friendly_test import DiagramFriendlyTest
 from infrastructure.hardware.micro_controller.MCU_serial_communicator import MCU_SerialCommunicator
 from infrastructure.hardware.micro_controller.ad9106.ad9106_controller import AD9106Controller
 from infrastructure.hardware.micro_controller.ad9106.adapter_excitation_configuration_ad9106 import AdapterExcitationConfigurationAD9106
-from domain.shared_kernel.value_objects.excitation.excitation_parameters import ExcitationParameters
-from domain.shared_kernel.value_objects.excitation.excitation_mode import ExcitationMode
-from domain.shared_kernel.value_objects.excitation.excitation_level import ExcitationLevel
+from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from domain.shared_kernel.excitation.value_objects.excitation_parameters import ExcitationParameters
+from domain.shared_kernel.excitation.value_objects.excitation_mode import ExcitationMode
+from domain.shared_kernel.excitation.value_objects.excitation_level import ExcitationLevel
 
 
 class TestAD9106Adapter(DiagramFriendlyTest):
@@ -74,7 +75,8 @@ class TestAD9106Adapter(DiagramFriendlyTest):
         
         params = ExcitationParameters(
             mode=ExcitationMode.X_DIR,
-            level=ExcitationLevel(50.0),  # 50%
+            level_s1_s2=ExcitationLevel(50.0),  # 50%
+            level_s3_s4=ExcitationLevel(50.0),
             frequency=1000.0
         )
         
@@ -172,7 +174,8 @@ class TestAD9106Adapter(DiagramFriendlyTest):
         
         params = ExcitationParameters(
             mode=ExcitationMode.Y_DIR,
-            level=ExcitationLevel(75.0),  # 75%
+            level_s1_s2=ExcitationLevel(75.0),  # 75%
+            level_s3_s4=ExcitationLevel(75.0),
             frequency=2000.0
         )
         
@@ -230,7 +233,8 @@ class TestAD9106Adapter(DiagramFriendlyTest):
         
         params = ExcitationParameters(
             mode=ExcitationMode.X_DIR,  # Mode doesn't matter when level=0
-            level=ExcitationLevel(0.0),  # 0% = OFF
+            level_s1_s2=ExcitationLevel(0.0),  # 0% = OFF
+            level_s3_s4=ExcitationLevel(0.0),
             frequency=1000.0
         )
         
@@ -286,6 +290,97 @@ class TestAD9106Adapter(DiagramFriendlyTest):
         )
         self.assertEqual(memory_state["DDS"]["Phase"][1], 0)
         self.assertEqual(memory_state["DDS"]["Phase"][2], 0)
+
+    def test_apply_excitation_asymmetric_levels(self):
+        """S1/S2 (channel 2, DDS2 generator) and S3/S4 (channel 1, DDS1
+        generator) must accept independent gains — confirmed on oscilloscope,
+        counter-intuitive relative to the channel numbers (see SphereId)."""
+        self.communicator = MCU_SerialCommunicator()
+        self.controller = AD9106Controller(self.communicator)
+        self.adapter = AdapterExcitationConfigurationAD9106(self.controller, self.communicator)
+
+        params = ExcitationParameters(
+            mode=ExcitationMode.X_DIR,
+            level_s1_s2=ExcitationLevel(30.0),
+            level_s3_s4=ExcitationLevel(70.0),
+            frequency=1000.0
+        )
+        self.adapter.apply_excitation(params)
+
+        memory_state = self.controller.get_memory_state()
+        expected_gain_s1_s2 = int((30.0 / 100.0) * 5500)
+        expected_gain_s3_s4 = int((70.0 / 100.0) * 5500)
+        self.assertEqual(memory_state["DDS"]["Gain"][2], expected_gain_s1_s2)  # channel 2 -> S1/S2
+        self.assertEqual(memory_state["DDS"]["Gain"][1], expected_gain_s3_s4)  # channel 1 -> S3/S4
+        self.assertNotEqual(memory_state["DDS"]["Gain"][1], memory_state["DDS"]["Gain"][2])
+
+    def test_apply_excitation_partial_off_does_not_reset_phase(self):
+        """One DDS at 0% while the other is active must not trigger the full-OFF phase reset."""
+        self.communicator = MCU_SerialCommunicator()
+        self.controller = AD9106Controller(self.communicator)
+        self.adapter = AdapterExcitationConfigurationAD9106(self.controller, self.communicator)
+
+        params = ExcitationParameters(
+            mode=ExcitationMode.X_DIR,
+            level_s1_s2=ExcitationLevel(0.0),
+            level_s3_s4=ExcitationLevel(50.0),
+            frequency=1000.0
+        )
+        self.adapter.apply_excitation(params)
+
+        memory_state = self.controller.get_memory_state()
+        self.assertEqual(memory_state["DDS"]["Gain"][2], 0)  # channel 2 -> S1/S2 (level_s1_s2=0)
+        self.assertEqual(memory_state["DDS"]["Gain"][1], int((50.0 / 100.0) * 5500))  # channel 1 -> S3/S4
+        # X_DIR mode phases still applied (not reset to 0 by a false full-OFF short-circuit)
+        self.assertEqual(memory_state["DDS"]["Phase"][1], 0)
+        self.assertEqual(memory_state["DDS"]["Phase"][2], 32768)
+
+    def test_apply_excitation_publishes_dds_channel_config_changed_for_hardware_config_sync(self):
+        """The Hardware Config tab (HardwareAdvancedConfigPresenter) listens
+        for this event to stay in sync when level/mode change from the
+        Excitation panel instead — see DdsChannelConfigChanged intention.md."""
+        event_bus = InMemoryEventBus()
+        received = []
+        event_bus.subscribe("ddschannelconfigchanged", received.append)
+
+        communicator = MCU_SerialCommunicator()
+        controller = AD9106Controller(communicator)
+        adapter = AdapterExcitationConfigurationAD9106(controller, communicator, event_bus=event_bus)
+
+        params = ExcitationParameters(
+            mode=ExcitationMode.X_DIR,
+            level_s1_s2=ExcitationLevel(30.0),
+            level_s3_s4=ExcitationLevel(70.0),
+            frequency=1000.0,
+        )
+        adapter.apply_excitation(params)
+
+        self.assertEqual({e.channel for e in received}, {1, 2})
+        by_channel = {e.channel: e for e in received}
+        self.assertEqual(by_channel[2].gain, int((30.0 / 100.0) * 5500))  # channel 2 -> S1/S2
+        self.assertEqual(by_channel[1].gain, int((70.0 / 100.0) * 5500))  # channel 1 -> S3/S4
+        self.assertEqual(by_channel[1].phase, 0)
+        self.assertEqual(by_channel[2].phase, 32768)
+
+    def test_apply_excitation_off_publishes_zeroed_dds_channel_config_changed(self):
+        event_bus = InMemoryEventBus()
+        received = []
+        event_bus.subscribe("ddschannelconfigchanged", received.append)
+
+        communicator = MCU_SerialCommunicator()
+        controller = AD9106Controller(communicator)
+        adapter = AdapterExcitationConfigurationAD9106(controller, communicator, event_bus=event_bus)
+
+        params = ExcitationParameters(
+            mode=ExcitationMode.X_DIR,
+            level_s1_s2=ExcitationLevel(0.0),
+            level_s3_s4=ExcitationLevel(0.0),
+            frequency=1000.0,
+        )
+        adapter.apply_excitation(params)
+
+        self.assertEqual({e.channel for e in received}, {1, 2})
+        self.assertTrue(all(e.gain == 0 and e.phase == 0 for e in received))
 
 
 if __name__ == '__main__':

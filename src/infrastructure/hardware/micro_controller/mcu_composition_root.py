@@ -46,7 +46,7 @@ class MCUCompositionRoot:
       - AdapterAefiAcquisitionAds131a04 (continuous acquisition)
     """
 
-    def __init__(self, event_bus: IDomainEventBus, port: str = "COM10", baudrate: int = 1500000):
+    def __init__(self, event_bus: IDomainEventBus, port: str = "COM10", baudrate: int = 1500000, communicator=None):
         """
         Initialize the MCU hardware stack.
 
@@ -54,11 +54,13 @@ class MCUCompositionRoot:
             event_bus: Domain event bus (required for continuous acquisition)
             port: Serial port (e.g., 'COM10')
             baudrate: Serial baudrate
+            communicator: Optional injected transport (e.g. FakeMCUSerialCommunicator
+                for a simulated stack). Defaults to the real MCU_SerialCommunicator.
         """
         # 1. Instantiate Driver (Shared by all adapters)
         # Note: MCU_SerialCommunicator is a Singleton, but we can instantiate it.
         # Ideally we should use the instance.
-        self._driver = MCU_SerialCommunicator()
+        self._driver = communicator if communicator is not None else MCU_SerialCommunicator()
         
         # 2. Instantiate Acquisition Adapter
         # Injects the driver
@@ -74,10 +76,12 @@ class MCUCompositionRoot:
         # 3. Instantiate AD9106 Controller and Adapter (Excitation)
         # Controller uses the shared driver
         self._ad9106_controller = AD9106Controller(self._driver)
-        self.excitation: IExcitationPort = AdapterExcitationConfigurationAD9106(self._ad9106_controller, self._driver)
+        self.excitation: IExcitationPort = AdapterExcitationConfigurationAD9106(
+            self._ad9106_controller, self._driver, event_bus=event_bus
+        )
         
         # 3b. Instantiate AD9106 Configurator (Decoupled)
-        self._ad9106_configurator = AD9106AdvancedConfigurator(self._ad9106_controller)
+        self._ad9106_configurator = AD9106AdvancedConfigurator(self._ad9106_controller, event_bus)
         
         # 3c. Instantiate MCU General Configurator
         self._mcu_configurator = MCUAdvancedConfigurator(self._driver)
