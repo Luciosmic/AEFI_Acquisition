@@ -290,6 +290,7 @@ class ArcusAdapter(IMotionPort):
                 self._controller.move_to(self._axis_y, steps_y)
         except Exception as e:
             print(f"[ArcusAdapter] Internal move failed: {e}")
+            raise
 
     def _internal_home(self, axis: Optional[str]):
         """Internal synchronous home execution."""
