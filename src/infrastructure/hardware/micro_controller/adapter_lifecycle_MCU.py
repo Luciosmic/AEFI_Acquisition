@@ -1,17 +1,31 @@
+import json
+import logging
+import os
 from typing import Optional
 from application.services.system_lifecycle_service.ports.i_hardware_initialization_port import IHardwareInitializationPort
+from application.services.hardware_configuration_service.ports.i_hardware_advanced_configurator import IHardwareAdvancedConfigurator
 from infrastructure.hardware.micro_controller.MCU_serial_communicator import MCU_SerialCommunicator
+from infrastructure.hardware.micro_controller.ad9106.ad9106_advanced_configurator import AD9106AdvancedConfigurator
+
+logger = logging.getLogger(__name__)
+
 
 class MCULifecycleAdapter(IHardwareInitializationPort):
     """
     Lifecycle Adapter for the MCU (MicroController Unit).
-    
+
     Responsibility:
     - Manage the lifecycle (Connect, Verify, Close) of the MCU Serial Communicator.
     - Acts as the 'plumbing' layer for MCU initialization.
     """
-    
-    def __init__(self, port: str = "COM10", baudrate: int = 9600, communicator: Optional[MCU_SerialCommunicator] = None):
+
+    def __init__(
+        self,
+        port: str = "COM10",
+        baudrate: int = 9600,
+        communicator: Optional[MCU_SerialCommunicator] = None,
+        ad9106_configurator: Optional[IHardwareAdvancedConfigurator] = None,
+    ):
         self._port_name = port
         self._baudrate = baudrate
         if communicator:
@@ -19,6 +33,12 @@ class MCULifecycleAdapter(IHardwareInitializationPort):
         else:
             self._communicator = MCU_SerialCommunicator() # Singleton access
         self._config: Optional[dict] = None
+        # DDS gain/phase/offset/frequency at startup are applied through the
+        # same apply_config() the Hardware Advanced Config panel uses for a
+        # manual "Apply" — single writer, so hardware writes and the
+        # ExcitationFrequencyChanged/DdsChannelConfigChanged sync events
+        # happen in exactly one place instead of two diverging ones.
+        self._ad9106_configurator = ad9106_configurator
 
     def set_config(self, config: dict) -> None:
         """Set configuration to be used during initialization."""
@@ -34,20 +54,20 @@ class MCULifecycleAdapter(IHardwareInitializationPort):
         Returns:
             Dict of initialized resources.
         """
-        print(f"[MCULifecycle] Initializing MCU on {self._port_name}...")
+        logger.info("Initializing MCU on %s...", self._port_name)
         success = self._communicator.connect(self._port_name, self._baudrate)
         if not success:
             raise RuntimeError(f"Failed to connect to MCU on port {self._port_name}")
-        
+
         if config:
             # Override stored config if provided directly
             self._config = config
-            
+
         if self._config:
-            print(f"[MCULifecycle] Configuring hardware from JSON...")
+            logger.info("Configuring hardware from JSON...")
             self._configure_hardware_from_json(self._config)
         else:
-            print(f"[MCULifecycle] WARNING: No configuration provided. Using legacy defaults.")
+            logger.warning("No configuration provided. Using legacy defaults.")
             self._init_default_hardware_config()
         
         return {"mcu_communicator": self._communicator}
@@ -58,6 +78,8 @@ class MCULifecycleAdapter(IHardwareInitializationPort):
             self._configure_adc(config["adc"])
         if "dds" in config:
             self._configure_dds(config["dds"])
+        if "mcu" in config:
+            self._configure_mcu(config["mcu"])
             
     def _configure_adc(self, adc_config: dict) -> None:
         """Configure ADC registers."""
@@ -86,7 +108,14 @@ class MCULifecycleAdapter(IHardwareInitializationPort):
                 a_sys_cfg_val += 8
             
             self._write_register(11, a_sys_cfg_val)
-            print(f"[MCULifecycle] A_SYS_CFG register (11) = {a_sys_cfg_val} (neg_ref={adc_config.get('negative_ref', False)}, high_res={adc_config.get('high_res', True)}, ref_voltage={adc_config.get('ref_voltage', 0)}, ref_selection={adc_config.get('ref_selection', 1)})")
+            logger.debug(
+                "A_SYS_CFG register (11) = %s (neg_ref=%s, high_res=%s, ref_voltage=%s, ref_selection=%s)",
+                a_sys_cfg_val,
+                adc_config.get('negative_ref', False),
+                adc_config.get('high_res', True),
+                adc_config.get('ref_voltage', 0),
+                adc_config.get('ref_selection', 1),
+            )
         
         # 1. CLKIN divider (Address 13)
         if "clkin_divider" in adc_config:
@@ -120,7 +149,7 @@ class MCULifecycleAdapter(IHardwareInitializationPort):
                 reg_val = 32 | (osr_code << 2)
                 self._write_register(14, reg_val)
             else:
-                print(f"[MCULifecycle] WARNING: Invalid OSR {osr_val}. Using default (32).")
+                logger.warning("Invalid OSR %s. Using default (32).", osr_val)
                 self._write_register(14, 32) # Fallback to legacy default
             
         # 3. Gains (Addresses 17-20)
@@ -142,18 +171,17 @@ class MCULifecycleAdapter(IHardwareInitializationPort):
                     self._write_register(addr, reg_val)
 
     def _configure_dds(self, dds_config: dict) -> None:
-        """Configure DDS registers."""
-        # 1. Frequency
-        if "frequency_hz" in dds_config:
-            freq_hz = dds_config["frequency_hz"]
-            # Formula: uint32 = freq * (2^32) / 16_000_000
-            val_32 = int(round(freq_hz * (2**32) / 16_000_000))
-            msb = (val_32 >> 16) & 0xFFFF
-            lsb = val_32 & 0xFFFF
-            self._write_register(62, msb)
-            self._write_register(63, lsb)
-            
-        # 2. Modes
+        """Configure DDS registers.
+
+        Frequency and channel 1-4 gain/phase/offset are delegated to
+        AD9106AdvancedConfigurator.apply_config() (see below) — the same
+        single writer the Hardware Advanced Config panel's manual "Apply"
+        uses, so hardware writes and sync-event publication happen in one
+        place. AC/DC mode registers stay a direct write here: they're not
+        exposed in any panel, so there's no risk of a second reader/writer
+        disagreeing about their value.
+        """
+        # 1. Modes
         # Legacy: 38 (DDS3+4), 39 (DDS1+2). Value 12593 means AC+AC.
         # 12593 = 0x3131. 0x31 = 49 (AC). 
         # So 12593 is AC(49) << 8 | AC(49).
@@ -182,42 +210,43 @@ class MCULifecycleAdapter(IHardwareInitializationPort):
                 val = (m4 << 8) | m3
                 self._write_register(38, val)
 
-        # 3. Gains, Phases, Offsets, Consts
-        # Map: Channel -> {Gain: addr, Phase: addr, ...}
-        # Using legacy addresses
-        # Gain: 1->53, 2->52, 3->51, 4->50
-        # Phase: 1->67, 2->66, 3->65, 4->64
-        # Offset: 1->37, 2->36, 3->35, 4->34
-        # Const: 1->49, 2->48, 3->47, 4->46
-        
-        addr_map = {
-            "gain": {1: 53, 2: 52, 3: 51, 4: 50},
-            "phase": {1: 67, 2: 66, 3: 65, 4: 64},
-            "offset": {1: 37, 2: 36, 3: 35, 4: 34},
-            "const": {1: 49, 2: 48, 3: 47, 4: 46} # Not in JSON example but in legacy
-        }
-        
-        if "channels" in dds_config:
-            for ch_str, settings in dds_config["channels"].items():
-                ch = int(ch_str)
-                if "gain" in settings:
-                    self._write_register(addr_map["gain"][ch], settings["gain"])
-                if "phase" in settings:
-                    self._write_register(addr_map["phase"][ch], settings["phase"])
-                if "offset" in settings:
-                    self._write_register(addr_map["offset"][ch], settings["offset"])
+        # 2. Frequency + channel 1-4 gain/phase/offset: single writer
+        flat_config = AD9106AdvancedConfigurator.nested_channels_to_flat_config(dds_config)
+        if flat_config:
+            if self._ad9106_configurator is not None:
+                self._ad9106_configurator.apply_config(flat_config)
+            else:
+                logger.warning(
+                    "No AD9106 configurator injected — "
+                    "frequency/gain/phase/offset not applied at startup."
+                )
+
+    def _configure_mcu(self, mcu_config: dict) -> None:
+        """Persist the resolved MCU config (currently just n_avg) back to
+        mcu_last_config.json — the file ADS131A04Adapter.acquire_sample()
+        reads live on every acquisition. There's no persistent register to
+        write for n_avg, so this is the only "apply" step it needs, and it
+        must happen here (at connect time) rather than at composition-root
+        construction time so a mock/fake stack that never connects doesn't
+        touch disk."""
+        try:
+            config_path = os.path.join(".aefi_acquisition", "configs", "mcu_last_config.json")
+            with open(config_path, 'w') as f:
+                json.dump(mcu_config, f, indent=4)
+        except Exception:
+            logger.exception("Failed to persist resolved MCU config")
 
     def _write_register(self, address: int, value: int) -> None:
         """Helper to write to a register."""
         success, response = self._communicator.send_command(f"a{address}")
         if not success:
-            print(f"[MCULifecycle] WARNING: Failed to select address {address}: {response}")
+            logger.warning("Failed to select address %s: %s", address, response)
             return
-        
+
         success, response = self._communicator.send_command(f"d{value}")
         if not success:
-            print(f"[MCULifecycle] WARNING: Failed to write value {value} to address {address}: {response}")
-    
+            logger.warning("Failed to write value %s to address %s: %s", value, address, response)
+
     def _init_default_hardware_config(self) -> None:
         """
         Initialize MCU hardware with default configuration.
@@ -265,16 +294,16 @@ class MCULifecycleAdapter(IHardwareInitializationPort):
             # Select register
             success, response = self._communicator.send_command(f"a{address}")
             if not success:
-                print(f"[MCULifecycle] WARNING: Failed to select address {address}: {response}")
+                logger.warning("Failed to select address %s: %s", address, response)
                 continue
-            
+
             # Write data
             success, response = self._communicator.send_command(f"d{value}")
             if not success:
-                print(f"[MCULifecycle] WARNING: Failed to write value {value} to address {address}: {response}")
+                logger.warning("Failed to write value %s to address %s: %s", value, address, response)
                 continue
-        
-        print(f"[MCULifecycle] Default hardware configuration applied successfully.")
+
+        logger.info("Default hardware configuration applied successfully.")
         
     def verify_all(self) -> bool:
         """
@@ -287,16 +316,16 @@ class MCULifecycleAdapter(IHardwareInitializationPort):
         if not self._communicator.ser or not self._communicator.ser.is_open:
              raise RuntimeError("MCU Serial port is not open.")
              
-        # Optional: Send a 'ping' command if supported. 
+        # Optional: Send a 'ping' command if supported.
         # For now, just checking the connection status is enough.
-        print(f"[MCULifecycle] Verification Success. Connected to {self._port_name}.")
+        logger.info("Verification Success. Connected to %s.", self._port_name)
         return True
 
     def close_all(self) -> None:
         """
         Close the connection.
         """
-        print("[MCULifecycle] Closing MCU connection...")
+        logger.info("Closing MCU connection...")
         self._communicator.disconnect()
 
     def get_communicator(self) -> MCU_SerialCommunicator:

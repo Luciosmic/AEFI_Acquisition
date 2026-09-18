@@ -18,6 +18,9 @@ Design:
 """
 
 # EXTERNAL PYTHON LIBS
+import json
+import logging
+import os
 from dataclasses import replace
 from typing import Optional
 
@@ -30,6 +33,9 @@ from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
 from domain.shared_kernel.excitation.events.dds_channel_config_changed.dds_channel_config_changed import (
     DdsChannelConfigChanged,
 )
+from domain.shared_kernel.excitation.events.excitation_dds_link_changed.excitation_dds_link_changed import (
+    ExcitationDdsLinkChanged,
+)
 
 # APPLICATION
 from application.services.excitation_configuration_service.ports.i_excitation_port import IExcitationPort
@@ -37,6 +43,14 @@ from application.services.excitation_configuration_service.ports.i_excitation_po
 # INFRASTRUCTURE
 from infrastructure.hardware.micro_controller.ad9106.ad9106_controller import AD9106Controller
 from infrastructure.hardware.micro_controller.MCU_serial_communicator import MCU_SerialCommunicator
+from infrastructure.hardware.micro_controller.hardware_config_resolution import (
+    load_json_if_exists,
+    resolve_config,
+)
+
+EXCITATION_DDS_LINK_CHANGED_TOPIC = "excitationddslinkchanged"
+
+logger = logging.getLogger(__name__)
 
 
 class AdapterExcitationConfigurationAD9106(IExcitationPort):
@@ -86,6 +100,7 @@ class AdapterExcitationConfigurationAD9106(IExcitationPort):
 
         self._current_params: Optional[ExcitationParameters] = None
         self._event_bus = event_bus
+        self._last_published_link: Optional[bool] = None
 
     @property
     def last_parameters(self) -> Optional[ExcitationParameters]:
@@ -118,10 +133,9 @@ class AdapterExcitationConfigurationAD9106(IExcitationPort):
         if self._current_params == params:
             return
 
-        print(
-            f"[AD9106Adapter] apply_excitation called: mode={params.mode.name}, "
-            f"level_s1_s2={params.level_s1_s2.value}%, level_s3_s4={params.level_s3_s4.value}%, "
-            f"freq={params.frequency}Hz"
+        logger.info(
+            "apply_excitation called: mode=%s, level_s1_s2=%s%%, level_s3_s4=%s%%, freq=%sHz",
+            params.mode.name, params.level_s1_s2.value, params.level_s3_s4.value, params.frequency,
         )
 
         # 1. Handle full OFF (both DDS levels at 0)
@@ -131,6 +145,7 @@ class AdapterExcitationConfigurationAD9106(IExcitationPort):
             # get reset to 0 here too, which scrambled the excitation
             # direction on every point of a differential scan, since mute()
             # goes through this same branch).
+            logger.debug("apply_excitation: OFF branch — zeroing DDS1/DDS2 gain only, phase left untouched")
             for channel in [1, 2]:
                 result = self._controller.set_dds_gain(channel, 0)
                 if result.is_failure:
@@ -205,12 +220,10 @@ class AdapterExcitationConfigurationAD9106(IExcitationPort):
         if mode_changed:
             for channel in [1, 2]:
                 phase = dds_config["phases"][channel]
-                print(f"[AD9106Adapter] Setting DDS{channel} phase to {phase} (mode={params.mode.name})")
                 result = self._controller.set_dds_phase(channel, phase)
-                print(f"[AD9106Adapter] DDS{channel} phase set to {phase}")
                 if result.is_failure:
                     raise RuntimeError(f"Failed to set DDS{channel} phase: {result.error}")
-                print(f"[AD9106Adapter] DDS{channel} phase set successfully")
+                logger.debug("DDS%s phase set to %s (mode=%s)", channel, phase, params.mode.name)
 
         if update_gains or mode_changed:
             self._publish_channel_config_changed(applied_gain_by_channel, dds_config["phases"])
@@ -244,6 +257,32 @@ class AdapterExcitationConfigurationAD9106(IExcitationPort):
             level_s1_s2=ExcitationLevel(level_s1_s2_percent),
             level_s3_s4=ExcitationLevel(level_s3_s4_percent),
         )
+
+    def set_link_dds1_dds2(self, linked: bool) -> None:
+        """
+        Persist the DDS1/DDS2 gain link preference (no hardware register
+        involved — same "config flag with no hardware write" shape as MCU
+        n_avg) and publish ExcitationDdsLinkChanged so the Hardware Advanced
+        Config tab's own link_dds1_dds2 parameter stays in sync.
+
+        Read-modify-write against the resolved default+last state (same
+        reasoning as AD9106AdvancedConfigurator.apply_config()) so this
+        never touches frequency/channel fields it doesn't know about.
+        """
+        default_path = os.path.join(".aefi_acquisition", "configs", "ad9106_default_config.json")
+        last_path = os.path.join(".aefi_acquisition", "configs", "ad9106_last_config.json")
+        resolved = resolve_config(load_json_if_exists(default_path), load_json_if_exists(last_path))
+        resolved["link_dds1_dds2"] = linked
+
+        try:
+            with open(last_path, "w") as f:
+                json.dump(resolved, f, indent=4)
+        except Exception:
+            logger.exception("Failed to persist link_dds1_dds2")
+
+        if self._event_bus and linked != self._last_published_link:
+            self._event_bus.publish(EXCITATION_DDS_LINK_CHANGED_TOPIC, ExcitationDdsLinkChanged(linked=linked))
+            self._last_published_link = linked
 
     def _publish_channel_config_changed(self, gain_by_channel: dict, phase_by_channel: dict) -> None:
         """Notify sync consumers (e.g. the Hardware Config tab) with the
@@ -286,7 +325,7 @@ class AdapterExcitationConfigurationAD9106(IExcitationPort):
             config["active_channels"] = [1, 2]
             config["phases"][1] = 0  # DDS1: 0°
             config["phases"][2] = 0  # DDS2: 0° (in phase)
-            print(f"[AD9106Adapter] Y_DIR mode: DDS1 phase=0°, DDS2 phase=0° (in phase)")
+            logger.debug("Y_DIR mode: DDS1 phase=0°, DDS2 phase=0° (in phase)")
             # DDS3 and DDS4 unchanged (synchronous detection)
             
         elif mode == ExcitationMode.X_DIR:
@@ -298,7 +337,7 @@ class AdapterExcitationConfigurationAD9106(IExcitationPort):
             config["active_channels"] = [1, 2]
             config["phases"][1] = 0      # DDS1: 0°
             config["phases"][2] = 32768  # DDS2: 180° (Opposition)
-            print(f"[AD9106Adapter] X_DIR mode: DDS1 phase=0°, DDS2 phase=180° (Opposition)")
+            logger.debug("X_DIR mode: DDS1 phase=0°, DDS2 phase=180° (Opposition)")
             # DDS3 and DDS4 unchanged (synchronous detection)
             
         elif mode == ExcitationMode.CIRCULAR_PLUS:
@@ -307,7 +346,7 @@ class AdapterExcitationConfigurationAD9106(IExcitationPort):
             config["active_channels"] = [1, 2]
             config["phases"][1] = 0      # DDS1: 0°
             config["phases"][2] = 16384  # DDS2: 90° (quadrature +)
-            print(f"[AD9106Adapter] CIRCULAR_PLUS mode: DDS1 phase=0°, DDS2 phase=90° (16384)")
+            logger.debug("CIRCULAR_PLUS mode: DDS1 phase=0°, DDS2 phase=90° (16384)")
             # DDS3 and DDS4 unchanged (synchronous detection)
             
         elif mode == ExcitationMode.CIRCULAR_MINUS:
@@ -316,7 +355,7 @@ class AdapterExcitationConfigurationAD9106(IExcitationPort):
             config["active_channels"] = [1, 2]
             config["phases"][1] = 0      # DDS1: 0°
             config["phases"][2] = 49152  # DDS2: 270° (quadrature -)
-            print(f"[AD9106Adapter] CIRCULAR_MINUS mode: DDS1 phase=0°, DDS2 phase=270° (49152)")
+            logger.debug("CIRCULAR_MINUS mode: DDS1 phase=0°, DDS2 phase=270° (49152)")
             # DDS3 and DDS4 unchanged (synchronous detection)
             
         elif mode == ExcitationMode.CUSTOM:

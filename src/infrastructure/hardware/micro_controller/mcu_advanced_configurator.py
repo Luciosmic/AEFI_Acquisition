@@ -1,5 +1,6 @@
 from typing import List, Dict, Any
 import json
+import logging
 import os
 from dataclasses import replace
 
@@ -8,6 +9,12 @@ from domain.shared_kernel.value_objects.hardware_configuration.hardware_advanced
     HardwareAdvancedParameterSchema, NumberParameterSchema
 )
 from infrastructure.hardware.micro_controller.MCU_serial_communicator import MCU_SerialCommunicator
+from infrastructure.hardware.micro_controller.hardware_config_resolution import (
+    load_json_if_exists,
+    resolve_config,
+)
+
+logger = logging.getLogger(__name__)
 
 class MCUAdvancedConfigurator(IHardwareAdvancedConfigurator):
     """
@@ -62,31 +69,39 @@ class MCUAdvancedConfigurator(IHardwareAdvancedConfigurator):
         
 
 
-        # Load default config if exists
+        # Resolve default+last config so the panel shows what's actually in
+        # effect (mcu_last_config.json is what acquire_sample() reads live),
+        # not just the factory default.
         updated_specs = []
         try:
-            config_path = os.path.join(".aefi_acquisition", "configs", "mcu_default_config.json")
-            default_config = {}
-            if os.path.exists(config_path):
-                with open(config_path, 'r') as f:
-                    default_config = json.load(f)
-            
+            default_path = os.path.join(".aefi_acquisition", "configs", "mcu_default_config.json")
+            last_path = os.path.join(".aefi_acquisition", "configs", "mcu_last_config.json")
+            default_config = resolve_config(load_json_if_exists(default_path), load_json_if_exists(last_path))
+
             for spec in specs:
                 if spec.key == "n_avg" and "n_avg" in default_config:
                     updated_specs.append(replace(spec, default_value=default_config["n_avg"]))
                 else:
                     updated_specs.append(spec)
                         
-        except Exception as e:
-            print(f"[MCUConfigurator] Failed to load default config: {e}")
+        except Exception:
+            logger.exception("Failed to load default config")
             return specs
             
         return updated_specs
 
+    def reset_to_default(self) -> None:
+        """Discard whatever is in mcu_last_config.json and re-apply the saved
+        default n_avg — reads the PURE default file, not the resolved
+        default+last state get_parameter_specs() shows."""
+        default_path = os.path.join(".aefi_acquisition", "configs", "mcu_default_config.json")
+        default_config = load_json_if_exists(default_path)
+        self.apply_config({"n_avg": default_config.get("n_avg", self.NAVG_MIN)})
+
     def apply_config(self, config: Dict[str, Any]) -> None:
         """
         Apply advanced configuration.
-        
+
         Args:
             config: Flat dictionary of values keyed by parameter key.
         """
@@ -106,9 +121,9 @@ class MCUAdvancedConfigurator(IHardwareAdvancedConfigurator):
             config_path = os.path.join(".aefi_acquisition", "configs", "mcu_last_config.json")
             with open(config_path, 'w') as f:
                 json.dump(json_config, f, indent=4)
-            print(f"[MCUConfigurator] Config saved to {config_path}: n_avg={n_avg}")
-        except Exception as e:
-            print(f"[MCUConfigurator] Failed to save config: {e}")
+            logger.info("Config saved to %s: n_avg=%s", config_path, n_avg)
+        except Exception:
+            logger.exception("Failed to save config")
             raise
 
     def save_config_as_default(self, config: Dict[str, Any]) -> None:
@@ -128,9 +143,9 @@ class MCUAdvancedConfigurator(IHardwareAdvancedConfigurator):
             config_path = os.path.join(".aefi_acquisition", "configs", "mcu_default_config.json")
             with open(config_path, 'w') as f:
                 json.dump(json_config, f, indent=4)
-            print(f"[MCUConfigurator] Default config saved to {config_path}: n_avg={n_avg}")
+            logger.info("Default config saved to %s: n_avg=%s", config_path, n_avg)
         except Exception as e:
-            print(f"[MCUConfigurator] Failed to save default config: {e}")
+            logger.exception("Failed to save default config")
             raise e
     
     def get_n_avg(self) -> int:
@@ -146,8 +161,8 @@ class MCUAdvancedConfigurator(IHardwareAdvancedConfigurator):
                 with open(config_path, 'r') as f:
                     saved_config = json.load(f)
                     return int(saved_config.get("n_avg", 1))
-        except Exception as e:
-            print(f"[MCUConfigurator] Failed to read saved config: {e}")
+        except Exception:
+            logger.exception("Failed to read saved config")
         
         # Fallback to default
         return 1

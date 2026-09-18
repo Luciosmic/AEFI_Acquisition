@@ -4,7 +4,7 @@
 
 Les application services (`ScanApplicationService`, `ElectricFieldProbeService`) ont besoin de lancer une boucle en tâche de fond sans dépendre du mécanisme de concurrence (threading, asyncio, pool distant). Le port isole cette responsabilité d'infra derrière une interface stable.
 
-Ce port est placé dans `application/_shared/ports/` car il est consommé par plusieurs services et sa cause de changement (choix du mécanisme de concurrence) est orthogonale à chaque use case. Cf. `standard-solidai-shared-domain-concept-extraction` appliqué au niveau application.
+Ce port est placé dans `application/shared/ports/` car il est consommé par plusieurs services et sa cause de changement (choix du mécanisme de concurrence) est orthogonale à chaque use case. Cf. `standard-solidai-shared-domain-concept-extraction` appliqué au niveau application.
 
 ## Responsibility
 

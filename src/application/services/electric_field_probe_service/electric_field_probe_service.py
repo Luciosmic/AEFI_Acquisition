@@ -15,6 +15,8 @@ Rationale:
 
 from __future__ import annotations
 
+import logging
+
 from application.services.electric_field_probe_service.i_api_electric_field_probe_service import (
     IApiElectricFieldProbeService,
 )
@@ -47,6 +49,8 @@ BATTERY_REFRESHED_TOPIC = "electricfieldprobebatteryrefreshed"
 EXCITATION_FREQUENCY_CHANGED_TOPIC = "excitationfrequencychanged"
 FREQUENCY_CORRECTION_CHANGED_TOPIC = "electricfieldprobefrequencycorrectionchanged"
 
+logger = logging.getLogger(__name__)
+
 
 class ElectricFieldProbeService(IApiElectricFieldProbeService):
     """Application service for a generic electric field probe."""
@@ -66,9 +70,11 @@ class ElectricFieldProbeService(IApiElectricFieldProbeService):
         )
 
     def connect_probe(self) -> None:
+        logger.info("ElectricFieldProbeService: Command connect_probe")
         try:
             self._probe_port.connect()
         except Exception as e:
+            logger.error("ElectricFieldProbeService: connect_probe failed error=%s", e)
             self._event_bus.publish(
                 CONNECTION_CHANGED_TOPIC,
                 ElectricFieldProbeConnectionChanged(connected=False, error=str(e)),
@@ -86,6 +92,7 @@ class ElectricFieldProbeService(IApiElectricFieldProbeService):
         )
 
     def disconnect_probe(self) -> None:
+        logger.info("ElectricFieldProbeService: Command disconnect_probe")
         self._probe_port.disconnect()
         self._event_bus.publish(
             CONNECTION_CHANGED_TOPIC,
@@ -93,20 +100,26 @@ class ElectricFieldProbeService(IApiElectricFieldProbeService):
         )
 
     def start_acquisition(self, config: ElectricFieldProbeAcquisitionConfig) -> None:
+        logger.info("ElectricFieldProbeService: Command start_acquisition")
         self._executor.start(config, self._probe_port)
 
     def stop_acquisition(self) -> None:
+        logger.info("ElectricFieldProbeService: Command stop_acquisition")
         self._executor.stop()
 
     def is_acquisition_running(self) -> bool:
         return self._executor.is_running()
 
     def refresh_battery(self) -> None:
+        logger.info("ElectricFieldProbeService: Command refresh_battery")
         # Le lien serie est partage avec l'acquisition en cours (get_battery_voltage
         # entrelacerait ses propres trames avec celles du flux) : on refuse silencieusement
         # plutot que de risquer de corrompre une acquisition en cours. Le bouton UI est deja
         # desactive pendant l'acquisition (cf. panel) — cette garde est la protection de fond.
         if not self._probe_port.is_connected() or self._executor.is_running():
+            logger.debug(
+                "ElectricFieldProbeService: refresh_battery skipped (not connected or acquisition running)"
+            )
             return
         self._probe_port.refresh_battery()
         self._event_bus.publish(
@@ -121,6 +134,10 @@ class ElectricFieldProbeService(IApiElectricFieldProbeService):
         if self._executor.is_running():
             # Le worker applique et publie lui-meme (seul a toucher le port serie pendant
             # le streaming) — cf. request_frequency_correction.
+            logger.debug(
+                "ElectricFieldProbeService: frequency correction delegated to running executor frequency_hz=%s",
+                event.frequency_hz,
+            )
             self._executor.request_frequency_correction(event.frequency_hz)
             return
         result = self._probe_port.apply_frequency_correction(event.frequency_hz)

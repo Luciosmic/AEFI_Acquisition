@@ -1,7 +1,10 @@
 from __future__ import annotations
+import logging
 from typing import Optional
 
 from infrastructure.hardware.arcus_performax_4EX.driver_arcus_performax4EX import ArcusPerformax4EXController
+
+logger = logging.getLogger(__name__)
 
 
 class ArcusSpeedConfigAdapter:
@@ -27,3 +30,4 @@ class ArcusSpeedConfigAdapter:
 
             if any(v is not None for v in kwargs.values()):
                 self._controller.set_axis_params(axis, **kwargs)
+                logger.info("Applied speed config for axis %s: %s", axis, kwargs)

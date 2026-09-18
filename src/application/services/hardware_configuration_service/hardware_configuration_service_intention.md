@@ -8,7 +8,7 @@ Fournir un point d'entrée unique à la couche UI pour découvrir et configurer 
 
 - Lister les identifiants de tous les périphériques configurables (`list_hardware_ids`).
 - Exposer le nom affichable et les specs de paramètres par périphérique (`get_hardware_display_name`, `get_parameter_specs`).
-- Router les configurations utilisateur vers le bon adaptateur (`apply_config`, `save_config_as_default`).
+- Router les configurations utilisateur vers le bon adaptateur (`apply_config`, `save_config_as_default`, `reset_to_default`).
 
 ## Design
 

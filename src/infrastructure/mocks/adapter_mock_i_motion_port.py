@@ -1,3 +1,4 @@
+import logging
 from typing import List, Optional
 import threading
 import time
@@ -10,6 +11,8 @@ from domain.shared_kernel.events.position_updated.position_updated import Positi
 from domain.shared_kernel.events.motion_stopped.motion_stopped import MotionStopped
 from domain.shared_kernel.events.emergency_stop_triggered.emergency_stop_triggered import EmergencyStopTriggered
 
+logger = logging.getLogger(__name__)
+
 class MockMotionPort(IMotionPort):
     """
     Mock implementation of IMotionPort for testing.
@@ -19,7 +22,7 @@ class MockMotionPort(IMotionPort):
     Supports event-based architecture when event_bus is provided.
     """
     def __init__(self, event_bus: Optional[IDomainEventBus] = None, motion_delay_ms: float = 100.0):
-        print("[MockMotionPort] __init__: Mock motion port created at (0,0)")
+        logger.debug("__init__: Mock motion port created at (0,0)")
         self._event_bus = event_bus
         self._motion_delay_ms = motion_delay_ms
         self.move_history: List[Position2D] = []
@@ -34,7 +37,7 @@ class MockMotionPort(IMotionPort):
         If event_bus is provided, publishes PositionUpdated and MotionCompleted events.
         """
         motion_id = str(uuid4())
-        print(f"[MockMotionPort] move_to: Moving to {position} (motion_id={motion_id})")
+        logger.info(f"move_to: Moving to {position} (motion_id={motion_id})")
         
         # Publish position update (is_moving=True) if event_bus available
         if self._event_bus:
@@ -58,7 +61,7 @@ class MockMotionPort(IMotionPort):
             # Synchronous (legacy mode, no events)
             self._current_pos = position
             self._is_moving = False
-            print(f"[MockMotionPort] move_to: Arrived at {self._current_pos}")
+            logger.info(f"move_to: Arrived at {self._current_pos}")
         
         return motion_id
     
@@ -72,8 +75,8 @@ class MockMotionPort(IMotionPort):
         self._is_moving = False
         
         duration = (time.time() - start_time) * 1000
-        
-        print(f"[MockMotionPort] move_to: Arrived at {self._current_pos} (took {duration:.1f}ms)")
+
+        logger.info(f"move_to: Arrived at {self._current_pos} (took {duration:.1f}ms)")
         
         # Publish MotionCompleted and PositionUpdated
         if self._event_bus:
@@ -88,28 +91,28 @@ class MockMotionPort(IMotionPort):
             ))
 
     def get_current_position(self) -> Position2D:
-        print(f"[MockMotionPort] get_current_position: Current position is {self._current_pos}")
+        # ponytail: no per-call log here — a polling getter, LDD's "raw
+        # granularity" the same way a register read would be.
         return self._current_pos
 
     def is_moving(self) -> bool:
-        print(f"[MockMotionPort] is_moving: Motion system is {'MOVING' if self._is_moving else 'STOPPED'}")
         return self._is_moving
 
     def wait_until_stopped(self) -> None:
-        print("[MockMotionPort] wait_until_stopped: Waiting for motion to stop (mock is always stopped)")
+        pass  # mock is always stopped between calls
 
     def set_speed(self, speed: float) -> None:
         self.last_speed = speed
-        print(f"[MockMotionPort] set_speed: Speed set to {speed} cm/s")
+        logger.info(f"set_speed: Speed set to {speed} cm/s")
 
     def set_speed_mode(self, mode: str) -> None:
         self.last_speed_mode = mode
-        print(f"[MockMotionPort] set_speed_mode: Speed mode set to {mode}")
+        logger.info(f"set_speed_mode: Speed mode set to {mode}")
 
     def stop(self) -> None:
         """Regular stop with deceleration."""
         self._is_moving = False
-        print(f"[MockMotionPort] stop: Normal Stop triggered (decelerating...)")
+        logger.info("stop: Normal Stop triggered (decelerating...)")
         
         # Publish MotionStopped event
         if self._event_bus:
@@ -120,7 +123,7 @@ class MockMotionPort(IMotionPort):
     def emergency_stop(self) -> None:
         """Emergency stop - immediate halt."""
         self._is_moving = False
-        print("[MockMotionPort] emergency_stop: EMERGENCY STOP triggered! (Immediate Halt)")
+        logger.warning("emergency_stop: EMERGENCY STOP triggered! (Immediate Halt)")
         
         # Publish EmergencyStopTriggered event
         if self._event_bus:
@@ -128,16 +131,16 @@ class MockMotionPort(IMotionPort):
 
     def home(self, axis: str | None = None) -> None:
         axis_print = axis if axis else 'BOTH'
-        print(f"[MockMotionPort] home: Homing axis: {axis_print}")
+        logger.info(f"home: Homing axis: {axis_print}")
         if axis is None:
             self._current_pos = Position2D(0, 0)
-            print("[MockMotionPort] home: Both axes homed to (0,0)")
+            logger.info("home: Both axes homed to (0,0)")
         elif axis.lower() == 'x':
             self._current_pos = Position2D(0, self._current_pos.y)
-            print(f"[MockMotionPort] home: X axis homed to (0,{self._current_pos.y})")
+            logger.info(f"home: X axis homed to (0,{self._current_pos.y})")
         elif axis.lower() == 'y':
             self._current_pos = Position2D(self._current_pos.x, 0)
-            print(f"[MockMotionPort] home: Y axis homed to ({self._current_pos.x},0)")
+            logger.info(f"home: Y axis homed to ({self._current_pos.x},0)")
 
     def set_reference(self, axis: str, position: float = 0.0) -> None:
         """Set current position as reference."""
@@ -145,7 +148,7 @@ class MockMotionPort(IMotionPort):
             self._current_pos = Position2D(position, self._current_pos.y)
         elif axis.lower() == 'y':
             self._current_pos = Position2D(self._current_pos.x, position)
-        print(f"[MockMotionPort] set_reference: {axis.upper()} axis set to {position}")
+        logger.info(f"set_reference: {axis.upper()} axis set to {position}")
 
     def get_axis_limits(self) -> tuple[float, float]:
         return (1000.0, 1000.0)

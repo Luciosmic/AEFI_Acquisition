@@ -1,12 +1,16 @@
 from datetime import datetime
+import logging
 import random
 from application.services.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
 from domain.shared_kernel.value_objects.acquisition.aefi_voltage_measurement import AefiVoltageMeasurement
 
+logger = logging.getLogger(__name__)
+
 class MockAcquisitionPort(IAcquisitionPort):
     def __init__(self):
         self.acquire_count = 0
-        
+        logger.info("MockAcquisitionPort initialized")
+
     def acquire_sample(self) -> AefiVoltageMeasurement:
         self.acquire_count += 1
         # Return synthetic data based on count
@@ -41,6 +45,7 @@ class RandomNoiseAcquisitionPort(IAcquisitionPort):
         self.noise_std = noise_std
         self._rng = random.Random(seed)
         self.acquire_count = 0
+        logger.info("RandomNoiseAcquisitionPort initialized (noise_std=%s, seed=%s)", noise_std, seed)
 
     def acquire_sample(self) -> AefiVoltageMeasurement:
         self.acquire_count += 1

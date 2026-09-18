@@ -19,9 +19,16 @@ from domain.shared_kernel.excitation.events.excitation_frequency_changed.excitat
 from domain.shared_kernel.excitation.events.dds_channel_config_changed.dds_channel_config_changed import (
     DdsChannelConfigChanged,
 )
-from interface.presenters.hardware_advanced_config_presenter import DDS_CHANNEL_CONFIG_CHANGED_TOPIC
+from domain.shared_kernel.excitation.events.excitation_dds_link_changed.excitation_dds_link_changed import (
+    ExcitationDdsLinkChanged,
+)
+from interface.presenters.hardware_advanced_config_presenter import (
+    DDS_CHANNEL_CONFIG_CHANGED_TOPIC,
+    EXCITATION_DDS_LINK_CHANGED_TOPIC,
+)
 from domain.shared_kernel.value_objects.hardware_configuration.hardware_advanced_parameter_schema import (
     NumberParameterSchema,
+    BooleanParameterSchema,
 )
 
 
@@ -54,13 +61,22 @@ class FakeAD9106Configurator:
                 key="ch2_phase", display_name="DDS 2 Phase", default_value=0.0,
                 min_value=0.0, max_value=65535.0, group="DDS 2",
             ),
+            BooleanParameterSchema(
+                key="link_dds1_dds2", display_name="Link DDS1-DDS2", default_value=True, group="Global",
+            ),
         ]
+
+    def __init__(self):
+        self.reset_called = False
 
     def apply_config(self, config):
         pass
 
     def save_config_as_default(self, config):
         pass
+
+    def reset_to_default(self):
+        self.reset_called = True
 
 
 class TestHardwareAdvancedConfigPresenterFrequencySync(unittest.TestCase):
@@ -119,6 +135,40 @@ class TestHardwareAdvancedConfigPresenterFrequencySync(unittest.TestCase):
             DDS_CHANNEL_CONFIG_CHANGED_TOPIC, DdsChannelConfigChanged(channel=1, gain=100, phase=0)
         )
         self.assertEqual(self.received, [])
+
+    def test_reset_configuration_to_default_calls_provider_and_refreshes_specs(self):
+        self.presenter.select_hardware("ad9106_dds")
+        fake_provider = self.service._providers_by_id["ad9106_dds"]
+        self.received.clear()
+
+        self.presenter.reset_configuration_to_default()
+
+        self.assertTrue(fake_provider.reset_called)
+        self.assertEqual(len(self.received), 1)
+        hw_id, specs = self.received[0]
+        self.assertEqual(hw_id, "ad9106_dds")
+        self.assertGreaterEqual(len(specs), 1)
+
+    def test_reset_configuration_to_default_without_selection_emits_error(self):
+        messages = []
+        self.presenter.status_message.connect(messages.append)
+
+        self.presenter.reset_configuration_to_default()
+
+        self.assertEqual(self.received, [])
+        self.assertTrue(any("No hardware selected" in m for m in messages))
+
+    def test_excitation_panel_link_toggle_refreshes_link_spec(self):
+        self.presenter.select_hardware("ad9106_dds")
+        self.received.clear()
+
+        self.event_bus.publish(EXCITATION_DDS_LINK_CHANGED_TOPIC, ExcitationDdsLinkChanged(linked=False))
+
+        self.assertEqual(len(self.received), 1)
+        hw_id, specs = self.received[0]
+        self.assertEqual(hw_id, "ad9106_dds")
+        link_spec = next(s for s in specs if s.key == "link_dds1_dds2")
+        self.assertFalse(link_spec.default_value)
 
 
 if __name__ == "__main__":

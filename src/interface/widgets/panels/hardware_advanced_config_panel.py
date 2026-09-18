@@ -46,6 +46,12 @@ class HardwareAdvancedConfigPanel(QWidget):
     config_changed = Signal(dict)  # {param_key: value}
     apply_requested = Signal(dict)  # full config dict
     save_default_requested = Signal(dict) # full config dict
+    reset_default_requested = Signal()  # no payload — reset always uses the stored default file
+    # Hardcoded deviation from the schema-generic pattern above — explicitly
+    # accepted (see plan): synchronous detection calibration/compensation
+    # controls, not part of HardwareAdvancedParameterSchema.
+    save_calibration_point_requested = Signal()
+    compensation_toggle_requested = Signal(bool)
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -91,19 +97,44 @@ class HardwareAdvancedConfigPanel(QWidget):
         
         # Buttons layout
         btn_layout = QHBoxLayout()
-        
-        # Apply button
-        self._apply_btn = QPushButton("Apply Configuration")
-        self._apply_btn.setEnabled(False)
-        self._apply_btn.clicked.connect(self._on_apply_clicked)
-        btn_layout.addWidget(self._apply_btn)
-        
+
+        # No "Apply Configuration" button: each field auto-applies on commit
+        # (Enter / focus-loss for spinboxes, immediately for combo/checkbox)
+        # via _create_widget's signal wiring — same interaction model as
+        # ExcitationPanel. apply_requested is still emitted, just triggered
+        # per-field instead of by a manual click.
+
         # Save Default button
         self._save_default_btn = QPushButton("Save as Default")
         self._save_default_btn.setEnabled(False)
         self._save_default_btn.clicked.connect(self._on_save_default_clicked)
         btn_layout.addWidget(self._save_default_btn)
-        
+
+        # Reset to Default button — counterpart to Save as Default: that
+        # captures a baseline, this discards the current applied/last state
+        # and reverts to it.
+        self._reset_default_btn = QPushButton("Reset to Default")
+        self._reset_default_btn.setEnabled(False)
+        self._reset_default_btn.clicked.connect(self.reset_default_requested.emit)
+        btn_layout.addWidget(self._reset_default_btn)
+
+        # Synchronous detection calibration/compensation controls — hardcoded
+        # deviation from the schema-generic buttons above, explicitly
+        # accepted, and specific to the "ad9106_dds" hardware only (see
+        # _update_synchronous_detection_controls_visibility): hidden for any
+        # other hardware selection.
+        self._save_calibration_point_btn = QPushButton("Enregistrer comme point de calibration")
+        self._save_calibration_point_btn.clicked.connect(self.save_calibration_point_requested.emit)
+        self._save_calibration_point_btn.setVisible(False)
+        btn_layout.addWidget(self._save_calibration_point_btn)
+
+        # A toggle, not an action button — QCheckBox rather than a checkable
+        # QPushButton, so it reads unambiguously as on/off state.
+        self._compensation_toggle_checkbox = QCheckBox("Compensation active")
+        self._compensation_toggle_checkbox.toggled.connect(self._on_compensation_toggle_clicked)
+        self._compensation_toggle_checkbox.setVisible(False)
+        btn_layout.addWidget(self._compensation_toggle_checkbox)
+
         main_layout.addLayout(btn_layout)
     
     def set_hardware_list(self, hardware_ids: List[str]):
@@ -159,9 +190,19 @@ class HardwareAdvancedConfigPanel(QWidget):
             self._content_layout.addWidget(group_box)
         
         self._content_layout.addStretch()
-        self._apply_btn.setEnabled(True)
         self._save_default_btn.setEnabled(True)
-    
+        self._reset_default_btn.setEnabled(True)
+        self._update_synchronous_detection_controls_visibility()
+
+    _SYNCHRONOUS_DETECTION_HARDWARE_ID = "ad9106_dds"
+
+    def _update_synchronous_detection_controls_visibility(self) -> None:
+        """Calibration point / compensation controls only make sense for the
+        AD9106 DDS hardware — hidden for any other hardware selection."""
+        is_ad9106 = self._current_hardware_id == self._SYNCHRONOUS_DETECTION_HARDWARE_ID
+        self._save_calibration_point_btn.setVisible(is_ad9106)
+        self._compensation_toggle_checkbox.setVisible(is_ad9106)
+
     def _create_widget(self, spec: HardwareAdvancedParameterSchema) -> QWidget:
         """Create appropriate widget based on spec type."""
         if isinstance(spec, NumberParameterSchema):
@@ -183,18 +224,25 @@ class HardwareAdvancedConfigPanel(QWidget):
             widget.setRange(spec.min_value, spec.max_value)
             widget.setValue(spec.default_value)
             widget.valueChanged.connect(lambda: self._on_parameter_changed())
-            
+            # Commit on Enter or focus-loss — not on every keystroke/step —
+            # same interaction model as ExcitationPanel's spinboxes.
+            widget.editingFinished.connect(self._auto_apply)
+
         elif isinstance(spec, EnumParameterSchema):
             widget = QComboBox()
             widget.addItems(spec.choices)
             if spec.default_value in spec.choices:
                 widget.setCurrentText(str(spec.default_value))
             widget.currentTextChanged.connect(lambda: self._on_parameter_changed())
-            
+            # A combo selection is itself a complete, discrete commit.
+            widget.currentTextChanged.connect(lambda _: self._auto_apply())
+
         elif isinstance(spec, BooleanParameterSchema):
             widget = QCheckBox()
             widget.setChecked(bool(spec.default_value))
             widget.toggled.connect(lambda: self._on_parameter_changed())
+            # A checkbox toggle is itself a complete, discrete commit.
+            widget.toggled.connect(lambda _: self._auto_apply())
             
         else:
             # Fallback to label
@@ -212,8 +260,10 @@ class HardwareAdvancedConfigPanel(QWidget):
         config = self._get_current_config()
         self.config_changed.emit(config)
     
-    def _on_apply_clicked(self):
-        """Handle apply button click."""
+    def _auto_apply(self):
+        """Apply the current full config — triggered per-field on commit
+        (spinbox Enter/focus-loss, combo selection, checkbox toggle), not by
+        a manual button."""
         config = self._get_current_config()
         self.apply_requested.emit(config)
 
@@ -221,6 +271,12 @@ class HardwareAdvancedConfigPanel(QWidget):
         """Handle save default button click."""
         config = self._get_current_config()
         self.save_default_requested.emit(config)
+
+    def _on_compensation_toggle_clicked(self, checked: bool):
+        """Handle the compensation checkbox being toggled by the user. Not
+        called by set_compensation_enabled_state (blockSignals guards
+        against that)."""
+        self.compensation_toggle_requested.emit(checked)
     
     def _get_current_config(self) -> Dict[str, Any]:
         """Get current configuration from widgets."""
@@ -237,6 +293,17 @@ class HardwareAdvancedConfigPanel(QWidget):
     def set_status_message(self, message: str):
         """Update status label."""
         self._status_label.setText(message)
+
+    def set_compensation_enabled_state(self, enabled: bool):
+        """Update the compensation checkbox from external state (service
+        refresh_state / other panel) without re-emitting
+        compensation_toggle_requested — same blockSignals pattern as
+        ExcitationPanel.set_link_state."""
+        if self._compensation_toggle_checkbox.isChecked() == enabled:
+            return
+        self._compensation_toggle_checkbox.blockSignals(True)
+        self._compensation_toggle_checkbox.setChecked(enabled)
+        self._compensation_toggle_checkbox.blockSignals(False)
     
     def clear_parameters(self):
         """Clear parameter widgets."""
@@ -247,8 +314,10 @@ class HardwareAdvancedConfigPanel(QWidget):
             child = self._content_layout.takeAt(0)
             if child.widget():
                 child.widget().deleteLater()
-        self._apply_btn.setEnabled(False)
         self._save_default_btn.setEnabled(False)
+        self._reset_default_btn.setEnabled(False)
+        self._current_hardware_id = None
+        self._update_synchronous_detection_controls_visibility()
 
 
 

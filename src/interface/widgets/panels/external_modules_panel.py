@@ -1,6 +1,7 @@
 """Lance les applications sous external_modules/ depuis le dashboard."""
 from __future__ import annotations
 
+import logging
 import os
 import sys
 from functools import partial
@@ -9,6 +10,8 @@ from PySide6.QtCore import QProcess
 from PySide6.QtWidgets import QLabel, QMessageBox, QPushButton, QWidget, QVBoxLayout
 
 from interface.widgets.panels.base_panel import BasePanel
+
+logger = logging.getLogger(__name__)
 
 _BTN_STYLE = """
 QPushButton {{
@@ -118,7 +121,7 @@ class ExternalModulesPanel(BasePanel):
         script_path = os.path.join(root, *script_parts)
         python_exe = sys.executable
 
-        print(f"[ExternalModulesPanel] {key}: {python_exe} {script_path}")
+        logger.info("Launching %s: %s %s", key, python_exe, script_path)
 
         process = QProcess(self)
         process.finished.connect(partial(self._on_finished, key, button_label))
@@ -134,14 +137,14 @@ class ExternalModulesPanel(BasePanel):
         process.start(python_exe, [script_path])
 
     def _on_finished(self, key: str, default_button_text: str, exit_code: int, _exit_status) -> None:
-        print(f"[ExternalModulesPanel] {key} finished code={exit_code}")
+        logger.info("%s finished code=%s", key, exit_code)
         self._status_labels[key].setText(f"Terminé (code {exit_code})")
         self._status_labels[key].setStyleSheet("color: #AAA;")
         self._buttons[key].setText(default_button_text)
         self._buttons[key].setEnabled(True)
 
     def _on_error(self, key: str, default_button_text: str, error) -> None:
-        print(f"[ExternalModulesPanel] {key} error: {error}")
+        logger.error("%s error: %s", key, error)
         self._status_labels[key].setText(f"Erreur ({error})")
         self._status_labels[key].setStyleSheet("color: #F44336;")
         self._buttons[key].setText(default_button_text)

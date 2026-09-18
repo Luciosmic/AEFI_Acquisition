@@ -21,6 +21,7 @@ Design:
       size face averaging) entirely to CubeSensorFieldSimulator
 """
 
+import logging
 from typing import Optional
 
 from application.services.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
@@ -28,6 +29,8 @@ from application.services.excitation_configuration_service.ports.i_excitation_po
 from domain.shared_kernel.value_objects.acquisition.aefi_voltage_measurement import AefiVoltageMeasurement
 from domain.shared_kernel.excitation.value_objects.excitation_parameters import ExcitationParameters
 from infrastructure.mocks.cube_sensor_field_simulator import CubeSensorFieldSimulator
+
+logger = logging.getLogger(__name__)
 
 
 class ExcitationAwareAcquisitionPort(IAcquisitionPort):
@@ -64,6 +67,12 @@ class ExcitationAwareAcquisitionPort(IAcquisitionPort):
         # Current excitation state (tracked manually if no port provided)
         self._current_excitation: Optional[ExcitationParameters] = None
 
+        logger.info(
+            "ExcitationAwareAcquisitionPort initialized (excitation_port=%s, field_simulator=%s)",
+            "external" if excitation_port is not None else "manual-tracking",
+            type(self._field_simulator).__name__,
+        )
+
     def acquire_sample(self) -> AefiVoltageMeasurement:
         """Acquire a sample and apply the simulated excitation field."""
         base_measurement = self._base_port.acquire_sample()
@@ -93,6 +102,11 @@ class ExcitationAwareAcquisitionPort(IAcquisitionPort):
     def set_excitation_parameters(self, params: ExcitationParameters) -> None:
         """Manually set excitation parameters (if not using excitation port)."""
         self._current_excitation = params
+        logger.info(
+            "Manual excitation parameters updated (level_s1_s2=%s, level_s3_s4=%s)",
+            params.level_s1_s2.value,
+            params.level_s3_s4.value,
+        )
 
     def _get_current_excitation(self) -> Optional[ExcitationParameters]:
         """Get current excitation parameters from port or manual tracking."""

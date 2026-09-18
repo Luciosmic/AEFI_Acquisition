@@ -110,7 +110,10 @@ class ScanExportService:
           starts (on `ScanStarted` event).
         """
         self._config = config
-        print(f"[ScanExportService] Configured: enabled={config.enabled}, dir='{config.output_directory}', file='{config.filename_base}'")
+        logger.info(
+            "Command: configure export. enabled=%s, dir=%s, file=%s",
+            config.enabled, config.output_directory, config.filename_base,
+        )
         logger.debug("ScanExportService configured: %s", config)
 
     # ------------------------------------------------------------------ #
@@ -132,13 +135,12 @@ class ScanExportService:
             elif isinstance(event, ElectricFieldProbeConnectionChanged):
                 self._handle_probe_connection_changed(event)
         except Exception as exc:
-            print(f"[ScanExportService] ERROR handling {type(event).__name__}: {exc}")
-            logger.error("Error in ScanExportService while handling %s: %s", type(event).__name__, exc)
+            logger.exception("Error handling %s: %s", type(event).__name__, exc)
 
     def _handle_scan_started(self, event: ScanStarted) -> None:
-        print(f"[ScanExportService] Handling ScanStarted. Config present: {self._config is not None}")
+        logger.info("Handling ScanStarted. scan_id=%s, config present: %s", event.scan_id, self._config is not None)
         if not self._config or not self._config.enabled:
-            print("[ScanExportService] Export disabled or not configured.")
+            logger.info("Export disabled or not configured. Doing nothing.")
             self._export_active = False
             self._field_export_active = False
             return
@@ -157,7 +159,7 @@ class ScanExportService:
 
         metadata = self._build_metadata(event)
 
-        print(f"[ScanExportService] Starting export to dir='{directory}', base='{filename_base}'")
+        logger.info("Starting export to dir=%s, base=%s", directory, filename_base)
         logger.debug(
             "Starting scan export for scan_id=%s to directory=%s, filename_base=%s",
             event.scan_id,
@@ -246,6 +248,7 @@ class ScanExportService:
             # HDF5) — remove the acquisition folder instead of littering
             # the exports directory. stop() already closed the file
             # handles above, so this is safe on Windows.
+            logger.info("No points written; removing empty acquisition folder(s)")
             for folder in {p.parent for p in (csv_path, hdf5_path) if p is not None}:
                 shutil.rmtree(folder, ignore_errors=True)
 

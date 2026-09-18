@@ -14,6 +14,7 @@ Important:
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
@@ -32,6 +33,8 @@ from domain.shared_kernel.events.system_shutdown_complete_event.system_shutdown_
 )
 from .ports.i_hardware_initialization_port import IHardwareInitializationPort
 from .ports.i_system_lifecycle_output_port import ISystemLifecycleOutputPort
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -123,6 +126,12 @@ class SystemStartupApplicationService:
         4. Publish SystemReadyEvent or SystemStartupFailedEvent
         """
 
+        logger.info(
+            "SystemStartupApplicationService: Command startup_system verify_hardware=%s load_last_calibration=%s",
+            config.verify_hardware,
+            config.load_last_calibration,
+        )
+
         errors: List[str] = []
         resources: Dict[str, Any] = {}
 
@@ -139,6 +148,7 @@ class SystemStartupApplicationService:
         except Exception as exc:
             msg = f"hardware initialization failed: {exc!r}"
             errors.append(msg)
+            logger.error("SystemStartupApplicationService: %s", msg)
             if self._output_port:
                 self._output_port.present_error(msg)
                 self._output_port.present_initialization_step("Hardware", "Failed")
@@ -158,6 +168,7 @@ class SystemStartupApplicationService:
             except Exception as exc:
                 msg = f"hardware verification failed: {exc!r}"
                 errors.append(msg)
+                logger.error("SystemStartupApplicationService: %s", msg)
                 if self._output_port:
                     self._output_port.present_error(msg)
                     self._output_port.present_initialization_step("Verification", "Failed")
@@ -172,12 +183,18 @@ class SystemStartupApplicationService:
                     self._calibration_service.load_last_calibration()
                 elif hasattr(self._calibration_service, "load_last"):
                     self._calibration_service.load_last()
-                # else: silently skip, calibration is optional
+                else:
+                    # else: silently skip, calibration is optional
+                    logger.debug(
+                        "SystemStartupApplicationService: calibration_service exposes neither "
+                        "load_last_calibration nor load_last, skipping silently"
+                    )
                 if self._output_port:
                     self._output_port.present_initialization_step("Calibration", "Loaded")
             except Exception as exc:
                 msg = f"calibration load failed: {exc!r}"
                 errors.append(msg)
+                logger.error("SystemStartupApplicationService: %s", msg)
                 if self._output_port:
                     self._output_port.present_error(msg)
                     self._output_port.present_initialization_step("Calibration", "Failed")
@@ -234,6 +251,11 @@ class SystemShutdownApplicationService:
         5. Publish SystemShutdownCompleteEvent
         """
 
+        logger.info(
+            "SystemShutdownApplicationService: Command shutdown_system save_state=%s",
+            config.save_state,
+        )
+
         cleanup_status: Dict[str, bool] = {}
         errors: List[str] = []
 
@@ -254,7 +276,9 @@ class SystemShutdownApplicationService:
                 cleanup_status["scan"] = True
             except Exception as exc:
                 cleanup_status["scan"] = False
-                errors.append(f"scan stop failed: {exc!r}")
+                msg = f"scan stop failed: {exc!r}"
+                errors.append(msg)
+                logger.error("SystemShutdownApplicationService: %s", msg)
 
             # 2.b Optional persistence
             if config.save_state:
@@ -262,7 +286,9 @@ class SystemShutdownApplicationService:
                     if hasattr(self._scan_service, "save_state"):
                         self._scan_service.save_state()
                 except Exception as exc:
-                    errors.append(f"scan save_state failed: {exc!r}")
+                    msg = f"scan save_state failed: {exc!r}"
+                    errors.append(msg)
+                    logger.error("SystemShutdownApplicationService: %s", msg)
 
         # 3. Stop acquisition operations (if a dedicated service exists)
         if self._acquisition_service is not None:
@@ -272,14 +298,18 @@ class SystemShutdownApplicationService:
                 cleanup_status["acquisition"] = True
             except Exception as exc:
                 cleanup_status["acquisition"] = False
-                errors.append(f"acquisition stop failed: {exc!r}")
+                msg = f"acquisition stop failed: {exc!r}"
+                errors.append(msg)
+                logger.error("SystemShutdownApplicationService: %s", msg)
 
             if config.save_state:
                 try:
                     if hasattr(self._acquisition_service, "save_state"):
                         self._acquisition_service.save_state()
                 except Exception as exc:
-                    errors.append(f"acquisition save_state failed: {exc!r}")
+                    msg = f"acquisition save_state failed: {exc!r}"
+                    errors.append(msg)
+                    logger.error("SystemShutdownApplicationService: %s", msg)
 
 
 
@@ -289,7 +319,9 @@ class SystemShutdownApplicationService:
             cleanup_status["hardware"] = True
         except Exception as exc:
             cleanup_status["hardware"] = False
-            errors.append(f"hardware shutdown failed: {exc!r}")
+            msg = f"hardware shutdown failed: {exc!r}"
+            errors.append(msg)
+            logger.error("SystemShutdownApplicationService: %s", msg)
 
         success = not errors and all(cleanup_status.values()) if cleanup_status else not errors
 

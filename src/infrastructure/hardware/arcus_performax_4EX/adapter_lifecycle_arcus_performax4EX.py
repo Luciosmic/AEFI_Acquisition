@@ -1,7 +1,11 @@
+import logging
 from typing import Optional, Any
 from application.services.system_lifecycle_service.ports.i_hardware_initialization_port import IHardwareInitializationPort
 from infrastructure.hardware.arcus_performax_4EX.adapter_motion_port_arcus_performax4EX import ArcusAdapter
 from infrastructure.hardware.arcus_performax_4EX.driver_arcus_performax4EX import ArcusPerformax4EXController
+
+logger = logging.getLogger(__name__)
+
 
 class ArcusPerformaxLifecycleAdapter(IHardwareInitializationPort):
     """
@@ -31,7 +35,7 @@ class ArcusPerformaxLifecycleAdapter(IHardwareInitializationPort):
         Returns:
             Dict of initialized resources.
         """
-        print(f"[ArcusLifecycle] Connecting Arcus Performax 4EX (Port: {self._port})...")
+        logger.info("Connecting Arcus Performax 4EX (Port: %s)...", self._port)
         
         # 1. Connect Controller
         success = self._controller.connect(port=self._port)
@@ -55,7 +59,7 @@ class ArcusPerformaxLifecycleAdapter(IHardwareInitializationPort):
         """
         try:
             pos = self._adapter.get_current_position()
-            print(f"[ArcusLifecycle] Verification Success. Current Position: {pos}")
+            logger.info("Verification Success. Current Position: %s", pos)
             return True
         except Exception as e:
             raise RuntimeError(f"Verification failed: {e}")
@@ -64,7 +68,7 @@ class ArcusPerformaxLifecycleAdapter(IHardwareInitializationPort):
         """
         Close the connection.
         """
-        print("[ArcusLifecycle] Closing Arcus connection...")
+        logger.info("Closing Arcus connection...")
         self._adapter.disable()
         self._controller.disconnect()
 

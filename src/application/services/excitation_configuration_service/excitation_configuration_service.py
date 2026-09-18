@@ -1,3 +1,4 @@
+import logging
 from dataclasses import replace
 from typing import Dict
 
@@ -15,10 +16,14 @@ from domain.shared_kernel.excitation.events.excitation_levels_changed.excitation
 from domain.shared_kernel.excitation.events.dds_channel_config_changed.dds_channel_config_changed import (
     DdsChannelConfigChanged,
 )
+from domain.shared_kernel.excitation.events.excitation_dds_link_changed.excitation_dds_link_changed import (
+    ExcitationDdsLinkChanged,
+)
 
 EXCITATION_FREQUENCY_CHANGED_TOPIC = "excitationfrequencychanged"
 EXCITATION_LEVELS_CHANGED_TOPIC = "excitationlevelschanged"
 DDS_CHANNEL_CONFIG_CHANGED_TOPIC = "ddschannelconfigchanged"
+EXCITATION_DDS_LINK_CHANGED_TOPIC = "excitationddslinkchanged"
 
 # Mirrors AdapterExcitationConfigurationAD9106._map_excitation_mode_to_dds's
 # phase table, (DDS1 phase, DDS2 phase) -> mode — channel number = DDS
@@ -35,6 +40,8 @@ _MODE_BY_PHASE_PAIR = {
 # Mirrors AdapterExcitationConfigurationAD9106.MAX_EXCITATION_GAIN.
 _MAX_EXCITATION_GAIN = 5500
 
+logger = logging.getLogger(__name__)
+
 
 class ExcitationConfigurationService:
     """
@@ -47,14 +54,22 @@ class ExcitationConfigurationService:
         self._current_params = ExcitationParameters.off()
         self._muted_params: ExcitationParameters | None = None
         self._last_known_phase_by_channel: Dict[int, int] = {1: 0, 2: 0}
+        # Link S1-S2 = S3-S4 (DDS1/DDS2 gain), shared with the Hardware
+        # Advanced Config tab's own link_dds1_dds2 parameter — defaults True
+        # to match the Excitation panel's own default-checked link_checkbox.
+        self._linked: bool = True
         # Hardware Config tab can also change the shared DDS frequency register,
         # or channel 1/2 gain/phase, directly (bypassing this service) — stay in
         # sync via the event bus instead of polling.
         self._event_bus.subscribe(EXCITATION_FREQUENCY_CHANGED_TOPIC, self._on_frequency_changed)
         self._event_bus.subscribe(DDS_CHANNEL_CONFIG_CHANGED_TOPIC, self._on_dds_channel_config_changed)
+        self._event_bus.subscribe(EXCITATION_DDS_LINK_CHANGED_TOPIC, self._on_link_changed)
 
     def _on_frequency_changed(self, event: ExcitationFrequencyChanged) -> None:
         self._current_params = replace(self._current_params, frequency=event.frequency_hz)
+
+    def _on_link_changed(self, event: ExcitationDdsLinkChanged) -> None:
+        self._linked = event.linked
 
     def _on_dds_channel_config_changed(self, event: DdsChannelConfigChanged) -> None:
         """Recompute level for the changed channel from its gain, and
@@ -74,6 +89,11 @@ class ExcitationConfigurationService:
 
         phase_pair = (self._last_known_phase_by_channel[1], self._last_known_phase_by_channel[2])
         mode = _MODE_BY_PHASE_PAIR.get(phase_pair, ExcitationMode.CUSTOM)
+        if phase_pair not in _MODE_BY_PHASE_PAIR:
+            logger.debug(
+                "ExcitationConfigurationService: phase pair %s matches no known mode — falling back to CUSTOM",
+                phase_pair,
+            )
 
         self._current_params = replace(
             self._current_params, mode=mode, level_s1_s2=level_s1_s2, level_s3_s4=level_s3_s4
@@ -95,6 +115,10 @@ class ExcitationConfigurationService:
             level_s3_s4_percent: Intensity of spheres S3/S4 (DDS1 generator), 0.0 - 100.0
             frequency: Frequency logic (Hz)
         """
+        logger.info(
+            "ExcitationConfigurationService: set_excitation mode=%s level_s1_s2=%s%% level_s3_s4=%s%% freq=%sHz",
+            mode.name, level_s1_s2_percent, level_s3_s4_percent, frequency,
+        )
         level_s1_s2 = ExcitationLevel(level_s1_s2_percent)
         level_s3_s4 = ExcitationLevel(level_s3_s4_percent)
         params = ExcitationParameters(mode, level_s1_s2, level_s3_s4, frequency)
@@ -125,6 +149,21 @@ class ExcitationConfigurationService:
     def get_current_parameters(self) -> ExcitationParameters:
         return self._current_params
 
+    def is_linked(self) -> bool:
+        """Whether S1-S2 and S3-S4 (DDS1/DDS2 gain) are currently kept equal —
+        shared state with the Hardware Advanced Config tab's link_dds1_dds2."""
+        return self._linked
+
+    def set_link(self, linked: bool) -> None:
+        """Toggle the S1-S2 = S3-S4 link from the Excitation panel. Delegates
+        persistence/event-publication to the port (single writer for
+        link_dds1_dds2, same as apply_config() on the Hardware Advanced side)
+        — the event loops back to _on_link_changed synchronously, so
+        _linked is updated either way."""
+        logger.info("ExcitationConfigurationService: set_link linked=%s", linked)
+        self._port.set_link_dds1_dds2(linked)
+        self._linked = linked
+
     def mute(self) -> None:
         """
         Cut the DDS gain to 0% for the differential-measurement baseline
@@ -135,13 +174,19 @@ class ExcitationConfigurationService:
         configured) nor publishes events (unlike apply_excitation(), which
         would sync the Hardware Config tab to every mute/unmute blip).
         """
+        logger.info("ExcitationConfigurationService: mute")
         if self._muted_params is not None:
+            logger.debug(
+                "ExcitationConfigurationService: mute called while already muted — "
+                "ignoring to avoid overwriting the pre-mute levels"
+            )
             return  # already muted — avoid overwriting the pre-mute levels
         self._muted_params = self._current_params
         self._port.set_gain(ExcitationLevel.off().value, ExcitationLevel.off().value)
 
     def unmute(self) -> None:
         """Restore the levels active before the last mute(). No-op if not muted."""
+        logger.info("ExcitationConfigurationService: unmute")
         if self._muted_params is None:
             return
         self._port.set_gain(

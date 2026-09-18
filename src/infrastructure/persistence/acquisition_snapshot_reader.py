@@ -15,15 +15,19 @@ Rationale:
 from __future__ import annotations
 
 import json
+import logging
 from pathlib import Path
 from typing import Any, Dict, Optional
+
+logger = logging.getLogger(__name__)
 
 
 def _load_json(path: Path) -> Optional[Dict[str, Any]]:
     try:
         with path.open("r", encoding="utf-8") as f:
             return json.load(f)
-    except (OSError, json.JSONDecodeError):
+    except (OSError, json.JSONDecodeError) as exc:
+        logger.warning("Could not load acquisition snapshot source %s: %s", path, exc)
         return None
 
 
@@ -43,4 +47,9 @@ class AcquisitionSnapshotReader:
             content = _load_json(path)
             if content is not None:
                 snapshot[key] = content
+        logger.info(
+            "Acquisition snapshot assembled (%d/%d sources available)",
+            len(snapshot),
+            len(self.SOURCES),
+        )
         return snapshot

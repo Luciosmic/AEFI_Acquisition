@@ -1,5 +1,9 @@
+import logging
 import math
 from infrastructure.hardware.micro_controller.MCU_serial_communicator import MCU_SerialCommunicator
+
+logger = logging.getLogger(__name__)
+
 
 class ADS131Controller:
     """
@@ -11,16 +15,18 @@ class ADS131Controller:
             self.communicator = serial_communicator
         else:
             self.communicator = MCU_SerialCommunicator()
-            
+
         self.memory_state = {
             "ICLK_divider_ratio": 2,
             "Oversampling_ratio": 32
         }
 
     def connect(self, port, baudrate=1500000):
+        logger.info("Connecting to ADS131A04 on %s (baudrate=%d)", port, baudrate)
         return self.communicator.connect(port, baudrate)
 
     def disconnect(self):
+        logger.info("Disconnecting from ADS131A04")
         self.communicator.disconnect()
 
     def _iclk_value_to_code(self, iclk_value):
@@ -38,25 +44,32 @@ class ADS131Controller:
     def set_iclk_divider_and_oversampling(self, iclk_value, oversampling_value):
         """Configure conjointement ICLK divider ratio et Oversampling ratio."""
         if iclk_value not in [0, 2, 4, 6, 8, 10, 12, 14]:
+            logger.error("Invalid ICLK divider value: %s", iclk_value)
             return False, "Valeur ICLK invalide"
-            
+
         valid_oversampling_values = [4096, 2048, 1024, 800, 768, 512, 400, 384, 256, 200, 192, 128, 96, 64, 48, 32]
         if oversampling_value not in valid_oversampling_values:
+            logger.error("Invalid oversampling value: %s", oversampling_value)
             return False, "Valeur Oversampling invalide"
-        
+
         iclk_code = self._iclk_value_to_code(iclk_value)
         oversampling_code = self._oversampling_value_to_code(oversampling_value)
-        
+
         combined_value = (iclk_code * 32) + oversampling_code
-        
+
         success, response = self.communicator.send_command(f"a14")
-        if not success: return False, response
+        if not success:
+            logger.error("Failed to set ICLK/oversampling address register: %s", response)
+            return False, response
         success, response = self.communicator.send_command(f"d{combined_value}")
-        if not success: return False, response
-        
+        if not success:
+            logger.error("Failed to write ICLK/oversampling data register: %s", response)
+            return False, response
+
         self.memory_state["ICLK_divider_ratio"] = iclk_value
         self.memory_state["Oversampling_ratio"] = oversampling_value
-        
+
+        logger.info("ICLK divider set to %d, oversampling ratio set to %d", iclk_value, oversampling_value)
         return True, f"ICLK divider ({iclk_value}) et Oversampling ratio ({oversampling_value}) configurés"
 
     def set_iclk_divider(self, value):
@@ -78,10 +91,15 @@ class ADS131Controller:
         if ref_selection == 1: val_combinee += 8
         
         success, response = self.communicator.send_command(f"a11")
-        if not success: return False, response
+        if not success:
+            logger.error("Failed to set reference config address register: %s", response)
+            return False, response
         success, response = self.communicator.send_command(f"d{val_combinee}")
-        if not success: return False, response
-        
+        if not success:
+            logger.error("Failed to write reference config data register: %s", response)
+            return False, response
+
+        logger.info("Reference config set (value=%d)", val_combinee)
         return True, f"Références configurées (valeur: {val_combinee})"
 
     def set_channel_gain(self, channel_index: int, gain: int) -> tuple[bool, str]:
@@ -97,11 +115,13 @@ class ADS131Controller:
             (success, message)
         """
         if channel_index not in [1, 2, 3, 4]:
+            logger.error("Invalid channel index: %s", channel_index)
             return False, f"Invalid channel index: {channel_index}"
-            
+
         # Per datasheet 9.6.2: Gains 1, 2, 4, 8, 16 supported.
         available_gains = [1, 2, 4, 8, 16]
         if gain not in available_gains:
+            logger.error("Invalid gain %s for channel %d. Supported: %s", gain, channel_index, available_gains)
             return False, f"Invalid gain: {gain}. Supported: {available_gains}"
             
         # Map gain to bits [2:0]
@@ -118,13 +138,16 @@ class ADS131Controller:
         # 1. Set Address
         success_a, resp_a = self.communicator.send_command(f"a{address}")
         if not success_a:
+            logger.error("Failed to set gain address %d for channel %d: %s", address, channel_index, resp_a)
             return False, f"Failed to set address {address}: {resp_a}"
-            
+
         # 2. Set Data
         success_d, resp_d = self.communicator.send_command(f"d{gain_code}")
         if not success_d:
+            logger.error("Failed to write gain %d to address %d: %s", gain, address, resp_d)
             return False, f"Failed to write gain {gain} to address {address}: {resp_d}"
-            
+
+        logger.info("Set digital gain %d for channel %d (register ADC%d)", gain, channel_index, channel_index)
         return True, f"Set Digital Gain {gain} (Code {gain_code}) for Register ADC{channel_index} (Addr {address})"
 
     def acquisition(self, n_avg=127):
@@ -144,4 +167,5 @@ class ADS131Controller:
             values = [float(x) for x in response_str.split('\t') if x.strip()]
             return True, values
         except ValueError:
+            logger.error("Failed to parse acquisition response: %s", response_str)
             return False, f"Error parsing data: {response_str}"
