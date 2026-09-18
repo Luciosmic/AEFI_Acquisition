@@ -1,5 +1,107 @@
 # Tâches actives
 
+## Observabilité : migration vers Observability-Driven Design (ODD)
+
+**Statut** : pas commencé — prompt de démarrage prêt ci-dessous, à lancer dans une nouvelle
+discussion (chantier distinct, nécessite une décision d'architecture avant tout code).
+
+### Contexte — pourquoi ce chantier existe
+
+Une session précédente (2026-09-18) a fait une remédiation de logging massive (commit
+`c2043b6`, 136 fichiers) : conversion de ~220 `print()` en `logging.getLogger(__name__)`
+sur toute la couche application/infrastructure, en suivant le standard Packmind
+**"Logs-Driven Design (LDD)"** (`.packmind/standards/logs-driven-design-ldd.md`).
+
+En cours de route, deux standards Packmind plus récents sont apparus côté org UTUKI et
+n'existaient pas au moment où ce travail a été planifié :
+
+- **"Observability-Driven Design (ODD)"**
+  (`.packmind/standards/standard-observability-driven-design-odd.md`) — remplace/étend
+  LDD. Reprend ses règles (logger nommé, granularité intention métier, décisions de
+  branche non triviales loguées) et ajoute :
+  - **3 piliers OpenTelemetry** : métriques (détectent qu'un problème existe), logs
+    (diagnostiquent pourquoi), traces (montrent le chemin). Un log seul ne détecte pas
+    une absence de signal.
+  - **Logs structurés obligatoires** (JSON ou clé=valeur) — jamais de chaîne interpolée
+    libre. Tout le travail déjà committé utilise des f-strings/`%s` en texte libre, donc
+    **ne respecte pas cette règle**.
+  - **`correlation_id`** généré à l'entrée de tout flux async/multi-étapes, propagé dans
+    tous les logs/métriques de la chaîne — jamais recréé à mi-flux. **N'existe nulle
+    part dans le code actuel.**
+  - **Métriques de comptage** sur tout flux métier significatif (succès/échec) et sur
+    toute exception capturée (type + contexte métier). **Aucune lib de métriques
+    intégrée** (pas de `prometheus_client`, pas d'OpenTelemetry SDK) — à choisir.
+  - **Subsegments de trace** par opération métier distincte dans un flux multi-étapes.
+    **Aucun tracing n'existe.**
+
+- **"SolidAI — EventStore : Création de Domain Events"** — précise la frontière domain
+  event vs log ODD : une idempotence ou un rejet d'invariant domain n'est JAMAIS un
+  domain event, toujours un log+métrique côté application. Déjà appliqué (voir commit 4
+  ci-dessous).
+
+Ces deux standards ont été synchronisés dans ce repo ET propagés dans les 4 autres
+worktrees (`AEFI_Acquisition`, `AEFI_Acquisition_dev_hardware`,
+`AEFI_Acquisition_dev_scan`, `AEFI_Acquisition_n8n-poc`) via
+`npx @packmind/cli@latest install`. Si le tunnel SSH vers le serveur Packmind (port
+8081, localhost via tunnel) n'est plus ouvert, la skill `get-solidai-standards`
+documente comment le rétablir.
+
+### Déjà fait (lire les commits pour le détail exact, ne pas refaire)
+
+Sur `develop`, 4 commits de cette lignée de travail :
+
+1. `074197a` — chore(packmind): sync standards
+2. `c2043b6` — refactor(observability): migration print()→logging LDD, 136 fichiers,
+   infra + application uniquement (domain volontairement exclu, voir point 4)
+3. `0a24f63` — fix(scan): correction d'une race condition subscribe-after-publish dans
+   `scan_differential_mode_integration_test.py` (trouvée en creusant une flakiness de
+   tests révélée — pas causée — par le commit 2 ; confirmé par profiling cProfile que le
+   temps perdu vient d'attentes `threading.Event.wait()` légitimes, pas du logging)
+4. `cb79201` — fix(domain): 4 trous d'observabilité domain fermés (audit en 3
+   sous-agents sur les 76 fichiers domain), en appliquant la règle EventStore/ODD :
+   idempotence → valeur de retour observable + log côté appelant ; rejet d'invariant →
+   exception ; jamais un domain event pour ces deux cas. Le domain reste pur : zéro
+   `import logging` dedans, par design.
+
+Lire `git show <sha> --stat` puis `git log -1 <sha>` pour le détail de chaque commit
+avant de commencer, pour ne pas re-découvrir ce qui est déjà su.
+
+### Périmètre de ce chantier
+
+Amener le travail existant au niveau ODD complet :
+
+1. **Format structuré** — convertir les logs texte libre en JSON/clé=valeur, en gardant
+   la lisibilité humaine dans le panneau Logs Qt existant
+   (`src/interface/widgets/panels/logs_panel.py`) — probablement deux sorties, pas une
+   seule (lisible à l'écran + structuré vers un sink séparé).
+2. **`correlation_id`** — génération à l'entrée de chaque flux (ex. `execute_scan()`,
+   `apply_config()`), propagation à travers les threads (`ThreadPoolTaskRunner`) et les
+   domain events (le standard EventStore le veut aussi comme champ optionnel sur les
+   events eux-mêmes).
+3. **Métriques** — aucune lib en place ; c'est un outil desktop mono-poste, pas un
+   service web avec Prometheus à côté. Évaluer des pistes légères (compteurs in-process
+   exposés dans un panneau UI, ou métriques déduites de logs structurés agrégables)
+   avant de choisir une stack lourde.
+4. **Traces** — même remarque : évaluer si OpenTelemetry complet a du sens pour un
+   poste mono-utilisateur, ou si `correlation_id` + logs d'étape structurés suffisent.
+
+### Méthode recommandée
+
+**Ne pas commencer par écrire du code.** Il y a une vraie décision d'architecture à
+trancher (quelle stack métriques/traces pour un outil desktop, quel format structuré)
+avant toute exécution. Proposer un plan court, le faire valider, puis seulement lancer
+des sous-agents d'exécution (comme pour le passage print()→logging).
+
+### Point connexe, pas ce chantier
+
+Gap de fidélité QoS trouvé en tâche annexe (audit du commit `c2043b6`) : le nouveau
+standard SolidAI publié cette session-là
+(`solidai-fidelite-de-promesse-des-doubles-de-test-...`) a motivé un audit des mocks qui
+a trouvé `adapter_mock_i_motion_port.py::home()` retournant instantanément alors que le
+vrai driver Arcus a des timeouts de homing mécanique jusqu'à 120s. Non corrigé, laissé
+en advisory. À mentionner si pertinent, pas à traiter dans ce chantier ODD sauf demande
+explicite.
+
 ## Config hardware : source unique de vérité (AD9106+MCU fait, ADS131A04 restant)
 
 **Statut** : refonte implémentée pour AD9106 + MCU (2026-09-08, puis corrections et ajout du
