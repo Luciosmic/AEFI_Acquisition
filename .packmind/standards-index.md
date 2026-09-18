@@ -8,6 +8,7 @@ This standards index contains all available coding standards that can be used by
 - [Background Job Three-Layer Pattern](./standards/background-job-three-layer-pattern.md) : Background Job Three-Layer Pattern
 - [Domain Error Structure](./standards/domain-error-structure.md) : Domain Error Structure
 - [Domain Events for Cross-Layer Communication](./standards/domain-events-for-cross-layer-communication.md) : Domain Events for Cross-Layer Communication
+- [Logs-Driven Design (LDD)](./standards/logs-driven-design-ldd.md) : Logs-Driven Design (LDD)
 - [Persistence Model Mixin Composition](./standards/persistence-model-mixin-composition.md) : Persistence Model Mixin Composition
 - [Port Interface Naming and Placement](./standards/port-interface-naming-and-placement.md) : Port Interface Naming and Placement
 - [Presenter Responsibility Boundary](./standards/presenter-responsibility-boundary.md) : Presenter Responsibility Boundary
@@ -17,6 +18,8 @@ This standards index contains all available coding standards that can be used by
 - [SolidAI — Architecture Fractale Trio Atomique : Intention, Code, Tests Co-localisés](./standards/solidai-architecture-fractale-trio-atomique-intention-code-tests-co-localises.md) : SolidAI — Architecture Fractale Trio Atomique : Intention, Code, Tests Co-localisés
 - [SolidAI — DDD Plugin Layer Dependency Direction](./standards/solidai-ddd-plugin-layer-dependency-direction.md) : SolidAI — DDD Plugin Layer Dependency Direction
 - [SolidAI — Domain Reference via Wikilinks in SKILL.md](./standards/solidai-domain-reference-via-wikilinks-in-skillmd.md) : SolidAI — Domain Reference via Wikilinks in SKILL.md
+- [SolidAI — Error Taxonomy and Layer Contracts](./standards/solidai-error-taxonomy-and-layer-contracts.md) : SolidAI — Error Taxonomy and Layer Contracts
+- [SolidAI — Fidélité de Promesse des Doubles de Test : Qualité de Service Implicite et Imposition Non Assumée](./standards/solidai-fidelite-de-promesse-des-doubles-de-test-qualite-de-service-implicite-et-imposition-non-assumee.md) : SolidAI — Fidélité de Promesse des Doubles de Test : Qualité de Service Implicite et Imposition Non Assumée
 - [SolidAI — Graph of Intentions (Promise↔DDD) Modeling](./standards/solidai-graph-of-intentions-promiseddd-modeling.md) : SolidAI — Graph of Intentions (Promise↔DDD) Modeling
 - [SolidAI — Graphe de Pensée : Ossature DDD-Crew et Règles de Traversal [EXPÉRIMENTAL]](./standards/solidai-graphe-de-pensee-ossature-ddd-crew-et-regles-de-traversal-experimental.md) : SolidAI — Graphe de Pensée : Ossature DDD-Crew et Règles de Traversal [EXPÉRIMENTAL]
 - [SolidAI — Handler Pattern](./standards/solidai-handler-pattern.md) : SolidAI — Handler Pattern
