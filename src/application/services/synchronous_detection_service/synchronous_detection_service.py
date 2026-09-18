@@ -85,9 +85,15 @@ class SynchronousDetectionService(IApiSynchronousDetectionService):
 
     def enable_lock_in_detection(self) -> None:
         """Force ch3/ch4's gain back to the recommended default — the
-        Excitation panel's "Enable Lock-In Detection" toggle."""
+        Excitation panel's "Enable Lock-In Detection" toggle, checked."""
         logger.info("SynchronousDetectionService: Command enable_lock_in_detection")
         self._hardware_port.reset_lock_in_gain_to_default()
+
+    def disable_lock_in_detection(self) -> None:
+        """Zero ch3/ch4's gain, effectively disabling synchronous detection —
+        the Excitation panel's "Enable Lock-In Detection" toggle, unchecked."""
+        logger.info("SynchronousDetectionService: Command disable_lock_in_detection")
+        self._hardware_port.zero_lock_in_gain()
 
     def save_calibration_point(self) -> None:
         logger.info(
@@ -165,15 +171,42 @@ class SynchronousDetectionService(IApiSynchronousDetectionService):
                 "SynchronousDetectionService: no calibration data yet for hardware signature, skipping correction"
             )
             return  # pas encore de donnée de calibration pour cette signature
+        self._hardware_port.set_ch3_phase_register(self._ch3_register_for_offset(delta_phi))
 
+    def reset_phase_offset_to_calibrated(self) -> None:
+        """Reset button: snap the phase offset to whatever the calibration
+        registry currently recommends for this frequency + hardware
+        signature — a one-shot action (unlike enabling compensation, this
+        does not keep re-applying on future frequency changes). Persists as
+        the new manual baseline, same as a hand-typed offset."""
+        logger.info("SynchronousDetectionService: Command reset_phase_offset_to_calibrated")
+        delta_phi = self._lookup_current_correction()
+        if delta_phi is None:
+            raise ValueError(
+                "Aucun point de calibration enregistré pour cette fréquence/signature matérielle"
+            )
+        self._hardware_port.set_ch3_phase_register(self._ch3_register_for_offset(delta_phi), persist=True)
+
+    def set_manual_phase_offset(self, offset_degrees: float) -> None:
+        """Manually set the Lock-in Detection Phase Offset (ch4 - ch1) to an
+        arbitrary degree value from the Excitation panel — unlike the
+        compensation correction, this PERSISTS as the new manual baseline
+        (see ISynchronousDetectionHardwarePort.set_ch3_phase_register)."""
+        logger.info(
+            "SynchronousDetectionService: Command set_manual_phase_offset degrees=%s", offset_degrees
+        )
+        self._hardware_port.set_ch3_phase_register(
+            self._ch3_register_for_offset(offset_degrees), persist=True
+        )
+
+    def _ch3_register_for_offset(self, offset_degrees: float) -> int:
+        """Target: ch4 = ch1 + offset_degrees. Ch4 isn't independently
+        writable — it rigidly follows ch3 at -90° (_enforce_dds3_dds4_quadrature)
+        — so solve for the ch3 register that makes that hold:
+        ch3 - 90 = ch1 + offset_degrees  =>  ch3 = ch1 + offset_degrees + 90."""
         registers = self._hardware_port.get_all_channel_phase_registers()
         ch1_phase = PhaseAngle.from_register(registers[1])
-        # Target: ch4 = ch1 + delta_phi. Ch4 isn't independently writable —
-        # it rigidly follows ch3 at -90° (_enforce_dds3_dds4_quadrature) — so
-        # solve for the ch3 register that makes that hold: ch3 - 90 = ch1 +
-        # delta_phi  =>  ch3 = ch1 + delta_phi + 90.
-        new_ch3_phase = PhaseAngle(ch1_phase.degrees + delta_phi + 90.0)
-        self._hardware_port.set_ch3_phase_register(new_ch3_phase.to_register())
+        return PhaseAngle(ch1_phase.degrees + offset_degrees + 90.0).to_register()
 
     def _publish_domain_events(self) -> None:
         for event in self._calibration.domain_events:

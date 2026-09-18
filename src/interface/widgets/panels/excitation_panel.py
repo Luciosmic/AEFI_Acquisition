@@ -1,5 +1,6 @@
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QGroupBox, QDoubleSpinBox, QComboBox, QCheckBox
+    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QGroupBox, QDoubleSpinBox, QComboBox, QCheckBox,
+    QPushButton,
 )
 from PySide6.QtGui import QPainter, QColor, QPen, QBrush, QFont, QPolygon
 from PySide6.QtCore import Qt, Signal, QRectF, QPoint
@@ -184,6 +185,9 @@ class ExcitationPanel(QWidget):
     excitation_changed = Signal(str, float, float, float)  # mode, level_s1_s2, level_s3_s4, freq
     link_toggled = Signal(bool)  # linked
     lock_in_detection_toggled = Signal(bool)  # enabled
+    compensation_toggle_requested = Signal(bool)  # enabled
+    lock_in_phase_offset_changed = Signal(float)  # degrees
+    lock_in_phase_offset_reset_requested = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -365,10 +369,40 @@ class ExcitationPanel(QWidget):
         lock_in_header.addStretch()
         lock_in_column.addLayout(lock_in_header)
 
+        self.compensation_checkbox = QCheckBox("Compensation active")
+        lock_in_column.addWidget(self.compensation_checkbox)
+
         lock_in_column.addStretch()
 
-        self.delta_phi_label = QLabel("Lock-in Detection Phase Offset: n/a")
-        lock_in_column.addWidget(self.delta_phi_label)
+        # Editable in degrees (not raw registers) — lets the user tune the
+        # lock-in reference directly from this panel instead of going
+        # through Hardware Advanced Config's raw phase field. Locked
+        # (disabled) unless compensation is active — see set_compensation_state.
+        offset_layout = QHBoxLayout()
+        offset_label = QLabel("Lock-in Detection Phase Offset:")
+        offset_label.setStyleSheet("font-weight: bold; color: white;")
+        self.lock_in_offset_spin = QDoubleSpinBox()
+        self.lock_in_offset_spin.setRange(0.0, 360.0)
+        # AD9106 phase register is 16-bit over 360° -> 1 register increment =
+        # 360/65536 ~= 0.0055°. 3 decimals is the coarsest display precision
+        # that still reflects a single hardware step (2 decimals can round
+        # two adjacent register values to the same displayed number).
+        self.lock_in_offset_spin.setDecimals(3)
+        self.lock_in_offset_spin.setSingleStep(360.0 / 65536)
+        self.lock_in_offset_spin.setWrapping(True)
+        self.lock_in_offset_spin.setEnabled(False)
+        offset_unit = QLabel("°")
+        offset_unit.setStyleSheet("color: #AAA;")
+        self.lock_in_offset_reset_btn = QPushButton("Reset")
+        self.lock_in_offset_reset_btn.setToolTip(
+            "Réinitialiser au point de calibration enregistré pour la fréquence courante."
+        )
+        offset_layout.addWidget(offset_label)
+        offset_layout.addWidget(self.lock_in_offset_spin)
+        offset_layout.addWidget(offset_unit)
+        offset_layout.addWidget(self.lock_in_offset_reset_btn)
+        offset_layout.addStretch()
+        lock_in_column.addLayout(offset_layout)
 
         main_row.addLayout(lock_in_column, stretch=1)
 
@@ -386,6 +420,9 @@ class ExcitationPanel(QWidget):
         self.link_checkbox.toggled.connect(self._on_link_toggled)
         self.freq_spin.editingFinished.connect(self._emit_changed)
         self.lock_in_checkbox.toggled.connect(self._on_lock_in_detection_toggled)
+        self.compensation_checkbox.toggled.connect(self._on_compensation_toggled)
+        self.lock_in_offset_spin.editingFinished.connect(self._on_lock_in_offset_editing_finished)
+        self.lock_in_offset_reset_btn.clicked.connect(self.lock_in_phase_offset_reset_requested.emit)
 
     def _on_mode_changed(self, mode_text: str):
         mode_code = self._text_to_mode_code(mode_text)
@@ -441,6 +478,25 @@ class ExcitationPanel(QWidget):
         self.lock_in_checkbox.blockSignals(True)
         self.lock_in_checkbox.setChecked(enabled)
         self.lock_in_checkbox.blockSignals(False)
+
+    def _on_compensation_toggled(self, checked: bool):
+        self.compensation_toggle_requested.emit(checked)
+
+    def set_compensation_state(self, enabled: bool):
+        """Sync the "Compensation active" checkbox from external state
+        (Hardware Advanced Config's own compensation checkbox, or service
+        state) without re-emitting compensation_toggle_requested. Also locks
+        the phase offset field: it's only meaningful to hand-edit while
+        compensation is actively managing ch3 — otherwise use Hardware
+        Advanced Config directly."""
+        if self.compensation_checkbox.isChecked() != enabled:
+            self.compensation_checkbox.blockSignals(True)
+            self.compensation_checkbox.setChecked(enabled)
+            self.compensation_checkbox.blockSignals(False)
+        self.lock_in_offset_spin.setEnabled(enabled)
+
+    def _on_lock_in_offset_editing_finished(self):
+        self.lock_in_phase_offset_changed.emit(self.lock_in_offset_spin.value())
 
     def _emit_changed(self):
         mode = self._text_to_mode_code(self.mode_combo.currentText())
@@ -500,10 +556,10 @@ class ExcitationPanel(QWidget):
     def set_synchronous_detection_state(
         self, s1, s2, s3, s4, delta_phi_corrige, lock_in_gain_below_default
     ) -> None:
-        """Update the read-only Lock-In Detection display. Pure primitives in —
+        """Update the Lock-In Detection display/controls. Pure primitives in —
         no domain/application types cross into this view."""
         self.sphere_widget.set_sphere_phases(s1, s2, s3, s4)
-        text = f"{delta_phi_corrige:.1f}°" if delta_phi_corrige is not None else "n/a"
-        self.delta_phi_label.setText(f"Lock-in Detection Phase Offset: {text}")
+        if delta_phi_corrige is not None and self.lock_in_offset_spin.value() != delta_phi_corrige % 360.0:
+            self.lock_in_offset_spin.setValue(delta_phi_corrige % 360.0)
         self.lock_in_gain_warning_label.setVisible(lock_in_gain_below_default)
         self._set_lock_in_checkbox_state(not lock_in_gain_below_default)

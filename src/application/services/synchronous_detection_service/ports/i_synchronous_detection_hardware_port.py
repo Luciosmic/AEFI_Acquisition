@@ -24,15 +24,18 @@ class ISynchronousDetectionHardwarePort(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def set_ch3_phase_register(self, value: int) -> None:
+    def set_ch3_phase_register(self, value: int, persist: bool = False) -> None:
         """
         Écrit le registre de phase du canal 3 (valeur brute 16 bits,
         0-65535), en passant par l'écrivain unique du configurateur AD9106
         (`AD9106AdvancedConfigurator.apply_config`).
 
-        Écriture transitoire/programmatique (correction de compensation) —
-        ne doit jamais persister dans `ad9106_last_config.json`, qui reste la
-        trace du dernier réglage manuel de l'utilisateur.
+        persist=False (défaut) : écriture transitoire/programmatique
+        (correction de compensation) — ne persiste jamais dans
+        `ad9106_last_config.json`.
+        persist=True : réglage manuel explicite de l'utilisateur (ex.
+        "Lock-in Detection Phase Offset" édité depuis le panneau Excitation)
+        — devient la nouvelle référence manuelle persistée.
         """
         raise NotImplementedError
 
@@ -79,5 +82,14 @@ class ISynchronousDetectionHardwarePort(ABC):
         Réapplique le gain par défaut sur ch3 (ch4 suit via le lien de
         gain). Action manuelle explicite ("Enable Lock-In Detection") —
         persiste normalement dans `ad9106_last_config.json`.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def zero_lock_in_gain(self) -> None:
+        """
+        Met le gain de ch3 à 0 (ch4 suit via le lien de gain) — désactive
+        effectivement la détection synchrone. Action manuelle explicite
+        ("Disable Lock-In Detection") — persiste normalement.
         """
         raise NotImplementedError

@@ -448,6 +448,10 @@ def main(hardware_config: dict | None = None):
     excitation_presenter.refresh_state()
     synchronous_detection_presenter.sphere_phases_updated.connect(excitation_panel.set_synchronous_detection_state)
     excitation_panel.lock_in_detection_toggled.connect(synchronous_detection_presenter.on_lock_in_detection_toggled)
+    excitation_panel.compensation_toggle_requested.connect(synchronous_detection_presenter.on_compensation_toggle_requested)
+    synchronous_detection_presenter.compensation_state_changed.connect(excitation_panel.set_compensation_state)
+    excitation_panel.lock_in_phase_offset_changed.connect(synchronous_detection_presenter.on_lock_in_phase_offset_changed)
+    excitation_panel.lock_in_phase_offset_reset_requested.connect(synchronous_detection_presenter.on_lock_in_phase_offset_reset_requested)
     # NOTE: synchronous_detection_presenter.refresh_state() is deliberately
     # NOT called here — compensation_state_changed isn't wired to
     # hardware_config_panel yet at this point (that happens further below,

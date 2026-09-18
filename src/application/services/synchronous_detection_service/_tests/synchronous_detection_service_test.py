@@ -266,6 +266,79 @@ class TestSynchronousDetectionService(DiagramFriendlyTest):
         # target ch4 = ch1 + 2.0 -> writes ch3 = ch1 + 2.0 + 90
         spy.assert_called_once_with(PhaseAngle(92.0).to_register())
 
+    # -- lock-in gain (Enable Lock-In Detection) ---------------------------------
+
+    def test_get_sphere_phases_reports_lock_in_gain_below_default(self):
+        self.port.lock_in_gain = 5000
+        self.port.default_lock_in_gain = 10000
+
+        dto = self.service.get_sphere_phases()
+
+        self.assertTrue(dto.lock_in_gain_below_default)
+
+    def test_get_sphere_phases_reports_lock_in_gain_at_default_as_not_below(self):
+        self.port.lock_in_gain = 10000
+        self.port.default_lock_in_gain = 10000
+
+        dto = self.service.get_sphere_phases()
+
+        self.assertFalse(dto.lock_in_gain_below_default)
+
+    def test_enable_lock_in_detection_resets_gain_to_default(self):
+        self.port.lock_in_gain = 5000
+        self.port.default_lock_in_gain = 10000
+
+        self.service.enable_lock_in_detection()
+
+        self.assertEqual(self.port.lock_in_gain, 10000)
+
+    def test_disable_lock_in_detection_zeroes_gain(self):
+        self.port.lock_in_gain = 10000
+
+        self.service.disable_lock_in_detection()
+
+        self.assertEqual(self.port.lock_in_gain, 0)
+
+    # -- manual phase offset (Excitation panel, editable in degrees) ------------
+
+    def test_set_manual_phase_offset_writes_and_persists(self):
+        self.port.registers[1] = 0  # ch1 = 0deg
+        spy = self._spy_on_set_ch3()
+
+        self.service.set_manual_phase_offset(30.0)
+
+        # target ch4 = ch1 + 30.0 -> writes ch3 = ch1 + 30.0 + 90, persisted
+        spy.assert_called_once_with(PhaseAngle(120.0).to_register(), persist=True)
+
+    def test_set_manual_phase_offset_uses_current_ch1_phase(self):
+        self.port.registers[1] = PhaseAngle(45.0).to_register()
+        spy = self._spy_on_set_ch3()
+
+        self.service.set_manual_phase_offset(0.0)
+
+        spy.assert_called_once_with(PhaseAngle(135.0).to_register(), persist=True)
+
+    # -- reset button (one-shot snap to the calibrated point) -------------------
+
+    def test_reset_phase_offset_raises_when_no_calibration_data(self):
+        with self.assertRaises(ValueError):
+            self.service.reset_phase_offset_to_calibrated()
+
+    def test_reset_phase_offset_writes_and_persists_calibrated_value(self):
+        self.repository.add(
+            SynchronousDetectionPhaseCalibrationEntry.single(
+                self.hardware_signature,
+                SynchronousDetectionPhaseCalibrationPoint(frequency_hz=1000.0, delta_phi_degrees=15.0),
+            )
+        )
+        self.port.registers[1] = 0  # ch1 = 0deg
+        self._publish_frequency(1000.0)
+        spy = self._spy_on_set_ch3()
+
+        self.service.reset_phase_offset_to_calibrated()
+
+        spy.assert_called_once_with(PhaseAngle(105.0).to_register(), persist=True)
+
 
 if __name__ == "__main__":
     unittest.main()

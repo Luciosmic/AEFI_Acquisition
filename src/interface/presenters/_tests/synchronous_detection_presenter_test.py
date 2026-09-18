@@ -35,6 +35,10 @@ class FakeSynchronousDetectionService(IApiSynchronousDetectionService):
         self.save_calibration_point_calls = 0
         self.set_compensation_enabled_calls = []
         self.enable_lock_in_detection_calls = 0
+        self.disable_lock_in_detection_calls = 0
+        self.set_manual_phase_offset_calls = []
+        self.reset_phase_offset_error: Exception | None = None
+        self.reset_phase_offset_calls = 0
 
     def get_sphere_phases(self) -> SpherePhasesDTO:
         return self.sphere_phases
@@ -53,6 +57,17 @@ class FakeSynchronousDetectionService(IApiSynchronousDetectionService):
 
     def enable_lock_in_detection(self) -> None:
         self.enable_lock_in_detection_calls += 1
+
+    def disable_lock_in_detection(self) -> None:
+        self.disable_lock_in_detection_calls += 1
+
+    def set_manual_phase_offset(self, offset_degrees: float) -> None:
+        self.set_manual_phase_offset_calls.append(offset_degrees)
+
+    def reset_phase_offset_to_calibrated(self) -> None:
+        self.reset_phase_offset_calls += 1
+        if self.reset_phase_offset_error is not None:
+            raise self.reset_phase_offset_error
 
 
 class TestSynchronousDetectionPresenter(unittest.TestCase):
@@ -113,10 +128,33 @@ class TestSynchronousDetectionPresenter(unittest.TestCase):
 
         self.assertEqual(self.service.enable_lock_in_detection_calls, 1)
 
-    def test_on_lock_in_detection_toggled_false_is_a_no_op(self):
+    def test_on_lock_in_detection_toggled_false_disables_lock_in_detection(self):
         self.presenter.on_lock_in_detection_toggled(False)
 
         self.assertEqual(self.service.enable_lock_in_detection_calls, 0)
+        self.assertEqual(self.service.disable_lock_in_detection_calls, 1)
+
+    def test_on_lock_in_phase_offset_changed_calls_service(self):
+        self.presenter.on_lock_in_phase_offset_changed(45.5)
+
+        self.assertEqual(self.service.set_manual_phase_offset_calls, [45.5])
+
+    def test_on_lock_in_phase_offset_reset_requested_reports_success(self):
+        self.presenter.on_lock_in_phase_offset_reset_requested()
+
+        self.assertEqual(self.service.reset_phase_offset_calls, 1)
+        self.assertEqual(
+            self.received_status_messages, ["Offset réinitialisé au point de calibration enregistré"]
+        )
+
+    def test_on_lock_in_phase_offset_reset_requested_catches_service_exception(self):
+        self.service.reset_phase_offset_error = ValueError("no calibration point")
+
+        self.presenter.on_lock_in_phase_offset_reset_requested()
+
+        self.assertEqual(len(self.received_status_messages), 1)
+        self.assertIn("Erreur", self.received_status_messages[0])
+        self.assertIn("no calibration point", self.received_status_messages[0])
 
 
 if __name__ == "__main__":

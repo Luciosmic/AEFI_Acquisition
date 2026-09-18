@@ -1,5 +1,8 @@
 {
     "frequency_hz": 1000,
+    "link_dds1_dds2": true,
+    "enforce_dds3_dds4_quadrature": true,
+    "link_dds3_dds4_gain": true,
     "mode_dds1_dds2": "AC+AC",
     "mode_dds3_dds4": "AC+AC",
     "channels": {

@@ -49,13 +49,15 @@ class AdapterSynchronousDetectionAD9106(ISynchronousDetectionHardwarePort):
     def get_all_channel_phase_registers(self) -> Dict[int, int]:
         return dict(self._controller.get_memory_state()["DDS"]["Phase"])
 
-    def set_ch3_phase_register(self, value: int) -> None:
-        # persist=False: this is a transient, programmatic correction (the
+    def set_ch3_phase_register(self, value: int, persist: bool = False) -> None:
+        # persist=False (default): transient, programmatic correction (the
         # synchronous-detection compensation), not the user's manually-tuned
         # baseline — must not overwrite ad9106_last_config.json (see
         # AD9106AdvancedConfigurator.apply_config's persist parameter).
-        logger.debug("Setting ch3 phase register to %d (transient, not persisted)", value)
-        self._configurator.apply_config({"ch3_phase": value}, persist=False)
+        # persist=True: explicit manual edit (Excitation panel's Lock-in
+        # Detection Phase Offset field) — becomes the new manual baseline.
+        logger.debug("Setting ch3 phase register to %d (persist=%s)", value, persist)
+        self._configurator.apply_config({"ch3_phase": value}, persist=persist)
 
     def restore_manual_configuration(self) -> None:
         logger.info("Restoring manual ch3/ch4 phase configuration")
@@ -74,3 +76,7 @@ class AdapterSynchronousDetectionAD9106(ISynchronousDetectionHardwarePort):
         default_gain = self._configurator.get_default_ch3_gain()
         logger.info("Resetting lock-in gain (ch3/ch4) to default: %d", default_gain)
         self._configurator.apply_config({"ch3_gain": default_gain})
+
+    def zero_lock_in_gain(self) -> None:
+        logger.info("Disabling lock-in gain (ch3/ch4) -> 0")
+        self._configurator.apply_config({"ch3_gain": 0})

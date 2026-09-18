@@ -38,9 +38,14 @@ class MockSynchronousDetectionHardwarePort(ISynchronousDetectionHardwarePort):
     def get_all_channel_phase_registers(self) -> Dict[int, int]:
         return dict(self.registers)
 
-    def set_ch3_phase_register(self, value: int) -> None:
+    def set_ch3_phase_register(self, value: int, persist: bool = False) -> None:
         self.registers[3] = value
-        logger.info("CH3 phase register set to %s", value)
+        logger.info("CH3 phase register set to %s (persist=%s)", value, persist)
+        if persist:
+            # Simulates ad9106_last_config.json being updated by a manual
+            # edit — this becomes the new baseline restore_manual_configuration()
+            # would reload.
+            self.manual_baseline_registers = dict(self.registers)
 
     def restore_manual_configuration(self) -> None:
         self.restore_manual_configuration_calls += 1
@@ -61,3 +66,6 @@ class MockSynchronousDetectionHardwarePort(ISynchronousDetectionHardwarePort):
 
     def reset_lock_in_gain_to_default(self) -> None:
         self.lock_in_gain = self.default_lock_in_gain
+
+    def zero_lock_in_gain(self) -> None:
+        self.lock_in_gain = 0

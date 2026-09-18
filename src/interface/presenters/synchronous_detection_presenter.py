@@ -107,11 +107,30 @@ class SynchronousDetectionPresenter(QObject):
 
     @Slot(bool)
     def on_lock_in_detection_toggled(self, enabled: bool) -> None:
-        """Only the transition to checked does anything (forces ch3/ch4 gain
-        to the recommended default) — there's no corresponding "disable"
-        hardware action, so unchecking is a no-op; the next refresh_state()
-        naturally re-checks it if the gain is still at/above default."""
-        if not enabled:
-            return
-        logger.info("Enable Lock-In Detection requested")
-        self._service.enable_lock_in_detection()
+        """Checked -> force ch3/ch4 gain to the recommended default.
+        Unchecked -> zero ch3/ch4 gain (disables synchronous detection)."""
+        logger.info("Lock-In Detection %s", "activé" if enabled else "désactivé")
+        if enabled:
+            self._service.enable_lock_in_detection()
+        else:
+            self._service.disable_lock_in_detection()
+
+    @Slot(float)
+    def on_lock_in_phase_offset_changed(self, offset_degrees: float) -> None:
+        """User-edited "Lock-in Detection Phase Offset" field (Excitation
+        panel) — an explicit manual value, distinct from the calibrated
+        compensation correction."""
+        logger.info("Lock-in Detection Phase Offset manually set to %.1f°", offset_degrees)
+        self._service.set_manual_phase_offset(offset_degrees)
+
+    @Slot()
+    def on_lock_in_phase_offset_reset_requested(self) -> None:
+        try:
+            self._service.reset_phase_offset_to_calibrated()
+            message = "Offset réinitialisé au point de calibration enregistré"
+            logger.info(message)
+            self.status_message.emit(message)
+        except Exception as e:
+            message = f"Erreur: {e}"
+            logger.error(message)
+            self.status_message.emit(message)
