@@ -22,7 +22,7 @@ from .dtos.scan_export_dtos import ExportConfigDTO
 from .ports.i_scan_export_port import IScanExportPort
 from .ports.i_acquisition_snapshot_port import IAcquisitionSnapshotPort
 from .ports.i_post_processing_port import IPostProcessingPort
-from application._shared.ports.i_async_task_runner import IAsyncTaskRunner
+from application.shared.ports.i_async_task_runner import IAsyncTaskRunner
 
 from domain.step_scan.events.scan_started.scan_started import ScanStarted
 from domain.step_scan.events.scan_point_acquired.scan_point_acquired import ScanPointAcquired

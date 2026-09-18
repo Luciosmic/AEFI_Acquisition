@@ -25,7 +25,7 @@ from __future__ import annotations
 import threading
 from typing import Callable, Optional
 
-from application._shared.ports.i_async_task_runner import IAsyncTaskRunner, TaskHandle
+from application.shared.ports.i_async_task_runner import IAsyncTaskRunner, TaskHandle
 
 
 class _ThreadTaskHandle(TaskHandle):

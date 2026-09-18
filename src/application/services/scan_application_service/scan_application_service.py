@@ -36,7 +36,7 @@ from domain.step_scan.value_objects.scan_trajectory.scan_trajectory import ScanT
 
 # Ports
 from application.services.motion_control_service.ports.i_motion_port import IMotionPort
-from application._shared.ports.i_async_task_runner import IAsyncTaskRunner
+from application.shared.ports.i_async_task_runner import IAsyncTaskRunner
 from .ports.i_motion_synchronizer import IMotionSynchronizer
 from .ports.i_scan_output_port import IScanOutputPort
 from application.services.electric_field_probe_service.ports.i_electric_field_probe_port import IElectricFieldProbePort
