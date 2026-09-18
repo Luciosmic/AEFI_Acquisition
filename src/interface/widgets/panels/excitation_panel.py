@@ -200,16 +200,18 @@ class ExcitationPanel(QWidget):
 
     def _build_ui(self):
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(10, 10, 10, 10)
-        layout.setSpacing(10)
-        
-        # Style
+        layout.setContentsMargins(8, 8, 8, 8)
+        layout.setSpacing(6)
+
+        # Style — same compact metrics as MotionPanelCompact so both panels
+        # end up the same height when docked side by side.
         self.setStyleSheet("""
             QGroupBox {
                 border: 1px solid #333;
-                border-radius: 5px;
-                margin-top: 10px;
+                border-radius: 4px;
+                margin-top: 6px;
                 font-weight: bold;
+                font-size: 11px;
                 color: #CCC;
             }
             QGroupBox::title {
@@ -217,14 +219,29 @@ class ExcitationPanel(QWidget):
                 subcontrol-position: top center;
                 padding: 0 5px;
             }
-            QLabel { color: #DDD; }
+            QLabel {
+                color: #DDD;
+                font-size: 11px;
+            }
+            QCheckBox { font-size: 11px; }
+            QPushButton {
+                background-color: #333;
+                color: #EEE;
+                border: 1px solid #555;
+                border-radius: 3px;
+                padding: 3px;
+                font-size: 11px;
+            }
+            QPushButton:hover { background-color: #444; }
+            QPushButton:pressed { background-color: #222; }
             QComboBox {
                 background-color: #353535;
                 color: white;
                 border: 1px solid #2E86AB;
-                border-radius: 4px;
-                padding: 5px;
-                min-width: 120px;
+                border-radius: 3px;
+                padding: 2px;
+                font-size: 11px;
+                min-width: 100px;
             }
             QComboBox::drop-down {
                 border: none;
@@ -238,14 +255,15 @@ class ExcitationPanel(QWidget):
                 background-color: #222;
                 color: #FFF;
                 border: 1px solid #444;
-                padding: 4px;
+                padding: 2px;
+                font-size: 11px;
             }
         """)
 
         group = QGroupBox("Excitation Configuration")
         v_layout = QVBoxLayout(group)
-        v_layout.setSpacing(10)
-        v_layout.setContentsMargins(15, 20, 15, 15)
+        v_layout.setSpacing(8)
+        v_layout.setContentsMargins(10, 15, 10, 10)
 
         # Top row: Mode + Frequency selection
         top_row = QHBoxLayout()
@@ -287,14 +305,13 @@ class ExcitationPanel(QWidget):
 
         v_layout.addLayout(top_row)
 
-        # Main row: excitation level controls (left) — sphere visualization
-        # (center) — Lock-In Detection controls (right). Levels sit next to
-        # the widget they control the color of; Lock-In controls sit on the
-        # opposite side to balance the layout.
-        main_row = QHBoxLayout()
-        main_row.setSpacing(20)
+        # Main column: excitation levels, then the sphere visualization, then
+        # the Lock-In Detection controls — stacked vertically so the panel
+        # stays narrow (it used to be three side-by-side columns).
+        main_column = QVBoxLayout()
+        main_column.setSpacing(8)
 
-        # --- Left: Level Control — S1/S2 and S3/S4 (same S1..S4 naming as
+        # --- Level Control — S1/S2 and S3/S4 (same S1..S4 naming as
         # Motion Control) are each an independent DDS differential pair.
         levels_column = QVBoxLayout()
         levels_column.setSpacing(8)
@@ -334,15 +351,16 @@ class ExcitationPanel(QWidget):
         self.link_checkbox = QCheckBox("Link S1-S2 = S3-S4")
         self.link_checkbox.setChecked(True)
         levels_column.addWidget(self.link_checkbox)
-        levels_column.addStretch()
 
-        main_row.addLayout(levels_column, stretch=1)
+        main_column.addLayout(levels_column)
 
-        # --- Center: Sphere Visualization (now also shows each S1-S4 phase)
+        # --- Sphere Visualization (now also shows each S1-S4 phase), centered
         self.sphere_widget = SphereVisualizationWidget()
-        main_row.addWidget(self.sphere_widget)
+        main_column.addWidget(
+            self.sphere_widget, alignment=Qt.AlignmentFlag.AlignHCenter
+        )
 
-        # --- Right: Lock-In Detection command controls, with the phase
+        # --- Lock-In Detection command controls, with the phase
         # offset display below them.
         lock_in_column = QVBoxLayout()
         lock_in_column.setSpacing(8)
@@ -372,8 +390,6 @@ class ExcitationPanel(QWidget):
         self.compensation_checkbox = QCheckBox("Compensation active")
         lock_in_column.addWidget(self.compensation_checkbox)
 
-        lock_in_column.addStretch()
-
         # Editable in degrees (not raw registers) — lets the user tune the
         # lock-in reference directly from this panel instead of going
         # through Hardware Advanced Config's raw phase field. Locked
@@ -397,16 +413,18 @@ class ExcitationPanel(QWidget):
         self.lock_in_offset_reset_btn.setToolTip(
             "Réinitialiser au point de calibration enregistré pour la fréquence courante."
         )
-        offset_layout.addWidget(offset_label)
         offset_layout.addWidget(self.lock_in_offset_spin)
         offset_layout.addWidget(offset_unit)
         offset_layout.addWidget(self.lock_in_offset_reset_btn)
         offset_layout.addStretch()
+        # Label above its controls rather than beside them: the label is long
+        # and was the widest single row of the panel.
+        lock_in_column.addWidget(offset_label)
         lock_in_column.addLayout(offset_layout)
 
-        main_row.addLayout(lock_in_column, stretch=1)
+        main_column.addLayout(lock_in_column)
 
-        v_layout.addLayout(main_row)
+        v_layout.addLayout(main_column)
 
         layout.addWidget(group)
         layout.addStretch()
