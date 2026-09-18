@@ -81,10 +81,16 @@ class TestScanDifferentialModeIntegration(unittest.TestCase):
             excitation_service=self.excitation_service,
         )
 
-    def _wait_for_completion(self, timeout: float = 10.0) -> bool:
+    def _subscribe_completion(self) -> threading.Event:
+        """Subscribe before execute_scan() is called — execute_scan() submits
+        the scan to a background thread and returns immediately, so
+        subscribing afterwards races the scan's own completion publish. A
+        1-point mock scan can finish before the test thread gets back around
+        to subscribing, silently dropping the event and hanging the test
+        for the full timeout."""
         done = threading.Event()
         self.event_bus.subscribe("scancompleted", lambda e: done.set())
-        return done.wait(timeout=timeout)
+        return done
 
     def test_mute_eliminates_excitation_offset_for_baseline_window(self):
         scan_dto = Scan2DConfigDTO(
@@ -98,8 +104,9 @@ class TestScanDifferentialModeIntegration(unittest.TestCase):
             differential_settle_delay_ms=20,
         )
 
+        done = self._subscribe_completion()
         self.assertTrue(self.service.execute_scan(scan_dto))
-        self.assertTrue(self._wait_for_completion(), "Scan did not complete within timeout")
+        self.assertTrue(done.wait(timeout=10.0), "Scan did not complete within timeout")
 
         scan = self.service._current_scan
         self.assertEqual(len(scan.points), 1)
@@ -156,8 +163,9 @@ class TestScanDifferentialModeIntegration(unittest.TestCase):
             differential_settle_delay_ms=20,
         )
 
+        done = self._subscribe_completion()
         self.assertTrue(self.service.execute_scan(scan_dto))
-        self.assertTrue(self._wait_for_completion(), "Scan did not complete within timeout")
+        self.assertTrue(done.wait(timeout=10.0), "Scan did not complete within timeout")
 
         self.assertEqual(len(received), 1)
         _, _, data = received[0]
@@ -177,8 +185,9 @@ class TestScanDifferentialModeIntegration(unittest.TestCase):
             differential_mode=False,
         )
 
+        done = self._subscribe_completion()
         self.assertTrue(self.service.execute_scan(scan_dto))
-        self.assertTrue(self._wait_for_completion(), "Scan did not complete within timeout")
+        self.assertTrue(done.wait(timeout=10.0), "Scan did not complete within timeout")
 
         point = self.service._current_scan.points[0]
         self.assertIsNone(point.baseline_measurement)
