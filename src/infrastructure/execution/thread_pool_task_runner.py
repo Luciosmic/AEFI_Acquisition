@@ -22,10 +22,13 @@ Design:
 
 from __future__ import annotations
 
+import logging
 import threading
 from typing import Callable, Optional
 
-from application._shared.ports.i_async_task_runner import IAsyncTaskRunner, TaskHandle
+from application.shared.ports.i_async_task_runner import IAsyncTaskRunner, TaskHandle
+
+logger = logging.getLogger(__name__)
 
 
 class _ThreadTaskHandle(TaskHandle):
@@ -43,6 +46,7 @@ class ThreadPoolTaskRunner(IAsyncTaskRunner):
     """Runs each submitted callable in its own daemon thread."""
 
     def submit(self, task: Callable[[], None]) -> TaskHandle:
+        logger.info("Submitting task to background thread")
         thread = threading.Thread(target=task, daemon=True)
         thread.start()
         return _ThreadTaskHandle(thread)

@@ -20,12 +20,15 @@ Design:
 
 from dataclasses import dataclass
 from typing import Dict, Optional, Any, List
+import logging
 import math
 
 from application.services.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
 from domain.shared_kernel.value_objects.acquisition.aefi_voltage_measurement import AefiVoltageMeasurement
 import json
 import os
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -88,13 +91,13 @@ class ADS131A04Adapter(IAcquisitionPort):
                 # Calculate sampling rate based on OSR (approximate)
                 sampling_rate_hz=self.MAX_DATA_RATE_HZ / adc_config["oversampling_ratio"]
             )
-            print(f"[ADS131Adapter] Configuration loaded: {self._current_config}")
-            
+            logger.info("Configuration loaded: %s", self._current_config)
+
         except KeyError as e:
-            print(f"[ADS131Adapter] Failed to load config: Missing key {e}")
+            logger.exception("Failed to load config: Missing key")
             raise ValueError(f"Invalid configuration format: Missing key {e}")
         except Exception as e:
-            print(f"[ADS131Adapter] Failed to load config: {e}")
+            logger.exception("Failed to load config")
             raise e
     
     def acquire_sample(self) -> AefiVoltageMeasurement:
@@ -125,8 +128,8 @@ class ADS131A04Adapter(IAcquisitionPort):
                 with open(mcu_config_path, 'r') as f:
                     mcu_config = json.load(f)
                     n_avg = int(mcu_config.get("n_avg", 1))
-        except Exception as e:
-            print(f"[ADS131Adapter] Failed to read MCU config, using default n_avg=1: {e}")
+        except Exception:
+            logger.exception("Failed to read MCU config, using default n_avg=1")
         
         # Acquire via MCU: command 'm{n_avg}' (n_avg samples averaged by MCU)
         # DEBUG: Trace acquisition start
@@ -134,7 +137,7 @@ class ADS131A04Adapter(IAcquisitionPort):
         success, response = self._serial.send_command(f'm{n_avg}')
         
         if not success:
-            print(f"[ADS131Adapter] Acquisition failed. Response: {response}")
+            logger.warning("Acquisition failed. Response: %s", response)
             raise RuntimeError(f"Acquisition failed: {response}")
 
         # Parse response: tab-separated raw ADC codes (8 channels hardware, use first 6)
@@ -142,12 +145,12 @@ class ADS131A04Adapter(IAcquisitionPort):
             raw_codes = [int(x) for x in response.split('\t') if x.strip()]
             
             if len(raw_codes) < 6:
-                print(f"[ADS131Adapter] Error: Not enough channels. Got {len(raw_codes)}")
+                logger.warning("Not enough channels. Got %s", len(raw_codes))
                 raise ValueError(f"Expected at least 6 channels, got {len(raw_codes)}")
             # Use only first 6 channels
             raw_codes = raw_codes[:6]
         except ValueError as e:
-            print(f"[ADS131Adapter] Parsing error: {e}")
+            logger.error("Parsing error: %s", e)
             raise RuntimeError(f"Failed to parse ADC data: {e}, response: '{response}'")
         
         # Convert raw codes to voltages

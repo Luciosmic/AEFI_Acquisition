@@ -1,3 +1,4 @@
+import logging
 from typing import Dict, Any, List
 from application.services.hardware_configuration_service.ports.i_hardware_advanced_configurator import IHardwareAdvancedConfigurator
 from domain.shared_kernel.value_objects.hardware_configuration.hardware_advanced_parameter_schema import (
@@ -6,6 +7,8 @@ from domain.shared_kernel.value_objects.hardware_configuration.hardware_advanced
     BooleanParameterSchema,
     EnumParameterSchema
 )
+
+logger = logging.getLogger(__name__)
 
 class MockHardwareAdvancedConfigurator(IHardwareAdvancedConfigurator):
     """
@@ -99,10 +102,20 @@ class MockHardwareAdvancedConfigurator(IHardwareAdvancedConfigurator):
     def apply_config(self, config: Dict[str, Any]) -> None:
         """
         Apply configuration (mock implementation).
-        
+
         Args:
             config: Dictionary of parameter values keyed by parameter key.
         """
-        print(f"[MockAdvancedConfig] Applying config: {config}")
+        logger.info(f"apply_config: Applying config: {config}")
         self.last_config = dict(config)
         self.applied_params.update(config)
+
+    def save_config_as_default(self, config: Dict[str, Any]) -> None:
+        logger.info(f"save_config_as_default: Saving as default: {config}")
+
+    def reset_to_default(self) -> None:
+        """get_parameter_specs() here reads only in-memory hardcoded specs
+        (no default+last resolution), so its default_value already IS the
+        pure default — safe to feed straight into apply_config()."""
+        flat_config = {spec.key: spec.default_value for spec in self.get_parameter_specs()}
+        self.apply_config(flat_config)

@@ -1,6 +1,7 @@
 import unittest
 
 from domain.shared_kernel.excitation.value_objects.sphere_id import SphereId
+from domain.shared_kernel.excitation.value_objects.phase_angle import PhaseAngle
 
 
 class TestSphereId(unittest.TestCase):
@@ -30,6 +31,26 @@ class TestSphereId(unittest.TestCase):
         self.assertTrue(SphereId.S2.is_direct_output)
         self.assertFalse(SphereId.S3.is_direct_output)
         self.assertTrue(SphereId.S4.is_direct_output)
+
+    def test_derive_phase_s1_is_complementary_of_dds2(self):
+        dds1_phase = PhaseAngle(10.0)
+        dds2_phase = PhaseAngle(20.0)
+        self.assertEqual(SphereId.S1.derive_phase(dds1_phase, dds2_phase), PhaseAngle(200.0))
+
+    def test_derive_phase_s2_is_direct_from_dds2(self):
+        dds1_phase = PhaseAngle(10.0)
+        dds2_phase = PhaseAngle(20.0)
+        self.assertEqual(SphereId.S2.derive_phase(dds1_phase, dds2_phase), PhaseAngle(20.0))
+
+    def test_derive_phase_s3_is_complementary_of_dds1(self):
+        dds1_phase = PhaseAngle(10.0)
+        dds2_phase = PhaseAngle(20.0)
+        self.assertEqual(SphereId.S3.derive_phase(dds1_phase, dds2_phase), PhaseAngle(190.0))
+
+    def test_derive_phase_s4_is_direct_from_dds1(self):
+        dds1_phase = PhaseAngle(10.0)
+        dds2_phase = PhaseAngle(20.0)
+        self.assertEqual(SphereId.S4.derive_phase(dds1_phase, dds2_phase), PhaseAngle(10.0))
 
 
 if __name__ == "__main__":

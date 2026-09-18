@@ -18,11 +18,14 @@ Design:
 - QCS organization: Setup / Commands / Queries
 """
 
+import logging
 import os
 import time
 import threading
 from typing import Optional, List, Dict
 from dataclasses import dataclass
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -107,8 +110,8 @@ class ArcusPerformax4EXController:
                 self._initialize_homing_status()
                 
                 return True
-            except Exception as e:
-                print(f"[ArcusController] Connection failed: {e}")
+            except Exception:
+                logger.exception("Connection failed")
                 return False
     
     def disconnect(self) -> None:
@@ -138,7 +141,7 @@ class ArcusPerformax4EXController:
                     self._is_homed[axis] = True
             except:
                 pass
-        print(f"[ArcusController] Homing status initialized: {self._is_homed}")
+        logger.info("Homing status initialized: %s", self._is_homed)
     
     def set_axis_params(self, axis: str, ls: Optional[int] = None, hs: Optional[int] = None, 
                        acc: Optional[int] = None, dec: Optional[int] = None) -> Dict[str, int]:
@@ -245,16 +248,15 @@ class ArcusPerformax4EXController:
                 raise RuntimeError("Not connected")
             
             axis_lower = axis.lower()
-            
-            print(f"[ArcusController] Homing {axis.upper()} (direction -)...")
+
+            logger.info("Homing %s (direction -)...", axis.upper())
             self._stage.home(axis_lower, direction="-", home_mode="only_home_input")
-            
+
             if blocking:
-                print(f"[ArcusController] Waiting for {axis.upper()} homing to complete...")
                 self._stage.wait_move(axis_lower, timeout=timeout)
                 self._stage.set_position_reference(axis_lower, 0)
                 self._is_homed[axis_lower] = True
-                print(f"[ArcusController] {axis.upper()} homed. Position set to 0.")
+                logger.info("%s homed. Position set to 0.", axis.upper())
     
     def home_both(self, blocking: bool = True, timeout: float = 120.0) -> None:
         """
@@ -268,19 +270,18 @@ class ArcusPerformax4EXController:
             if not self._stage:
                 raise RuntimeError("Not connected")
             
-            print("[ArcusController] Homing X and Y simultaneously...")
+            logger.info("Homing X and Y simultaneously...")
             self._stage.home('x', direction='-', home_mode='only_home_input')
             self._stage.home('y', direction='-', home_mode='only_home_input')
-            
+
             if blocking:
-                print("[ArcusController] Waiting for both axes...")
                 self._stage.wait_move('x', timeout=timeout)
                 self._stage.wait_move('y', timeout=timeout)
                 self._stage.set_position_reference('x', 0)
                 self._stage.set_position_reference('y', 0)
                 self._is_homed['x'] = True
                 self._is_homed['y'] = True
-                print("[ArcusController] Both axes homed. Positions set to 0.")
+                logger.info("Both axes homed. Positions set to 0.")
     
     def set_homed(self, axis: str, value: bool = True) -> None:
         """Manually set homing status (for testing/recovery)."""

@@ -1,3 +1,4 @@
+import logging
 import os
 import sys
 from pathlib import Path
@@ -19,6 +20,7 @@ from application.services.scan_application_service.scan_application_service impo
     make_electric_field_probe_channel,
 )
 from application.services.excitation_configuration_service.excitation_configuration_service import ExcitationConfigurationService
+from application.services.synchronous_detection_service.synchronous_detection_service import SynchronousDetectionService
 from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
 from application.services.motion_control_service.motion_control_service import MotionControlService
 from application.services.electric_field_probe_service.electric_field_probe_service import ElectricFieldProbeService
@@ -31,6 +33,13 @@ from infrastructure.execution.event_bus_motion_synchronizer import EventBusMotio
 from infrastructure.persistence.csv_scan_export_port import CsvScanExportPort
 from infrastructure.persistence.hdf5_scan_export_port import Hdf5ScanExportPort
 from infrastructure.persistence.acquisition_snapshot_reader import AcquisitionSnapshotReader
+from infrastructure.persistence.calibration.hardware_signature_reader import HardwareSignatureReader
+from infrastructure.persistence.calibration.real_synchronous_detection_phase_calibration_repository import (
+    RealSynchronousDetectionPhaseCalibrationRepository,
+)
+from infrastructure.hardware.micro_controller.ad9106.adapter_synchronous_detection_ad9106 import (
+    AdapterSynchronousDetectionAD9106,
+)
 from infrastructure.post_processing.aefi_post_processor_port import AefiPostProcessorPort
 from application.services.scan_export_service.scan_export_service import ScanExportService
 
@@ -60,6 +69,7 @@ from interface.shell.dashboard import Dashboard
 from interface.widgets.panels.logs_panel import LogsPanel, install_console_capture
 from interface.presenters.motion_presenter import MotionPresenter
 from interface.presenters.excitation_presenter import ExcitationPresenter
+from interface.presenters.synchronous_detection_presenter import SynchronousDetectionPresenter
 from interface.presenters.aefi_continuous_reading_presenter import AefiContinuousReadingPresenter
 from interface.presenters.electric_field_probe_presenter import ElectricFieldProbePresenter
 from interface.presenters.sensor_transformation_presenter import SensorTransformationPresenter
@@ -73,6 +83,9 @@ from application.services.hardware_configuration_service.hardware_configuration_
 from application.services.hardware_configuration_service.ports.i_hardware_advanced_configurator import IHardwareAdvancedConfigurator
 from interface.presenters.hardware_advanced_config_presenter import HardwareAdvancedConfigPresenter
 from interface.styles.theme import apply_dark_theme
+
+logger = logging.getLogger(__name__)
+
 
 def main(hardware_config: dict | None = None):
     """
@@ -92,7 +105,7 @@ def main(hardware_config: dict | None = None):
     )
     seeded = bootstrapper.ensure_configs_exist()
     if seeded:
-        print(f"[bootstrap] Configs initialisées depuis templates : {seeded}")
+        logger.info(f"Configs initialisées depuis templates : {seeded}")
 
     # 1. Create QApplication
     app = QApplication(sys.argv)
@@ -132,7 +145,7 @@ def main(hardware_config: dict | None = None):
         }
     NARDA_COM_PORT = "COM8"  # cf. config_templates/electric_field_probe_config.json
     print("--- Starting Interface V2 ---")
-    print(f"Hardware Config: {hardware_config}")
+    logger.info(f"Hardware config: {hardware_config}")
     
     # 3. Infrastructure Setup (Event Bus)
     event_bus = InMemoryEventBus()
@@ -156,13 +169,13 @@ def main(hardware_config: dict | None = None):
     # startup/shutdown lifecycle, and ArcusAdapter's real worker/monitor
     # threads all run identically to the real-hardware path.
     if hardware_config["motion"] == "real":
-        print("  [motion] -> real (ArcusCompositionRoot)")
+        logger.info("Motion -> real (ArcusCompositionRoot)")
         arcus_root = ArcusCompositionRoot(event_bus=event_bus)
     else:
         from infrastructure.hardware.arcus_performax_4EX.fake.fake_arcus_performax4ex_controller import (
             FakeArcusPerformax4EXController,
         )
-        print("  [motion] -> mock (ArcusCompositionRoot, simulated controller)")
+        logger.info("Motion -> mock (ArcusCompositionRoot, simulated controller)")
         arcus_root = ArcusCompositionRoot(event_bus=event_bus, controller=FakeArcusPerformax4EXController())
     motion_port = arcus_root.motion
     lifecycle_adapters.append(arcus_root.lifecycle)
@@ -173,21 +186,21 @@ def main(hardware_config: dict | None = None):
     # Config entries), and the excitation frequency-sync event all behave
     # exactly like real hardware.
     if hardware_config["aefi_device"] == "real":
-        print("  [acquisition] -> real (MCUCompositionRoot)")
+        logger.info("Acquisition -> real (MCUCompositionRoot)")
         mcu_root = MCUCompositionRoot(event_bus=event_bus)
     else:
         from infrastructure.hardware.micro_controller.fake.fake_mcu_serial_communicator import (
             FakeMCUSerialCommunicator,
         )
-        print("  [acquisition] -> mock (MCUCompositionRoot, simulated communicator)")
+        logger.info("Acquisition -> mock (MCUCompositionRoot, simulated communicator)")
         mcu_root = MCUCompositionRoot(event_bus=event_bus, communicator=FakeMCUSerialCommunicator())
 
     base_acquisition_port = mcu_root.acquisition
     excitation_port = mcu_root.excitation
     continuous_executor = mcu_root.continuous
     lifecycle_adapters.append(mcu_root.lifecycle)
-    print(f"  [excitation] -> {hardware_config['aefi_device']} (from MCUCompositionRoot)")
-    print(f"  [continuous] -> {hardware_config['aefi_device']} (from MCUCompositionRoot)")
+    logger.info(f"Excitation -> {hardware_config['aefi_device']} (from MCUCompositionRoot)")
+    logger.info(f"Continuous -> {hardware_config['aefi_device']} (from MCUCompositionRoot)")
 
     # --- Wrap acquisition port with excitation-aware wrapper (only in mock mode) ---
     # This simulates the physical coupling between excitation and acquisition —
@@ -204,23 +217,32 @@ def main(hardware_config: dict | None = None):
             base_acquisition_port=base_acquisition_port,
             excitation_port=excitation_port,
         )
-        print("  [acquisition] -> wrapped with ExcitationAwareAcquisitionPort (simulation)")
+        logger.info("Acquisition -> wrapped with ExcitationAwareAcquisitionPort (simulation)")
     else:
         # Use base acquisition port directly for real hardware
         acquisition_port = base_acquisition_port
-        print("  [acquisition] -> using base port directly (real hardware)")
+        logger.info("Acquisition -> using base port directly (real hardware)")
 
     # --- Electric Field Probe (Narda EP-601) ---
     # Deliberately NOT added to lifecycle_adapters: this probe is auto-off and
     # times out often, so it must never block or fail app startup. Connection
     # is a manual action from the panel (Connect button), not a startup step.
     if hardware_config["electric_field_probe"] == "real":
-        print(f"  [electric_field_probe] -> real (Narda EP-601 on {NARDA_COM_PORT})")
+        logger.info(f"Electric field probe -> real (Narda EP-601 on {NARDA_COM_PORT})")
         probe_port = NardaEP601ProbeAdapter(port=NARDA_COM_PORT)
     else:
         from infrastructure.hardware.narda_ep600.fake.fake_electric_field_probe_adapter import FakeElectricFieldProbeAdapter
-        print("  [electric_field_probe] -> mock")
+        logger.info("Electric field probe -> mock")
         probe_port = FakeElectricFieldProbeAdapter()
+
+    # Rule-6: non-obvious branch decision, per the "Deliberately NOT added to
+    # lifecycle_adapters" comment above — worth a log line since a future
+    # reader debugging a startup hang/failure needs to know the probe is not
+    # part of the startup sequence at all.
+    logger.debug(
+        "Electric field probe deliberately excluded from hardware lifecycle "
+        "(auto-off, frequent timeouts) — connection is manual via the panel."
+    )
 
     # 5. Create Hardware Initialization Port
     if lifecycle_adapters:
@@ -245,6 +267,7 @@ def main(hardware_config: dict | None = None):
     # pulling acquisition_port directly, so it needs the service, not the
     # raw port.
     continuous_service = AefiAcquisitionService(continuous_executor, acquisition_port)
+    logger.info("Services -> AefiAcquisitionService created (continuous acquisition)")
 
     # Electric Field Probe Service
     # Same reasoning: built before ScanApplicationService, which subscribes
@@ -255,6 +278,7 @@ def main(hardware_config: dict | None = None):
         probe_port=probe_port,
         event_bus=event_bus,
     )
+    logger.info("Services -> ElectricFieldProbeService created")
 
     # Scan Application Service — auxiliary probes (currently: Narda EF probe)
     # are registered as blocking channels; see AuxiliaryProbeChannel for what
@@ -266,6 +290,21 @@ def main(hardware_config: dict | None = None):
     )
     # Excitation Service
     excitation_service = ExcitationConfigurationService(excitation_port, event_bus)
+    logger.info("Services -> ExcitationConfigurationService created")
+
+    # Synchronous Detection Service (DDS3/DDS1 phase calibration)
+    synchronous_detection_hardware_port = AdapterSynchronousDetectionAD9106(
+        mcu_root.ad9106_controller, mcu_root.ad9106_configurator
+    )
+    hardware_signature = HardwareSignatureReader().read()
+    synchronous_detection_calibration_repository = RealSynchronousDetectionPhaseCalibrationRepository()
+    synchronous_detection_service = SynchronousDetectionService(
+        hardware_port=synchronous_detection_hardware_port,
+        calibration_repository=synchronous_detection_calibration_repository,
+        hardware_signature=hardware_signature,
+        event_bus=event_bus,
+    )
+    logger.info("Services -> SynchronousDetectionService created (signature=%s)", hardware_signature)
 
     scan_service = ScanApplicationService(
         motion_port, continuous_service, event_bus,
@@ -274,6 +313,7 @@ def main(hardware_config: dict | None = None):
         auxiliary_probes=[narda_channel],
         excitation_service=excitation_service,
     )
+    logger.info("Services -> ScanApplicationService created (auxiliary_probes=1)")
 
     # Scan Export Service
     csv_export_port = CsvScanExportPort()
@@ -287,13 +327,15 @@ def main(hardware_config: dict | None = None):
         post_processing_port=post_processing_port,
         task_runner=task_runner,
     )
+    logger.info("Services -> ScanExportService created")
 
     # Motion Control Service
     motion_control_service = MotionControlService(motion_port, event_bus)
+    logger.info("Services -> MotionControlService created")
 
     # Transformation Service (Shared State)
     transformation_service = TransformationService(event_bus)
-    
+
     # Hardware Configuration Service
     print("\n--- Creating Hardware Configuration Service ---")
     configurators: list[IHardwareAdvancedConfigurator] = []
@@ -301,13 +343,13 @@ def main(hardware_config: dict | None = None):
     # arcus_root/mcu_root always exist now (mock mode = same composition
     # roots, simulated transport) — Hardware Config lists everything either way.
     configurators.append(arcus_root.config)
-    print("  [config] -> added Arcus configurator")
+    logger.info("Config -> added Arcus configurator")
 
     configurators.extend(mcu_root.configurators)
-    print(f"  [config] -> added {len(mcu_root.configurators)} MCU configurator(s)")
-    
+    logger.info(f"Config -> added {len(mcu_root.configurators)} MCU configurator(s)")
+
     hardware_config_service = HardwareConfigurationService(configurators)
-    print(f"  [config] -> service created with {len(configurators)} configurator(s)")
+    logger.info(f"Config -> service created with {len(configurators)} configurator(s)")
     
     # 7. Create Lifecycle Services (only if real hardware is used)
     # For mock-only, we skip startup
@@ -350,7 +392,8 @@ def main(hardware_config: dict | None = None):
     
     motion_presenter = MotionPresenter(motion_control_service, event_bus)
     excitation_presenter = ExcitationPresenter(excitation_service, event_bus)
-    
+    synchronous_detection_presenter = SynchronousDetectionPresenter(synchronous_detection_service, event_bus)
+
     # Continuous Presenter needs Transformation Service now
     aefi_continuous_reading_presenter = AefiContinuousReadingPresenter(continuous_service, event_bus, transformation_service)
 
@@ -392,16 +435,31 @@ def main(hardware_config: dict | None = None):
 
     # Initialize presenter to fetch limits
     motion_presenter.initialize()
-    motion_presenter.on_speed_mode_requested(motion_panel.get_current_speed_mode())
-    print("  [motion] wired")
-    
+    logger.debug("Motion panel wired")
+
     # Excitation Panel
     excitation_panel = dashboard.panels["excitation"]
-    print(f"  [excitation] Connecting signal: excitation_panel.excitation_changed -> excitation_presenter.on_excitation_changed")
+    logger.debug("Connecting signal: excitation_panel.excitation_changed -> excitation_presenter.on_excitation_changed")
     excitation_panel.excitation_changed.connect(excitation_presenter.on_excitation_changed)
     excitation_presenter.excitation_updated.connect(excitation_panel.set_state)
+    excitation_panel.link_toggled.connect(excitation_presenter.on_link_toggled)
+    excitation_presenter.link_state_changed.connect(excitation_panel.set_link_state)
     excitation_presenter.refresh_state()
-    print("  [excitation] wired")
+    synchronous_detection_presenter.sphere_phases_updated.connect(excitation_panel.set_synchronous_detection_state)
+    excitation_panel.lock_in_detection_toggled.connect(synchronous_detection_presenter.on_lock_in_detection_toggled)
+    excitation_panel.compensation_toggle_requested.connect(synchronous_detection_presenter.on_compensation_toggle_requested)
+    synchronous_detection_presenter.compensation_state_changed.connect(excitation_panel.set_compensation_state)
+    excitation_panel.lock_in_phase_offset_changed.connect(synchronous_detection_presenter.on_lock_in_phase_offset_changed)
+    excitation_panel.lock_in_phase_offset_reset_requested.connect(synchronous_detection_presenter.on_lock_in_phase_offset_reset_requested)
+    # NOTE: synchronous_detection_presenter.refresh_state() is deliberately
+    # NOT called here — compensation_state_changed isn't wired to
+    # hardware_config_panel yet at this point (that happens further below,
+    # in the Hardware Advanced Config Panel wiring block). Calling it here
+    # would emit the real persisted compensation state to no listener, and
+    # the panel's toggle button would keep Qt's default (unchecked) instead
+    # of the actual persisted state. See the single refresh_state() call
+    # after ALL synchronous-detection wiring is complete, below.
+    logger.debug("Excitation panel wired")
     
     # Continuous Acquisition Panel
     aefi_continuous_reading_panel = dashboard.panels["aefi_continuous_reading"]
@@ -428,7 +486,7 @@ def main(hardware_config: dict | None = None):
     aefi_continuous_reading_presenter.acquisition_stopped.connect(aefi_continuous_reading_panel.on_acquisition_stopped)
     aefi_continuous_reading_presenter.sample_acquired.connect(aefi_continuous_reading_panel.on_sample_acquired)
     aefi_continuous_reading_presenter.angles_updated.connect(aefi_continuous_reading_panel.update_angles_display)
-    print("  [continuous] wired")
+    logger.debug("Continuous acquisition panel wired")
 
     # Electric Field Probe Panel
     electric_field_probe_panel = dashboard.panels["electric_field_probe"]
@@ -448,7 +506,7 @@ def main(hardware_config: dict | None = None):
     electric_field_probe_presenter.sample_acquired.connect(electric_field_probe_panel.on_sample_acquired)
     electric_field_probe_presenter.noise_state_updated.connect(electric_field_probe_panel.update_correction_states)
     electric_field_probe_presenter.frequency_correction_changed.connect(electric_field_probe_panel.on_frequency_correction_changed)
-    print("  [electric_field_probe] wired")
+    logger.debug("Electric field probe panel wired")
 
     # Scan Panels Wiring
     scan_control_panel = dashboard.panels["scan_control"]
@@ -498,7 +556,7 @@ def main(hardware_config: dict | None = None):
     scan_presenter.scan_started.connect(on_scan_started_viz)
     scan_presenter.scan_progress.connect(on_scan_progress_viz)
     scan_presenter.field_scan_progress.connect(on_field_scan_progress_viz)
-    print("  [scan] wired")
+    logger.debug("Scan panels wired")
 
     # Hardware Advanced Config Panel Wiring
     hardware_config_panel = dashboard.panels["hardware_config"]
@@ -513,27 +571,47 @@ def main(hardware_config: dict | None = None):
     hardware_config_panel.hardware_selected.connect(hardware_config_presenter.select_hardware)
     hardware_config_panel.apply_requested.connect(hardware_config_presenter.apply_configuration)
     hardware_config_panel.save_default_requested.connect(hardware_config_presenter.save_configuration_as_default)
-    
+    hardware_config_panel.reset_default_requested.connect(hardware_config_presenter.reset_configuration_to_default)
+
+    # Synchronous Detection (calibration point + compensation toggle) — Panel -> Presenter
+    hardware_config_panel.save_calibration_point_requested.connect(
+        synchronous_detection_presenter.on_save_calibration_point_requested
+    )
+    hardware_config_panel.compensation_toggle_requested.connect(
+        synchronous_detection_presenter.on_compensation_toggle_requested
+    )
+    # Synchronous Detection — Presenter -> Panel
+    synchronous_detection_presenter.compensation_state_changed.connect(
+        hardware_config_panel.set_compensation_enabled_state
+    )
+    synchronous_detection_presenter.status_message.connect(hardware_config_panel.set_status_message)
+
+    # All synchronous-detection wiring (both panels, both directions) is now
+    # complete — safe to push the real persisted state (sphere phases +
+    # compensation-enabled) to both panels for the first time.
+    synchronous_detection_presenter.refresh_state()
+
     # Initialize: refresh hardware list on startup
     hardware_config_presenter.refresh_hardware_list()
-    
-    print("  [hardware_config] wired")
 
-    print("  [transformation] wired (via constructor)")
+    logger.debug("Hardware config panel wired")
+
+    logger.debug("Transformation panel wired (via constructor)")
     
     # 11. Startup Sequence (hardware init if real hardware) or Direct Launch (if mocks only)
     # StartupView has been visible since the very start of main(); the log
     # panel it hosted moves into the Dashboard once it's shown.
     def on_startup_finished(success: bool, errors: list):
         if success:
-            print("Hardware initialization successful.")
+            logger.info("Hardware initialization successful.")
+            motion_presenter.on_speed_mode_requested(motion_panel.get_current_speed_mode())
             startup_view.close()
 
             print("\n--- Launching Dashboard ---")
             dashboard.show()
-            print("Dashboard launched successfully!")
+            logger.info("Dashboard launched successfully.")
         else:
-            print(f"CRITICAL: Hardware initialization failed: {errors}")
+            logger.error(f"Hardware initialization failed: {errors}")
             # StartupView will display the error
             # User can close the window manually
 
@@ -545,6 +623,7 @@ def main(hardware_config: dict | None = None):
         startup_view.start_hardware_init()
     else:
         # No hardware lifecycle to run for mocks - finish immediately
+        logger.info("No real hardware in lifecycle (mock-only) — skipping startup sequence.")
         on_startup_finished(success=True, errors=[])
 
     sys.exit(app.exec())

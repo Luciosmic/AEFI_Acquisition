@@ -12,6 +12,7 @@ Design:
 
 from __future__ import annotations
 
+import logging
 import threading
 import time
 from uuid import uuid4, UUID
@@ -36,6 +37,8 @@ from domain.shared_kernel.events.aefi_voltage_reading_stopped.aefi_voltage_readi
     AefiVoltageReadingStopped,
 )
 
+logger = logging.getLogger(__name__)
+
 
 class AefiAcquisitionExecutor(IAefiAcquisitionExecutor):
     # ponytail: events renamed Acquisition->Reading (AefiVoltageReadingStarted/
@@ -56,10 +59,12 @@ class AefiAcquisitionExecutor(IAefiAcquisitionExecutor):
         If an acquisition is already running, this call is ignored for now.
         """
         if self._thread and self._thread.is_alive():
+            logger.info("Acquisition start ignored: an acquisition is already running")
             return
 
         self._stop_flag.clear()
         self._current_acquisition_id = uuid4()
+        logger.info("Starting acquisition %s", self._current_acquisition_id)
         self._thread = threading.Thread(
             target=self._worker,
             args=(self._current_acquisition_id, config, acquisition_port),
@@ -69,6 +74,7 @@ class AefiAcquisitionExecutor(IAefiAcquisitionExecutor):
 
     def stop(self) -> None:
         """Request graceful stop of the running acquisition."""
+        logger.info("Stopping acquisition %s", self._current_acquisition_id)
         self._stop_flag.set()
         if self._thread:
             self._thread.join(timeout=2.0)
@@ -109,12 +115,14 @@ class AefiAcquisitionExecutor(IAefiAcquisitionExecutor):
 
                 index += 1
         except Exception as e:
+            logger.exception("Acquisition %s failed after %d sample(s)", acquisition_id, index)
             error_event = AefiVoltageReadingFailed(
                 acquisition_id=acquisition_id,
                 reason=str(e)
             )
             self._event_bus.publish("aefivoltagereadingfailed", error_event)
         finally:
+            logger.info("Acquisition %s stopped after %d sample(s)", acquisition_id, index)
             stop_event = AefiVoltageReadingStopped(acquisition_id=acquisition_id)
             self._event_bus.publish("aefivoltagereadingstopped", stop_event)
 

@@ -1,5 +1,6 @@
 from typing import List, Dict, Any
 import json
+import logging
 import os
 from dataclasses import replace
 
@@ -8,6 +9,8 @@ from domain.shared_kernel.value_objects.hardware_configuration.hardware_advanced
     HardwareAdvancedParameterSchema, NumberParameterSchema, EnumParameterSchema, BooleanParameterSchema
 )
 from infrastructure.hardware.micro_controller.ads131a04.adapter_i_acquistion_port_ads131a04 import ADS131A04Adapter
+
+logger = logging.getLogger(__name__)
 
 class ADS131A04AdvancedConfigurator(IHardwareAdvancedConfigurator):
     """
@@ -164,16 +167,24 @@ class ADS131A04AdvancedConfigurator(IHardwareAdvancedConfigurator):
                 else:
                     updated_specs.append(spec)
                             
-        except Exception as e:
-            print(f"[ADS131Configurator] Failed to load default config: {e}")
+        except Exception:
+            logger.exception("Failed to load default config")
             return specs
             
         return updated_specs
 
+    def reset_to_default(self) -> None:
+        """Discard the current applied state and re-apply the saved default.
+        get_parameter_specs() here reads only the default file (no
+        default+last resolution for this hardware yet), so its default_value
+        already IS the pure default — safe to feed straight into apply_config()."""
+        flat_config = {spec.key: spec.default_value for spec in self.get_parameter_specs()}
+        self.apply_config(flat_config)
+
     def apply_config(self, config: Dict[str, Any]) -> None:
         """
         Apply advanced configuration.
-        
+
         Args:
             config: Flat dictionary of values keyed by parameter key.
         """
@@ -222,7 +233,7 @@ class ADS131A04AdvancedConfigurator(IHardwareAdvancedConfigurator):
             # Apply to hardware immediately via Controller
             success, msg = self._controller.set_channel_gain(pair_idx, gain_val)
             if not success:
-                print(f"[ADS131Configurator] Failed to set gain for pair {pair_idx}: {msg}")
+                logger.warning("Failed to set gain for pair %s: %s", pair_idx, msg)
             
         # Populate JSON config for Adapter (used for conversion)
         # We assume standard mapping:
@@ -252,9 +263,9 @@ class ADS131A04AdvancedConfigurator(IHardwareAdvancedConfigurator):
             config_path = os.path.join(".aefi_acquisition", "configs", "ads131a04_last_config.json")
             with open(config_path, 'w') as f:
                 json.dump(json_config, f, indent=4)
-            print(f"[ADS131Configurator] Config saved to {config_path}")
-        except Exception as e:
-            print(f"[ADS131Configurator] Failed to save config: {e}")
+            logger.info("Config saved to %s", config_path)
+        except Exception:
+            logger.exception("Failed to save config")
 
     def save_config_as_default(self, config: Dict[str, Any]) -> None:
         """
@@ -300,9 +311,9 @@ class ADS131A04AdvancedConfigurator(IHardwareAdvancedConfigurator):
             config_path = os.path.join(".aefi_acquisition", "configs", "ads131a04_default_config.json")
             with open(config_path, 'w') as f:
                 json.dump(json_config, f, indent=4)
-            print(f"[ADS131Configurator] Default config saved to {config_path}")
+            logger.info("Default config saved to %s", config_path)
         except Exception as e:
-            print(f"[ADS131Configurator] Failed to save default config: {e}")
+            logger.exception("Failed to save default config")
             raise e
     
     def get_adc_output_data_frequency(self) -> float:
@@ -338,8 +349,8 @@ class ADS131A04AdvancedConfigurator(IHardwareAdvancedConfigurator):
                     return self.calculate_adc_output_data_frequency_from_resolution_mode(
                         resolution_mode, osr, vncpen, fmod_index=1
                     )
-        except Exception as e:
-            print(f"[ADS131Configurator] Failed to read saved config: {e}")
+        except Exception:
+            logger.exception("Failed to read saved config")
         
         # Fallback to defaults if config not available
         return self.calculate_adc_output_data_frequency_from_resolution_mode(

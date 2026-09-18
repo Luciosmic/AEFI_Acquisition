@@ -104,9 +104,9 @@ class CsvScanExportPort(IScanExportPort):
         self._timestamp = timestamp
         self._scan_name = safe_base
         self._configured_path = acquisition_dir / f"{timestamp}_stepScan_{safe_base}_aefi.csv"
-        print(f"[CsvScanExportPort] CWD: {os.getcwd()}")
-        print(f"[CsvScanExportPort] Configured export path (rel): {self._configured_path}")
-        print(f"[CsvScanExportPort] Configured export path (abs): {self._configured_path.resolve()}")
+        logger.debug("CWD: %s", os.getcwd())
+        logger.debug("Configured export path (rel): %s", self._configured_path)
+        logger.debug("Configured export path (abs): %s", self._configured_path.resolve())
         logger.debug("CSV export configured at %s", self._configured_path)
 
     def start(self) -> None:
@@ -123,7 +123,7 @@ class CsvScanExportPort(IScanExportPort):
             # Already started; nothing to do.
             return
         
-        print(f"[CsvScanExportPort] Opening file for writing: {self._configured_path}")
+        logger.info("Opening file for writing: %s", self._configured_path)
         self._file = self._configured_path.open(mode="w", newline="", encoding="utf-8")
         # We initialise DictWriter without fieldnames; they will be set on first write.
         self._writer = csv.DictWriter(self._file, fieldnames=[])
@@ -165,7 +165,7 @@ class CsvScanExportPort(IScanExportPort):
 
         probe_label = (probe_info or {}).get("probe_label", "field_probe")
         field_path = self._dir_path / f"{self._timestamp}_stepScan_{self._scan_name}_{probe_label}.csv"
-        print(f"[CsvScanExportPort] Field data export path: {field_path}")
+        logger.info("Field data export path: %s", field_path)
         self._field_file = field_path.open(mode="w", newline="", encoding="utf-8")
         self._field_writer = csv.DictWriter(self._field_file, fieldnames=[])
         self._field_fieldnames = None

@@ -1,5 +1,6 @@
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QGroupBox, QDoubleSpinBox, QComboBox, QCheckBox
+    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QGroupBox, QDoubleSpinBox, QComboBox, QCheckBox,
+    QPushButton,
 )
 from PySide6.QtGui import QPainter, QColor, QPen, QBrush, QFont, QPolygon
 from PySide6.QtCore import Qt, Signal, QRectF, QPoint
@@ -13,8 +14,10 @@ class SphereVisualizationWidget(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setMinimumSize(100, 80)
-        self.setMaximumSize(130, 100)
+        # Slightly larger than before: each sphere now shows its phase value
+        # on a second line under the S1-S4 label.
+        self.setMinimumSize(140, 110)
+        self.setMaximumSize(190, 150)
 
         # Sphere states, keyed by sphere id (S1-S4, matches domain SphereId)
         self.sphere_colors = {
@@ -23,6 +26,13 @@ class SphereVisualizationWidget(QWidget):
             'S3': QColor(100, 100, 100),
             'S4': QColor(100, 100, 100)
         }
+        # Live phase (degrees), None until the first SynchronousDetectionService
+        # refresh — set via set_sphere_phases(), read in paintEvent.
+        self.sphere_phases: dict[str, "float | None"] = {'S1': None, 'S2': None, 'S3': None, 'S4': None}
+
+    def set_sphere_phases(self, s1: float, s2: float, s3: float, s4: float) -> None:
+        self.sphere_phases = {'S1': s1, 'S2': s2, 'S3': s3, 'S4': s4}
+        self.update()
 
     def set_excitation_mode(self, mode: str):
         """Update colors based on excitation mode."""
@@ -149,14 +159,22 @@ class SphereVisualizationWidget(QWidget):
             painter.drawEllipse(x + sphere_size//4, y + sphere_size//4,
                               sphere_size//3, sphere_size//3)
 
-            # S1-S4 label, centered in the sphere
+            # S1-S4 label (upper half) + live phase value (lower half)
             painter.setPen(QPen(QColor(255, 255, 255)))
             painter.setFont(QFont("Arial", 8, QFont.Weight.Bold))
             painter.drawText(
-                QRectF(x, y, sphere_size, sphere_size),
+                QRectF(x, y + sphere_size * 0.12, sphere_size, sphere_size * 0.5),
                 Qt.AlignmentFlag.AlignCenter,
                 sphere_id,
             )
+            phase = self.sphere_phases.get(sphere_id)
+            if phase is not None:
+                painter.setFont(QFont("Arial", 6))
+                painter.drawText(
+                    QRectF(x, y + sphere_size * 0.58, sphere_size, sphere_size * 0.35),
+                    Qt.AlignmentFlag.AlignCenter,
+                    f"{phase:.0f}°",
+                )
 
 class ExcitationPanel(QWidget):
     """
@@ -165,6 +183,11 @@ class ExcitationPanel(QWidget):
     """
     # Signals
     excitation_changed = Signal(str, float, float, float)  # mode, level_s1_s2, level_s3_s4, freq
+    link_toggled = Signal(bool)  # linked
+    lock_in_detection_toggled = Signal(bool)  # enabled
+    compensation_toggle_requested = Signal(bool)  # enabled
+    lock_in_phase_offset_changed = Signal(float)  # degrees
+    lock_in_phase_offset_reset_requested = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -224,14 +247,12 @@ class ExcitationPanel(QWidget):
         v_layout.setSpacing(10)
         v_layout.setContentsMargins(15, 20, 15, 15)
 
-        # Mode Selection + Visualization
-        mode_layout = QHBoxLayout()
-        mode_layout.setSpacing(8)
-        
-        # Mode Selection
+        # Top row: Mode + Frequency selection
+        top_row = QHBoxLayout()
+        top_row.setSpacing(20)
+
         mode_selector_layout = QVBoxLayout()
         mode_selector_layout.setSpacing(2)
-        
         mode_label = QLabel("Mode:")
         mode_label.setStyleSheet("font-weight: bold; color: white;")
         self.mode_combo = QComboBox()
@@ -242,19 +263,42 @@ class ExcitationPanel(QWidget):
             "Circular -",
             "Custom"
         ])
-        
         mode_selector_layout.addWidget(mode_label)
         mode_selector_layout.addWidget(self.mode_combo)
-        mode_layout.addLayout(mode_selector_layout)
-        
-        # Sphere Visualization
-        self.sphere_widget = SphereVisualizationWidget()
-        mode_layout.addWidget(self.sphere_widget, stretch=1)
-        
-        v_layout.addLayout(mode_layout)
+        top_row.addLayout(mode_selector_layout)
 
-        # Level Control — S1/S2 and S3/S4 (same S1..S4 naming as Motion Control)
-        # are each an independent DDS differential pair — two independent gains.
+        freq_selector_layout = QVBoxLayout()
+        freq_selector_layout.setSpacing(2)
+        freq_label = QLabel("Frequency:")
+        freq_label.setStyleSheet("font-weight: bold; color: white;")
+        freq_row = QHBoxLayout()
+        self.freq_spin = QDoubleSpinBox()
+        self.freq_spin.setRange(0.0, 1000000.0)
+        self.freq_spin.setValue(1000.0)
+        self.freq_spin.setDecimals(0)
+        freq_unit = QLabel("Hz")
+        freq_unit.setStyleSheet("color: #AAA;")
+        freq_row.addWidget(self.freq_spin)
+        freq_row.addWidget(freq_unit)
+        freq_selector_layout.addWidget(freq_label)
+        freq_selector_layout.addLayout(freq_row)
+        top_row.addLayout(freq_selector_layout)
+        top_row.addStretch()
+
+        v_layout.addLayout(top_row)
+
+        # Main row: excitation level controls (left) — sphere visualization
+        # (center) — Lock-In Detection controls (right). Levels sit next to
+        # the widget they control the color of; Lock-In controls sit on the
+        # opposite side to balance the layout.
+        main_row = QHBoxLayout()
+        main_row.setSpacing(20)
+
+        # --- Left: Level Control — S1/S2 and S3/S4 (same S1..S4 naming as
+        # Motion Control) are each an independent DDS differential pair.
+        levels_column = QVBoxLayout()
+        levels_column.setSpacing(8)
+
         s1_s2_layout = QHBoxLayout()
         s1_s2_label = QLabel("Level S1-S2:")
         s1_s2_label.setStyleSheet("font-weight: bold; color: white;")
@@ -268,7 +312,7 @@ class ExcitationPanel(QWidget):
         s1_s2_layout.addWidget(self.level_s1_s2_spin)
         s1_s2_layout.addWidget(s1_s2_unit)
         s1_s2_layout.addStretch()
-        v_layout.addLayout(s1_s2_layout)
+        levels_column.addLayout(s1_s2_layout)
 
         s3_s4_layout = QHBoxLayout()
         s3_s4_label = QLabel("Level S3-S4:")
@@ -283,30 +327,87 @@ class ExcitationPanel(QWidget):
         s3_s4_layout.addWidget(self.level_s3_s4_spin)
         s3_s4_layout.addWidget(s3_s4_unit)
         s3_s4_layout.addStretch()
-        v_layout.addLayout(s3_s4_layout)
+        levels_column.addLayout(s3_s4_layout)
 
         # Checked by default: reproduces the previous single-"Level" behavior
         # (one shared value applied to both DDS).
         self.link_checkbox = QCheckBox("Link S1-S2 = S3-S4")
         self.link_checkbox.setChecked(True)
-        v_layout.addWidget(self.link_checkbox)
+        levels_column.addWidget(self.link_checkbox)
+        levels_column.addStretch()
 
-        # Frequency Control
-        freq_layout = QHBoxLayout()
-        freq_label = QLabel("Frequency:")
-        freq_label.setStyleSheet("font-weight: bold; color: white;")
-        self.freq_spin = QDoubleSpinBox()
-        self.freq_spin.setRange(0.0, 1000000.0)
-        self.freq_spin.setValue(1000.0)
-        self.freq_spin.setDecimals(0)
-        freq_unit = QLabel("Hz")
-        freq_unit.setStyleSheet("color: #AAA;")
-        freq_layout.addWidget(freq_label)
-        freq_layout.addWidget(self.freq_spin)
-        freq_layout.addWidget(freq_unit)
-        freq_layout.addStretch()
-        v_layout.addLayout(freq_layout)
-        
+        main_row.addLayout(levels_column, stretch=1)
+
+        # --- Center: Sphere Visualization (now also shows each S1-S4 phase)
+        self.sphere_widget = SphereVisualizationWidget()
+        main_row.addWidget(self.sphere_widget)
+
+        # --- Right: Lock-In Detection command controls, with the phase
+        # offset display below them.
+        lock_in_column = QVBoxLayout()
+        lock_in_column.setSpacing(8)
+
+        lock_in_header = QHBoxLayout()
+        lock_in_header.setSpacing(6)
+        self.lock_in_checkbox = QCheckBox("Enable Lock-In Detection")
+        self.lock_in_checkbox.setChecked(True)
+        lock_in_header.addWidget(self.lock_in_checkbox)
+
+        # Small warning symbol, hidden unless the synchronous-detection
+        # (ch3/ch4) gain is below the recommended default — kept minimal
+        # (a single glyph + tooltip) rather than a verbose inline message.
+        self.lock_in_gain_warning_label = QLabel("⚠")
+        self.lock_in_gain_warning_label.setStyleSheet(
+            "color: #E6B800; font-weight: bold; font-size: 14px;"
+        )
+        self.lock_in_gain_warning_label.setToolTip(
+            "Le gain de l'excitation synchrone (DDS3/DDS4) est en dessous "
+            "de la valeur recommandée par défaut."
+        )
+        self.lock_in_gain_warning_label.setVisible(False)
+        lock_in_header.addWidget(self.lock_in_gain_warning_label)
+        lock_in_header.addStretch()
+        lock_in_column.addLayout(lock_in_header)
+
+        self.compensation_checkbox = QCheckBox("Compensation active")
+        lock_in_column.addWidget(self.compensation_checkbox)
+
+        lock_in_column.addStretch()
+
+        # Editable in degrees (not raw registers) — lets the user tune the
+        # lock-in reference directly from this panel instead of going
+        # through Hardware Advanced Config's raw phase field. Locked
+        # (disabled) unless compensation is active — see set_compensation_state.
+        offset_layout = QHBoxLayout()
+        offset_label = QLabel("Lock-in Detection Phase Offset:")
+        offset_label.setStyleSheet("font-weight: bold; color: white;")
+        self.lock_in_offset_spin = QDoubleSpinBox()
+        self.lock_in_offset_spin.setRange(0.0, 360.0)
+        # AD9106 phase register is 16-bit over 360° -> 1 register increment =
+        # 360/65536 ~= 0.0055°. 3 decimals is the coarsest display precision
+        # that still reflects a single hardware step (2 decimals can round
+        # two adjacent register values to the same displayed number).
+        self.lock_in_offset_spin.setDecimals(3)
+        self.lock_in_offset_spin.setSingleStep(360.0 / 65536)
+        self.lock_in_offset_spin.setWrapping(True)
+        self.lock_in_offset_spin.setEnabled(False)
+        offset_unit = QLabel("°")
+        offset_unit.setStyleSheet("color: #AAA;")
+        self.lock_in_offset_reset_btn = QPushButton("Reset")
+        self.lock_in_offset_reset_btn.setToolTip(
+            "Réinitialiser au point de calibration enregistré pour la fréquence courante."
+        )
+        offset_layout.addWidget(offset_label)
+        offset_layout.addWidget(self.lock_in_offset_spin)
+        offset_layout.addWidget(offset_unit)
+        offset_layout.addWidget(self.lock_in_offset_reset_btn)
+        offset_layout.addStretch()
+        lock_in_column.addLayout(offset_layout)
+
+        main_row.addLayout(lock_in_column, stretch=1)
+
+        v_layout.addLayout(main_row)
+
         layout.addWidget(group)
         layout.addStretch()
 
@@ -318,6 +419,10 @@ class ExcitationPanel(QWidget):
         self.level_s3_s4_spin.editingFinished.connect(self._emit_changed)
         self.link_checkbox.toggled.connect(self._on_link_toggled)
         self.freq_spin.editingFinished.connect(self._emit_changed)
+        self.lock_in_checkbox.toggled.connect(self._on_lock_in_detection_toggled)
+        self.compensation_checkbox.toggled.connect(self._on_compensation_toggled)
+        self.lock_in_offset_spin.editingFinished.connect(self._on_lock_in_offset_editing_finished)
+        self.lock_in_offset_reset_btn.clicked.connect(self.lock_in_phase_offset_reset_requested.emit)
 
     def _on_mode_changed(self, mode_text: str):
         mode_code = self._text_to_mode_code(mode_text)
@@ -341,6 +446,7 @@ class ExcitationPanel(QWidget):
         spin.blockSignals(False)
 
     def _on_link_toggled(self, checked: bool):
+        self.link_toggled.emit(checked)
         if not checked:
             return
         s1_s2 = self.level_s1_s2_spin.value()
@@ -350,6 +456,47 @@ class ExcitationPanel(QWidget):
             self._set_spin_value(self.level_s1_s2_spin, aligned)
             self._set_spin_value(self.level_s3_s4_spin, aligned)
             self._emit_changed()
+
+    def set_link_state(self, linked: bool):
+        """Update the "Link" checkbox from external state (Hardware Advanced
+        Config tab) without re-emitting link_toggled — same blockSignals
+        pattern as set_state()."""
+        if self.link_checkbox.isChecked() == linked:
+            return
+        self.link_checkbox.blockSignals(True)
+        self.link_checkbox.setChecked(linked)
+        self.link_checkbox.blockSignals(False)
+
+    def _on_lock_in_detection_toggled(self, checked: bool):
+        self.lock_in_detection_toggled.emit(checked)
+
+    def _set_lock_in_checkbox_state(self, enabled: bool):
+        """Sync the "Enable Lock-In Detection" checkbox from service state
+        (gain at/above default) without re-emitting lock_in_detection_toggled."""
+        if self.lock_in_checkbox.isChecked() == enabled:
+            return
+        self.lock_in_checkbox.blockSignals(True)
+        self.lock_in_checkbox.setChecked(enabled)
+        self.lock_in_checkbox.blockSignals(False)
+
+    def _on_compensation_toggled(self, checked: bool):
+        self.compensation_toggle_requested.emit(checked)
+
+    def set_compensation_state(self, enabled: bool):
+        """Sync the "Compensation active" checkbox from external state
+        (Hardware Advanced Config's own compensation checkbox, or service
+        state) without re-emitting compensation_toggle_requested. Also locks
+        the phase offset field: it's only meaningful to hand-edit while
+        compensation is actively managing ch3 — otherwise use Hardware
+        Advanced Config directly."""
+        if self.compensation_checkbox.isChecked() != enabled:
+            self.compensation_checkbox.blockSignals(True)
+            self.compensation_checkbox.setChecked(enabled)
+            self.compensation_checkbox.blockSignals(False)
+        self.lock_in_offset_spin.setEnabled(enabled)
+
+    def _on_lock_in_offset_editing_finished(self):
+        self.lock_in_phase_offset_changed.emit(self.lock_in_offset_spin.value())
 
     def _emit_changed(self):
         mode = self._text_to_mode_code(self.mode_combo.currentText())
@@ -405,3 +552,14 @@ class ExcitationPanel(QWidget):
             self.level_s3_s4_spin.blockSignals(False)
             self.freq_spin.blockSignals(False)
             self.blockSignals(False)
+
+    def set_synchronous_detection_state(
+        self, s1, s2, s3, s4, delta_phi_corrige, lock_in_gain_below_default
+    ) -> None:
+        """Update the Lock-In Detection display/controls. Pure primitives in —
+        no domain/application types cross into this view."""
+        self.sphere_widget.set_sphere_phases(s1, s2, s3, s4)
+        if delta_phi_corrige is not None and self.lock_in_offset_spin.value() != delta_phi_corrige % 360.0:
+            self.lock_in_offset_spin.setValue(delta_phi_corrige % 360.0)
+        self.lock_in_gain_warning_label.setVisible(lock_in_gain_below_default)
+        self._set_lock_in_checkbox_state(not lock_in_gain_below_default)

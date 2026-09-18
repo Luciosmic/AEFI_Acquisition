@@ -5,15 +5,21 @@ Bridges between ExcitationConfigurationService and ExcitationPanel.
 Adapted from interface v1 for PySide6.
 """
 
+import logging
+
 from PySide6.QtCore import QObject, Signal, Slot
 from application.services.excitation_configuration_service.excitation_configuration_service import (
     ExcitationConfigurationService,
     EXCITATION_FREQUENCY_CHANGED_TOPIC,
     DDS_CHANNEL_CONFIG_CHANGED_TOPIC,
+    EXCITATION_DDS_LINK_CHANGED_TOPIC,
 )
 from domain.shared_kernel.excitation.value_objects.excitation_mode import ExcitationMode
 from domain.shared_kernel.excitation.value_objects.excitation_parameters import ExcitationParameters
 from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+
+
+logger = logging.getLogger(__name__)
 
 
 class ExcitationPresenter(QObject):
@@ -26,6 +32,7 @@ class ExcitationPresenter(QObject):
     # Signals emitted to the UI
     excitation_updated = Signal(str, float, float, float)  # mode_name, level_s1_s2_percent, level_s3_s4_percent, frequency
     excitation_error = Signal(str)  # error_message
+    link_state_changed = Signal(bool)  # linked
 
     def __init__(self, service: ExcitationConfigurationService, event_bus: IDomainEventBus):
         super().__init__()
@@ -38,9 +45,13 @@ class ExcitationPresenter(QObject):
         # this handler runs.
         event_bus.subscribe(EXCITATION_FREQUENCY_CHANGED_TOPIC, self._on_hardware_config_changed)
         event_bus.subscribe(DDS_CHANNEL_CONFIG_CHANGED_TOPIC, self._on_hardware_config_changed)
+        event_bus.subscribe(EXCITATION_DDS_LINK_CHANGED_TOPIC, self._on_link_changed)
 
     def _on_hardware_config_changed(self, event) -> None:
         self.refresh_state()
+
+    def _on_link_changed(self, event) -> None:
+        self.link_state_changed.emit(self._service.is_linked())
 
     def refresh_state(self) -> None:
         """Push the service's current parameters to the UI (startup + external changes)."""
@@ -48,6 +59,12 @@ class ExcitationPresenter(QObject):
         self.excitation_updated.emit(
             params.mode.name, params.level_s1_s2.value, params.level_s3_s4.value, params.frequency
         )
+        self.link_state_changed.emit(self._service.is_linked())
+
+    @Slot(bool)
+    def on_link_toggled(self, linked: bool) -> None:
+        """Handle the Excitation panel's own "Link" checkbox being toggled by the user."""
+        self._service.set_link(linked)
 
     @Slot(str, float, float, float)
     def on_excitation_changed(
@@ -74,7 +91,7 @@ class ExcitationPresenter(QObject):
 
         except Exception as e:
             error_msg = f"Failed to set excitation: {str(e)}"
-            print(f"[ExcitationPresenter] ERROR: {error_msg}")
+            logger.error(error_msg)
             self.excitation_error.emit(error_msg)
 
     def get_current_parameters(self) -> ExcitationParameters:

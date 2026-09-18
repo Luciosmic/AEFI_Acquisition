@@ -22,3 +22,12 @@ class IExcitationPort(ABC):
         that shouldn't sync the Hardware Config tab on every point.
         """
         raise NotImplementedError
+
+    @abstractmethod
+    def set_link_dds1_dds2(self, linked: bool) -> None:
+        """
+        Persist and publish the DDS1/DDS2 gain link preference (Excitation
+        panel's "Link S1-S2 = S3-S4") so the Hardware Advanced Config tab's
+        own link_dds1_dds2 parameter stays in sync with it, and vice versa.
+        """
+        raise NotImplementedError

@@ -10,6 +10,7 @@ Rationale:
 - Ensures consistent initialization of related components.
 """
 
+import logging
 from typing import Optional
 from pathlib import Path
 
@@ -22,6 +23,8 @@ from infrastructure.hardware.arcus_performax_4EX.adapter_motion_port_arcus_perfo
 from infrastructure.hardware.arcus_performax_4EX.adapter_lifecycle_arcus_performax4EX import ArcusPerformaxLifecycleAdapter
 from infrastructure.hardware.arcus_performax_4EX.arcus_advanced_configuration import ArcusPerformax4EXAdvancedConfigurator
 from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+
+logger = logging.getLogger(__name__)
 
 
 class ArcusCompositionRoot:
@@ -52,6 +55,7 @@ class ArcusCompositionRoot:
         """
         if controller is not None:
             self._driver = controller
+            logger.info("Arcus composition root wired with injected controller %s", type(controller).__name__)
         else:
             # If dll_path is not provided, try to find it relative to this file
             if not dll_path:
@@ -59,7 +63,8 @@ class ArcusCompositionRoot:
                 dll_path = str(Path(__file__).parent / "DLL64")
 
             self._driver = ArcusPerformax4EXController(dll_path=dll_path)
-        
+            logger.info("Arcus composition root wired with real ArcusPerformax4EXController (port=%s, dll_path=%s)", port, dll_path)
+
         # 2. Instantiate Motion Adapter
         # We pass the event_bus to the adapter so it can publish events
         self.motion: ArcusAdapter = ArcusAdapter(event_bus=event_bus)
@@ -74,4 +79,10 @@ class ArcusCompositionRoot:
         self.config: IHardwareAdvancedConfigurator = ArcusPerformax4EXAdvancedConfigurator(
             controller=self._driver,
             adapter=self.motion
+        )
+        logger.info(
+            "Arcus hardware stack wired: motion=%s, lifecycle=%s, config=%s",
+            type(self.motion).__name__,
+            type(self.lifecycle).__name__,
+            type(self.config).__name__,
         )

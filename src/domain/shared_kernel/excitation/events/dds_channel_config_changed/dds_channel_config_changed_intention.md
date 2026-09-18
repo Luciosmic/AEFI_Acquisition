@@ -24,7 +24,11 @@ layer).
   know the conversion formula.
 - Published once per channel whenever that channel's gain or phase was
   actually written this call (including the "full OFF" path, which zeroes
-  both).
+  both). When the DDS1/DDS2 gain link is active (`link_dds1_dds2`, see
+  `ExcitationDdsLinkChanged`), `AD9106AdvancedConfigurator.apply_config()`
+  mirrors a single-channel gain edit onto the other channel *before* writing
+  — so both channels can legitimately publish this event from one apply
+  call, even though only one was mentioned in the incoming flat config.
 
 ## Design
 

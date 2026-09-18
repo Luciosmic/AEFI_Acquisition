@@ -96,3 +96,14 @@ class IHardwareAdvancedConfigurator(ABC):
             config: Dictionary of parameter values keyed by spec.name
         """
         raise NotImplementedError
+
+    @abstractmethod
+    def reset_to_default(self) -> None:
+        """
+        Discard the current applied/last state and re-apply the saved default
+        configuration — the counterpart to save_config_as_default(): that
+        captures a baseline, this reverts to it. Must apply to the real
+        hardware (not just update the on-disk "last" state) and behave
+        exactly as if apply_config() had been called with the default values.
+        """
+        raise NotImplementedError

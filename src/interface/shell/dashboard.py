@@ -118,7 +118,7 @@ class Dashboard(QWidget):
             "aefi_continuous_reading": ("AEFI Continuous Reading", "Continuous Reading"),
             "electric_field_probe": ("Electric Field Continuous Reading", "Continuous Reading"),
             "motion": ("Motion Control", "Hardware"),
-            "excitation": ("Excitation", "Hardware"),
+            "excitation": ("Excitation & Lock-In Detection", "Hardware"),
             "hardware_config": ("Hardware Advanced Config", "Hardware"),
             "transformation": ("Sensor Transformation", "Hardware"),
             "external_modules": ("External Modules", "Système"),

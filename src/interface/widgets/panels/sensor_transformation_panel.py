@@ -1,11 +1,14 @@
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QGroupBox, 
+    QWidget, QVBoxLayout, QGroupBox,
     QDoubleSpinBox, QFormLayout, QPushButton
 )
 from PySide6.QtCore import Signal, Slot, QProcess
+import logging
 import sys
 import os
 from PySide6.QtCore import Signal, Slot
+
+logger = logging.getLogger(__name__)
 
 class SensorTransformationPanel(QWidget):
     """
@@ -92,7 +95,7 @@ class SensorTransformationPanel(QWidget):
         root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))
         script_path = os.path.join(root_dir, "external_modules", "cube_visualizer", "main.py")
         
-        print(f"[SensorTransformationPanel] Launching Cube Visualizer: {python_exe} {script_path}")
+        logger.info("Launching Cube Visualizer: %s %s", python_exe, script_path)
         
         self.process = QProcess(self)
         self.process.start(python_exe, [script_path])

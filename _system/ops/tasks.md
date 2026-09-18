@@ -1,5 +1,85 @@
 # Tâches actives
 
+## Config hardware : source unique de vérité (AD9106+MCU fait, ADS131A04 restant)
+
+**Statut** : refonte implémentée pour AD9106 + MCU (2026-09-08, puis corrections et ajout du
+lien DDS1-DDS2 le 2026-09-17-18, suite verte — 387 passed, 2 skipped, 1 flaky de timing
+préexistant sans rapport). Détail complet dans
+`C:\Users\manip\.claude\plans\lively-seeking-backus.md`. Reste à généraliser à l'ADS131A04
+(ADC) — voir "Fait vs à faire" ci-dessous.
+
+**Incident post-déploiement corrigé (2026-09-17)** : `AD9106AdvancedConfigurator.apply_config()`
+faisait `config.get(f"ch{ch}_gain", 0)` — un dict partiel (envoyé par les tests, pas par l'UI
+qui envoie toujours tout) mettait à 0 les canaux non mentionnés dans `ad9106_last_config.json`,
+et comme ce fichier est réputé "complet" une fois écrit, `resolve_config()` ne pouvait plus
+récupérer les valeurs default perdues. Des tests pré-existants corrompaient donc le **vrai**
+fichier de config à chaque run de la suite (pas d'isolation CWD/backup). Corrigé par :
+apply_config()/save_config_as_default() font maintenant un vrai read-modify-write contre
+l'état résolu ; tous les tests qui appellent apply_config() sauvegardent/restaurent
+`ad9106_last_config.json` réel dans setUp/tearDown (pattern déjà utilisé par
+`config_persistence_test.py` pour l'ADC — l'ADC a le même risque latent, non traité).
+
+**Fonctionnalité ajoutée (2026-09-18)** : lien DDS1-DDS2 (gain) partagé entre le panel
+Excitation ("Link S1-S2 = S3-S4", jusque-là 100% local au widget) et Hardware Advanced
+Config (nouveau paramètre `link_dds1_dds2`, persisté, résolu comme le reste). Nouvel event
+`ExcitationDdsLinkChanged` (nommé ainsi, pas `DdsLinkChanged` générique, car une notion de
+lien différente est prévue pour DDS3/DDS4 phase+fréquence — synchronisation de la détection
+synchrone — à ne pas confondre). Enforcement dans `apply_config()` : si lié, un apply qui ne
+touche qu'un seul de ch1_gain/ch2_gain (ou les deux avec des valeurs différentes) aligne
+l'autre canal avant écriture — élimine la désync à la source, quel que soit le panel
+d'origine. Sync bidirectionnelle vérifiée bout-en-bout avec de vrais widgets Qt (headless).
+
+### Le problème (constaté sur AD9106/MCU, mais généralisable)
+
+Chaque hardware configurable (AD9106 DDS, ADS131A04 ADC, MCU n_avg) a deux lecteurs
+indépendants de "la config" :
+- le panel Hardware Advanced Config lit `*_default_config.json` seul
+- le boot réel (`MCUCompositionRoot._load_and_apply_config()`) fusionne
+  `*_default_config.json` + `*_last_config.json` avec des règles ad hoc (parfois un
+  `dict.update()` superficiel qui écrase des sous-dicts imbriqués entiers, parfois aucune
+  fusion du tout)
+
+Résultat déjà observé : le panel affiche une valeur (ex. gain DDS3/4 = 10000, n_avg = 127)
+alors que le hardware réel démarre avec une autre valeur (0, ou la dernière valeur
+sauvegardée), jusqu'à ce que l'utilisateur clique manuellement sur "Apply".
+
+### Périmètre de la refonte propre (voir le plan pour le détail par fichier)
+
+1. Module partagé `hardware_config_resolution.py` (`resolve_config()` deep-merge pur,
+   testé) — remplace les fusions ad hoc dispersées.
+2. Convergence sur un **écrivain unique** par hardware : `MCULifecycleAdapter` au boot doit
+   appeler le même `apply_config()` que le panel manuel (`AD9106AdvancedConfigurator` pour
+   l'AD9106), au lieu de dupliquer une écriture registre séparée qui ne publie pas les
+   events de sync (`ExcitationFrequencyChanged`, `DdsChannelConfigChanged`).
+3. Les panels (`get_parameter_specs()`) doivent lire l'état résolu (default+last), pas le
+   default seul — sinon l'affichage continue de mentir sur ce qui est réellement appliqué.
+
+### Fait vs à faire
+
+- **AD9106 + MCU (n_avg)** : ✅ fait. Nouveau module partagé
+  `infrastructure/hardware/micro_controller/hardware_config_resolution.py`
+  (`resolve_config()`/`load_json_if_exists()`, testés). `MCULifecycleAdapter` au boot
+  délègue à `AD9106AdvancedConfigurator.apply_config()` (écrivain unique — plus de double
+  écriture registre, les events `ExcitationFrequencyChanged`/`DdsChannelConfigChanged`
+  sont publiés automatiquement). `MCUAdvancedConfigurator.get_parameter_specs()` et
+  `AD9106AdvancedConfigurator.get_parameter_specs()` lisent désormais l'état résolu
+  (default+last), plus le default seul. Tests ajoutés :
+  `_tests/hardware_config_resolution_test.py`,
+  `_tests/adapter_lifecycle_MCU_dds_config_test.py` (chemin JSON-driven de `_configure_dds`,
+  jusque-là jamais testé), + tests du flatten helper dans
+  `ad9106/_tests/ad9106_advanced_configurator_test.py`.
+- **ADS131A04 (ADC)** : la fusion default+last de la composition root utilise maintenant
+  `resolve_config()` (ferme le risque d'écrasement en bloc de `channels`), mais
+  `ADS131A04AdvancedConfigurator.get_parameter_specs()`/`apply_config()` gardent leur propre
+  forme de dict (`gain_pair_N`, enums string comme `ref_voltage="4.0V"`) et lisent toujours
+  le default seul — **même angle mort confirmé mais non corrigé** pour l'affichage panel vs
+  état réellement appliqué. À traiter dans une passe suivante avec la même logique
+  (`resolve_config()` + `get_parameter_specs()` sur l'état résolu).
+- Modes AC/DC des DDS (`mode_dds1_dds2`/`mode_dds3_dds4`) : pas de panel, pas de risque de
+  désync — volontairement hors scope.
+- Pas de vérification read-back des registres (fiabilité hardware) — chantier séparé, plus
+  large, non commencé.
+
 ## Mesure différentielle (baseline sans excitation + mesure normale)
 
 **Statut** : implémenté en TDD (2026-07-30) — mute()/unmute(), ScanPointResult/events + baseline, boucle différentielle, export CSV, checkbox UI. Suite complète verte (293 passed).

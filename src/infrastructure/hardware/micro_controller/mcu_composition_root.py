@@ -10,7 +10,7 @@ Rationale:
 - Ensures consistent initialization of related components (shared communicator).
 """
 
-import json
+import logging
 import os
 from typing import Optional
 
@@ -32,6 +32,13 @@ from application.services.hardware_configuration_service.ports.i_hardware_advanc
 
 from infrastructure.hardware.micro_controller.ads131a04.ads131a04_advanced_configurator import ADS131A04AdvancedConfigurator
 from infrastructure.hardware.micro_controller.mcu_advanced_configurator import MCUAdvancedConfigurator
+from infrastructure.hardware.micro_controller.hardware_config_resolution import (
+    load_json_if_exists,
+    resolve_config,
+)
+
+logger = logging.getLogger(__name__)
+
 
 class MCUCompositionRoot:
     """
@@ -89,9 +96,10 @@ class MCUCompositionRoot:
         # 4. Instantiate Lifecycle Adapter
         # Injects the driver to manage connection
         self.lifecycle: IHardwareInitializationPort = MCULifecycleAdapter(
-            port=port, 
-            baudrate=baudrate, 
-            communicator=self._driver
+            port=port,
+            baudrate=baudrate,
+            communicator=self._driver,
+            ad9106_configurator=self._ad9106_configurator,
         )
         
         # 5. Instantiate Continuous Acquisition Executor
@@ -102,69 +110,40 @@ class MCUCompositionRoot:
         self._load_and_apply_config()
         
     def _load_and_apply_config(self) -> None:
-        """Load configuration from JSON files and apply to adapters."""
-        # Paths to atomic config files
-        base_dir = os.path.dirname(__file__)
-        
-        # Defaults (Factory Settings)
-        adc_default_path = os.path.join(".aefi_acquisition", "configs", "ads131a04_default_config.json")
-        dds_default_path = os.path.join(".aefi_acquisition", "configs", "ad9106_default_config.json")
+        """Resolve each hardware's default+last config in memory and hand the
+        result to the Lifecycle Adapter — no disk writes here. Actual hardware
+        application (and, for MCU, persisting the resolved n_avg back to
+        mcu_last_config.json) happens later, inside MCULifecycleAdapter, only
+        once initialize_all() actually connects."""
+        configs_dir = os.path.join(".aefi_acquisition", "configs")
 
-        # User Config (Last Saved State)
-        adc_user_path = os.path.join(".aefi_acquisition", "configs", "ads131a04_last_config.json")
-        dds_user_path = os.path.join(".aefi_acquisition", "configs", "ad9106_last_config.json")
-        
-        adc_config = {}
-        dds_config = {}
-        
         try:
-            # 1. Load Defaults
-            if os.path.exists(adc_default_path):
-                with open(adc_default_path, 'r') as f:
-                    adc_config = json.load(f)
-            else:
-                print(f"[MCUCompositionRoot] WARNING: Default ADC Config not found at {adc_default_path}")
+            adc_config = resolve_config(
+                load_json_if_exists(os.path.join(configs_dir, "ads131a04_default_config.json")),
+                load_json_if_exists(os.path.join(configs_dir, "ads131a04_last_config.json")),
+            )
+            dds_config = resolve_config(
+                load_json_if_exists(os.path.join(configs_dir, "ad9106_default_config.json")),
+                load_json_if_exists(os.path.join(configs_dir, "ad9106_last_config.json")),
+            )
+            # MCU config has no hardware register to write at startup — n_avg
+            # is re-read live from mcu_last_config.json on every
+            # acquire_sample() call. Resolving it here just means the
+            # lifecycle adapter will persist this resolved value back to that
+            # file once it connects (see MCULifecycleAdapter._configure_mcu).
+            mcu_config = resolve_config(
+                load_json_if_exists(os.path.join(configs_dir, "mcu_default_config.json")),
+                load_json_if_exists(os.path.join(configs_dir, "mcu_last_config.json")),
+            )
 
-            if os.path.exists(dds_default_path):
-                with open(dds_default_path, 'r') as f:
-                    dds_config = json.load(f)
-            else:
-                print(f"[MCUCompositionRoot] WARNING: Default DDS Config not found at {dds_default_path}")
+            self.lifecycle.set_config({"adc": adc_config, "dds": dds_config, "mcu": mcu_config})
 
-            # 2. Load and Merge User Config
-            if os.path.exists(adc_user_path):
-                try:
-                    with open(adc_user_path, 'r') as f:
-                        user_adc = json.load(f)
-                        # Simple update for now (could be deep merge if needed)
-                        adc_config.update(user_adc)
-                    print(f"[MCUCompositionRoot] Loaded User ADC Config")
-                except Exception as e:
-                    print(f"[MCUCompositionRoot] Failed to load User ADC Config: {e}")
-
-            if os.path.exists(dds_user_path):
-                try:
-                    with open(dds_user_path, 'r') as f:
-                        user_dds = json.load(f)
-                        dds_config.update(user_dds)
-                    print(f"[MCUCompositionRoot] Loaded User DDS Config")
-                except Exception as e:
-                    print(f"[MCUCompositionRoot] Failed to load User DDS Config: {e}")
-
-            # 3. Combine for Lifecycle Adapter
-            # Lifecycle adapter expects {"adc": ..., "dds": ...}
-            combined_config = {
-                "adc": adc_config,
-                "dds": dds_config
-            }
-            self.lifecycle.set_config(combined_config)
-            
-            # 4. Apply to Acquisition Adapter (for internal state)
+            # Apply to Acquisition Adapter (for internal state)
             if hasattr(self.acquisition, "load_config") and adc_config:
                 self.acquisition.load_config(adc_config)
-                
-        except Exception as e:
-            print(f"[MCUCompositionRoot] Failed to load config: {e}")
+
+        except Exception:
+            logger.exception("Failed to load config")
 
     @property
     def configurators(self) -> list[IHardwareAdvancedConfigurator]:
@@ -175,3 +154,15 @@ class MCUCompositionRoot:
         configs.append(self._ad9106_configurator)
         configs.append(self._mcu_configurator)
         return configs
+
+    @property
+    def ad9106_controller(self) -> AD9106Controller:
+        """Read-only access to the shared AD9106Controller — lets main.py wire
+        AdapterSynchronousDetectionAD9106 without reaching into a private attribute."""
+        return self._ad9106_controller
+
+    @property
+    def ad9106_configurator(self) -> AD9106AdvancedConfigurator:
+        """Read-only access to the shared AD9106AdvancedConfigurator — same
+        rationale as ad9106_controller above."""
+        return self._ad9106_configurator

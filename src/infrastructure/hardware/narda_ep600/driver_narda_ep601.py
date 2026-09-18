@@ -2,12 +2,15 @@
 Protocole documenté et validé sur banc dans le sous-projet Ressources/ExperimentalData_ASSOCE/Narda-electric-field-probe-acquisition
 (voir notes-narda-electric-field-probe-acquisition/sources/narda-ep60x_protocole-communication.md).
 """
+import logging
 import statistics
 import struct
 import time
 from collections import namedtuple
 
 import serial
+
+logger = logging.getLogger(__name__)
 
 __version__ = "0.6.0"
 
@@ -125,6 +128,7 @@ class NardaEP601:
                 # TimeoutError (donc NardaProbeTimeout) en est une sous-classe — sans ce except
                 # explicite AVANT le `except IOError` ci-dessous, ce cas serait silencieusement
                 # attrape et retente aussi (bug reel trouve par le self-check de ce module).
+                logger.debug("Slave-mode confirmation got empty reply — probe off/disconnected, not retrying")
                 raise
             except IOError as e:
                 last_error = e
@@ -228,6 +232,7 @@ class NardaEP601:
             try:
                 return fn()
             except NardaProbeTimeout:
+                logger.debug("Empty reply (probe off/disconnected) — skipping retry, raising immediately")
                 raise
             except IOError as e:
                 last_error = e
@@ -346,7 +351,7 @@ class NardaEP601:
 
 
 def demo(port):
-    print(f"driver_narda_ep601 v{__version__}")
+    logger.info("driver_narda_ep601 v%s", __version__)
     try:
         with NardaEP601(port) as probe:
             assert probe.get_version().startswith("vEP600")
@@ -354,18 +359,26 @@ def demo(port):
             norm = (x**2 + y**2 + z**2) ** 0.5
             total = probe.get_total_field()
             assert abs(norm - total) < 5.0, f"?A norme={norm:.3f} vs ?T={total:.3f} — écart suspect"
-            print("OK —", probe.get_version(), probe.get_serial_number())
-            print(f"batterie={probe.get_battery_voltage():.2f}V  X={x:.3f} Y={y:.3f} Z={z:.3f}  |norme|={norm:.3f} V/m  ?T={total:.3f} V/m")
+            logger.info("OK — %s %s", probe.get_version(), probe.get_serial_number())
+            logger.info(
+                "batterie=%.2fV  X=%.3f Y=%.3f Z=%.3f  |norme|=%.3f V/m  ?T=%.3f V/m",
+                probe.get_battery_voltage(), x, y, z, norm, total,
+            )
 
             avg_total = probe.get_total_field_averaged(n=4)
             avg_x, avg_y, avg_z = probe.get_field_components_averaged(n=4)
-            print(f"?T moyenne (n=4)={avg_total:.3f} V/m  ?A moyenne (n=4): X={avg_x:.3f} Y={avg_y:.3f} Z={avg_z:.3f}")
+            logger.info(
+                "?T moyenne (n=4)=%.3f V/m  ?A moyenne (n=4): X=%.3f Y=%.3f Z=%.3f",
+                avg_total, avg_x, avg_y, avg_z,
+            )
     except NardaProbeTimeout as e:
-        print(f"TIMEOUT: {e}")
+        logger.error("TIMEOUT: %s", e)
         raise SystemExit(1)
 
 
 if __name__ == "__main__":
     import sys
+
+    logging.basicConfig(level=logging.INFO)
 
     demo(sys.argv[1] if len(sys.argv) > 1 else "COM8")

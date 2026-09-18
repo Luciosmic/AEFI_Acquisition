@@ -2,7 +2,7 @@ import logging
 import sys
 
 from PySide6.QtCore import QObject, Signal
-from PySide6.QtWidgets import QPlainTextEdit
+from PySide6.QtWidgets import QCheckBox, QHBoxLayout, QPlainTextEdit
 
 from interface.widgets.panels.base_panel import BasePanel
 
@@ -13,11 +13,32 @@ class LogsPanel(BasePanel):
     def __init__(self, parent=None):
         super().__init__("Logs", "#9E9E9E", parent)
 
+        level_row = QHBoxLayout()
+        self.debug_checkbox = QCheckBox("Debug")
+        self.debug_checkbox.toggled.connect(self._on_level_toggled)
+        level_row.addWidget(self.debug_checkbox)
+        self.warning_checkbox = QCheckBox("Warning only")
+        self.warning_checkbox.toggled.connect(self._on_level_toggled)
+        level_row.addWidget(self.warning_checkbox)
+        level_row.addStretch()
+        self.layout.addLayout(level_row)
+
         self.text_edit = QPlainTextEdit()
         self.text_edit.setReadOnly(True)
         self.text_edit.setMaximumBlockCount(5000)
         self.text_edit.setStyleSheet("font-family: Consolas, monospace; font-size: 11px;")
         self.layout.addWidget(self.text_edit)
+
+    def _on_level_toggled(self) -> None:
+        # Debug wins if both are checked — INFO (which already includes
+        # WARNING/ERROR) is the default when neither is checked.
+        if self.debug_checkbox.isChecked():
+            level = logging.DEBUG
+        elif self.warning_checkbox.isChecked():
+            level = logging.WARNING
+        else:
+            level = logging.INFO
+        logging.getLogger().setLevel(level)
 
     def append_line(self, text: str) -> None:
         text = text.rstrip("\n")

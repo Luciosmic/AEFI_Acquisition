@@ -7,6 +7,7 @@ Responsibility:
 """
 
 import dataclasses
+import logging
 from datetime import datetime
 from typing import Optional
 
@@ -24,6 +25,8 @@ from infrastructure.hardware.narda_ep600.driver_narda_ep601 import (
     estimate_battery_remaining_hours,
 )
 
+logger = logging.getLogger(__name__)
+
 AXIS_LABELS = ("X", "Y", "Z")
 
 
@@ -38,6 +41,7 @@ class NardaEP601ProbeAdapter(IElectricFieldProbePort):
             serial_number = self._driver.get_serial_number()
             battery_voltage = self._driver.get_battery_voltage()
         except Exception:
+            logger.exception("Failed to read Narda EP-601 identity/battery after connect; disconnecting")
             self._driver.disconnect()
             raise
         self._probe = ElectricFieldProbe(
@@ -49,8 +53,10 @@ class NardaEP601ProbeAdapter(IElectricFieldProbePort):
             battery_percentage=estimate_battery_percentage(battery_voltage),
             battery_remaining_hours=estimate_battery_remaining_hours(battery_voltage),
         )
+        logger.info("Connected to Narda EP-601 probe (serial_number=%s)", serial_number)
 
     def disconnect(self) -> None:
+        logger.info("Disconnecting Narda EP-601 probe")
         self._driver.disconnect()
         self._probe = None
 
@@ -90,9 +96,11 @@ class NardaEP601ProbeAdapter(IElectricFieldProbePort):
         try:
             applied_hz = self._driver.set_frequency_correction(frequency_hz)
         except (ValueError, IOError) as e:
+            logger.error("Failed to apply frequency correction %.1f Hz: %s", frequency_hz, e)
             return FrequencyCorrectionResult(
                 requested_hz=frequency_hz, applied_hz=None, in_range=True, error=str(e)
             )
+        logger.info("Applied frequency correction: requested=%.1f Hz, applied=%.1f Hz", frequency_hz, applied_hz)
         return FrequencyCorrectionResult(
             requested_hz=frequency_hz, applied_hz=applied_hz, in_range=True
         )

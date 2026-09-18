@@ -1,5 +1,7 @@
 from enum import Enum
 
+from domain.shared_kernel.excitation.value_objects.phase_angle import PhaseAngle
+
 
 class SphereId(Enum):
     """
@@ -40,6 +42,18 @@ class SphereId(Enum):
         """True if this sphere carries its DDS's direct (0°) output, False if
         it carries the complementary (+180°) differential output."""
         return _IS_DIRECT_OUTPUT[self]
+
+    def derive_phase(self, dds1_phase: PhaseAngle, dds2_phase: PhaseAngle) -> PhaseAngle:
+        """
+        Derive this sphere's actual excitation phase from the two DDS
+        generator phases (ch1/ch2).
+
+        Selects the phase of whichever generator drives this sphere
+        (`dds_channel`), then applies the differential branch offset:
+        as-is for the direct output, +180° for the complementary output.
+        """
+        base = dds1_phase if self.dds_channel == 1 else dds2_phase
+        return base if self.is_direct_output else base.opposite()
 
 
 _ELECTRONIC_PAIRS = {

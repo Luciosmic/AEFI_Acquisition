@@ -1,3 +1,4 @@
+import logging
 from typing import Tuple, Optional
 import numpy as np
 from scipy.spatial.transform import Rotation as R
@@ -5,6 +6,8 @@ from scipy.spatial.transform import Rotation as R
 from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
 from domain.shared_kernel.events.sensor_transformation_angles_updated.sensor_transformation_angles_updated import SensorTransformationAnglesUpdated
 from .dtos.transformation_dtos import SetRotationAnglesDTO
+
+logger = logging.getLogger(__name__)
 
 class TransformationService:
     """
@@ -22,6 +25,10 @@ class TransformationService:
         Set rotation angles in DEGREES.
         Rotation order is 'XYZ' (extrinsic - rotations around FIXED axes).
         """
+        logger.info(
+            "TransformationService: Command set_rotation_angles theta_x=%s theta_y=%s theta_z=%s",
+            dto.theta_x, dto.theta_y, dto.theta_z,
+        )
         self._angles = np.array([dto.theta_x, dto.theta_y, dto.theta_z])
         self._rotation = R.from_euler('XYZ', self._angles, degrees=True)
 
@@ -38,6 +45,7 @@ class TransformationService:
 
     def set_enabled(self, enabled: bool):
         """Enable or disable the transformation application."""
+        logger.info("TransformationService: Command set_enabled enabled=%s", enabled)
         self._enabled = enabled
 
     def is_enabled(self) -> bool:

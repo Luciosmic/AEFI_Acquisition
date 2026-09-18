@@ -12,6 +12,9 @@ from domain.shared_kernel.excitation.events.excitation_levels_changed.excitation
 from domain.shared_kernel.excitation.events.dds_channel_config_changed.dds_channel_config_changed import (
     DdsChannelConfigChanged,
 )
+from domain.shared_kernel.excitation.events.excitation_dds_link_changed.excitation_dds_link_changed import (
+    ExcitationDdsLinkChanged,
+)
 from domain.shared_kernel.excitation.value_objects.excitation_mode import ExcitationMode
 from domain.shared_kernel.excitation.value_objects.excitation_parameters import ExcitationParameters
 from tool.diagram_friendly_test import DiagramFriendlyTest
@@ -184,6 +187,33 @@ class TestExcitationConfigurationService(DiagramFriendlyTest):
         handler(DdsChannelConfigChanged(channel=2, gain=5500, phase=0))  # (0,0) -> Y_DIR
 
         self.assertEqual(self.service.get_current_parameters().mode, ExcitationMode.Y_DIR)
+
+    def test_is_linked_defaults_to_true(self):
+        self.assertTrue(self.service.is_linked())
+
+    def test_set_link_calls_port_and_updates_query(self):
+        self.service.set_link(False)
+
+        self.port.set_link_dds1_dds2.assert_called_once_with(False)
+        self.assertFalse(self.service.is_linked())
+
+    def _link_handler(self):
+        subscribe_call = next(
+            call for call in self.event_bus.subscribe.call_args_list
+            if call.args[0] == "excitationddslinkchanged"
+        )
+        return subscribe_call.args[1]
+
+    def test_external_link_change_updates_query_without_republishing(self):
+        # Hardware Advanced Config tab toggles link_dds1_dds2 directly — the
+        # service must pick that up via its own subscription, not re-publish it.
+        handler = self._link_handler()
+        self.event_bus.reset_mock()
+
+        handler(ExcitationDdsLinkChanged(linked=False))
+
+        self.assertFalse(self.service.is_linked())
+        self.event_bus.publish.assert_not_called()
 
 
 if __name__ == "__main__":
