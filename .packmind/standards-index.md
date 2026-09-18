@@ -19,6 +19,7 @@ This standards index contains all available coding standards that can be used by
 - [SolidAI — DDD Plugin Layer Dependency Direction](./standards/solidai-ddd-plugin-layer-dependency-direction.md) : SolidAI — DDD Plugin Layer Dependency Direction
 - [SolidAI — Domain Reference via Wikilinks in SKILL.md](./standards/solidai-domain-reference-via-wikilinks-in-skillmd.md) : SolidAI — Domain Reference via Wikilinks in SKILL.md
 - [SolidAI — Error Taxonomy and Layer Contracts](./standards/solidai-error-taxonomy-and-layer-contracts.md) : SolidAI — Error Taxonomy and Layer Contracts
+- [SolidAI — EventStore : Création de Domain Events](./standards/solidai-eventstore-creation-de-domain-events.md) : SolidAI — EventStore : Création de Domain Events
 - [SolidAI — Fidélité de Promesse des Doubles de Test : Qualité de Service Implicite et Imposition Non Assumée](./standards/solidai-fidelite-de-promesse-des-doubles-de-test-qualite-de-service-implicite-et-imposition-non-assumee.md) : SolidAI — Fidélité de Promesse des Doubles de Test : Qualité de Service Implicite et Imposition Non Assumée
 - [SolidAI — Graph of Intentions (Promise↔DDD) Modeling](./standards/solidai-graph-of-intentions-promiseddd-modeling.md) : SolidAI — Graph of Intentions (Promise↔DDD) Modeling
 - [SolidAI — Graphe de Pensée : Ossature DDD-Crew et Règles de Traversal [EXPÉRIMENTAL]](./standards/solidai-graphe-de-pensee-ossature-ddd-crew-et-regles-de-traversal-experimental.md) : SolidAI — Graphe de Pensée : Ossature DDD-Crew et Règles de Traversal [EXPÉRIMENTAL]
@@ -34,6 +35,7 @@ This standards index contains all available coding standards that can be used by
 - [SolidAI — SKILL.md Containment Invariant](./standards/solidai-skillmd-containment-invariant.md) : SolidAI — SKILL.md Containment Invariant
 - [SolidAI — Test Doubles DDD : Fake In-Memory vs Mock, Placement Infrastructure](./standards/solidai-test-doubles-ddd-fake-in-memory-vs-mock-placement-infrastructure.md) : SolidAI — Test Doubles DDD : Fake In-Memory vs Mock, Placement Infrastructure
 - [SolidAI — Use Case vs Application Service : Vocabulaires et Couches](./standards/solidai-use-case-vs-application-service-vocabulaires-et-couches.md) : SolidAI — Use Case vs Application Service : Vocabulaires et Couches
+- [Standard: Observability-Driven Design (ODD)](./standards/standard-observability-driven-design-odd.md) : Standard: Observability-Driven Design (ODD)
 - [Test Mock Placement and DTO Construction](./standards/test-mock-placement-and-dto-construction.md) : Test Mock Placement and DTO Construction
 - [Typed Entity ID Pattern](./standards/typed-entity-id-pattern.md) : Typed Entity ID Pattern
 

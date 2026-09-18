@@ -7,7 +7,7 @@
     "claude",
     "packmind"
   ],
-  "installedAt": "2026-09-18T14:49:41.649Z",
+  "installedAt": "2026-09-18T18:25:11.945Z",
   "artifacts": {
     "user:command:create-application-service": {
       "name": "Create application service",
@@ -471,6 +471,27 @@
         }
       ]
     },
+    "user:standard:solidai-eventstore-creation-de-domain-events": {
+      "name": "SolidAI — EventStore : Création de Domain Events",
+      "type": "standard",
+      "id": "602adf09-3337-49cc-adf5-b513d0a9678a",
+      "version": 2,
+      "spaceId": "ece77158-227f-4106-8321-db6beba6054a",
+      "packageIds": [
+        "c08434ec-f950-40fc-8a4f-480a22fb9585"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/rules/packmind/standard-solidai-eventstore-creation-de-domain-events.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".packmind/standards/solidai-eventstore-creation-de-domain-events.md",
+          "agent": "packmind"
+        }
+      ]
+    },
     "user:standard:solidai-fidelite-de-promesse-des-doubles-de-test-qualite-de-service-implicite-et-imposition-non-assumee": {
       "name": "SolidAI — Fidélité de Promesse des Doubles de Test : Qualité de Service Implicite et Imposition Non Assumée",
       "type": "standard",
@@ -786,6 +807,27 @@
         }
       ]
     },
+    "user:standard:standard-observability-driven-design-odd": {
+      "name": "Standard: Observability-Driven Design (ODD)",
+      "type": "standard",
+      "id": "1733c7ea-ff27-47e4-ac8b-2fd4b54e080c",
+      "version": 1,
+      "spaceId": "ece77158-227f-4106-8321-db6beba6054a",
+      "packageIds": [
+        "c08434ec-f950-40fc-8a4f-480a22fb9585"
+      ],
+      "source": "user",
+      "files": [
+        {
+          "path": ".claude/rules/packmind/standard-standard-observability-driven-design-odd.md",
+          "agent": "claude"
+        },
+        {
+          "path": ".packmind/standards/standard-observability-driven-design-odd.md",
+          "agent": "packmind"
+        }
+      ]
+    },
     "user:standard:test-mock-placement-and-dto-construction": {
       "name": "Test Mock Placement and DTO Construction",
       "type": "standard",
@@ -829,5 +871,5 @@
       ]
     }
   },
-  "cliVersion": "0.31.0"
+  "cliVersion": "0.35.1"
 }
