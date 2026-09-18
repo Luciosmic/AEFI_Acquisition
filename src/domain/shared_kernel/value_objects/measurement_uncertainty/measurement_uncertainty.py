@@ -21,8 +21,8 @@ Design:
 - Uncertainty expressed in domain units (Volts), not hardware parameters
 """
 
-from dataclasses import dataclass
-from typing import Optional
+from dataclasses import dataclass, field
+from typing import List, Optional
 import math
 
 from domain.shared_kernel.value_objects.validation_result.validation_result import ValidationResult
@@ -46,12 +46,18 @@ class MeasurementUncertainty:
     """
 
     max_uncertainty_volts: float  # Maximum acceptable uncertainty (±V)
+    # Non-blocking validate() warnings (e.g. "unrealistic for current hardware"),
+    # kept on the instance — not raised, not a domain event (soft signal, not an
+    # invariant rejection) — so the caller can log them; see ODD standard on
+    # soft-validation vs invariant rejection.
+    warnings: List[str] = field(default_factory=list, init=False, compare=False, repr=False)
 
     def __post_init__(self):
         """Validate at construction time"""
         result = self.validate()
         if not result.is_valid:
             raise ValueError(f"Invalid MeasurementPrecision: {', '.join(result.errors)}")
+        object.__setattr__(self, "warnings", result.warnings)
 
     def validate(self) -> ValidationResult:
         """

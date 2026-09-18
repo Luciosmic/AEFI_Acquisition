@@ -244,9 +244,14 @@ class ScanApplicationService:
             return False
 
     def pause_scan(self) -> None:
-        if self._current_scan:
+        if not self._current_scan:
+            return
+        try:
             self._current_scan.pause()
-            self._publish_events(self._current_scan.domain_events)
+        except ValueError as e:
+            logger.warning("ScanApplicationService: pause_scan rejected — %s", e)
+            return
+        self._publish_events(self._current_scan.domain_events)
 
     def resume_scan(self) -> None:
         if self._current_scan:
@@ -699,6 +704,10 @@ class ScanApplicationService:
             self._event_bus.publish(event_type, event)
 
     def _to_domain_config(self, dto: Scan2DConfigDTO) -> StepScanConfig:
+        measurement_uncertainty = MeasurementUncertainty(max_uncertainty_volts=dto.uncertainty_volts)
+        for warning in measurement_uncertainty.warnings:
+            logger.warning("ScanApplicationService: uncertainty_volts=%s — %s", dto.uncertainty_volts, warning)
+
         return StepScanConfig(
             scan_zone=ScanZone(x_min=dto.x_min, x_max=dto.x_max, y_min=dto.y_min, y_max=dto.y_max),
             x_nb_points=dto.x_nb_points,
@@ -706,7 +715,7 @@ class ScanApplicationService:
             scan_pattern=ScanPattern[dto.scan_pattern],
             stabilization_delay_ms=dto.stabilization_delay_ms,
             averaging_per_position=dto.averaging_per_position,
-            measurement_uncertainty=MeasurementUncertainty(max_uncertainty_volts=dto.uncertainty_volts),
+            measurement_uncertainty=measurement_uncertainty,
             scan_axis=ScanAxis[dto.scan_axis],
             differential_mode=dto.differential_mode,
             differential_settle_delay_ms=dto.differential_settle_delay_ms,
