@@ -435,7 +435,6 @@ def main(hardware_config: dict | None = None):
 
     # Initialize presenter to fetch limits
     motion_presenter.initialize()
-    motion_presenter.on_speed_mode_requested(motion_panel.get_current_speed_mode())
     logger.debug("Motion panel wired")
 
     # Excitation Panel
@@ -605,6 +604,7 @@ def main(hardware_config: dict | None = None):
     def on_startup_finished(success: bool, errors: list):
         if success:
             logger.info("Hardware initialization successful.")
+            motion_presenter.on_speed_mode_requested(motion_panel.get_current_speed_mode())
             startup_view.close()
 
             print("\n--- Launching Dashboard ---")
