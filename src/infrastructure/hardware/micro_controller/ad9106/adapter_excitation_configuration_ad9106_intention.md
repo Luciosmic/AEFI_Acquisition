@@ -25,5 +25,9 @@ Adaptateur Real implémentant `IExcitationPort` pour l'AD9106 DDS. Traduit les `
   implémentation de `apply_config()` sur le même hardware — écrivain distinct, volontaire :
   celui-ci traduit le domaine, `AD9106AdvancedConfigurator` expose le réglage bas niveau).
 - Les formules de conversion (gain %, table de phases par mode) sont encapsulées ici.
+- `apply_excitation()` diffe contre `AD9106Controller.get_memory_state()` (état partagé), jamais
+  contre son propre dernier `ExcitationParameters` : l'autre écrivain réécrit les mêmes registres,
+  et un cache local faisait sauter l'écriture de la phase DDS2 au changement de direction. À 0 %
+  (OFF), la phase du mode choisi est quand même écrite — la phase *est* la direction.
 - `ExcitationDdsLinkChanged` nommé ainsi (pas `DdsLinkChanged` générique) car une notion de
   lien différente est prévue pour DDS3/DDS4 (phase/fréquence, déphasage détection synchrone).

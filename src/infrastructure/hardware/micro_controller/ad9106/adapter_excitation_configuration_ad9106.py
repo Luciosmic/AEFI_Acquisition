@@ -119,116 +119,66 @@ class AdapterExcitationConfigurationAD9106(IExcitationPort):
         - Mode → set_dds_phase() for each channel (Gains only if active channels change)
         - Level → set_dds_gain() for active channels
         
-        Optimized to minimize hardware communication:
-        - Only updates parameters that have changed.
-        - Strictly follows "Just change phases for mode change" rule where possible.
-        
+        Minimizes hardware communication by diffing against the SHARED
+        controller's memory state — not against this adapter's own last
+        params: AD9106AdvancedConfigurator (Hardware Config tab, boot/reload
+        of last_config) writes the same registers behind this adapter's
+        back, so a local cache used to believe DDS2 phase was already right
+        and silently skip the write on a direction change.
+
+        Level 0% (OFF) still writes the selected mode's phases: phase is
+        what "direction" means, and the next non-zero level must come out
+        in the direction the user picked. (Differential-scan mute goes
+        through set_gain(), which never touches phase.)
+
         Args:
             params: Domain excitation parameters (mode, level, frequency)
-            
+
         Raises:
             RuntimeError: If hardware configuration fails
         """
-        # Check for redundant update to avoid double communication
-        if self._current_params == params:
-            return
-
         logger.info(
             "apply_excitation called: mode=%s, level_s1_s2=%s%%, level_s3_s4=%s%%, freq=%sHz",
             params.mode.name, params.level_s1_s2.value, params.level_s3_s4.value, params.frequency,
         )
 
-        # 1. Handle full OFF (both DDS levels at 0)
-        if params.level_s1_s2.value == 0 and params.level_s3_s4.value == 0:
-            # Zero gain only — amplitude is what "off" means, phase is
-            # irrelevant once gain is 0 and not worth touching (it used to
-            # get reset to 0 here too, which scrambled the excitation
-            # direction on every point of a differential scan, since mute()
-            # goes through this same branch).
-            logger.debug("apply_excitation: OFF branch — zeroing DDS1/DDS2 gain only, phase left untouched")
-            for channel in [1, 2]:
-                result = self._controller.set_dds_gain(channel, 0)
-                if result.is_failure:
-                    raise RuntimeError(f"Failed to set DDS{channel} gain to 0: {result.error}")
-            current_phase = self._controller.get_memory_state()["DDS"]["Phase"]
-            self._publish_channel_config_changed(
-                {1: 0, 2: 0}, {1: current_phase[1], 2: current_phase[2]}
-            )
-            # Store current parameters and return
-            self._current_params = params
-            return
-
-        # Determine what changed
-        # If previous was None or fully OFF, assume everything needs update
-        was_off = self._current_params is None or (
-            self._current_params.level_s1_s2.value == 0 and self._current_params.level_s3_s4.value == 0
-        )
-
-        freq_changed = was_off or (params.frequency != self._current_params.frequency)
-        level_changed = was_off or (
-            params.level_s1_s2.value != self._current_params.level_s1_s2.value
-            or params.level_s3_s4.value != self._current_params.level_s3_s4.value
-        )
-        mode_changed = was_off or (params.mode != self._current_params.mode)
-
-        # 2. Set frequency (applies to all DDS channels)
-        if params.frequency > 0 and freq_changed:
-            result = self._controller.set_dds_frequency(params.frequency)
-            if result.is_failure:
-                raise RuntimeError(f"Failed to set DDS frequency: {result.error}")
-        
-        # 3. Map excitation mode to DDS channel configuration
         dds_config = self._map_excitation_mode_to_dds(params.mode)
-        
-        # 4. Set gains
-        # Update gains if Level changed OR if Active Channels changed (due to mode change)
-        update_gains = level_changed
-        if mode_changed and not was_off:
-            # Check if active channels changed
-            prev_config = self._map_excitation_mode_to_dds(self._current_params.mode)
-            if set(prev_config["active_channels"]) != set(dds_config["active_channels"]):
-                update_gains = True
-        
         # Convert level percentages (0-100) to DDS gain (0-5500), per channel.
         # Confirmed on oscilloscope (see "Correspondance Poupette Sortie DDS" note):
         # channel 1 (DDS1 generator) feeds spheres S3/S4, channel 2 (DDS2 generator)
         # feeds spheres S1/S2 — the reverse of the naive channel-number assumption.
-        # Computed unconditionally (cheap) so it's available for the sync-event
-        # publish below even on a phase-only change (update_gains False).
         active_channels = dds_config["active_channels"]
         applied_gain_by_channel = {
             1: int((params.level_s3_s4.value / 100.0) * self.MAX_EXCITATION_GAIN) if 1 in active_channels else 0,
             2: int((params.level_s1_s2.value / 100.0) * self.MAX_EXCITATION_GAIN) if 2 in active_channels else 0,
         }
+        hardware = self._controller.get_memory_state()["DDS"]
 
-        if update_gains:
-            # Apply gain to active channels
-            for channel in active_channels:
-                result = self._controller.set_dds_gain(channel, applied_gain_by_channel[channel])
+        # Frequency (applies to all DDS channels)
+        if params.frequency > 0 and params.frequency != hardware["Frequence"]:
+            result = self._controller.set_dds_frequency(params.frequency)
+            if result.is_failure:
+                raise RuntimeError(f"Failed to set DDS frequency: {result.error}")
+
+        for channel in (1, 2):
+            gain = applied_gain_by_channel[channel]
+            if gain != hardware["Gain"][channel]:
+                result = self._controller.set_dds_gain(channel, gain)
                 if result.is_failure:
-                    raise RuntimeError(f"Failed to set DDS{channel} gain: {result.error}")
+                    raise RuntimeError(f"Failed to set DDS{channel} gain to {gain}: {result.error}")
 
-            # Set inactive excitation channels (DDS1/DDS2) to 0 gain
-            inactive_excitation_channels = [ch for ch in [1, 2] if ch not in active_channels]
-            for channel in inactive_excitation_channels:
-                result = self._controller.set_dds_gain(channel, 0)
-                if result.is_failure:
-                    raise RuntimeError(f"Failed to set DDS{channel} gain to 0: {result.error}")
-
-        # 5. Set phases
-        # Update phases if Mode changed (or if we just came from OFF)
-        if mode_changed:
-            for channel in [1, 2]:
-                phase = dds_config["phases"][channel]
+            phase = dds_config["phases"][channel]
+            if phase != hardware["Phase"][channel]:
                 result = self._controller.set_dds_phase(channel, phase)
                 if result.is_failure:
                     raise RuntimeError(f"Failed to set DDS{channel} phase: {result.error}")
-                logger.debug("DDS%s phase set to %s (mode=%s)", channel, phase, params.mode.name)
+                logger.debug(
+                    "DDS%s phase %s -> %s (mode=%s)", channel, hardware["Phase"][channel], phase, params.mode.name
+                )
+            else:
+                logger.debug("DDS%s phase already %s (mode=%s). Doing nothing.", channel, phase, params.mode.name)
 
-        if update_gains or mode_changed:
-            self._publish_channel_config_changed(applied_gain_by_channel, dds_config["phases"])
-
-        # Store current parameters
+        self._publish_channel_config_changed(applied_gain_by_channel, dds_config["phases"])
         self._current_params = params
 
     def set_gain(self, level_s1_s2_percent: float, level_s3_s4_percent: float) -> None:
