@@ -12,10 +12,9 @@ from infrastructure.persistence.calibration.fake.fake_synchronous_detection_phas
 
 def _make_signature(serial: str = "SN-1") -> HardwareSignature:
     return HardwareSignature(
-        excitation_board_version="board_v2",
-        conditioning_board_version="cond_v4",
-        sensor_version="v2b",
-        sensor_serial_number=serial,
+        excitation_electronics_board_name="board_v2",
+        conditioning_electronics_board_name="cond_v4",
+        sensor_name=f"v2b_{serial}",
     )
 
 

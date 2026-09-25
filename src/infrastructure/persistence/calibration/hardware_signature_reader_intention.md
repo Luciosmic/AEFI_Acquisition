@@ -31,7 +31,16 @@ onto the domain VO's fields.
 - `read(path: Optional[Path] = None) -> HardwareSignature`.
 - Field mapping (confirmed against the real JSON schema in
   `acquisition_snapshot_reader.py` / `config_templates/aefi_device_config.json`):
-  - `excitation_board_version` <- `data["excitation"]["electronic_board_version"]`
-  - `conditioning_board_version` <- `data["sensor"]["conditioning_board_version"]`
+  - `excitation_electronics_board_name` <- `data["excitation"]["electronic_board_version"]`
+  - `conditioning_electronics_board_name` <- `data["sensor"]["conditioning_board_version"]`
   - `sensor_version` <- `data["sensor"]["version"]`
   - `sensor_serial_number` <- `data["sensor"]["serial_number"]` (defaults to `None`)
+- Since 2026-09-25, `sensor_version` / `sensor_serial_number` read here are
+  only a **fallback**: `SensorCalibrationService` replaces them with the
+  sensor identity of the latest sensor calibration entry (the registry is
+  the source of truth), and logs a WARNING when it has to use this fallback.
+- Since 2026-09-25 (later the same day), the board versions read here are
+  generic template placeholders too: the mounted boards come from the
+  electronic board calibration registries
+  (`Calibration.resolve_current_hardware_signature`), and these names are
+  only used — with a WARNING — while no board of that kind is mounted.

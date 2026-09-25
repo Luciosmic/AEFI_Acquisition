@@ -23,29 +23,46 @@ class TestFrameRotation(AnalyticTestCase):
         data = np.zeros((10, 10, 6))
         data[:, :, 0] = 1.0 # Ux_I
         
-        # 2. Define rotation: 90 degrees around Z axis
-        # X vector should become Y vector
+        # 2. Angles of the mounting rotation P = Rz(90)
+        # The rotator applies P = Rz(90): X vector should become +Y vector
         angles = (0.0, 0.0, 90.0)
-        
+
         # 3. Apply rotation
         rotator = SensorToEFSourcesFrameRotator()
         rotated_data, _ = rotator.rotate(data, angles)
-        
+
         # 4. Verify result
-        # Expected: Ux=0, Uy=1 (approx)
-        # Note: Rotation order XYZ. 
-        # Z-rotation of 90 deg sends X -> Y, Y -> -X.
-        
+        # Expected: Ux=0, Uy=+1 (approx)
+        # Note: P = Rz(90) is the mounting rotation; E_sources = P·E_sensor.
+        # Rz(90) sends X -> Y, Y -> -X.
+
         mean_vector = np.mean(rotated_data, axis=(0,1))
-        print("\nFrame Rotation Test Results (90 deg around Z):")
+        print("\nFrame Rotation Test Results (P = Rz(90), applied P):")
         print(f"  Input Vector (Mean): {np.mean(data, axis=(0,1))}")
         print(f"  Rotated Vector (Mean): {mean_vector}")
-        
+
         # Check Ux_I is approx 0
-        self.assertAlmostEqual(mean_vector[0], 0.0, delta=1e-6, msg="Ux should be 0 after 90 deg Z-rot")
-        # Check Uy_I is approx 1
-        self.assertAlmostEqual(mean_vector[2], 1.0, delta=1e-6, msg="Uy should be 1 after 90 deg Z-rot")
-        
+        self.assertAlmostEqual(mean_vector[0], 0.0, delta=1e-6, msg="Ux should be 0 after applying P = Rz(90)")
+        # Check Uy_I is approx +1
+        self.assertAlmostEqual(mean_vector[2], 1.0, delta=1e-6, msg="Uy should be +1 after applying P = Rz(90)")
+
+    def test_ideal_angles_map_cube_diagonal_to_sources_vertical(self):
+        """
+        With the ideal angles (atan(1/sqrt(2)), 45, 0), the cube diagonal
+        (-1, 1, 1)/sqrt(3) in the sensor frame is the sources vertical (0, 0, 1):
+        P·(-1, 1, 1)/sqrt(3) = (0, 0, 1).
+        """
+        data = np.zeros((4, 4, 6))
+        data[:, :, [0, 2, 4]] = np.array([-1.0, 1.0, 1.0]) / np.sqrt(3.0)
+
+        angles = (np.degrees(np.arctan(1.0 / np.sqrt(2.0))), 45.0, 0.0)
+        rotated_data, _ = SensorToEFSourcesFrameRotator().rotate(data, angles)
+
+        mean_vector = np.mean(rotated_data, axis=(0, 1))
+        self.assertAlmostEqual(mean_vector[0], 0.0, delta=1e-9)
+        self.assertAlmostEqual(mean_vector[2], 0.0, delta=1e-9)
+        self.assertAlmostEqual(mean_vector[4], 1.0, delta=1e-9)
+
     def test_quaternion_consistency(self):
         """
         Verify quaternion matches euler angles.

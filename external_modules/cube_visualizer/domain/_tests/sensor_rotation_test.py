@@ -11,6 +11,7 @@ from cube_visualizer.domain.sensor_rotation import (
     quaternion_identity,
     quaternion_multiply,
     quaternion_slerp,
+    rotation_from_euler_xyz,
     rotation_from_quaternion,
 )
 
@@ -69,6 +70,7 @@ class TestQuaternionOperations:
         rot_composed = rotation_from_quaternion(q_composed)
         v = np.array([1, 0, 0])
         v_result = rot_composed.apply(v)
+        # Quaternions are mounting rotations P, i.e. Rx(90) then Ry(90) here.
         expected = np.array([0, 0, -1])
         assert np.allclose(v_result, expected, atol=1e-10)
 
@@ -124,6 +126,12 @@ class TestDefaultQuaternion:
         assert np.isclose(theta_x, get_default_theta_x(), atol=1e-8)
         assert np.isclose(theta_y, get_default_theta_y(), atol=1e-8)
         assert np.isclose(theta_z, 0.0, atol=1e-10)
+
+    def test_default_angles_map_cube_diagonal_to_sources_vertical(self):
+        # P·(-1,1,1)/sqrt(3) = e_z^sources for the ideal mounting angles.
+        rotation = rotation_from_euler_xyz(get_default_theta_x(), get_default_theta_y(), 0.0)
+        diagonal_sensor = np.array([-1, 1, 1]) / np.sqrt(3)
+        assert np.allclose(rotation.apply(diagonal_sensor), [0, 0, 1], atol=1e-9)
 
 
 if __name__ == "__main__":

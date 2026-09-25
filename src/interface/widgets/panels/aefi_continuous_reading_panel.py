@@ -241,7 +241,7 @@ class AefiContinuousReadingPanel(QWidget):
             }
         """)
         self.btn_apply_rotation.toggled.connect(self._on_rotation_toggled)
-        self.btn_apply_rotation.setToolTip("Transform Sensor Frame -> Source Frame using angles from 'Ref. Transform' panel.")
+        self.btn_apply_rotation.setToolTip("Ramène les signaux dans le repère sources : E_sources = P·E_sensor, P = angles de montage du panneau Calibration (transformation transposée de la mesure).")
 
         self.lbl_angles_info = QLabel("Angles: [0, 0, 0]")
         self.lbl_angles_info.setStyleSheet("color: #AAA;")

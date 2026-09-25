@@ -87,9 +87,9 @@ class HardwareCompositionRoot:
             from infrastructure.mocks.adapter_mock_excitation_aware_acquisition import ExcitationAwareAcquisitionPort
             # Field simulation (4-sphere point-charge model + 8mm cube sensor,
             # empty-bench baseline) loads its geometry/gain/orientation from
-            # .aefi_acquisition/configs/aefi_device_config.json — including the
-            # real measured sensor.calibration.sensor_to_lab_rotation, not an
-            # arbitrary demo angle.
+            # .aefi_acquisition/configs/aefi_device_config.json — including
+            # sensor.calibration.sources_to_sensor_rotation (ideal mounting
+            # angles), not an arbitrary demo angle.
             self.acquisition_port: IAcquisitionPort = ExcitationAwareAcquisitionPort(
                 base_acquisition_port=base_acquisition_port,
                 excitation_port=self.excitation_port,

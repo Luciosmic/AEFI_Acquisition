@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QLineEdit, QComboBox, QPushButton, QGroupBox, QFormLayout,
-    QCheckBox, QFileDialog
+    QCheckBox, QFileDialog, QGridLayout
 )
 from PySide6.QtCore import Signal
 from pathlib import Path
@@ -29,16 +29,18 @@ class ScanControlPanel(QWidget):
 
     def _build_ui(self):
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(10, 10, 10, 10)
-        layout.setSpacing(10)
-        
-        # Style
+        layout.setContentsMargins(8, 8, 8, 8)
+        layout.setSpacing(8)
+
+        # Same compact metrics as MotionPanelCompact / ExcitationPanel so the
+        # three panels end up the same height when docked side by side.
         self.setStyleSheet("""
             QGroupBox {
                 border: 1px solid #333;
-                border-radius: 5px;
-                margin-top: 10px;
+                border-radius: 4px;
+                margin-top: 6px;
                 font-weight: bold;
+                font-size: 11px;
                 color: #CCC;
             }
             QGroupBox::title {
@@ -46,28 +48,25 @@ class ScanControlPanel(QWidget):
                 subcontrol-position: top center;
                 padding: 0 5px;
             }
-            QLabel { color: #DDD; }
+            QLabel { color: #DDD; font-size: 11px; }
             QLineEdit, QComboBox {
                 background-color: #222;
                 color: #FFF;
                 border: 1px solid #444;
-                padding: 4px;
+                padding: 2px;
                 border-radius: 3px;
+                font-size: 11px;
             }
-            QCheckBox {
-                color: #DDD;
-            }
+            QCheckBox { color: #DDD; font-size: 11px; }
             QPushButton {
                 background-color: #333;
                 color: #EEE;
                 border: 1px solid #555;
-                border-radius: 4px;
-                padding: 6px 12px;
-                font-weight: 500;
+                border-radius: 3px;
+                padding: 3px 8px;
+                font-size: 11px;
             }
-            QPushButton:hover {
-                background-color: #444;
-            }
+            QPushButton:hover { background-color: #444; }
             QPushButton:disabled {
                 background-color: #222;
                 color: #666;
@@ -76,35 +75,34 @@ class ScanControlPanel(QWidget):
                 background-color: #2E7D32;
                 border: 1px solid #43A047;
             }
-            QPushButton#btn_start:hover {
-                background-color: #388E3C;
-            }
+            QPushButton#btn_start:hover { background-color: #388E3C; }
             QPushButton#btn_stop {
                 background-color: #C62828;
                 border: 1px solid #E53935;
             }
-            QPushButton#btn_stop:hover {
-                background-color: #D32F2F;
-            }
+            QPushButton#btn_stop:hover { background-color: #D32F2F; }
         """)
-        
+
         # --- Scan Configuration Group ---
+        # 4-column grid (label, field, label, field): X/Y rows use cols 1-3 for
+        # min/max/points, the other settings are paired two per row.
         config_group = QGroupBox("Scan Configuration")
-        form_layout = QFormLayout()
-        form_layout.setSpacing(8)
-        form_layout.setContentsMargins(15, 20, 15, 15)
-        
+        grid = QGridLayout(config_group)
+        grid.setHorizontalSpacing(6)
+        grid.setVerticalSpacing(8)
+        grid.setContentsMargins(10, 15, 10, 10)
+
         self.input_x_min = QLineEdit("600.0")
         self.input_x_max = QLineEdit("800.0")
         self.input_x_nb = QLineEdit("81")
-        
+
         self.input_y_min = QLineEdit("600.0")
         self.input_y_max = QLineEdit("800.0")
         self.input_y_nb = QLineEdit("81")
-        
+
         self.input_stabilization = QLineEdit("300") # ms
         self.input_averaging = QLineEdit("10") # samples
-        
+
         self.combo_pattern = QComboBox()
         self.combo_pattern.addItems(["SERPENTINE", "RASTER"])
 
@@ -116,28 +114,45 @@ class ScanControlPanel(QWidget):
 
         self.btn_save_scan_defaults = QPushButton("Set as default")
 
-        form_layout.addRow("X Min (mm):", self.input_x_min)
-        form_layout.addRow("X Max (mm):", self.input_x_max)
-        form_layout.addRow("X Points:", self.input_x_nb)
-        form_layout.addRow("Y Min (mm):", self.input_y_min)
-        form_layout.addRow("Y Max (mm):", self.input_y_max)
-        form_layout.addRow("Y Points:", self.input_y_nb)
-        form_layout.addRow("Stabilization (ms):", self.input_stabilization)
-        form_layout.addRow("Averaging (samples):", self.input_averaging)
-        form_layout.addRow("Pattern:", self.combo_pattern)
-        form_layout.addRow("Axis (fast):", self.combo_axis)
-        form_layout.addRow(self.checkbox_differential_mode)
-        form_layout.addRow("Differential settle (ms):", self.input_differential_settle_delay)
-        form_layout.addRow(self.btn_save_scan_defaults)
+        for field in (
+            self.input_x_min, self.input_x_max, self.input_x_nb,
+            self.input_y_min, self.input_y_max, self.input_y_nb,
+            self.input_stabilization, self.input_averaging,
+            self.input_differential_settle_delay,
+        ):
+            field.setFixedWidth(70)
 
-        config_group.setLayout(form_layout)
+        for col, text in enumerate(("Min (mm)", "Max (mm)", "Points"), start=1):
+            grid.addWidget(QLabel(text), 0, col)
+        for row, (name, widgets) in enumerate((
+            ("X:", (self.input_x_min, self.input_x_max, self.input_x_nb)),
+            ("Y:", (self.input_y_min, self.input_y_max, self.input_y_nb)),
+        ), start=1):
+            grid.addWidget(QLabel(name), row, 0)
+            for col, w in enumerate(widgets, start=1):
+                grid.addWidget(w, row, col)
+
+        grid.addWidget(QLabel("Stabilization (ms):"), 3, 0)
+        grid.addWidget(self.input_stabilization, 3, 1)
+        grid.addWidget(QLabel("Averaging:"), 3, 2)
+        grid.addWidget(self.input_averaging, 3, 3)
+        grid.addWidget(QLabel("Pattern:"), 4, 0)
+        grid.addWidget(self.combo_pattern, 4, 1)
+        grid.addWidget(QLabel("Axis (fast):"), 4, 2)
+        grid.addWidget(self.combo_axis, 4, 3)
+        grid.addWidget(self.checkbox_differential_mode, 5, 0, 1, 4)
+        grid.addWidget(QLabel("Diff. settle (ms):"), 6, 0)
+        grid.addWidget(self.input_differential_settle_delay, 6, 1)
+        grid.addWidget(self.btn_save_scan_defaults, 6, 2, 1, 2)
+
         layout.addWidget(config_group)
 
         # --- Export Configuration Group ---
         export_group = QGroupBox("Export Configuration")
-        export_layout = QFormLayout()
-        export_layout.setSpacing(8)
-        export_layout.setContentsMargins(15, 20, 15, 15)
+        export_grid = QGridLayout(export_group)
+        export_grid.setHorizontalSpacing(6)
+        export_grid.setVerticalSpacing(8)
+        export_grid.setContentsMargins(10, 15, 10, 10)
 
         self.checkbox_export_enabled = QCheckBox("Enable export")
         self.checkbox_export_enabled.setChecked(True)
@@ -146,52 +161,49 @@ class ScanControlPanel(QWidget):
         self.input_export_directory = QLineEdit("")
         self.input_export_directory.setPlaceholderText("~/Desktop/AEFI_Acquisition_Exports")
 
+        self.input_export_filename.setFixedWidth(90)
         self.btn_browse_export_directory = QPushButton("Browse...")
-
-        directory_row = QHBoxLayout()
-        directory_row.addWidget(self.input_export_directory)
-        directory_row.addWidget(self.btn_browse_export_directory)
-
         self.btn_save_export_defaults = QPushButton("Set as default")
 
-        export_layout.addRow(self.checkbox_export_enabled)
-        export_layout.addRow("Filename base:", self.input_export_filename)
-        export_layout.addRow("Output directory:", directory_row)
-        export_layout.addRow(self.btn_save_export_defaults)
+        export_grid.addWidget(self.checkbox_export_enabled, 0, 0)
+        export_grid.addWidget(QLabel("Filename base:"), 0, 1)
+        export_grid.addWidget(self.input_export_filename, 0, 2)
+        export_grid.addWidget(self.btn_save_export_defaults, 0, 3)
+        export_grid.addWidget(QLabel("Output dir:"), 1, 0)
+        export_grid.addWidget(self.input_export_directory, 1, 1, 1, 2)
+        export_grid.addWidget(self.btn_browse_export_directory, 1, 3)
 
-        export_group.setLayout(export_layout)
         layout.addWidget(export_group)
-        
+
         # --- Control Group ---
         control_group = QGroupBox("Control")
-        btn_layout = QHBoxLayout()
-        btn_layout.setSpacing(10)
-        btn_layout.setContentsMargins(15, 15, 15, 15)
-        
+        btn_layout = QHBoxLayout(control_group)
+        btn_layout.setSpacing(6)
+        btn_layout.setContentsMargins(10, 15, 10, 10)
+
         self.btn_start = QPushButton("START")
         self.btn_start.setObjectName("btn_start")
         self.btn_stop = QPushButton("STOP")
         self.btn_stop.setObjectName("btn_stop")
         self.btn_pause = QPushButton("Pause")
         self.btn_resume = QPushButton("Resume")
-        
+
         self.btn_stop.setEnabled(False)
         self.btn_pause.setEnabled(False)
         self.btn_resume.setEnabled(False)
-        
+
         btn_layout.addWidget(self.btn_start)
         btn_layout.addWidget(self.btn_pause)
         btn_layout.addWidget(self.btn_resume)
         btn_layout.addWidget(self.btn_stop)
-        
-        control_group.setLayout(btn_layout)
+
         layout.addWidget(control_group)
-        
+
         # --- Status ---
         self.lbl_status = QLabel("Status: Ready")
-        self.lbl_status.setStyleSheet("color: #AAA; font-size: 12px; padding: 5px;")
+        self.lbl_status.setStyleSheet("color: #AAA; font-size: 11px;")
         layout.addWidget(self.lbl_status)
-        
+
         layout.addStretch()
 
     def _connect_signals(self):

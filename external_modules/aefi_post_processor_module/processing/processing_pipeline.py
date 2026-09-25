@@ -66,7 +66,7 @@ class ProcessingPipeline:
         
         Args:
             csv_path: Path to input CSV file
-            rotation_angles: Optional (theta_x, theta_y, theta_z) in degrees
+            rotation_angles: Optional (theta_x, theta_y, theta_z) in degrees of the mounting rotation P (scipy 'XYZ'); applied E_sources = P·E_sensor
             skip_interpolation: If True, skip interpolation step
             
         Returns:
@@ -115,7 +115,7 @@ class ProcessingPipeline:
             
             # Step 5: Frame rotation (if angles provided)
             if rotation_angles is not None:
-                print(f"Rotating to probe frame: {rotation_angles}...")
+                print(f"Rotating sensor frame to sources frame (E_sources = P·E_sensor), angles {rotation_angles}...")
                 rotated, rot_metadata = self.frame_rotator.rotate(
                     amplitude_subtracted,
                     rotation_angles

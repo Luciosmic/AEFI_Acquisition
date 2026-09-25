@@ -5,6 +5,8 @@
   "excitation": {
     "sources_geometry": {
 
+      "_note": "SUPERSEDED AS LIVE SOURCE (2026-09-23): SourceGeometryCalibrationService's append-only registry (.aefi_acquisition/calibrations/source_geometry_calibration.json) is now the source of truth for the current geometric configuration, with a dated, GUM-uncertainty-tracked history. This JSON block is read exactly once by the composition root (main.py), only to seed that registry's first entry when it has never been recorded yet (first boot). Edit values here only to change the seed used on a fresh .aefi_acquisition/ directory — the running application's actual geometry lives in the registry, not here.",
+
       "sphere_labels": {
         "_note": "Quadrant convention (2026-07-24, corrects the earlier x+/x-/y+/y- half-axis labeling). S_i occupies a quadrant, not a half-axis. Source of truth: 'ImagerieElectrique - Correspondance Poupette Sortie DDS - Connexion Carte Amplification Excitation' and the 'NOTE - Source Frame Geometry' (Luis Saluden's vault, not tracked in this repo).",
         "S1": "x_neg_y_pos",
@@ -32,13 +34,14 @@
       }
     },
 
-    "electronic_board_version": "AmpliHT_opa462_v2_ASSOCE",
+    "_note_electronic_board_version": "TEMPLATE PLACEHOLDER (2026-09-25): generic name only. The mounted excitation board is declared in the 'Carte electronique d'excitation' calibration tab (registry .aefi_acquisition/calibrations/excitation_electronic_board_calibration.json). This name is used only while no board is mounted (WARNING, configuration incomplete).",
+    "electronic_board_version": "undeclared_excitation_electronic_board",
     "dds_chip": "AD9106"
   },
 
   "sensor": {
-    "version": "v2b",
-    "serial_number": null,
+    "_note_name": "TEMPLATE PLACEHOLDER (2026-09-25): generic name only. The sensor is a hardware component: it is characterized (transduction gain) and mounted in the 'Capteur' calibration tab (registry .aefi_acquisition/calibrations/hardware_components/sensor.json). This name is used only while no sensor is mounted (WARNING, configuration incomplete).",
+    "name": "undeclared_sensor",
     "dimension": {
       "value": 8e-3,
       "unit": "m",
@@ -52,17 +55,25 @@
       }
     },
     "counter_electrode_feedback_mode": "Adjacent",
-    "conditioning_board_version": "Final_v4_ASSOCE",
+    "_note_conditioning_board_version": "TEMPLATE PLACEHOLDER (2026-09-25): generic name only. The mounted conditioning board is declared in the 'Carte electronique de conditionnement' calibration tab (registry .aefi_acquisition/calibrations/conditioning_electronics_board_calibration.json). This name is used only while no board is mounted (WARNING, configuration incomplete).",
+    "conditioning_board_version": "undeclared_conditioning_electronics_board",
     "calibration": {
       "gain": {
         "value": 63600.0,
         "unit": "[V/m]/V"
       },
-      "sensor_to_lab_rotation": {
-        "theta_x": -33.5,
-        "theta_y": 33.5,
-        "theta_z": -7.0,
-        "unit": "deg"
+      "sources_to_sensor_rotation": {
+        "_note": "Ideal (nominal) mounting angles: default rotation (and 'Reset to Default' target) applied when no sensor calibration exists for the current source geometry (calibrated angles live in .aefi_acquisition/calibrations/sensor_calibration.json). Mounting angles P (bring the sensor from the sources frame to its current mounting). Reference definition of the frames (sensor / sources / bench) and of P: src/domain/calibration/value_objects/rotation_convention/rotation_convention_intention.md",
+        "theta_x": 35.3,
+        "theta_y": 45,
+        "theta_z": 0,
+        "unit": "deg",
+        "convention": {
+          "type": "extrinsic",
+          "order": "ZYX",
+          "direction": "sources_to_sensor",
+          "_note": "P = Rx(theta_x)·Ry(theta_y)·Rz(theta_z): brings the sensor from the sources frame to its current mounting (rotations about the FIXED sources axes, applied Z then Y then X; scipy Rotation.from_euler('XYZ', …), uppercase = intrinsic X->Y'->Z''). Measurement: E_sensor = P^T·E_sources. Coordinate transform back to the sources frame: E_sources = P·E_sensor. Enter the mounting angles as they are — do NOT negate them."
+        }
       },
       "date": null
     }

@@ -12,6 +12,7 @@ Rationale:
 """
 
 import logging
+from typing import List
 
 from interface.shell.dashboard import Dashboard
 from interface.presenters.motion_presenter import MotionPresenter
@@ -21,6 +22,9 @@ from interface.presenters.aefi_continuous_reading_presenter import AefiContinuou
 from interface.presenters.electric_field_probe_presenter import ElectricFieldProbePresenter
 from interface.presenters.scan_presenter import ScanPresenter
 from interface.presenters.hardware_advanced_config_presenter import HardwareAdvancedConfigPresenter
+from interface.presenters.sensor_calibration_presenter import SensorCalibrationPresenter
+from interface.presenters.source_geometry_calibration_presenter import SourceGeometryCalibrationPresenter
+from interface.presenters.hardware_component_presenter import HardwareComponentPresenter
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +38,9 @@ def wire_dashboard(
     electric_field_probe_presenter: ElectricFieldProbePresenter,
     scan_presenter: ScanPresenter,
     hardware_config_presenter: HardwareAdvancedConfigPresenter,
+    sensor_calibration_presenter: SensorCalibrationPresenter,
+    source_geometry_calibration_presenter: SourceGeometryCalibrationPresenter,
+    hardware_component_presenters: List[HardwareComponentPresenter],
 ) -> None:
     """Connect every dashboard panel to its presenter. Called once from
     main.py right after the dashboard and presenters are constructed."""
@@ -133,6 +140,49 @@ def wire_dashboard(
     electric_field_probe_presenter.noise_state_updated.connect(electric_field_probe_panel.update_correction_states)
     electric_field_probe_presenter.frequency_correction_changed.connect(electric_field_probe_panel.on_frequency_correction_changed)
     logger.debug("Electric field probe panel wired")
+
+    # Calibration Panel (capteur, géométrie source, carte de conditionnement — un seul dock à onglets)
+    calibration_panel = dashboard.panels["calibration"]
+
+    calibration_panel.sensor_calibration_panel.save_calibration_requested.connect(
+        sensor_calibration_presenter.on_save_calibration_requested
+    )
+    calibration_panel.sensor_calibration_panel.trial_rotation_requested.connect(
+        sensor_calibration_presenter.on_trial_rotation_requested
+    )
+    calibration_panel.sensor_calibration_panel.reset_to_default_requested.connect(
+        sensor_calibration_presenter.on_reset_to_default_requested
+    )
+    sensor_calibration_presenter.status_message.connect(calibration_panel.sensor_calibration_panel.set_status_message)
+    sensor_calibration_presenter.latest_calibration_updated.connect(
+        calibration_panel.sensor_calibration_panel.on_latest_calibration_updated
+    )
+    sensor_calibration_presenter.active_rotation_updated.connect(
+        calibration_panel.sensor_calibration_panel.on_active_rotation_updated
+    )
+    calibration_panel.sensor_calibration_panel.launch_visualizer_requested.connect(
+        lambda: dashboard.panels["external_modules"].launch("cube")
+    )
+    sensor_calibration_presenter.refresh_state()
+
+    calibration_panel.source_geometry_panel.save_calibration_requested.connect(
+        source_geometry_calibration_presenter.on_save_calibration_requested
+    )
+    source_geometry_calibration_presenter.latest_calibration_updated.connect(
+        calibration_panel.source_geometry_panel.on_latest_calibration_updated
+    )
+    source_geometry_calibration_presenter.refresh_state()
+
+    # One tab per hardware component kind (boards, signal generation chip, ADC, microcontroller, motors)
+    for presenter in hardware_component_presenters:
+        component_panel = calibration_panel.add_hardware_component_tab(presenter.kind)
+        component_panel.save_requested.connect(presenter.on_save_requested)
+        component_panel.mount_requested.connect(presenter.on_mount_requested)
+        presenter.components_listed.connect(component_panel.on_components_listed)
+        presenter.mounted_component_updated.connect(component_panel.on_mounted_component_updated)
+        presenter.status_message.connect(component_panel.set_status_message)
+        presenter.refresh_state()
+    logger.debug("Calibration panel wired")
 
     # Scan Panels Wiring
     scan_control_panel = dashboard.panels["scan_control"]

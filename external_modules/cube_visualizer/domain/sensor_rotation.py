@@ -14,24 +14,37 @@ import math
 
 def quaternion_from_euler_xyz(theta_x_deg: float, theta_y_deg: float, theta_z_deg: float) -> np.ndarray:
     """
-    Convert Euler angles to a quaternion (EXTRINSIC — lab-fixed axes).
+    Convert mounting angles to the quaternion of the mounting rotation P.
+
+    P = Rx(theta_x)·Ry(theta_y)·Rz(theta_z) (extrinsic about the fixed sources
+    axes, applied Z then Y then X; scipy 'XYZ' uppercase) brings the cube,
+    aligned on the sources frame, to its actual mounting. Its columns are the
+    axes e_i^sensor expressed in the sources frame, so it converts sensor-frame
+    coordinates into sources-frame coordinates: E_sources = P·E_sensor.
+    Applying it to the cube mesh draws the mounted cube in the sources frame.
+    Reference: AEFI_Acquisition src/domain/calibration/
+    value_objects/rotation_convention/rotation_convention_intention.md
 
     Args:
-        theta_x_deg: Rotation around lab X (degrees)
-        theta_y_deg: Rotation around lab Y (degrees)
-        theta_z_deg: Rotation around lab Z (degrees)
+        theta_x_deg: theta_x (degrees)
+        theta_y_deg: theta_y (degrees)
+        theta_z_deg: theta_z (degrees)
 
     Returns:
         np.ndarray: Quaternion [x, y, z, w] (scipy convention)
     """
-    # 'XYZ' (uppercase) = extrinsic rotations (fixed lab axes)
-    rot = R.from_euler('XYZ', [theta_x_deg, theta_y_deg, theta_z_deg], degrees=True)
-    return rot.as_quat()
+    return R.from_euler('XYZ', [theta_x_deg, theta_y_deg, theta_z_deg], degrees=True).as_quat()
 
 
 def euler_xyz_from_quaternion(quat: np.ndarray) -> tuple:
     """
-    Convert a quaternion back to Euler angles (EXTRINSIC XYZ order).
+    Inverse of quaternion_from_euler_xyz: takes the quaternion of the mounting
+    rotation P and returns its mounting angles (theta_x, theta_y, theta_z), with
+    P = Rx(theta_x)·Ry(theta_y)·Rz(theta_z) (extrinsic, applied Z then Y then X;
+    scipy 'XYZ' uppercase). P converts sensor coordinates into sources
+    coordinates: E_sources = P·E_sensor.
+    Reference: AEFI_Acquisition src/domain/calibration/
+    value_objects/rotation_convention/rotation_convention_intention.md
 
     Args:
         quat: Quaternion [x, y, z, w] (scipy convention)
@@ -39,19 +52,25 @@ def euler_xyz_from_quaternion(quat: np.ndarray) -> tuple:
     Returns:
         tuple: (theta_x_deg, theta_y_deg, theta_z_deg) in degrees
     """
-    rot = R.from_quat(quat)
-    euler = rot.as_euler('XYZ', degrees=True)
-    return tuple(euler)
+    return tuple(R.from_quat(quat).as_euler('XYZ', degrees=True))
 
 
 def rotation_from_euler_xyz(theta_x_deg: float, theta_y_deg: float, theta_z_deg: float) -> R:
     """
-    Create a scipy Rotation from Euler angles (EXTRINSIC XYZ).
+    Create the scipy Rotation of the mounting rotation P.
+
+    P = Rx(theta_x)·Ry(theta_y)·Rz(theta_z) (extrinsic about the fixed sources
+    axes, applied Z then Y then X; scipy 'XYZ' uppercase) brings the cube,
+    aligned on the sources frame, to its actual mounting. It converts
+    sensor-frame coordinates into sources-frame coordinates:
+    E_sources = P·E_sensor. Applying it to the cube mesh draws the mounted cube
+    in the sources frame. Reference: AEFI_Acquisition src/domain/calibration/
+    value_objects/rotation_convention/rotation_convention_intention.md
 
     Args:
-        theta_x_deg: Rotation around lab X (degrees)
-        theta_y_deg: Rotation around lab Y (degrees)
-        theta_z_deg: Rotation around lab Z (degrees)
+        theta_x_deg: theta_x (degrees)
+        theta_y_deg: theta_y (degrees)
+        theta_z_deg: theta_z (degrees)
 
     Returns:
         R: scipy Rotation object
@@ -126,7 +145,9 @@ def get_default_quaternion() -> np.ndarray:
     """
     Default quaternion for the sensor cube orientation.
 
-    Equivalent to: theta_x=~35.26°, theta_y=45°, theta_z=0°
+    Equivalent to: theta_x=~35.26°, theta_y=45°, theta_z=0° (quaternion of the
+    mounting rotation P, see quaternion_from_euler_xyz): maps the cube diagonal
+    (-1,1,1)/√3 of the sensor frame onto e_z^sources (cube on a vertex).
 
     Returns:
         np.ndarray: Quaternion [x, y, z, w]

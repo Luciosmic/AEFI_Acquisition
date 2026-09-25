@@ -28,7 +28,7 @@ def make_synthetic_config(
             "dimension": {"value": dimension_m},
             "calibration": {
                 "gain": {"value": gain},
-                "sensor_to_lab_rotation": {"theta_x": 0.0, "theta_y": 0.0, "theta_z": 0.0},
+                "sources_to_sensor_rotation": {"theta_x": 0.0, "theta_y": 0.0, "theta_z": 0.0},
             },
         },
     }

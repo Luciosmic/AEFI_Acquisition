@@ -1,7 +1,12 @@
 """
-SensorToEFSourcesFrameRotator - Rotates sensor frame to probe frame using quaternions.
+SensorToEFSourcesFrameRotator - Rotates vectors from the sensor frame to the EF sources frame.
+
+Convention (reference: src/domain/calibration/value_objects/rotation_convention/rotation_convention_intention.md):
+the angles (theta_x, theta_y, theta_z) define the mounting rotation
+P = Rx(theta_x)·Ry(theta_y)·Rz(theta_z) (extrinsic, fixed sources axes, Z then Y then X,
+scipy 'XYZ'), which brings the sensor, aligned on the sources frame, to its mounting.
+The measurement is E_sensor = Pᵀ·E_sources; the rotator applies E_sources = P·E_sensor.
 Uses quaternion-based rotation for numerical stability.
-Adapted from transformation_service.py.
 """
 
 from typing import Tuple, Optional
@@ -11,7 +16,8 @@ from scipy.spatial.transform import Rotation as R
 
 class SensorToEFSourcesFrameRotator:
     """
-    Applies 3D rotation to project sensor frame to EF sources (probe) frame.
+    Applies E_sources = P·E_sensor (sensor frame -> EF sources frame), where P is the
+    mounting rotation Rx·Ry·Rz (extrinsic, scipy 'XYZ') defined by the angles.
     Uses quaternion representation for numerical stability and to avoid gimbal lock.
     """
     
@@ -23,13 +29,14 @@ class SensorToEFSourcesFrameRotator:
     
     def set_rotation_angles(self, theta_x: float, theta_y: float, theta_z: float):
         """
-        Set rotation angles in degrees.
-        Rotation order is 'XYZ' (extrinsic - rotations around FIXED axes).
-        
+        Set the angles (degrees) of the mounting rotation P = Rx·Ry·Rz
+        (extrinsic, Z then Y then X, scipy 'XYZ'). The stored rotation is P
+        (sensor -> sources): E_sources = P·E_sensor.
+
         Args:
-            theta_x: Rotation around X axis (degrees)
-            theta_y: Rotation around Y axis (degrees)
-            theta_z: Rotation around Z axis (degrees)
+            theta_x: theta_x of P (degrees)
+            theta_y: theta_y of P (degrees)
+            theta_z: theta_z of P (degrees)
         """
         self.rotation_angles = (theta_x, theta_y, theta_z)
         self.rotation = R.from_euler('XYZ', [theta_x, theta_y, theta_z], degrees=True)
@@ -37,16 +44,16 @@ class SensorToEFSourcesFrameRotator:
     
     def create_quaternion(self, angles: Tuple[float, float, float]) -> np.ndarray:
         """
-        Create quaternion from Euler angles.
-        
+        Create the quaternion of the applied rotation P (sensor -> sources).
+
         Args:
-            angles: Tuple of (theta_x, theta_y, theta_z) in degrees
-            
+            angles: Tuple of (theta_x, theta_y, theta_z) in degrees of the
+                    mounting rotation P = Rx·Ry·Rz (extrinsic, scipy 'XYZ')
+
         Returns:
             Quaternion as [x, y, z, w]
         """
-        rot = R.from_euler('XYZ', angles, degrees=True)
-        return rot.as_quat()
+        return R.from_euler('XYZ', angles, degrees=True).as_quat()
     
     def apply_rotation_to_vector(self, vector: np.ndarray) -> np.ndarray:
         """
@@ -128,8 +135,8 @@ class SensorToEFSourcesFrameRotator:
         
         Args:
             data: Input vector field, shape (H, W, 6)
-            angles: Optional rotation angles (theta_x, theta_y, theta_z) in degrees.
-                   If None, uses current rotation.
+            angles: Optional (theta_x, theta_y, theta_z) in degrees of the
+                   mounting rotation P. If None, uses current rotation.
                    
         Returns:
             Tuple of (rotated data, metadata dict)
@@ -142,7 +149,8 @@ class SensorToEFSourcesFrameRotator:
         metadata = {
             'rotation_angles': self.rotation_angles,
             'quaternion': self.quaternion.tolist(),
-            'rotation_matrix': self.get_rotation_matrix().tolist()
+            'rotation_matrix': self.get_rotation_matrix().tolist(),
+            'convention': "P = Rx·Ry·Rz (scipy 'XYZ'), mounting sources->sensor; applied E_sources = P·E_sensor"
         }
         
         return rotated, metadata

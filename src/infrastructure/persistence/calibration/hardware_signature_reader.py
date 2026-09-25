@@ -38,10 +38,9 @@ class HardwareSignatureReader:
         sensor = data.get("sensor") or {}
 
         signature = HardwareSignature(
-            excitation_board_version=excitation.get("electronic_board_version") or "",
-            conditioning_board_version=sensor.get("conditioning_board_version") or "",
-            sensor_version=sensor.get("version") or "",
-            sensor_serial_number=sensor.get("serial_number"),
+            excitation_electronics_board_name=excitation.get("electronic_board_version") or "",
+            conditioning_electronics_board_name=sensor.get("conditioning_board_version") or "",
+            sensor_name=sensor.get("name") or "",
         )
         logger.info("Hardware signature read from %s: %s", resolved_path, signature)
         return signature

@@ -19,7 +19,7 @@ from interface.widgets.panels.excitation_panel import ExcitationPanel
 from interface.widgets.panels.aefi_continuous_reading_panel import AefiContinuousReadingPanel
 from interface.widgets.panels.electric_field_probe_panel import ElectricFieldProbePanel
 from interface.widgets.panels.hardware_advanced_config_panel import HardwareAdvancedConfigPanel
-from interface.widgets.panels.sensor_transformation_panel import SensorTransformationPanel
+from interface.widgets.panels.calibration_panel import CalibrationPanel
 from interface.widgets.panels.external_modules_panel import ExternalModulesPanel
 from interface.widgets.panels.logs_panel import LogsPanel
 
@@ -80,7 +80,7 @@ class Dashboard(QWidget):
             "motion": MotionPanelCompact(),
             "excitation": ExcitationPanel(),
             "hardware_config": HardwareAdvancedConfigPanel(),
-            "transformation": SensorTransformationPanel(),
+            "calibration": CalibrationPanel(),
             "external_modules": ExternalModulesPanel(),
             "logs": LogsPanel(),
             "settings": SettingsPanel()
@@ -120,7 +120,7 @@ class Dashboard(QWidget):
             "motion": ("Motion Control", "Hardware"),
             "excitation": ("Excitation & Lock-In Detection", "Hardware"),
             "hardware_config": ("Hardware Advanced Config", "Hardware"),
-            "transformation": ("Sensor Transformation", "Hardware"),
+            "calibration": ("Calibration", "Hardware"),
             "external_modules": ("External Modules", "Système"),
             "logs": ("Logs", "Système"),
             "settings": ("Settings", "Système"),

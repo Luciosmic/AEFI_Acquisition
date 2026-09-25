@@ -21,6 +21,10 @@ from application.services.scan_application_service.scan_application_service impo
 )
 from application.services.excitation_configuration_service.excitation_configuration_service import ExcitationConfigurationService
 from application.services.synchronous_detection_service.synchronous_detection_service import SynchronousDetectionService
+from application.services.sensor_calibration_service.sensor_calibration_service import SensorCalibrationService
+from application.services.source_geometry_calibration_service.source_geometry_calibration_service import SourceGeometryCalibrationService
+from application.services.hardware_component_service.hardware_component_service import HardwareComponentService
+from domain.calibration.calibration import Calibration
 from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
 from application.services.motion_control_service.motion_control_service import MotionControlService
 from application.services.electric_field_probe_service.electric_field_probe_service import ElectricFieldProbeService
@@ -34,13 +38,22 @@ from infrastructure.persistence.csv_scan_export_port import CsvScanExportPort
 from infrastructure.persistence.hdf5_scan_export_port import Hdf5ScanExportPort
 from infrastructure.persistence.acquisition_snapshot_reader import AcquisitionSnapshotReader
 from infrastructure.persistence.calibration.hardware_signature_reader import HardwareSignatureReader
+from infrastructure.persistence.calibration.geometric_configuration_reader import GeometricConfigurationReader
+from infrastructure.persistence.calibration.ideal_sensor_rotation_reader import IdealSensorRotationReader
 from infrastructure.persistence.calibration.real_synchronous_detection_phase_calibration_repository import (
     RealSynchronousDetectionPhaseCalibrationRepository,
 )
+from infrastructure.persistence.calibration.real_sensor_calibration_repository import (
+    RealSensorCalibrationRepository,
+)
+from infrastructure.persistence.calibration.real_source_geometry_calibration_repository import (
+    RealSourceGeometryCalibrationRepository,
+)
+from infrastructure.persistence.calibration.real_hardware_component_repository import RealHardwareComponentRepository
 from infrastructure.hardware.micro_controller.ad9106.adapter_synchronous_detection_ad9106 import (
     AdapterSynchronousDetectionAD9106,
 )
-from infrastructure.post_processing.aefi_post_processor_port import AefiPostProcessorPort
+from infrastructure.post_processing.aefi_post_processor_port import AefiPostProcessorPort, rotation_origin
 from application.services.scan_export_service.scan_export_service import ScanExportService
 
 from infrastructure.execution.electric_field_probe_acquisition_executor import ElectricFieldProbeAcquisitionExecutor
@@ -64,13 +77,16 @@ from interface.widgets.panels.logs_panel import LogsPanel, install_console_captu
 from interface.presenters.motion_presenter import MotionPresenter
 from interface.presenters.excitation_presenter import ExcitationPresenter
 from interface.presenters.synchronous_detection_presenter import SynchronousDetectionPresenter
+from interface.presenters.sensor_calibration_presenter import SensorCalibrationPresenter
+from interface.presenters.source_geometry_calibration_presenter import SourceGeometryCalibrationPresenter
+from interface.presenters.hardware_component_presenter import HardwareComponentPresenter
 from interface.presenters.aefi_continuous_reading_presenter import AefiContinuousReadingPresenter
 from interface.presenters.electric_field_probe_presenter import ElectricFieldProbePresenter
-from interface.presenters.sensor_transformation_presenter import SensorTransformationPresenter
 from interface.presenters.scan_presenter import ScanPresenter
 
 # --- Transformation Service ---
 from application.services.transformation_service.transformation_service import TransformationService
+from application.services.transformation_service.dtos.transformation_dtos import SetRotationAnglesDTO
 
 # --- Hardware Configuration ---
 from application.services.hardware_configuration_service.hardware_configuration_service import HardwareConfigurationService
@@ -201,11 +217,63 @@ def main(hardware_config: dict | None = None):
     excitation_service = ExcitationConfigurationService(hw.excitation_port, event_bus)
     logger.info("Services -> ExcitationConfigurationService created")
 
+    # Source Geometry Calibration Service (4-sphere caliper measurements) —
+    # now the live source of geometric configuration; GeometricConfigurationReader
+    # is only used below, once, to seed this registry's first entry from the
+    # legacy device config JSON when it has never been recorded yet.
+    source_geometry_calibration_repository = RealSourceGeometryCalibrationRepository()
+    source_geometry_calibration_service = SourceGeometryCalibrationService(
+        calibration_repository=source_geometry_calibration_repository,
+        event_bus=event_bus,
+    )
+    if not source_geometry_calibration_repository.find_all():
+        legacy_geometry = GeometricConfigurationReader().read()
+        source_geometry_calibration_service.record_calibration(
+            sphere_diameters_m=list(legacy_geometry.sphere_diameters_m),
+            pairwise_distances_ext_m=list(legacy_geometry.pairwise_distances_ext_m),
+        )
+        logger.info(
+            "SourceGeometryCalibrationService: seeded initial entry from legacy aefi_device_config.json"
+        )
+    source_geometry_entry_id = source_geometry_calibration_service.get_current_entry_id()
+    logger.info("Services -> SourceGeometryCalibrationService created (current geometry entry=%s)", source_geometry_entry_id)
+
+    # Hardware components (sensor, boards, signal generation chip, ADC,
+    # microcontroller, motors): catalog of characterized components (unique
+    # name + history, any quantity may be "not characterized") and the
+    # component mounted per kind. The mounted sensor and boards make up the
+    # hardware signature; the device config template (generic names) only
+    # fills a kind nothing is mounted for yet — WARNING, incomplete config.
+    hardware_component_repository = RealHardwareComponentRepository()
+    hardware_component_service = HardwareComponentService(repository=hardware_component_repository, event_bus=event_bus)
+    hardware_signature = Calibration.resolve_current_hardware_signature(
+        HardwareSignatureReader().read(),
+        hardware_component_service.get_mounted_component_name("conditioning_electronics_board"),
+        hardware_component_service.get_mounted_component_name("excitation_electronics_board"),
+        hardware_component_service.get_mounted_component_name("sensor"),
+    )
+    logger.info("Services -> HardwareComponentService created (hardware signature=%s)", hardware_signature)
+
+    # Sensor Calibration Service (mounting angles P of the mounted sensor).
+    # Each angle calibration references the sensor's current mounting and the
+    # current source geometry entry. Also owns the active rotation applied to
+    # sensor readings: latest calibration for that mounting + geometry, else
+    # the ideal angles (sensor.calibration.sources_to_sensor_rotation of the
+    # device config).
+    sensor_calibration_repository = RealSensorCalibrationRepository()
+    sensor_calibration_service = SensorCalibrationService(
+        calibration_repository=sensor_calibration_repository,
+        sensor_mounting_id=hardware_component_service.get_current_mounting_id("sensor"),
+        source_geometry_entry_id=source_geometry_entry_id,
+        default_angles=IdealSensorRotationReader().read(),
+        event_bus=event_bus,
+    )
+    logger.info("Services -> SensorCalibrationService created (geometry entry=%s)", source_geometry_entry_id)
+
     # Synchronous Detection Service (DDS3/DDS1 phase calibration)
     synchronous_detection_hardware_port = AdapterSynchronousDetectionAD9106(
         hw.mcu_root.ad9106_controller, hw.mcu_root.ad9106_configurator
     )
-    hardware_signature = HardwareSignatureReader().read()
     synchronous_detection_calibration_repository = RealSynchronousDetectionPhaseCalibrationRepository()
     synchronous_detection_service = SynchronousDetectionService(
         hardware_port=synchronous_detection_hardware_port,
@@ -227,8 +295,21 @@ def main(hardware_config: dict | None = None):
     # Scan Export Service
     csv_export_port = CsvScanExportPort()
     hdf5_export_port = Hdf5ScanExportPort()
-    acquisition_snapshot_port = AcquisitionSnapshotReader()
-    post_processing_port = AefiPostProcessorPort()
+    acquisition_snapshot_port = AcquisitionSnapshotReader(
+        hardware_component_repository=hardware_component_repository,
+        sensor_calibration_repository=sensor_calibration_repository,
+        source_geometry_calibration_repository=source_geometry_calibration_repository,
+    )
+    active_rotation = sensor_calibration_service.get_active_rotation()
+    post_processing_port = AefiPostProcessorPort(
+        event_bus,
+        initial_rotation_angles=(
+            active_rotation.theta_x_degrees, active_rotation.theta_y_degrees, active_rotation.theta_z_degrees,
+        ),
+        initial_rotation_origin=rotation_origin(
+            active_rotation.is_trial, active_rotation.is_calibrated, active_rotation.recorded_at
+        ),
+    )
     scan_export_service = ScanExportService(
         event_bus, csv_export_port, hdf5_export_port,
         excitation_service=excitation_service,
@@ -242,8 +323,20 @@ def main(hardware_config: dict | None = None):
     motion_control_service = MotionControlService(hw.motion_port, event_bus)
     logger.info("Services -> MotionControlService created")
 
-    # Transformation Service (Shared State)
+    # Transformation Service — applies E_sources = P·E_sensor with the active
+    # angles (trial, calibrated or ideal) to every sample; follows ActiveSensorRotationChanged afterwards.
     transformation_service = TransformationService(event_bus)
+    active_rotation = sensor_calibration_service.get_active_rotation()
+    transformation_service.set_rotation_angles(SetRotationAnglesDTO(
+        theta_x=active_rotation.theta_x_degrees,
+        theta_y=active_rotation.theta_y_degrees,
+        theta_z=active_rotation.theta_z_degrees,
+    ))
+    logger.info(
+        "Services -> TransformationService created (active rotation %s, is_calibrated=%s)",
+        (active_rotation.theta_x_degrees, active_rotation.theta_y_degrees, active_rotation.theta_z_degrees),
+        active_rotation.is_calibrated,
+    )
 
     # Hardware Configuration Service
     print("\n--- Creating Hardware Configuration Service ---")
@@ -296,12 +389,21 @@ def main(hardware_config: dict | None = None):
     # Note: Presenters now depend on Services AND Dashboard panels (Views)
     # But some Presenters are View-agnostic? 
     # AefiContinuousReadingPresenter is View-Agnostic regarding instantiation, but needs wiring later.
-    # SensorTransformationPresenter NEEDS the panel in constructor.
     print("\n--- Creating UI Presenters ---")
     
     motion_presenter = MotionPresenter(motion_control_service, event_bus)
     excitation_presenter = ExcitationPresenter(excitation_service, event_bus)
     synchronous_detection_presenter = SynchronousDetectionPresenter(synchronous_detection_service, event_bus)
+    sensor_calibration_presenter = SensorCalibrationPresenter(
+        sensor_calibration_service, event_bus
+    )
+    source_geometry_calibration_presenter = SourceGeometryCalibrationPresenter(
+        source_geometry_calibration_service, event_bus
+    )
+    hardware_component_presenters = [
+        HardwareComponentPresenter(hardware_component_service, kind, event_bus)
+        for kind in hardware_component_service.list_kinds()
+    ]
 
     # Continuous Presenter needs Transformation Service now
     aefi_continuous_reading_presenter = AefiContinuousReadingPresenter(
@@ -311,8 +413,6 @@ def main(hardware_config: dict | None = None):
     # Electric Field Probe Presenter
     electric_field_probe_presenter = ElectricFieldProbePresenter(electric_field_probe_service, event_bus)
     
-    # Transformation Presenter needs Panel + Service
-    transformation_presenter = SensorTransformationPresenter(dashboard.panels["transformation"], transformation_service)
     
     
     # Scan Presenter
@@ -331,8 +431,10 @@ def main(hardware_config: dict | None = None):
         electric_field_probe_presenter,
         scan_presenter,
         hardware_config_presenter,
+        sensor_calibration_presenter,
+        source_geometry_calibration_presenter,
+        hardware_component_presenters,
     )
-    logger.debug("Transformation panel wired (via constructor)")
 
     # 11. Startup Sequence (hardware init if real hardware) or Direct Launch (if mocks only)
     # StartupView has been visible since the very start of main(); the log
