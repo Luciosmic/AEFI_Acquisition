@@ -133,5 +133,50 @@ class TestCsvScanExportPortMetadata(unittest.TestCase):
         self.assertEqual(data, {"scan_id": "abc", "scan": {"pattern": "SERPENTINE"}})
 
 
+class TestCsvScanExportPortLogs(unittest.TestCase):
+    """App logs emitted during a scan must land next to its data."""
+
+    def setUp(self):
+        self.tmp_dir = Path(tempfile.mkdtemp())
+        self.port = CsvScanExportPort()
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp_dir, ignore_errors=True)
+
+    def test_logs_between_start_and_stop_land_in_acquisition_folder(self):
+        import logging
+        logging.getLogger().setLevel(logging.INFO)
+        self.port.configure(str(self.tmp_dir), "scan", metadata={})
+        self.port.start()
+        logging.getLogger("some.module").info("during scan")
+        self.port.stop()
+        logging.getLogger("some.module").info("after scan")
+
+        log_files = list(self.tmp_dir.glob("*_stepScan_*/*_stepScan_scan_logs.log"))
+        self.assertEqual(len(log_files), 1)
+        content = log_files[0].read_text(encoding="utf-8")
+        self.assertIn("during scan", content)
+        self.assertNotIn("after scan", content)
+
+    def test_write_event_appends_jsonl_line_in_acquisition_folder(self):
+        from dataclasses import dataclass
+
+        @dataclass(frozen=True)
+        class _SampleEvent:
+            scan_id: str
+
+        self.port.configure(str(self.tmp_dir), "scan", metadata={})
+        self.port.start()
+        self.port.write_event(_SampleEvent(scan_id="abc"))
+        self.port.write_event(_SampleEvent(scan_id="abc"))
+        self.port.stop()
+
+        event_files = list(self.tmp_dir.glob("*_stepScan_*/*_stepScan_scan_events.jsonl"))
+        self.assertEqual(len(event_files), 1)
+        lines = event_files[0].read_text(encoding="utf-8").strip().splitlines()
+        self.assertEqual(len(lines), 2)
+        self.assertEqual(json.loads(lines[0]), {"event_type": "_SampleEvent", "scan_id": "abc"})
+
+
 if __name__ == "__main__":
     unittest.main()

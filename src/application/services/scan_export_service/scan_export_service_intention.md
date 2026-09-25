@@ -8,7 +8,9 @@ Isoler la logique d'export des résultats de scan dans un service dédié pour p
 
 - S'abonner aux événements domain du scan (`ScanStarted`, `ScanPointAcquired`, `ElectricFieldScanPointAcquired`, `ScanCompleted`, `ScanFailed`, `ScanCancelled`) et streamer chaque point vers les ports d'export au fil de l'acquisition — pas un transfert différé en fin de scan.
 - Exporter chaque scan simultanément en CSV et en HDF5 (plus un choix de format interchangeable) dans un même dossier d'acquisition.
-- Écrire un snapshot JSON des paramètres d'acquisition (scan, excitation, sonde de champ électrique, config moteur) une fois par scan via `write_metadata`.
+- Écrire un snapshot JSON des paramètres d'acquisition (scan, excitation, sonde de champ électrique, config moteur) une fois par scan via `write_metadata`. Ce JSON porte aussi les unités de chaque colonne exportée (`export.units`) — pas dans les en-têtes CSV, que `aefi_post_processor_module` lit par nom.
+- Exporter une lecture continue (`AefiVoltageReadingStarted` → `AefiVoltageSampleAcquired` → `AefiVoltageReadingStopped`) en série temporelle : dossier `<date>_timeSeries_<nom>/`, CSV seul (une ligne par échantillon, `t_s` depuis le premier échantillon), armé explicitement par `configure_time_series_export` puis consommé par la prochaine lecture — les scans démarrent eux aussi le worker ADC continu, ces lectures-là ne doivent pas être exportées.
+- Tenir un event store par acquisition : abonné à `"*"`, le service transmet via `write_event` tout événement publié pendant qu'un export est ouvert (pas seulement ceux portant le `scan_id` — mouvement, excitation, sonde font partie du contexte à rejouer). Le port CSV l'écrit dans `<…>_events.jsonl`, à côté de `<…>_logs.log` (logs applicatifs teeés pendant la même fenêtre).
 - Déclencher, en fire-and-forget via `IAsyncTaskRunner`, le post-processing (`IPostProcessingPort`) une fois le scan terminé avec succès (`ScanCompleted` uniquement) — le service ne bloque pas et n'attend pas la fin du pipeline.
 - Gérer les erreurs d'export sans affecter le cycle de vie du scan (chaque handler d'événement est protégé par un try/except qui logue plutôt que de propager).
 

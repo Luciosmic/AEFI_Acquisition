@@ -9,6 +9,8 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Dict, Any, Optional
 
+from domain.shared_kernel.events.domain_event import DomainEvent
+
 class IScanExportPort(ABC):
     """Interface for data export."""
 
@@ -19,6 +21,7 @@ class IScanExportPort(ABC):
         filename: str,
         metadata: Dict[str, Any],
         timestamp: Optional[str] = None,
+        acquisition_kind: str = "stepScan",
     ) -> None:
         """Configure the export destination and metadata.
 
@@ -26,6 +29,8 @@ class IScanExportPort(ABC):
         Pass the same value to every port driven for one scan so CSV and
         HDF5 land in the same acquisition folder; omit to self-generate
         (single-port callers, tests).
+        `acquisition_kind`: folder/file name tag — `stepScan` for a 2D scan,
+        `timeSeries` for a continuous reading exported vs time.
         """
         pass
 
@@ -42,6 +47,12 @@ class IScanExportPort(ABC):
     @abstractmethod
     def write_metadata(self, metadata: Dict[str, Any]) -> None:
         """Write a JSON snapshot of the acquisition's parameters, once per scan."""
+        pass
+
+    @abstractmethod
+    def write_event(self, event: DomainEvent) -> None:
+        """Persist one domain event published during the scan (per-scan event store).
+        Ports that don't keep an event store implement it as a no-op."""
         pass
 
     @abstractmethod

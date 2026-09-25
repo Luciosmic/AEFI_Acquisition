@@ -1,7 +1,7 @@
 import shutil
 import tempfile
 import unittest
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
@@ -42,6 +42,9 @@ from domain.step_scan.events.electric_field_scan_point_acquired.electric_field_s
 )
 from domain.electric_field_probe.value_objects.field_measurement.field_measurement import FieldMeasurement
 from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
+from domain.shared_kernel.events.aefi_voltage_reading_started.aefi_voltage_reading_started import AefiVoltageReadingStarted
+from domain.shared_kernel.events.aefi_voltage_sample_acquired.aefi_voltage_sample_acquired import AefiVoltageSampleAcquired
+from domain.shared_kernel.events.aefi_voltage_reading_stopped.aefi_voltage_reading_stopped import AefiVoltageReadingStopped
 
 
 class FakeExportPort(IScanExportPort):
@@ -53,13 +56,15 @@ class FakeExportPort(IScanExportPort):
         self.metadata: Dict[str, Any] = None
         self.field_data_config: Dict[str, Any] = None
         self.field_points: List[Dict[str, Any]] = []
+        self.events: List[Any] = []
         self.started = False
         self.stopped = False
         self._output_path = output_path
 
-    def configure(self, directory, filename, metadata, timestamp=None):
+    def configure(self, directory, filename, metadata, timestamp=None, acquisition_kind="stepScan"):
         self.configured = {
             "directory": directory, "filename": filename, "metadata": metadata, "timestamp": timestamp,
+            "acquisition_kind": acquisition_kind,
         }
 
     def start(self):
@@ -76,6 +81,9 @@ class FakeExportPort(IScanExportPort):
 
     def write_field_point(self, data):
         self.field_points.append(data)
+
+    def write_event(self, event):
+        self.events.append(event)
 
     def get_output_path(self) -> Optional[Path]:
         return self._output_path
@@ -277,6 +285,85 @@ class TestScanExportServiceMetadata(unittest.TestCase):
 
         row = self.export_port.field_points[0]
         self.assertEqual(row["baseline_field_components"], (0.1,))
+
+    def test_only_events_published_during_the_scan_are_exported(self):
+        probe_event = ElectricFieldProbeConnectionChanged(connected=False, probe=None)
+        self.event_bus.publish("electricfieldprobeconnectionchanged", probe_event)  # before
+
+        started = _make_scan_started_event()
+        point = _make_scan_point_acquired_event()
+        completed = ScanCompleted(scan_id=started.scan_id, total_points=1)
+        self.event_bus.publish("scanstarted", started)
+        self.event_bus.publish("scanpointacquired", point)
+        self.event_bus.publish("scancompleted", completed)
+
+        self.event_bus.publish("electricfieldprobeconnectionchanged", probe_event)  # after
+
+        self.assertEqual(self.export_port.events, [started, point, completed])
+
+    def test_scan_metadata_carries_units_and_no_uncertainty(self):
+        self.event_bus.publish("scanstarted", _make_scan_started_event())
+
+        metadata = self.export_port.metadata
+        self.assertNotIn("measurement_uncertainty_max_volts", metadata["scan"])
+        self.assertEqual(metadata["export"]["units"]["x"], "mm")
+        self.assertEqual(metadata["export"]["units"]["voltage_*"], "V")
+
+
+def _publish_reading(bus, n_samples):
+    """Continuous reading as the executor publishes it: started, samples 0.5 s apart, stopped."""
+    acquisition_id = uuid4()
+    t0 = datetime(2026, 1, 1, 12, 0, 0)
+    bus.publish("aefivoltagereadingstarted", AefiVoltageReadingStarted(acquisition_id=acquisition_id))
+    for i in range(n_samples):
+        sample = AefiVoltageMeasurement(
+            voltage_x_in_phase=0.1, voltage_x_quadrature=0.2,
+            voltage_y_in_phase=0.3, voltage_y_quadrature=0.4,
+            voltage_z_in_phase=0.5, voltage_z_quadrature=0.6,
+            timestamp=t0 + timedelta(seconds=0.5 * i),
+        )
+        bus.publish("aefivoltagesampleacquired", AefiVoltageSampleAcquired(
+            acquisition_id=acquisition_id, sample_index=i, sample=sample,
+        ))
+    bus.publish("aefivoltagereadingstopped", AefiVoltageReadingStopped(acquisition_id=acquisition_id))
+    return acquisition_id
+
+
+class TestTimeSeriesExport(unittest.TestCase):
+    """Continuous reading exported vs time — CSV only, armed explicitly."""
+
+    setUp = TestScanExportServiceMetadata.setUp
+
+    def _arm(self):
+        self.service.configure_time_series_export(
+            ExportConfigDTO(enabled=True, output_directory="", filename_base="drift")
+        )
+
+    def test_armed_reading_is_exported_as_time_series_csv(self):
+        self._arm()
+        acquisition_id = _publish_reading(self.event_bus, n_samples=3)
+
+        self.assertEqual(self.export_port.configured["acquisition_kind"], "timeSeries")
+        self.assertEqual([row["t_s"] for row in self.export_port.points], [0.0, 0.5, 1.0])
+        self.assertEqual(self.export_port.points[0]["voltage_x_in_phase"], 0.1)
+        self.assertEqual(self.export_port.metadata["acquisition_id"], str(acquisition_id))
+        self.assertEqual(self.export_port.metadata["export"]["units"]["t_s"], "s")
+        self.assertTrue(self.export_port.stopped)
+        self.assertFalse(self.hdf5_export_port.started)
+
+    def test_unarmed_reading_is_not_exported(self):
+        # Scans start the continuous ADC worker too — never export those.
+        _publish_reading(self.event_bus, n_samples=3)
+
+        self.assertFalse(self.export_port.started)
+        self.assertEqual(self.export_port.points, [])
+
+    def test_arming_is_consumed_by_one_reading(self):
+        self._arm()
+        _publish_reading(self.event_bus, n_samples=1)
+        _publish_reading(self.event_bus, n_samples=2)
+
+        self.assertEqual(len(self.export_port.points), 1)
 
 
 class TestScanExportServiceZeroPointCleanup(unittest.TestCase):

@@ -5,6 +5,8 @@ Responsibility:
 - Listen to scan-related domain events and drive an `IExportPort`
   to export step-scan point results (position + averaged value + std dev)
   to an external format (e.g. CSV).
+- Export a continuous AEFI reading as a time series (one CSV row per
+  sample, vs time since the first sample), when armed from the UI.
 
 Rationale:
 - Keep export orchestration in the Application layer, decoupled from
@@ -16,6 +18,7 @@ from __future__ import annotations
 import logging
 import shutil
 from datetime import datetime
+from pathlib import Path
 from typing import Optional, Dict, Any, List
 
 from .dtos.scan_export_dtos import ExportConfigDTO
@@ -32,12 +35,34 @@ from domain.step_scan.events.scan_cancelled.scan_cancelled import ScanCancelled
 from domain.step_scan.events.electric_field_scan_point_acquired.electric_field_scan_point_acquired import ElectricFieldScanPointAcquired
 from domain.electric_field_probe.electric_field_probe import ElectricFieldProbe
 from domain.electric_field_probe.events.electric_field_probe_connection_changed.electric_field_probe_connection_changed import ElectricFieldProbeConnectionChanged
+from domain.shared_kernel.events.aefi_voltage_reading_started.aefi_voltage_reading_started import AefiVoltageReadingStarted
+from domain.shared_kernel.events.aefi_voltage_sample_acquired.aefi_voltage_sample_acquired import AefiVoltageSampleAcquired
+from domain.shared_kernel.events.aefi_voltage_reading_stopped.aefi_voltage_reading_stopped import AefiVoltageReadingStopped
 from domain.shared_kernel.events.domain_event import DomainEvent
 from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
 from application.services.excitation_configuration_service.excitation_configuration_service import ExcitationConfigurationService
 
 
 logger = logging.getLogger(__name__)
+
+# Unit of every exported column (and of the position bounds in the metadata
+# "scan" section). Written to the acquisition-parameters JSON rather than the
+# CSV headers: aefi_post_processor_module reads the columns by name.
+EXPORT_UNITS: Dict[str, str] = {
+    "x": "mm",
+    "y": "mm",
+    "x_min": "mm",
+    "x_max": "mm",
+    "y_min": "mm",
+    "y_max": "mm",
+    "t_s": "s",
+    "timestamp": "ISO 8601, local time",
+    "voltage_*": "V",
+    "std_dev_*": "V",
+    "baseline_voltage_*": "V",
+    "field_*": "V/m",
+    "baseline_field_*": "V/m",
+}
 
 
 class ScanExportService:
@@ -83,6 +108,13 @@ class ScanExportService:
         self._field_probe_info: Optional[Dict[str, Any]] = None
         self._field_n_components: int = 0
         self._last_known_probe: Optional[ElectricFieldProbe] = None
+        # Continuous reading export: armed by configure_time_series_export,
+        # consumed by the next AefiVoltageReadingStarted. Arming is explicit
+        # because scans also start the continuous ADC worker — those readings
+        # must not be exported as time series.
+        self._time_series_config: Optional[ExportConfigDTO] = None
+        self._time_series_active: bool = False
+        self._time_series_t0: Optional[datetime] = None
 
         # Subscribe to scan events
         self._event_bus.subscribe("scanstarted", self._on_event)
@@ -95,6 +127,12 @@ class ScanExportService:
         # Passively cache the last-connected probe's identity — avoids a
         # constructor dependency on ElectricFieldProbeService.
         self._event_bus.subscribe("electricfieldprobeconnectionchanged", self._on_event)
+        # Continuous reading (time-series export)
+        self._event_bus.subscribe("aefivoltagereadingstarted", self._on_event)
+        self._event_bus.subscribe("aefivoltagesampleacquired", self._on_event)
+        self._event_bus.subscribe("aefivoltagereadingstopped", self._on_event)
+        # Per-scan event store: every event published while the export is open.
+        self._event_bus.subscribe("*", self._record_event)
 
     # ------------------------------------------------------------------ #
     # Configuration API (called from UI / presenter)
@@ -116,6 +154,16 @@ class ScanExportService:
         )
         logger.debug("ScanExportService configured: %s", config)
 
+    def configure_time_series_export(self, config: ExportConfigDTO) -> None:
+        """Arm (enabled=True) or disarm the export of the next continuous
+        reading. Call right before starting the reading: the arming is
+        consumed by the next `AefiVoltageReadingStarted`."""
+        self._time_series_config = config if config.enabled else None
+        logger.info(
+            "Command: configure time-series export. enabled=%s, dir=%s, file=%s",
+            config.enabled, config.output_directory, config.filename_base,
+        )
+
     # ------------------------------------------------------------------ #
     # Event handling
     # ------------------------------------------------------------------ #
@@ -134,11 +182,34 @@ class ScanExportService:
                 self._handle_scan_finished(event)
             elif isinstance(event, ElectricFieldProbeConnectionChanged):
                 self._handle_probe_connection_changed(event)
+            elif isinstance(event, AefiVoltageReadingStarted):
+                self._handle_reading_started(event)
+            elif isinstance(event, AefiVoltageSampleAcquired):
+                self._handle_voltage_sample_acquired(event)
+            elif isinstance(event, AefiVoltageReadingStopped):
+                self._handle_reading_stopped(event)
         except Exception as exc:
             logger.exception("Error handling %s: %s", type(event).__name__, exc)
 
+    def _record_event(self, event: DomainEvent) -> None:
+        """Forward every event published during the scan — not only the
+        scan_id-tagged ones: motion, excitation, probe events are the context
+        needed to replay what happened during the acquisition.
+
+        Relies on the bus dispatching "*" subscribers after typed ones: the
+        export is already open when ScanStarted reaches here, and already
+        closed for the finishing event (written by _close_export).
+        `_active_ports` is empty whenever no export is open."""
+        for port in self._active_ports:
+            port.write_event(event)
+
     def _handle_scan_started(self, event: ScanStarted) -> None:
         logger.info("Handling ScanStarted. scan_id=%s, config present: %s", event.scan_id, self._config is not None)
+        # The scan owns the ADC worker and the export ports from here on.
+        self._time_series_config = None
+        if self._time_series_active:
+            logger.info("Scan started during a time-series export: closing it. scan_id=%s", event.scan_id)
+            self._close_export(event)
         if not self._config or not self._config.enabled:
             logger.info("Export disabled or not configured. Doing nothing.")
             self._export_active = False
@@ -167,7 +238,12 @@ class ScanExportService:
             filename_base,
         )
 
-        acquisition_metadata = self._build_acquisition_metadata(event)
+        scan_section = dict(metadata)
+        acquisition_metadata = self._build_acquisition_metadata(
+            {"scan_id": scan_section.pop("scan_id"), "scan": scan_section},
+            formats=["CSV", "HDF5"],
+            filename_base=filename_base,
+        )
         for port in self._active_ports:
             port.configure(directory, filename_base, metadata, timestamp=timestamp)
             port.start()
@@ -225,32 +301,96 @@ class ScanExportService:
         """Cache the connected probe's identity for the next scan's metadata JSON."""
         self._last_known_probe = event.probe if event.connected else None
 
+    def _handle_reading_started(self, event: AefiVoltageReadingStarted) -> None:
+        config, self._time_series_config = self._time_series_config, None
+        if config is None:
+            logger.info("Reading started, time-series export not armed. Doing nothing. acquisition_id=%s", event.acquisition_id)
+            return
+        if self._export_active:
+            logger.info("Reading started during a scan export: time-series export skipped. acquisition_id=%s", event.acquisition_id)
+            return
+
+        logger.info(
+            "Starting time-series export. acquisition_id=%s, dir=%s, base=%s",
+            event.acquisition_id, config.output_directory, config.filename_base,
+        )
+        # CSV only: the HDF5 layout is a position grid, meaningless vs time.
+        port = self._csv_export_port
+        port.configure(
+            config.output_directory, config.filename_base,
+            {"acquisition_id": str(event.acquisition_id)},
+            acquisition_kind="timeSeries",
+        )
+        port.start()
+        port.write_metadata(self._build_acquisition_metadata(
+            {"acquisition_id": str(event.acquisition_id), "acquisition_kind": "timeSeries"},
+            formats=["CSV"],
+            filename_base=config.filename_base,
+        ))
+        self._active_ports = [port]
+        self._time_series_active = True
+        self._time_series_t0 = None
+        self._points_written = 0
+
+    def _handle_voltage_sample_acquired(self, event: AefiVoltageSampleAcquired) -> None:
+        if not self._time_series_active:
+            return
+        m = event.sample
+        if self._time_series_t0 is None:
+            self._time_series_t0 = m.timestamp
+        self._csv_export_port.write_point({
+            "sample_index": event.sample_index,
+            "t_s": (m.timestamp - self._time_series_t0).total_seconds(),
+            "timestamp": m.timestamp.isoformat(),
+            "voltage_x_in_phase": m.voltage_x_in_phase,
+            "voltage_x_quadrature": m.voltage_x_quadrature,
+            "voltage_y_in_phase": m.voltage_y_in_phase,
+            "voltage_y_quadrature": m.voltage_y_quadrature,
+            "voltage_z_in_phase": m.voltage_z_in_phase,
+            "voltage_z_quadrature": m.voltage_z_quadrature,
+        })
+        self._points_written += 1
+
+    def _handle_reading_stopped(self, event: AefiVoltageReadingStopped) -> None:
+        if not self._time_series_active:
+            return
+        logger.info(
+            "Time-series export closed. acquisition_id=%s, samples=%d",
+            event.acquisition_id, self._points_written,
+        )
+        self._close_export(event)
+
+    def _close_export(self, event: DomainEvent) -> List[Optional[Path]]:
+        """Write the finishing event, close every active port, and drop the
+        acquisition folder if nothing was written. Returns each active port's
+        output path, in `_active_ports` order."""
+        # Read before stop() — ports clear their path once closed.
+        paths = [port.get_output_path() for port in self._active_ports]
+        try:
+            for port in self._active_ports:
+                port.write_event(event)  # last event of the export, before its file closes
+                port.stop()
+        finally:
+            self._export_active = False
+            self._time_series_active = False
+            self._active_ports = []
+
+        if self._points_written == 0:
+            # A scan/reading that ended before any point leaves nothing worth
+            # keeping (0-row CSV, near-empty HDF5) — remove the acquisition
+            # folder instead of littering the exports directory. stop()
+            # already closed the file handles, so this is safe on Windows.
+            logger.info("No points written; removing empty acquisition folder(s)")
+            for folder in {p.parent for p in paths if p is not None}:
+                shutil.rmtree(folder, ignore_errors=True)
+        return paths
+
     def _handle_scan_finished(self, event: DomainEvent) -> None:
         if not self._export_active:
             return
 
         logger.debug("Stopping scan export after event: %s", type(event).__name__)
-        # Output paths must be read before stop() — both ports clear their
-        # path once closed.
-        csv_path = self._csv_export_port.get_output_path()
-        hdf5_path = self._hdf5_export_port.get_output_path()
-        points_written = self._points_written
-        try:
-            for port in self._active_ports:
-                port.stop()
-        finally:
-            self._export_active = False
-            self._active_ports = []
-
-        if points_written == 0:
-            # A scan that failed/was cancelled before any point was
-            # acquired leaves nothing worth keeping (0-row CSV, near-empty
-            # HDF5) — remove the acquisition folder instead of littering
-            # the exports directory. stop() already closed the file
-            # handles above, so this is safe on Windows.
-            logger.info("No points written; removing empty acquisition folder(s)")
-            for folder in {p.parent for p in (csv_path, hdf5_path) if p is not None}:
-                shutil.rmtree(folder, ignore_errors=True)
+        csv_path, hdf5_path = self._close_export(event)  # scan ports are [csv, hdf5]
 
         if (
             isinstance(event, ScanCompleted)
@@ -293,19 +433,20 @@ class ScanExportService:
             "y_nb_points": cfg.y_nb_points,
             "stabilization_delay_ms": cfg.stabilization_delay_ms,
             "averaging_per_position": cfg.averaging_per_position,
-            "measurement_uncertainty_max_volts": cfg.measurement_uncertainty.max_uncertainty_volts,
             "total_points": cfg.total_points(),
             "estimated_duration_s": cfg.estimated_duration_seconds(),
         }
 
-    def _build_acquisition_metadata(self, event: ScanStarted) -> Dict[str, Any]:
+    def _build_acquisition_metadata(
+        self, header: Dict[str, Any], formats: List[str], filename_base: str
+    ) -> Dict[str, Any]:
         """Bundle every acquisition parameter currently accessible into one
         JSON-ready snapshot (v0, agile — see i_acquisition_snapshot_port.py
         and the ExcitationConfigurationService coupling note in __init__ for
-        what's a live getter vs. an on-disk config read)."""
-        scan = self._build_metadata(event)
-        scan_id = scan.pop("scan_id")
+        what's a live getter vs. an on-disk config read).
 
+        `header`: the acquisition's own identity/parameters — `scan_id` +
+        `scan` section for a step scan, `acquisition_id` for a time series."""
         excitation_params = self._excitation_service.get_current_parameters()
 
         probe = None
@@ -322,13 +463,13 @@ class ScanExportService:
             }
 
         metadata = {
-            "metadata_schema_version": "0.1-agile",
-            "scan_id": scan_id,
+            "metadata_schema_version": "0.2-agile",
+            **header,
             "generated_at": datetime.now().isoformat(),
-            "scan": scan,
             "export": {
-                "formats": ["CSV", "HDF5"],
-                "filename_base": self._config.filename_base,
+                "formats": formats,
+                "filename_base": filename_base,
+                "units": EXPORT_UNITS,
             },
             "excitation": {
                 "mode": excitation_params.mode.name,
