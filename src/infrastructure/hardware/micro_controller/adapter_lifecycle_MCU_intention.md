@@ -11,9 +11,11 @@ Adaptateur gérant le cycle de vie de la connexion série au MCU (ouverture port
 - Fermer proprement la connexion au shutdown.
 - Contribuer à `IHardwareInitializationPort` via le composite.
 - À `initialize_all()`, appliquer la config résolue reçue de `MCUCompositionRoot` :
-  - ADC (`_configure_adc`) et modes AC/DC des DDS (`_configure_dds`, registres 38/39) : écriture
-    registre directe, ces réglages ne sont exposés dans aucun panel donc aucun risque de
-    double-lecteur.
+  - ADC (`_configure_adc`) : **délégué** à `ADS131A04AdvancedConfigurator.apply_persisted_config(
+    persist=False)`, le même écrivain que l'Apply du panel — le lifecycle ne connaît aucun bit de
+    registre ADC.
+  - Modes AC/DC des DDS (`_configure_dds`, registres 38/39) : écriture registre directe, ces
+    réglages ne sont exposés dans aucun panel donc aucun risque de double-lecteur.
   - Fréquence + gain/phase/offset des 4 canaux DDS : **délégués** à
     `AD9106AdvancedConfigurator.apply_config()` (écrivain unique partagé avec le panel Hardware
     Advanced Config) via `nested_channels_to_flat_config()` — pas d'écriture registre propre ici,
@@ -28,4 +30,4 @@ Adaptateur gérant le cycle de vie de la connexion série au MCU (ouverture port
 - **Séparation lifecycle / contrôle hardware** : la connexion série est établie une fois au démarrage, puis tous les controllers (AD9106, ADS131A04) partagent le même `MCUSerialCommunicator`.
 - Reçoit `ad9106_configurator: Optional[IHardwareAdvancedConfigurator]` en injection (depuis
   `MCUCompositionRoot`) — sans lui, la config DDS au boot n'est pas appliquée (warning loggé,
-  pas de crash).
+  pas de crash). Idem `ads131a04_configurator` pour la config ADC.

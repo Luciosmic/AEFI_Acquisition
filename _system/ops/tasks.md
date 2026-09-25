@@ -172,11 +172,14 @@ sauvegardée), jusqu'à ce que l'utilisateur clique manuellement sur "Apply".
   `ad9106/_tests/ad9106_advanced_configurator_test.py`.
 - **ADS131A04 (ADC)** : la fusion default+last de la composition root utilise maintenant
   `resolve_config()` (ferme le risque d'écrasement en bloc de `channels`), mais
-  `ADS131A04AdvancedConfigurator.get_parameter_specs()`/`apply_config()` gardent leur propre
-  forme de dict (`gain_pair_N`, enums string comme `ref_voltage="4.0V"`) et lisent toujours
-  le default seul — **même angle mort confirmé mais non corrigé** pour l'affichage panel vs
-  état réellement appliqué. À traiter dans une passe suivante avec la même logique
-  (`resolve_config()` + `get_parameter_specs()` sur l'état résolu).
+  `ADS131A04AdvancedConfigurator.get_parameter_specs()` lit toujours le default seul — **même
+  angle mort confirmé mais non corrigé** pour l'affichage panel vs état réellement appliqué. À
+  traiter dans une passe suivante (`resolve_config()` + `get_parameter_specs()` sur l'état résolu).
+  *Fait 2026-09-25* : écrivain unique ADC (`apply_persisted_config`, appelé par le boot avec
+  `persist=False` et par l'Apply), encodage registre seulement dans `ADS131Controller`, un nom
+  physique par réglage (`reference_voltage`, `reference_source`, `high_resolution`,
+  `negative_charge_pump`) — corrige Vref jamais écrite, bit réservé A_SYS_CFG, OSR mal encodé au
+  boot (hors 4096) et OSR jamais écrit à l'Apply.
 - Modes AC/DC des DDS (`mode_dds1_dds2`/`mode_dds3_dds4`) : pas de panel, pas de risque de
   désync — volontairement hors scope.
 - Pas de vérification read-back des registres (fiabilité hardware) — chantier séparé, plus

@@ -20,7 +20,7 @@ def test_read_maps_fields_from_real_schema(tmp_path):
         {
             "excitation": {
                 "electronic_board_version": "AmpliHT_opa462_v2_ASSOCE",
-                "dds_chip": "ADS131A04",
+                "dds_chip": "AD9106",
             },
             "sensor": {
                 "version": "v2b",

@@ -4,7 +4,7 @@
   "hardware_ref": "aefi_device_config.json",
 
   "excitation": {
-    "dds_chip": "ADS131A04",
+    "dds_chip": "AD9106",
     "frequency_hz": 1000,
     "dds_field_generator": {
       "dds1": { "gain": 5000, "phase_deg": 180 },
