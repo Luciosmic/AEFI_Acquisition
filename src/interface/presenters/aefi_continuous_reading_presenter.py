@@ -10,6 +10,8 @@ from typing import Dict, Any
 
 from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
 from application.services.aefi_acquisition_service.ports.i_aefi_acquisition_executor import AefiAcquisitionConfig
+from application.services.scan_export_service.scan_export_service import ScanExportService
+from application.services.scan_export_service.dtos.scan_export_dtos import ExportConfigDTO
 from domain.shared_kernel.events.aefi_voltage_sample_acquired.aefi_voltage_sample_acquired import (
     AefiVoltageSampleAcquired,
 )
@@ -43,9 +45,11 @@ class AefiContinuousReadingPresenter(QObject):
     angles_updated = Signal(tuple)      # For updating the read-only display
     correction_states_updated = Signal(bool, bool, bool, str, str, str)  # (noise, phase, primary, noise_str, phase_str, primary_str)
 
-    def __init__(self, service: AefiAcquisitionService, event_bus: IDomainEventBus, transformation_service: TransformationService):
+    def __init__(self, service: AefiAcquisitionService, event_bus: IDomainEventBus, transformation_service: TransformationService,
+                 export_service: ScanExportService):
         super().__init__()
         self._service = service
+        self._export_service = export_service
         self._event_bus = event_bus
         self._transformation_service = transformation_service
         self._current_acquisition_id: str | None = None
@@ -155,8 +159,14 @@ class AefiContinuousReadingPresenter(QObject):
         Handle start request from panel.
 
         Args:
-            params: {max_duration_s (optional)}
+            params: {max_duration_s (optional), export_enabled, export_filename_base}
         """
+        # Always (re)configured, so an unchecked box disarms a previous arming.
+        self._export_service.configure_time_series_export(ExportConfigDTO(
+            enabled=bool(params.get("export_enabled", False)),
+            output_directory="",  # default exports dir, same as the scan panel's empty field
+            filename_base=params.get("export_filename_base") or "continuous",
+        ))
         config = AefiAcquisitionConfig(
             max_duration_s=params.get("max_duration_s", None),
             target_uncertainty=None,

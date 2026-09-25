@@ -13,15 +13,26 @@ from PySide6.QtWidgets import (
     QDoubleSpinBox,
     QGroupBox,
     QComboBox,
-    QFormLayout,
     QGridLayout,
     QSizePolicy,
+    QCheckBox,
+    QLineEdit,
 )
 from PySide6.QtCore import Qt, Signal
 import pyqtgraph as pg  # type: ignore[import]
 
 from interface.widgets.scope.scope_window_control import ScopeWindowControl
 from interface.widgets.scope.scope_cursors import ScopeCursors
+from interface.widgets.layouts.flow_layout import FlowLayout
+
+
+def _compact_group(title: str, layout_cls):
+    """Titled group with tight margins — keeps the controls strip thin."""
+    group = QGroupBox(title)
+    layout = layout_cls(group)
+    layout.setContentsMargins(4, 2, 4, 2)
+    layout.setSpacing(3)
+    return group, layout
 
 
 class AefiContinuousReadingPanel(QWidget):
@@ -64,105 +75,97 @@ class AefiContinuousReadingPanel(QWidget):
         
         # Main layout
         vlayout = QVBoxLayout(self)
-        vlayout.setContentsMargins(5, 5, 5, 5)
-        vlayout.setSpacing(5)
+        vlayout.setContentsMargins(4, 4, 4, 4)
+        vlayout.setSpacing(4)
 
-        # --- Controls Area ---
-        controls_layout = QHBoxLayout()
-        controls_layout.setContentsMargins(0, 0, 0, 0)
-        
-        # 1. Acquisition Params
-        grp_params = QGroupBox("Acquisition")
-        l_params = QFormLayout(grp_params)
-        l_params.setContentsMargins(5, 5, 5, 5)
+        # --- Controls strip ---
+        # FlowLayout: groups wrap onto a new row when the dock is narrow, so
+        # the panel never imposes the sum of their widths (which made the
+        # dock's scroll area show a horizontal scrollbar). Every group is kept
+        # to 2 rows at most so the strip stays thin and the plot gets the rest.
+        controls_host = QWidget()
+        controls_host.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
+        controls_layout = FlowLayout(controls_host, spacing=4)
 
-        # Scale Control
+        # 1. Acquisition: Start/Stop/status, then export
+        grp_ctrl, l_ctrl = _compact_group("Acquisition", QGridLayout)
+
+        self.btn_start = QPushButton("Start")
+        self.btn_start.clicked.connect(self._on_start_clicked)
+        self.btn_start.setStyleSheet("background-color: #2ECC71; color: white; font-weight: bold;")
+
+        self.btn_stop = QPushButton("Stop")
+        self.btn_stop.clicked.connect(self._on_stop_clicked)
+        self.btn_stop.setStyleSheet("background-color: #E74C3C; color: white; font-weight: bold;")
+        self.btn_stop.setEnabled(False)
+
+        self.lbl_status = QLabel("Idle")
+        self.lbl_status.setMinimumWidth(QLabel("Running").sizeHint().width())  # widest state, no reflow
+
+        # Export vs time (CSV) — armed on Start, closed on Stop
+        self.chk_export = QCheckBox("Export CSV")
+        self.input_export_filename = QLineEdit("continuous")
+        self.input_export_filename.setFixedWidth(90)
+        self.input_export_filename.setToolTip("Written to ~/Desktop/AEFI_Acquisition_Exports/<date>_timeSeries_<name>/")
+
+        l_ctrl.addWidget(self.btn_start, 0, 0)
+        l_ctrl.addWidget(self.btn_stop, 0, 1)
+        l_ctrl.addWidget(self.lbl_status, 0, 2)
+        l_ctrl.addWidget(self.chk_export, 1, 0)
+        l_ctrl.addWidget(QLabel("Filename base:"), 1, 1)
+        l_ctrl.addWidget(self.input_export_filename, 1, 2)
+        controls_layout.addWidget(grp_ctrl)
+
+        # 2. Display: scale + Y mode, fixed calibre underneath (Oscillo only)
+        grp_params, l_params = _compact_group("Display", QGridLayout)
+
         self.cbo_scale = QComboBox()
         self.cbo_scale.addItems(["V", "mV", "uV"])
         self.cbo_scale.currentTextChanged.connect(self._on_scale_changed)
-        l_params.addRow("Scale:", self.cbo_scale)
         self._scale_factor = 1.0  # Default V
 
         # Mode Control (Auto = fit to data, Oscillo = fixed calibre)
         self.cbo_mode = QComboBox()
         self.cbo_mode.addItems(["Auto", "Oscillo"])
         self.cbo_mode.currentTextChanged.connect(self._on_mode_changed)
-        l_params.addRow("Mode:", self.cbo_mode)
 
-        self.lbl_fullscale = QLabel("Range (±)")
+        self.lbl_fullscale = QLabel("±")
         self.spin_fullscale = QDoubleSpinBox()
         self.spin_fullscale.setRange(0.001, 1_000_000.0)
         self.spin_fullscale.setValue(1.0)
         self.spin_fullscale.valueChanged.connect(self._on_fullscale_changed)
-        l_params.addRow(self.lbl_fullscale, self.spin_fullscale)
         self.lbl_fullscale.setVisible(False)
         self.spin_fullscale.setVisible(False)
 
+        self.cbo_scale.setFixedWidth(60)
+        self.cbo_mode.setFixedWidth(80)
+        l_params.addWidget(QLabel("Scale"), 0, 0)
+        l_params.addWidget(self.cbo_scale, 0, 1)
+        l_params.addWidget(QLabel("Mode"), 1, 0)
+        l_params.addWidget(self.cbo_mode, 1, 1)
+        l_params.addWidget(self.lbl_fullscale, 1, 2)
+        l_params.addWidget(self.spin_fullscale, 1, 3)
         controls_layout.addWidget(grp_params)
 
-        # 2. Controls
-        grp_ctrl = QGroupBox("Control")
-        l_ctrl = QVBoxLayout(grp_ctrl)
-        l_ctrl.setContentsMargins(5, 5, 5, 5)
-        
-        self.btn_start = QPushButton("Start")
-        self.btn_start.clicked.connect(self._on_start_clicked)
-        self.btn_start.setStyleSheet("background-color: #2ECC71; color: white; font-weight: bold;")
-        
-        self.btn_stop = QPushButton("Stop")
-        self.btn_stop.clicked.connect(self._on_stop_clicked)
-        self.btn_stop.setStyleSheet("background-color: #E74C3C; color: white; font-weight: bold;")
-        self.btn_stop.setEnabled(False)
-        
-        self.lbl_status = QLabel("Idle")
-        self.lbl_status.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        
-        l_ctrl.addWidget(self.btn_start)
-        l_ctrl.addWidget(self.btn_stop)
-        l_ctrl.addWidget(self.lbl_status)
-        controls_layout.addWidget(grp_ctrl)
-        
-        # 3. Channel Toggles
-        # Create a grid or flow for channels ? Let's just stack them horizontally or in a grid
-        # To make it compact, maybe a 2-rows grid
-        grp_channels = QGroupBox("Channels")
-        # Layout inside group
-        l_channels = QVBoxLayout(grp_channels)
-        l_channels.setContentsMargins(2, 2, 2, 2)
-        l_channels.setSpacing(2)
+        # 3. Channel Toggles: 3 columns (X, Y, Z) x 2 rows (In-Phase, Quadrature)
+        grp_channels, channel_grid_layout = _compact_group("Channels", QGridLayout)
 
-        # Create pairs (In-Phase / Quadrature)
-        # Use Grid Layout: 3 Columns (X, Y, Z), 2 Rows (In-Phase, Quadrature)
-        channel_grid_layout = QGridLayout() # Use a separate layout for buttons
-        channel_grid_layout.setContentsMargins(2, 2, 2, 2)
-        channel_grid_layout.setSpacing(5)
-        
         for i, ch in enumerate(self.CHANNELS):
             cb = QPushButton(ch["label"])
             cb.setCheckable(True)
             # Default check only In-Phase to avoid clutter
-            cb.setChecked("In-Phase" in ch["name"]) 
-            cb.setStyleSheet(f"QPushButton {{ color: {ch['color']}; font-weight: bold; }}"
+            cb.setChecked("In-Phase" in ch["name"])
+            cb.setStyleSheet(f"QPushButton {{ color: {ch['color']}; font-weight: bold; padding: 1px 6px; }}"
                              f"QPushButton:checked {{ border: 2px solid {ch['color']}; }}")
-            cb.setFixedWidth(130)  # Compact width for labels (X In-Phase etc.)
             cb.clicked.connect(self._on_channel_toggled)
             self.channel_checkboxes[ch["name"]] = cb
+            # Even index = In-Phase (row 0), odd = Quadrature (row 1); col = axis
+            channel_grid_layout.addWidget(cb, i % 2, i // 2)
 
-            
-            # Logic: Even index = In-Phase (Row 0), Odd index = Quadrature (Row 1)
-            # Col = i // 2 (0, 1, 2)
-            row = i % 2
-            col = i // 2
-            channel_grid_layout.addWidget(cb, row, col)
-            
-        l_channels.addLayout(channel_grid_layout) # Add grid layout to group
-        controls_layout.addWidget(grp_channels) # Add group to main controls layout
+        controls_layout.addWidget(grp_channels)
 
-        # 4. Calibration Controls
-        grp_calib = QGroupBox("Signal Processing")
-        l_calib = QGridLayout(grp_calib)
-        l_calib.setContentsMargins(5, 5, 5, 5)
-        l_calib.setSpacing(4)
+        # 4. Calibration Controls: buttons on row 0, their values underneath
+        grp_calib, l_calib = _compact_group("Signal Processing", QGridLayout)
 
         _TOGGLE_STYLE = (
             "QPushButton { color: #888; border: 1px solid #555; border-radius: 3px; padding: 2px 6px; }"
@@ -211,49 +214,44 @@ class AefiContinuousReadingPanel(QWidget):
         self.lbl_val_noise   = QLabel("—")
         self.lbl_val_phase   = QLabel("—")
         self.lbl_val_primary = QLabel("—")
-        for lbl in (self.lbl_val_noise, self.lbl_val_phase, self.lbl_val_primary):
-            lbl.setStyleSheet(_LBL_STYLE)
 
-        l_calib.addWidget(self.btn_calib_noise,    0, 0)
-        l_calib.addWidget(self.btn_toggle_noise,   0, 1)
-        l_calib.addWidget(self.lbl_val_noise,      0, 2)
-        l_calib.addWidget(self.btn_calib_phase,    1, 0)
-        l_calib.addWidget(self.btn_toggle_phase,   1, 1)
-        l_calib.addWidget(self.lbl_val_phase,      1, 2)
-        l_calib.addWidget(self.btn_calib_primary,  2, 0)
-        l_calib.addWidget(self.btn_toggle_primary, 2, 1)
-        l_calib.addWidget(self.lbl_val_primary,    2, 2)
-        l_calib.addWidget(self.btn_reset_calib,    3, 0, 1, 3)
-        l_calib.setColumnStretch(2, 1)
+        for col, (btn, toggle, lbl) in enumerate((
+            (self.btn_calib_noise,   self.btn_toggle_noise,   self.lbl_val_noise),
+            (self.btn_calib_phase,   self.btn_toggle_phase,   self.lbl_val_phase),
+            (self.btn_calib_primary, self.btn_toggle_primary, self.lbl_val_primary),
+        )):
+            lbl.setStyleSheet(_LBL_STYLE)
+            l_calib.addWidget(btn,    0, 2 * col)
+            l_calib.addWidget(toggle, 0, 2 * col + 1)
+            l_calib.addWidget(lbl,    1, 2 * col, 1, 2)
+        l_calib.addWidget(self.btn_reset_calib, 0, 6)
 
         controls_layout.addWidget(grp_calib)
 
         # 5. Coordinate Transform Controls
-        grp_trans = QGroupBox("Coordinate Transform")
-        l_trans = QVBoxLayout(grp_trans)
-        l_trans.setContentsMargins(5, 5, 5, 5)
-        
+        grp_trans, l_trans = _compact_group("Coordinate Transform", QVBoxLayout)
+
         self.btn_apply_rotation = QPushButton("Apply Rotation")
         self.btn_apply_rotation.setCheckable(True)
         self.btn_apply_rotation.setStyleSheet("""
             QPushButton:checked {
-                background-color: #8E44AD; 
-                color: white; 
+                background-color: #8E44AD;
+                color: white;
                 font-weight: bold;
             }
         """)
         self.btn_apply_rotation.toggled.connect(self._on_rotation_toggled)
         self.btn_apply_rotation.setToolTip("Transform Sensor Frame -> Source Frame using angles from 'Ref. Transform' panel.")
-        
+
         self.lbl_angles_info = QLabel("Angles: [0, 0, 0]")
         self.lbl_angles_info.setStyleSheet("color: #AAA;")
-        
+
         l_trans.addWidget(self.btn_apply_rotation)
         l_trans.addWidget(self.lbl_angles_info)
-        
+
         controls_layout.addWidget(grp_trans)
 
-        # 6. Sliding window / cursors (shared, composed) — always rightmost
+        # 6. Sliding window / cursors (shared, composed) — always last
         self.window_control = ScopeWindowControl(default_window_s=10.0)
         self.window_control.changed.connect(self._update_plot)
         controls_layout.addWidget(self.window_control)
@@ -261,10 +259,9 @@ class AefiContinuousReadingPanel(QWidget):
         self.cursors = ScopeCursors(y_unit=" V")
         controls_layout.addWidget(self.cursors)
 
-        controls_layout.addStretch() # Add stretch to push groups to left
-        vlayout.addLayout(controls_layout)
+        vlayout.addWidget(controls_host)
 
-        # Plot pyqtgraph
+        # Plot pyqtgraph — takes all the remaining space
         self.plot = pg.PlotWidget()
         self.plot.setBackground("#353535")
         self.plot.showGrid(x=True, y=True, alpha=0.2)
@@ -279,7 +276,12 @@ class AefiContinuousReadingPanel(QWidget):
             curve.setVisible("In-Phase" in ch["name"])
             self.curves[ch["name"]] = curve
 
-        vlayout.addWidget(self.plot)
+        # Ignored: the dock's scroll area sizes the panel from its height-for-
+        # width, which would otherwise reserve pyqtgraph's 480 px sizeHint and
+        # show a vertical scrollbar — the plot just fills what's left.
+        self.plot.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Ignored)
+        self.plot.setMinimumHeight(150)
+        vlayout.addWidget(self.plot, 1)
         self.cursors.attach(self.plot)
 
         # pyqtgraph's built-in "A" (autorange) button forces autorange on both axes,
@@ -292,6 +294,8 @@ class AefiContinuousReadingPanel(QWidget):
         """Gather parameters and emit signal."""
         params = {
             "max_duration_s": None,  # Infinite duration
+            "export_enabled": self.chk_export.isChecked(),
+            "export_filename_base": self.input_export_filename.text(),
         }
         self.lbl_status.setText("Running...")
         self.btn_start.setEnabled(False)
@@ -365,11 +369,15 @@ class AefiContinuousReadingPanel(QWidget):
     def on_acquisition_started(self, acquisition_id: str):
         """Called when acquisition starts (from presenter)."""
         self._reset_buffers()
-        self.lbl_status.setText(f"Running (ID={acquisition_id[:8]})")
+        # Short text + ID in tooltip: a longer label would widen the group and
+        # reflow the whole controls strip on every start/stop.
+        self.lbl_status.setText("Running")
+        self.lbl_status.setToolTip(f"Acquisition ID: {acquisition_id}")
 
     def on_acquisition_stopped(self, acquisition_id: str):
         """Called when acquisition stops (from presenter)."""
-        self.lbl_status.setText(f"Stopped (ID={acquisition_id[:8]})")
+        self.lbl_status.setText("Stopped")
+        self.lbl_status.setToolTip(f"Acquisition ID: {acquisition_id}")
         self.btn_start.setEnabled(True)
         self.btn_stop.setEnabled(False)
 

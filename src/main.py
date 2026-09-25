@@ -304,7 +304,9 @@ def main(hardware_config: dict | None = None):
     synchronous_detection_presenter = SynchronousDetectionPresenter(synchronous_detection_service, event_bus)
 
     # Continuous Presenter needs Transformation Service now
-    aefi_continuous_reading_presenter = AefiContinuousReadingPresenter(continuous_service, event_bus, transformation_service)
+    aefi_continuous_reading_presenter = AefiContinuousReadingPresenter(
+        continuous_service, event_bus, transformation_service, export_service=scan_export_service
+    )
 
     # Electric Field Probe Presenter
     electric_field_probe_presenter = ElectricFieldProbePresenter(electric_field_probe_service, event_bus)
