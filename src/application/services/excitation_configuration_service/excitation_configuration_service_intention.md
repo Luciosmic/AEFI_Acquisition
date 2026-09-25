@@ -7,7 +7,10 @@ Isoler la configuration du générateur d'excitation DDS (AD9106) de la UI et du
 ## Responsibility
 
 - `set_excitation(mode, level_s1_s2, level_s3_s4, frequency)` : appliquer via `IExcitationPort`
-  et publier `ExcitationFrequencyChanged`/`ExcitationLevelsChanged` si ces valeurs ont changé.
+  et publier `ExcitationFrequencyChanged` si la fréquence a changé. Pas d'event de niveau ici :
+  l'écrivain DDS du port publie `DdsChannelConfigChanged` par canal, sur lequel tous les panels
+  se synchronisent (l'ancien `ExcitationLevelsChanged`, doublon sans abonné, a été supprimé
+  2026-09-25).
 - `mute()`/`unmute()` : couper puis restaurer le gain pour la fenêtre baseline d'un scan
   différentiel — ne touche pas `_current_params` ni ne publie d'event (toggle transitoire, pas
   un changement de config utilisateur).

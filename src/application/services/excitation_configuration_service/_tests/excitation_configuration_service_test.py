@@ -6,9 +6,6 @@ from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
 from domain.shared_kernel.excitation.events.excitation_frequency_changed.excitation_frequency_changed import (
     ExcitationFrequencyChanged,
 )
-from domain.shared_kernel.excitation.events.excitation_levels_changed.excitation_levels_changed import (
-    ExcitationLevelsChanged,
-)
 from domain.shared_kernel.excitation.events.dds_channel_config_changed.dds_channel_config_changed import (
     DdsChannelConfigChanged,
 )
@@ -59,18 +56,15 @@ class TestExcitationConfigurationService(DiagramFriendlyTest):
 
         self.event_bus.publish.assert_not_called()
 
-    def test_set_excitation_publishes_levels_event_when_levels_change(self):
+    def test_set_excitation_publishes_nothing_when_only_levels_change(self):
+        # Level sync goes through DdsChannelConfigChanged, published by the
+        # port's DDS writer — the service must not add a second, parallel event.
         self.service.set_excitation(ExcitationMode.X_DIR, 50.0, 50.0, 1000.0)
         self.event_bus.reset_mock()
 
         self.service.set_excitation(ExcitationMode.X_DIR, 30.0, 70.0, 1000.0)
 
-        self.event_bus.publish.assert_called_once()
-        topic, event = self.event_bus.publish.call_args[0]
-        self.assertEqual(topic, "excitationlevelschanged")
-        self.assertIsInstance(event, ExcitationLevelsChanged)
-        self.assertAlmostEqual(event.level_s1_s2_percent, 30.0)
-        self.assertAlmostEqual(event.level_s3_s4_percent, 70.0)
+        self.event_bus.publish.assert_not_called()
 
     def test_mute_sets_levels_to_zero_keeping_mode_and_frequency(self):
         self.service.set_excitation(ExcitationMode.Y_DIR, 40.0, 60.0, 2000.0)
