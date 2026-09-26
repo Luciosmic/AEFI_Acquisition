@@ -7,6 +7,9 @@ This layer is the ONLY place allowed to import pyvista.
 import numpy as np
 import pyvista as pv
 from scipy.spatial.transform import Rotation as R
+from typing import Optional
+
+from ...domain.cube_geometry import vertex_positions, edge_midpoints, face_centers
 
 
 def create_colored_cube(size: float = 1.0) -> pv.PolyData:
@@ -36,6 +39,51 @@ def create_colored_cube(size: float = 1.0) -> pv.PolyData:
     n = cube.n_cells
     cube.cell_data["colors"] = colors[:n]
     return cube
+
+
+def _outward_offset(positions: dict, offset: float) -> tuple[np.ndarray, list[str]]:
+    """Offset positions radially outward from the origin for label placement."""
+    labels = list(positions.keys())
+    pts = []
+    for pos in positions.values():
+        norm = np.linalg.norm(pos)
+        pts.append(pos + (pos / norm) * offset if norm > 1e-9 else pos.copy())
+    return np.array(pts), labels
+
+
+def get_vertex_label_data(
+    size: float = 1.0, rotation: Optional[R] = None
+) -> tuple[np.ndarray, list[str]]:
+    """
+    Return (points, labels) for the 8 vertices, ready for plotter.add_point_labels().
+
+    Points are offset slightly outward for readability. If rotation is provided,
+    points are expressed in lab frame (body frame rotated).
+    """
+    pts, labels = _outward_offset(vertex_positions(size), offset=0.08 * size)
+    if rotation is not None:
+        pts = rotation.apply(pts)
+    return pts, labels
+
+
+def get_edge_label_data(
+    size: float = 1.0, rotation: Optional[R] = None
+) -> tuple[np.ndarray, list[str]]:
+    """Return (points, labels) for the 12 edge midpoints."""
+    pts, labels = _outward_offset(edge_midpoints(size), offset=0.06 * size)
+    if rotation is not None:
+        pts = rotation.apply(pts)
+    return pts, labels
+
+
+def get_face_label_data(
+    size: float = 1.0, rotation: Optional[R] = None
+) -> tuple[np.ndarray, list[str]]:
+    """Return (points, labels) for the 6 face centers."""
+    pts, labels = _outward_offset(face_centers(size), offset=0.05 * size)
+    if rotation is not None:
+        pts = rotation.apply(pts)
+    return pts, labels
 
 
 def apply_rotation_to_mesh(mesh: pv.PolyData, rotation: R) -> pv.PolyData:

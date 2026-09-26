@@ -11,7 +11,10 @@ from scipy.spatial.transform import Rotation as R
 
 from ...application.cube_visualizer_service.ports.i_cube_renderer import ICubeRenderer
 from ..messaging.event_bus import EventBus, Event, EventType
-from .cube_mesh_factory import create_colored_cube, apply_rotation_to_mesh
+from .cube_mesh_factory import (
+    create_colored_cube, apply_rotation_to_mesh,
+    get_vertex_label_data, get_edge_label_data, get_face_label_data,
+)
 
 
 class CubeVisualizerAdapter(ICubeRenderer):
@@ -41,9 +44,12 @@ class CubeVisualizerAdapter(ICubeRenderer):
         self.arrows_mes: dict = {}
         self.arrows_labo: dict = {}
         self.text_actor = None
+        self._label_actors: list = []
+        self._show_labels: bool = False
 
         self.event_bus.subscribe(EventType.ANGLES_CHANGED, self._on_angles_changed_event)
         self.event_bus.subscribe(EventType.CAMERA_VIEW_CHANGED, self._on_camera_view_changed_event)
+        self.event_bus.subscribe(EventType.LABELS_TOGGLED, self._on_labels_toggled_event)
 
         self._create_plotter_standalone()
 
@@ -95,6 +101,7 @@ class CubeVisualizerAdapter(ICubeRenderer):
         self.plotter.camera_position = pos
         self.plotter.camera.zoom(zoom)
         self.plotter.enable_trackball_style()
+        self.plotter.add_key_event('l', self._toggle_labels)
         if hasattr(self.plotter, 'iren') and self.plotter.iren is not None:
             self.plotter.iren.add_observer('MouseWheelForwardEvent', self._on_wheel_forward)
             self.plotter.iren.add_observer('MouseWheelBackwardEvent', self._on_wheel_backward)
@@ -114,8 +121,14 @@ class CubeVisualizerAdapter(ICubeRenderer):
                           *self.arrows_mes.values(), *self.arrows_labo.values()]:
                 if actor is not None:
                     self.plotter.remove_actor(actor)
+            for actor in self._label_actors:
+                try:
+                    self.plotter.remove_actor(actor)
+                except Exception:
+                    pass
             self.arrows_mes.clear()
             self.arrows_labo.clear()
+            self._label_actors.clear()
 
             # Cube
             cube = create_colored_cube(size=1.0)
@@ -153,11 +166,27 @@ class CubeVisualizerAdapter(ICubeRenderer):
                                  tip_radius=lr, tip_length=0.15, shaft_radius=lr * 0.6)
                 self.arrows_labo[key] = self.plotter.add_mesh(arrow, color=color)
 
+            # Labels (toggled with L key)
+            if self._show_labels:
+                pts, lbs = get_face_label_data(size=1.0, rotation=rotation)
+                self._label_actors.append(self.plotter.add_point_labels(
+                    pts, lbs, font_size=12, text_color='black',
+                    shape=None, always_visible=True, bold=True, show_points=False))
+                pts, lbs = get_edge_label_data(size=1.0, rotation=rotation)
+                self._label_actors.append(self.plotter.add_point_labels(
+                    pts, lbs, font_size=9, text_color='#444444',
+                    shape=None, always_visible=True, show_points=False))
+                pts, lbs = get_vertex_label_data(size=1.0, rotation=rotation)
+                self._label_actors.append(self.plotter.add_point_labels(
+                    pts, lbs, font_size=9, text_color='#222222',
+                    shape=None, always_visible=True, show_points=False))
+
             euler = rotation.as_euler('XYZ', degrees=True)
             view_label = {'3d': 'Vue 3D', 'xy': 'Vue X-Y', 'xz': 'Vue X-Z', 'yz': 'Vue Y-Z'}
+            label_hint = ' [L: labels]' if not self._show_labels else ' [L: masquer]'
             self.text_actor = self.plotter.add_text(
                 f"{view_label.get(self.current_view, '3D')} — "
-                f"X={euler[0]:.1f}° Y={euler[1]:.1f}° Z={euler[2]:.1f}°",
+                f"X={euler[0]:.1f}° Y={euler[1]:.1f}° Z={euler[2]:.1f}°{label_hint}",
                 position='upper_left', font_size=12, color='black')
 
             self.plotter.render()
@@ -185,3 +214,12 @@ class CubeVisualizerAdapter(ICubeRenderer):
         if self.plotter and self.plotter.camera:
             self.plotter.camera.zoom(0.9)
             self.plotter.render()
+
+    def _toggle_labels(self):
+        """Toggle vertex/edge/face label display (called by 'L' key or LABELS_TOGGLED event)."""
+        self._show_labels = not self._show_labels
+        if self._last_rotation is not None:
+            self._do_render(self._last_rotation)
+
+    def _on_labels_toggled_event(self, event: Event):
+        self._toggle_labels()

@@ -14,6 +14,7 @@ class EventType(Enum):
     ANGLES_CHANGED = "angles_changed"
     CAMERA_VIEW_CHANGED = "camera_view_changed"
     RESET_REQUESTED = "reset_requested"
+    LABELS_TOGGLED = "labels_toggled"
 
 
 @dataclass

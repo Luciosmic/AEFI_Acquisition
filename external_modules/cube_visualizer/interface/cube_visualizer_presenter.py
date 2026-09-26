@@ -49,6 +49,11 @@ class CubeVisualizerPresenter:
         event = Event(event_type=EventType.CAMERA_VIEW_CHANGED, data={'view_name': view_name})
         self._event_bus.publish(event)
 
+    def request_toggle_labels(self) -> None:
+        """Toggle vertex/edge/face label display."""
+        event = Event(event_type=EventType.LABELS_TOGGLED, data={})
+        self._event_bus.publish(event)
+
     def get_current_angles(self) -> tuple:
         """Query current angles (no side effects)."""
         dto = self._service.get_current_orientation()
