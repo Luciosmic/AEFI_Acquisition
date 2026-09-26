@@ -10,9 +10,6 @@ from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
 from domain.shared_kernel.excitation.events.excitation_frequency_changed.excitation_frequency_changed import (
     ExcitationFrequencyChanged,
 )
-from domain.shared_kernel.excitation.events.excitation_levels_changed.excitation_levels_changed import (
-    ExcitationLevelsChanged,
-)
 from domain.shared_kernel.excitation.events.dds_channel_config_changed.dds_channel_config_changed import (
     DdsChannelConfigChanged,
 )
@@ -21,7 +18,6 @@ from domain.shared_kernel.excitation.events.excitation_dds_link_changed.excitati
 )
 
 EXCITATION_FREQUENCY_CHANGED_TOPIC = "excitationfrequencychanged"
-EXCITATION_LEVELS_CHANGED_TOPIC = "excitationlevelschanged"
 DDS_CHANNEL_CONFIG_CHANGED_TOPIC = "ddschannelconfigchanged"
 EXCITATION_DDS_LINK_CHANGED_TOPIC = "excitationddslinkchanged"
 
@@ -124,11 +120,9 @@ class ExcitationConfigurationService:
         params = ExcitationParameters(mode, level_s1_s2, level_s3_s4, frequency)
 
         frequency_changed = frequency != self._current_params.frequency
-        levels_changed = (
-            level_s1_s2_percent != self._current_params.level_s1_s2.value
-            or level_s3_s4_percent != self._current_params.level_s3_s4.value
-        )
 
+        # Level changes need no event here: the port's DDS writer publishes
+        # DdsChannelConfigChanged per channel, which every panel already syncs on.
         self._port.apply_excitation(params)
         self._current_params = params
 
@@ -136,14 +130,6 @@ class ExcitationConfigurationService:
             self._event_bus.publish(
                 EXCITATION_FREQUENCY_CHANGED_TOPIC,
                 ExcitationFrequencyChanged(frequency_hz=frequency),
-            )
-        if levels_changed:
-            self._event_bus.publish(
-                EXCITATION_LEVELS_CHANGED_TOPIC,
-                ExcitationLevelsChanged(
-                    level_s1_s2_percent=level_s1_s2_percent,
-                    level_s3_s4_percent=level_s3_s4_percent,
-                ),
             )
 
     def get_current_parameters(self) -> ExcitationParameters:

@@ -35,7 +35,7 @@ class TestCubeSensorFieldSimulator(unittest.TestCase):
 
     def test_rotation_moves_signal_into_z(self):
         config = make_synthetic_config()
-        config["sensor"]["calibration"]["sensor_to_lab_rotation"] = {
+        config["sensor"]["calibration"]["sources_to_sensor_rotation"] = {
             "theta_x": 90.0, "theta_y": 0.0, "theta_z": 0.0,
         }
         sim = CubeSensorFieldSimulator.from_config(config)
@@ -44,6 +44,12 @@ class TestCubeSensorFieldSimulator(unittest.TestCase):
         # sensor's local axes -> the y-signal from the unrotated case should
         # now show up (at least partly) on z instead.
         self.assertNotAlmostEqual(vz, 0.0)
+
+    def test_missing_rotation_key_raises(self):
+        config = make_synthetic_config()
+        del config["sensor"]["calibration"]["sources_to_sensor_rotation"]
+        with self.assertRaises(ValueError):
+            CubeSensorFieldSimulator.from_config(config)
 
     def test_finite_face_average_converges_toward_point_value_for_tiny_cube(self):
         """Sanity check: a near-zero-size cube should behave like the old

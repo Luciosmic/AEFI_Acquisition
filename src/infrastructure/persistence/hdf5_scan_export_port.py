@@ -77,7 +77,8 @@ class Hdf5ScanExportPort(IScanExportPort):
     _index: int = field(init=False, default=0)
 
     def configure(
-        self, directory: str, filename: str, metadata: Dict[str, Any], timestamp: Optional[str] = None
+        self, directory: str, filename: str, metadata: Dict[str, Any], timestamp: Optional[str] = None,
+        acquisition_kind: str = "stepScan",
     ) -> None:
         """
         Configure the export destination.
@@ -106,9 +107,9 @@ class Hdf5ScanExportPort(IScanExportPort):
         timestamp = timestamp or datetime.now().strftime("%Y-%m-%d_%H%M%S")
         safe_base = "".join(c for c in filename if c.isalnum() or c in ("-", "_"))
 
-        acquisition_dir = dir_path / f"{timestamp}_stepScan_{safe_base}"
+        acquisition_dir = dir_path / f"{timestamp}_{acquisition_kind}_{safe_base}"
         acquisition_dir.mkdir(parents=True, exist_ok=True)
-        final_name = f"{timestamp}_stepScan_{safe_base}.h5"
+        final_name = f"{timestamp}_{acquisition_kind}_{safe_base}.h5"
 
         self._file_path = acquisition_dir / final_name
         self._metadata = metadata or {}
@@ -384,6 +385,9 @@ class Hdf5ScanExportPort(IScanExportPort):
         metadata_path = self._file_path.parent / f"{self._file_path.stem}_acquisition-parameters.json"
         with metadata_path.open(mode="w", encoding="utf-8") as f:
             json.dump(metadata, f, indent=2, ensure_ascii=False, default=str)
+
+    def write_event(self, event) -> None:
+        """No-op: the CSV port writes the scan's events.jsonl into the shared acquisition folder."""
 
     def get_output_path(self) -> Optional[Path]:
         """Path to the `.h5` file, once configured."""

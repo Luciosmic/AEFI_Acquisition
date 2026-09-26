@@ -19,6 +19,8 @@
     "sources_geometry": {
       "_ref": "config_templates/NOTE - Source Frame Geometry.md — coordinate system and Distance Geometry Problem for pairwise distances.",
 
+      "_note": "SUPERSEDED AS LIVE SOURCE (2026-09-23): SourceGeometryCalibrationService's append-only registry (.aefi_acquisition/calibrations/source_geometry_calibration.json) is now the source of truth for the current geometric configuration, with a dated, GUM-uncertainty-tracked history. This JSON block is read exactly once by the composition root (main.py), only to seed that registry's first entry when it has never been recorded yet (first boot). Edit values here only to change the seed used on a fresh .aefi_acquisition/ directory — the running application's actual geometry lives in the registry, not here.",
+
       "sphere_labels": {
         "_note": "Quadrant convention (2026-07-24, corrects the earlier x+/x-/y+/y- half-axis labeling). S_i occupies a quadrant, not a half-axis. board_connector maps Si to the physical DDS output on the excitation board. Source of truth: 'ImagerieElectrique - Correspondance Poupette Sortie DDS - Connexion Carte Amplification Excitation' and the 'NOTE - Source Frame Geometry' (Luis Saluden's vault, not tracked in this repo).",
         "S1": { "board_connector": "DDS1", "scan_frame_quadrant": "x_neg_y_pos" },
@@ -46,121 +48,14 @@
       }
     },
 
-    "electronics": {
-      "board_version": "AmpliHT_opa462_v2_ASSOCE",
-      "dds_chip": "AD9106",
-      "_note_chip": "AD9106 = 4-channel DDS signal generator (TI). NOT ADS131A04 (which is the ADC). Old schema v2.0 had these chips swapped — this is the corrected version.",
-
-      "ad9106_channel_roles": {
-        "_note": "AD9106 chip channels. CH1 and CH2 are the two independent excitation generators. CH3 and CH4 produce synchronous detection reference signals and are NEVER modified by the excitation adapter.",
-        "AD9106_CH1": "excitation_generator_1",
-        "AD9106_CH2": "excitation_generator_2",
-        "AD9106_CH3": "synchronous_detection_reference",
-        "AD9106_CH4": "synchronous_detection_reference"
-      },
-
-      "output_to_sphere_wiring": {
-        "_note": "Physical wiring: each board connector (Si) receives a specific signal from one AD9106 channel or its complement. 'CHx_bar' means the complementary (inverted) output of AD9106_CHx. Source: correspondance note 2025-06-12.",
-        "_board_photo": "De gauche à droite sur la carte : DDS4, DDS3, DDS2, DDS1 (connecteurs physiques vers poupettes).",
-        "S1": {
-          "board_connector": "DDS1",
-          "scan_quadrant": "x_neg_y_pos",
-          "receives": "AD9106_CH2_bar",
-          "_meaning": "Complement of CH2 = CH2 signal phase-shifted by 180°"
-        },
-        "S2": {
-          "board_connector": "DDS2",
-          "scan_quadrant": "x_pos_y_neg",
-          "receives": "AD9106_CH2",
-          "_meaning": "Direct output of CH2"
-        },
-        "S3": {
-          "board_connector": "DDS3",
-          "scan_quadrant": "x_pos_y_pos",
-          "receives": "AD9106_CH1_bar",
-          "_meaning": "Complement of CH1 = CH1 signal phase-shifted by 180°"
-        },
-        "S4": {
-          "board_connector": "DDS4",
-          "scan_quadrant": "x_neg_y_neg",
-          "receives": "AD9106_CH1",
-          "_meaning": "Direct output of CH1"
-        }
-      },
-
-      "max_excitation_gain_raw": {
-        "value": 5500,
-        "range": "0–16376",
-        "description": "Practical maximum AD9106 gain register value (100% level). Limited by amplification board saturation. Hardware absolute max is 16376."
-      }
-    },
-
-    "excitation_modes": {
-      "_note": "Phase register: 16-bit, 0=0°, 16384=90°, 32768=180°, 49152=270°. AD9106_CH1 phase is always 0° (reference). AD9106_CH3 and CH4 are never touched. 'Phase at sphere' is derived from wiring: CHx → sphere gets CHx phase; CHx_bar → sphere gets CHx phase + 180°.",
-
-      "X_DIR": {
-        "AD9106_CH1_phase_deg": 0,
-        "AD9106_CH1_phase_raw": 0,
-        "AD9106_CH2_phase_deg": 180,
-        "AD9106_CH2_phase_raw": 32768,
-        "phase_at_sphere": {
-          "S1_x_neg_y_pos": { "phase_deg": 0,   "_via": "CH2_bar → complement of 180° = 0°" },
-          "S2_x_pos_y_neg": { "phase_deg": 180, "_via": "CH2 direct at 180°" },
-          "S3_x_pos_y_pos": { "phase_deg": 180, "_via": "CH1_bar → complement of 0° = 180°" },
-          "S4_x_neg_y_neg": { "phase_deg": 0,   "_via": "CH1 direct at 0°" }
-        },
-        "field_effect": "x<0 spheres (S1, S4) positive, x>0 spheres (S2, S3) negative → electric field gradient along X axis.",
-        "field_direction": "X"
-      },
-
-      "Y_DIR": {
-        "AD9106_CH1_phase_deg": 0,
-        "AD9106_CH1_phase_raw": 0,
-        "AD9106_CH2_phase_deg": 0,
-        "AD9106_CH2_phase_raw": 0,
-        "phase_at_sphere": {
-          "S1_x_neg_y_pos": { "phase_deg": 180, "_via": "CH2_bar → complement of 0° = 180°" },
-          "S2_x_pos_y_neg": { "phase_deg": 0,   "_via": "CH2 direct at 0°" },
-          "S3_x_pos_y_pos": { "phase_deg": 180, "_via": "CH1_bar → complement of 0° = 180°" },
-          "S4_x_neg_y_neg": { "phase_deg": 0,   "_via": "CH1 direct at 0°" }
-        },
-        "field_effect": "y<0 spheres (S2, S4) positive, y>0 spheres (S1, S3) negative → electric field gradient along Y axis.",
-        "field_direction": "Y"
-      },
-
-      "CIRCULAR_PLUS": {
-        "AD9106_CH1_phase_deg": 0,
-        "AD9106_CH1_phase_raw": 0,
-        "AD9106_CH2_phase_deg": 90,
-        "AD9106_CH2_phase_raw": 16384,
-        "phase_at_sphere": {
-          "S1_x_neg_y_pos": { "phase_deg": 270, "_via": "CH2_bar → complement of 90° = 270°" },
-          "S2_x_pos_y_neg": { "phase_deg": 90,  "_via": "CH2 direct at 90°" },
-          "S3_x_pos_y_pos": { "phase_deg": 180, "_via": "CH1_bar → complement of 0° = 180°" },
-          "S4_x_neg_y_neg": { "phase_deg": 0,   "_via": "CH1 direct at 0°" }
-        },
-        "field_effect": "CH2 leads CH1 by 90°. Rotating field. Rotation sense (CW/CCW) to be confirmed experimentally."
-      },
-
-      "CIRCULAR_MINUS": {
-        "AD9106_CH1_phase_deg": 0,
-        "AD9106_CH1_phase_raw": 0,
-        "AD9106_CH2_phase_deg": 270,
-        "AD9106_CH2_phase_raw": 49152,
-        "phase_at_sphere": {
-          "S1_x_neg_y_pos": { "phase_deg": 90,  "_via": "CH2_bar → complement of 270° = 90°" },
-          "S2_x_pos_y_neg": { "phase_deg": 270, "_via": "CH2 direct at 270°" },
-          "S3_x_pos_y_pos": { "phase_deg": 180, "_via": "CH1_bar → complement of 0° = 180°" },
-          "S4_x_neg_y_neg": { "phase_deg": 0,   "_via": "CH1 direct at 0°" }
-        },
-        "field_effect": "CH2 lags CH1 by 90°. Rotating field opposite sense to CIRCULAR_PLUS."
-      }
-    }
+    "_note_electronic_board_version": "TEMPLATE PLACEHOLDER (2026-09-25): generic name only. The mounted excitation board is declared in the 'Carte electronique d'excitation' calibration tab (registry .aefi_acquisition/calibrations/excitation_electronic_board_calibration.json). This name is used only while no board is mounted (WARNING, configuration incomplete).",
+    "electronic_board_version": "undeclared_excitation_electronic_board",
+    "dds_chip": "AD9106"
   },
 
   "sensor": {
-    "version": "v2b",
-    "serial_number": null,
+    "_note_name": "TEMPLATE PLACEHOLDER (2026-09-25): generic name only. The sensor is a hardware component: it is characterized (transduction gain) and mounted in the 'Capteur' calibration tab (registry .aefi_acquisition/calibrations/hardware_components/sensor.json). This name is used only while no sensor is mounted (WARNING, configuration incomplete).",
+    "name": "undeclared_sensor",
     "dimension": {
       "value": 8e-3,
       "unit": "m",
@@ -174,17 +69,25 @@
       }
     },
     "counter_electrode_feedback_mode": "Adjacent",
-    "conditioning_board_version": "Final_v4_ASSOCE",
+    "_note_conditioning_board_version": "TEMPLATE PLACEHOLDER (2026-09-25): generic name only. The mounted conditioning board is declared in the 'Carte electronique de conditionnement' calibration tab (registry .aefi_acquisition/calibrations/conditioning_electronics_board_calibration.json). This name is used only while no board is mounted (WARNING, configuration incomplete).",
+    "conditioning_board_version": "undeclared_conditioning_electronics_board",
     "calibration": {
       "gain": {
         "value": 63600.0,
         "unit": "[V/m]/V"
       },
-      "sensor_to_lab_rotation": {
-        "theta_x": -33.5,
-        "theta_y": 33.5,
-        "theta_z": -7.0,
-        "unit": "deg"
+      "sources_to_sensor_rotation": {
+        "_note": "Ideal (nominal) mounting angles: default rotation (and 'Reset to Default' target) applied when no sensor calibration exists for the current source geometry (calibrated angles live in .aefi_acquisition/calibrations/sensor_calibration.json). Mounting angles P (bring the sensor from the sources frame to its current mounting). Reference definition of the frames (sensor / sources / bench) and of P: src/domain/calibration/value_objects/rotation_convention/rotation_convention_intention.md",
+        "theta_x": 35.3,
+        "theta_y": 45,
+        "theta_z": 0,
+        "unit": "deg",
+        "convention": {
+          "type": "extrinsic",
+          "order": "ZYX",
+          "direction": "sources_to_sensor",
+          "_note": "P = Rx(theta_x)·Ry(theta_y)·Rz(theta_z): brings the sensor from the sources frame to its current mounting (rotations about the FIXED sources axes, applied Z then Y then X; scipy Rotation.from_euler('XYZ', …), uppercase = intrinsic X->Y'->Z''). Measurement: E_sensor = P^T·E_sources. Coordinate transform back to the sources frame: E_sources = P·E_sensor. Enter the mounting angles as they are — do NOT negate them."
+        }
       },
       "date": null
     }
@@ -192,7 +95,6 @@
 
   "adc": {
     "chip": "ADS131A04",
-    "_note_chip": "ADS131A04 = 4-channel simultaneous 24-bit ADC (TI). NOT AD9106 (which is the DDS). Old schema v2.0 had these chips swapped — this is the corrected version.",
     "clk_divider": 1,
     "iclk_divider": 1,
     "channels": {
@@ -206,7 +108,8 @@
     },
     "unit": "ADC_counts",
     "conversion_factor": {
-      "value": 4.76837e-7,
+      "_note": "Informative only (not read by code): Vref/2^23 at digital gain 1. Vref = ads131a04_default_config.json reference_voltage (2.442 V internal), written to A_SYS_CFG at startup. The live conversion is ADS131A04Adapter._convert_raw_to_volts.",
+      "value": 2.91109e-7,
       "unit": "V/ADC_counts"
     }
   }

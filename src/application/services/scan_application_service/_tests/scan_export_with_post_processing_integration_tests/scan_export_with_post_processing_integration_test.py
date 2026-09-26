@@ -54,7 +54,8 @@ class _RecordingPostProcessorPort(AefiPostProcessorPort):
     is stubbed — the real one spawns an external GUI process, which would
     make this test non-headless and flaky in CI."""
 
-    def __init__(self) -> None:
+    def __init__(self, event_bus) -> None:
+        super().__init__(event_bus, initial_rotation_angles=(35.3, 45.0, 0.0), initial_rotation_origin="ideal default")
         self.launched_dirs: List[Path] = []
 
     def _launch_visualizer(self, acquisition_dir: Path) -> None:
@@ -83,7 +84,7 @@ class ScanExportWithPostProcessingIntegrationTest(unittest.TestCase):
             mode=ExcitationMode.X_DIR, level_s1_s2_percent=80.0, level_s3_s4_percent=60.0, frequency=1000.0
         )
 
-        self.post_processing_port = _RecordingPostProcessorPort()
+        self.post_processing_port = _RecordingPostProcessorPort(self.event_bus)
         self.export_service = ScanExportService(
             self.event_bus,
             csv_export_port=CsvScanExportPort(),

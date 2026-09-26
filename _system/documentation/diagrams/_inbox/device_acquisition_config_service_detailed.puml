@@ -86,10 +86,10 @@ class ADCTimingConfig {
 }
 
 class ADCReferenceConfig {
-  + negative_ref: bool
-  + high_res: bool
-  + ref_voltage: float
-  + ref_selection: int
+  + negative_charge_pump: bool
+  + high_resolution: bool
+  + reference_voltage: float
+  + reference_source: str
 }
 
 class ExportConfig {

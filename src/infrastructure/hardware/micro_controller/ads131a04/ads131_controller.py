@@ -82,13 +82,30 @@ class ADS131Controller:
         current_iclk = self.memory_state["ICLK_divider_ratio"]
         return self.set_iclk_divider_and_oversampling(current_iclk, value)
 
-    def set_reference_config(self, negative_ref=False, high_res=True, ref_voltage=1, ref_selection=1):
-        """Configure les références ADC (adresse 11)"""
+    def set_clkin_divider(self, divider: int):
+        """CLK1 (adresse 13) : CLK_DIV[2:0] sur les bits 3:1, code = divider/2 -> registre = divider."""
+        if divider not in [2, 4, 6, 8, 10, 12, 14]:
+            logger.error("Invalid CLKIN divider value: %s", divider)
+            return False, "Valeur CLKIN divider invalide"
+        success, response = self.communicator.send_command("a13")
+        if not success:
+            logger.error("Failed to set CLKIN divider address register: %s", response)
+            return False, response
+        success, response = self.communicator.send_command(f"d{divider}")
+        if not success:
+            logger.error("Failed to write CLKIN divider data register: %s", response)
+            return False, response
+        logger.info("CLKIN divider set to %d", divider)
+        return True, f"CLKIN divider ({divider}) configuré"
+
+    def set_reference_config(self, negative_charge_pump=False, high_resolution=True, reference_voltage=2.442, internal_reference=True):
+        """A_SYS_CFG (adresse 11). Grandeurs physiques -> bits ; seul endroit qui connaît ce registre."""
         val_combinee = 0
-        if negative_ref: val_combinee += 128
-        if high_res: val_combinee += 64
-        if ref_voltage == 1: val_combinee += 16
-        if ref_selection == 1: val_combinee += 8
+        if negative_charge_pump: val_combinee += 128  # Bit 7: VNCPEN
+        if high_resolution: val_combinee += 64  # Bit 6: HRM
+        val_combinee += 32  # Bit 5: reserved, datasheet says always write 1
+        if reference_voltage == 4.0: val_combinee += 16  # Bit 4: VREF_4V (0 = 2.442 V)
+        if internal_reference: val_combinee += 8  # Bit 3: INT_REFEN
         
         success, response = self.communicator.send_command(f"a11")
         if not success:
@@ -99,7 +116,10 @@ class ADS131Controller:
             logger.error("Failed to write reference config data register: %s", response)
             return False, response
 
-        logger.info("Reference config set (value=%d)", val_combinee)
+        logger.info(
+            "Reference config set: A_SYS_CFG=%d (reference_voltage=%sV, internal_reference=%s, high_resolution=%s, negative_charge_pump=%s)",
+            val_combinee, reference_voltage, internal_reference, high_resolution, negative_charge_pump,
+        )
         return True, f"Références configurées (valeur: {val_combinee})"
 
     def set_channel_gain(self, channel_index: int, gain: int) -> tuple[bool, str]:

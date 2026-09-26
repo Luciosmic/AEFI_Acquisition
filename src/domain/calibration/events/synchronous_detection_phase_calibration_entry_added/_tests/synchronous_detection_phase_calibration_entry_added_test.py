@@ -16,10 +16,9 @@ from domain.calibration.value_objects.synchronous_detection_phase_calibration_po
 
 def make_entry():
     signature = HardwareSignature(
-        excitation_board_version="v1.2",
-        conditioning_board_version="v2.0",
-        sensor_version="v3.1",
-        sensor_serial_number=None,
+        excitation_electronics_board_name="v1.2",
+        conditioning_electronics_board_name="v2.0",
+        sensor_name="v3.1",
     )
     point = SynchronousDetectionPhaseCalibrationPoint(frequency_hz=1000.0, delta_phi_degrees=5.0)
     return SynchronousDetectionPhaseCalibrationEntry(

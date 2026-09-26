@@ -1,5 +1,8 @@
 {
     "reference_voltage": 2.442,
+    "reference_source": "Internal",
+    "high_resolution": true,
+    "negative_charge_pump": false,
     "clkin_divider": 2,
     "iclk_divider": 2,
     "oversampling_ratio": 4096,

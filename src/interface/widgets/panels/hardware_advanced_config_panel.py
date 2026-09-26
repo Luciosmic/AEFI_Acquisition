@@ -5,7 +5,8 @@ Generic panel for hardware advanced configuration.
 Generates UI widgets from HardwareAdvancedParameterSchema with grouping support.
 """
 
-from typing import Dict, List, Any, Optional
+from dataclasses import replace
+from typing import Dict, List, Any, Optional, Tuple
 from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -28,6 +29,15 @@ from domain.shared_kernel.value_objects.hardware_configuration.hardware_advanced
     EnumParameterSchema,
     BooleanParameterSchema,
 )
+
+# AD9106 scales used only for the optional display conversion
+# (raw register <-> % / °); the emitted config stays raw.
+# Register value shown as 100 % (and max settable in % mode), per channel:
+# ch1/ch2 (excitation) = 5500, same as the Excitation panel's level
+# (AdapterExcitationConfigurationAD9106.MAX_EXCITATION_GAIN — excitation
+# board saturates above); ch3/ch4 (lock-in reference) = 10000.
+_AD9106_GAIN_100_PERCENT = {"ch1_gain": 5500, "ch2_gain": 5500, "ch3_gain": 10000, "ch4_gain": 10000}
+_AD9106_PHASE_FULL_SCALE = 65536  # 16-bit phase word over 360°
 
 
 class HardwareAdvancedConfigPanel(QWidget):
@@ -59,7 +69,11 @@ class HardwareAdvancedConfigPanel(QWidget):
         self._specs: List[HardwareAdvancedParameterSchema] = []
         self._widgets: Dict[str, QWidget] = {}
         self._group_boxes: Dict[str, QGroupBox] = {}
-        
+        # Unit mode the current widgets were BUILT with — read by
+        # _display_conversion, so toggling can still read the old widgets
+        # back to raw before rebuilding.
+        self._physical_units_active = False
+
         self._build_ui()
     
     def _build_ui(self):
@@ -75,6 +89,17 @@ class HardwareAdvancedConfigPanel(QWidget):
         self._hw_combo.currentTextChanged.connect(self._on_hardware_selected)
         hw_layout.addWidget(hw_label)
         hw_layout.addWidget(self._hw_combo, 1)
+        # Display-only: gain in % (see _AD9106_GAIN_100_PERCENT), phase in degrees. The
+        # config emitted to the presenter stays in raw register units.
+        self._physical_units_checkbox = QCheckBox("Gain en % / Phase en °")
+        self._physical_units_checkbox.setToolTip(
+            "Affiche les gains en % (DDS1/DDS2 : 100 % = 5500, comme le panel Excitation ; "
+            "DDS3/DDS4 : 100 % = 10000) et les phases en degrés (65536 = 360°). "
+            "Les valeurs appliquées restent les registres bruts."
+        )
+        self._physical_units_checkbox.setVisible(False)
+        self._physical_units_checkbox.toggled.connect(self._on_physical_units_toggled)
+        hw_layout.addWidget(self._physical_units_checkbox)
         main_layout.addLayout(hw_layout)
         
         # Scroll area for parameters
@@ -99,9 +124,9 @@ class HardwareAdvancedConfigPanel(QWidget):
         btn_layout = QHBoxLayout()
 
         # No "Apply Configuration" button: each field auto-applies on commit
-        # (Enter / focus-loss for spinboxes, immediately for combo/checkbox)
-        # via _create_widget's signal wiring — same interaction model as
-        # ExcitationPanel. apply_requested is still emitted, just triggered
+        # (arrow click / Enter / focus-loss for spinboxes — see
+        # _wire_spinbox_commit — immediately for combo/checkbox).
+        # apply_requested is still emitted, just triggered
         # per-field instead of by a manual click.
 
         # Save Default button
@@ -177,7 +202,10 @@ class HardwareAdvancedConfigPanel(QWidget):
                 self._widgets[spec.key] = widget
                 
                 label_text = spec.display_name
-                if isinstance(spec, NumberParameterSchema) and spec.unit:
+                conversion = self._display_conversion(spec.key)
+                if conversion:
+                    label_text += f" ({conversion[0]})"
+                elif isinstance(spec, NumberParameterSchema) and spec.unit:
                     label_text += f" ({spec.unit})"
                 
                 label = QLabel(label_text)
@@ -202,10 +230,63 @@ class HardwareAdvancedConfigPanel(QWidget):
         is_ad9106 = self._current_hardware_id == self._SYNCHRONOUS_DETECTION_HARDWARE_ID
         self._save_calibration_point_btn.setVisible(is_ad9106)
         self._compensation_toggle_checkbox.setVisible(is_ad9106)
+        self._physical_units_checkbox.setVisible(is_ad9106)
+
+    def _display_conversion(self, key: str) -> Optional[Tuple[str, float, Optional[float]]]:
+        """(unit, display units per register LSB, display max or None) for an
+        AD9106 gain/phase register while the physical-units display is
+        active, else None."""
+        if not self._physical_units_active or self._current_hardware_id != self._SYNCHRONOUS_DETECTION_HARDWARE_ID:
+            return None
+        if key in _AD9106_GAIN_100_PERCENT:
+            return "%", 100.0 / _AD9106_GAIN_100_PERCENT[key], 100.0
+        if key.startswith("ch") and key.endswith("_phase"):
+            return "°", 360.0 / _AD9106_PHASE_FULL_SCALE, None
+        return None
+
+    def _on_physical_units_toggled(self, checked: bool) -> None:
+        """Rebuild the widgets in the other unit, carrying over what they
+        currently show (read back to raw with the OLD unit mode first)."""
+        raw = self._get_current_config()
+        self._physical_units_active = checked
+        if self._current_hardware_id is None:
+            return
+        # Keep each spec's original value type — _create_widget picks
+        # QSpinBox vs QDoubleSpinBox from it.
+        specs = [
+            replace(s, default_value=type(s.default_value)(raw[s.key])) if s.key in raw else s
+            for s in self._specs
+        ]
+        self.set_parameter_specs(self._current_hardware_id, specs)
+
+    def _wire_spinbox_commit(self, widget) -> None:
+        """Apply on arrow click / arrow key, Enter, or focus-loss — but not
+        on every typed keystroke: with keyboard tracking off, valueChanged
+        only fires on those commits. Called AFTER the initial setValue, so
+        building the panel never applies anything."""
+        widget.setKeyboardTracking(False)
+        # Mouse wheel disabled: the panel scrolls, and a wheel passing over
+        # a spinbox would otherwise silently write a hardware register.
+        widget.wheelEvent = lambda event: event.ignore()
+        widget.valueChanged.connect(lambda _: self._on_parameter_changed())
+        widget.valueChanged.connect(lambda _: self._auto_apply())
 
     def _create_widget(self, spec: HardwareAdvancedParameterSchema) -> QWidget:
         """Create appropriate widget based on spec type."""
-        if isinstance(spec, NumberParameterSchema):
+        conversion = self._display_conversion(spec.key)
+        if isinstance(spec, NumberParameterSchema) and conversion:
+            # 3 decimals is finer than 1 LSB for both (0.006 % / 0.0055 °),
+            # so raw -> display -> raw round-trips exactly.
+            unit, per_lsb, display_max = conversion
+            widget = QDoubleSpinBox()
+            widget.setDecimals(3)
+            widget.setSingleStep(1.0)
+            widget.setWrapping(unit == "°")
+            widget.setRange(spec.min_value * per_lsb, display_max or spec.max_value * per_lsb)
+            widget.setValue(spec.default_value * per_lsb)
+            self._wire_spinbox_commit(widget)
+
+        elif isinstance(spec, NumberParameterSchema):
             # Determine if float or int
             has_decimals = (
                 isinstance(spec.default_value, float) or
@@ -223,10 +304,7 @@ class HardwareAdvancedConfigPanel(QWidget):
             
             widget.setRange(spec.min_value, spec.max_value)
             widget.setValue(spec.default_value)
-            widget.valueChanged.connect(lambda: self._on_parameter_changed())
-            # Commit on Enter or focus-loss — not on every keystroke/step —
-            # same interaction model as ExcitationPanel's spinboxes.
-            widget.editingFinished.connect(self._auto_apply)
+            self._wire_spinbox_commit(widget)
 
         elif isinstance(spec, EnumParameterSchema):
             widget = QComboBox()
@@ -279,11 +357,13 @@ class HardwareAdvancedConfigPanel(QWidget):
         self.compensation_toggle_requested.emit(checked)
     
     def _get_current_config(self) -> Dict[str, Any]:
-        """Get current configuration from widgets."""
+        """Get current configuration from widgets — always in raw register
+        units, whatever the display unit mode."""
         config = {}
         for key, widget in self._widgets.items():
             if isinstance(widget, (QSpinBox, QDoubleSpinBox)):
-                config[key] = widget.value()
+                conversion = self._display_conversion(key)
+                config[key] = int(round(widget.value() / conversion[1])) if conversion else widget.value()
             elif isinstance(widget, QComboBox):
                 config[key] = widget.currentText()
             elif isinstance(widget, QCheckBox):

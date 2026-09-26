@@ -21,6 +21,40 @@ breaking existing callers.
 - Mint new `SynchronousDetectionPhaseCalibrationEntry` records via
   `record_synchronous_detection_phase_entry`, emitting
   `SynchronousDetectionPhaseCalibrationEntryAdded`.
+- Mint new `SensorCalibrationEntry` records via
+  `record_sensor_calibration_entry`, emitting
+  `SensorCalibrationEntryAdded` — the sensor-mount rotation angle
+  counterpart, referencing by identity the sensor mounting
+  (`sensor_mounting_id`) and the source geometry entry
+  (`source_geometry_entry_id`) it was measured on — refused when no sensor
+  is mounted. The sensor itself is a hardware component (kind `SENSOR`).
+- Mint new `SourceGeometryCalibrationEntry` records via
+  `record_source_geometry_calibration_entry`, emitting
+  `SourceGeometryCalibrationEntryAdded` — the caliper-measured 4-sphere
+  geometry (diameters + extremity-to-extremity distances). This registry is
+  the live source of the current geometry, referenced by sensor calibration
+  entries through its `entry_id`; the raw JSON device config is only its
+  one-time seed on first boot.
+- Hardware components (boards, signal generation chip, ADC, microcontroller,
+  motors — `HardwareComponentKind`) are product modules: each has a unique
+  name and a characterization (the kind's essential quantities, each
+  possibly "not characterized") that can be completed over time.
+  - `record_hardware_component_characterization(kind, name, values)`: mint a
+    characterization entry, emitting `HardwareComponentCharacterized`.
+    Recording again under the same name completes that component's history.
+  - `mount_hardware_component(kind, name, known_names, mounted_name)`:
+    declare the mounted component. Refused (`ValueError`) if never
+    characterized; logged no-op if already mounted; otherwise returns a
+    `HardwareComponentSelection` and emits `HardwareComponentMounted`.
+  - `mounted_component_name(selections)` / `current_characterization(entries,
+    name)`: the two reading rules (latest selection = mounted, latest entry =
+    current characterization), stated once so the service and the acquisition
+    export can't diverge.
+  - `resolve_current_hardware_signature(fallback, mounted_conditioning,
+    mounted_excitation)`: the board parts of `HardwareSignature` are the
+    mounted boards; the template `fallback` (generic names) only fills a kind
+    nobody selected yet, with a WARNING (incomplete configuration). The
+    sensor part stays with `SensorCalibrationService`.
 - Provide `reconstitute(...)`, the single explicit entry point to rebuild
   the aggregate from persisted repository state (rehydration) — distinct
   from the default constructor `Calibration()`, which represents a

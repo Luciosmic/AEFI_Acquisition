@@ -13,10 +13,9 @@ from domain.calibration.value_objects.synchronous_detection_phase_calibration_po
 
 def make_hardware_signature(**overrides):
     defaults = dict(
-        excitation_board_version="v1.2",
-        conditioning_board_version="v2.0",
-        sensor_version="v3.1",
-        sensor_serial_number="SN-001",
+        excitation_electronics_board_name="v1.2",
+        conditioning_electronics_board_name="v2.0",
+        sensor_name="v3.1_SN-001",
     )
     defaults.update(overrides)
     return HardwareSignature(**defaults)

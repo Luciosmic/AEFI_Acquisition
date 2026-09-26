@@ -6,6 +6,7 @@ from application.services.system_lifecycle_service.ports.i_hardware_initializati
 from application.services.hardware_configuration_service.ports.i_hardware_advanced_configurator import IHardwareAdvancedConfigurator
 from infrastructure.hardware.micro_controller.MCU_serial_communicator import MCU_SerialCommunicator
 from infrastructure.hardware.micro_controller.ad9106.ad9106_advanced_configurator import AD9106AdvancedConfigurator
+from infrastructure.hardware.micro_controller.ads131a04.ads131a04_advanced_configurator import ADS131A04AdvancedConfigurator
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +26,7 @@ class MCULifecycleAdapter(IHardwareInitializationPort):
         baudrate: int = 9600,
         communicator: Optional[MCU_SerialCommunicator] = None,
         ad9106_configurator: Optional[IHardwareAdvancedConfigurator] = None,
+        ads131a04_configurator: Optional[ADS131A04AdvancedConfigurator] = None,
     ):
         self._port_name = port
         self._baudrate = baudrate
@@ -39,6 +41,7 @@ class MCULifecycleAdapter(IHardwareInitializationPort):
         # ExcitationFrequencyChanged/DdsChannelConfigChanged sync events
         # happen in exactly one place instead of two diverging ones.
         self._ad9106_configurator = ad9106_configurator
+        self._ads131a04_configurator = ads131a04_configurator
 
     def set_config(self, config: dict) -> None:
         """Set configuration to be used during initialization."""
@@ -82,93 +85,15 @@ class MCULifecycleAdapter(IHardwareInitializationPort):
             self._configure_mcu(config["mcu"])
             
     def _configure_adc(self, adc_config: dict) -> None:
-        """Configure ADC registers."""
-        # 0. A_SYS_CFG register (Address 11) - Reference configuration
-        # Bit 7: VNCPEN (negative_ref), Bit 6: HRM (high_res), Bit 4: VREF_4V (ref_voltage), Bit 3: INT_REFEN (ref_selection)
-        if any(key in adc_config for key in ["negative_ref", "high_res", "ref_voltage", "ref_selection"]):
-            a_sys_cfg_val = 0
-            
-            # Bit 7: VNCPEN (Negative charge pump enable)
-            if adc_config.get("negative_ref", False):
-                a_sys_cfg_val += 128
-            
-            # Bit 6: HRM (High-resolution mode)
-            if adc_config.get("high_res", True):  # Default True
-                a_sys_cfg_val += 64
-            
-            # Bit 5: Reserved - always write 1
-            a_sys_cfg_val += 32
-            
-            # Bit 4: VREF_4V (Reference voltage level: 0=2.442V, 1=4.0V)
-            if adc_config.get("ref_voltage", 0) == 1:  # 1 = 4.0V
-                a_sys_cfg_val += 16
-            
-            # Bit 3: INT_REFEN (Internal reference enable: 0=External, 1=Internal)
-            if adc_config.get("ref_selection", 1) == 1:  # 1 = Internal
-                a_sys_cfg_val += 8
-            
-            self._write_register(11, a_sys_cfg_val)
-            logger.debug(
-                "A_SYS_CFG register (11) = %s (neg_ref=%s, high_res=%s, ref_voltage=%s, ref_selection=%s)",
-                a_sys_cfg_val,
-                adc_config.get('negative_ref', False),
-                adc_config.get('high_res', True),
-                adc_config.get('ref_voltage', 0),
-                adc_config.get('ref_selection', 1),
-            )
-        
-        # 1. CLKIN divider (Address 13)
-        if "clkin_divider" in adc_config:
-            self._write_register(13, adc_config["clkin_divider"])
-            
-        # 2. ICLK divider + OSR (Address 14)
-        # Register 14: Bits[7:5]=ICLK_DIV, Bits[4:1] or [3:0]=OSR (check datasheet register map)
-        # We assume ICLK_DIV=2 (001 -> 32) for now as per legacy default.
-        # OSR Mapping from datasheet Table 30. Data Rate Settings (OSR[3:0] codes 0-15):
-        # Code 0->4096, 1->2048, 2->1024, 3->800, 4->768, 5->512, 6->400, 7->384,
-        # 8->256, 9->200, 10->192, 11->128, 12->96, 13->64, 14->48, 15->32
-        if "oversampling_ratio" in adc_config:
-            osr_val = int(adc_config["oversampling_ratio"])
-            osr_map = {
-                4096: 0, 2048: 1, 1024: 2, 800: 3, 768: 4, 512: 5, 400: 6, 384: 7,
-                256: 8, 200: 9, 192: 10, 128: 11, 96: 12, 64: 13, 48: 14, 32: 15
-            }
-            
-            if osr_val in osr_map:
-                osr_code = osr_map[osr_val]
-                # Combine with ICLK_DIV=2 (001 -> shift 5 bits = 32)
-                # If ICLK_DIV is configurable in future, read it from config.
-                iclk_div_val = 2 # Default /2
-                # Map ICLK div to bits? Legacy 32 implies 001 (1).
-                # 001 << 5 = 32.
-                # So Reg = 32 | (osr_code << 2) ? 
-                # Wait, OSR is bits 4:2. 
-                # 000 -> 0. 32 | 0 = 32. Correct for OSR 128.
-                # 001 -> 1. 1<<2 = 4. 32 | 4 = 36. Correct for OSR 256.
-                
-                reg_val = 32 | (osr_code << 2)
-                self._write_register(14, reg_val)
-            else:
-                logger.warning("Invalid OSR %s. Using default (32).", osr_val)
-                self._write_register(14, 32) # Fallback to legacy default
-            
-        # 3. Gains (Addresses 17-20)
-        if "channels" in adc_config:
-            for ch_str, settings in adc_config["channels"].items():
-                ch = int(ch_str)
-                if 1 <= ch <= 4: # ADC has 4 gain registers for main channels? Legacy has 17,18,19,20
-                    # Legacy: 17=Gain1, 18=Gain2, 19=Gain3, 20=Gain4
-                    # Map channel to address: 1->17, 2->18, 3->19, 4->20
-                    addr = 16 + ch
-                    gain_val = 0 # Default to 0 (Gain=1)
-                    # TODO: Map gain value (1, 2, 4...) to register value (0, 1, 2...)
-                    # For now, assuming 0 in JSON means register value 0.
-                    # Wait, JSON has "gain": 1. Legacy has (17, 0).
-                    # Need a map.
-                    gain_map = {1: 0, 2: 1, 4: 2, 8: 3, 16: 4, 32: 5, 64: 6, 128: 7}
-                    gain_setting = settings.get("gain", 1)
-                    reg_val = gain_map.get(gain_setting, 0)
-                    self._write_register(addr, reg_val)
+        """Delegate to ADS131A04AdvancedConfigurator.apply_persisted_config() —
+        the single ADC writer shared with the panel's Apply: chip registers and
+        the counts->V conversion come from the same values, and the register
+        encoding lives only in ADS131Controller. persist=False: booting must not
+        copy the resolved config into ads131a04_last_config.json."""
+        if self._ads131a04_configurator is None:
+            logger.warning("No ADS131A04 configurator injected — ADC config not applied at startup.")
+            return
+        self._ads131a04_configurator.apply_persisted_config(adc_config, persist=False)
 
     def _configure_dds(self, dds_config: dict) -> None:
         """Configure DDS registers.

@@ -40,6 +40,17 @@ def _export_output_directory() -> Path:
     directory = config.get("output_directory") or ""
     return Path(directory) if directory else _DEFAULT_EXPORT_DIR
 
+
+_DEVICE_CONFIG_PATH = project_root / "config_templates" / "aefi_device_config.json"
+
+
+def _ideal_rotation_angles() -> tuple:
+    """Ideal sources -> sensor angles (theta_x, theta_y, theta_z) from the device config template."""
+    # ponytail: batch reprocessing uses the IDEAL angles, not the sensor calibration active when the
+    # scan was acquired (the in-app export uses the active one). Upgrade: read the angles stored with each scan.
+    rotation = json.loads(_DEVICE_CONFIG_PATH.read_text(encoding="utf-8"))["sensor"]["calibration"]["sources_to_sensor_rotation"]
+    return (float(rotation["theta_x"]), float(rotation["theta_y"]), float(rotation["theta_z"]))
+
 from aefi_post_processor_module.processing.processing_pipeline import ProcessingPipeline
 from aefi_post_processor_module.visualisation.model import VisualisationModel
 from aefi_post_processor_module.visualisation.view import VisualisationView
@@ -82,8 +93,7 @@ def sync_scans(raw_dir: Path, force: bool = False):
             with ProcessingPipeline(output_path=expected_output) as pipeline:
                 pipeline.run_full_pipeline(
                     csv_path, 
-                    # specific angles requested by user
-                    rotation_angles=(35.26, -45.00, -7.20),
+                    rotation_angles=_ideal_rotation_angles(),
                     reference_point=(0, 0)
                 )
             

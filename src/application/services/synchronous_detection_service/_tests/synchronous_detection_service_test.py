@@ -34,10 +34,9 @@ from tool.diagram_friendly_test import DiagramFriendlyTest
 
 def make_hardware_signature(**overrides) -> HardwareSignature:
     defaults = dict(
-        excitation_board_version="rev-b",
-        conditioning_board_version="rev-a",
-        sensor_version="v2",
-        sensor_serial_number="SN-001",
+        excitation_electronics_board_name="rev-b",
+        conditioning_electronics_board_name="rev-a",
+        sensor_name="v2_SN-001",
     )
     defaults.update(overrides)
     return HardwareSignature(**defaults)
