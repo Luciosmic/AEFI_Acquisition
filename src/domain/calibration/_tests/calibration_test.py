@@ -223,6 +223,15 @@ class TestCalibration(unittest.TestCase):
         self.assertEqual(Calibration.current_characterization([first, completed, other], "A"), completed)
         self.assertIsNone(Calibration.current_characterization([first], None))
 
+    def test_is_component_already_recorded_by_name_only(self):
+        record = Calibration().record_hardware_component_characterization
+        kind = HardwareComponentKind.EXCITATION_ELECTRONICS_BOARD
+        entries = [record(kind, "A", {})]
+
+        self.assertTrue(Calibration.is_component_already_recorded(entries, "A"))
+        self.assertFalse(Calibration.is_component_already_recorded(entries, "B"))
+        self.assertFalse(Calibration.is_component_already_recorded([], "A"))
+
     def test_resolve_current_hardware_signature_warns_per_board_kind_not_mounted(self):
         fallback = make_hardware_signature()
 

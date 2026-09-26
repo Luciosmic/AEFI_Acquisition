@@ -190,6 +190,14 @@ class Calibration:
         return current
 
     @staticmethod
+    def is_component_already_recorded(
+        entries: Sequence[HardwareComponentCharacterizationEntry], component_name: HardwareComponentName
+    ) -> bool:
+        """True if the catalog already holds an entry under that name (recording
+        again is allowed — it completes the history — but may be a duplicate typo)."""
+        return Calibration.current_characterization(entries, component_name) is not None
+
+    @staticmethod
     def resolve_current_hardware_signature(
         fallback: HardwareSignature,
         mounted_conditioning_electronics_board: Optional[HardwareComponentName],

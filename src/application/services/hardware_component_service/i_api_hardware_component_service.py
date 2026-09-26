@@ -4,6 +4,7 @@ from typing import Any, List, Mapping, Optional
 from application.services.hardware_component_service.dtos.hardware_component_dto import (
     HardwareComponentDTO,
     HardwareComponentKindDTO,
+    RecordCharacterizationResultDTO,
 )
 
 
@@ -23,9 +24,12 @@ class IApiHardwareComponentService(ABC):
     def list_kinds(self) -> List[HardwareComponentKindDTO]: ...
 
     @abstractmethod
-    def record_characterization(self, kind_key: str, component_name: str, values: Mapping[str, Any]) -> None:
+    def record_characterization(
+        self, kind_key: str, component_name: str, values: Mapping[str, Any]
+    ) -> RecordCharacterizationResultDTO:
         """Quantities left out or None are recorded as not characterized.
-        Recording under an existing name completes that component's history."""
+        Recording under an existing name completes that component's history
+        (allowed, flagged by `name_already_recorded` — never refused)."""
 
     @abstractmethod
     def mount_component(self, kind_key: str, component_name: str) -> None:

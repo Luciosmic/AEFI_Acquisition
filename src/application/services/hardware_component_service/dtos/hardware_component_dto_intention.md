@@ -9,6 +9,8 @@ draw, and the domain entries to display values.
 ## Responsibility
 
 - `QuantitySpecDTO` / `HardwareComponentKindDTO`: what to draw for a kind.
+- `RecordCharacterizationResultDTO`: non-blocking outcome of a recording
+  (name already in the catalog), so the UI can warn without domain access.
 - `HardwareComponentDTO`: one component's current characterization, with the
   list of quantities still not characterized.
 

@@ -47,6 +47,16 @@ class TestHardwareComponentService(unittest.TestCase):
         self.assertEqual(len(self.repository.find_all(self.repository_kind(EXCITATION))), 2)
         self.assertEqual(self.service.list_components(EXCITATION)[0].values["gain"], 20.0)
 
+    def test_recording_an_existing_name_warns_but_is_not_refused(self):
+        first = self.service.record_characterization(EXCITATION, "AmpliHT", {})
+        again = self.service.record_characterization(EXCITATION, "AmpliHT", {"gain": 20.0})
+        other_kind = self.service.record_characterization(MCU, "AmpliHT", {})
+
+        self.assertFalse(first.name_already_recorded)
+        self.assertTrue(again.name_already_recorded)
+        self.assertFalse(other_kind.name_already_recorded)  # registers are per kind
+        self.assertEqual(len(self.repository.find_all(self.repository_kind(EXCITATION))), 2)
+
     def test_curve_values_round_trip(self):
         self.service.record_characterization(MCU, "STM32", {"optimal_acquisition_rate_per_s": [(1, 1000), (8, 700)]})
 

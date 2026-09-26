@@ -6,6 +6,7 @@ from application.services.hardware_component_service.dtos.hardware_component_dto
     HardwareComponentDTO,
     HardwareComponentKindDTO,
     QuantitySpecDTO,
+    RecordCharacterizationResultDTO,
 )
 from application.services.hardware_component_service.i_api_hardware_component_service import (
     IApiHardwareComponentService,
@@ -44,7 +45,9 @@ class HardwareComponentService(IApiHardwareComponentService):
 
     # -- commands -----------------------------------------------------------------
 
-    def record_characterization(self, kind_key: str, component_name: str, values: Mapping[str, Any]) -> None:
+    def record_characterization(
+        self, kind_key: str, component_name: str, values: Mapping[str, Any]
+    ) -> RecordCharacterizationResultDTO:
         kind = HardwareComponentKind(kind_key)
         component_name = HardwareComponentName(component_name)
         logger.info(
@@ -53,10 +56,10 @@ class HardwareComponentService(IApiHardwareComponentService):
             component_name,
             dict(values),
         )
-        existing = self._latest_entry_per_component(kind)
+        already_recorded = Calibration.is_component_already_recorded(self._repository.find_all(kind), component_name)
         calibration = Calibration()
         entry = calibration.record_hardware_component_characterization(kind, component_name, values)
-        if component_name in existing:
+        if already_recorded:
             logger.info("HardwareComponentService: completing history of %s '%s'", kind.value, component_name)
         else:
             logger.info("HardwareComponentService: registering new %s '%s'", kind.value, component_name)
@@ -70,6 +73,7 @@ class HardwareComponentService(IApiHardwareComponentService):
             )
         self._repository.add(entry)
         self._publish(calibration)
+        return RecordCharacterizationResultDTO(name_already_recorded=already_recorded)
 
     def mount_component(self, kind_key: str, component_name: str) -> None:
         kind = HardwareComponentKind(kind_key)

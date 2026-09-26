@@ -31,6 +31,15 @@ class TestHardwareComponentPresenter(unittest.TestCase):
         self.assertEqual(self.adc_mounted[-1].component_name, "ADS131A04")
         self.assertEqual(self.motors_listed, [])
 
+    def test_saving_an_existing_name_reports_a_non_blocking_warning(self):
+        self.adc.on_save_requested("ADS131A04", {})
+        self.adc.on_save_requested("ADS131A04", {"lsb_v": 2.9e-7})
+
+        self.assertNotIn("attention", self.status[0])
+        self.assertIn("attention", self.status[1])
+        self.assertNotIn("Erreur", self.status[1])
+        self.assertEqual(self.adc_listed[-1][0].values["lsb_v"], 2.9e-7)
+
     def test_errors_are_reported_not_raised(self):
         self.adc.on_mount_requested("Unknown")
 
