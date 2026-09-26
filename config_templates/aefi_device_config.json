@@ -1,16 +1,30 @@
 {
-  "schema_version": "2.0",
-  "description": "Hardware identity of the AEFI device: source geometry, excitation electronics, sensor, conditioning electronics",
+  "schema_version": "3.0",
+  "description": "Hardware identity of the AEFI device — single source of truth. Covers: source geometry, DDS-to-sphere wiring, excitation mode phases, sensor calibration, ADC channel mapping. DO NOT duplicate any of these values elsewhere in code or notes.",
+
+  "_changelog": {
+    "v3.0": "Complete rewrite. Fixed chip name swap (AD9106=DDS, ADS131A04=ADC). Removed incorrect 'S1=x+' axis convention (see _naming_warning). Added scan_frame_quadrant and full DDS wiring table. Added excitation_modes with per-sphere phase table. Sources: correspondance note 2025-06-12, position_visualizer.py, adapter_excitation_configuration_ad9106.py.",
+    "v2.0": "Added pairwise_distances, removed scalar d_source.",
+    "v1.0": "Initial version."
+  },
+
+  "_naming_warning": {
+    "Si_labels": "S1–S4 are the labels of the 4 physical connectors on the amplification board (board silkscreen: DDS1–DDS4). They identify an electronic output, NOT a spatial axis. S1 is NOT on the x+ axis. Any code or note that uses 'S1=x+', 'S2=x-', 'S3=y+', 'S4=y-' as pure-axis positions is incorrect and must be corrected. Use scan_frame_quadrant for spatial reference.",
+    "DDS_name_collision": "The term 'DDS' is overloaded: (1) AD9106 chip generator channels (AD9106_CH1, AD9106_CH2) set via the adapter; (2) board output connector labels (DDS1–DDS4 printed on the PCB). These are DIFFERENT things. This config uses 'AD9106_CHx' for the chip channels and 'Si' for board connectors/spheres.",
+    "source": "0_inbox/a-relire-et-renforcer-avant-integration/Notes volantes/ImagerieElectrique - Correspondance Poupette Sortie DDS - Connexion Carte Amplification Excitation.md (2025-06-12)"
+  },
 
   "excitation": {
+
     "sources_geometry": {
+      "_ref": "config_templates/NOTE - Source Frame Geometry.md — coordinate system and Distance Geometry Problem for pairwise distances.",
 
       "sphere_labels": {
-        "_note": "Quadrant convention (2026-07-24, corrects the earlier x+/x-/y+/y- half-axis labeling). S_i occupies a quadrant, not a half-axis. Source of truth: 'ImagerieElectrique - Correspondance Poupette Sortie DDS - Connexion Carte Amplification Excitation' and the 'NOTE - Source Frame Geometry' (Luis Saluden's vault, not tracked in this repo).",
-        "S1": "x_neg_y_pos",
-        "S2": "x_pos_y_neg",
-        "S3": "x_pos_y_pos",
-        "S4": "x_neg_y_neg"
+        "_note": "Quadrant convention (2026-07-24, corrects the earlier x+/x-/y+/y- half-axis labeling). S_i occupies a quadrant, not a half-axis. board_connector maps Si to the physical DDS output on the excitation board. Source of truth: 'ImagerieElectrique - Correspondance Poupette Sortie DDS - Connexion Carte Amplification Excitation' and the 'NOTE - Source Frame Geometry' (Luis Saluden's vault, not tracked in this repo).",
+        "S1": { "board_connector": "DDS1", "scan_frame_quadrant": "x_neg_y_pos" },
+        "S2": { "board_connector": "DDS2", "scan_frame_quadrant": "x_pos_y_neg" },
+        "S3": { "board_connector": "DDS3", "scan_frame_quadrant": "x_pos_y_pos" },
+        "S4": { "board_connector": "DDS4", "scan_frame_quadrant": "x_neg_y_neg" }
       },
 
       "sphere_diameters": {
@@ -32,8 +46,116 @@
       }
     },
 
-    "electronic_board_version": "AmpliHT_opa462_v2_ASSOCE",
-    "dds_chip": "ADS131A04"
+    "electronics": {
+      "board_version": "AmpliHT_opa462_v2_ASSOCE",
+      "dds_chip": "AD9106",
+      "_note_chip": "AD9106 = 4-channel DDS signal generator (TI). NOT ADS131A04 (which is the ADC). Old schema v2.0 had these chips swapped — this is the corrected version.",
+
+      "ad9106_channel_roles": {
+        "_note": "AD9106 chip channels. CH1 and CH2 are the two independent excitation generators. CH3 and CH4 produce synchronous detection reference signals and are NEVER modified by the excitation adapter.",
+        "AD9106_CH1": "excitation_generator_1",
+        "AD9106_CH2": "excitation_generator_2",
+        "AD9106_CH3": "synchronous_detection_reference",
+        "AD9106_CH4": "synchronous_detection_reference"
+      },
+
+      "output_to_sphere_wiring": {
+        "_note": "Physical wiring: each board connector (Si) receives a specific signal from one AD9106 channel or its complement. 'CHx_bar' means the complementary (inverted) output of AD9106_CHx. Source: correspondance note 2025-06-12.",
+        "_board_photo": "De gauche à droite sur la carte : DDS4, DDS3, DDS2, DDS1 (connecteurs physiques vers poupettes).",
+        "S1": {
+          "board_connector": "DDS1",
+          "scan_quadrant": "x_neg_y_pos",
+          "receives": "AD9106_CH2_bar",
+          "_meaning": "Complement of CH2 = CH2 signal phase-shifted by 180°"
+        },
+        "S2": {
+          "board_connector": "DDS2",
+          "scan_quadrant": "x_pos_y_neg",
+          "receives": "AD9106_CH2",
+          "_meaning": "Direct output of CH2"
+        },
+        "S3": {
+          "board_connector": "DDS3",
+          "scan_quadrant": "x_pos_y_pos",
+          "receives": "AD9106_CH1_bar",
+          "_meaning": "Complement of CH1 = CH1 signal phase-shifted by 180°"
+        },
+        "S4": {
+          "board_connector": "DDS4",
+          "scan_quadrant": "x_neg_y_neg",
+          "receives": "AD9106_CH1",
+          "_meaning": "Direct output of CH1"
+        }
+      },
+
+      "max_excitation_gain_raw": {
+        "value": 5500,
+        "range": "0–16376",
+        "description": "Practical maximum AD9106 gain register value (100% level). Limited by amplification board saturation. Hardware absolute max is 16376."
+      }
+    },
+
+    "excitation_modes": {
+      "_note": "Phase register: 16-bit, 0=0°, 16384=90°, 32768=180°, 49152=270°. AD9106_CH1 phase is always 0° (reference). AD9106_CH3 and CH4 are never touched. 'Phase at sphere' is derived from wiring: CHx → sphere gets CHx phase; CHx_bar → sphere gets CHx phase + 180°.",
+
+      "X_DIR": {
+        "AD9106_CH1_phase_deg": 0,
+        "AD9106_CH1_phase_raw": 0,
+        "AD9106_CH2_phase_deg": 180,
+        "AD9106_CH2_phase_raw": 32768,
+        "phase_at_sphere": {
+          "S1_x_neg_y_pos": { "phase_deg": 0,   "_via": "CH2_bar → complement of 180° = 0°" },
+          "S2_x_pos_y_neg": { "phase_deg": 180, "_via": "CH2 direct at 180°" },
+          "S3_x_pos_y_pos": { "phase_deg": 180, "_via": "CH1_bar → complement of 0° = 180°" },
+          "S4_x_neg_y_neg": { "phase_deg": 0,   "_via": "CH1 direct at 0°" }
+        },
+        "field_effect": "x<0 spheres (S1, S4) positive, x>0 spheres (S2, S3) negative → electric field gradient along X axis.",
+        "field_direction": "X"
+      },
+
+      "Y_DIR": {
+        "AD9106_CH1_phase_deg": 0,
+        "AD9106_CH1_phase_raw": 0,
+        "AD9106_CH2_phase_deg": 0,
+        "AD9106_CH2_phase_raw": 0,
+        "phase_at_sphere": {
+          "S1_x_neg_y_pos": { "phase_deg": 180, "_via": "CH2_bar → complement of 0° = 180°" },
+          "S2_x_pos_y_neg": { "phase_deg": 0,   "_via": "CH2 direct at 0°" },
+          "S3_x_pos_y_pos": { "phase_deg": 180, "_via": "CH1_bar → complement of 0° = 180°" },
+          "S4_x_neg_y_neg": { "phase_deg": 0,   "_via": "CH1 direct at 0°" }
+        },
+        "field_effect": "y<0 spheres (S2, S4) positive, y>0 spheres (S1, S3) negative → electric field gradient along Y axis.",
+        "field_direction": "Y"
+      },
+
+      "CIRCULAR_PLUS": {
+        "AD9106_CH1_phase_deg": 0,
+        "AD9106_CH1_phase_raw": 0,
+        "AD9106_CH2_phase_deg": 90,
+        "AD9106_CH2_phase_raw": 16384,
+        "phase_at_sphere": {
+          "S1_x_neg_y_pos": { "phase_deg": 270, "_via": "CH2_bar → complement of 90° = 270°" },
+          "S2_x_pos_y_neg": { "phase_deg": 90,  "_via": "CH2 direct at 90°" },
+          "S3_x_pos_y_pos": { "phase_deg": 180, "_via": "CH1_bar → complement of 0° = 180°" },
+          "S4_x_neg_y_neg": { "phase_deg": 0,   "_via": "CH1 direct at 0°" }
+        },
+        "field_effect": "CH2 leads CH1 by 90°. Rotating field. Rotation sense (CW/CCW) to be confirmed experimentally."
+      },
+
+      "CIRCULAR_MINUS": {
+        "AD9106_CH1_phase_deg": 0,
+        "AD9106_CH1_phase_raw": 0,
+        "AD9106_CH2_phase_deg": 270,
+        "AD9106_CH2_phase_raw": 49152,
+        "phase_at_sphere": {
+          "S1_x_neg_y_pos": { "phase_deg": 90,  "_via": "CH2_bar → complement of 270° = 90°" },
+          "S2_x_pos_y_neg": { "phase_deg": 270, "_via": "CH2 direct at 270°" },
+          "S3_x_pos_y_pos": { "phase_deg": 180, "_via": "CH1_bar → complement of 0° = 180°" },
+          "S4_x_neg_y_neg": { "phase_deg": 0,   "_via": "CH1 direct at 0°" }
+        },
+        "field_effect": "CH2 lags CH1 by 90°. Rotating field opposite sense to CIRCULAR_PLUS."
+      }
+    }
   },
 
   "sensor": {
@@ -69,10 +191,12 @@
   },
 
   "adc": {
-    "chip": "AD9106",
+    "chip": "ADS131A04",
+    "_note_chip": "ADS131A04 = 4-channel simultaneous 24-bit ADC (TI). NOT AD9106 (which is the DDS). Old schema v2.0 had these chips swapped — this is the corrected version.",
     "clk_divider": 1,
     "iclk_divider": 1,
     "channels": {
+      "_note": "Logical channel assignment for lock-in demodulated sensor signals. Each of the 3 sensor axes produces real (in-phase I) and imaginary (quadrature Q) components.",
       "U_x_real": 1,
       "U_x_imag": 2,
       "U_y_real": 3,

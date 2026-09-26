@@ -67,13 +67,14 @@ class AdapterExcitationConfigurationAD9106(IExcitationPort):
     # This is the maximum practical gain for excitation (not the absolute hardware max)
     MAX_EXCITATION_GAIN = 5500  # 100% level maps to 5500
     
-    # Phase values from documentation (event_storming_aefi.md) and config (experimental_data_config_v3.json)
-    # Phases are in 16-bit values (0-65535) representing 0-360 degrees
-    # Corrected mapping (was inverted in previous code):
-    # - X_DIR: DDS1=0°, DDS2=0° (In Phase)
-    # - Y_DIR: DDS1=0°, DDS2=180° (Opposition) = 32768
-    # - circ+: phase_dds1=0, phase_dds2=16384 (90°)
-    # - circ-: phase_dds1=0, phase_dds2=49152 (270°)
+    # Phase mapping — see config_templates/aefi_device_config.json (single source of truth).
+    # AD9106_CH1 is always 0°. Phases are 16-bit (0=0°, 16384=90°, 32768=180°, 49152=270°).
+    # CH1/CH2 here = AD9106 generator channels (NOT board connector labels DDS1–DDS4).
+    # Wiring: CH1→S4(x_neg_y_neg), CH1_bar→S3(x_pos_y_pos), CH2→S2(x_pos_y_neg), CH2_bar→S1(x_neg_y_pos)
+    # - X_DIR: CH1=0°, CH2=180° → x<0 spheres positive, x>0 spheres negative → X field
+    # - Y_DIR: CH1=0°, CH2=0°  → y<0 spheres positive, y>0 spheres negative → Y field
+    # - CIRCULAR_PLUS:  CH2=+90°  (16384)
+    # - CIRCULAR_MINUS: CH2=+270° (49152)
     
     def __init__(
         self,
@@ -320,20 +321,17 @@ class AdapterExcitationConfigurationAD9106(IExcitationPort):
         # Map modes according to documentation (event_storming_aefi.md) and config (experimental_data_config_v3.json)
         # CORRECTED: X_DIR and Y_DIR were inverted in previous code
         if mode == ExcitationMode.Y_DIR:
-            # X direction: DDS1 and DDS2 active, in phase (0°)
-            # Documentation: X-Dir: DDS1=0°, DDS2=0° (In Phase)
+            # Y_DIR: CH1=0°, CH2=0° (in phase)
+            # → y<0 spheres (S2, S4) positive; y>0 spheres (S1, S3) negative → Y field gradient
             config["active_channels"] = [1, 2]
             config["phases"][1] = 0  # DDS1: 0°
             config["phases"][2] = 0  # DDS2: 0° (in phase)
             logger.debug("Y_DIR mode: DDS1 phase=0°, DDS2 phase=0° (in phase)")
             # DDS3 and DDS4 unchanged (synchronous detection)
-            
+
         elif mode == ExcitationMode.X_DIR:
-            # Y direction: DDS1 and DDS2 active, in opposition (180°)
-            # Documentation: Y-Dir: DDS1=0°, DDS2=180° (Opposition)
-            # Config JSON: ydir: dds1 phase_deg=180, dds2 phase_deg=0
-            # Note: Config shows dds1=180, but documentation says DDS1=0°, DDS2=180°
-            # Following documentation convention: DDS1=0°, DDS2=180°
+            # X_DIR: CH1=0°, CH2=180° (opposition)
+            # → x<0 spheres (S1, S4) positive; x>0 spheres (S2, S3) negative → X field gradient
             config["active_channels"] = [1, 2]
             config["phases"][1] = 0      # DDS1: 0°
             config["phases"][2] = 32768  # DDS2: 180° (Opposition)
@@ -341,17 +339,15 @@ class AdapterExcitationConfigurationAD9106(IExcitationPort):
             # DDS3 and DDS4 unchanged (synchronous detection)
             
         elif mode == ExcitationMode.CIRCULAR_PLUS:
-            # Circular rotation (clockwise): DDS1 and DDS2 with +90° quadrature
-            # Legacy: phase_dds1=0, phase_dds2=16384 (90°)
+            # CIRCULAR_PLUS: CH1=0°, CH2=+90° (16384)
             config["active_channels"] = [1, 2]
             config["phases"][1] = 0      # DDS1: 0°
             config["phases"][2] = 16384  # DDS2: 90° (quadrature +)
             logger.debug("CIRCULAR_PLUS mode: DDS1 phase=0°, DDS2 phase=90° (16384)")
             # DDS3 and DDS4 unchanged (synchronous detection)
-            
+
         elif mode == ExcitationMode.CIRCULAR_MINUS:
-            # Circular rotation (counter-clockwise): DDS1 and DDS2 with -90° quadrature
-            # Legacy: phase_dds1=0, phase_dds2=49152 (270° = -90°)
+            # CIRCULAR_MINUS: CH1=0°, CH2=+270° (49152 = -90°)
             config["active_channels"] = [1, 2]
             config["phases"][1] = 0      # DDS1: 0°
             config["phases"][2] = 49152  # DDS2: 270° (quadrature -)

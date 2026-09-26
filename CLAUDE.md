@@ -27,9 +27,11 @@ external_modules/  # modules tiers (cube_visualizer 3D, aefi_post_processor_modu
 .aefi_acquisition/ # données runtime (configs, scans, calibrations, logs) — gitignored
 ```
 
-## Exports
+## Exports de données réelles 
 
-Les données exportées (scans CSV/XLSX, captures d'écran) vivent hors repo dans `C:\Users\manip\Desktop\AEFI_Acquisition_Exports`.
+Les données exportées (scans CSV/XLSX, captures d'écran) vivent hors repo dans `C:\Users\manip\Desktop\AEFI_Acquisition_Exports`
+Ceci est vrai uniquement pour l'ordinateur du laboratoire, qui exporte des données réelles.
+En mode Mock, on exporte dans le répertoire de travail pour développement plus rapide.
 
 ## Référence agents
 
@@ -64,3 +66,26 @@ Avant toute modification, identifier le worktree courant (nom de dossier et/ou b
 - Tout nouveau développement part de `develop`
 - Les configs hardware runtime utilisateur vivent dans `.aefi_acquisition/configs/` (hors git)
 - La référence des schémas de config est dans `_system/self/goals.md`
+
+---
+
+## Documentation locale — notes hors-graphe
+
+Toute note documentant un run, une mesure, une acquisition ou une décision technique
+dans ce dossier suit la convention **hors-graphe** du vault de thèse.
+Définition canonique : [`../../../CLAUDE.md`](../../../CLAUDE.md) § « Hors-graphe notes ».
+
+### Règles condensées
+
+1. **Nom de fichier = claim en prose**, kebab-case sans accent, sans virgule.
+   `%→pct`, `.` décimal → `-`. Lisible dans « puisque [nom] ».
+2. **Frontmatter obligatoire** :
+   ```yaml
+   ---
+   in_graph: false
+   vault_ref: "0_inbox/EVENT - YYYY-MM-DD_topic.md"
+   generated: YYYY-MM-DD
+   ---
+   ```
+3. **Un EVENT dans `0_inbox/`** par cluster — point d'entrée unique vers le vault.
+4. **README parent** en prose au sommet d'un cluster multi-études.
