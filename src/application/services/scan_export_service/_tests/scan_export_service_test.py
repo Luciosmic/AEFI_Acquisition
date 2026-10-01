@@ -171,6 +171,24 @@ class TestScanExportServiceMetadata(unittest.TestCase):
         self.assertEqual(metadata["motion_last_config"], {"speed_mode": "fast"})
         self.assertIsNone(metadata["electric_field_probe"])
 
+    def test_line_scan_metadata_describes_the_line(self):
+        from domain.step_scan.value_objects.line_scan_config.line_scan_config import LineScanConfig
+        config = LineScanConfig(
+            center=Position2D(600.0, 600.0), length_mm=100.0, n_points=11, theta_deg=90.0,
+            stabilization_delay_ms=300, averaging_per_position=10,
+        )
+        self.event_bus.publish("scanstarted", ScanStarted(scan_id=uuid4(), config=config))
+
+        scan = self.export_port.metadata["scan"]
+        self.assertEqual(scan["scan_kind"], "line")
+        self.assertEqual(scan["theta_deg"], 90.0)
+        self.assertEqual(scan["length_mm"], 100.0)
+        self.assertEqual(scan["total_points"], 11)
+        self.assertAlmostEqual(scan["start_y"], 550.0)
+        self.assertAlmostEqual(scan["end_y"], 650.0)
+        self.assertEqual(scan["averaging_per_position"], 10)
+        self.assertEqual(self.export_port.metadata["export"]["units"]["theta_deg"], "deg")
+
     def test_probe_connection_event_is_cached_into_next_metadata(self):
         probe = ElectricFieldProbe(
             brand="Narda", model="EP-601", serial_number="SN123",

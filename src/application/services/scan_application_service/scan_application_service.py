@@ -15,14 +15,17 @@ Rationale:
 """
 
 from dataclasses import dataclass
-from typing import Any, Optional, Callable, List, Dict
+from typing import Any, Optional, Callable, List, Dict, Union
 import logging
 import queue
 import time
 from datetime import datetime
 
-from .dtos.scan_dtos import Scan2DConfigDTO, ScanStatusDTO
+from .dtos.scan_dtos import Scan2DConfigDTO, LineScanConfigDTO, ScanStatusDTO
 from domain.step_scan.services.scan_trajectory_factory.scan_trajectory_factory import ScanTrajectoryFactory
+from domain.step_scan.services.line_scan_trajectory_factory.line_scan_trajectory_factory import LineScanTrajectoryFactory
+from domain.step_scan.value_objects.line_scan_config.line_scan_config import LineScanConfig
+from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
 from domain.step_scan.services.measurement_statistics_service.measurement_statistics_service import MeasurementStatisticsService
 from domain.electric_field_probe.services.field_measurement_statistics_service.field_measurement_statistics_service import FieldMeasurementStatisticsService
 from domain.step_scan.value_objects.step_scan_config.step_scan_config import StepScanConfig
@@ -215,12 +218,30 @@ class ScanApplicationService:
     # ==================================================================================
 
     def execute_scan(self, scan_dto: Scan2DConfigDTO) -> bool:
-        try:
+        def build() -> StepScanConfig:
             config = self._to_domain_config(scan_dto)
-
             validation = config.validate()
             if not validation.is_valid:
                 raise ValueError(f"Invalid configuration: {validation.errors}")
+            return config
+
+        return self._start_scan(build, ScanTrajectoryFactory.create_trajectory)
+
+    def execute_line_scan(self, scan_dto: LineScanConfigDTO) -> bool:
+        logger.info(
+            "ScanApplicationService: Command execute_line_scan — center=(%s, %s) length_mm=%s n_points=%s theta_deg=%s",
+            scan_dto.center_x, scan_dto.center_y, scan_dto.length_mm, scan_dto.n_points, scan_dto.theta_deg,
+        )
+        return self._start_scan(
+            lambda: self._to_line_domain_config(scan_dto), LineScanTrajectoryFactory.create_trajectory
+        )
+
+    def _start_scan(self, build_config: Callable[[], Any], create_trajectory: Callable[[Any], ScanTrajectory]) -> bool:
+        """Shared start for every scan shape: same aggregate, same loop —
+        only the config type and its trajectory factory differ."""
+        try:
+            config = build_config()
+
             if config.differential_mode and self._excitation_service is None:
                 raise ValueError("differential_mode requires an ExcitationConfigurationService")
 
@@ -229,7 +250,7 @@ class ScanApplicationService:
             self._current_scan = scan
             self._publish_events(scan.domain_events)
 
-            trajectory = ScanTrajectoryFactory.create_trajectory(config)
+            trajectory = create_trajectory(config)
 
             self._task_runner.submit(
                 lambda: self._execute_scan_loop(scan, trajectory, config)
@@ -305,7 +326,7 @@ class ScanApplicationService:
         self,
         scan: StepScan,
         trajectory: ScanTrajectory,
-        config: StepScanConfig,
+        config: Union[StepScanConfig, LineScanConfig],
     ) -> None:
         """
         Core step-scan acquisition loop.
@@ -620,7 +641,24 @@ class ScanApplicationService:
         if not self._output_port:
             return
 
-        if isinstance(event, ScanStarted):
+        if isinstance(event, ScanStarted) and isinstance(event.config, LineScanConfig):
+            cfg = event.config
+            start, end = cfg.endpoints()
+            self._output_port.present_scan_started(str(event.scan_id), {
+                "scan_kind": "line",
+                "points": cfg.total_points(),
+                "n_points": cfg.n_points,
+                "center_x": cfg.center.x,
+                "center_y": cfg.center.y,
+                "length_mm": cfg.length_mm,
+                "theta_deg": cfg.theta_deg,
+                "start_x": start.x,
+                "start_y": start.y,
+                "end_x": end.x,
+                "end_y": end.y,
+            })
+
+        elif isinstance(event, ScanStarted):
             self._output_port.present_scan_started(str(event.scan_id), {
                 "pattern": event.config.scan_pattern.name,
                 "points": event.config.total_points(),
@@ -717,6 +755,18 @@ class ScanApplicationService:
             averaging_per_position=dto.averaging_per_position,
             measurement_uncertainty=measurement_uncertainty,
             scan_axis=ScanAxis[dto.scan_axis],
+            differential_mode=dto.differential_mode,
+            differential_settle_delay_ms=dto.differential_settle_delay_ms,
+        )
+
+    def _to_line_domain_config(self, dto: LineScanConfigDTO) -> LineScanConfig:
+        return LineScanConfig(
+            center=Position2D(x=dto.center_x, y=dto.center_y),
+            length_mm=dto.length_mm,
+            n_points=dto.n_points,
+            theta_deg=dto.theta_deg,
+            stabilization_delay_ms=dto.stabilization_delay_ms,
+            averaging_per_position=dto.averaging_per_position,
             differential_mode=dto.differential_mode,
             differential_settle_delay_ms=dto.differential_settle_delay_ms,
         )

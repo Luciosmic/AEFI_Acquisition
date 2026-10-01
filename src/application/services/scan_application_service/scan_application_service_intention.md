@@ -6,7 +6,7 @@ Orchestrer le cycle de vie d'un scan 2D step-by-step. Ce service est le point ce
 
 ## Responsibility
 
-- Accepter un `Scan2DConfigDTO` et déclencher la séquence complète : validation → création de l'agrégat `StepScan` → génération de trajectoire → délégation à `IScanExecutor`.
+- Accepter un `Scan2DConfigDTO` (`execute_scan`, grille) ou un `LineScanConfigDTO` (`execute_line_scan`, ligne theta) et déclencher la séquence complète : validation → création de l'agrégat `StepScan` → génération de trajectoire (factory propre à chaque forme) → boucle de scan commune (`_start_scan`).
 - Gérer le cycle de vie du scan : pause, resume, cancel via l'exécuteur.
 - S'abonner aux événements domain publiés sur `IDomainEventBus` et les forwarder vers `IScanOutputPort` (Presenter).
 - Exposer une query `get_status() → ScanStatusDTO` sans dépendance infrastructure.

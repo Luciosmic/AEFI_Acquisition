@@ -32,6 +32,23 @@ class Scan2DConfigDTO:
 
 
 @dataclass(frozen=True)
+class LineScanConfigDTO:
+    """Configuration for a 1D line scan in the XY plane (from UI).
+
+    Units: mm, degrees. theta=0 -> along X, 90 -> along Y.
+    """
+    center_x: float
+    center_y: float
+    length_mm: float
+    n_points: int
+    theta_deg: float
+    stabilization_delay_ms: int
+    averaging_per_position: int
+    differential_mode: bool = False
+    differential_settle_delay_ms: float = 50.0
+
+
+@dataclass(frozen=True)
 class ScanStatusDTO:
     """Status of the current scan."""
     status: str

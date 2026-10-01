@@ -274,11 +274,41 @@ uv run pytest src/ -v   # non-régression complète (149+ tests existants, dont 
 
 ### Critères de done
 
-- [ ] `physical_bench_limits.py` créé, `scan_zone.py` migré sans régression
-- [ ] `LineScanConfig` + `LineScanTrajectoryFactory` + tests (theta=0/45/90/-90, n=1)
-- [ ] `ZAxisScanConfig` + `ZAxisTrajectory` + `ZAxisScanTrajectoryFactory` + tests
-- [ ] Tous les `_intention.md` rédigés (Trio Atomique)
-- [ ] Suite complète `uv run pytest src/` verte
+- [x] `physical_bench_limits.py` créé, `scan_zone.py` migré sans régression
+- [x] `LineScanConfig` + `LineScanTrajectoryFactory` + tests (theta=0/45/90/-90, n=1)
+- [x] `ZAxisScanConfig` + `ZAxisTrajectory` + `ZAxisScanTrajectoryFactory` + tests
+- [x] Tous les `_intention.md` rédigés (Trio Atomique)
+- [x] Suite complète `uv run pytest src/` verte (2026-10-01 : 745 passed ; seul échec = le
+      test de timing intermittent `scan_differential_mode_integration_test`, déjà connu, vert en isolé)
+
+Note d'implémentation : `LineScanConfig` tolère 1e-9 mm sur les bornes — `cos(90°)≈6e-17`
+rejetait à tort une ligne verticale posée sur le bord x=0.
+
+### Exécution du scan ligne — FAIT (2026-10-01)
+
+Le scan ligne s'exécute de bout en bout depuis l'UI (vérifié headless avec vrais widgets sur
+mock stack : 11 points à 45°, diagonale de heatmap remplie). Suite : 763 passed.
+
+- *Domain* : `StepScan` porte la ligne tel quel (même aggregate, même boucle) via
+  `LineScanConfig.total_points()` + 4 réglages par point (dupliqués avec `StepScanConfig`,
+  marqueur `ponytail:`). `ScanStarted.config: Union[StepScanConfig, LineScanConfig]`.
+- *Application* : `execute_line_scan(LineScanConfigDTO)` ; démarrage partagé `_start_scan`.
+  Présentation `scan_kind="line"` (extrémités, theta…) ; métadonnées d'export dédiées.
+- *Interface* : onglets Grid | Line dans `ScanControlPanel` (persistés dans
+  `scan_default_config.json`).
+- *Visualisation* : `ScanVisualizationPanel.initialize_line(...)` — mode ligne, chaque vue
+  (Single / Grid / Profiles) trace valeur vs distance depuis le départ (mm), quel que soit theta.
+  Points placés par projection sur la ligne. Remplace l'ancienne projection heatmap creuse
+  (`line_heatmap_grid`, supprimé). Scan 2D : panel dédié « AEFI Voltage Profiles Plot »
+  (`aefi_voltage_profiles`, même classe, `view_modes=PROFILE_MODES`) — 6 canaux d'un coup ou
+  un seul, profils à X ou Y constant, lignes cochables (Tout / Aucun). « AEFI Voltage Map »
+  = heatmaps seules.
+
+**Reste ouvert :**
+- Post-traitement auto en fin de scan (`aefi_post_processor_module`) : non vérifié sur un CSV
+  ligne — s'il suppose une grille, il échouera en tâche de fond (le scan et l'export restent OK).
+- Nom de fichier d'export toujours `stepScan` (c'est bien l'aggregate `StepScan`).
+- Z : hors scope pour l'instant (`ScanPointResult` n'a qu'une `Position2D` → Z perdu).
 
 ---
 

@@ -28,6 +28,7 @@ from .ports.i_post_processing_port import IPostProcessingPort
 from application.shared.ports.i_async_task_runner import IAsyncTaskRunner
 
 from domain.step_scan.events.scan_started.scan_started import ScanStarted
+from domain.step_scan.value_objects.line_scan_config.line_scan_config import LineScanConfig
 from domain.step_scan.events.scan_point_acquired.scan_point_acquired import ScanPointAcquired
 from domain.step_scan.events.scan_completed.scan_completed import ScanCompleted
 from domain.step_scan.events.scan_failed.scan_failed import ScanFailed
@@ -55,6 +56,15 @@ EXPORT_UNITS: Dict[str, str] = {
     "x_max": "mm",
     "y_min": "mm",
     "y_max": "mm",
+    # Line scan geometry
+    "center_x": "mm",
+    "center_y": "mm",
+    "start_x": "mm",
+    "start_y": "mm",
+    "end_x": "mm",
+    "end_y": "mm",
+    "length_mm": "mm",
+    "theta_deg": "deg",
     "t_s": "s",
     "timestamp": "ISO 8601, local time",
     "voltage_*": "V",
@@ -419,6 +429,24 @@ class ScanExportService:
     def _build_metadata(self, event: ScanStarted) -> Dict[str, Any]:
         """Extract basic metadata from the scan configuration."""
         cfg = event.config
+        if isinstance(cfg, LineScanConfig):
+            start, end = cfg.endpoints()
+            return {
+                "scan_id": str(event.scan_id),
+                "scan_kind": "line",
+                "center_x": cfg.center.x,
+                "center_y": cfg.center.y,
+                "length_mm": cfg.length_mm,
+                "theta_deg": cfg.theta_deg,
+                "start_x": start.x,
+                "start_y": start.y,
+                "end_x": end.x,
+                "end_y": end.y,
+                "stabilization_delay_ms": cfg.stabilization_delay_ms,
+                "averaging_per_position": cfg.averaging_per_position,
+                "total_points": cfg.total_points(),
+            }
+
         zone = cfg.scan_zone
 
         return {

@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QLineEdit, QComboBox, QPushButton, QGroupBox, QFormLayout,
-    QCheckBox, QFileDialog, QGridLayout
+    QCheckBox, QFileDialog, QGridLayout, QTabWidget
 )
 from PySide6.QtCore import Signal
 from pathlib import Path
@@ -58,6 +58,15 @@ class ScanControlPanel(QWidget):
                 font-size: 11px;
             }
             QCheckBox { color: #DDD; font-size: 11px; }
+            QTabWidget::pane { border: 1px solid #333; border-radius: 3px; }
+            QTabBar::tab {
+                background-color: #222;
+                color: #AAA;
+                border: 1px solid #444;
+                padding: 2px 10px;
+                font-size: 11px;
+            }
+            QTabBar::tab:selected { background-color: #333; color: #FFF; }
             QPushButton {
                 background-color: #333;
                 color: #EEE;
@@ -114,36 +123,70 @@ class ScanControlPanel(QWidget):
 
         self.btn_save_scan_defaults = QPushButton("Set as default")
 
+        # Line scan geometry: theta=0 -> along X, 90 -> along Y.
+        self.input_line_center_x = QLineEdit("700.0")
+        self.input_line_center_y = QLineEdit("700.0")
+        self.input_line_length = QLineEdit("200.0")
+        self.input_line_nb = QLineEdit("81")
+        self.input_line_theta = QLineEdit("0.0")
+
         for field in (
             self.input_x_min, self.input_x_max, self.input_x_nb,
             self.input_y_min, self.input_y_max, self.input_y_nb,
             self.input_stabilization, self.input_averaging,
             self.input_differential_settle_delay,
+            self.input_line_center_x, self.input_line_center_y,
+            self.input_line_length, self.input_line_nb, self.input_line_theta,
         ):
             field.setFixedWidth(70)
 
+        # Geometry depends on the scan shape (one tab per shape); per-point
+        # settings below the tabs are shared by every shape.
+        self.tabs_scan_kind = QTabWidget()
+
+        grid_tab = QWidget()
+        grid_tab_layout = QGridLayout(grid_tab)
+        grid_tab_layout.setContentsMargins(4, 6, 4, 4)
         for col, text in enumerate(("Min (mm)", "Max (mm)", "Points"), start=1):
-            grid.addWidget(QLabel(text), 0, col)
+            grid_tab_layout.addWidget(QLabel(text), 0, col)
         for row, (name, widgets) in enumerate((
             ("X:", (self.input_x_min, self.input_x_max, self.input_x_nb)),
             ("Y:", (self.input_y_min, self.input_y_max, self.input_y_nb)),
         ), start=1):
-            grid.addWidget(QLabel(name), row, 0)
+            grid_tab_layout.addWidget(QLabel(name), row, 0)
             for col, w in enumerate(widgets, start=1):
-                grid.addWidget(w, row, col)
+                grid_tab_layout.addWidget(w, row, col)
+        grid_tab_layout.addWidget(QLabel("Pattern:"), 3, 0)
+        grid_tab_layout.addWidget(self.combo_pattern, 3, 1)
+        grid_tab_layout.addWidget(QLabel("Axis (fast):"), 3, 2)
+        grid_tab_layout.addWidget(self.combo_axis, 3, 3)
+        self.tabs_scan_kind.addTab(grid_tab, "Grid")
 
-        grid.addWidget(QLabel("Stabilization (ms):"), 3, 0)
-        grid.addWidget(self.input_stabilization, 3, 1)
-        grid.addWidget(QLabel("Averaging:"), 3, 2)
-        grid.addWidget(self.input_averaging, 3, 3)
-        grid.addWidget(QLabel("Pattern:"), 4, 0)
-        grid.addWidget(self.combo_pattern, 4, 1)
-        grid.addWidget(QLabel("Axis (fast):"), 4, 2)
-        grid.addWidget(self.combo_axis, 4, 3)
-        grid.addWidget(self.checkbox_differential_mode, 5, 0, 1, 4)
-        grid.addWidget(QLabel("Diff. settle (ms):"), 6, 0)
-        grid.addWidget(self.input_differential_settle_delay, 6, 1)
-        grid.addWidget(self.btn_save_scan_defaults, 6, 2, 1, 2)
+        line_tab = QWidget()
+        line_tab_layout = QGridLayout(line_tab)
+        line_tab_layout.setContentsMargins(4, 6, 4, 4)
+        line_tab_layout.addWidget(QLabel("Center X (mm):"), 0, 0)
+        line_tab_layout.addWidget(self.input_line_center_x, 0, 1)
+        line_tab_layout.addWidget(QLabel("Center Y (mm):"), 0, 2)
+        line_tab_layout.addWidget(self.input_line_center_y, 0, 3)
+        line_tab_layout.addWidget(QLabel("Length (mm):"), 1, 0)
+        line_tab_layout.addWidget(self.input_line_length, 1, 1)
+        line_tab_layout.addWidget(QLabel("Points:"), 1, 2)
+        line_tab_layout.addWidget(self.input_line_nb, 1, 3)
+        line_tab_layout.addWidget(QLabel("Theta (°):"), 2, 0)
+        line_tab_layout.addWidget(self.input_line_theta, 2, 1)
+        line_tab_layout.addWidget(QLabel("0° = X, 90° = Y"), 2, 2, 1, 2)
+        self.tabs_scan_kind.addTab(line_tab, "Line")
+
+        grid.addWidget(self.tabs_scan_kind, 0, 0, 1, 4)
+        grid.addWidget(QLabel("Stabilization (ms):"), 1, 0)
+        grid.addWidget(self.input_stabilization, 1, 1)
+        grid.addWidget(QLabel("Averaging:"), 1, 2)
+        grid.addWidget(self.input_averaging, 1, 3)
+        grid.addWidget(self.checkbox_differential_mode, 2, 0, 1, 4)
+        grid.addWidget(QLabel("Diff. settle (ms):"), 3, 0)
+        grid.addWidget(self.input_differential_settle_delay, 3, 1)
+        grid.addWidget(self.btn_save_scan_defaults, 3, 2, 1, 2)
 
         layout.addWidget(config_group)
 
@@ -224,6 +267,12 @@ class ScanControlPanel(QWidget):
     def _on_start_clicked(self):
         """Gather parameters and emit signal."""
         params = {
+            "scan_kind": self._scan_kind(),
+            "line_center_x": self.input_line_center_x.text(),
+            "line_center_y": self.input_line_center_y.text(),
+            "line_length_mm": self.input_line_length.text(),
+            "line_n_points": self.input_line_nb.text(),
+            "line_theta_deg": self.input_line_theta.text(),
             "x_min": self.input_x_min.text(),
             "x_max": self.input_x_max.text(),
             "x_nb_points": self.input_x_nb.text(),
@@ -241,6 +290,9 @@ class ScanControlPanel(QWidget):
             "export_filename_base": self.input_export_filename.text(),
         }
         self.scan_start_requested.emit(params)
+
+    def _scan_kind(self) -> str:
+        return "line" if self.tabs_scan_kind.currentIndex() == 1 else "grid"
 
     def update_status(self, status: str):
         """Update status label."""
@@ -305,6 +357,12 @@ class ScanControlPanel(QWidget):
             self.input_averaging.setText(str(scan_config.get("averaging_per_position", 10)))
             self.checkbox_differential_mode.setChecked(scan_config.get("differential_mode", False))
             self.input_differential_settle_delay.setText(str(scan_config.get("differential_settle_delay_ms", 50)))
+            self.input_line_center_x.setText(str(scan_config.get("line_center_x", 700.0)))
+            self.input_line_center_y.setText(str(scan_config.get("line_center_y", 700.0)))
+            self.input_line_length.setText(str(scan_config.get("line_length_mm", 200.0)))
+            self.input_line_nb.setText(str(scan_config.get("line_n_points", 81)))
+            self.input_line_theta.setText(str(scan_config.get("line_theta_deg", 0.0)))
+            self.tabs_scan_kind.setCurrentIndex(1 if scan_config.get("scan_kind") == "line" else 0)
 
             pattern_index = self.combo_pattern.findText(scan_config.get("scan_pattern", "SERPENTINE"))
             if pattern_index >= 0:
@@ -335,6 +393,12 @@ class ScanControlPanel(QWidget):
             "averaging_per_position": int(self.input_averaging.text()),
             "differential_mode": self.checkbox_differential_mode.isChecked(),
             "differential_settle_delay_ms": float(self.input_differential_settle_delay.text()),
+            "scan_kind": self._scan_kind(),
+            "line_center_x": float(self.input_line_center_x.text()),
+            "line_center_y": float(self.input_line_center_y.text()),
+            "line_length_mm": float(self.input_line_length.text()),
+            "line_n_points": int(self.input_line_nb.text()),
+            "line_theta_deg": float(self.input_line_theta.text()),
         }
         try:
             self._config_store.save_scan_config(scan_config)

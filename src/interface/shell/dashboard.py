@@ -74,7 +74,9 @@ class Dashboard(QWidget):
         self.panels = {
             "scan_control": ScanControlPanel(),
             "aefi_voltage_map": ScanVisualizationPanel(),
-            "electric_field_map": ScanVisualizationPanel(enable_grid_view=False),
+            "aefi_voltage_profiles": ScanVisualizationPanel(
+                view_modes=ScanVisualizationPanel.PROFILE_MODES),
+            "electric_field_map": ScanVisualizationPanel(view_modes=("Single View", "Profiles")),
             "aefi_continuous_reading": AefiContinuousReadingPanel(),
             "electric_field_probe": ElectricFieldProbePanel(),
             "motion": MotionPanelCompact(),
@@ -114,6 +116,7 @@ class Dashboard(QWidget):
         panel_metadata = {
             "scan_control": ("Scan Configuration", "Scan"),
             "aefi_voltage_map": ("AEFI Voltage Map", "Scan"),
+            "aefi_voltage_profiles": ("AEFI Voltage Profiles Plot", "Scan"),
             "electric_field_map": ("Electric Field Map", "Scan"),
             "aefi_continuous_reading": ("AEFI Continuous Reading", "Continuous Reading"),
             "electric_field_probe": ("Electric Field Continuous Reading", "Continuous Reading"),

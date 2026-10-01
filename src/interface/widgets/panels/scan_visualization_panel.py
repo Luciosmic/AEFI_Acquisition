@@ -1,7 +1,7 @@
 import numpy as np
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QComboBox, QLabel, QHBoxLayout,
-    QListWidget, QListWidgetItem
+    QListWidget, QListWidgetItem, QPushButton
 )
 from PySide6.QtCore import Qt, Signal
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
@@ -9,10 +9,14 @@ from matplotlib.figure import Figure
 
 class ScanVisualizationPanel(QWidget):
     """
-    Panel for visualizing 2D scan results with matplotlib colormaps.
-    Supports single channel view and 6-channel grid view.
+    Panel for visualizing scan results: heatmaps (single / 6-channel grid) or
+    profiles at fixed X or Y (single channel / 6-channel grid). `view_modes`
+    picks which of these a given panel instance offers.
     """
-    def __init__(self, parent=None, enable_grid_view: bool = True):
+    MAP_MODES = ("Single View", "6-Channel Grid")
+    PROFILE_MODES = ("6-Channel Profiles", "Profiles")
+
+    def __init__(self, parent=None, view_modes=MAP_MODES):
         super().__init__(parent)
 
         # Data storage
@@ -21,7 +25,10 @@ class ScanVisualizationPanel(QWidget):
         self.available_channels = []
         self.current_channel = None
         self._grid_shape = (1, 1)
-        self._enable_grid_view = enable_grid_view
+        self._view_modes = list(view_modes)
+        # Line scan geometry (x0, y0, ux, uy, step, length) or None for a 2D grid.
+        # In line mode data grids are (1, n) and every view draws value vs distance.
+        self._line = None
 
         self._build_ui()
 
@@ -53,9 +60,7 @@ class ScanVisualizationPanel(QWidget):
         # View Mode Selector
         toolbar_layout.addWidget(QLabel("View:"))
         self.combo_view_mode = QComboBox()
-        view_modes = ["Single View", "6-Channel Grid"] if self._enable_grid_view else ["Single View"]
-        view_modes.append("Profiles")
-        self.combo_view_mode.addItems(view_modes)
+        self.combo_view_mode.addItems(self._view_modes)
         self.combo_view_mode.currentTextChanged.connect(self._on_view_mode_changed)
         toolbar_layout.addWidget(self.combo_view_mode)
         
@@ -90,18 +95,33 @@ class ScanVisualizationPanel(QWidget):
         self.canvas = FigureCanvasQTAgg(self.figure)
         content_layout.addWidget(self.canvas, stretch=1)
 
+        # Profile list + check all / none, hidden together outside Profiles view
+        self.profiles_box = QWidget()
+        profiles_layout = QVBoxLayout(self.profiles_box)
+        profiles_layout.setContentsMargins(0, 0, 0, 0)
+        buttons_layout = QHBoxLayout()
+        self.btn_check_all = QPushButton("Tout")
+        self.btn_check_all.clicked.connect(lambda: self._set_all_profiles(Qt.Checked))
+        self.btn_check_none = QPushButton("Aucun")
+        self.btn_check_none.clicked.connect(lambda: self._set_all_profiles(Qt.Unchecked))
+        buttons_layout.addWidget(self.btn_check_all)
+        buttons_layout.addWidget(self.btn_check_none)
+        profiles_layout.addLayout(buttons_layout)
+
         self.list_profiles = QListWidget()
-        self.list_profiles.setMaximumWidth(160)
         self.list_profiles.itemChanged.connect(self._on_profile_item_changed)
-        self.list_profiles.setVisible(False)
-        content_layout.addWidget(self.list_profiles)
+        profiles_layout.addWidget(self.list_profiles)
+
+        self.profiles_box.setMaximumWidth(160)
+        self.profiles_box.setVisible(False)
+        content_layout.addWidget(self.profiles_box)
 
         layout.addLayout(content_layout)
 
         # Initialize visualization
         self.axes_dict = {}  # channel -> ax
         self.ims_dict = {}   # channel -> image artist
-        self._setup_single_view()
+        self._on_view_mode_changed(self.combo_view_mode.currentText())
 
     def initialize_scan(self, x_min, x_max, x_nb, y_min, y_max, y_nb, channels=None):
         """
@@ -113,9 +133,24 @@ class ScanVisualizationPanel(QWidget):
         component count depends on the connected probe) — channels are then
         created lazily from whatever keys `update_data_point` receives.
         """
+        self._line = None
         self.extent = [float(x_min), float(x_max), float(y_min), float(y_max)]
         self._grid_shape = (int(y_nb), int(x_nb))
+        self._reset_channels(channels)
 
+    def initialize_line(self, start_x, start_y, end_x, end_y, n_points, channels=None):
+        """Initialize for a 1D line scan: data is plotted against the distance
+        from the line start (mm), whatever the line orientation."""
+        n = int(n_points)
+        dx, dy = float(end_x) - float(start_x), float(end_y) - float(start_y)
+        length = float(np.hypot(dx, dy))
+        ux, uy = (dx / length, dy / length) if length > 0 else (1.0, 0.0)
+        step = length / (n - 1) if n > 1 else 0.0
+        self._line = (float(start_x), float(start_y), ux, uy, step, length)
+        self._grid_shape = (1, n)
+        self._reset_channels(channels)
+
+    def _reset_channels(self, channels):
         if channels is None:
             channels = [
                 'x_in_phase', 'x_quadrature',
@@ -134,14 +169,8 @@ class ScanVisualizationPanel(QWidget):
         self._update_channel_combo()
         self._update_profile_list()
 
-        # Reset visualization
-        mode = self.combo_view_mode.currentText()
-        if mode == "Single View":
-            self._setup_single_view()
-        elif mode == "Profiles":
-            self._setup_profiles_view()
-        else:
-            self._setup_grid_view()
+        # Reset visualization (also syncs the profile controls with line/grid mode)
+        self._on_view_mode_changed(self.combo_view_mode.currentText())
 
     def update_data_point(self, x_idx, y_idx, measurements: dict):
         """Update a single data point with measurements. Unknown channels are
@@ -163,6 +192,14 @@ class ScanVisualizationPanel(QWidget):
 
     def update_data_point_from_position(self, x, y, measurements: dict):
         """Update data point by calculating indices from physical coordinates."""
+        if self._line is not None:
+            x0, y0, ux, uy, step, _ = self._line
+            s = (x - x0) * ux + (y - y0) * uy  # projection on the line
+            idx = int(round(s / step)) if step > 0 else 0
+            if 0 <= idx < self._grid_shape[1]:
+                self.update_data_point(idx, 0, measurements)
+            return
+
         # Calculate indices based on extent and grid size
         x_min, x_max, y_min, y_max = self.extent
 
@@ -190,17 +227,18 @@ class ScanVisualizationPanel(QWidget):
 
     def _on_view_mode_changed(self, mode: str):
         single_channel = mode in ("Single View", "Profiles")
-        profiles = mode == "Profiles"
+        # A line scan is its own single profile: no line list to pick from.
+        profiles = mode in self.PROFILE_MODES and self._line is None
 
         self.combo_channel.setVisible(single_channel)
         self.lbl_channel.setVisible(single_channel)
         self.lbl_profile_axis.setVisible(profiles)
         self.combo_profile_axis.setVisible(profiles)
-        self.list_profiles.setVisible(profiles)
+        self.profiles_box.setVisible(profiles)
 
         if mode == "Single View":
             self._setup_single_view()
-        elif profiles:
+        elif mode == "Profiles":
             self._setup_profiles_view()
         else:
             self._setup_grid_view()
@@ -210,6 +248,14 @@ class ScanVisualizationPanel(QWidget):
         self._refresh_visualization()
 
     def _on_profile_item_changed(self, item: QListWidgetItem):
+        self._refresh_visualization()
+
+    def _set_all_profiles(self, state):
+        # One redraw instead of one per item
+        self.list_profiles.blockSignals(True)
+        for row in range(self.list_profiles.count()):
+            self.list_profiles.item(row).setCheckState(state)
+        self.list_profiles.blockSignals(False)
         self._refresh_visualization()
 
     def _profile_axis(self) -> str:
@@ -330,46 +376,67 @@ class ScanVisualizationPanel(QWidget):
         """Refresh the matplotlib display."""
         mode = self.combo_view_mode.currentText()
 
-        if mode == "Single View":
+        if self._line is not None:
+            self._draw_curves(self._draw_line_profile)
+        elif mode in self.PROFILE_MODES:
+            self._draw_curves(self._draw_profiles)
+        elif mode == "Single View":
             self._update_single_view()
-        elif mode == "Profiles":
-            self._update_profiles_view()
         else:
             self._update_grid_view()
 
-    def _update_profiles_view(self):
-        ax = self.axes_dict.get('profiles')
-        if ax is None:
-            return
+    def _draw_curves(self, draw):
+        """Run a curve-drawing function on every axes: 'single'/'profiles'
+        axes show the selected channel, grid axes their own channel."""
+        first_ax = next(iter(self.axes_dict.values()), None)
+        for key, ax in self.axes_dict.items():
+            compact = key not in ('single', 'profiles')
+            channel = key if compact else self.current_channel
+            draw(ax, channel, compact, legend=(ax is first_ax))
+        self.figure.tight_layout()
+        self.canvas.draw()
 
+    def _prepare_curve_ax(self, ax, channel, compact, xlabel):
         ax.clear()
         ax.set_facecolor('#2A2A2A')
-        ax.tick_params(colors='white')
+        ax.tick_params(colors='white', **({'labelsize': 8} if compact else {}))
         ax.grid(True, color='#444', linestyle=':')
+        title, color = self._get_channel_metadata(channel or "")
+        ax.set_title(title, color=color, fontweight='bold', **({'fontsize': 10} if compact else {}))
+        if not compact:
+            ax.set_xlabel(xlabel, color='white')
+            ax.set_ylabel('Value', color='white')
+        return color
 
+    def _draw_line_profile(self, ax, channel, compact, legend):
+        """Line scan: value vs distance from the line start."""
+        color = self._prepare_curve_ax(ax, channel, compact, 'Distance along line (mm)')
+        data = self.data_grids.get(channel)
+        if data is not None:
+            s = np.linspace(0.0, self._line[5], self._grid_shape[1])
+            ax.plot(s, data[0, :], marker='o', markersize=3, color=color)
+
+    def _draw_profiles(self, ax, channel, compact, legend):
+        """2D scan: checked profiles at fixed X (vs Y) or fixed Y (vs X)."""
         axis = self._profile_axis()
         # A profile at fixed X is plotted against Y, and vice versa.
         abscissa = self._axis_coords('y' if axis == 'x' else 'x')
-        ax.set_xlabel('Y (mm)' if axis == 'x' else 'X (mm)', color='white')
-        ax.set_ylabel('Value', color='white')
+        self._prepare_curve_ax(ax, channel, compact, 'Y (mm)' if axis == 'x' else 'X (mm)')
 
-        data = self.data_grids.get(self.current_channel)
-        if data is not None:
-            for idx, coord in self._checked_profiles():
-                # data is indexed [y, x]
-                series = data[:, idx] if axis == 'x' else data[idx, :]
-                ax.plot(abscissa, series, marker='o', markersize=3,
-                        label=f"{axis.upper()} = {coord:.2f} mm")
+        data = self.data_grids.get(channel)
+        if data is None:
+            return
+        for idx, coord in self._checked_profiles():
+            # data is indexed [y, x]
+            series = data[:, idx] if axis == 'x' else data[idx, :]
+            ax.plot(abscissa, series, marker='o', markersize=3,
+                    label=f"{axis.upper()} = {coord:.2f} mm")
 
-            if ax.get_legend_handles_labels()[0]:
-                legend = ax.legend(fontsize=8, facecolor='#1E1E1E', edgecolor='#444')
-                for text in legend.get_texts():
-                    text.set_color('white')
-
-        title, color = self._get_channel_metadata(self.current_channel or "")
-        ax.set_title(title, color=color, fontweight='bold')
-        self.figure.tight_layout()
-        self.canvas.draw()
+        # Grid of 6: one legend (same profiles everywhere) to keep plots readable
+        if legend and ax.get_legend_handles_labels()[0]:
+            leg = ax.legend(fontsize=7 if compact else 8, facecolor='#1E1E1E', edgecolor='#444')
+            for text in leg.get_texts():
+                text.set_color('white')
 
     def _update_single_view(self):
         if not self.current_channel or self.current_channel not in self.data_grids:
