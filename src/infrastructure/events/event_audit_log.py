@@ -8,6 +8,9 @@ from uuid import UUID, uuid4
 
 logger = logging.getLogger(__name__)
 
+# Session file = events_<SESSION_TIMESTAMP_FORMAT, UTC start>_<6 hex>.jsonl — also parsed by FileEventLogStorage.
+SESSION_TIMESTAMP_FORMAT = "%Y%m%dT%H%M%SZ"
+
 
 def _json_default(value: Any) -> Any:
     if isinstance(value, UUID):
@@ -29,8 +32,13 @@ class EventAuditLog:
 
     def __init__(self, log_dir: Path):
         log_dir.mkdir(parents=True, exist_ok=True)
-        session_start = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+        session_start = datetime.now(timezone.utc).strftime(SESSION_TIMESTAMP_FORMAT)
         self._path = log_dir / f"events_{session_start}_{uuid4().hex[:6]}.jsonl"
+
+    @property
+    def path(self) -> Path:
+        """This run's session file (created on the first recorded event)."""
+        return self._path
 
     def record(self, event: Any) -> None:
         try:

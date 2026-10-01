@@ -24,6 +24,7 @@ from application.services.synchronous_detection_service.synchronous_detection_se
 from application.services.sensor_calibration_service.sensor_calibration_service import SensorCalibrationService
 from application.services.source_geometry_calibration_service.source_geometry_calibration_service import SourceGeometryCalibrationService
 from application.services.hardware_component_service.hardware_component_service import HardwareComponentService
+from application.services.event_log_maintenance_service.event_log_maintenance_service import EventLogMaintenanceService
 from domain.calibration.calibration import Calibration
 from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
 from application.services.motion_control_service.motion_control_service import MotionControlService
@@ -32,6 +33,7 @@ from application.services.electric_field_probe_service.electric_field_probe_serv
 # --- Infrastructure ---
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
 from infrastructure.events.event_audit_log import EventAuditLog
+from infrastructure.events.file_event_log_storage import FileEventLogStorage
 from infrastructure.execution.thread_pool_task_runner import ThreadPoolTaskRunner
 from infrastructure.execution.event_bus_motion_synchronizer import EventBusMotionSynchronizer
 from infrastructure.persistence.csv_scan_export_port import CsvScanExportPort
@@ -80,6 +82,7 @@ from interface.presenters.synchronous_detection_presenter import SynchronousDete
 from interface.presenters.sensor_calibration_presenter import SensorCalibrationPresenter
 from interface.presenters.source_geometry_calibration_presenter import SourceGeometryCalibrationPresenter
 from interface.presenters.hardware_component_presenter import HardwareComponentPresenter
+from interface.presenters.event_log_presenter import EventLogPresenter
 from interface.presenters.aefi_continuous_reading_presenter import AefiContinuousReadingPresenter
 from interface.presenters.electric_field_probe_presenter import ElectricFieldProbePresenter
 from interface.presenters.scan_presenter import ScanPresenter
@@ -420,6 +423,11 @@ def main(hardware_config: dict | None = None):
     
     # Hardware Advanced Config Presenter
     hardware_config_presenter = HardwareAdvancedConfigPresenter(hardware_config_service, event_bus)
+
+    # Event log maintenance — shown in the Logs panel, nothing deleted without the user
+    event_log_presenter = EventLogPresenter(
+        EventLogMaintenanceService(FileEventLogStorage(audit_log.path.parent, live_session=audit_log.path))
+    )
     
     # 10. Wire Presenters to Panels
     wire_dashboard(
@@ -434,6 +442,7 @@ def main(hardware_config: dict | None = None):
         sensor_calibration_presenter,
         source_geometry_calibration_presenter,
         hardware_component_presenters,
+        event_log_presenter,
     )
 
     # 11. Startup Sequence (hardware init if real hardware) or Direct Launch (if mocks only)

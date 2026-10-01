@@ -25,6 +25,7 @@ from interface.presenters.hardware_advanced_config_presenter import HardwareAdva
 from interface.presenters.sensor_calibration_presenter import SensorCalibrationPresenter
 from interface.presenters.source_geometry_calibration_presenter import SourceGeometryCalibrationPresenter
 from interface.presenters.hardware_component_presenter import HardwareComponentPresenter
+from interface.presenters.event_log_presenter import EventLogPresenter
 
 logger = logging.getLogger(__name__)
 
@@ -41,10 +42,19 @@ def wire_dashboard(
     sensor_calibration_presenter: SensorCalibrationPresenter,
     source_geometry_calibration_presenter: SourceGeometryCalibrationPresenter,
     hardware_component_presenters: List[HardwareComponentPresenter],
+    event_log_presenter: EventLogPresenter,
 ) -> None:
     """Connect every dashboard panel to its presenter. Called once from
     main.py right after the dashboard and presenters are constructed."""
     print("--- Wiring Presenters to Panels ---")
+
+    # Logs Panel — event audit log size + user-confirmed deletion of old sessions
+    logs_panel = dashboard.panels["logs"]
+    logs_panel.purge_requested.connect(event_log_presenter.on_purge_requested)
+    logs_panel.purge_confirmed.connect(event_log_presenter.on_purge_confirmed)
+    event_log_presenter.summary_updated.connect(logs_panel.set_event_log_summary)
+    event_log_presenter.purge_confirmation_needed.connect(logs_panel.confirm_purge)
+    event_log_presenter.refresh()
 
     # Motion Panel
     motion_panel = dashboard.panels["motion"]

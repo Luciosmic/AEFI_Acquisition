@@ -3,16 +3,42 @@ import os
 import sys
 
 from PySide6.QtCore import QObject, Signal
-from PySide6.QtWidgets import QCheckBox, QHBoxLayout, QPlainTextEdit
+from PySide6.QtWidgets import QCheckBox, QHBoxLayout, QLabel, QMessageBox, QPlainTextEdit, QPushButton, QWidget
 
 from interface.widgets.panels.base_panel import BasePanel
 
 
+def _format_size(size_bytes: int) -> str:
+    gb = size_bytes / 1024**3
+    return f"{gb:.1f} Go".replace(".", ",") if gb >= 1 else f"{size_bytes / 1024**2:.0f} Mo"
+
+
+def _format_date(utc_datetime) -> str:
+    return utc_datetime.astimezone().strftime("%d/%m/%Y")
+
+
 class LogsPanel(BasePanel):
-    """Read-only scrollback of everything printed/logged since app launch."""
+    """Read-only scrollback of everything printed/logged since app launch,
+    plus the event audit log's size and the deletion of its old sessions
+    (row hidden until a summary arrives — the splash's panel never gets one)."""
+
+    purge_requested = Signal()
+    purge_confirmed = Signal()
 
     def __init__(self, parent=None):
         super().__init__("Logs", "#9E9E9E", parent)
+
+        self.event_log_row = QWidget()
+        event_log_layout = QHBoxLayout(self.event_log_row)
+        event_log_layout.setContentsMargins(0, 0, 0, 0)
+        self.event_log_label = QLabel()
+        event_log_layout.addWidget(self.event_log_label)
+        event_log_layout.addStretch()
+        self.purge_button = QPushButton()
+        self.purge_button.clicked.connect(self.purge_requested)
+        event_log_layout.addWidget(self.purge_button)
+        self.event_log_row.setVisible(False)
+        self.layout.addWidget(self.event_log_row)
 
         level_row = QHBoxLayout()
         self.debug_checkbox = QCheckBox("Debug")
@@ -43,6 +69,45 @@ class LogsPanel(BasePanel):
         else:
             level = logging.INFO
         logging.getLogger().setLevel(level)
+
+    def set_event_log_summary(self, summary) -> None:
+        """summary: EventLogSummaryDTO."""
+        text = f"Journal d'événements : {_format_size(summary.total_size_bytes)} · {summary.session_count} session(s)"
+        if summary.oldest_started_at is not None:
+            text += f" · depuis le {_format_date(summary.oldest_started_at)}"
+        if summary.size_warning:
+            text += f" — au-delà de {_format_size(summary.size_warning_threshold_bytes)}"
+        self.event_log_label.setText(text)
+        self.event_log_label.setStyleSheet("color: #FF9800; font-weight: bold;" if summary.size_warning else "")
+        self.event_log_label.setToolTip(
+            "Fichiers .aefi_acquisition/logs/events/ : tous les événements de chaque lancement du logiciel "
+            "(filet de sécurité). Rien n'est supprimé automatiquement."
+        )
+
+        self.purge_button.setText(f"Supprimer les sessions de plus de {summary.retention_days} jours…")
+        self.purge_button.setEnabled(summary.expired_session_count > 0)
+        self.purge_button.setToolTip(
+            f"{summary.expired_session_count} session(s), {_format_size(summary.expired_size_bytes)}"
+            if summary.expired_session_count
+            else f"Aucune session de plus de {summary.retention_days} jours"
+        )
+        self.event_log_row.setVisible(True)
+
+    def confirm_purge(self, summary) -> None:
+        """summary: EventLogSummaryDTO with expired sessions to delete."""
+        answer = QMessageBox.question(
+            self,
+            "Supprimer d'anciennes sessions",
+            f"Supprimer définitivement {summary.expired_session_count} session(s) du journal d'événements "
+            f"({_format_size(summary.expired_size_bytes)}), du {_format_date(summary.expired_oldest_started_at)} "
+            f"au {_format_date(summary.expired_newest_started_at)} ?\n\n"
+            f"Les sessions de moins de {summary.retention_days} jours, la session en cours et les fichiers "
+            "des exports de scan ne sont pas touchés.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
+            QMessageBox.StandardButton.Cancel,
+        )
+        if answer == QMessageBox.StandardButton.Yes:
+            self.purge_confirmed.emit()
 
     def append_line(self, text: str) -> None:
         text = text.rstrip("\n")
