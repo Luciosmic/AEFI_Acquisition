@@ -72,6 +72,7 @@ class EventLogMaintenanceService(IApiEventLogMaintenanceService):
         expired = self._expired(sessions)
         total = sum(s.size_bytes for s in sessions)
         return EventLogSummaryDTO(
+            location=self._storage.location(),
             total_size_bytes=total,
             session_count=len(sessions),
             oldest_started_at=min((s.started_at for s in sessions), default=None),

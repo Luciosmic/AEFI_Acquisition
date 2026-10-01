@@ -9,6 +9,8 @@ fuirait dans la couche application.
 
 ## Responsibility
 
+- `location()` : où sont stockées les sessions (le dossier, pour que
+  l'utilisateur puisse l'ouvrir depuis le panneau Logs).
 - `list_sessions()` : chaque session du journal, avec sa date de démarrage,
   sa taille, et si c'est la session en cours d'écriture.
 - `delete_session(name)` : supprime une session ; échec attendu (fichier

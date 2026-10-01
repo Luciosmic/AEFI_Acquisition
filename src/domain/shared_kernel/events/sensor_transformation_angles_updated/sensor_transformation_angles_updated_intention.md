@@ -2,7 +2,7 @@
 
 ## Rationale
 
-Modéliser l'événement lié aux transformations de repère du capteur. Permet à la UI de mettre à jour la visualisation 3D (CubeVisualizer) en réaction aux rotations appliquées, via le bus événementiel.
+Modéliser l'événement lié aux transformations de repère du capteur. Permet à la UI de réagir aux rotations appliquées, via le bus événementiel.
 
 ## Responsibility
 

@@ -45,7 +45,9 @@ so recorded calibrations were never used.
 - Display the active mounting ("Montage actif") — the angles P applied to
   sensor readings — and where it comes from (trial in progress, calibration date, or ideal
   default angles), and mirror its angles in the spinboxes.
-- Launch the 3D sensor visualizer (`external_modules/cube_visualizer`).
+- Show the active mounting in 3D, inside the panel (no other window): the
+  cube follows the same active angles as the spinboxes, so there is a single
+  set of angles on screen.
 - No field-minimization logic here: the operator judges the signal; this UI
   forwards trial angles and captures the result with full traceability
   (hardware + geometry + date).
@@ -63,12 +65,16 @@ so recorded calibrations were never used.
 - `on_active_rotation_updated(dto)` sets the spinboxes inside
   `blockSignals(True/False)`, so mirroring the active rotation never starts a
   new trial.
-- `launch_visualizer_requested = Signal()` — wired in `dashboard_wiring.py`
-  to the existing `ExternalModulesPanel.launch("cube")` (already guards
-  against double launches); the panel starts no process itself. The
-  visualizer takes no arguments, so it opens with its own default angles.
+- `orientation_view` (constructor, optional): any `QWidget` with
+  `show_mounting(matrix)`, placed to the right of the controls. The
+  dashboard injects `SensorOrientationView`
+  (`interface/widgets/sensor_orientation_view/`).
 - `on_latest_calibration_updated(dto)`: `dto` is `None` when no entry
   matches the current geometric configuration.
-- `on_active_rotation_updated(dto)`: `ActiveSensorRotationDTO`, never `None`.
-- No dedicated Qt `_tests/` — convention followed by every panel in this
-  folder (presenters/services carry the tested logic).
+- `on_active_rotation_updated(dto)`: `ActiveSensorRotationDTO`, never `None`;
+  mirrors the angles in the spinboxes and forwards `dto.mounting_matrix`
+  (P, computed by the domain) to `orientation_view` — the only path to the
+  3D view, so it always shows what is applied to the readings, with no
+  second copy of the rotation convention in the interface.
+- `_tests/sensor_calibration_panel_test.py` covers the sync to
+  `orientation_view` with a fake view.

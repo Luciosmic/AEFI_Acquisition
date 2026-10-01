@@ -20,6 +20,7 @@ def log_dir(tmp_path):
 def test_lists_sessions_with_start_from_name_and_live_flag_even_before_live_file_exists(log_dir):
     storage = FileEventLogStorage(log_dir, live_session=log_dir / LIVE)
 
+    assert storage.location() == str(log_dir.resolve())
     sessions = storage.list_sessions()
     assert [(s.name, s.size_bytes, s.is_live) for s in sessions] == [(OLD, 10, False)]
     assert sessions[0].started_at == datetime(2026, 7, 31, 12, 53, 27, tzinfo=timezone.utc)

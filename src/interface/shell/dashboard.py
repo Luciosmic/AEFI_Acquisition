@@ -21,6 +21,7 @@ from interface.widgets.panels.electric_field_probe_panel import ElectricFieldPro
 from interface.widgets.panels.hardware_advanced_config_panel import HardwareAdvancedConfigPanel
 from interface.widgets.panels.calibration_panel import CalibrationPanel
 from interface.widgets.panels.external_modules_panel import ExternalModulesPanel
+from interface.widgets.sensor_orientation_view.sensor_orientation_view import SensorOrientationView
 from interface.widgets.panels.logs_panel import LogsPanel
 
 
@@ -80,7 +81,9 @@ class Dashboard(QWidget):
             "motion": MotionPanelCompact(),
             "excitation": ExcitationPanel(),
             "hardware_config": HardwareAdvancedConfigPanel(),
-            "calibration": CalibrationPanel(),
+            "calibration": CalibrationPanel(
+                sensor_orientation_view=SensorOrientationView()
+            ),
             "external_modules": ExternalModulesPanel(),
             "logs": LogsPanel(),
             "settings": SettingsPanel()

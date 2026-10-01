@@ -10,10 +10,12 @@ divided by the cube dimension — this is what the physical differential
 electrodes actually measure, and it captures the field's curvature across
 the sensor's finite extent instead of a point-gradient approximation.
 
-The cube's orientation reuses `external_modules/cube_visualizer/domain/
-sensor_rotation.py` (the canonical source of truth for sensor-orientation
-math in this repo, per user pointer 2026-07-31) rather than re-deriving
-rotation math locally, and defaults to `aefi_device_config.json`'s measured
+The cube's orientation reuses `SensorRotationAngles.mounting_matrix()`
+(`domain/calibration/value_objects/sensor_rotation_angles/`, the canonical
+source of truth for P since 2026-10-01; it replaced
+`external_modules/cube_visualizer/domain/sensor_rotation.py`, the user's
+2026-07-31 pointer, when the cube visualizer moved into `src/`) rather
+than re-deriving rotation math locally, and defaults to `aefi_device_config.json`'s measured
 `sensor.calibration.sources_to_sensor_rotation` — the real calibrated
 orientation, not the arbitrary demo angles `main.py` used to hardcode. The
 configured angles define P (montage): the mounting rotation that brings the

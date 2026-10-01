@@ -2,10 +2,24 @@ import logging
 import os
 import sys
 
-from PySide6.QtCore import QObject, Signal
-from PySide6.QtWidgets import QCheckBox, QHBoxLayout, QLabel, QMessageBox, QPlainTextEdit, QPushButton, QWidget
+from PySide6.QtCore import QObject, Qt, QUrl, Signal
+from PySide6.QtGui import QDesktopServices
+from PySide6.QtWidgets import (
+    QCheckBox,
+    QFormLayout,
+    QHBoxLayout,
+    QLabel,
+    QMessageBox,
+    QPlainTextEdit,
+    QPushButton,
+    QStackedWidget,
+    QVBoxLayout,
+    QWidget,
+)
 
 from interface.widgets.panels.base_panel import BasePanel
+
+_WARNING_STYLE = "color: #FF9800; font-weight: bold;"
 
 
 def _format_size(size_bytes: int) -> str:
@@ -19,27 +33,39 @@ def _format_date(utc_datetime) -> str:
 
 class LogsPanel(BasePanel):
     """Read-only scrollback of everything printed/logged since app launch,
-    plus the event audit log's size and the deletion of its old sessions
-    (row hidden until a summary arrives — the splash's panel never gets one)."""
+    with a one-line event audit log size and a "Gérer" view (details, open
+    the folder, delete old sessions). The size line stays hidden until a
+    summary arrives — the splash's panel never gets one."""
 
+    manage_requested = Signal()
     purge_requested = Signal()
     purge_confirmed = Signal()
 
     def __init__(self, parent=None):
         super().__init__("Logs", "#9E9E9E", parent)
         self.label.hide()  # the dashboard tab already names the panel; keep the room for the logs
+        self._event_log_location = ""
+
+        self.stack = QStackedWidget()
+        self.layout.addWidget(self.stack)
+        logs_page = QWidget()
+        logs_layout = QVBoxLayout(logs_page)
+        logs_layout.setContentsMargins(0, 0, 0, 0)
+        self.stack.addWidget(logs_page)
+        self.manage_page = self._build_manage_page()
+        self.stack.addWidget(self.manage_page)
 
         self.event_log_row = QWidget()
         event_log_layout = QHBoxLayout(self.event_log_row)
         event_log_layout.setContentsMargins(0, 0, 0, 0)
         self.event_log_label = QLabel()
         event_log_layout.addWidget(self.event_log_label)
+        manage_button = QPushButton("Gérer")
+        manage_button.clicked.connect(self._open_manage_page)
+        event_log_layout.addWidget(manage_button)
         event_log_layout.addStretch()
-        self.purge_button = QPushButton()
-        self.purge_button.clicked.connect(self.purge_requested)
-        event_log_layout.addWidget(self.purge_button)
         self.event_log_row.setVisible(False)
-        self.layout.addWidget(self.event_log_row)
+        logs_layout.addWidget(self.event_log_row)
 
         level_row = QHBoxLayout()
         self.debug_checkbox = QCheckBox("Debug")
@@ -49,7 +75,7 @@ class LogsPanel(BasePanel):
         self.warning_checkbox.toggled.connect(self._on_level_toggled)
         level_row.addWidget(self.warning_checkbox)
         level_row.addStretch()
-        self.layout.addLayout(level_row)
+        logs_layout.addLayout(level_row)
         # A panel built after install_console_capture (the dashboard's) reflects
         # the level already in force (e.g. AEFI_LOG_LEVEL=DEBUG) instead of showing unchecked.
         self.debug_checkbox.setChecked(logging.getLogger().getEffectiveLevel() == logging.DEBUG)
@@ -58,7 +84,58 @@ class LogsPanel(BasePanel):
         self.text_edit.setReadOnly(True)
         self.text_edit.setMaximumBlockCount(5000)
         self.text_edit.setStyleSheet("font-family: Consolas, monospace; font-size: 11px;")
-        self.layout.addWidget(self.text_edit)
+        logs_layout.addWidget(self.text_edit)
+
+    def _build_manage_page(self) -> QWidget:
+        page = QWidget()
+        layout = QVBoxLayout(page)
+        layout.setContentsMargins(0, 0, 0, 0)
+
+        title = QLabel("Journal d'événements")
+        title.setStyleSheet("font-weight: bold; font-size: 14px;")
+        layout.addWidget(title)
+        explanation = QLabel(
+            "Tous les événements de chaque lancement du logiciel, échantillons compris : un filet de "
+            "sécurité pour retrouver après coup ce que le logiciel a réellement fait. Un fichier par "
+            "lancement (« session »). Rien n'est supprimé automatiquement."
+        )
+        explanation.setWordWrap(True)
+        layout.addWidget(explanation)
+
+        form = QFormLayout()
+        self.manage_size_label = QLabel()
+        self.manage_sessions_label = QLabel()
+        self.manage_oldest_label = QLabel()
+        self.manage_location_label = QLabel()
+        self.manage_location_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        form.addRow("Taille :", self.manage_size_label)
+        form.addRow("Sessions :", self.manage_sessions_label)
+        form.addRow("Plus ancienne :", self.manage_oldest_label)
+        form.addRow("Dossier :", self.manage_location_label)
+        layout.addLayout(form)
+
+        buttons = QHBoxLayout()
+        self.open_folder_button = QPushButton("Ouvrir le dossier")
+        self.open_folder_button.clicked.connect(self._open_event_log_folder)
+        buttons.addWidget(self.open_folder_button)
+        self.purge_button = QPushButton()
+        self.purge_button.clicked.connect(self.purge_requested)
+        buttons.addWidget(self.purge_button)
+        buttons.addStretch()
+        back_button = QPushButton("Retour")
+        back_button.clicked.connect(lambda: self.stack.setCurrentIndex(0))
+        buttons.addWidget(back_button)
+        layout.addLayout(buttons)
+        layout.addStretch()
+        return page
+
+    def _open_manage_page(self) -> None:
+        self.stack.setCurrentWidget(self.manage_page)
+        self.manage_requested.emit()  # fresh figures: the live session keeps growing
+
+    def _open_event_log_folder(self) -> None:
+        if self._event_log_location:
+            QDesktopServices.openUrl(QUrl.fromLocalFile(self._event_log_location))
 
     def _on_level_toggled(self) -> None:
         # Debug wins if both are checked — INFO (which already includes
@@ -73,17 +150,20 @@ class LogsPanel(BasePanel):
 
     def set_event_log_summary(self, summary) -> None:
         """summary: EventLogSummaryDTO."""
-        text = f"Journal d'événements : {_format_size(summary.total_size_bytes)} · {summary.session_count} session(s)"
-        if summary.oldest_started_at is not None:
-            text += f" · depuis le {_format_date(summary.oldest_started_at)}"
+        size = _format_size(summary.total_size_bytes)
+        warning_style = _WARNING_STYLE if summary.size_warning else ""
+        self.event_log_label.setText(f"Journal d'événements : {size}")
+        self.event_log_label.setStyleSheet(warning_style)
         if summary.size_warning:
-            text += f" — au-delà de {_format_size(summary.size_warning_threshold_bytes)}"
-        self.event_log_label.setText(text)
-        self.event_log_label.setStyleSheet("color: #FF9800; font-weight: bold;" if summary.size_warning else "")
-        self.event_log_label.setToolTip(
-            "Fichiers .aefi_acquisition/logs/events/ : tous les événements de chaque lancement du logiciel "
-            "(filet de sécurité). Rien n'est supprimé automatiquement."
+            size += f" — au-delà de {_format_size(summary.size_warning_threshold_bytes)}"
+        self.manage_size_label.setText(size)
+        self.manage_size_label.setStyleSheet(warning_style)
+        self.manage_sessions_label.setText(str(summary.session_count))
+        self.manage_oldest_label.setText(
+            _format_date(summary.oldest_started_at) if summary.oldest_started_at is not None else "—"
         )
+        self._event_log_location = summary.location
+        self.manage_location_label.setText(summary.location)
 
         self.purge_button.setText(f"Supprimer les sessions de plus de {summary.retention_days} jours…")
         self.purge_button.setEnabled(summary.expired_session_count > 0)

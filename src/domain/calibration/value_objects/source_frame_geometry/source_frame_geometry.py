@@ -4,14 +4,16 @@ Source Frame Geometry
 Responsibility:
 - Immutable result of the source geometry reconstruction: where the 4
   excitation sphere centers actually are in the source frame, and how far
-  the bench deviates from a perfect square.
+  their arrangement deviates from a perfect square.
 
 Design:
-- Source frame: origin at the spheres' centroid, +x/+y through the side
-  midpoints, so each sphere lands in the quadrant its label names
+- Source frame: origin at the spheres' centroid, +x/+y along the sides of
+  the best-fit square (ideally the source is an axis-aligned square, so
+  best_fit_square_positions_m are exactly (±side/2, ±side/2)), each sphere
+  in the quadrant its label names
   (S1=x_neg_y_pos, S2=x_pos_y_neg, S3=x_pos_y_pos, S4=x_neg_y_neg) — the
   same frame as aefi_device_config.json's sphere_labels. z=0 for all 4
-  (coplanar by construction of the bench), so positions are 2D.
+  (coplanar by construction of the source), so positions are 2D.
 - Every per-sphere tuple is ordered S1..S4; every per-distance tuple follows
   SourceGeometryCalibrationEntry.pairwise_distances_ext order.
 - Built exclusively by SourceFrameSolver.solve().
@@ -37,8 +39,8 @@ class SourceFrameGeometry:
 
     @property
     def square_residuals_m(self) -> SpherePoints:
-        """Per-sphere (dx, dy) from its best-fit square corner — the bench's
-        actual mechanical defect."""
+        """Per-sphere (dx, dy) from its best-fit square corner — the measured
+        deviation of the sphere arrangement (says nothing about the bench)."""
         return tuple(
             (x - ix, y - iy)
             for (x, y), (ix, iy) in zip(self.sphere_positions_m, self.best_fit_square_positions_m)

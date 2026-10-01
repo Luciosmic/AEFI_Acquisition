@@ -50,6 +50,7 @@ def wire_dashboard(
 
     # Logs Panel — event audit log size + user-confirmed deletion of old sessions
     logs_panel = dashboard.panels["logs"]
+    logs_panel.manage_requested.connect(event_log_presenter.refresh)
     logs_panel.purge_requested.connect(event_log_presenter.on_purge_requested)
     logs_panel.purge_confirmed.connect(event_log_presenter.on_purge_confirmed)
     event_log_presenter.summary_updated.connect(logs_panel.set_event_log_summary)
@@ -169,9 +170,6 @@ def wire_dashboard(
     )
     sensor_calibration_presenter.active_rotation_updated.connect(
         calibration_panel.sensor_calibration_panel.on_active_rotation_updated
-    )
-    calibration_panel.sensor_calibration_panel.launch_visualizer_requested.connect(
-        lambda: dashboard.panels["external_modules"].launch("cube")
     )
     sensor_calibration_presenter.refresh_state()
 

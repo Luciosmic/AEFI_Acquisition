@@ -16,12 +16,20 @@ triplet could be reapplied the wrong way silently.
   expressed in, as a single immutable value.
 - No range validation on the angles — any signed value is accepted (the
   ideal mounting is 35.26°/45°/0°, calibrated values deviate from it).
+- `mounting_matrix()`: the single place that turns the angles into the
+  3×3 matrix P. Without it every consumer (3D view, mock field simulator,
+  …) re-derives P from the Euler string, and one lowercase `'xyz'` is
+  enough to show or simulate a different mounting silently — the
+  convention was already corrected twice.
 
 ## Design
 
 - `@dataclass(frozen=True)`: `theta_x_degrees`, `theta_y_degrees`,
   `theta_z_degrees`, `convention` (defaults to `RotationConvention.standard()`,
   the only supported one).
+- `mounting_matrix()` returns `P = Rx(θx)·Ry(θy)·Rz(θz)` as a numpy 3×3
+  array, built literally from that definition (numpy only); its columns are
+  the sensor axes expressed in the sources frame.
 - Definition of P, of the frames and of the calibration procedure:
   `value_objects/rotation_convention/rotation_convention_intention.md`
   (reference — not restated here).

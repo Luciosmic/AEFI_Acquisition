@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Tuple
 
 
 @dataclass(frozen=True)
@@ -21,7 +21,9 @@ class ActiveSensorRotationDTO:
     current mounting; measurement E_sensor = Pᵀ·E_sources; correction
     E_sources = P·E_sensor) currently applied to sensor readings: trial angles being tuned, else the latest calibration for the
     current sensor mounting and source geometry, else the ideal default
-    angles."""
+    angles. `mounting_matrix` is P itself (rows, columns = sensor axes in the
+    sources frame), computed by the domain so no consumer re-derives the
+    convention from the angles."""
 
     theta_x_degrees: float
     theta_y_degrees: float
@@ -29,3 +31,4 @@ class ActiveSensorRotationDTO:
     is_calibrated: bool
     is_trial: bool
     recorded_at: Optional[datetime]
+    mounting_matrix: Tuple[Tuple[float, float, float], ...]

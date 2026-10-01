@@ -223,6 +223,7 @@ class SensorCalibrationService(IApiSensorCalibrationService):
             is_calibrated=is_calibrated,
             is_trial=is_trial,
             recorded_at=recorded_at,
+            mounting_matrix=tuple(tuple(row) for row in angles.mounting_matrix().tolist()),
         )
 
     def _find_latest_matching_entry(self) -> Optional[SensorCalibrationEntry]:

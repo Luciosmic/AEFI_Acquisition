@@ -12,9 +12,15 @@ class FakeEventLogStorage(IEventLogStoragePort):
     """In-memory event log sessions. `locked` names refuse deletion, like a
     file still open in another app instance on Windows."""
 
-    def __init__(self, sessions: Iterable[StoredEventLogSession] = (), locked: Iterable[str] = ()):
+    def __init__(
+        self, sessions: Iterable[StoredEventLogSession] = (), locked: Iterable[str] = (), location: str = "fake://events"
+    ):
         self.sessions = {s.name: s for s in sessions}
         self._locked = set(locked)
+        self._location = location
+
+    def location(self) -> str:
+        return self._location
 
     def list_sessions(self) -> List[StoredEventLogSession]:
         return sorted(self.sessions.values(), key=lambda s: s.started_at)

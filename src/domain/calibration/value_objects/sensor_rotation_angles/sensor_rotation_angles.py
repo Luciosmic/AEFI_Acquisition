@@ -11,6 +11,8 @@ Responsibility:
 
 from dataclasses import dataclass, field
 
+import numpy as np
+
 from domain.calibration.value_objects.rotation_convention.rotation_convention import RotationConvention
 
 
@@ -28,3 +30,11 @@ class SensorRotationAngles:
     theta_y_degrees: float
     theta_z_degrees: float
     convention: RotationConvention = field(default_factory=RotationConvention.standard)
+
+    def mounting_matrix(self) -> np.ndarray:
+        """P = Rx(θx)·Ry(θy)·Rz(θz): columns are the sensor axes in the sources frame."""
+        x, y, z = np.radians([self.theta_x_degrees, self.theta_y_degrees, self.theta_z_degrees])
+        rx = np.array([[1, 0, 0], [0, np.cos(x), -np.sin(x)], [0, np.sin(x), np.cos(x)]])
+        ry = np.array([[np.cos(y), 0, np.sin(y)], [0, 1, 0], [-np.sin(y), 0, np.cos(y)]])
+        rz = np.array([[np.cos(z), -np.sin(z), 0], [np.sin(z), np.cos(z), 0], [0, 0, 1]])
+        return rx @ ry @ rz

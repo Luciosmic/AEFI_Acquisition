@@ -32,6 +32,7 @@ def test_summary_previews_only_sessions_older_than_90_days():
 
     summary = service.get_summary()
 
+    assert summary.location == "fake://events"
     assert summary.session_count == 4
     assert summary.total_size_bytes == 7 * MB
     assert summary.oldest_started_at == NOW - timedelta(days=200)

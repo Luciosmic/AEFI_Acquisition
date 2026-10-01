@@ -37,13 +37,6 @@ class ExternalModulesPanel(BasePanel):
             "#1976D2",
             "#1565C0",
         ),
-        (
-            "cube",
-            "Visualiseur 3D (cube senseur)",
-            ("external_modules", "cube_visualizer", "main.py"),
-            "#00897B",
-            "#00796B",
-        ),
     )
 
     def __init__(self, parent=None):

@@ -5,6 +5,7 @@ from typing import Optional, Tuple
 
 @dataclass(frozen=True)
 class EventLogSummaryDTO:
+    location: str  # directory holding the session files
     total_size_bytes: int
     session_count: int
     oldest_started_at: Optional[datetime]

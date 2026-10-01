@@ -35,6 +35,10 @@ class IEventLogStoragePort(ABC):
     """
 
     @abstractmethod
+    def location(self) -> str:
+        """Where the sessions are stored, for the user to open."""
+
+    @abstractmethod
     def list_sessions(self) -> List[StoredEventLogSession]: ...
 
     @abstractmethod
