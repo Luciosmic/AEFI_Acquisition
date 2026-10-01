@@ -5,6 +5,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from domain.calibration.calibration import Calibration
+from domain.calibration.value_objects.caliper_measurement.caliper_measurement import CaliperMeasurement
 from domain.calibration.entities.hardware_component_selection.hardware_component_selection import (
     HardwareComponentSelection,
 )
@@ -33,10 +34,11 @@ class TestAcquisitionSnapshotReader(unittest.TestCase):
         self.addCleanup(lambda: os.chdir(self.cwd))
         os.chdir(self._tmp.name)
         self.components = FakeHardwareComponentRepository()
+        self.geometries = FakeSourceGeometryCalibrationRepository()
         self.reader = AcquisitionSnapshotReader(
             hardware_component_repository=self.components,
             sensor_calibration_repository=FakeSensorCalibrationRepository(),
-            source_geometry_calibration_repository=FakeSourceGeometryCalibrationRepository(),
+            source_geometry_calibration_repository=self.geometries,
         )
 
     def test_missing_config_files_are_omitted_and_empty_registries_are_flagged(self):
@@ -48,6 +50,23 @@ class TestAcquisitionSnapshotReader(unittest.TestCase):
             self.assertIsNone(hardware[kind.value])
         self.assertEqual(len(hardware["warnings"]), len(HardwareComponentKind) + 2)
         self.assertIn("configuration incomplete", hardware["warnings"][0])
+
+    def test_latest_source_geometry_is_exported_with_its_reconstructed_sphere_positions(self):
+        measure = lambda values: tuple(CaliperMeasurement.from_resolution(v) for v in values)
+        entry = Calibration().record_source_geometry_calibration_entry(
+            measure((0.0196, 0.0196, 0.0195, 0.0195)),
+            measure((0.11142, 0.10908, 0.08436, 0.08352, 0.08230, 0.08450)),
+        )
+        self.geometries.add(entry)
+
+        reconstruction = self.reader.read()["hardware_configuration"]["source_frame_reconstruction"]
+
+        self.assertEqual(reconstruction["source_geometry_entry_id"], str(entry.entry_id))
+        x1, y1 = reconstruction["sphere_positions"]["S1"]  # x_neg_y_pos
+        self.assertLess(x1, 0)
+        self.assertGreater(y1, 0)
+        self.assertEqual(list(reconstruction["distance_residuals"])[:2], ["D_S1_S2", "D_S3_S4"])
+        json.dumps(reconstruction)  # plain JSON, no custom encoder needed
 
     def test_mounted_component_is_exported_from_domain_with_its_debt(self):
         self.components.add(

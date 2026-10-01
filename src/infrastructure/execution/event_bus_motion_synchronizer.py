@@ -18,6 +18,9 @@ Design:
   by motion_id so concurrent motions would be safe, though the scan loop
   sends only one at a time).
 - EmergencyStopTriggered has no motion_id: it cancels every pending wait.
+- A completion/failure published before wait_for_motion() registers (null
+  move: done before move_to() returns its id) is kept and returned at once
+  — otherwise the wait missed it and timed out after 30 s.
 - Always returns OperationResult — never raises for expected outcomes.
 - Unsubscribes on close() to avoid memory leaks in long-lived processes.
 """
@@ -26,6 +29,7 @@ from __future__ import annotations
 
 import logging
 import threading
+from collections import OrderedDict
 from typing import Dict, Optional, Tuple
 
 from application.services.scan_application_service.errors.motion_sync_error import (
@@ -51,6 +55,7 @@ logger = logging.getLogger(__name__)
 
 # (motion_event, optional_error) stored per pending motion_id
 _Slot = Tuple[threading.Event, Optional[MotionSyncError]]
+_MAX_EARLY_OUTCOMES = 16
 
 
 class EventBusMotionSynchronizer(IMotionSynchronizer):
@@ -61,6 +66,10 @@ class EventBusMotionSynchronizer(IMotionSynchronizer):
         # motion_id -> (threading.Event, result_container)
         # result_container is a list so we can mutate from event handlers
         self._pending: Dict[str, Tuple[threading.Event, list]] = {}
+        # Terminal outcomes that arrived before wait_for_motion() registered
+        # (a null move completes before move_to() even returns its id).
+        # ponytail: bounded to the last few ids, enough for one motion at a time.
+        self._early: "OrderedDict[str, Optional[MotionSyncError]]" = OrderedDict()
         self._lock = threading.Lock()
 
         event_bus.subscribe("motioncompleted", self._on_motion_completed)
@@ -80,6 +89,10 @@ class EventBusMotionSynchronizer(IMotionSynchronizer):
         result_container: list = [None]  # [MotionSyncError | None]
 
         with self._lock:
+            if motion_id in self._early:
+                error = self._early.pop(motion_id)
+                logger.debug("Motion %s already terminated before the wait", motion_id)
+                return OperationResult.ok(None) if error is None else OperationResult.fail(error)
             self._pending[motion_id] = (evt, result_container)
 
         try:
@@ -132,8 +145,11 @@ class EventBusMotionSynchronizer(IMotionSynchronizer):
     def _signal(self, motion_id: str, error: Optional[MotionSyncError]) -> None:
         with self._lock:
             entry = self._pending.get(motion_id)
-        if entry is None:
-            return
+            if entry is None:
+                self._early[motion_id] = error
+                while len(self._early) > _MAX_EARLY_OUTCOMES:
+                    self._early.popitem(last=False)
+                return
         evt, container = entry
         container[0] = error
         evt.set()

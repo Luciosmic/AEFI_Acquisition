@@ -6,8 +6,9 @@ Responsibility:
   the per-scan metadata JSON —
   - `hardware_configuration`: built from the domain registries — for every
     hardware component kind, the mounted component and its current
-    characterization; the latest sensor calibration and source geometry —
-    plus the `warnings` of an incomplete / not characterized configuration;
+    characterization; the latest sensor calibration and source geometry,
+    with the sphere positions reconstructed from it (`source_frame_reconstruction`)
+    — plus the `warnings` of an incomplete / not characterized configuration;
   - the last-applied AD9106/motion configs and the probe connection
     defaults, still read from their on-disk JSON files.
 
@@ -26,6 +27,11 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from domain.calibration.calibration import Calibration
+from domain.calibration.entities.source_geometry_calibration_entry.source_geometry_calibration_entry import (
+    SourceGeometryCalibrationEntry,
+)
+from domain.calibration.errors.source_geometry_inconsistent_error import SourceGeometryInconsistentError
+from domain.calibration.services.source_frame_solver.source_frame_solver import SourceFrameSolver
 from domain.calibration.repositories.i_hardware_component_repository import IHardwareComponentRepository
 from domain.calibration.repositories.i_sensor_calibration_repository import ISensorCalibrationRepository
 from domain.calibration.repositories.i_source_geometry_calibration_repository import (
@@ -49,6 +55,30 @@ def _load_json(path: Path) -> Optional[Dict[str, Any]]:
 
 def _latest(entries):
     return max(entries, key=lambda entry: entry.recorded_at) if entries else None
+
+
+def _source_frame_reconstruction(entry: SourceGeometryCalibrationEntry) -> Dict[str, Any]:
+    """Sphere centers reconstructed from `entry`, keyed S1..S4 / D_Si_Sj."""
+    frame = SourceFrameSolver.solve(entry)
+    spheres = ("S1", "S2", "S3", "S4")
+    distances = [f"D_S{i + 1}_S{j + 1}" for i, j in entry.center_to_center_distances_m]
+    return {
+        "source_geometry_entry_id": str(entry.entry_id),
+        "frame": (
+            "origin = centroid of the 4 sphere centers, +x/+y along the sides of the best-fit square, z=0 "
+            "(coplanar by construction); S1=x_neg_y_pos, S2=x_pos_y_neg, S3=x_pos_y_pos, S4=x_neg_y_neg"
+        ),
+        "unit": "m",
+        "sphere_positions": dict(zip(spheres, frame.sphere_positions_m)),
+        "sphere_radii": dict(zip(spheres, frame.sphere_radii_m)),
+        "best_fit_square": {
+            "side": frame.best_fit_square_side_m,
+            "positions": dict(zip(spheres, frame.best_fit_square_positions_m)),
+            "residuals": dict(zip(spheres, frame.square_residuals_m)),
+            "rms_residual": frame.square_rms_residual_m,
+        },
+        "distance_residuals": dict(zip(distances, frame.distance_residuals_m)),
+    }
 
 
 class AcquisitionSnapshotReader:
@@ -111,8 +141,14 @@ class AcquisitionSnapshotReader:
 
         geometry = _latest(self._source_geometry_calibration_repository.find_all())
         configuration["source_geometry_latest"] = asdict(geometry) if geometry else None
+        configuration["source_frame_reconstruction"] = None
         if geometry is None:
             warnings.append("source_geometry: no source geometry recorded")
+        else:
+            try:
+                configuration["source_frame_reconstruction"] = _source_frame_reconstruction(geometry)
+            except SourceGeometryInconsistentError as e:
+                warnings.append(f"source_frame_reconstruction: latest source geometry cannot be reconstructed ({e})")
 
         configuration["warnings"] = warnings
         for warning in warnings:

@@ -34,6 +34,8 @@ class SourceGeometryCalibrationPresenter(QObject):
     # dto (SourceGeometryCalibrationDTO) or None
     latest_calibration_updated = Signal(object)
     status_message = Signal(str)
+    source_frame_preview_updated = Signal(object)  # SourceFrameGeometryDTO
+    source_frame_preview_rejected = Signal(str)  # reason, names the offending reading
 
     def __init__(self, service: IApiSourceGeometryCalibrationService, event_bus: IDomainEventBus):
         super().__init__()
@@ -46,6 +48,17 @@ class SourceGeometryCalibrationPresenter(QObject):
     def refresh_state(self) -> None:
         """Push the latest recorded source geometry calibration to the UI."""
         self.latest_calibration_updated.emit(self._service.get_latest_calibration())
+
+    @Slot(list, list)
+    def on_measurements_edited(
+        self, sphere_diameters_m: List[float], pairwise_distances_ext_m: List[float]
+    ) -> None:
+        """Live preview of the reconstruction while the operator edits — nothing recorded."""
+        result = self._service.preview_source_frame(sphere_diameters_m, pairwise_distances_ext_m)
+        if result.is_success:
+            self.source_frame_preview_updated.emit(result.value)
+        else:
+            self.source_frame_preview_rejected.emit(result.error.reason)
 
     @Slot(list, list)
     def on_save_calibration_requested(

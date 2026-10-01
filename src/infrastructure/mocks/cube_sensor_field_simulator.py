@@ -6,20 +6,16 @@ See cube_sensor_field_simulator_intention.md.
 
 import json
 import random
-import sys
 from pathlib import Path
 from typing import Optional, Tuple
 
 import numpy as np
+from scipy.spatial.transform import Rotation
 
+from domain.calibration.value_objects.sensor_rotation_angles.sensor_rotation_angles import (
+    SensorRotationAngles,
+)
 from infrastructure.mocks.point_charge_field_simulator import PointChargeFieldSimulator
-
-_PROJECT_ROOT = Path(__file__).resolve().parents[3]
-_EXTERNAL_MODULES = _PROJECT_ROOT / "external_modules"
-if str(_EXTERNAL_MODULES) not in sys.path:
-    sys.path.insert(0, str(_EXTERNAL_MODULES))
-
-from cube_visualizer.domain.sensor_rotation import rotation_from_euler_xyz  # noqa: E402
 
 _DEFAULT_CONFIG_PATH = Path(".aefi_acquisition") / "configs" / "aefi_device_config.json"
 
@@ -92,7 +88,9 @@ class CubeSensorFieldSimulator:
                 "update .aefi_acquisition/configs/aefi_device_config.json from config_templates/"
             )
         rot = calibration["sources_to_sensor_rotation"]
-        rotation = rotation_from_euler_xyz(rot["theta_x"], rot["theta_y"], rot["theta_z"])
+        rotation = Rotation.from_matrix(
+            SensorRotationAngles(rot["theta_x"], rot["theta_y"], rot["theta_z"]).mounting_matrix()
+        )
 
         spheres = point_charge_simulator or PointChargeFieldSimulator.from_config(config)
         return cls(

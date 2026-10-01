@@ -37,6 +37,12 @@ class FakeSensorCalibrationService(IApiSensorCalibrationService):
     def reset_to_default(self) -> None:
         self.reset_to_default_calls += 1
 
+    def set_output_port(self, output_port) -> None:
+        self.output_port = output_port
+
+    def start_automatic_calibration(self) -> None:
+        self.automatic_calibration_started = True
+
     def record_calibration(self, theta_x_degrees, theta_y_degrees, theta_z_degrees) -> None:
         self.record_calibration_calls.append((theta_x_degrees, theta_y_degrees, theta_z_degrees))
         if self.record_calibration_error is not None:
@@ -55,11 +61,18 @@ class FakeSensorCalibrationService(IApiSensorCalibrationService):
 
     def get_active_rotation(self) -> ActiveSensorRotationDTO:
         if self.latest is None:
-            return ActiveSensorRotationDTO(35.3, 45.0, 0.0, is_calibrated=False, is_trial=False, recorded_at=None)
+            return ActiveSensorRotationDTO(
+                35.3, 45.0, 0.0, is_calibrated=False, is_trial=False, recorded_at=None,
+                mounting_matrix=_IDENTITY,
+            )
         return ActiveSensorRotationDTO(
             self.latest.theta_x_degrees, self.latest.theta_y_degrees, self.latest.theta_z_degrees,
             is_calibrated=True, is_trial=False, recorded_at=self.latest.recorded_at,
+            mounting_matrix=_IDENTITY,
         )
+
+
+_IDENTITY = ((1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0))
 
 
 class TestSensorCalibrationPresenter(unittest.TestCase):
@@ -124,6 +137,21 @@ class TestSensorCalibrationPresenter(unittest.TestCase):
         self.presenter.on_reset_to_default_requested()
 
         self.assertEqual(self.service.reset_to_default_calls, 1)
+
+    def test_presenter_registers_itself_as_output_port(self):
+        self.assertIs(self.service.output_port, self.presenter)
+
+    def test_automatic_calibration_disables_then_re_enables_on_outcome(self):
+        running = []
+        self.presenter.automatic_calibration_running.connect(running.append)
+
+        self.presenter.on_automatic_calibration_requested()
+        self.presenter.present_automatic_calibration_failed("niveau nul")
+
+        self.assertTrue(self.service.automatic_calibration_started)
+        self.assertEqual(running, [True, False])
+        self.assertIn("Erreur", self.received_status_messages[-1])
+        self.assertIn("niveau nul", self.received_status_messages[-1])
 
 
 if __name__ == "__main__":

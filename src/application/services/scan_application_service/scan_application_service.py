@@ -69,6 +69,8 @@ from .errors.motion_sync_error import (
 
 logger = logging.getLogger(__name__)
 
+SCAN_EXCITATION_CONTROLLER = "scan"
+
 
 def _drain_queue(q: "queue.Queue") -> None:
     """Discard whatever is currently buffered in `q` without blocking."""
@@ -244,6 +246,14 @@ class ScanApplicationService:
 
             if config.differential_mode and self._excitation_service is None:
                 raise ValueError("differential_mode requires an ExcitationConfigurationService")
+            # The excitation is a measurement condition of every point: held
+            # for the whole scan, differential or not (refused if e.g. the
+            # automatic sensor calibration drives it). Released with the streams.
+            if self._excitation_service is not None:
+                control = self._excitation_service.take_control(SCAN_EXCITATION_CONTROLLER)
+                if control.is_failure:
+                    logger.warning("ScanApplicationService: scan refused — %s", control.error)
+                    return False
 
             scan = StepScan()
             scan.start(config)
@@ -259,6 +269,8 @@ class ScanApplicationService:
 
         except Exception as e:
             logger.error(f"Scan failed to start: {e}")
+            if self._excitation_service is not None:
+                self._excitation_service.release_control(SCAN_EXCITATION_CONTROLLER)
             if self._current_scan and self._current_scan.status == ScanStatus.RUNNING:
                 self._current_scan.fail(str(e))
                 self._publish_events(self._current_scan.domain_events)
@@ -394,6 +406,8 @@ class ScanApplicationService:
                 self._aefi_acquisition_service.stop_acquisition()
             for channel in channels_started_by_scan:
                 channel.service.stop_acquisition()
+            if self._excitation_service is not None:
+                self._excitation_service.release_control(SCAN_EXCITATION_CONTROLLER)
 
         try:
             for i, position in enumerate(trajectory):

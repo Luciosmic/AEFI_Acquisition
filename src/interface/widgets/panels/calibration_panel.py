@@ -7,7 +7,7 @@ no logic, no signals of its own: dashboard_wiring.py connects directly to
 the sub-widgets exposed as attributes.
 """
 
-from typing import Dict
+from typing import Dict, Optional
 
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QTabWidget
 
@@ -19,10 +19,10 @@ from interface.widgets.panels.hardware_component_panel import HardwareComponentP
 class CalibrationPanel(QWidget):
     """Tabbed dock hosting every calibration sub-panel."""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, sensor_orientation_view: Optional[QWidget] = None):
         super().__init__(parent)
 
-        self.sensor_calibration_panel = SensorCalibrationPanel()
+        self.sensor_calibration_panel = SensorCalibrationPanel(orientation_view=sensor_orientation_view)
         self.source_geometry_panel = SourceGeometryCalibrationPanel()
         self.hardware_component_panels: Dict[str, HardwareComponentPanel] = {}
 

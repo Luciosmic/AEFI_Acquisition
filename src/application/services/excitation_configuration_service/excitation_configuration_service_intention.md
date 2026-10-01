@@ -22,6 +22,17 @@ Isoler la configuration du générateur d'excitation DDS (AD9106) de la UI et du
   `_on_link_changed`, abonnés sur le bus d'events au lieu de poller) — recalcule mode/niveau
   depuis la paire de phases (DDS1, DDS2), retombe sur `ExcitationMode.CUSTOM` si la paire ne
   correspond à aucun mode connu.
+- `take_control(controller)` / `release_control(controller)` / `get_controller()` :
+  propriétaire unique de l'excitation (emprunt exclusif, à la `&mut` de Rust mais vérifié
+  à l'exécution). Le scan la prend pour toute sa durée (différentiel ou non : l'excitation
+  est une condition de mesure de chaque point), la calibration automatique du capteur pour
+  sa séquence coupée/X/Y. Tant qu'elle est tenue, `set_excitation` (sans le bon
+  `controller`) et `set_link` sont refusés par `OperationResult.fail` — sans ça, une
+  calibration lancée pendant un scan change l'excitation au milieu des points, sans erreur
+  et avec des données plausibles. Publie `ExcitationControlChanged` à chaque prise/libération
+  pour que le panel Excitation affiche qui pilote et se verrouille (pas d'état caché).
+  Les lectures (`get_current_parameters`) restent libres. ponytail: l'onglet Hardware
+  Advanced Config écrit les registres DDS sans passer par ce service — non couvert.
 
 ## Design
 

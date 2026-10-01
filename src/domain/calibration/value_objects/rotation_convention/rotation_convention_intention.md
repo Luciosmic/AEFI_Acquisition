@@ -98,8 +98,11 @@ the asymmetries of the sphere mounting.
 
 Trial angles are applied live through `SensorCalibrationService.preview_rotation`
 and persisted only when recorded ("Enregistrer calibration"). "Reset to
-Default" restarts from the ideal angles. A future automatic calibration
-service will optimize the same criterion by driving the same preview.
+Default" restarts from the ideal angles. "Calibration automatique"
+(`SensorCalibrationService.start_automatic_calibration`) optimizes the same
+criterion on the measured responses — least squares over both directions
+(Wahba, `domain/calibration/services/sensor_mounting_solver/`), not the
+ideal-field closed form above — and drives the same preview.
 
 ## Relation to the thesis vault note
 

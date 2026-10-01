@@ -13,6 +13,11 @@ other panel in this codebase — mirrors `SensorCalibrationPresenter`.
   as a status message.
 - `refresh_state()`: push `service.get_latest_calibration()` (DTO or `None`)
   to the panel via `latest_calibration_updated`.
+- `on_measurements_edited(sphere_diameters_m, pairwise_distances_ext_m)`:
+  forward to `service.preview_source_frame(...)` and emit
+  `source_frame_preview_updated(SourceFrameGeometryDTO)` or
+  `source_frame_preview_rejected(reason)` — pure branching on the
+  `OperationResult`, the impossibility rules stay in the domain.
 - Subscribe to `SOURCE_GEOMETRY_CALIBRATION_ENTRY_ADDED_TOPIC` at
   construction and call `refresh_state()` on it — `record_calibration()`
   publishes this event synchronously, so the panel refreshes automatically

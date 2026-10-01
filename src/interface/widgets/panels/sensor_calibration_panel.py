@@ -6,7 +6,7 @@ the mounting angles P of the mounted sensor (brings the sensor from the
 sources frame to its current mounting; measurement E_sensor = Pᵀ·E_sources;
 correction E_sources = P·E_sensor), tuned live by trial and error (applied
 without being recorded). Also shows the mounting currently applied to sensor
-readings and launches the 3D sensor visualizer. Definition of the
+readings, in text and in 3D (injected orientation view). Definition of the
 frames and of P: domain/calibration/value_objects/rotation_convention/
 rotation_convention_intention.md.
 """
@@ -15,6 +15,7 @@ from typing import Optional
 
 from PySide6.QtWidgets import (
     QWidget,
+    QHBoxLayout,
     QVBoxLayout,
     QGroupBox,
     QFormLayout,
@@ -34,6 +35,9 @@ _PROCEDURE_TEXT = (
     "Réglage par tâtonnement (\"Apply Rotation\" activé, chaque modification s'applique en direct) :\n"
     "1) Excitation selon X : E_x^sources maximal, E_y^sources et E_z^sources minimaux.\n"
     "2) Excitation selon Y : E_y^sources maximal, E_x^sources et E_z^sources minimaux.\n"
+    "« Calibration automatique » fait la même chose seule : au niveau d'excitation réglé, elle mesure "
+    "la baseline (excitation coupée), puis les réponses aux excitations X et Y, calcule les angles qui "
+    "les alignent au mieux sur e_x et e_y (moindres carrés), les applique en essai et restaure l'excitation.\n"
     "« Reset to Default » repart des angles idéaux ; « Enregistrer calibration » fige les angles."
 )
 
@@ -45,15 +49,25 @@ class SensorCalibrationPanel(QWidget):
 
     # theta_x, theta_y, theta_z
     save_calibration_requested = Signal(float, float, float)
-    launch_visualizer_requested = Signal()
     # theta_x, theta_y, theta_z — live trial, not recorded
     trial_rotation_requested = Signal(float, float, float)
     reset_to_default_requested = Signal()
+    automatic_calibration_requested = Signal()
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, orientation_view: Optional[QWidget] = None):
+        """orientation_view: QWidget with show_mounting(matrix), shown right of
+        the controls and fed with the active mounting matrix P."""
         super().__init__(parent)
+        self._orientation_view = orientation_view
 
-        layout = QVBoxLayout(self)
+        root = QHBoxLayout(self)
+        root.setContentsMargins(0, 0, 0, 0)
+        controls = QWidget()
+        root.addWidget(controls)
+        if orientation_view is not None:
+            root.addWidget(orientation_view, 1)
+
+        layout = QVBoxLayout(controls)
         layout.setContentsMargins(5, 5, 5, 5)
         layout.setSpacing(5)
 
@@ -81,10 +95,11 @@ class SensorCalibrationPanel(QWidget):
         layout.addWidget(self.btn_reset_to_default)
 
         self.btn_auto_calibration = QPushButton("Calibration automatique")
-        self.btn_auto_calibration.setEnabled(False)
         self.btn_auto_calibration.setToolTip(
-            "À venir : service de calibration automatique (ajustement des angles sur le signal selon le même critère)."
+            "Pilote l'excitation (coupée, X, Y) au niveau réglé dans l'onglet Excitation, ajuste les angles "
+            "sur les réponses du capteur et les applique en essai (non enregistrés)."
         )
+        self.btn_auto_calibration.clicked.connect(self.automatic_calibration_requested.emit)
         layout.addWidget(self.btn_auto_calibration)
 
         self.btn_save = QPushButton("Enregistrer calibration")
@@ -106,10 +121,6 @@ class SensorCalibrationPanel(QWidget):
             "Angles de montage P appliqués ; les mesures sont ramenées dans le repère sources par E_sources = P·E_sensor (Continuous Reading, \"Apply Rotation\")."
         )
         layout.addWidget(self.lbl_active_rotation)
-
-        self.btn_launch_visualizer = QPushButton("Lancer le visualiseur 3D")
-        self.btn_launch_visualizer.clicked.connect(self.launch_visualizer_requested.emit)
-        layout.addWidget(self.btn_launch_visualizer)
 
         layout.addStretch()
 
@@ -134,6 +145,12 @@ class SensorCalibrationPanel(QWidget):
             self.spin_theta_y.value(),
             self.spin_theta_z.value(),
         )
+
+    def set_automatic_calibration_running(self, running: bool) -> None:
+        """Lock the controls while the automatic calibration drives the excitation."""
+        for widget in (self.btn_auto_calibration, self.btn_save, self.btn_reset_to_default,
+                       self.spin_theta_x, self.spin_theta_y, self.spin_theta_z):
+            widget.setEnabled(not running)
 
     def set_status_message(self, message: str) -> None:
         """Presenter feedback — red for "Erreur: ..." (e.g. no sensor mounted)."""
@@ -162,6 +179,8 @@ class SensorCalibrationPanel(QWidget):
             spin.blockSignals(True)
             spin.setValue(value)
             spin.blockSignals(False)
+        if self._orientation_view is not None:
+            self._orientation_view.show_mounting(dto.mounting_matrix)
         angles = (
             f"θx={dto.theta_x_degrees:.2f}°  θy={dto.theta_y_degrees:.2f}°  θz={dto.theta_z_degrees:.2f}°"
         )

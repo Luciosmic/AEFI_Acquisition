@@ -11,8 +11,14 @@ Rationale:
     - Simulates the physical coupling between excitation and acquisition
     - After synchronous detection, signal characteristics are tied to excitation level
     - Frequency has no impact (processing occurs after synchronous detection)
-    - No object-under-test is modeled (empty-bench baseline), so
-      ExcitationMode has no effect — only level_s1_s2/level_s3_s4 do
+    - No object-under-test is modeled (empty-bench baseline)
+    - ExcitationMode sets the phase phi of S1/S2 (DDS2) relative to S3/S4
+      (DDS1, the synchronous detection reference) — same phase pairs as
+      AdapterExcitationConfigurationAD9106: Y_DIR 0°, X_DIR 180°,
+      CIRCULAR_PLUS 90°, CIRCULAR_MINUS 270°. The field is linear in the
+      levels: in-phase = S3/S4 + cos(phi)·S1/S2, quadrature = sin(phi)·S1/S2.
+      On the ideal square, Y_DIR gives a field along +y^sources, X_DIR along
+      +x^sources.
 
 Design:
     - Wraps an IAcquisitionPort to intercept measurements
@@ -22,15 +28,27 @@ Design:
 """
 
 import logging
+import math
 from typing import Optional
 
 from application.services.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
 from application.services.excitation_configuration_service.ports.i_excitation_port import IExcitationPort
 from domain.shared_kernel.value_objects.acquisition.aefi_voltage_measurement import AefiVoltageMeasurement
 from domain.shared_kernel.excitation.value_objects.excitation_parameters import ExcitationParameters
+from domain.shared_kernel.excitation.value_objects.excitation_mode import ExcitationMode
 from infrastructure.mocks.cube_sensor_field_simulator import CubeSensorFieldSimulator
 
 logger = logging.getLogger(__name__)
+
+# Phase of S1/S2 (DDS2) relative to S3/S4 (DDS1), from the AD9106 adapter's
+# (DDS1, DDS2) phase pairs. ponytail: CUSTOM keeps whatever phases the
+# hardware has, unknown here — simulated as 0°; quadrature sign assumed +sin(phi).
+_S1_S2_PHASE_DEGREES = {
+    ExcitationMode.Y_DIR: 0.0,
+    ExcitationMode.X_DIR: 180.0,
+    ExcitationMode.CIRCULAR_PLUS: 90.0,
+    ExcitationMode.CIRCULAR_MINUS: 270.0,
+}
 
 
 class ExcitationAwareAcquisitionPort(IAcquisitionPort):
@@ -81,13 +99,22 @@ class ExcitationAwareAcquisitionPort(IAcquisitionPort):
         if not excitation:
             return base_measurement
 
-        ux, uy, uz = self._field_simulator.compute_axis_voltages(
-            excitation.level_s1_s2.value, excitation.level_s3_s4.value
+        phi = math.radians(_S1_S2_PHASE_DEGREES.get(excitation.mode, 0.0))
+        level_s1_s2 = excitation.level_s1_s2.value
+        in_phase = self._field_simulator.compute_axis_voltages(
+            level_s1_s2 * math.cos(phi), excitation.level_s3_s4.value
         )
-        if ux == 0.0 and uy == 0.0 and uz == 0.0:
+        # Rounded so X_DIR/Y_DIR (sin = ±1e-16) add no quadrature at all.
+        quadrature_weight = round(math.sin(phi), 12)
+        quadrature = (
+            self._field_simulator.compute_axis_voltages(level_s1_s2 * quadrature_weight, 0.0)
+            if quadrature_weight and level_s1_s2
+            else (0.0, 0.0, 0.0)
+        )
+        if not any(in_phase) and not any(quadrature):
             return base_measurement
 
-        return self._apply_offset_to_measurement(base_measurement, ux, uy, uz)
+        return self._apply_offset_to_measurement(base_measurement, in_phase, quadrature)
 
     def is_ready(self) -> bool:
         """Check if base acquisition port is ready."""
@@ -117,24 +144,21 @@ class ExcitationAwareAcquisitionPort(IAcquisitionPort):
     @staticmethod
     def _apply_offset_to_measurement(
         measurement: AefiVoltageMeasurement,
-        ux: float,
-        uy: float,
-        uz: float,
+        in_phase,
+        quadrature,
     ) -> AefiVoltageMeasurement:
         """
-        Apply the simulated field (already in Sensor Frame — see
-        CubeSensorFieldSimulator) to the in-phase components of a voltage
-        measurement. Quadrature is left untouched — both DDS pairs run at
-        the same frequency, so this empty-bench model has no phase shift to
-        contribute.
+        Add the simulated field (already in Sensor Frame — see
+        CubeSensorFieldSimulator), split into in-phase and quadrature
+        (x, y, z) triplets, to a voltage measurement.
         """
         return AefiVoltageMeasurement(
-            voltage_x_in_phase=measurement.voltage_x_in_phase + ux,
-            voltage_x_quadrature=measurement.voltage_x_quadrature,
-            voltage_y_in_phase=measurement.voltage_y_in_phase + uy,
-            voltage_y_quadrature=measurement.voltage_y_quadrature,
-            voltage_z_in_phase=measurement.voltage_z_in_phase + uz,
-            voltage_z_quadrature=measurement.voltage_z_quadrature,
+            voltage_x_in_phase=measurement.voltage_x_in_phase + in_phase[0],
+            voltage_x_quadrature=measurement.voltage_x_quadrature + quadrature[0],
+            voltage_y_in_phase=measurement.voltage_y_in_phase + in_phase[1],
+            voltage_y_quadrature=measurement.voltage_y_quadrature + quadrature[1],
+            voltage_z_in_phase=measurement.voltage_z_in_phase + in_phase[2],
+            voltage_z_quadrature=measurement.voltage_z_quadrature + quadrature[2],
             timestamp=measurement.timestamp,
             uncertainty_estimate_volts=measurement.uncertainty_estimate_volts,
             std_dev_x_in_phase=measurement.std_dev_x_in_phase,

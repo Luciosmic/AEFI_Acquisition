@@ -9,6 +9,22 @@ def _c(phase):
     return phase_to_sphere_color(phase).name()
 
 
+def test_controlled_excitation_locks_the_settings_and_says_who():
+    from PySide6.QtWidgets import QApplication
+    from interface.widgets.panels.excitation_panel import ExcitationPanel
+
+    _app = QApplication.instance() or QApplication([])
+    panel = ExcitationPanel()
+
+    panel.set_controller("scan")
+    assert not panel.level_s1_s2_spin.isEnabled() and not panel.mode_combo.isEnabled()
+    assert "scan" in panel.controller_label.text() and not panel.controller_label.isHidden()
+
+    panel.set_controller("")
+    assert panel.level_s1_s2_spin.isEnabled() and panel.mode_combo.isEnabled()
+    assert panel.controller_label.isHidden()
+
+
 def test_sphere_color_follows_applied_phase_not_selected_mode():
     red, blue = _c(0.0), _c(180.0)
     assert red != blue

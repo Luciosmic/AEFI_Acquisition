@@ -1,6 +1,7 @@
 import logging
+import threading
 from dataclasses import replace
-from typing import Dict
+from typing import Dict, Optional
 
 from .ports.i_excitation_port import IExcitationPort
 from domain.shared_kernel.excitation.value_objects.excitation_parameters import ExcitationParameters
@@ -16,10 +17,15 @@ from domain.shared_kernel.excitation.events.dds_channel_config_changed.dds_chann
 from domain.shared_kernel.excitation.events.excitation_dds_link_changed.excitation_dds_link_changed import (
     ExcitationDdsLinkChanged,
 )
+from domain.shared_kernel.excitation.events.excitation_control_changed.excitation_control_changed import (
+    ExcitationControlChanged,
+)
+from domain.shared_kernel.operation_result import OperationResult
 
 EXCITATION_FREQUENCY_CHANGED_TOPIC = "excitationfrequencychanged"
 DDS_CHANNEL_CONFIG_CHANGED_TOPIC = "ddschannelconfigchanged"
 EXCITATION_DDS_LINK_CHANGED_TOPIC = "excitationddslinkchanged"
+EXCITATION_CONTROL_CHANGED_TOPIC = "excitationcontrolchanged"
 
 # Mirrors AdapterExcitationConfigurationAD9106._map_excitation_mode_to_dds's
 # phase table, (DDS1 phase, DDS2 phase) -> mode — channel number = DDS
@@ -54,6 +60,10 @@ class ExcitationConfigurationService:
         # Advanced Config tab's own link_dds1_dds2 parameter — defaults True
         # to match the Excitation panel's own default-checked link_checkbox.
         self._linked: bool = True
+        # Single owner of the excitation (scan, automatic calibration...):
+        # while held, only that controller may change it. None = settable by hand.
+        self._controller: Optional[str] = None
+        self._control_lock = threading.Lock()
         # Hardware Config tab can also change the shared DDS frequency register,
         # or channel 1/2 gain/phase, directly (bypassing this service) — stay in
         # sync via the event bus instead of polling.
@@ -95,13 +105,61 @@ class ExcitationConfigurationService:
             self._current_params, mode=mode, level_s1_s2=level_s1_s2, level_s3_s4=level_s3_s4
         )
 
+    # -- control (single owner) -------------------------------------------------
+
+    def take_control(self, controller: str) -> OperationResult[None, str]:
+        """Become the only one allowed to change the excitation, until
+        release_control(). Refused if another controller holds it."""
+        logger.info("ExcitationConfigurationService: Command take_control controller=%s", controller)
+        with self._control_lock:
+            if self._controller == controller:
+                logger.info("ExcitationConfigurationService: '%s' already controls the excitation. Doing nothing.", controller)
+                return OperationResult.ok(None)
+            if self._controller is not None:
+                logger.warning(
+                    "ExcitationConfigurationService: control refused to '%s', held by '%s'", controller, self._controller
+                )
+                return OperationResult.fail(f"excitation pilotée par : {self._controller}")
+            self._controller = controller
+        self._event_bus.publish(EXCITATION_CONTROL_CHANGED_TOPIC, ExcitationControlChanged(controller=controller))
+        return OperationResult.ok(None)
+
+    def release_control(self, controller: str) -> None:
+        """Give the excitation back (settable by hand). Idempotent; ignored if
+        `controller` is not the current owner."""
+        with self._control_lock:
+            if self._controller != controller:
+                logger.debug(
+                    "ExcitationConfigurationService: release by '%s' ignored (owner: %s)", controller, self._controller
+                )
+                return
+            self._controller = None
+        logger.info("ExcitationConfigurationService: control released by '%s'", controller)
+        self._event_bus.publish(EXCITATION_CONTROL_CHANGED_TOPIC, ExcitationControlChanged(controller=None))
+
+    def get_controller(self) -> Optional[str]:
+        return self._controller
+
+    def _refuse_if_controlled_by_another(self, controller: Optional[str], command: str) -> Optional[str]:
+        owner = self._controller
+        if owner is not None and owner != controller:
+            logger.warning(
+                "ExcitationConfigurationService: %s refused (caller=%s, excitation controlled by '%s')",
+                command, controller, owner,
+            )
+            return f"excitation pilotée par : {owner}"
+        return None
+
+    # -- commands ----------------------------------------------------------------
+
     def set_excitation(
         self,
         mode: ExcitationMode,
         level_s1_s2_percent: float,
         level_s3_s4_percent: float,
         frequency: float,
-    ) -> None:
+        controller: Optional[str] = None,
+    ) -> OperationResult[None, str]:
         """
         Set the excitation mode, DDS levels, and frequency.
 
@@ -110,11 +168,16 @@ class ExcitationConfigurationService:
             level_s1_s2_percent: Intensity of spheres S1/S2 (DDS2 generator), 0.0 - 100.0
             level_s3_s4_percent: Intensity of spheres S3/S4 (DDS1 generator), 0.0 - 100.0
             frequency: Frequency logic (Hz)
+            controller: the caller's name when it holds the control (None = by hand).
+                Refused while another controller holds the excitation.
         """
         logger.info(
-            "ExcitationConfigurationService: set_excitation mode=%s level_s1_s2=%s%% level_s3_s4=%s%% freq=%sHz",
-            mode.name, level_s1_s2_percent, level_s3_s4_percent, frequency,
+            "ExcitationConfigurationService: set_excitation mode=%s level_s1_s2=%s%% level_s3_s4=%s%% freq=%sHz controller=%s",
+            mode.name, level_s1_s2_percent, level_s3_s4_percent, frequency, controller,
         )
+        refusal = self._refuse_if_controlled_by_another(controller, "set_excitation")
+        if refusal is not None:
+            return OperationResult.fail(refusal)
         level_s1_s2 = ExcitationLevel(level_s1_s2_percent)
         level_s3_s4 = ExcitationLevel(level_s3_s4_percent)
         params = ExcitationParameters(mode, level_s1_s2, level_s3_s4, frequency)
@@ -131,6 +194,7 @@ class ExcitationConfigurationService:
                 EXCITATION_FREQUENCY_CHANGED_TOPIC,
                 ExcitationFrequencyChanged(frequency_hz=frequency),
             )
+        return OperationResult.ok(None)
 
     def get_current_parameters(self) -> ExcitationParameters:
         return self._current_params
@@ -140,15 +204,20 @@ class ExcitationConfigurationService:
         shared state with the Hardware Advanced Config tab's link_dds1_dds2."""
         return self._linked
 
-    def set_link(self, linked: bool) -> None:
+    def set_link(self, linked: bool) -> OperationResult[None, str]:
         """Toggle the S1-S2 = S3-S4 link from the Excitation panel. Delegates
         persistence/event-publication to the port (single writer for
         link_dds1_dds2, same as apply_config() on the Hardware Advanced side)
         — the event loops back to _on_link_changed synchronously, so
-        _linked is updated either way."""
+        _linked is updated either way. Refused while a controller holds the
+        excitation (the link rewrites the gains)."""
         logger.info("ExcitationConfigurationService: set_link linked=%s", linked)
+        refusal = self._refuse_if_controlled_by_another(None, "set_link")
+        if refusal is not None:
+            return OperationResult.fail(refusal)
         self._port.set_link_dds1_dds2(linked)
         self._linked = linked
+        return OperationResult.ok(None)
 
     def mute(self) -> None:
         """

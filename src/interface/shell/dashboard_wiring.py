@@ -25,6 +25,7 @@ from interface.presenters.hardware_advanced_config_presenter import HardwareAdva
 from interface.presenters.sensor_calibration_presenter import SensorCalibrationPresenter
 from interface.presenters.source_geometry_calibration_presenter import SourceGeometryCalibrationPresenter
 from interface.presenters.hardware_component_presenter import HardwareComponentPresenter
+from interface.presenters.event_log_presenter import EventLogPresenter
 
 logger = logging.getLogger(__name__)
 
@@ -41,10 +42,20 @@ def wire_dashboard(
     sensor_calibration_presenter: SensorCalibrationPresenter,
     source_geometry_calibration_presenter: SourceGeometryCalibrationPresenter,
     hardware_component_presenters: List[HardwareComponentPresenter],
+    event_log_presenter: EventLogPresenter,
 ) -> None:
     """Connect every dashboard panel to its presenter. Called once from
     main.py right after the dashboard and presenters are constructed."""
     print("--- Wiring Presenters to Panels ---")
+
+    # Logs Panel — event audit log size + user-confirmed deletion of old sessions
+    logs_panel = dashboard.panels["logs"]
+    logs_panel.manage_requested.connect(event_log_presenter.refresh)
+    logs_panel.purge_requested.connect(event_log_presenter.on_purge_requested)
+    logs_panel.purge_confirmed.connect(event_log_presenter.on_purge_confirmed)
+    event_log_presenter.summary_updated.connect(logs_panel.set_event_log_summary)
+    event_log_presenter.purge_confirmation_needed.connect(logs_panel.confirm_purge)
+    event_log_presenter.refresh()
 
     # Motion Panel
     motion_panel = dashboard.panels["motion"]
@@ -77,6 +88,7 @@ def wire_dashboard(
     excitation_presenter.excitation_updated.connect(excitation_panel.set_state)
     excitation_panel.link_toggled.connect(excitation_presenter.on_link_toggled)
     excitation_presenter.link_state_changed.connect(excitation_panel.set_link_state)
+    excitation_presenter.controller_changed.connect(excitation_panel.set_controller)
     excitation_presenter.refresh_state()
     synchronous_detection_presenter.sphere_phases_updated.connect(excitation_panel.set_synchronous_detection_state)
     excitation_panel.lock_in_detection_toggled.connect(synchronous_detection_presenter.on_lock_in_detection_toggled)
@@ -153,15 +165,18 @@ def wire_dashboard(
     calibration_panel.sensor_calibration_panel.reset_to_default_requested.connect(
         sensor_calibration_presenter.on_reset_to_default_requested
     )
+    calibration_panel.sensor_calibration_panel.automatic_calibration_requested.connect(
+        sensor_calibration_presenter.on_automatic_calibration_requested
+    )
+    sensor_calibration_presenter.automatic_calibration_running.connect(
+        calibration_panel.sensor_calibration_panel.set_automatic_calibration_running
+    )
     sensor_calibration_presenter.status_message.connect(calibration_panel.sensor_calibration_panel.set_status_message)
     sensor_calibration_presenter.latest_calibration_updated.connect(
         calibration_panel.sensor_calibration_panel.on_latest_calibration_updated
     )
     sensor_calibration_presenter.active_rotation_updated.connect(
         calibration_panel.sensor_calibration_panel.on_active_rotation_updated
-    )
-    calibration_panel.sensor_calibration_panel.launch_visualizer_requested.connect(
-        lambda: dashboard.panels["external_modules"].launch("cube")
     )
     sensor_calibration_presenter.refresh_state()
 
@@ -170,6 +185,15 @@ def wire_dashboard(
     )
     source_geometry_calibration_presenter.latest_calibration_updated.connect(
         calibration_panel.source_geometry_panel.on_latest_calibration_updated
+    )
+    calibration_panel.source_geometry_panel.measurements_edited.connect(
+        source_geometry_calibration_presenter.on_measurements_edited
+    )
+    source_geometry_calibration_presenter.source_frame_preview_updated.connect(
+        calibration_panel.source_geometry_panel.on_source_frame_preview_updated
+    )
+    source_geometry_calibration_presenter.source_frame_preview_rejected.connect(
+        calibration_panel.source_geometry_panel.on_source_frame_preview_rejected
     )
     source_geometry_calibration_presenter.refresh_state()
 
