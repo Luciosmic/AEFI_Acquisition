@@ -53,7 +53,7 @@ def test_fit_is_per_level_and_mode():
 def test_dry_run_writes_csv_and_summary(tmp_path):
     summary_path = main([
         "--dry-run", "--yes", "--modes", "fast", "--distances", "1", "2", "--reps", "1",
-        "--out-dir", str(tmp_path),
+        "--out-dir", str(tmp_path), "--microns-per-pulse", "21.8",
     ])
     summary = json.loads(summary_path.read_text(encoding="utf-8"))
     assert summary["dry_run"] is True

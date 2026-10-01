@@ -18,8 +18,6 @@ Design (QCS):
 from typing import Optional, List, Dict, Any
 import logging
 import time
-import json
-import os
 import threading
 import queue
 from uuid import uuid4
@@ -34,7 +32,6 @@ from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
 from infrastructure.hardware.arcus_performax_4EX.driver_arcus_performax4EX import (
     ArcusPerformax4EXController,
 )
-from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -82,39 +79,30 @@ class ArcusAdapter(IMotionPort):
         self._last_position: Optional[Position2D] = None
         self._last_moving: bool = False
         
-        # Initialize calibration with defaults
-        self.MICRONS_PER_STEP = ArcusAdapter.MICRONS_PER_STEP
-        self.MM_PER_STEP = ArcusAdapter.MM_PER_STEP
-        self.STEPS_PER_MM = ArcusAdapter.STEPS_PER_MM
-        
-        self._load_calibration()
+        # mm <-> pulse conversion: given by the domain (mechanical
+        # transmission calibration), never guessed here — None until
+        # set_microns_per_pulse(), and the adapter refuses to move meanwhile.
+        self.MICRONS_PER_STEP: Optional[float] = None
+        self.MM_PER_STEP: Optional[float] = None
+        self.STEPS_PER_MM: Optional[float] = None
 
-    def _load_calibration(self):
-        """Load calibration from config file."""
-        try:
-            config_path = Path(".aefi_acquisition") / "configs" / "arcus_default_config.json"
-            if config_path.exists():
-                with open(config_path, 'r') as f:
-                    config = json.load(f)
-                    if "microns_per_step" in config:
-                        self.update_calibration(float(config["microns_per_step"]))
-        except Exception:
-            logger.exception("Failed to load calibration")
-    
-    def update_calibration(self, microns_per_step: float) -> None:
+    def set_microns_per_pulse(self, microns_per_pulse: float) -> None:
         """
-        Update calibration factor dynamically.
-        
-        This method should be called when the calibration factor is changed
-        from the UI to ensure all position calculations use the new value.
-        
-        Args:
-            microns_per_step: New calibration factor in microns per step
+        SETUP: Distance per motor pulse (µm), from the mechanical
+        transmission calibration (domain) — the only source of the factor.
         """
-        self.MICRONS_PER_STEP = float(microns_per_step)
+        if microns_per_pulse <= 0:
+            raise ValueError(f"microns_per_pulse must be > 0, got {microns_per_pulse}")
+        self.MICRONS_PER_STEP = float(microns_per_pulse)
         self.MM_PER_STEP = self.MICRONS_PER_STEP / 1000.0
         self.STEPS_PER_MM = 1.0 / self.MM_PER_STEP
-        logger.info("Calibration updated: %s microns/step (%.2f steps/mm)", self.MICRONS_PER_STEP, self.STEPS_PER_MM)
+        logger.info("Conversion set: %s microns/pulse (%.2f pulses/mm)", self.MICRONS_PER_STEP, self.STEPS_PER_MM)
+
+    def _require_conversion(self) -> None:
+        if self.STEPS_PER_MM is None:
+            raise RuntimeError(
+                "Arcus adapter has no mm/pulse conversion: no mechanical transmission calibration applied"
+            )
 
     def set_controller(self, controller: ArcusPerformax4EXController) -> None:
         """Inject controller."""
@@ -329,14 +317,6 @@ class ArcusAdapter(IMotionPort):
     # COMMANDS
     # ==========================================================================
 
-    # Conversion Constants
-    MICRONS_PER_STEP = 43.6
-    MM_PER_STEP = MICRONS_PER_STEP / 1000.0  # 0.0436 mm/step
-    CM_PER_STEP = MM_PER_STEP / 10.0         # 0.00436 cm/step
-    
-    STEPS_PER_MM = 1.0 / MM_PER_STEP         # ~22.936 steps/mm
-    STEPS_PER_CM = 1.0 / CM_PER_STEP         # ~229.36 steps/cm
-
     def move_to(self, position: Position2D) -> str:
         """
         COMMAND: Move to the specified 2D position.
@@ -346,6 +326,7 @@ class ArcusAdapter(IMotionPort):
         """
         if not self._controller:
             raise RuntimeError("Arcus controller not connected")
+        self._require_conversion()
 
         motion_id = str(uuid4())
         
@@ -416,6 +397,7 @@ class ArcusAdapter(IMotionPort):
         """
         if not self._controller:
             raise RuntimeError("Arcus controller not connected")
+        self._require_conversion()
         
         try:
             # Convert mm/s to Hz (steps/s)
@@ -499,6 +481,7 @@ class ArcusAdapter(IMotionPort):
         """
         if not self._controller:
             raise RuntimeError("Arcus controller not connected")
+        self._require_conversion()
 
         try:
             steps_x = self._controller.get_position(self._axis_x)

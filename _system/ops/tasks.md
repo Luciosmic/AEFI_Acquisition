@@ -1,5 +1,99 @@
 # Tâches actives
 
+## Fly-scan : transmission mécanique au domaine, puis projection en direct
+
+**Statut** (2026-10-01) : worktree `dev_scan` (décision Luis : tout se fait ici, y compris calibration et
+hardware). **Phase A faite** (non commitée) : suite verte hors le test de cadence du fake MCU, instable avant ce
+chantier ; démarrage réel en mock vérifié (amorçage moteur/driver/transmission, adaptateur à 21,8 µm/impulsion,
+avertissement de courant logué, second démarrage sans réamorçage). Phases B et C à faire. Décision ouverte avant B :
+décalage d'une demi-rampe.
+
+### Contexte
+
+Une première version du fly-scan (non commitée) plaçait les mesures **en fin de ligne**, en
+normalisant par la durée mesurée de la ligne. Lancée dans l'appli (mock), elle a fait planter
+l'application au 27e balayage : le journal d'événements s'arrête net en plein balayage, sans
+`ScanFailed`. Cause soupçonnée, **non prouvée** : 81 points envoyés d'un coup à des panneaux
+matplotlib qui redessinent tout à chaque point. Décision Luis : projeter **en direct**, à
+**vitesse constante**, la vitesse venant de la calibration.
+
+Vitesse = facteur de conversion × fréquence de pas du mode (HS). Le facteur n'est pas propre à
+Arcus : il dépend de toute la chaîne (moteur, driver et son réglage, mécanique). Il doit donc
+vivre au domaine, et l'infrastructure ne parle en Hz/pas que chez elle.
+
+**Faits (doc `_system/documentation/hardware_datasheet/motorisation/` + notes Luis)** :
+- Moteur Igus MOT-AN-S-060-035-060-L-A-AAAA : 200 pas/tour, Nennstrom 4,2 A (datasheet ne
+  précise pas efficace ou crête). Pas d'encodeur. Même modèle sur X et Y.
+- Driver TB6600 : 1/16 de pas (3200 impulsions/tour), courant max du driver 3,5 A (4,0 A crête).
+  1/32 ne fonctionne pas ; 3,0 A saute des pas sur les petits mouvements. Plus de dérive depuis
+  le passage au courant max.
+- 21,8 µm/impulsion pour le 1/16 = 43,6 (1/8, « probablement ») ÷ 2 — calculé, pas re-mesuré
+  en 1/16. D'où une avance de 21,8 µm × 200 × 16 = **69,76 mm par tour moteur**.
+- Aujourd'hui le facteur vient de `arcus_default_config.json` (lu par l'adaptateur, modifiable
+  dans le panneau avancé Arcus). **Piège** : si ce fichier manque, l'adaptateur retombe sans
+  rien dire sur sa constante de classe 43,6 (valeur 1/8) → positions fausses ×2.
+- Le type de composant « Moteurs » déclare `step_um`, `max_speed_mm_per_s`,
+  `acceleration_mm_per_s2` : jamais remplis, les deux derniers jamais demandés.
+
+### Phase A — Transmission mécanique au domaine
+
+Modèle calqué sur le capteur : produit au catalogue, montage dans le journal, ce qui dépend de
+l'assemblage sur ce banc dans une calibration banc qui référence les montages par identité.
+
+1. **Catalogue** (`HardwareComponentKind`) :
+   - « Moteurs » : remplacer les 3 grandeurs par `full_steps_per_revolution` (pas/tour) et
+     `rated_current_a` (courant nominal, A).
+   - Nouveau type « Driver pas à pas » (`stepper_driver`) : `max_current_a` (A).
+2. **Calibration banc « transmission mécanique »** (entité de l'agrégat `Calibration`, trio
+   atomique, entrées datées, la plus récente fait foi, comme la géométrie des sources) :
+   montage moteur, montage driver, micro-pas (16), courant réglé (3,5 A) et sa crête (4,0 A),
+   avance par tour moteur (69,76 mm). Une seule transmission pour X et Y.
+3. **Règles domaine** :
+   - µm/impulsion = avance par tour ÷ (pas/tour du moteur × micro-pas) → 21,8.
+   - Courant réglé < courant nominal du moteur → avertissement (non bloquant) affichant les
+     deux valeurs du driver : « 3,5 A (4,0 A crête) < nominal moteur 4,2 A ». Permanent sur ce
+     banc (le TB6600 plafonne sous 4,2 A) : c'est un fait connu, pas une erreur.
+4. **Amorçage sans saisie** : un template versionné `config_templates/` contient moteur,
+   driver et transmission ci-dessus ; au premier démarrage, la composition root les enregistre
+   via les services (même chemin que l'UI, comme la géométrie des sources) et monte moteur et
+   driver.
+5. **Infrastructure** :
+   - `IMotionPort` reçoit le facteur (µm/impulsion) ; la composition root le lui donne au
+     démarrage, avant tout mouvement.
+   - `ArcusAdapter` ne lit plus `arcus_default_config.json` pour le facteur, plus de constante
+     43,6 : **refuse de bouger** tant qu'il n'a pas reçu de facteur.
+   - Retrait de `microns_per_step` du template Arcus et du panneau avancé Arcus.
+   - Le caractériseur de timing lit le facteur courant comme l'appli.
+6. **Export** : la transmission courante (et l'avertissement de courant) dans les métadonnées
+   d'acquisition, à côté des composants.
+
+Hors périmètre de cette phase : onglet UI pour saisir une nouvelle transmission (changer de
+réglage = éditer le template/registre, puis redémarrer) ; contrôleur PMX-4EX non référencé
+(aucune grandeur utile aujourd'hui).
+
+### Phase B — Projection en direct
+
+1. `IMotionPort` expose la vitesse de croisière du mode courant en mm/s (HS lu sur le
+   contrôleur × facteur reçu). Mock : idem.
+2. Domaine : la règle « vitesse constante » remplace la normalisation par durée de ligne —
+   position = début + vitesse × (t − t_départ − décalage) ; dit quel point de grille vient
+   d'être dépassé. **Décision ouverte** : décalage = demi-rampe du mode (recommandé : sans lui,
+   ~16 mm d'erreur en fast, ~5 mm en medium) ou 0.
+3. Boucle fly : chaque point émis dès qu'il est dépassé (interpolation entre les deux
+   échantillons qui encadrent son instant) ; points restants en fin de ligne = dernier
+   échantillon.
+4. Affichage : mesurer le coût de redessin des panneaux, limiter la cadence si nécessaire
+   (fast, pas 2,5 mm → 24 points/s). Attention : `scan_visualization_panel.py`,
+   `dashboard*.py` ont des modifications non commitées qui ne viennent pas de ce chantier.
+
+### Phase C — Vérification
+
+- Suite de tests.
+- **Appli réelle en mode mock** (`main_mock.py`) : un fly-scan complet sur la grille par défaut
+  (81 × 81) sans plantage, carte remplie en direct, avant de dire que ça marche.
+- Limite connue : le fake Arcus ne valide que la plomberie (position linéaire sur tout le
+  déplacement, pas de rampe, pas de latence USB) ; le calage du décalage se fait au banc.
+
 ## Observabilité : migration vers Observability-Driven Design (ODD)
 
 **Statut** : pas commencé — prompt de démarrage prêt ci-dessous, à lancer dans une nouvelle

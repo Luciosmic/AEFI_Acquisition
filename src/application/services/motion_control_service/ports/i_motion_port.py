@@ -91,6 +91,18 @@ class IMotionPort(ABC):
         pass
 
     @abstractmethod
+    def set_microns_per_pulse(self, microns_per_pulse: float) -> None:
+        """
+        Set the distance travelled per motor pulse (µm), given by the
+        mechanical transmission calibration (domain). The port does not hold
+        a factor of its own: until this is called, it refuses to move.
+
+        Args:
+            microns_per_pulse: Distance per pulse in µm (> 0).
+        """
+        pass
+
+    @abstractmethod
     def set_speed_mode(self, mode: str) -> None:
         """
         Apply a named speed preset ('slow', 'medium', or 'fast') to both axes.

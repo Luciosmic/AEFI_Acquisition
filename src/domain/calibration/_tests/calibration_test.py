@@ -178,6 +178,41 @@ class TestCalibration(unittest.TestCase):
             )
         self.assertEqual(calibration.domain_events, [])
 
+    def test_record_mechanical_transmission_entry_returns_entry_and_emits_event(self):
+        from domain.calibration.events.mechanical_transmission_calibration_entry_added.mechanical_transmission_calibration_entry_added import (
+            MechanicalTransmissionCalibrationEntryAdded,
+        )
+        calibration = Calibration()
+        motor, driver = uuid4(), uuid4()
+
+        entry = calibration.record_mechanical_transmission_calibration_entry(motor, driver, 16, 3.5, 4.0, 69.76)
+
+        self.assertEqual((entry.motor_mounting_id, entry.stepper_driver_mounting_id), (motor, driver))
+        (event,) = calibration.domain_events
+        self.assertIsInstance(event, MechanicalTransmissionCalibrationEntryAdded)
+        self.assertEqual(event.entry, entry)
+
+    def test_record_mechanical_transmission_entry_requires_mounted_motor_and_driver(self):
+        calibration = Calibration()
+
+        for motor, driver in ((None, uuid4()), (uuid4(), None)):
+            with self.assertRaises(ValueError):
+                calibration.record_mechanical_transmission_calibration_entry(motor, driver, 16, 3.5, 4.0, 69.76)
+        self.assertEqual(calibration.domain_events, [])
+
+    def test_current_mechanical_transmission_is_latest_for_the_mounted_motor_and_driver(self):
+        calibration = Calibration()
+        motor, driver, other_driver = uuid4(), uuid4(), uuid4()
+        record = calibration.record_mechanical_transmission_calibration_entry
+        old = record(motor, driver, 8, 3.5, 4.0, 69.76)
+        new = record(motor, driver, 16, 3.5, 4.0, 69.76)
+        swapped = record(motor, other_driver, 16, 3.5, 4.0, 69.76)
+        entries = [old, new, swapped]
+
+        self.assertEqual(Calibration.current_mechanical_transmission(entries, motor, driver), new)
+        self.assertEqual(Calibration.current_mechanical_transmission(entries, motor, other_driver), swapped)
+        self.assertIsNone(Calibration.current_mechanical_transmission(entries, uuid4(), driver))
+
     def test_record_hardware_component_characterization_emits_event(self):
         calibration = Calibration()
 

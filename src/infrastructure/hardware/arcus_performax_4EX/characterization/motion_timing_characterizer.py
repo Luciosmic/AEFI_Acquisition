@@ -11,6 +11,11 @@ Usage (from the repo root, app CLOSED, bench clear):
     uv run python src/infrastructure/hardware/arcus_performax_4EX/characterization/motion_timing_characterizer.py
     ... --dry-run          # FakeArcusPerformax4EXController, no hardware
     ... --modes medium --reps 1 --distances 5 50
+    ... --microns-per-pulse 21.8   # override the recorded mechanical transmission
+
+The mm/pulse factor comes from the current mechanical transmission
+calibration (.aefi_acquisition/calibrations/, seeded by the app on first
+boot), like the app itself — the adapter has no factor of its own.
 """
 import argparse
 import csv
@@ -35,6 +40,13 @@ if str(_SRC) not in sys.path:
 from domain.shared_kernel.value_objects.geometric.position_2d import Position2D  # noqa: E402
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus  # noqa: E402
 from infrastructure.hardware.arcus_performax_4EX.composition_root_arcus import ArcusCompositionRoot  # noqa: E402
+from application.services.mechanical_transmission_calibration_service.mechanical_transmission_calibration_service import (  # noqa: E402
+    MechanicalTransmissionCalibrationService,
+)
+from infrastructure.persistence.calibration.real_hardware_component_repository import RealHardwareComponentRepository  # noqa: E402
+from infrastructure.persistence.calibration.real_mechanical_transmission_calibration_repository import (  # noqa: E402
+    RealMechanicalTransmissionCalibrationRepository,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -167,6 +179,8 @@ def main(argv: Optional[Sequence[str]] = None) -> Optional[Path]:
     parser.add_argument("--dry-run", action="store_true", help="FakeArcus controller, no hardware")
     parser.add_argument("--yes", action="store_true", help="skip the operator confirmation")
     parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--microns-per-pulse", type=float, default=None,
+                        help="override the recorded mechanical transmission (µm/pulse)")
     args = parser.parse_args(argv)
     if len(set(args.distances)) < 2:
         parser.error("--distances needs at least 2 distinct values to fit t0 and v")
@@ -187,6 +201,17 @@ def main(argv: Optional[Sequence[str]] = None) -> Optional[Path]:
         )
         controller = FakeArcusPerformax4EXController()
     root = ArcusCompositionRoot(event_bus=bus, controller=controller)
+    microns_per_pulse = args.microns_per_pulse
+    if microns_per_pulse is None:
+        transmission = MechanicalTransmissionCalibrationService(
+            RealMechanicalTransmissionCalibrationRepository(), RealHardwareComponentRepository(), bus
+        ).get_current_calibration()
+        if transmission is None:
+            raise SystemExit(
+                "No mechanical transmission recorded: start the app once (it seeds it) or pass --microns-per-pulse"
+            )
+        microns_per_pulse = transmission.microns_per_pulse
+    root.motion.set_microns_per_pulse(microns_per_pulse)
     driver, adapter = root._driver, root.motion
 
     plan = plan_moves(args.modes, args.distances, args.reps, seed=args.seed)

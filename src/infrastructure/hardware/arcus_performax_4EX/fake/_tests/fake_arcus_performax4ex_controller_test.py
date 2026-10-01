@@ -76,7 +76,7 @@ class TestFakeArcusPerformax4EXController(unittest.TestCase):
         self.controller.connect()
         self.controller.home_both()
         adapter = ArcusAdapter(event_bus=bus)
-        adapter.update_calibration(21.8)  # calibration of the measurement
+        adapter.set_microns_per_pulse(21.8)  # transmission of the measurement
         adapter.set_controller(self.controller)
         adapter.enable()
         try:
@@ -95,6 +95,16 @@ class TestFakeArcusPerformax4EXController(unittest.TestCase):
         finally:
             adapter.disable()
 
+    def test_real_adapter_refuses_to_move_without_a_transmission(self):
+        """No mm/pulse factor from the domain: no guessed default, no move."""
+        self.controller.connect()
+        self.controller.home_both()
+        adapter = ArcusAdapter()
+        adapter.set_controller(self.controller)
+        with self.assertRaises(RuntimeError):
+            adapter.move_to(Position2D(10.0, 10.0))
+        self.assertFalse(self.controller.is_moving())
+
     def test_set_axis_params_roundtrip(self):
         self.controller.connect()
         result = self.controller.set_axis_params("x", hs=3000)
@@ -105,6 +115,7 @@ class TestFakeArcusPerformax4EXController(unittest.TestCase):
         """The whole point: real ArcusAdapter worker/monitor code, fake controller."""
         self.controller.connect()
         adapter = ArcusAdapter()
+        adapter.set_microns_per_pulse(21.8)
         adapter.set_controller(self.controller)
         adapter.enable()
         try:

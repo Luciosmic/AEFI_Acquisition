@@ -22,6 +22,9 @@ from infrastructure.persistence.calibration.fake.fake_sensor_calibration_reposit
 from infrastructure.persistence.calibration.fake.fake_source_geometry_calibration_repository import (
     FakeSourceGeometryCalibrationRepository,
 )
+from infrastructure.persistence.calibration.fake.fake_mechanical_transmission_calibration_repository import (
+    FakeMechanicalTransmissionCalibrationRepository,
+)
 
 CONDITIONING = HardwareComponentKind.CONDITIONING_ELECTRONICS_BOARD
 
@@ -35,10 +38,12 @@ class TestAcquisitionSnapshotReader(unittest.TestCase):
         os.chdir(self._tmp.name)
         self.components = FakeHardwareComponentRepository()
         self.geometries = FakeSourceGeometryCalibrationRepository()
+        self.transmissions = FakeMechanicalTransmissionCalibrationRepository()
         self.reader = AcquisitionSnapshotReader(
             hardware_component_repository=self.components,
             sensor_calibration_repository=FakeSensorCalibrationRepository(),
             source_geometry_calibration_repository=self.geometries,
+            mechanical_transmission_calibration_repository=self.transmissions,
         )
 
     def test_missing_config_files_are_omitted_and_empty_registries_are_flagged(self):
@@ -48,7 +53,7 @@ class TestAcquisitionSnapshotReader(unittest.TestCase):
         hardware = snapshot["hardware_configuration"]
         for kind in HardwareComponentKind:
             self.assertIsNone(hardware[kind.value])
-        self.assertEqual(len(hardware["warnings"]), len(HardwareComponentKind) + 2)
+        self.assertEqual(len(hardware["warnings"]), len(HardwareComponentKind) + 3)
         self.assertIn("configuration incomplete", hardware["warnings"][0])
 
     def test_latest_source_geometry_is_exported_with_its_reconstructed_sphere_positions(self):
@@ -89,6 +94,27 @@ class TestAcquisitionSnapshotReader(unittest.TestCase):
             hardware["warnings"],
         )
         json.dumps(hardware, default=str)  # what the export ports do
+
+    def test_current_transmission_is_exported_with_its_factor_and_current_warning(self):
+        calibration = Calibration()
+        for kind, name, values in (
+            (HardwareComponentKind.MOTORS, "Igus", {"full_steps_per_revolution": 200, "rated_current_a": 4.2}),
+            (HardwareComponentKind.STEPPER_DRIVER, "TB6600", {"max_current_a": 3.5}),
+        ):
+            self.components.add(calibration.record_hardware_component_characterization(kind, name, values))
+            self.components.add_selection(calibration.mount_hardware_component(kind, name, {name}, None))
+        motor, driver = (
+            Calibration.current_mounting(self.components.find_selections(kind)).mounting_id
+            for kind in (HardwareComponentKind.MOTORS, HardwareComponentKind.STEPPER_DRIVER)
+        )
+        self.transmissions.add(
+            calibration.record_mechanical_transmission_calibration_entry(motor, driver, 16, 3.5, 4.0, 69.76)
+        )
+
+        hardware = self.reader.read()["hardware_configuration"]
+
+        self.assertAlmostEqual(hardware["mechanical_transmission"]["microns_per_pulse"], 21.8)
+        self.assertTrue(any("below motor rated current 4.2" in w for w in hardware["warnings"]))
 
     def test_present_config_files_land_under_their_section_key(self):
         configs_dir = Path(".aefi_acquisition/configs")

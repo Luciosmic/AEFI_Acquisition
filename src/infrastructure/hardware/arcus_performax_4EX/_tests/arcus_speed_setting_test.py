@@ -14,11 +14,10 @@ from infrastructure.hardware.arcus_performax_4EX.driver_arcus_performax4EX impor
 class TestArcusSpeedSetting(unittest.TestCase):
     def setUp(self):
         self.adapter = ArcusAdapter()
+        self.adapter.set_microns_per_pulse(21.8)  # bench transmission (1/16 microstepping)
         self.mock_controller = MagicMock(spec=ArcusPerformax4EXController)
         self.adapter.set_controller(self.mock_controller)
 
-        # Read from adapter so the test stays consistent with whatever
-        # arcus_default_config.json sets as microns_per_step.
         self.STEPS_PER_MM = self.adapter.STEPS_PER_MM
 
     def test_speed_conversion_6_54_cm_s(self):

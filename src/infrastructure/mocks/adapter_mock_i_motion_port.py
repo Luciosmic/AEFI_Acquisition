@@ -134,6 +134,13 @@ class MockMotionPort(IMotionPort):
         self.last_speed = speed
         logger.info(f"set_speed: Speed set to {speed} cm/s")
 
+    def set_microns_per_pulse(self, microns_per_pulse: float) -> None:
+        # ponytail: recorded only — this mock works in mm and never refuses to
+        # move without it (unlike ArcusAdapter); the real refusal is tested
+        # on ArcusAdapter over the fake controller.
+        self.microns_per_pulse = microns_per_pulse
+        logger.info(f"set_microns_per_pulse: {microns_per_pulse} µm/pulse")
+
     def set_speed_mode(self, mode: str) -> None:
         if mode not in MEASURED_PORT_TIMING:
             raise ValueError(f"Unknown speed mode: {mode}")
