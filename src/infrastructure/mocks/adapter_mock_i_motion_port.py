@@ -13,15 +13,37 @@ from domain.shared_kernel.events.emergency_stop_triggered.emergency_stop_trigger
 
 logger = logging.getLogger(__name__)
 
+# Measured on the real bench (Arcus Performax 4EX, 21.8 um/step), port level:
+# ArcusAdapter.move_to -> MotionCompleted, t = t0 + max(|dx|, |dy|) / v —
+# both axes move together. Source:
+# infrastructure/hardware/arcus_performax_4EX/characterization/results/2026-10-01_184301_arcus_motion_timing.json
+# ponytail: linear model, acceleration ramp ignored — fast mode overestimates a
+# 2.5 mm move by ~0.05 s; switch to a trapezoid if a test needs that precision.
+MEASURED_PORT_TIMING = {  # speed mode: (t0_s, speed_mm_s)
+    "slow": (0.333, 17.40),
+    "medium": (0.422, 32.34),
+    "fast": (0.555, 59.86),
+}
+# The real controller boots at HS=1500 (driver DEFAULT_PARAMS) = medium.
+DEFAULT_SPEED_MODE = "medium"
+
+
+def measured_move_duration_s(start: Position2D, target: Position2D, speed_mode: str) -> float:
+    t0, speed_mm_s = MEASURED_PORT_TIMING[speed_mode]
+    return t0 + max(abs(target.x - start.x), abs(target.y - start.y)) / speed_mm_s
+
+
 class MockMotionPort(IMotionPort):
     """
     Mock implementation of IMotionPort for testing.
     Records moves and allows position retrieval.
-    All actions print to terminal for explicit visibility.
-    
-    Supports event-based architecture when event_bus is provided.
+
+    Supports event-based architecture when event_bus is provided: a move then
+    takes the bench-measured duration for its displacement and speed mode
+    (MEASURED_PORT_TIMING), unless `motion_delay_ms` forces a fixed delay —
+    kept for logic tests that must stay fast.
     """
-    def __init__(self, event_bus: Optional[IDomainEventBus] = None, motion_delay_ms: float = 100.0):
+    def __init__(self, event_bus: Optional[IDomainEventBus] = None, motion_delay_ms: Optional[float] = None):
         logger.debug("__init__: Mock motion port created at (0,0)")
         self._event_bus = event_bus
         self._motion_delay_ms = motion_delay_ms
@@ -51,10 +73,15 @@ class MockMotionPort(IMotionPort):
         
         # Simulate motion in background thread (like real hardware)
         if self._event_bus:
-            # Async simulation with delay
+            if self._motion_delay_ms is not None:
+                delay_s = self._motion_delay_ms / 1000.0
+            else:
+                delay_s = measured_move_duration_s(
+                    self._current_pos, position, self.last_speed_mode or DEFAULT_SPEED_MODE
+                )
             threading.Thread(
                 target=self._simulate_motion,
-                args=(motion_id, position),
+                args=(motion_id, position, delay_s),
                 daemon=True
             ).start()
         else:
@@ -65,10 +92,10 @@ class MockMotionPort(IMotionPort):
         
         return motion_id
     
-    def _simulate_motion(self, motion_id: str, target: Position2D):
+    def _simulate_motion(self, motion_id: str, target: Position2D, delay_s: float):
         """Simulate motion with delay and publish MotionCompleted event."""
         start_time = time.time()
-        time.sleep(self._motion_delay_ms / 1000.0)  # Simulate motion time
+        time.sleep(delay_s)
         
         # Update position
         self._current_pos = target
@@ -102,10 +129,14 @@ class MockMotionPort(IMotionPort):
         pass  # mock is always stopped between calls
 
     def set_speed(self, speed: float) -> None:
+        # ponytail: recorded only, the timing model is keyed by speed mode —
+        # model a custom speed if a caller ever relies on set_speed().
         self.last_speed = speed
         logger.info(f"set_speed: Speed set to {speed} cm/s")
 
     def set_speed_mode(self, mode: str) -> None:
+        if mode not in MEASURED_PORT_TIMING:
+            raise ValueError(f"Unknown speed mode: {mode}")
         self.last_speed_mode = mode
         logger.info(f"set_speed_mode: Speed mode set to {mode}")
 

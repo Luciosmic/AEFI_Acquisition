@@ -102,6 +102,21 @@ vrai driver Arcus a des timeouts de homing mécanique jusqu'à 120s. Non corrig�
 en advisory. À mentionner si pertinent, pas à traiter dans ce chantier ODD sauf demande
 explicite.
 
+**Mise à jour 2026-10-01 (worktree `dev_scan`, à reporter dans `dev_hardware`)** : la durée des
+*déplacements* est maintenant fidèle. Caractériseur banc
+`infrastructure/hardware/arcus_performax_4EX/characterization/` (360 mouvements, modèle
+`t = t0 + max(|dx|,|dy|)/v`, synthèse commitée dans `results/`) → constantes nommées dans
+`MockMotionPort` (niveau port, exact) et `FakeArcusPerformax4EXController` (niveau contrôleur,
+exact ; vu depuis le port, t0 sous-estimé d'environ 0,19 s faute de latence USB simulée). Restent
+ouverts :
+- `home()` non caractérisé (toujours instantané/0,2 s) ;
+- rampe d'accélération en fast (environ 0,1 s d'erreur sur 2,5 mm) ;
+- **extrapolé de la mesure** (non mesuré directement, déplacements ≤ 100 mm) : en slow, home → (600, 600) dure environ 35 s, au-delà des 30 s de timeout du scan
+  (`wait_for_motion`) et de `ArcusAdapter._internal_wait_until_stopped` (qui publie alors un
+  `MotionCompleted` alors que le moteur roule encore). Reproductible en test avec `MockMotionPort`.
+- LS=0 et DEC=0 relus sur le contrôleur : le `ls=10`/`dec=300` de `arcus_default_config.json` n'est
+  jamais appliqué.
+
 ## Config hardware : source unique de vérité (AD9106+MCU fait, ADS131A04 restant)
 
 **Statut** : refonte implémentée pour AD9106 + MCU (2026-09-08, puis corrections et ajout du

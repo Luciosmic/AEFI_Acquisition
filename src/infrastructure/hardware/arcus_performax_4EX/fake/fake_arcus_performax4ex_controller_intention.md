@@ -28,6 +28,22 @@ conversion mm↔steps, pas de garde homing) — aucun code réel n'est exercé.
 
 - État interne : position par axe, flags homed/moving, paramètres LS/HS/ACC/DEC
   par axe (mêmes valeurs par défaut que `ArcusPerformax4EXController.DEFAULT_PARAMS`).
-- Déplacement simulé par un court délai synchrone (`_simulate_move`) plutôt
-  qu'une interpolation — suffisant pour exercer le worker thread et la boucle
-  de monitoring réels de `ArcusAdapter`, pas besoin de plus pour ce chantier.
+- **Durée de déplacement mesurée sur le banc** (2026-10-01, caractériseur
+  `../characterization/`) : `move_to`/`move_by` sont non bloquants comme dans
+  pylablib (la commande rend la main, l'axe roule) ; chaque axe met
+  `t0 + |Δpas| / vitesse`, constantes `_MEASURED_TIMING_BY_HS` indexées par le
+  HS des presets slow/medium/fast. Les deux axes commandés à la suite roulent
+  donc ensemble (coût = axe le plus long), comme sur le banc. `is_moving` et
+  `get_position` sont calculés depuis l'horloge (position interpolée
+  linéairement, figée par `stop`).
+- **Fidélité vérifiée** en repassant le caractériseur en `--dry-run` sur ce fake :
+  niveau contrôleur identique au banc (v et t0 à ~0,01 près). Niveau port
+  (avec le vrai `ArcusAdapter` au-dessus) : vitesse identique, mais t0
+  **sous-estimé d'environ 0,19 s** — le banc paie une latence USB à chaque
+  requête de l'adaptateur (polling `is_moving`, thread monitor, relecture de
+  position) que ce fake ne simule pas, faute de mesure directe. Un test qui a
+  besoin de la durée exacte vue par la boucle de scan utilise `MockMotionPort`
+  (calé sur la mesure niveau port).
+- Rampe d'accélération ignorée (modèle linéaire) : en fast (ACC = 500 ms), un
+  déplacement de 2,5 mm est surestimé d'environ 0,1 s.
+- Homing : toujours un court délai synchrone (`_simulate_move`), non caractérisé.
