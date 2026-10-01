@@ -11,7 +11,7 @@ Rationale:
 - Algorithm from "NOTE - Source Frame Geometry" (Luis Saluden's vault, not
   tracked in this repo) §3-4, validated in external_modules/source_geometry/
   (2026-07-24 → 2026-07-29) before moving here.
-- The 4 spheres are coplanar by construction of the bench — a known
+- The 4 spheres are coplanar by construction of the source — a known
   constraint, not a hypothesis to test — so every center is solved in z=0.
   Treating S4's height as a free unknown produced a negative discriminant on
   real data: an ill-posed problem, not a sign of non-planarity.
@@ -28,10 +28,15 @@ Rationale:
 
 Design:
 - Work frame (S1 at origin, S2 on +x) is an internal computational
-  convenience, never exposed: positions are returned in the source frame
-  (centroid origin, +x/+y through side midpoints, Gram-Schmidt
-  orthogonalized) where each sphere lands in its labeled quadrant. Rigid
-  transform, so distances and square residuals are unchanged.
+  convenience, never exposed. Positions are returned in the source frame:
+  centroid origin, +x/+y along the sides of the best-fit square (the source
+  is ideally an axis-aligned square), each sphere in its labeled quadrant.
+  Built in two rigid steps — side midpoints give the quadrant orientation
+  (resolves the mirror ambiguity distances alone leave), then a rotation
+  aligns the best-fit square — so distances and residuals are unchanged.
+  Aligning on the side midpoints alone favored the S1-S3/S4-S2 sides: on
+  real measurements the best-fit square came out tilted by half the
+  arrangement's shear (0.7°, 2026-10-01).
 - Best-fit square by 4-point DFT over the perimeter S1→S3→S2→S4 (S1<->S2 and
   S3<->S4 are the diagonals). That order winds clockwise in the source
   frame, so the square generator is w=-i; the CCW convention silently picks
@@ -39,6 +44,7 @@ Design:
 - Impossible measurements raise SourceGeometryInconsistentError.
 """
 
+import cmath
 import math
 
 import numpy as np
@@ -52,13 +58,15 @@ from domain.calibration.value_objects.source_frame_geometry.source_frame_geometr
 
 S1, S2, S3, S4 = range(4)
 PERIMETER_ORDER = (S1, S3, S2, S4)
+# S1 corner (x_neg_y_pos) of an axis-aligned square seen from its center
+_ALIGNED_S1_PHASE = 3 * math.pi / 4
 
 
 class SourceFrameSolver:
     @staticmethod
     def solve(entry: SourceGeometryCalibrationEntry) -> SourceFrameGeometry:
         d = entry.center_to_center_distances_m
-        positions = _to_source_frame(_solve_work_frame(d))
+        positions = _align_on_fitted_square(_to_source_frame(_solve_work_frame(d)))
         ideal, side = _fit_square(positions)
         return SourceFrameGeometry(
             sphere_positions_m=tuple((float(x), float(y)) for x, y in positions),
@@ -112,12 +120,27 @@ def _normalize(vector):
     return vector / norm
 
 
+def _square_harmonic(positions):
+    """(center, z0) of the least-squares perfect square through the 4 centers:
+    corner k of the clockwise perimeter S1→S3→S2→S4 is center + z0·i^(-k)."""
+    z = [complex(*positions[i]) for i in PERIMETER_ORDER]
+    center = sum(z) / 4
+    return center, sum((zk - center) * 1j**k for k, zk in enumerate(z)) / 4
+
+
+def _align_on_fitted_square(positions):
+    """Rotate about the centroid (already the origin) so the best-fit square's
+    sides lie along x and y — the source is ideally an axis-aligned square;
+    the arrangement's deviation is then shared symmetrically between sides."""
+    _, z0 = _square_harmonic(positions)
+    turn = cmath.exp(-1j * (cmath.phase(z0) - _ALIGNED_S1_PHASE))
+    return [np.array(((complex(*p) * turn).real, (complex(*p) * turn).imag)) for p in positions]
+
+
 def _fit_square(positions):
     """Least-squares perfect square through the 4 centers. Returns (ideal
     corner per sphere S1..S4, side length)."""
-    z = [complex(*positions[i]) for i in PERIMETER_ORDER]
-    center = sum(z) / 4
-    z0 = sum((zk - center) * 1j**k for k, zk in enumerate(z)) / 4
+    center, z0 = _square_harmonic(positions)
     ideal = [0j] * 4
     for k, sphere in enumerate(PERIMETER_ORDER):
         corner = center + z0 * 1j ** (-k)

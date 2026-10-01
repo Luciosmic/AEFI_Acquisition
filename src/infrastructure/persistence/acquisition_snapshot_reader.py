@@ -65,7 +65,7 @@ def _source_frame_reconstruction(entry: SourceGeometryCalibrationEntry) -> Dict[
     return {
         "source_geometry_entry_id": str(entry.entry_id),
         "frame": (
-            "origin = centroid of the 4 sphere centers, +x/+y through the side midpoints, z=0 "
+            "origin = centroid of the 4 sphere centers, +x/+y along the sides of the best-fit square, z=0 "
             "(coplanar by construction); S1=x_neg_y_pos, S2=x_pos_y_neg, S3=x_pos_y_pos, S4=x_neg_y_neg"
         ),
         "unit": "m",

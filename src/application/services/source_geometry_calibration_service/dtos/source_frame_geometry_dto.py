@@ -8,7 +8,7 @@ SpherePoints = Tuple[Point2D, Point2D, Point2D, Point2D]  # S1..S4
 @dataclass(frozen=True)
 class SourceFrameGeometryDTO:
     """Reconstructed sphere centers in the source frame (centroid origin, each
-    sphere in its labeled quadrant) and the bench's deviation from a perfect
+    sphere in its labeled quadrant) and their arrangement's deviation from a perfect
     square — primitives only. Distances follow the D_S1_S2, D_S3_S4, D_S1_S3,
     D_S1_S4, D_S2_S3, D_S2_S4 order."""
 

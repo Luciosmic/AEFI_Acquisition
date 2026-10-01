@@ -74,7 +74,7 @@ class TestSourceFrameSolver(unittest.TestCase):
             self.assertLess(abs(residual), 5e-5)
         self.assertAlmostEqual(result.best_fit_square_side_m, 0.064, delta=0.002)
 
-    def test_result_does_not_depend_on_how_the_bench_is_rotated(self):
+    def test_result_does_not_depend_on_how_the_source_is_rotated(self):
         centers = square_centers()
         centers[1] = (centers[1][0] + 0.0005, centers[1][1] - 0.0003)  # S2 defect
         theta = math.radians(17)
@@ -90,6 +90,28 @@ class TestSourceFrameSolver(unittest.TestCase):
             self.assertAlmostEqual(a[0], b[0], places=9)
             self.assertAlmostEqual(a[1], b[1], places=9)
         self.assertAlmostEqual(straight.square_rms_residual_m, turned.square_rms_residual_m, places=9)
+
+    def test_best_fit_square_is_aligned_on_x_and_y(self):
+        """Real measurements (sheared arrangement, corners 88-92°): the ideal
+        square lies exactly on the axes, the shear is shared between sides."""
+        entry = make_entry(
+            [0.0196, 0.0196, 0.0195, 0.0195],
+            [0.11142, 0.10908, 0.08436, 0.08352, 0.08230, 0.08450],
+        )
+
+        result = SourceFrameSolver.solve(entry)
+
+        half = result.best_fit_square_side_m / 2
+        for (x, y), (sx, sy) in zip(result.best_fit_square_positions_m, _QUADRANT_SIGNS):
+            self.assertAlmostEqual(x, sx * half, places=9)
+            self.assertAlmostEqual(y, sy * half, places=9)
+        p = result.sphere_positions_m
+        tilt = lambda a, b: math.degrees(math.atan2(b[1] - a[1], b[0] - a[0]))
+        horizontal = (tilt(p[0], p[2]) + tilt(p[3], p[1])) / 2  # S1→S3, S4→S2
+        vertical = (tilt(p[3], p[0]) + tilt(p[1], p[2])) / 2 - 90  # S4→S1, S2→S3
+        # the fit is on corner positions, not on side angles: close, not exact
+        self.assertAlmostEqual(horizontal, -vertical, delta=0.05)
+        self.assertGreater(abs(horizontal), 0.5)  # the shear stays visible
 
     def test_inconsistent_symmetric_input_spreads_its_error_symmetrically(self):
         """All sides 85mm, both diagonals 110mm: not a square (the diagonal

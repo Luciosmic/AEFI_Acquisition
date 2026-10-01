@@ -16,7 +16,8 @@ l'appeler.
 
 - `solve(entry) -> SourceFrameGeometry` : à partir d'une
   `SourceGeometryCalibrationEntry`, placer les 4 centres dans le repère source
-  (centroïde, quadrants `x_neg_y_pos`…), ajuster le carré parfait, calculer
+  (centroïde, x/y le long des côtés du carré ajusté, quadrants
+  `x_neg_y_pos`…), ajuster le carré parfait, calculer
   les résidus par distance.
 - Refuser (`SourceGeometryInconsistentError`) des mesures qu'aucune
   configuration plane ne satisfait.
@@ -25,14 +26,18 @@ l'appeler.
 
 - Domain service sans état (méthode statique), pas d'I/O ; `numpy` + `scipy`
   (bibliothèques stables, acceptées dans le domain).
-- Coplanarité imposée (z=0) : contrainte connue du banc, pas une hypothèse.
+- Coplanarité imposée (z=0) : contrainte connue de la source, pas une hypothèse.
 - Graine par élimination exacte (S1, S2, S3 puis S4), puis moindres carrés
   non linéaires sur **les 4 centres et les 6 distances** (6 mesures pour 5
   degrés de liberté). Ajuster S4 seul faisait porter toute l'incohérence des
   mesures sur S4 : une saisie symétrique (côtés 85 mm, diagonales 110 mm)
   donnait un quadrilatère déformé d'un seul côté (corrigé le 2026-10-01).
 - Repère de travail (S1 à l'origine, S2 sur x) purement interne ; seul le
-  repère source sort du service.
+  repère source sort du service. Il est obtenu en deux rotations rigides :
+  milieux de côtés (orientation des quadrants, lève l'ambiguïté miroir),
+  puis alignement sur le carré ajusté. Aligner sur les seuls milieux de côtés
+  privilégiait S1-S3/S4-S2 : sur les mesures réelles le carré ajusté sortait
+  tourné de 0,7° (moitié du cisaillement de l'arrangement, ~1,4°).
 - Carré ajusté par DFT 4 points sur le périmètre S1→S3→S2→S4 (sens horaire
   dans le repère source ⇒ générateur w=-i).
 - Historique : validé dans `external_modules/source_geometry/`
