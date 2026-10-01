@@ -17,7 +17,9 @@ translating one convention into another.
   Z red, matching the axis arrows), same color on both faces of an axis.
 - Build the green markers mirroring the bench tape: one green disc centered
   on each negative face (−X, −Y, −Z), to be rotated with the cube.
-- Apply a rotation to a mesh (returns a rotated copy).
+- Apply the mounting matrix P to a mesh (returns a rotated copy). P comes
+  from the domain (`SensorRotationAngles.mounting_matrix()`, via the DTO):
+  this module never turns angles into a rotation itself.
 
 ## Design
 

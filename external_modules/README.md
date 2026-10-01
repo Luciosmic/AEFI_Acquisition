@@ -5,4 +5,4 @@ Dossiers **hors cœur applicatif** (`src/`) : outils autonomes (post-traitement,
 - **Lancement** : depuis le panneau **External Modules** du dashboard (entrées pour chaque outil) avec le même interpréteur Python que l’app (`uv` / `.venv` à la racine du dépôt).
 - **Objectif** : séparation claire et évolution modulaire ; une intégration plus poussée pourra venir plus tard sans mélanger ces arbres avec `src/`.
 
-Sous-modules actuels : `aefi_post_processor_module/`, `cube_visualizer/`. (`source_geometry/` a été réintégré dans `src/domain/calibration/` le 2026-10-01.)
+Sous-modules actuels : `aefi_post_processor_module/`. (`source_geometry/` a été réintégré dans `src/domain/calibration/` le 2026-10-01 ; `cube_visualizer/` est devenu `src/interface/widgets/sensor_orientation_view/` le 2026-10-01.)

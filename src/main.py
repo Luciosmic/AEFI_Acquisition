@@ -75,7 +75,7 @@ from interface.ui_system_lifecycle.view_startup import StartupView
 # --- Interface ---
 from interface.shell.dashboard import Dashboard
 from interface.shell.dashboard_wiring import wire_dashboard
-from cube_visualizer.interface.cube_sensor_widget import configure_qt_opengl  # path set by dashboard
+from interface.widgets.sensor_orientation_view.sensor_orientation_view import configure_qt_opengl
 from interface.widgets.panels.logs_panel import LogsPanel, install_console_capture
 from interface.presenters.motion_presenter import MotionPresenter
 from interface.presenters.excitation_presenter import ExcitationPresenter

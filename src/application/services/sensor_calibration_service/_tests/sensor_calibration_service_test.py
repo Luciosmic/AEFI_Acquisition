@@ -209,6 +209,15 @@ class TestSensorCalibrationService(DiagramFriendlyTest):
         self.assertEqual((dto.theta_x_degrees, dto.theta_y_degrees, dto.theta_z_degrees), (36.0, 44.0, 1.0))
         self.assertTrue(dto.is_calibrated)
 
+    def test_active_rotation_carries_the_mounting_matrix_p_as_primitives(self):
+        self._record(theta_x=36.0, theta_y=44.0, theta_z=1.0)
+
+        dto = self.service.get_active_rotation()
+
+        expected = SensorRotationAngles(36.0, 44.0, 1.0).mounting_matrix().tolist()
+        self.assertEqual([list(row) for row in dto.mounting_matrix], expected)
+        self.assertIsInstance(dto.mounting_matrix[0][0], float)
+
     def test_record_calibration_publishes_active_rotation_changed(self):
         received = self._collect_active_rotation_events()
 

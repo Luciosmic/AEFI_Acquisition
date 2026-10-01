@@ -55,11 +55,18 @@ class FakeSensorCalibrationService(IApiSensorCalibrationService):
 
     def get_active_rotation(self) -> ActiveSensorRotationDTO:
         if self.latest is None:
-            return ActiveSensorRotationDTO(35.3, 45.0, 0.0, is_calibrated=False, is_trial=False, recorded_at=None)
+            return ActiveSensorRotationDTO(
+                35.3, 45.0, 0.0, is_calibrated=False, is_trial=False, recorded_at=None,
+                mounting_matrix=_IDENTITY,
+            )
         return ActiveSensorRotationDTO(
             self.latest.theta_x_degrees, self.latest.theta_y_degrees, self.latest.theta_z_degrees,
             is_calibrated=True, is_trial=False, recorded_at=self.latest.recorded_at,
+            mounting_matrix=_IDENTITY,
         )
+
+
+_IDENTITY = ((1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0))
 
 
 class TestSensorCalibrationPresenter(unittest.TestCase):

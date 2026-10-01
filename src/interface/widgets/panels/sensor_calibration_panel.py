@@ -51,8 +51,8 @@ class SensorCalibrationPanel(QWidget):
     reset_to_default_requested = Signal()
 
     def __init__(self, parent=None, orientation_view: Optional[QWidget] = None):
-        """orientation_view: QWidget with show_orientation(theta_x, theta_y, theta_z),
-        shown right of the controls and fed with the active mounting."""
+        """orientation_view: QWidget with show_mounting(matrix), shown right of
+        the controls and fed with the active mounting matrix P."""
         super().__init__(parent)
         self._orientation_view = orientation_view
 
@@ -169,9 +169,7 @@ class SensorCalibrationPanel(QWidget):
             spin.setValue(value)
             spin.blockSignals(False)
         if self._orientation_view is not None:
-            self._orientation_view.show_orientation(
-                dto.theta_x_degrees, dto.theta_y_degrees, dto.theta_z_degrees
-            )
+            self._orientation_view.show_mounting(dto.mounting_matrix)
         angles = (
             f"θx={dto.theta_x_degrees:.2f}°  θy={dto.theta_y_degrees:.2f}°  θz={dto.theta_z_degrees:.2f}°"
         )

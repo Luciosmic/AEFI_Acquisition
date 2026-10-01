@@ -7,31 +7,33 @@ from PySide6.QtWidgets import QApplication, QWidget
 
 from interface.widgets.panels.sensor_calibration_panel import SensorCalibrationPanel
 
+_P = ((0.0, -1.0, 0.0), (1.0, 0.0, 0.0), (0.0, 0.0, 1.0))
+
 
 class _FakeOrientationView(QWidget):
     def __init__(self):
         super().__init__()
         self.shown = []
 
-    def show_orientation(self, theta_x, theta_y, theta_z):
-        self.shown.append((theta_x, theta_y, theta_z))
+    def show_mounting(self, matrix):
+        self.shown.append(matrix)
 
 
 def _active(theta_x, theta_y, theta_z):
     return SimpleNamespace(
         theta_x_degrees=theta_x, theta_y_degrees=theta_y, theta_z_degrees=theta_z,
-        is_trial=True, is_calibrated=False, recorded_at=None,
+        is_trial=True, is_calibrated=False, recorded_at=None, mounting_matrix=_P,
     )
 
 
-def test_active_rotation_is_forwarded_to_the_orientation_view():
+def test_active_mounting_matrix_is_forwarded_to_the_orientation_view():
     QApplication.instance() or QApplication([])
     view = _FakeOrientationView()
     panel = SensorCalibrationPanel(orientation_view=view)
 
-    panel.on_active_rotation_updated(_active(35.3, 45.0, 1.0))
+    panel.on_active_rotation_updated(_active(0.0, 0.0, 90.0))
 
-    assert view.shown == [(35.3, 45.0, 1.0)]
+    assert view.shown == [_P]
     assert panel.isAncestorOf(view)
 
 

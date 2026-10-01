@@ -155,7 +155,7 @@ Panneau de visualisation de la config active avant lancement d'un scan.
 
 L'ordre est imposé par les dépendances : AcquisitionConfiguration d'abord, puis nettoyage domain comme prérequis structurel au multi-capteurs et au fly-scan.
 
-**Prochaine étape architecturale après D1 + AcquisitionConfiguration :** Établir la Context Map (cf. IDDD ch.3). Le refactoring D1 a révélé les sous-domaines réels de l'application (electric_field_probe, motion, excitation, step_scan). Avant D2/D3, formaliser : (1) les frontières du unique Bounded Context "AEFI Acquisition", (2) les relations avec les systèmes externes (cube_visualizer, post_processor_module), (3) le rôle des adaptateurs infrastructure comme ACL implicite face au vocabulaire hardware (steps, pulses → mm, V/m).
+**Prochaine étape architecturale après D1 + AcquisitionConfiguration :** Établir la Context Map (cf. IDDD ch.3). Le refactoring D1 a révélé les sous-domaines réels de l'application (electric_field_probe, motion, excitation, step_scan). Avant D2/D3, formaliser : (1) les frontières du unique Bounded Context "AEFI Acquisition", (2) les relations avec les systèmes externes (post_processor_module ; cube_visualizer réintégré dans src/ le 2026-10-01), (3) le rôle des adaptateurs infrastructure comme ACL implicite face au vocabulaire hardware (steps, pulses → mm, V/m).
 
 ---
 

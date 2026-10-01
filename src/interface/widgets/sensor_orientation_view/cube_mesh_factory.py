@@ -1,12 +1,10 @@
 """
-CubeMeshFactory — infrastructure/rendering layer.
+Cube meshes of the sensor orientation view (PyVista).
 
-Responsibility: Create and transform PyVista meshes.
-This layer is the ONLY place allowed to import pyvista.
+See cube_mesh_factory_intention.md.
 """
 import numpy as np
 import pyvista as pv
-from scipy.spatial.transform import Rotation as R
 
 
 # Positive-face color per sensor axis: X blue, Y yellow, Z red (same as the arrows)
@@ -41,17 +39,8 @@ def create_negative_face_markers(size: float = 1.0) -> pv.PolyData:
     return pv.merge(discs)
 
 
-def apply_rotation_to_mesh(mesh: pv.PolyData, rotation: R) -> pv.PolyData:
-    """
-    Apply a scipy Rotation to a PyVista mesh (returns a copy).
-
-    Args:
-        mesh: Source mesh
-        rotation: scipy Rotation object
-
-    Returns:
-        pv.PolyData: Rotated copy of the mesh
-    """
+def apply_mounting_matrix(mesh: pv.PolyData, matrix) -> pv.PolyData:
+    """Rotated copy of the mesh: each point p becomes P·p (P given as rows)."""
     mesh_copy = mesh.copy()
-    mesh_copy.points = rotation.apply(mesh_copy.points)
+    mesh_copy.points = mesh_copy.points @ np.asarray(matrix, dtype=float).T
     return mesh_copy

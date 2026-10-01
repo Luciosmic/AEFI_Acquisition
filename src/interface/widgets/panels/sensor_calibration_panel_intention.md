@@ -66,15 +66,15 @@ so recorded calibrations were never used.
   `blockSignals(True/False)`, so mirroring the active rotation never starts a
   new trial.
 - `orientation_view` (constructor, optional): any `QWidget` with
-  `show_orientation(theta_x, theta_y, theta_z)`, placed to the right of the
-  controls. The dashboard injects `CubeSensorWidget(angle_controls=False)`
-  from `external_modules/cube_visualizer`; the panel never imports
-  external modules.
+  `show_mounting(matrix)`, placed to the right of the controls. The
+  dashboard injects `SensorOrientationView`
+  (`interface/widgets/sensor_orientation_view/`).
 - `on_latest_calibration_updated(dto)`: `dto` is `None` when no entry
   matches the current geometric configuration.
 - `on_active_rotation_updated(dto)`: `ActiveSensorRotationDTO`, never `None`;
-  mirrors the angles in the spinboxes and forwards them to
-  `orientation_view` — the only path to the 3D view, so it always shows what
-  is applied to the readings.
+  mirrors the angles in the spinboxes and forwards `dto.mounting_matrix`
+  (P, computed by the domain) to `orientation_view` — the only path to the
+  3D view, so it always shows what is applied to the readings, with no
+  second copy of the rotation convention in the interface.
 - `_tests/sensor_calibration_panel_test.py` covers the sync to
   `orientation_view` with a fake view.
