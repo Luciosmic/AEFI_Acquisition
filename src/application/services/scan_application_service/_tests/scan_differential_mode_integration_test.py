@@ -50,7 +50,7 @@ class TestScanDifferentialModeIntegration(unittest.TestCase):
         # would have it configured — the loop must mute it for the baseline
         # window and restore this exact state for the excited window.
         self.excitation_service.set_excitation(
-            ExcitationMode.X_DIR,
+            ExcitationMode.Y_DIR,  # S1/S2 in phase with S3/S4: field along +y only
             level_s1_s2_percent=self.EXCITATION_LEVEL_PERCENT,
             level_s3_s4_percent=self.EXCITATION_LEVEL_PERCENT,
             frequency=1000.0,
