@@ -92,6 +92,36 @@ class TestScanDifferentialModeIntegration(unittest.TestCase):
         self.event_bus.subscribe("scancompleted", lambda e: done.set())
         return done
 
+    def _one_point_scan(self, differential_mode=False):
+        return Scan2DConfigDTO(
+            x_min=0, x_max=1, x_nb_points=1,
+            y_min=0, y_max=1, y_nb_points=1,
+            scan_pattern="RASTER",
+            stabilization_delay_ms=0,
+            averaging_per_position=2,
+            uncertainty_volts=1e-6,
+            differential_mode=differential_mode,
+            differential_settle_delay_ms=0,
+        )
+
+    def test_scan_holds_the_excitation_for_its_whole_duration(self):
+        """Even a non-differential scan: the excitation is a measurement condition."""
+        controllers = []
+        self.event_bus.subscribe("excitationcontrolchanged", lambda e: controllers.append(e.controller))
+
+        done = self._subscribe_completion()
+        self.assertTrue(self.service.execute_scan(self._one_point_scan()))
+        self.assertTrue(done.wait(timeout=10.0))
+
+        self.assertEqual(controllers, ["scan", None])
+        self.assertIsNone(self.excitation_service.get_controller())
+
+    def test_scan_is_refused_while_another_controller_holds_the_excitation(self):
+        self.excitation_service.take_control("calibration automatique du capteur")
+
+        self.assertFalse(self.service.execute_scan(self._one_point_scan()))
+        self.assertEqual(self.excitation_service.get_controller(), "calibration automatique du capteur")
+
     def test_mute_eliminates_excitation_offset_for_baseline_window(self):
         scan_dto = Scan2DConfigDTO(
             x_min=0, x_max=1, x_nb_points=1,

@@ -88,6 +88,7 @@ def wire_dashboard(
     excitation_presenter.excitation_updated.connect(excitation_panel.set_state)
     excitation_panel.link_toggled.connect(excitation_presenter.on_link_toggled)
     excitation_presenter.link_state_changed.connect(excitation_panel.set_link_state)
+    excitation_presenter.controller_changed.connect(excitation_panel.set_controller)
     excitation_presenter.refresh_state()
     synchronous_detection_presenter.sphere_phases_updated.connect(excitation_panel.set_synchronous_detection_state)
     excitation_panel.lock_in_detection_toggled.connect(synchronous_detection_presenter.on_lock_in_detection_toggled)
