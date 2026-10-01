@@ -125,6 +125,37 @@ class TestSourceGeometryCalibrationService(DiagramFriendlyTest):
         (entry,) = self.repository.find_all()
         self.assertEqual(self.service.get_current_entry_id(), entry.entry_id)
 
+    # -- preview_source_frame -----------------------------------------------------
+
+    def test_preview_source_frame_places_each_sphere_in_its_quadrant(self):
+        result = self.service.preview_source_frame(_DIAMETERS_M, _DISTANCES_M)
+
+        self.assertTrue(result.is_success)
+        dto = result.value
+        quadrant_signs = ((-1, 1), (1, -1), (1, 1), (-1, -1))  # S1..S4
+        for (x, y), (sx, sy) in zip(dto.sphere_positions_m, quadrant_signs):
+            self.assertGreater(x * sx, 0)
+            self.assertGreater(y * sy, 0)
+        self.assertAlmostEqual(dto.best_fit_square_side_m, 0.0641, delta=1e-4)
+        self.assertEqual(len(dto.distance_residuals_m), 6)
+
+    def test_preview_source_frame_rejects_overlapping_spheres_with_visible_reason(self):
+        overlapping = [0.005] + _DISTANCES_M[1:]
+
+        result = self.service.preview_source_frame(_DIAMETERS_M, overlapping)
+
+        self.assertTrue(result.is_failure)
+        self.assertIn("D_S1_S2", result.error.reason)
+
+    def test_preview_source_frame_records_and_publishes_nothing(self):
+        received = []
+        self.event_bus.subscribe(SOURCE_GEOMETRY_CALIBRATION_ENTRY_ADDED_TOPIC, received.append)
+
+        self.service.preview_source_frame(_DIAMETERS_M, _DISTANCES_M)
+
+        self.assertEqual(self.repository.find_all(), [])
+        self.assertEqual(received, [])
+
 
 if __name__ == "__main__":
     unittest.main()

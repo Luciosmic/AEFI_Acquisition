@@ -32,6 +32,14 @@ values.
   stores it in each sensor calibration entry as `source_geometry_entry_id`.
   Raises `ValueError` if called before the registry has ever been seeded —
   defensive, should never trigger once the composition root's seed step runs.
+- `preview_source_frame(sphere_diameters_m, pairwise_distances_ext_m)`: query
+  for the live preview while the operator edits — builds an unrecorded
+  `SourceGeometryCalibrationEntry`, reconstructs it with `SourceFrameSolver`,
+  returns `OperationResult[SourceFrameGeometryDTO, SourceGeometryPreviewRejected]`.
+  Nothing persisted, nothing published. The impossibility rules stay in the
+  domain (`SourceGeometryInconsistentError`); this method is the single site
+  translating them into a visible use-case outcome. Logged at debug (called
+  on every edited digit).
 
 ## Design
 

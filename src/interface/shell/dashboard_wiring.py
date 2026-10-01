@@ -181,6 +181,15 @@ def wire_dashboard(
     source_geometry_calibration_presenter.latest_calibration_updated.connect(
         calibration_panel.source_geometry_panel.on_latest_calibration_updated
     )
+    calibration_panel.source_geometry_panel.measurements_edited.connect(
+        source_geometry_calibration_presenter.on_measurements_edited
+    )
+    source_geometry_calibration_presenter.source_frame_preview_updated.connect(
+        calibration_panel.source_geometry_panel.on_source_frame_preview_updated
+    )
+    source_geometry_calibration_presenter.source_frame_preview_rejected.connect(
+        calibration_panel.source_geometry_panel.on_source_frame_preview_rejected
+    )
     source_geometry_calibration_presenter.refresh_state()
 
     # One tab per hardware component kind (boards, signal generation chip, ADC, microcontroller, motors)
