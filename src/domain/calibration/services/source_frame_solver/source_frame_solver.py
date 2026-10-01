@@ -15,11 +15,16 @@ Rationale:
   constraint, not a hypothesis to test — so every center is solved in z=0.
   Treating S4's height as a free unknown produced a negative discriminant on
   real data: an ill-posed problem, not a sign of non-planarity.
-- S1, S2, S3 are placed by exact elimination. S4 is over-determined (d14,
-  d24, d34 for 2 unknowns): linear least squares over the 3 linearized rows
-  is wrong (the 3rd row is a linear combination of the other two, residual
-  two orders of magnitude worse); only nonlinear least squares on the 3
-  original distance equations uses the redundant measurement correctly.
+- 6 measured distances for 5 degrees of freedom (4 planar centers minus a
+  rigid motion): one redundant measurement. Linear least squares over
+  linearized rows is wrong (collinear rows, residual two orders of magnitude
+  worse); nonlinear least squares on the original distance equations is
+  required.
+- Fitting only S4 (S1, S2, S3 exact) dumped the whole inconsistency on S4's
+  3 distances: a symmetric input (all sides 85mm, both diagonals 110mm)
+  came out as a lopsided quadrilateral (2026-10-01). All 4 centers are now
+  refined together over the 6 distances, so a symmetric input gives a
+  symmetric result.
 
 Design:
 - Work frame (S1 at origin, S2 on +x) is an internal computational
@@ -75,27 +80,19 @@ def _solve_work_frame(d):
             "Triangle S1-S2-S3 cannot close with the measured D_S1_S2, D_S1_S3, D_S2_S3"
         )
     y3 = math.sqrt(y3_sq)
-    x4, y4 = _solve_s4(x3, y3, d12, d[(S1, S4)], d[(S2, S4)], d[(S3, S4)])
-    return [np.array(p) for p in ((0.0, 0.0), (d12, 0.0), (x3, y3), (x4, y4))]
+    # S4 seed: exact against S1 and S2, d34 picks its side of the S1-S2 axis
+    x4 = (d12**2 + d[(S1, S4)] ** 2 - d[(S2, S4)] ** 2) / (2 * d12)
+    y4 = (x3**2 + y3**2 + d[(S1, S4)] ** 2 - d[(S3, S4)] ** 2 - 2 * x3 * x4) / (2 * y3)
+    seed = np.array((0.0, 0.0, d12, 0.0, x3, y3, x4, y4))
 
+    def residuals(flat):
+        p = flat.reshape(4, 2)
+        return [np.linalg.norm(p[i] - p[j]) - d_ij for (i, j), d_ij in d.items()]
 
-def _solve_s4(x3, y3, d12, d14, d24, d34):
-    """Seeded by exact elimination against S1 and S2 (picking S4's side of the
-    S1-S2 axis with d34), refined by nonlinear least squares on all 3
-    distance equations."""
-    x4_0 = (d12**2 + d14**2 - d24**2) / (2 * d12)
-    y4_0 = (x3**2 + y3**2 + d14**2 - d34**2 - 2 * x3 * x4_0) / (2 * y3)
-
-    def residuals(point):
-        x4, y4 = point
-        return [
-            math.hypot(x4, y4) - d14,
-            math.hypot(x4 - d12, y4) - d24,
-            math.hypot(x4 - x3, y4 - y3) - d34,
-        ]
-
-    result = least_squares(residuals, x0=(x4_0, y4_0))
-    return result.x[0], result.x[1]
+    # all 4 centers refined together: the measurement inconsistency is spread
+    # over the 6 distances instead of being dumped on whichever sphere is
+    # solved last. Rigid-motion gauge left free, removed by _to_source_frame.
+    return list(least_squares(residuals, x0=seed).x.reshape(4, 2))
 
 
 def _to_source_frame(p):

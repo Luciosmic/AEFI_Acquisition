@@ -91,6 +91,21 @@ class TestSourceFrameSolver(unittest.TestCase):
             self.assertAlmostEqual(a[1], b[1], places=9)
         self.assertAlmostEqual(straight.square_rms_residual_m, turned.square_rms_residual_m, places=9)
 
+    def test_inconsistent_symmetric_input_spreads_its_error_symmetrically(self):
+        """All sides 85mm, both diagonals 110mm: not a square (the diagonal
+        should be ~112.1mm), but nothing distinguishes one sphere from
+        another, so the error must not be dumped on the last one solved."""
+        entry = make_entry([0.0196] * 4, [0.110, 0.110, 0.085, 0.085, 0.085, 0.085])
+
+        result = SourceFrameSolver.solve(entry)
+
+        self.assertAlmostEqual(result.square_rms_residual_m, 0.0, places=7)
+        sides = result.distance_residuals_m[2:]
+        for residual in sides:
+            self.assertAlmostEqual(residual, sides[0], places=7)
+        self.assertAlmostEqual(result.distance_residuals_m[0], result.distance_residuals_m[1], places=7)
+        self.assertGreater(abs(result.distance_residuals_m[0]), 5e-4)  # inconsistency stays visible
+
     def test_open_triangle_s1_s2_s3_is_rejected(self):
         # d12=0.09 but d13=d23=0.02: S3 cannot reach both S1 and S2
         entry = make_entry([0.02] * 4, [0.11, 0.11, 0.04, 0.08, 0.04, 0.08])

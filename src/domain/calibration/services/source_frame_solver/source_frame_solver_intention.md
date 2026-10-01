@@ -26,8 +26,11 @@ l'appeler.
 - Domain service sans état (méthode statique), pas d'I/O ; `numpy` + `scipy`
   (bibliothèques stables, acceptées dans le domain).
 - Coplanarité imposée (z=0) : contrainte connue du banc, pas une hypothèse.
-- S1, S2, S3 par élimination exacte ; S4 (surdéterminé) par moindres carrés
-  non linéaires sur les 3 équations de distance d'origine.
+- Graine par élimination exacte (S1, S2, S3 puis S4), puis moindres carrés
+  non linéaires sur **les 4 centres et les 6 distances** (6 mesures pour 5
+  degrés de liberté). Ajuster S4 seul faisait porter toute l'incohérence des
+  mesures sur S4 : une saisie symétrique (côtés 85 mm, diagonales 110 mm)
+  donnait un quadrilatère déformé d'un seul côté (corrigé le 2026-10-01).
 - Repère de travail (S1 à l'origine, S2 sur x) purement interne ; seul le
   repère source sort du service.
 - Carré ajusté par DFT 4 points sur le périmètre S1→S3→S2→S4 (sens horaire
