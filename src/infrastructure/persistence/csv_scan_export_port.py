@@ -23,6 +23,7 @@ from typing import Dict, Any, Optional, List, TextIO
 from application.services.scan_export_service.ports.i_scan_export_port import (
     IScanExportPort,
 )
+from infrastructure.events.event_audit_log import serialize_event
 
 
 logger = logging.getLogger(__name__)
@@ -61,9 +62,12 @@ class CsvScanExportPort(IScanExportPort):
     _field_fieldnames: Optional[List[str]] = field(init=False, default=None)
     _field_axis_labels: Optional[List[str]] = field(init=False, default=None)
     _scan_name: Optional[str] = field(init=False, default=None)
+    _log_handler: Optional[logging.FileHandler] = field(init=False, default=None)
+    _events_file: Optional[TextIO] = field(init=False, default=None)
 
     def configure(
-        self, directory: str, filename: str, metadata: Dict[str, Any]
+        self, directory: str, filename: str, metadata: Dict[str, Any], timestamp: Optional[str] = None,
+        acquisition_kind: str = "stepScan",
     ) -> None:
         """
         Configure the export destination and filename.
@@ -73,12 +77,15 @@ class CsvScanExportPort(IScanExportPort):
         - `filename`: scan name (without date/time, device tag, or extension).
         - `metadata`: currently unused here but kept for API symmetry and
           potential future use (e.g. writing a sidecar JSON file).
+        - `timestamp`: reuse a caller-supplied stamp instead of generating
+          one, so this port lands in the same acquisition folder as a
+          sibling port configured for the same scan.
 
         One acquisition is one bounded context, so every file it produces
         (this device's data + any probe sidecar file, see
         `configure_field_data`) is written into a single acquisition folder
-        `<dir>/YYYY-MM-DD_HHMMSS_stepScan_<name>/`, with files named
-        `YYYY-MM-DD_HHMMSS_stepScan_<name>_<device>.csv` (device last).
+        `<dir>/YYYY-MM-DD_HHMMSS_<kind>_<name>/`, with files named
+        `YYYY-MM-DD_HHMMSS_<kind>_<name>_<device>.csv` (device last), `<kind>` being `stepScan` or `timeSeries`.
         """
         # Resolve base directory
         if directory:
@@ -89,21 +96,23 @@ class CsvScanExportPort(IScanExportPort):
             # Use the base_output_dir directly when no directory is provided.
             dir_path = self.base_output_dir
 
-        timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+        timestamp = timestamp or datetime.now().strftime("%Y-%m-%d_%H%M%S")
         safe_base = "".join(
             c for c in filename if c.isalnum() or c in ("-", "_")
         )
 
-        acquisition_dir = dir_path / f"{timestamp}_stepScan_{safe_base}"
+        # `_scan_name` carries the kind tag so every per-file name below reads
+        # `<timestamp>_<kind>_<name>_...` without repeating it.
+        acquisition_dir = dir_path / f"{timestamp}_{acquisition_kind}_{safe_base}"
         acquisition_dir.mkdir(parents=True, exist_ok=True)
 
         self._dir_path = acquisition_dir
         self._timestamp = timestamp
-        self._scan_name = safe_base
-        self._configured_path = acquisition_dir / f"{timestamp}_stepScan_{safe_base}_aefi.csv"
-        print(f"[CsvScanExportPort] CWD: {os.getcwd()}")
-        print(f"[CsvScanExportPort] Configured export path (rel): {self._configured_path}")
-        print(f"[CsvScanExportPort] Configured export path (abs): {self._configured_path.resolve()}")
+        self._scan_name = f"{acquisition_kind}_{safe_base}"
+        self._configured_path = acquisition_dir / f"{timestamp}_{self._scan_name}_aefi.csv"
+        logger.debug("CWD: %s", os.getcwd())
+        logger.debug("Configured export path (rel): %s", self._configured_path)
+        logger.debug("Configured export path (abs): %s", self._configured_path.resolve())
         logger.debug("CSV export configured at %s", self._configured_path)
 
     def start(self) -> None:
@@ -120,11 +129,27 @@ class CsvScanExportPort(IScanExportPort):
             # Already started; nothing to do.
             return
         
-        print(f"[CsvScanExportPort] Opening file for writing: {self._configured_path}")
+        logger.info("Opening file for writing: %s", self._configured_path)
         self._file = self._configured_path.open(mode="w", newline="", encoding="utf-8")
         # We initialise DictWriter without fieldnames; they will be set on first write.
         self._writer = csv.DictWriter(self._file, fieldnames=[])
         self._fieldnames = None
+
+        # ponytail: root-logger tee for the scan's lifetime — captures every
+        # logger.* call app-wide at the level active in the Logs panel, but
+        # not bare print() (goes to stdout) nor post-processing logs (they run
+        # after stop()). Move to its own port if either is needed.
+        log_path = self._dir_path / f"{self._timestamp}_{self._scan_name}_logs.log"
+        self._log_handler = logging.FileHandler(log_path, encoding="utf-8")
+        self._log_handler.setFormatter(
+            logging.Formatter("%(asctime)s %(threadName)s %(levelname)s %(name)s: %(message)s")
+        )
+        logging.getLogger().addHandler(self._log_handler)
+        logger.info("Scan logs teed to %s", log_path)
+
+        events_path = self._dir_path / f"{self._timestamp}_{self._scan_name}_events.jsonl"
+        self._events_file = events_path.open(mode="w", encoding="utf-8")
+        logger.info("Scan events recorded to %s", events_path)
 
     def write_point(self, data: Dict[str, Any]) -> None:
         """
@@ -161,8 +186,8 @@ class CsvScanExportPort(IScanExportPort):
             raise RuntimeError("CsvScanExportPort.configure() must be called before configure_field_data().")
 
         probe_label = (probe_info or {}).get("probe_label", "field_probe")
-        field_path = self._dir_path / f"{self._timestamp}_stepScan_{self._scan_name}_{probe_label}.csv"
-        print(f"[CsvScanExportPort] Field data export path: {field_path}")
+        field_path = self._dir_path / f"{self._timestamp}_{self._scan_name}_{probe_label}.csv"
+        logger.info("Field data export path: %s", field_path)
         self._field_file = field_path.open(mode="w", newline="", encoding="utf-8")
         self._field_writer = csv.DictWriter(self._field_file, fieldnames=[])
         self._field_fieldnames = None
@@ -186,13 +211,27 @@ class CsvScanExportPort(IScanExportPort):
         if self._field_file is None or self._field_writer is None:
             raise RuntimeError("CsvScanExportPort.configure_field_data() must be called before write_field_point().")
 
-        row = {k: v for k, v in data.items() if k not in ("field_components", "field_std_dev_components")}
+        row = {
+            k: v for k, v in data.items()
+            if k not in (
+                "field_components", "field_std_dev_components",
+                "baseline_field_components", "baseline_field_std_dev_components",
+            )
+        }
         for i, c in enumerate(data.get("field_components", ())):
             row[self._component_column("field", i)] = c
         std_devs = data.get("field_std_dev_components")
         if std_devs:
             for i, s in enumerate(std_devs):
                 row[self._component_column("field_std_dev", i)] = s
+        baseline_components = data.get("baseline_field_components")
+        if baseline_components:
+            for i, c in enumerate(baseline_components):
+                row[self._component_column("baseline_field", i)] = c
+        baseline_std_devs = data.get("baseline_field_std_dev_components")
+        if baseline_std_devs:
+            for i, s in enumerate(baseline_std_devs):
+                row[self._component_column("baseline_field_std_dev", i)] = s
 
         if self._field_fieldnames is None:
             self._field_fieldnames = list(row.keys())
@@ -209,9 +248,28 @@ class CsvScanExportPort(IScanExportPort):
         if self._dir_path is None or self._timestamp is None:
             raise RuntimeError("CsvScanExportPort.configure() must be called before write_metadata().")
 
-        metadata_path = self._dir_path / f"{self._timestamp}_stepScan_{self._scan_name}_acquisition-parameters.json"
+        metadata_path = self._dir_path / f"{self._timestamp}_{self._scan_name}_acquisition-parameters.json"
         with metadata_path.open(mode="w", encoding="utf-8") as f:
             json.dump(metadata, f, indent=2, ensure_ascii=False, default=str)
+
+    def write_event(self, event) -> None:
+        """Append one domain event to `<timestamp>_stepScan_<name>_events.jsonl`,
+        same line format as the app-wide EventAuditLog."""
+        if self._events_file is None:
+            raise RuntimeError("CsvScanExportPort.start() must be called before write_event().")
+        try:
+            line = serialize_event(event)
+        except Exception:
+            # Swallowed on purpose: the service calls this right before stop()
+            # on scan end — raising here would leave the files open.
+            logger.exception("Failed to serialize event %r for scan events file", type(event).__name__)
+            return
+        self._events_file.write(line + "\n")
+        self._events_file.flush()
+
+    def get_output_path(self) -> Optional[Path]:
+        """Path to the main `_aefi.csv` file, once configured."""
+        return self._configured_path
 
     def stop(self) -> None:
         """Close the CSV file(s) if open."""
@@ -239,5 +297,16 @@ class CsvScanExportPort(IScanExportPort):
         self._field_writer = None
         self._field_fieldnames = None
         self._field_axis_labels = None
+
+        if self._events_file is not None:
+            self._events_file.close()
+            self._events_file = None
+
+        # Closed last so the file releases its Windows lock before
+        # ScanExportService may rmtree an empty acquisition folder.
+        if self._log_handler is not None:
+            logging.getLogger().removeHandler(self._log_handler)
+            self._log_handler.close()
+            self._log_handler = None
 
 

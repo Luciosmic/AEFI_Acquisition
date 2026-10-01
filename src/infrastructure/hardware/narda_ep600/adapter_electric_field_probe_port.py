@@ -7,18 +7,25 @@ Responsibility:
 """
 
 import dataclasses
+import logging
 from datetime import datetime
 from typing import Optional
 
 from application.services.electric_field_probe_service.ports.i_electric_field_probe_port import (
     IElectricFieldProbePort,
 )
+from application.services.electric_field_probe_service.dtos.electric_field_probe_dtos import (
+    FrequencyCorrectionResult,
+)
 from domain.electric_field_probe.electric_field_probe import ElectricFieldProbe
 from infrastructure.hardware.narda_ep600.driver_narda_ep601 import (
     NardaEP601,
+    RF_SENSING_RANGE_HZ,
     estimate_battery_percentage,
     estimate_battery_remaining_hours,
 )
+
+logger = logging.getLogger(__name__)
 
 AXIS_LABELS = ("X", "Y", "Z")
 
@@ -34,6 +41,7 @@ class NardaEP601ProbeAdapter(IElectricFieldProbePort):
             serial_number = self._driver.get_serial_number()
             battery_voltage = self._driver.get_battery_voltage()
         except Exception:
+            logger.exception("Failed to read Narda EP-601 identity/battery after connect; disconnecting")
             self._driver.disconnect()
             raise
         self._probe = ElectricFieldProbe(
@@ -45,8 +53,10 @@ class NardaEP601ProbeAdapter(IElectricFieldProbePort):
             battery_percentage=estimate_battery_percentage(battery_voltage),
             battery_remaining_hours=estimate_battery_remaining_hours(battery_voltage),
         )
+        logger.info("Connected to Narda EP-601 probe (serial_number=%s)", serial_number)
 
     def disconnect(self) -> None:
+        logger.info("Disconnecting Narda EP-601 probe")
         self._driver.disconnect()
         self._probe = None
 
@@ -74,4 +84,23 @@ class NardaEP601ProbeAdapter(IElectricFieldProbePort):
             battery_voltage_v=battery_voltage,
             battery_percentage=estimate_battery_percentage(battery_voltage),
             battery_remaining_hours=estimate_battery_remaining_hours(battery_voltage),
+        )
+
+    def apply_frequency_correction(self, frequency_hz: float) -> FrequencyCorrectionResult:
+        if frequency_hz < RF_SENSING_RANGE_HZ[0]:
+            # Limite physique permanente de la sonde (diode/antenne non qualifiee sous
+            # 10kHz), pas une panne — aucun round-trip serie, pas de clamp.
+            return FrequencyCorrectionResult(
+                requested_hz=frequency_hz, applied_hz=None, in_range=False
+            )
+        try:
+            applied_hz = self._driver.set_frequency_correction(frequency_hz)
+        except (ValueError, IOError) as e:
+            logger.error("Failed to apply frequency correction %.1f Hz: %s", frequency_hz, e)
+            return FrequencyCorrectionResult(
+                requested_hz=frequency_hz, applied_hz=None, in_range=True, error=str(e)
+            )
+        logger.info("Applied frequency correction: requested=%.1f Hz, applied=%.1f Hz", frequency_hz, applied_hz)
+        return FrequencyCorrectionResult(
+            requested_hz=frequency_hz, applied_hz=applied_hz, in_range=True
         )

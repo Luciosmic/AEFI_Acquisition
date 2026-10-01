@@ -7,6 +7,7 @@ class PanelDescriptor:
     label: str
     icon_path: Optional[str] = None
     is_visible: bool = True  # Panel is open/visible in UI
+    group: Optional[str] = None  # Visual grouping key for the taskbar (e.g. "Scan", "Hardware")
 
 class TaskbarPresentationModel:
     """
@@ -17,12 +18,12 @@ class TaskbarPresentationModel:
         self.panels: List[PanelDescriptor] = []
         self.visible_panel_ids: Set[str] = set()  # Panels currently visible
 
-    def add_panel(self, panel_id: str, label: str, icon_path: Optional[str] = None) -> None:
+    def add_panel(self, panel_id: str, label: str, icon_path: Optional[str] = None, group: Optional[str] = None) -> None:
         """Adds a new panel to the taskbar if it doesn't already exist."""
         if any(p.id == panel_id for p in self.panels):
-            return 
-            
-        panel = PanelDescriptor(id=panel_id, label=label, icon_path=icon_path, is_visible=True)
+            return
+
+        panel = PanelDescriptor(id=panel_id, label=label, icon_path=icon_path, is_visible=True, group=group)
         self.panels.append(panel)
         self.visible_panel_ids.add(panel_id)
 

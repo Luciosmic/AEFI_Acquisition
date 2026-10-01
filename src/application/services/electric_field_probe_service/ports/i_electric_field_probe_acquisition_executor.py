@@ -44,3 +44,11 @@ class IElectricFieldProbeAcquisitionExecutor(ABC):
     @abstractmethod
     def is_running(self) -> bool:
         """True if the acquisition worker is currently active."""
+
+    @abstractmethod
+    def request_frequency_correction(self, frequency_hz: float) -> None:
+        """
+        Request that the running worker apply a frequency correction on the
+        probe at its next loop iteration (non-blocking, no direct port call —
+        only the worker thread touches the probe port while streaming).
+        """

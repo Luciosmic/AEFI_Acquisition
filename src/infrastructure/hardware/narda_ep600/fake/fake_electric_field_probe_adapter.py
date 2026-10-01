@@ -13,8 +13,12 @@ from typing import Optional
 from application.services.electric_field_probe_service.ports.i_electric_field_probe_port import (
     IElectricFieldProbePort,
 )
+from application.services.electric_field_probe_service.dtos.electric_field_probe_dtos import (
+    FrequencyCorrectionResult,
+)
 from domain.electric_field_probe.electric_field_probe import ElectricFieldProbe
 from infrastructure.hardware.narda_ep600.driver_narda_ep601 import (
+    RF_SENSING_RANGE_HZ,
     estimate_battery_percentage,
     estimate_battery_remaining_hours,
 )
@@ -77,4 +81,16 @@ class FakeElectricFieldProbeAdapter(IElectricFieldProbePort):
             battery_voltage_v=_FAKE_BATTERY_VOLTAGE_V,
             battery_percentage=estimate_battery_percentage(_FAKE_BATTERY_VOLTAGE_V),
             battery_remaining_hours=estimate_battery_remaining_hours(_FAKE_BATTERY_VOLTAGE_V),
+        )
+
+    def apply_frequency_correction(self, frequency_hz: float) -> FrequencyCorrectionResult:
+        if frequency_hz < RF_SENSING_RANGE_HZ[0]:
+            return FrequencyCorrectionResult(
+                requested_hz=frequency_hz, applied_hz=None, in_range=False
+            )
+        # Quantification 10kHz, comme la resolution reelle du driver (#00k, cf.
+        # driver_narda_ep601.set_frequency_correction).
+        applied_hz = round(frequency_hz / 10_000) * 10_000
+        return FrequencyCorrectionResult(
+            requested_hz=frequency_hz, applied_hz=applied_hz, in_range=True
         )

@@ -14,10 +14,13 @@ Design:
 - Provides simple query methods (list hardware, get specs by id)
 """
 
+import logging
 from typing import Any, Dict, List
 
 from domain.shared_kernel.value_objects.hardware_configuration.hardware_advanced_parameter_schema import HardwareAdvancedParameterSchema
 from .ports.i_hardware_advanced_configurator import IHardwareAdvancedConfigurator
+
+logger = logging.getLogger(__name__)
 
 
 class HardwareConfigurationService:
@@ -80,6 +83,7 @@ class HardwareConfigurationService:
         Raises:
             KeyError: if hardware_id is unknown
         """
+        logger.info("HardwareConfigurationService: apply_config hardware_id=%s", hardware_id)
         provider = self._providers_by_id[hardware_id]
         provider.apply_config(config)
 
@@ -94,7 +98,23 @@ class HardwareConfigurationService:
         Raises:
             KeyError: if hardware_id is unknown
         """
+        logger.info("HardwareConfigurationService: save_config_as_default hardware_id=%s", hardware_id)
         provider = self._providers_by_id[hardware_id]
         provider.save_config_as_default(config)
+
+    def reset_to_default(self, hardware_id: str) -> None:
+        """
+        Discard the current applied/last state for a hardware and re-apply
+        its saved default configuration.
+
+        Args:
+            hardware_id: Identifier of the target hardware
+
+        Raises:
+            KeyError: if hardware_id is unknown
+        """
+        logger.info("HardwareConfigurationService: reset_to_default hardware_id=%s", hardware_id)
+        provider = self._providers_by_id[hardware_id]
+        provider.reset_to_default()
 
 

@@ -92,3 +92,25 @@ class TestElectricFieldScanPointAcquired:
         
         assert len(event.field_measurement.components) == 3
         assert event.field_measurement.std_dev_components == (0.1, 0.2, 0.3)
+
+    def test_baseline_field_measurement_defaults_to_none(self):
+        event = ElectricFieldScanPointAcquired(
+            scan_id=uuid4(),
+            point_index=0,
+            position=Position2D(x=0.0, y=0.0),
+            field_measurement=FieldMeasurement(components=(1.0,), timestamp=datetime.now()),
+        )
+
+        assert event.baseline_field_measurement is None
+
+    def test_baseline_field_measurement_can_be_attached(self):
+        baseline = FieldMeasurement(components=(0.1,), timestamp=datetime.now())
+        event = ElectricFieldScanPointAcquired(
+            scan_id=uuid4(),
+            point_index=0,
+            position=Position2D(x=0.0, y=0.0),
+            field_measurement=FieldMeasurement(components=(0.5,), timestamp=datetime.now()),
+            baseline_field_measurement=baseline,
+        )
+
+        assert event.baseline_field_measurement is baseline

@@ -24,6 +24,7 @@ Design:
 
 from __future__ import annotations
 
+import logging
 import threading
 from typing import Dict, Optional, Tuple
 
@@ -46,6 +47,8 @@ from domain.shared_kernel.events.motion_failed.motion_failed import MotionFailed
 from domain.shared_kernel.events.motion_stopped.motion_stopped import MotionStopped
 from domain.shared_kernel.operation_result import OperationResult
 
+logger = logging.getLogger(__name__)
+
 # (motion_event, optional_error) stored per pending motion_id
 _Slot = Tuple[threading.Event, Optional[MotionSyncError]]
 
@@ -64,6 +67,7 @@ class EventBusMotionSynchronizer(IMotionSynchronizer):
         event_bus.subscribe("motionfailed", self._on_motion_failed)
         event_bus.subscribe("motionstopped", self._on_motion_stopped)
         event_bus.subscribe("emergencystoptriggered", self._on_emergency_stop)
+        logger.info("EventBusMotionSynchronizer subscribed to motion event topics")
 
     # ------------------------------------------------------------------ #
     # IMotionSynchronizer
@@ -103,6 +107,7 @@ class EventBusMotionSynchronizer(IMotionSynchronizer):
         self._signal(event.motion_id, error=None)
 
     def _on_motion_failed(self, event: MotionFailed) -> None:
+        logger.error("Motion %s failed: %s", event.motion_id, event.error)
         self._signal(
             event.motion_id,
             error=MotionHardwareFailed(motion_id=event.motion_id, error_detail=event.error),
@@ -111,12 +116,14 @@ class EventBusMotionSynchronizer(IMotionSynchronizer):
     def _on_motion_stopped(self, event: MotionStopped) -> None:
         # MotionStopped has no motion_id — affects the most recently registered pending motion.
         # The scan loop sends one motion at a time, so only one entry exists in _pending.
+        logger.warning("Motion stopped externally: %s", event.reason)
         with self._lock:
             for mid, (evt, container) in list(self._pending.items()):
                 container[0] = MotionStoppedExternally(motion_id=mid, reason=event.reason)
                 evt.set()
 
     def _on_emergency_stop(self, event: EmergencyStopTriggered) -> None:
+        logger.warning("Emergency stop triggered: cancelling %d pending motion wait(s)", len(self._pending))
         with self._lock:
             for mid, (evt, container) in list(self._pending.items()):
                 container[0] = EmergencyStop()
@@ -137,6 +144,7 @@ class EventBusMotionSynchronizer(IMotionSynchronizer):
 
     def close(self) -> None:
         """Unsubscribe from the event bus (call on application shutdown)."""
+        logger.info("EventBusMotionSynchronizer unsubscribing from motion event topics")
         self._event_bus.unsubscribe("motioncompleted", self._on_motion_completed)
         self._event_bus.unsubscribe("motionfailed", self._on_motion_failed)
         self._event_bus.unsubscribe("motionstopped", self._on_motion_stopped)

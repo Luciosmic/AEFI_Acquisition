@@ -33,11 +33,11 @@ class TaskbarPresenter(QObject):
 
     # --- API called by Domain/Application Layer ---
 
-    def register_panel(self, panel_id: str, label: str, icon: str = None):
+    def register_panel(self, panel_id: str, label: str, icon: str = None, group: str = None):
         """
         Registers a new panel available in the application.
         """
-        self.model.add_panel(panel_id, label, icon)
+        self.model.add_panel(panel_id, label, icon, group)
         self.view.render(self.model)
 
     def set_panel_visibility(self, panel_id: str, visible: bool):

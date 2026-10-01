@@ -1,6 +1,9 @@
+import logging
 import serial
 import threading
 import time
+
+logger = logging.getLogger(__name__)
 
 class MCU_SerialCommunicator:
     _instance = None
@@ -39,8 +42,8 @@ class MCU_SerialCommunicator:
                     write_timeout=1
                 )
                 return True
-            except Exception as e:
-                print(f"Serial connection error: {e}")
+            except Exception:
+                logger.exception("Serial connection error")
                 return False
 
     def disconnect(self):
@@ -75,5 +78,5 @@ class MCU_SerialCommunicator:
                     response_str = response.decode('ascii', errors='ignore').rstrip('\r\n')
                     return True, response_str
             except Exception as e:
-                print(f"[MCU_Serial] Error: {e}")
+                logger.exception("Error")
                 return False, str(e)

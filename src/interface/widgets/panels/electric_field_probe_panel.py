@@ -18,7 +18,17 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, Signal
 import pyqtgraph as pg  # type: ignore[import]
 
+from interface.widgets.scope.scope_window_control import ScopeWindowControl
+from interface.widgets.scope.scope_cursors import ScopeCursors
+
 AXIS_COLORS = ["#4A90E2", "#F4D03F", "#E74C3C", "#9B59B6", "#2ECC71", "#E67E22"]
+
+FREQUENCY_CORRECTION_COLORS = {
+    "applied": "#2ECC71",
+    "out_of_range": "#F4D03F",
+    "error": "#E74C3C",
+    "unknown": "#888",
+}
 
 _TOGGLE_STYLE = (
     "QPushButton { color: #888; border: 1px solid #555; border-radius: 3px; padding: 2px 6px; }"
@@ -71,10 +81,15 @@ class ElectricFieldProbePanel(QWidget):
         self.lbl_probe_status.setStyleSheet("color: #888; font-weight: bold;")
         self.lbl_data_status = QLabel("● No data")
         self.lbl_data_status.setStyleSheet("color: #888;")
+        self.lbl_frequency_correction = QLabel("● —")
+        self.lbl_frequency_correction.setStyleSheet(
+            f"color: {FREQUENCY_CORRECTION_COLORS['unknown']};"
+        )
         l_conn.addWidget(self.btn_connect)
         l_conn.addWidget(self.btn_refresh_battery)
         l_conn.addWidget(self.lbl_probe_status)
         l_conn.addWidget(self.lbl_data_status)
+        l_conn.addWidget(self.lbl_frequency_correction)
         controls_layout.addWidget(grp_conn)
 
         grp_ctrl = QGroupBox("Control")
@@ -119,6 +134,14 @@ class ElectricFieldProbePanel(QWidget):
         l_calib.addWidget(self.btn_reset_calib)
         l_calib.addWidget(self.lbl_noise_offset, stretch=1)
         controls_layout.addWidget(grp_calib)
+
+        # --- Sliding window / cursors (shared, composed) ---
+        self.window_control = ScopeWindowControl(default_window_s=10.0)
+        self.window_control.changed.connect(self._update_plot)
+        controls_layout.addWidget(self.window_control)
+
+        self.cursors = ScopeCursors(y_unit=" V/m")
+        controls_layout.addWidget(self.cursors)
 
         controls_layout.addStretch()
         vlayout.addLayout(controls_layout)
@@ -187,6 +210,8 @@ class ElectricFieldProbePanel(QWidget):
         norm_pen = pg.mkPen("#FFFFFF", width=1, style=Qt.PenStyle.DotLine)
         self.curves["Norm"] = self.plot.plot([], [], pen=norm_pen, name="Norm")
 
+        self.cursors.attach(self.plot)
+
     def on_acquisition_started(self, acquisition_id: str):
         self._acquiring = True
         self._update_refresh_battery_enabled()
@@ -211,9 +236,15 @@ class ElectricFieldProbePanel(QWidget):
             self._t0 = ts
         self.times.append(ts - self._t0)
 
-        for key, curve in self.curves.items():
+        for key in self.curves:
             self.values.setdefault(key, []).append(data.get(key, 0.0))
-            curve.setData(self.times, self.values[key])
+
+        self._update_plot()
+
+    def on_frequency_correction_changed(self, state: str, text: str):
+        color = FREQUENCY_CORRECTION_COLORS.get(state, FREQUENCY_CORRECTION_COLORS["unknown"])
+        self.lbl_frequency_correction.setText(f"● {text}")
+        self.lbl_frequency_correction.setStyleSheet(f"color: {color}; font-weight: bold;")
 
     def update_correction_states(self, enabled: bool, offset_str: str):
         self.btn_toggle_noise.blockSignals(True)
@@ -231,3 +262,9 @@ class ElectricFieldProbePanel(QWidget):
         self._t0 = None
         for curve in self.curves.values():
             curve.setData([], [])
+
+    def _update_plot(self):
+        t_plot, values_plot = self.window_control.visible_slice(self.times, self.values)
+        self.cursors.sync_to_window(t_plot, self.window_control.is_sliding())
+        for key, curve in self.curves.items():
+            curve.setData(t_plot, values_plot.get(key, []))

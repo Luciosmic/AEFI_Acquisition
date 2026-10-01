@@ -144,7 +144,9 @@ class ScanPresenter(QObject, IScanOutputPort, metaclass=QABCMeta):
                 motion_speed_mm_s=None,  # Speed controlled by advanced hardware configuration
                 stabilization_delay_ms=int(params.get("stabilization_delay_ms", 300)),
                 averaging_per_position=int(params.get("averaging_per_position", 10)),
-                uncertainty_volts=0.001     # Default
+                uncertainty_volts=0.001,     # Default
+                differential_mode=bool(params.get("differential_mode", False)),
+                differential_settle_delay_ms=float(params.get("differential_settle_delay_ms", 50.0)),
             )
             
             # Configure Export
@@ -152,7 +154,6 @@ class ScanPresenter(QObject, IScanOutputPort, metaclass=QABCMeta):
                 enabled=params.get("export_enabled", False),
                 output_directory=params.get("export_output_directory", ""),
                 filename_base=params.get("export_filename_base", "scan"),
-                format=params.get("export_format", "CSV")
             )
             self._export_service.configure_export(export_dto)
             

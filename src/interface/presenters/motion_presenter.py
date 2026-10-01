@@ -5,12 +5,16 @@ Bridges between MotionControlService (Application) and MotionPanel (UI).
 Adapted from interface v1 for PySide6 and new panel architecture.
 """
 
+import logging
+
 from PySide6.QtCore import QObject, Signal, Slot
 from application.services.motion_control_service.motion_control_service import MotionControlService
 from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
 from domain.shared_kernel.events.position_updated.position_updated import PositionUpdated
 from domain.shared_kernel.events.motion_completed.motion_completed import MotionCompleted
 from domain.shared_kernel.events.motion_failed.motion_failed import MotionFailed
+
+logger = logging.getLogger(__name__)
 
 
 class MotionPresenter(QObject):
@@ -100,7 +104,7 @@ class MotionPresenter(QObject):
     def on_jog_requested(self, dx: float, dy: float):
         """Handle jog request from panel. Blocked if motion in progress."""
         if self._is_moving:
-            print("[MotionPresenter] Jog blocked: motion in progress")
+            logger.debug("Jog blocked: motion in progress")
             return
         
         if self._service:

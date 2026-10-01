@@ -15,6 +15,8 @@ Rationale:
 
 from __future__ import annotations
 
+import logging
+
 from application.services.electric_field_probe_service.i_api_electric_field_probe_service import (
     IApiElectricFieldProbeService,
 )
@@ -26,17 +28,28 @@ from application.services.electric_field_probe_service.ports.i_electric_field_pr
 )
 from application.services.electric_field_probe_service.dtos.electric_field_probe_dtos import (
     ElectricFieldProbeAcquisitionConfig,
+    FrequencyCorrectionResult,
 )
 from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from domain.shared_kernel.excitation.events.excitation_frequency_changed.excitation_frequency_changed import (
+    ExcitationFrequencyChanged,
+)
 from domain.electric_field_probe.events.electric_field_probe_connection_changed.electric_field_probe_connection_changed import (
     ElectricFieldProbeConnectionChanged,
 )
 from domain.electric_field_probe.events.electric_field_probe_battery_refreshed.electric_field_probe_battery_refreshed import (
     ElectricFieldProbeBatteryRefreshed,
 )
+from domain.electric_field_probe.events.electric_field_probe_frequency_correction_changed.electric_field_probe_frequency_correction_changed import (
+    ElectricFieldProbeFrequencyCorrectionChanged,
+)
 
 CONNECTION_CHANGED_TOPIC = "electricfieldprobeconnectionchanged"
 BATTERY_REFRESHED_TOPIC = "electricfieldprobebatteryrefreshed"
+EXCITATION_FREQUENCY_CHANGED_TOPIC = "excitationfrequencychanged"
+FREQUENCY_CORRECTION_CHANGED_TOPIC = "electricfieldprobefrequencycorrectionchanged"
+
+logger = logging.getLogger(__name__)
 
 
 class ElectricFieldProbeService(IApiElectricFieldProbeService):
@@ -51,16 +64,26 @@ class ElectricFieldProbeService(IApiElectricFieldProbeService):
         self._executor = executor
         self._probe_port = probe_port
         self._event_bus = event_bus
+        self._last_known_excitation_frequency_hz: float = 0.0  # mirrors ExcitationParameters.off().frequency
+        self._event_bus.subscribe(
+            EXCITATION_FREQUENCY_CHANGED_TOPIC, self._on_excitation_frequency_changed
+        )
 
     def connect_probe(self) -> None:
+        logger.info("ElectricFieldProbeService: Command connect_probe")
         try:
             self._probe_port.connect()
         except Exception as e:
+            logger.error("ElectricFieldProbeService: connect_probe failed error=%s", e)
             self._event_bus.publish(
                 CONNECTION_CHANGED_TOPIC,
                 ElectricFieldProbeConnectionChanged(connected=False, error=str(e)),
             )
             return
+        result = self._probe_port.apply_frequency_correction(
+            self._last_known_excitation_frequency_hz
+        )
+        self._publish_frequency_correction(result)
         self._event_bus.publish(
             CONNECTION_CHANGED_TOPIC,
             ElectricFieldProbeConnectionChanged(
@@ -69,6 +92,7 @@ class ElectricFieldProbeService(IApiElectricFieldProbeService):
         )
 
     def disconnect_probe(self) -> None:
+        logger.info("ElectricFieldProbeService: Command disconnect_probe")
         self._probe_port.disconnect()
         self._event_bus.publish(
             CONNECTION_CHANGED_TOPIC,
@@ -76,23 +100,56 @@ class ElectricFieldProbeService(IApiElectricFieldProbeService):
         )
 
     def start_acquisition(self, config: ElectricFieldProbeAcquisitionConfig) -> None:
+        logger.info("ElectricFieldProbeService: Command start_acquisition")
         self._executor.start(config, self._probe_port)
 
     def stop_acquisition(self) -> None:
+        logger.info("ElectricFieldProbeService: Command stop_acquisition")
         self._executor.stop()
 
     def is_acquisition_running(self) -> bool:
         return self._executor.is_running()
 
     def refresh_battery(self) -> None:
+        logger.info("ElectricFieldProbeService: Command refresh_battery")
         # Le lien serie est partage avec l'acquisition en cours (get_battery_voltage
         # entrelacerait ses propres trames avec celles du flux) : on refuse silencieusement
         # plutot que de risquer de corrompre une acquisition en cours. Le bouton UI est deja
         # desactive pendant l'acquisition (cf. panel) — cette garde est la protection de fond.
         if not self._probe_port.is_connected() or self._executor.is_running():
+            logger.debug(
+                "ElectricFieldProbeService: refresh_battery skipped (not connected or acquisition running)"
+            )
             return
         self._probe_port.refresh_battery()
         self._event_bus.publish(
             BATTERY_REFRESHED_TOPIC,
             ElectricFieldProbeBatteryRefreshed(probe=self._probe_port.get_probe()),
+        )
+
+    def _on_excitation_frequency_changed(self, event: ExcitationFrequencyChanged) -> None:
+        self._last_known_excitation_frequency_hz = event.frequency_hz
+        if not self._probe_port.is_connected():
+            return
+        if self._executor.is_running():
+            # Le worker applique et publie lui-meme (seul a toucher le port serie pendant
+            # le streaming) — cf. request_frequency_correction.
+            logger.debug(
+                "ElectricFieldProbeService: frequency correction delegated to running executor frequency_hz=%s",
+                event.frequency_hz,
+            )
+            self._executor.request_frequency_correction(event.frequency_hz)
+            return
+        result = self._probe_port.apply_frequency_correction(event.frequency_hz)
+        self._publish_frequency_correction(result)
+
+    def _publish_frequency_correction(self, result: FrequencyCorrectionResult) -> None:
+        self._event_bus.publish(
+            FREQUENCY_CORRECTION_CHANGED_TOPIC,
+            ElectricFieldProbeFrequencyCorrectionChanged(
+                requested_hz=result.requested_hz,
+                applied_hz=result.applied_hz,
+                in_range=result.in_range,
+                error=result.error,
+            ),
         )

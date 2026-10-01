@@ -17,9 +17,12 @@ Design (QCS):
 - QUERY: state queries (get_memory_state)
 """
 
+import logging
 from typing import Dict, Optional, Tuple
 from infrastructure.hardware.micro_controller.MCU_serial_communicator import MCU_SerialCommunicator
 from domain.shared_kernel.operation_result import OperationResult
+
+logger = logging.getLogger(__name__)
 
 
 class AD9106Controller:
@@ -305,16 +308,15 @@ class AD9106Controller:
         try:
             addr = self.DDS_ADDRESSES["Phase"][channel]
             success, response = self._communicator.send_command(f"a{addr}")
-            print(f"[AD9106 Controller] Selected Phase address: {addr}")
-            print(f"[AD9106 Controller] Sent to MCU")
             if not success:
                 return OperationResult.fail(f"Failed to select Phase address: {response}")
-            
+
             success, response = self._communicator.send_command(f"d{value}")
-            print(f"[AD9106 Controller] Sent to MCU Phase value: {value}")
             if not success:
                 return OperationResult.fail(f"Failed to write Phase value: {response}")
-            
+
+            logger.debug("Set DDS%s phase: address=%s, value=%s", channel, addr, value)
+
             # Update memory state
             self._memory_state["DDS"]["Phase"][channel] = value
             

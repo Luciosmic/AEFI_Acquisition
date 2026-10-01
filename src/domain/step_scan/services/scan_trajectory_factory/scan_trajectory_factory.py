@@ -60,7 +60,11 @@ class ScanTrajectoryFactory:
                     positions.append(make_pos(o, i))
 
         elif config.scan_pattern == ScanPattern.COMB:
-            # ponytail: COMB legacy behavior â€” Y-first columns, scan_axis ignored
+            # COMB legacy behavior — Y-first columns only, unconditionally.
+            # config.scan_axis is guaranteed == Y here: StepScanConfig
+            # rejects COMB + scan_axis=X at construction (see its
+            # __post_init__), so this can no longer silently drop an
+            # operator's explicit X choice.
             for col in range(config.x_nb_points):
                 x = zone.x_min + col * x_step
                 for row in range(config.y_nb_points):

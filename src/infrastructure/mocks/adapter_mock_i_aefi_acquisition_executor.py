@@ -1,3 +1,4 @@
+import logging
 import threading
 import time
 from typing import Optional
@@ -12,9 +13,14 @@ from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
 from domain.shared_kernel.events.aefi_voltage_sample_acquired.aefi_voltage_sample_acquired import (
     AefiVoltageSampleAcquired,
 )
-from domain.shared_kernel.events.continuous_acquisition_stopped.continuous_acquisition_stopped import (
-    ContinuousAcquisitionStopped,
+from domain.shared_kernel.events.aefi_voltage_reading_started.aefi_voltage_reading_started import (
+    AefiVoltageReadingStarted,
 )
+from domain.shared_kernel.events.aefi_voltage_reading_stopped.aefi_voltage_reading_stopped import (
+    AefiVoltageReadingStopped,
+)
+
+logger = logging.getLogger(__name__)
 
 class MockAefiAcquisitionExecutor(IAefiAcquisitionExecutor):
     """
@@ -46,11 +52,11 @@ class MockAefiAcquisitionExecutor(IAefiAcquisitionExecutor):
         Starts a mock acquisition thread.
         """
         if self._is_running:
-            print("[MockAefiAcquisitionExecutor] Already running, ignoring start.")
+            logger.info("start: Already running, ignoring start.")
             return
 
         self._current_acquisition_id = uuid4()
-        print(f"[MockAefiAcquisitionExecutor] Starting continuous acquisition (ID={self._current_acquisition_id}).")
+        logger.info(f"start: Starting continuous acquisition (ID={self._current_acquisition_id}).")
 
         # Configure port only if uncertainty is provided
         if config.target_uncertainty:
@@ -60,6 +66,9 @@ class MockAefiAcquisitionExecutor(IAefiAcquisitionExecutor):
         self._is_running = True
 
         def _worker():
+            started_event = AefiVoltageReadingStarted(acquisition_id=self._current_acquisition_id)
+            self._event_bus.publish(type(started_event).__name__.lower(), started_event)
+
             sample_index = 0
             while not self._stop_event.is_set():
                 if acquisition_port.is_ready():
@@ -76,8 +85,8 @@ class MockAefiAcquisitionExecutor(IAefiAcquisitionExecutor):
                 time.sleep(self._SIMULATION_INTERVAL_S)
 
             self._is_running = False
-            print("[MockAefiAcquisitionExecutor] Stopped.")
-            event = ContinuousAcquisitionStopped(acquisition_id=self._current_acquisition_id)
+            logger.info("_worker: Stopped.")
+            event = AefiVoltageReadingStopped(acquisition_id=self._current_acquisition_id)
             self._event_bus.publish(type(event).__name__.lower(), event)
 
         self._thread = threading.Thread(target=_worker, daemon=True)
@@ -87,7 +96,7 @@ class MockAefiAcquisitionExecutor(IAefiAcquisitionExecutor):
         """
         Signals the worker thread to stop.
         """
-        print("[MockAefiAcquisitionExecutor] Stop requested.")
+        logger.info("stop: Stop requested.")
         self._stop_event.set()
         if self._thread and self._thread.is_alive():
             self._thread.join(timeout=1.0)

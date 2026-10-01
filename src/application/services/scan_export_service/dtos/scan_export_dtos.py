@@ -9,9 +9,8 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class ExportConfigDTO:
-    """Configuration for data export."""
+    """Configuration for data export. Every scan is exported to both CSV and HDF5."""
     enabled: bool
     output_directory: str
     filename_base: str
     include_metadata: bool = True
-    format: str = "CSV"

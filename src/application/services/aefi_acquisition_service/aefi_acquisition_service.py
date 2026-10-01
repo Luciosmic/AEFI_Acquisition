@@ -8,9 +8,13 @@ Responsibility:
 
 from __future__ import annotations
 
+import logging
+
 from .ports.i_aefi_acquisition_executor import IAefiAcquisitionExecutor
 from .dtos.aefi_acquisition_dtos import AefiAcquisitionConfig
 from application.services.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
+
+logger = logging.getLogger(__name__)
 
 
 class AefiAcquisitionService:
@@ -27,9 +31,14 @@ class AefiAcquisitionService:
         self._acquisition_port = acquisition_port
 
     def start_acquisition(self, config: AefiAcquisitionConfig) -> None:
+        logger.info(
+            "AefiAcquisitionService: Command start_acquisition max_duration_s=%s",
+            config.max_duration_s,
+        )
         self._executor.start(config, self._acquisition_port)
 
     def stop_acquisition(self) -> None:
+        logger.info("AefiAcquisitionService: Command stop_acquisition")
         self._executor.stop()
 
     def is_acquisition_running(self) -> bool:

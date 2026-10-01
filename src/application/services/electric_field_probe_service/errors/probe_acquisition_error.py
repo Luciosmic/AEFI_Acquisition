@@ -7,7 +7,7 @@ Responsibility:
 
 Rationale:
 - The probe streaming loop currently catches `Exception` in infrastructure and
-  translates it to a `ContinuousAcquisitionFailed` event. This union makes
+  translates it to a `ElectricFieldProbeReadingFailed` event. This union makes
   the failure surface explicit and typed at the application boundary.
 
 Design:

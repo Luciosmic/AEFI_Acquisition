@@ -157,6 +157,47 @@ class TestHardwareConfigurationService(DiagramFriendlyTest):
         self.assertNotEqual(first_spec.display_name.strip(), "")
 
 
+class _FakeResettableProvider:
+    """Minimal duck-typed IHardwareAdvancedConfigurator — isolates the
+    service's reset_to_default() routing from any real hardware side effect
+    (unlike ArcusPerformax4EXAdvancedConfigurator, which would try to connect
+    to a real DLL-backed controller)."""
+
+    hardware_id = "fake_hw"
+    display_name = "Fake Hardware"
+
+    def __init__(self):
+        self.reset_called = False
+
+    @staticmethod
+    def get_parameter_specs():
+        return []
+
+    def apply_config(self, config):
+        pass
+
+    def save_config_as_default(self, config):
+        pass
+
+    def reset_to_default(self):
+        self.reset_called = True
+
+
+class TestHardwareConfigurationServiceResetToDefault(unittest.TestCase):
+    def setUp(self):
+        self.provider = _FakeResettableProvider()
+        self.service = HardwareConfigurationService([self.provider])
+
+    def test_reset_to_default_delegates_to_provider(self):
+        self.service.reset_to_default("fake_hw")
+
+        self.assertTrue(self.provider.reset_called)
+
+    def test_reset_to_default_unknown_hardware_raises_key_error(self):
+        with self.assertRaises(KeyError):
+            self.service.reset_to_default("unknown_hw")
+
+
 if __name__ == "__main__":
     unittest.main()
 

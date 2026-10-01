@@ -1,3 +1,4 @@
+import logging
 from typing import Dict, Any, List
 from application.services.hardware_configuration_service.ports.i_hardware_advanced_configurator import IHardwareAdvancedConfigurator
 from domain.shared_kernel.value_objects.hardware_configuration.hardware_advanced_parameter_schema import (
@@ -7,6 +8,8 @@ from domain.shared_kernel.value_objects.hardware_configuration.hardware_advanced
     EnumParameterSchema
 )
 
+logger = logging.getLogger(__name__)
+
 class MockHardwareAdvancedConfigurator(IHardwareAdvancedConfigurator):
     """
     Mock Advanced Hardware Configurator.
@@ -15,8 +18,8 @@ class MockHardwareAdvancedConfigurator(IHardwareAdvancedConfigurator):
     - Allow testing of "Advanced Settings" UI without real hardware.
     - Exposes representative parameters matching real hardware structure:
       * Number parameters (like n_avg)
-      * Boolean parameters (like high_res, negative_ref)
-      * Enum parameters (like ref_voltage, oversampling_ratio)
+      * Boolean parameters (like high_resolution, negative_charge_pump)
+      * Enum parameters (like reference_voltage, oversampling_ratio)
     - Groups parameters by category (similar to ADS131A04 and MCU configurators)
     """
 
@@ -53,25 +56,25 @@ class MockHardwareAdvancedConfigurator(IHardwareAdvancedConfigurator):
                 group="Acquisition"
             ),
             
-            # Boolean Parameters (like ADS131A04 negative_ref, high_res)
+            # Boolean Parameters (like ADS131A04 negative_charge_pump, high_resolution)
             BooleanParameterSchema(
-                key="high_res",
+                key="high_resolution",
                 display_name="High Resolution Mode (HRM)",
                 description="High-resolution mode (better accuracy) or Low-power mode (lower power consumption).",
                 default_value=True,
                 group="Reference Configuration"
             ),
             BooleanParameterSchema(
-                key="negative_ref",
-                display_name="Negative Reference (VNCPEN)",
+                key="negative_charge_pump",
+                display_name="Negative Charge Pump (VNCPEN)",
                 description="Enable negative charge pump for unipolar power supply.",
                 default_value=False,
                 group="Reference Configuration"
             ),
             
-            # Enum Parameters (like ADS131A04 ref_voltage, ref_selection, oversampling_ratio)
+            # Enum Parameters (like ADS131A04 reference_voltage, reference_source, oversampling_ratio)
             EnumParameterSchema(
-                key="ref_voltage",
+                key="reference_voltage",
                 display_name="Reference Voltage Level (VREF_4V)",
                 description="REFP reference voltage level when using internal reference.",
                 default_value="2.442V",
@@ -79,8 +82,8 @@ class MockHardwareAdvancedConfigurator(IHardwareAdvancedConfigurator):
                 group="Reference Configuration"
             ),
             EnumParameterSchema(
-                key="ref_selection",
-                display_name="Reference Selection (INT_REFEN)",
+                key="reference_source",
+                display_name="Reference Source (INT_REFEN)",
                 description="Internal or external reference voltage.",
                 default_value="Internal",
                 choices=("External", "Internal"),
@@ -99,10 +102,20 @@ class MockHardwareAdvancedConfigurator(IHardwareAdvancedConfigurator):
     def apply_config(self, config: Dict[str, Any]) -> None:
         """
         Apply configuration (mock implementation).
-        
+
         Args:
             config: Dictionary of parameter values keyed by parameter key.
         """
-        print(f"[MockAdvancedConfig] Applying config: {config}")
+        logger.info(f"apply_config: Applying config: {config}")
         self.last_config = dict(config)
         self.applied_params.update(config)
+
+    def save_config_as_default(self, config: Dict[str, Any]) -> None:
+        logger.info(f"save_config_as_default: Saving as default: {config}")
+
+    def reset_to_default(self) -> None:
+        """get_parameter_specs() here reads only in-memory hardcoded specs
+        (no default+last resolution), so its default_value already IS the
+        pure default — safe to feed straight into apply_config()."""
+        flat_config = {spec.key: spec.default_value for spec in self.get_parameter_specs()}
+        self.apply_config(flat_config)

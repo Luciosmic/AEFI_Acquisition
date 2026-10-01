@@ -26,18 +26,28 @@ from domain.electric_field_probe.events.electric_field_probe_connection_changed.
 from domain.electric_field_probe.events.electric_field_probe_battery_refreshed.electric_field_probe_battery_refreshed import (
     ElectricFieldProbeBatteryRefreshed,
 )
-from domain.shared_kernel.events.continuous_acquisition_failed.continuous_acquisition_failed import (
-    ContinuousAcquisitionFailed,
+from domain.electric_field_probe.events.electric_field_probe_frequency_correction_changed.electric_field_probe_frequency_correction_changed import (
+    ElectricFieldProbeFrequencyCorrectionChanged,
 )
-from domain.shared_kernel.events.continuous_acquisition_stopped.continuous_acquisition_stopped import (
-    ContinuousAcquisitionStopped,
+from domain.electric_field_probe.events.electric_field_probe_reading_failed.electric_field_probe_reading_failed import (
+    ElectricFieldProbeReadingFailed,
+)
+from domain.electric_field_probe.events.electric_field_probe_reading_stopped.electric_field_probe_reading_stopped import (
+    ElectricFieldProbeReadingStopped,
 )
 
 SAMPLE_ACQUIRED_TOPIC = "fieldsampleacquired"
 CONNECTION_CHANGED_TOPIC = "electricfieldprobeconnectionchanged"
 BATTERY_REFRESHED_TOPIC = "electricfieldprobebatteryrefreshed"
-ACQUISITION_FAILED_TOPIC = "electricfieldprobeacquisitionfailed"
-ACQUISITION_STOPPED_TOPIC = "electricfieldprobeacquisitionstopped"
+ACQUISITION_FAILED_TOPIC = "electricfieldprobereadingfailed"
+ACQUISITION_STOPPED_TOPIC = "electricfieldprobereadingstopped"
+FREQUENCY_CORRECTION_CHANGED_TOPIC = "electricfieldprobefrequencycorrectionchanged"
+
+
+def _format_frequency_hz(hz: float) -> str:
+    if hz >= 1_000_000:
+        return f"{hz / 1_000_000:.2f} MHz"
+    return f"{hz / 1_000:.1f} kHz"
 
 
 def _probe_label(probe) -> str:
@@ -67,6 +77,7 @@ class ElectricFieldProbePresenter(QObject):
         dict
     )  # {axis_label: value, ..., "Norm": ..., "timestamp": ...}
     noise_state_updated = Signal(bool, str)  # enabled, offset_str
+    frequency_correction_changed = Signal(str, str)  # state, text
 
     def __init__(self, service: ElectricFieldProbeService, event_bus: IDomainEventBus):
         super().__init__()
@@ -88,6 +99,9 @@ class ElectricFieldProbePresenter(QObject):
         )
         self._event_bus.subscribe(ACQUISITION_FAILED_TOPIC, self._on_failed_event)
         self._event_bus.subscribe(ACQUISITION_STOPPED_TOPIC, self._on_stopped_event)
+        self._event_bus.subscribe(
+            FREQUENCY_CORRECTION_CHANGED_TOPIC, self._on_frequency_correction_changed_event
+        )
 
     def shutdown(self):
         self._event_bus.unsubscribe(SAMPLE_ACQUIRED_TOPIC, self._on_sample_event)
@@ -99,6 +113,9 @@ class ElectricFieldProbePresenter(QObject):
         )
         self._event_bus.unsubscribe(ACQUISITION_FAILED_TOPIC, self._on_failed_event)
         self._event_bus.unsubscribe(ACQUISITION_STOPPED_TOPIC, self._on_stopped_event)
+        self._event_bus.unsubscribe(
+            FREQUENCY_CORRECTION_CHANGED_TOPIC, self._on_frequency_correction_changed_event
+        )
 
     # ------------------------------------------------------------------ #
     # UI Commands (from panel signals)
@@ -172,14 +189,32 @@ class ElectricFieldProbePresenter(QObject):
             label = event.error or "Disconnected"
             self.probe_connection_changed.emit(False, label)
             self._last_raw_sample = {}
+            self.frequency_correction_changed.emit("unknown", "—")
 
     def _on_battery_refreshed_event(self, event: ElectricFieldProbeBatteryRefreshed):
         self.probe_connection_changed.emit(True, _probe_label(event.probe))
 
-    def _on_failed_event(self, event: ContinuousAcquisitionFailed):
+    def _on_frequency_correction_changed_event(
+        self, event: ElectricFieldProbeFrequencyCorrectionChanged
+    ):
+        if event.error:
+            self.frequency_correction_changed.emit("error", f"Erreur: {event.error}")
+        elif not event.in_range:
+            self.frequency_correction_changed.emit(
+                "out_of_range",
+                "Hors plage sonde (<10kHz) — non compensée, sonde non qualifiée à cette fréquence",
+            )
+        elif event.applied_hz is not None:
+            self.frequency_correction_changed.emit(
+                "applied", f"Compensée @ {_format_frequency_hz(event.applied_hz)}"
+            )
+        else:
+            self.frequency_correction_changed.emit("unknown", "—")
+
+    def _on_failed_event(self, event: ElectricFieldProbeReadingFailed):
         self.acquisition_failed.emit(str(event.reason))
 
-    def _on_stopped_event(self, event: ContinuousAcquisitionStopped):
+    def _on_stopped_event(self, event: ElectricFieldProbeReadingStopped):
         if self._current_acquisition_id is not None:
             self.acquisition_stopped.emit(str(event.acquisition_id))
             self._current_acquisition_id = None

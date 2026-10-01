@@ -1,0 +1,16 @@
+{
+  "scan_config": {
+    "x_min": 600.0,
+    "x_max": 800.0,
+    "x_nb_points": 81,
+    "y_min": 600.0,
+    "y_max": 800.0,
+    "y_nb_points": 81,
+    "scan_pattern": "SERPENTINE",
+    "scan_axis": "Y",
+    "stabilization_delay_ms": 300,
+    "averaging_per_position": 10,
+    "differential_mode": false,
+    "differential_settle_delay_ms": 50.0
+  }
+}

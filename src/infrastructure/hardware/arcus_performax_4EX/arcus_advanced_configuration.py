@@ -16,6 +16,7 @@ from typing import Dict, Any, List, Optional, TYPE_CHECKING
 from pathlib import Path
 from dataclasses import replace
 import json
+import logging
 import os
 
 from domain.shared_kernel.value_objects.hardware_configuration.hardware_advanced_parameter_schema import (
@@ -32,6 +33,8 @@ from infrastructure.hardware.arcus_performax_4EX.driver_arcus_performax4EX impor
 
 if TYPE_CHECKING:
     from infrastructure.hardware.arcus_performax_4EX.adapter_motion_port_arcus_performax4EX import ArcusAdapter
+
+logger = logging.getLogger(__name__)
 
 
 class ArcusAdvancedConfigurationSpecs:
@@ -258,6 +261,14 @@ class ArcusPerformax4EXAdvancedConfigurator(IHardwareAdvancedConfigurator):
 
 
 
+    def reset_to_default(self) -> None:
+        """Discard the current applied state and re-apply the saved default.
+        get_parameter_specs() reads only the default file, so its
+        default_value already IS the pure default — safe to feed straight
+        into apply_config()."""
+        flat_config = {spec.key: spec.default_value for spec in self.get_parameter_specs()}
+        self.apply_config(flat_config)
+
     @staticmethod
     def get_parameter_specs() -> List[HardwareAdvancedParameterSchema]:
         """
@@ -269,7 +280,7 @@ class ArcusPerformax4EXAdvancedConfigurator(IHardwareAdvancedConfigurator):
         updated_specs = []
         
         try:
-            config_path = os.path.join(os.path.dirname(__file__), "arcus_default_config.json")
+            config_path = os.path.join(".aefi_acquisition", "configs", "arcus_default_config.json")
             default_config = {}
             if os.path.exists(config_path):
                 with open(config_path, 'r') as f:
@@ -282,8 +293,8 @@ class ArcusPerformax4EXAdvancedConfigurator(IHardwareAdvancedConfigurator):
                 else:
                     updated_specs.append(spec)
                         
-        except Exception as e:
-            print(f"[ArcusConfigurator] Failed to load default config: {e}")
+        except Exception:
+            logger.exception("Failed to load default config")
             return specs
             
         return updated_specs
@@ -327,12 +338,12 @@ class ArcusPerformax4EXAdvancedConfigurator(IHardwareAdvancedConfigurator):
         import os
         
         try:
-            config_path = os.path.join(os.path.dirname(__file__), "arcus_default_config.json")
+            config_path = os.path.join(".aefi_acquisition", "configs", "arcus_default_config.json")
             with open(config_path, 'w') as f:
                 json.dump(config, f, indent=4)
-            print(f"[ArcusConfigurator] Default config saved to {config_path}")
-        except Exception as e:
-            print(f"[ArcusConfigurator] Failed to save default config: {e}")
+            logger.info("Default config saved to %s", config_path)
+        except Exception:
+            logger.exception("Failed to save default config")
             # Don't raise, as it's not critical for now
 
 

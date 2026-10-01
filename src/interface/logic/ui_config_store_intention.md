@@ -4,7 +4,7 @@
 
 Les panneaux Qt (`interface/widgets/panels/`) ne doivent pas faire d'I/O disque directement. Avant ce module, `ScanControlPanel` lisait/écrivait ses fichiers de config JSON lui-même (`json`, `os`, `shutil` importés dans le widget), seul cas de ce type dans `interface/`.
 
-Placement dans `interface/logic/` et non `infrastructure/` : ces données (dernier dossier d'export utilisé, valeurs de formulaire) sont de la vue pure, sans concept domaine ni port applicatif — contrairement à la config hardware (`IHardwareAdvancedConfigurator`), qui passe par un port défini en `application/` et des adaptateurs en `infrastructure/hardware/` parce qu'elle configure un vrai périphérique physique. Construire un port+service applicatif pour un préférence de formulaire serait de la sur-ingénierie. Même logique que `interface/logic/coordinate_transformer.py` : utilitaire fin de la couche interface, pas de dépendance domaine, pas de protocole de service applicatif complet.
+Placement dans `interface/logic/` et non `infrastructure/` : ces données (dernier dossier d'export utilisé, valeurs de formulaire) sont de la vue pure, sans concept domaine ni port applicatif — contrairement à la config hardware (`IHardwareAdvancedConfigurator`), qui passe par un port défini en `application/` et des adaptateurs en `infrastructure/hardware/` parce qu'elle configure un vrai périphérique physique. Construire un port+service applicatif pour un préférence de formulaire serait de la sur-ingénierie.
 
 ## Responsibility
 

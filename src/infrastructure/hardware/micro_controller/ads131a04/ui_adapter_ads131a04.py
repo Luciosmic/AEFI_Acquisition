@@ -18,6 +18,7 @@ Design:
 """
 
 from typing import List, Tuple, Dict, Any
+import logging
 import sys
 from pathlib import Path
 
@@ -25,6 +26,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from interface.hardware_configuration_tabs.parameter_spec import ParameterSpec
+
+logger = logging.getLogger(__name__)
 
 
 class ADS131A04UIAdapter:
@@ -169,7 +172,7 @@ class ADS131A04UIAdapter:
             raise ValueError(f"Invalid configuration: {msg}")
         
         # Apply to hardware
-        print(f"[ADS131A04] Applying config: {config}")
+        logger.info("Applying config: %s", config)
         
         # TODO: Actual hardware communication
         # self._configure_osr(config['osr'])

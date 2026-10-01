@@ -18,12 +18,14 @@ infrastructure. Même rôle que `AefiAcquisitionExecutor` pour le canal AEFI.
   sonde réelle (réponse de filtre la plus rapide ~33Hz à F1). Contre la
   sonde réelle, le round-trip série domine déjà et ce délai n'ajoute
   presque rien.
+- Publier `ElectricFieldProbeReadingStarted` en entrée de boucle, avant même
+  la première tentative de lecture — symétrique à `Stopped`/`Failed`.
 - Tolérer jusqu'à `MAX_CONSECUTIVE_SAMPLE_FAILURES` (2) échecs consécutifs de
-  `probe_port.acquire_sample()` avant de publier `ContinuousAcquisitionFailed`
+  `probe_port.acquire_sample()` avant de publier `ElectricFieldProbeReadingFailed`
   — la sonde Narda est connue pour être flaky (erreurs USB/série
   transitoires) ; un consommateur du flux (ex. un scan) n'a aucun moyen de
   relancer le worker après une seule mauvaise lecture.
-- Publier `ContinuousAcquisitionStopped` en sortie de boucle (`finally`).
+- Publier `ElectricFieldProbeReadingStopped` en sortie de boucle (`finally`).
 
 ## Design
 

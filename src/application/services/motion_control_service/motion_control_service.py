@@ -1,3 +1,4 @@
+import logging
 from typing import Optional
 
 from application.services.motion_control_service.ports.i_motion_port import IMotionPort
@@ -6,6 +7,8 @@ from domain.shared_kernel.operation_result import OperationResult
 from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
 from domain.shared_kernel.events.position_updated.position_updated import PositionUpdated
 from domain.shared_kernel.events.emergency_stop_triggered.emergency_stop_triggered import EmergencyStopTriggered
+
+logger = logging.getLogger(__name__)
 
 
 class MotionControlService:
@@ -35,6 +38,7 @@ class MotionControlService:
             return self._motion_port.get_current_position()
         except Exception:
             # Fallback if hardware read fails (shouldn't happen often)
+            logger.warning("Failed to read current position from hardware, falling back to (0.0, 0.0)")
             return Position2D(0.0, 0.0)
 
     def _update_target(self, new_target: Position2D):
@@ -47,6 +51,7 @@ class MotionControlService:
 
     def move_relative(self, dx: float, dy: float) -> OperationResult[None, str]:
         """Move relative to current position (or last target). Returns Result for explicit error handling."""
+        logger.info("Command: move relative dx=%s dy=%s", dx, dy)
         try:
             current = self._get_reference_position()
             target_x = current.x + dx
@@ -65,11 +70,12 @@ class MotionControlService:
             return OperationResult.ok(None)
         except Exception as e:
             error_msg = f"Move relative failed: {str(e)}"
-            print(f"[MotionControlService] {error_msg}")
+            logger.error(error_msg)
             return OperationResult.fail(error_msg)
 
     def move_absolute(self, x: float, y: float) -> OperationResult[None, str]:
         """Move to absolute position. Returns Result for explicit error handling."""
+        logger.info("Command: move absolute x=%s y=%s", x, y)
         try:
             target = Position2D(x=x, y=y)
             
@@ -79,11 +85,12 @@ class MotionControlService:
             return OperationResult.ok(None)
         except Exception as e:
             error_msg = f"Move absolute failed: {str(e)}"
-            print(f"[MotionControlService] {error_msg}")
+            logger.error(error_msg)
             return OperationResult.fail(error_msg)
 
     def move_absolute_x(self, target_x: float) -> OperationResult[None, str]:
         """Move X axis to absolute position, keeping Y. Returns Result for explicit error handling."""
+        logger.info("Command: move absolute X target_x=%s", target_x)
         try:
             current = self._get_reference_position()
             target = Position2D(x=target_x, y=current.y)
@@ -94,11 +101,12 @@ class MotionControlService:
             return OperationResult.ok(None)
         except Exception as e:
             error_msg = f"Move absolute X failed: {str(e)}"
-            print(f"[MotionControlService] {error_msg}")
+            logger.error(error_msg)
             return OperationResult.fail(error_msg)
 
     def move_absolute_y(self, target_y: float) -> OperationResult[None, str]:
         """Move Y axis to absolute position, keeping X. Returns Result for explicit error handling."""
+        logger.info("Command: move absolute Y target_y=%s", target_y)
         try:
             current = self._get_reference_position()
             target = Position2D(x=current.x, y=target_y)
@@ -109,44 +117,48 @@ class MotionControlService:
             return OperationResult.ok(None)
         except Exception as e:
             error_msg = f"Move absolute Y failed: {str(e)}"
-            print(f"[MotionControlService] {error_msg}")
+            logger.error(error_msg)
             return OperationResult.fail(error_msg)
 
     def home_x(self) -> OperationResult[None, str]:
         """Home X axis using hardware homing sequence. Returns Result for explicit error handling."""
+        logger.info("Command: home X axis")
         try:
             self._motion_port.home(axis="x")
             self._reset_target() # Homing invalidates position tracking
             return OperationResult.ok(None)
         except Exception as e:
             error_msg = f"Home X failed: {str(e)}"
-            print(f"[MotionControlService] {error_msg}")
+            logger.error(error_msg)
             return OperationResult.fail(error_msg)
 
     def home_y(self) -> OperationResult[None, str]:
         """Home Y axis using hardware homing sequence. Returns Result for explicit error handling."""
+        logger.info("Command: home Y axis")
         try:
             self._motion_port.home(axis="y")
             self._reset_target() # Homing invalidates position tracking
             return OperationResult.ok(None)
         except Exception as e:
             error_msg = f"Home Y failed: {str(e)}"
-            print(f"[MotionControlService] {error_msg}")
+            logger.error(error_msg)
             return OperationResult.fail(error_msg)
 
     def home_xy(self) -> OperationResult[None, str]:
         """Home both axes using hardware homing sequence. Returns Result for explicit error handling."""
+        logger.info("Command: home X and Y axes")
         try:
             self._motion_port.home(axis=None)  # None = both axes
             self._reset_target() # Homing invalidates position tracking
             return OperationResult.ok(None)
         except Exception as e:
             error_msg = f"Home XY failed: {str(e)}"
-            print(f"[MotionControlService] {error_msg}")
+            logger.error(error_msg)
             return OperationResult.fail(error_msg)
 
     def set_speed_mode(self, mode: str) -> OperationResult[None, str]:
         """Apply a named speed preset ('slow', 'medium', 'fast'). Returns Result for explicit error handling."""
+        logger.info("Command: set speed mode=%s", mode)
         if mode not in self.SPEED_MODES:
             return OperationResult.fail(f"Invalid speed mode: {mode}. Must be one of {self.SPEED_MODES}")
         try:
@@ -154,22 +166,24 @@ class MotionControlService:
             return OperationResult.ok(None)
         except Exception as e:
             error_msg = f"Set speed mode failed: {str(e)}"
-            print(f"[MotionControlService] {error_msg}")
+            logger.error(error_msg)
             return OperationResult.fail(error_msg)
 
     def stop(self) -> OperationResult[None, str]:
         """Stop motion normally (deceleration). Returns Result for explicit error handling."""
+        logger.info("Command: stop (deceleration)")
         try:
             self._motion_port.stop()
             self._reset_target() # Stop invalidates target
             return OperationResult.ok(None)
         except Exception as e:
             error_msg = f"Stop failed: {str(e)}"
-            print(f"[MotionControlService] {error_msg}")
+            logger.error(error_msg)
             return OperationResult.fail(error_msg)
 
     def emergency_stop(self) -> OperationResult[None, str]:
         """Stop motion immediately (E-Stop). Returns Result for explicit error handling."""
+        logger.info("Command: emergency stop (E-Stop)")
         try:
             self._motion_port.emergency_stop()
             self._reset_target() # Stop invalidates target
@@ -177,24 +191,25 @@ class MotionControlService:
             return OperationResult.ok(None)
         except Exception as e:
             error_msg = f"Emergency stop failed: {str(e)}"
-            print(f"[MotionControlService] {error_msg}")
+            logger.error(error_msg)
             return OperationResult.fail(error_msg)
 
     def set_reference(self, axis: str, position: float = 0.0) -> OperationResult[None, str]:
         """
         Set the current position of the specified axis as a reference (e.g. 0).
-        
+
         Args:
             axis: 'x' or 'y'
             position: The value to set the current position to (default 0.0)
         """
+        logger.info("Command: set reference axis=%s position=%s", axis, position)
         try:
             self._motion_port.set_reference(axis, position)
             self._reset_target() # Reference change invalidates tracking
             return OperationResult.ok(None)
         except Exception as e:
             error_msg = f"Set reference failed: {str(e)}"
-            print(f"[MotionControlService] {error_msg}")
+            logger.error(error_msg)
             return OperationResult.fail(error_msg)
 
     def get_axis_limits(self) -> tuple[float, float]:
@@ -202,4 +217,5 @@ class MotionControlService:
         try:
             return self._motion_port.get_axis_limits()
         except Exception:
+            logger.warning("Failed to read axis limits from hardware, falling back to default (1000.0, 1000.0)")
             return (1000.0, 1000.0) # Default fallback

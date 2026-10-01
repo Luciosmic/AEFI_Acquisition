@@ -190,7 +190,8 @@ class TestScanApplicationService(DiagramFriendlyTest):
         self.assertEqual(len(received_completion), 1)
 
     def test_electric_field_scan_point_forwarded_to_output_port(self):
-        """ElectricFieldScanPointAcquired must be flattened (component_N + norm) and forwarded."""
+        """ElectricFieldScanPointAcquired must be flattened (field_<axis> + norm) and forwarded.
+        Falls back to field_<index> when the event carries no axis_labels (probe unknown)."""
         received = []
         self.service.set_output_port(_RecordingOutputPort(received))
 
@@ -207,7 +208,18 @@ class TestScanApplicationService(DiagramFriendlyTest):
         self.assertEqual(current, 3)
         self.assertEqual(data["x"], 1.0)
         self.assertEqual(data["y"], 2.0)
-        self.assertEqual(data["value"], {"component_0": 3.0, "component_1": 4.0, "norm": 5.0})
+        self.assertEqual(data["value"], {"field_0": 3.0, "field_1": 4.0, "norm": 5.0})
+
+        named_event = ElectricFieldScanPointAcquired(
+            scan_id=uuid4(),
+            point_index=4,
+            position=Position2D(x=1.0, y=2.0),
+            field_measurement=FieldMeasurement(components=(3.0, 4.0), timestamp=datetime.now()),
+            axis_labels=("X", "Y"),
+        )
+        self.event_bus.publish("electricfieldscanpointacquired", named_event)
+        _, _, named_data = received[1]
+        self.assertEqual(named_data["value"], {"field_x": 3.0, "field_y": 4.0, "norm": 5.0})
 
     def test_field_probe_point_completed_once_stream_produces_a_sample(self):
         """A point stays unvalidated across a sampling drought and is only

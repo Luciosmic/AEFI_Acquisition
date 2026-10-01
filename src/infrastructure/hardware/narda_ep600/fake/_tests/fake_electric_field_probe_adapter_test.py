@@ -63,3 +63,21 @@ def test_refresh_battery_updates_probe_battery_fields():
     assert probe_after is not probe_before
     assert probe_after.battery_voltage_v is not None
     assert probe_after.serial_number == probe_before.serial_number
+
+
+def test_apply_frequency_correction_out_of_range_below_10khz():
+    adapter = FakeElectricFieldProbeAdapter()
+    result = adapter.apply_frequency_correction(5_000.0)
+
+    assert result.in_range is False
+    assert result.applied_hz is None
+    assert result.requested_hz == 5_000.0
+
+
+def test_apply_frequency_correction_in_range():
+    adapter = FakeElectricFieldProbeAdapter()
+    result = adapter.apply_frequency_correction(50_000.0)
+
+    assert result.in_range is True
+    assert result.applied_hz == 50_000.0
+    assert result.error is None

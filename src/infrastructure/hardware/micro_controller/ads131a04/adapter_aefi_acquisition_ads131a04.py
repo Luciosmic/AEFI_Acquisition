@@ -13,6 +13,7 @@ Rationale:
 
 from __future__ import annotations
 
+import logging
 import threading
 import time
 from uuid import uuid4, UUID
@@ -27,12 +28,17 @@ from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
 from domain.shared_kernel.events.aefi_voltage_sample_acquired.aefi_voltage_sample_acquired import (
     AefiVoltageSampleAcquired,
 )
-from domain.shared_kernel.events.continuous_acquisition_failed.continuous_acquisition_failed import (
-    ContinuousAcquisitionFailed,
+from domain.shared_kernel.events.aefi_voltage_reading_started.aefi_voltage_reading_started import (
+    AefiVoltageReadingStarted,
 )
-from domain.shared_kernel.events.continuous_acquisition_stopped.continuous_acquisition_stopped import (
-    ContinuousAcquisitionStopped,
+from domain.shared_kernel.events.aefi_voltage_reading_failed.aefi_voltage_reading_failed import (
+    AefiVoltageReadingFailed,
 )
+from domain.shared_kernel.events.aefi_voltage_reading_stopped.aefi_voltage_reading_stopped import (
+    AefiVoltageReadingStopped,
+)
+
+logger = logging.getLogger(__name__)
 
 class AdapterAefiAcquisitionAds131a04(IAefiAcquisitionExecutor):
     """
@@ -81,7 +87,9 @@ class AdapterAefiAcquisitionAds131a04(IAefiAcquisitionExecutor):
         acquisition_port: IAcquisitionPort,
     ) -> None:
         """Background acquisition loop."""
-        print(f"[ContinuousAcquisition] Worker started. ID: {acquisition_id}")
+        logger.info("Worker started. ID: %s", acquisition_id)
+        started_event = AefiVoltageReadingStarted(acquisition_id=acquisition_id)
+        self._event_bus.publish("aefivoltagereadingstarted", started_event)
 
         # Best-effort: acquire back-to-back at whatever rate the serial link
         # allows. The ADC round-trip (OSR x n_avg, set in hardware advanced
@@ -94,7 +102,7 @@ class AdapterAefiAcquisitionAds131a04(IAefiAcquisitionExecutor):
             while not self._stop_flag.is_set():
                 # Check duration limit
                 if config.max_duration_s is not None and (time.time() - t0) > config.max_duration_s:
-                    print("[ContinuousAcquisition] Max duration reached.")
+                    logger.info("Max duration reached.")
                     break
 
                 # Acquire sample
@@ -103,7 +111,7 @@ class AdapterAefiAcquisitionAds131a04(IAefiAcquisitionExecutor):
                 try:
                     sample = acquisition_port.acquire_sample()
                 except Exception as e:
-                    print(f"[ContinuousAcquisition] Error acquiring sample: {e}")
+                    logger.exception("Error acquiring sample")
                     raise e
 
                 # Publish event
@@ -117,13 +125,13 @@ class AdapterAefiAcquisitionAds131a04(IAefiAcquisitionExecutor):
                 index += 1
 
         except Exception as e:
-            print(f"[ContinuousAcquisition] Loop failed: {e}")
-            error_event = ContinuousAcquisitionFailed(
+            logger.exception("Loop failed")
+            error_event = AefiVoltageReadingFailed(
                 acquisition_id=acquisition_id,
                 reason=str(e)
             )
-            self._event_bus.publish("continuousacquisitionfailed", error_event)
+            self._event_bus.publish("aefivoltagereadingfailed", error_event)
         finally:
-            print("[ContinuousAcquisition] Worker stopping.")
-            stop_event = ContinuousAcquisitionStopped(acquisition_id=acquisition_id)
-            self._event_bus.publish("continuousacquisitionstopped", stop_event)
+            logger.info("Worker stopping.")
+            stop_event = AefiVoltageReadingStopped(acquisition_id=acquisition_id)
+            self._event_bus.publish("aefivoltagereadingstopped", stop_event)

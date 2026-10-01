@@ -8,7 +8,10 @@ Définir le contrat que chaque périphérique hardware avancé (Arcus, MCU, AD91
 
 - Déclarer les propriétés `hardware_id: str` et `display_name: str` pour l'identification.
 - Déclarer `get_parameter_specs() → List[HardwareAdvancedParameterSchema]` (méthode de classe).
-- Déclarer `apply_config(config: Dict[str, Any])` et `save_config_as_default(config: Dict[str, Any])`.
+- Déclarer `apply_config(config: Dict[str, Any])`, `save_config_as_default(config: Dict[str, Any])`
+  et `reset_to_default()` — ce dernier est le pendant de `save_config_as_default` : celui-ci
+  capture une baseline, `reset_to_default()` y revient (doit réappliquer au hardware réel, pas
+  seulement réécrire le fichier "last").
 
 ## Design
 

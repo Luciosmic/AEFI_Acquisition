@@ -1,0 +1,465 @@
+"""
+AEFI Continuous Reading Panel - Interface V2
+Combines controls and visualization in a single panel (passive view pattern).
+"""
+
+from typing import Dict, List, Any
+from PySide6.QtWidgets import (
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QDoubleSpinBox,
+    QGroupBox,
+    QComboBox,
+    QGridLayout,
+    QSizePolicy,
+    QCheckBox,
+    QLineEdit,
+)
+from PySide6.QtCore import Qt, Signal
+import pyqtgraph as pg  # type: ignore[import]
+
+from interface.widgets.scope.scope_window_control import ScopeWindowControl
+from interface.widgets.scope.scope_cursors import ScopeCursors
+from interface.widgets.layouts.flow_layout import FlowLayout
+
+
+def _compact_group(title: str, layout_cls):
+    """Titled group with tight margins — keeps the controls strip thin."""
+    group = QGroupBox(title)
+    layout = layout_cls(group)
+    layout.setContentsMargins(4, 2, 4, 2)
+    layout.setSpacing(3)
+    return group, layout
+
+
+class AefiContinuousReadingPanel(QWidget):
+    """
+    Single panel for continuous AEFI voltage reading with controls and time series visualization.
+    
+    Features:
+    - Control panel (display window)
+    - Start/Stop buttons
+    - Pyqtgraph time series plot for 6 channels
+    - Channel visibility toggles
+    """
+    
+    # Signals (passive view pattern)
+    acquisition_start_requested = Signal(dict)  # parameters
+    acquisition_stop_requested = Signal()
+
+    CHANNELS = [
+        # X Axis
+        dict(name="Ux In-Phase", label="X In-Phase", color="#4A90E2", style=Qt.PenStyle.SolidLine),
+        dict(name="Ux Quadrature", label="X Quadrature", color="#4A90E2", style=Qt.PenStyle.DotLine),
+        
+        # Y Axis
+        dict(name="Uy In-Phase", label="Y In-Phase", color="#F4D03F", style=Qt.PenStyle.SolidLine),
+        dict(name="Uy Quadrature", label="Y Quadrature", color="#F4D03F", style=Qt.PenStyle.DotLine),
+        
+        # Z Axis
+        dict(name="Uz In-Phase", label="Z In-Phase", color="#E74C3C", style=Qt.PenStyle.SolidLine),
+        dict(name="Uz Quadrature", label="Z Quadrature", color="#E74C3C", style=Qt.PenStyle.DotLine),
+    ]
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.channel_checkboxes = {}
+        
+        # Data buffers
+        self.times: List[float] = []
+        self.values: Dict[str, List[float]] = {ch["name"]: [] for ch in self.CHANNELS}
+        self._t0: float | None = None
+        
+        # Main layout
+        vlayout = QVBoxLayout(self)
+        vlayout.setContentsMargins(4, 4, 4, 4)
+        vlayout.setSpacing(4)
+
+        # --- Controls strip ---
+        # FlowLayout: groups wrap onto a new row when the dock is narrow, so
+        # the panel never imposes the sum of their widths (which made the
+        # dock's scroll area show a horizontal scrollbar). Every group is kept
+        # to 2 rows at most so the strip stays thin and the plot gets the rest.
+        controls_host = QWidget()
+        controls_host.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
+        controls_layout = FlowLayout(controls_host, spacing=4)
+
+        # 1. Acquisition: Start/Stop/status, then export
+        grp_ctrl, l_ctrl = _compact_group("Acquisition", QGridLayout)
+
+        self.btn_start = QPushButton("Start")
+        self.btn_start.clicked.connect(self._on_start_clicked)
+        self.btn_start.setStyleSheet("background-color: #2ECC71; color: white; font-weight: bold;")
+
+        self.btn_stop = QPushButton("Stop")
+        self.btn_stop.clicked.connect(self._on_stop_clicked)
+        self.btn_stop.setStyleSheet("background-color: #E74C3C; color: white; font-weight: bold;")
+        self.btn_stop.setEnabled(False)
+
+        self.lbl_status = QLabel("Idle")
+        self.lbl_status.setMinimumWidth(QLabel("Running").sizeHint().width())  # widest state, no reflow
+
+        # Export vs time (CSV) — armed on Start, closed on Stop
+        self.chk_export = QCheckBox("Export CSV")
+        self.input_export_filename = QLineEdit("continuous")
+        self.input_export_filename.setFixedWidth(90)
+        self.input_export_filename.setToolTip("Written to ~/Desktop/AEFI_Acquisition_Exports/<date>_timeSeries_<name>/")
+
+        l_ctrl.addWidget(self.btn_start, 0, 0)
+        l_ctrl.addWidget(self.btn_stop, 0, 1)
+        l_ctrl.addWidget(self.lbl_status, 0, 2)
+        l_ctrl.addWidget(self.chk_export, 1, 0)
+        l_ctrl.addWidget(QLabel("Filename base:"), 1, 1)
+        l_ctrl.addWidget(self.input_export_filename, 1, 2)
+        controls_layout.addWidget(grp_ctrl)
+
+        # 2. Display: scale + Y mode, fixed calibre underneath (Oscillo only)
+        grp_params, l_params = _compact_group("Display", QGridLayout)
+
+        self.cbo_scale = QComboBox()
+        self.cbo_scale.addItems(["V", "mV", "uV"])
+        self.cbo_scale.currentTextChanged.connect(self._on_scale_changed)
+        self._scale_factor = 1.0  # Default V
+
+        # Mode Control (Auto = fit to data, Oscillo = fixed calibre)
+        self.cbo_mode = QComboBox()
+        self.cbo_mode.addItems(["Auto", "Oscillo"])
+        self.cbo_mode.currentTextChanged.connect(self._on_mode_changed)
+
+        self.lbl_fullscale = QLabel("±")
+        self.spin_fullscale = QDoubleSpinBox()
+        self.spin_fullscale.setRange(0.001, 1_000_000.0)
+        self.spin_fullscale.setValue(1.0)
+        self.spin_fullscale.valueChanged.connect(self._on_fullscale_changed)
+        self.lbl_fullscale.setVisible(False)
+        self.spin_fullscale.setVisible(False)
+
+        self.cbo_scale.setFixedWidth(60)
+        self.cbo_mode.setFixedWidth(80)
+        l_params.addWidget(QLabel("Scale"), 0, 0)
+        l_params.addWidget(self.cbo_scale, 0, 1)
+        l_params.addWidget(QLabel("Mode"), 1, 0)
+        l_params.addWidget(self.cbo_mode, 1, 1)
+        l_params.addWidget(self.lbl_fullscale, 1, 2)
+        l_params.addWidget(self.spin_fullscale, 1, 3)
+        controls_layout.addWidget(grp_params)
+
+        # 3. Channel Toggles: 3 columns (X, Y, Z) x 2 rows (In-Phase, Quadrature)
+        grp_channels, channel_grid_layout = _compact_group("Channels", QGridLayout)
+
+        for i, ch in enumerate(self.CHANNELS):
+            cb = QPushButton(ch["label"])
+            cb.setCheckable(True)
+            # Default check only In-Phase to avoid clutter
+            cb.setChecked("In-Phase" in ch["name"])
+            cb.setStyleSheet(f"QPushButton {{ color: {ch['color']}; font-weight: bold; padding: 1px 6px; }}"
+                             f"QPushButton:checked {{ border: 2px solid {ch['color']}; }}")
+            cb.clicked.connect(self._on_channel_toggled)
+            self.channel_checkboxes[ch["name"]] = cb
+            # Even index = In-Phase (row 0), odd = Quadrature (row 1); col = axis
+            channel_grid_layout.addWidget(cb, i % 2, i // 2)
+
+        controls_layout.addWidget(grp_channels)
+
+        # 4. Calibration Controls: buttons on row 0, their values underneath
+        grp_calib, l_calib = _compact_group("Signal Processing", QGridLayout)
+
+        _TOGGLE_STYLE = (
+            "QPushButton { color: #888; border: 1px solid #555; border-radius: 3px; padding: 2px 6px; }"
+            "QPushButton:checked { background-color: #27AE60; color: white; border: 1px solid #27AE60; font-weight: bold; }"
+            "QPushButton:disabled { color: #444; border: 1px solid #333; }"
+        )
+
+        self.btn_calib_noise = QPushButton("Zero Noise")
+        self.btn_calib_noise.setToolTip("Set current background as noise offset (Zero)")
+        self.btn_calib_noise.clicked.connect(self._on_calib_noise_clicked)
+
+        self.btn_toggle_noise = QPushButton("ON")
+        self.btn_toggle_noise.setCheckable(True)
+        self.btn_toggle_noise.setEnabled(False)
+        self.btn_toggle_noise.setFixedWidth(38)
+        self.btn_toggle_noise.setStyleSheet(_TOGGLE_STYLE)
+        self.btn_toggle_noise.toggled.connect(self._on_noise_toggled)
+
+        self.btn_calib_phase = QPushButton("Align Phase")
+        self.btn_calib_phase.setToolTip("Rotate Phase to maximize In-Phase component")
+        self.btn_calib_phase.clicked.connect(self._on_calib_phase_clicked)
+
+        self.btn_toggle_phase = QPushButton("ON")
+        self.btn_toggle_phase.setCheckable(True)
+        self.btn_toggle_phase.setEnabled(False)
+        self.btn_toggle_phase.setFixedWidth(38)
+        self.btn_toggle_phase.setStyleSheet(_TOGGLE_STYLE)
+        self.btn_toggle_phase.toggled.connect(self._on_phase_toggled)
+
+        self.btn_calib_primary = QPushButton("Null Primary")
+        self.btn_calib_primary.setToolTip("Set current signal as Primary Field offset (Tare)")
+        self.btn_calib_primary.clicked.connect(self._on_calib_primary_clicked)
+
+        self.btn_toggle_primary = QPushButton("ON")
+        self.btn_toggle_primary.setCheckable(True)
+        self.btn_toggle_primary.setEnabled(False)
+        self.btn_toggle_primary.setFixedWidth(38)
+        self.btn_toggle_primary.setStyleSheet(_TOGGLE_STYLE)
+        self.btn_toggle_primary.toggled.connect(self._on_primary_toggled)
+
+        self.btn_reset_calib = QPushButton("Reset All")
+        self.btn_reset_calib.setStyleSheet("color: #E74C3C;")
+        self.btn_reset_calib.clicked.connect(self._on_reset_calib_clicked)
+
+        _LBL_STYLE = "color: #888; font-size: 10px; font-style: italic;"
+        self.lbl_val_noise   = QLabel("—")
+        self.lbl_val_phase   = QLabel("—")
+        self.lbl_val_primary = QLabel("—")
+
+        for col, (btn, toggle, lbl) in enumerate((
+            (self.btn_calib_noise,   self.btn_toggle_noise,   self.lbl_val_noise),
+            (self.btn_calib_phase,   self.btn_toggle_phase,   self.lbl_val_phase),
+            (self.btn_calib_primary, self.btn_toggle_primary, self.lbl_val_primary),
+        )):
+            lbl.setStyleSheet(_LBL_STYLE)
+            l_calib.addWidget(btn,    0, 2 * col)
+            l_calib.addWidget(toggle, 0, 2 * col + 1)
+            l_calib.addWidget(lbl,    1, 2 * col, 1, 2)
+        l_calib.addWidget(self.btn_reset_calib, 0, 6)
+
+        controls_layout.addWidget(grp_calib)
+
+        # 5. Coordinate Transform Controls
+        grp_trans, l_trans = _compact_group("Coordinate Transform", QVBoxLayout)
+
+        self.btn_apply_rotation = QPushButton("Apply Rotation")
+        self.btn_apply_rotation.setCheckable(True)
+        self.btn_apply_rotation.setStyleSheet("""
+            QPushButton:checked {
+                background-color: #8E44AD;
+                color: white;
+                font-weight: bold;
+            }
+        """)
+        self.btn_apply_rotation.toggled.connect(self._on_rotation_toggled)
+        self.btn_apply_rotation.setToolTip("Ramène les signaux dans le repère sources : E_sources = P·E_sensor, P = angles de montage du panneau Calibration (transformation transposée de la mesure).")
+
+        self.lbl_angles_info = QLabel("Angles: [0, 0, 0]")
+        self.lbl_angles_info.setStyleSheet("color: #AAA;")
+
+        l_trans.addWidget(self.btn_apply_rotation)
+        l_trans.addWidget(self.lbl_angles_info)
+
+        controls_layout.addWidget(grp_trans)
+
+        # 6. Sliding window / cursors (shared, composed) — always last
+        self.window_control = ScopeWindowControl(default_window_s=10.0)
+        self.window_control.changed.connect(self._update_plot)
+        controls_layout.addWidget(self.window_control)
+
+        self.cursors = ScopeCursors(y_unit=" V")
+        controls_layout.addWidget(self.cursors)
+
+        vlayout.addWidget(controls_host)
+
+        # Plot pyqtgraph — takes all the remaining space
+        self.plot = pg.PlotWidget()
+        self.plot.setBackground("#353535")
+        self.plot.showGrid(x=True, y=True, alpha=0.2)
+        self.plot.setLabel("left", "Voltage (V)")
+        self.plot.setLabel("bottom", "Time (s)")
+        self.plot.addLegend()
+
+        self.curves: Dict[str, pg.PlotDataItem] = {}
+        for ch in self.CHANNELS:
+            pen = pg.mkPen(ch["color"], width=2, style=ch["style"])
+            curve = self.plot.plot([], [], pen=pen, name=ch["label"])
+            curve.setVisible("In-Phase" in ch["name"])
+            self.curves[ch["name"]] = curve
+
+        # Ignored: the dock's scroll area sizes the panel from its height-for-
+        # width, which would otherwise reserve pyqtgraph's 480 px sizeHint and
+        # show a vertical scrollbar — the plot just fills what's left.
+        self.plot.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Ignored)
+        self.plot.setMinimumHeight(150)
+        vlayout.addWidget(self.plot, 1)
+        self.cursors.attach(self.plot)
+
+        # pyqtgraph's built-in "A" (autorange) button forces autorange on both axes,
+        # bypassing our Oscillo fixed calibre. Reflect that back into the Mode selector
+        # so the switch to Auto stays visible instead of silently overriding Oscillo.
+        self.plot.getPlotItem().autoBtn.clicked.connect(self._on_autorange_btn_clicked)
+
+
+    def _on_start_clicked(self):
+        """Gather parameters and emit signal."""
+        params = {
+            "max_duration_s": None,  # Infinite duration
+            "export_enabled": self.chk_export.isChecked(),
+            "export_filename_base": self.input_export_filename.text(),
+        }
+        self.lbl_status.setText("Running...")
+        self.btn_start.setEnabled(False)
+        self.btn_stop.setEnabled(True)
+        self.acquisition_start_requested.emit(params)
+
+    def _on_stop_clicked(self):
+        """Request stop."""
+        self.acquisition_stop_requested.emit()
+        # UI state will be updated by presenter signal acquisition_stopped
+
+    # Signals for Calibration
+    calibrate_noise_requested = Signal()
+    calibrate_phase_requested = Signal()
+    calibrate_primary_requested = Signal()
+    reset_calibration_requested = Signal()
+
+    # Signals for correction toggles
+    noise_toggled = Signal(bool)
+    phase_toggled = Signal(bool)
+    primary_toggled = Signal(bool)
+
+    def _on_calib_noise_clicked(self):
+        self.calibrate_noise_requested.emit()
+
+    def _on_calib_phase_clicked(self):
+        self.calibrate_phase_requested.emit()
+
+    def _on_calib_primary_clicked(self):
+        self.calibrate_primary_requested.emit()
+
+    def _on_reset_calib_clicked(self):
+        self.reset_calibration_requested.emit()
+
+    def _on_noise_toggled(self, checked: bool):
+        self.noise_toggled.emit(checked)
+
+    def _on_phase_toggled(self, checked: bool):
+        self.phase_toggled.emit(checked)
+
+    def _on_primary_toggled(self, checked: bool):
+        self.primary_toggled.emit(checked)
+
+    def update_correction_states(self, noise: bool, phase: bool, primary: bool,
+                                noise_str: str = "—", phase_str: str = "—", primary_str: str = "—"):
+        """Sync toggle buttons and value labels (called by presenter after calibration/reset)."""
+        for btn, enabled in (
+            (self.btn_toggle_noise,   noise),
+            (self.btn_toggle_phase,   phase),
+            (self.btn_toggle_primary, primary),
+        ):
+            btn.blockSignals(True)
+            btn.setEnabled(True)
+            btn.setChecked(enabled)
+            btn.blockSignals(False)
+        self.lbl_val_noise.setText(noise_str)
+        self.lbl_val_phase.setText(phase_str)
+        self.lbl_val_primary.setText(primary_str)
+
+    # Signals for Rotation
+    apply_rotation_toggled = Signal(bool)
+
+    def _on_rotation_toggled(self, checked: bool):
+        self.apply_rotation_toggled.emit(checked)
+        
+    def update_angles_display(self, angles: tuple):
+        """Update the read-only angles label."""
+        self.lbl_angles_info.setText(f"Angles: [{angles[0]:.1f}, {angles[1]:.1f}, {angles[2]:.1f}]")
+
+
+    def on_acquisition_started(self, acquisition_id: str):
+        """Called when acquisition starts (from presenter)."""
+        self._reset_buffers()
+        # Short text + ID in tooltip: a longer label would widen the group and
+        # reflow the whole controls strip on every start/stop.
+        self.lbl_status.setText("Running")
+        self.lbl_status.setToolTip(f"Acquisition ID: {acquisition_id}")
+
+    def on_acquisition_stopped(self, acquisition_id: str):
+        """Called when acquisition stops (from presenter)."""
+        self.lbl_status.setText("Stopped")
+        self.lbl_status.setToolTip(f"Acquisition ID: {acquisition_id}")
+        self.btn_start.setEnabled(True)
+        self.btn_stop.setEnabled(False)
+
+    def on_sample_acquired(self, data: Dict[str, Any]):
+        """Called for each new sample (from presenter)."""
+        import datetime as _dt
+
+        ts = _dt.datetime.fromisoformat(data["timestamp"]).timestamp()
+        if self._t0 is None:
+            self._t0 = ts
+        t_rel = ts - self._t0
+        self.times.append(t_rel)
+
+        meas: Dict[str, float] = data.get("measurement", {})
+        for ch in self.CHANNELS:
+            name = ch["name"]
+            val = float(meas.get(name, 0.0))
+            self.values[name].append(val)
+
+        self._update_plot()
+
+    def _reset_buffers(self):
+        """Clear data buffers."""
+        self.times = []
+        self.values = {ch["name"]: [] for ch in self.CHANNELS}
+        self._t0 = None
+        for curve in self.curves.values():
+            curve.setData([], [])
+
+    def _update_plot(self):
+        """Refresh the plot based on display window settings."""
+        if not self.times:
+            return
+
+        t_plot, values_plot = self.window_control.visible_slice(self.times, self.values)
+        self.cursors.sync_to_window(t_plot, self.window_control.is_sliding())
+
+        for name, curve in self.curves.items():
+            ys = values_plot.get(name, [])
+            y_scaled = [val * self._scale_factor for val in ys]
+            curve.setData(t_plot, y_scaled)
+
+    def _on_channel_toggled(self):
+        """Show/hide curves based on button states."""
+        for name, btn in self.channel_checkboxes.items():
+            visible = btn.isChecked()
+            if name in self.curves:
+                self.curves[name].setVisible(visible)
+
+    def _on_scale_changed(self, unit: str):
+        """Update scale factor and Y-axis label."""
+        if unit == "mV":
+            self._scale_factor = 1000.0
+        elif unit == "uV":
+            self._scale_factor = 1e6
+        else:
+            self._scale_factor = 1.0
+
+        self.plot.setLabel("left", f"Voltage ({unit})")
+        self.cursors.set_y_unit(f" {unit}")
+        self._update_plot()
+        self._apply_view_mode()
+
+    def _on_mode_changed(self, mode_text: str):
+        """Switch between Auto (fit to data) and Oscillo (fixed calibre)."""
+        is_oscillo = mode_text == "Oscillo"
+        self.lbl_fullscale.setVisible(is_oscillo)
+        self.spin_fullscale.setVisible(is_oscillo)
+        self._apply_view_mode()
+
+    def _on_fullscale_changed(self):
+        self._apply_view_mode()
+
+    def _on_autorange_btn_clicked(self):
+        """Keep the Mode selector in sync when the user hits pyqtgraph's own 'A' button."""
+        self.cbo_mode.setCurrentText("Auto")
+
+    def _apply_view_mode(self):
+        """Apply Auto autorange or Oscillo fixed calibre to the Y axis."""
+        if self.cbo_mode.currentText() == "Oscillo":
+            fs = self.spin_fullscale.value()
+            self.plot.disableAutoRange(axis=pg.ViewBox.YAxis)
+            self.plot.setYRange(-fs, fs, padding=0)
+        else:
+            self.plot.enableAutoRange(axis=pg.ViewBox.YAxis, enable=True)
