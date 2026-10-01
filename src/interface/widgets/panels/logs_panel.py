@@ -27,6 +27,7 @@ class LogsPanel(BasePanel):
 
     def __init__(self, parent=None):
         super().__init__("Logs", "#9E9E9E", parent)
+        self.label.hide()  # the dashboard tab already names the panel; keep the room for the logs
 
         self.event_log_row = QWidget()
         event_log_layout = QHBoxLayout(self.event_log_row)
