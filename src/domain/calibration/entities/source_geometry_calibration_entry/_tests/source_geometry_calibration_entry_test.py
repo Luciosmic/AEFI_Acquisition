@@ -5,6 +5,7 @@ from uuid import UUID
 from domain.calibration.entities.source_geometry_calibration_entry.source_geometry_calibration_entry import (
     SourceGeometryCalibrationEntry,
 )
+from domain.calibration.errors.source_geometry_inconsistent_error import SourceGeometryInconsistentError
 from domain.calibration.value_objects.caliper_measurement.caliper_measurement import CaliperMeasurement
 from domain.calibration.value_objects.geometric_configuration_signature.geometric_configuration_signature import (
     GeometricConfigurationSignature,
@@ -68,11 +69,22 @@ class TestSourceGeometryCalibrationEntry(unittest.TestCase):
         """D_S1_S2 smaller than r1+r2 — physically impossible, must be a
         measurement error (e.g. digits swapped on the caliper reading)."""
         bad_distances = (0.005,) + _REAL_DISTANCES_M[1:]  # D_S1_S2 way too small
-        with self.assertRaises(ValueError):
+        with self.assertRaisesRegex(SourceGeometryInconsistentError, "D_S1_S2"):
             SourceGeometryCalibrationEntry.single(
                 sphere_diameters=_measurements(_REAL_DIAMETERS_M),
                 pairwise_distances_ext=_measurements(bad_distances),
             )
+
+    # -- center_to_center_distances_m -------------------------------------------
+
+    def test_center_to_center_distances_subtract_both_radii_in_entry_order(self):
+        entry = _make_entry()
+
+        distances = entry.center_to_center_distances_m
+
+        self.assertEqual(list(distances), [(0, 1), (2, 3), (0, 2), (0, 3), (1, 2), (1, 3)])
+        self.assertAlmostEqual(distances[(0, 1)], 0.11142 - 0.0098 - 0.0098)
+        self.assertAlmostEqual(distances[(2, 3)], 0.10908 - 0.00975 - 0.00975)
 
     # -- geometric_configuration ------------------------------------------------
 

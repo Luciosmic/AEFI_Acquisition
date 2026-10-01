@@ -8,11 +8,11 @@ type on the same `Calibration` aggregate — but with an added invariant
 check that neither `SensorCalibrationEntry` nor the raw
 `GeometricConfigurationSignature` snapshot enforce: a caliper transcription
 error (e.g. swapped digits) can silently produce spheres that would
-physically overlap. `external_modules/source_geometry/source_geometry.py`
-already protects this exact invariant for its own standalone `SourceGeometry`
-VO — this entity re-derives the same check so a bad entry is rejected at
-recording time, not discovered later when `external_modules/source_geometry/`
-happens to be run manually.
+physically overlap. This entity rejects such an entry at recording time, and
+is the single input of `SourceFrameSolver` (center positions
+reconstruction) — one vocabulary and one distance order for the whole
+source geometry, replacing the former `external_modules/source_geometry/`
+`SourceGeometry` VO (`D_12, D_13, …` order).
 
 ## Responsibility
 
@@ -37,10 +37,11 @@ happens to be run manually.
   0-based) for each of the 6 `pairwise_distances_ext` slots — the same
   D_ij <-> (sphere i, sphere j) pairing already fixed by
   `GeometricConfigurationReader`/`aefi_device_config.json`.
-- `__post_init__` checks tuple arity (4 and 6) then, for each distance,
-  `distance.value_m - r_i - r_j > 0` — same formula as
-  `SourceGeometry.__post_init__` in `external_modules/source_geometry/`,
-  re-derived here rather than imported (that module is deliberately kept
-  outside `src/`, not yet a dependency of the app per its own README).
+- `center_to_center_distances_m`: `{(i, j): D_ij - r_i - r_j}` in
+  `pairwise_distances_ext` order — the only place the D_ij <-> sphere pair
+  mapping is applied; `SourceFrameSolver` and the export read it.
+- `__post_init__` checks tuple arity (4 and 6, `ValueError`: programmer
+  error) then that every center-to-center distance is `> 0`, raising
+  `SourceGeometryInconsistentError` naming the offending `D_Si_Sj`.
 - `single(sphere_diameters, pairwise_distances_ext)` static factory —
   `entry_id=uuid4()`, `recorded_at=datetime.now(timezone.utc)`.

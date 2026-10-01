@@ -32,8 +32,9 @@ samples this potential field at a finite sensor's face points.
   calls repeatedly to average over a sensor face.
 - Derive sphere positions (center-to-sensor distance + quadrant sign, per-
   sphere radius) from `aefi_device_config.json`'s measured diagonals and
-  diameters — no dependency on `external_modules/source_geometry` (that DGP
-  solver is a calibration tool, not a runtime dependency of `src/`).
+  diameters, assuming a perfect square. The measured (non-square) positions
+  are now reconstructed in the domain (`SourceFrameSolver`, same quadrant
+  frame) — switching this simulator to them is a separate decision.
 
 ## Design
 

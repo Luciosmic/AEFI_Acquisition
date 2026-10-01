@@ -9,9 +9,10 @@ Responsibility:
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Tuple
+from typing import Dict, Tuple
 from uuid import UUID, uuid4
 
+from domain.calibration.errors.source_geometry_inconsistent_error import SourceGeometryInconsistentError
 from domain.calibration.value_objects.caliper_measurement.caliper_measurement import CaliperMeasurement
 from domain.calibration.value_objects.geometric_configuration_signature.geometric_configuration_signature import (
     GeometricConfigurationSignature,
@@ -49,14 +50,11 @@ class SourceGeometryCalibrationEntry:
         if len(self.pairwise_distances_ext) != 6:
             raise ValueError("pairwise_distances_ext must carry exactly 6 measurements")
 
-        radii = [diameter.value_m / 2 for diameter in self.sphere_diameters]
-        for distance, (i, j) in zip(self.pairwise_distances_ext, _DISTANCE_SPHERE_PAIRS):
-            center_to_center = distance.value_m - radii[i] - radii[j]
+        for (i, j), center_to_center in self.center_to_center_distances_m.items():
             if center_to_center <= 0:
-                raise ValueError(
-                    f"Measured distance {distance.value_m:.5f}m is not greater than the sum of "
-                    f"the two sphere radii ({radii[i] + radii[j]:.5f}m) — spheres would overlap "
-                    "given the measured diameters, this is a measurement error, not a valid geometry"
+                raise SourceGeometryInconsistentError(
+                    f"D_S{i + 1}_S{j + 1} is not greater than r{i + 1} + r{j + 1} — spheres would "
+                    "overlap given the measured diameters, this is a measurement error, not a valid geometry"
                 )
 
     @staticmethod
@@ -71,6 +69,16 @@ class SourceGeometryCalibrationEntry:
             pairwise_distances_ext=pairwise_distances_ext,
             recorded_at=datetime.now(timezone.utc),
         )
+
+    @property
+    def center_to_center_distances_m(self) -> Dict[Tuple[int, int], float]:
+        """d_ij = D_ij - r_i - r_j, keyed by 0-based sphere index pair (i, j),
+        in pairwise_distances_ext order (D_S1_S2, D_S3_S4, D_S1_S3, ...)."""
+        radii = [diameter.value_m / 2 for diameter in self.sphere_diameters]
+        return {
+            (i, j): distance.value_m - radii[i] - radii[j]
+            for distance, (i, j) in zip(self.pairwise_distances_ext, _DISTANCE_SPHERE_PAIRS)
+        }
 
     @property
     def geometric_configuration(self) -> GeometricConfigurationSignature:

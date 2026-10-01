@@ -1,9 +1,16 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional
 
+from application.services.source_geometry_calibration_service.dtos.source_frame_geometry_dto import (
+    SourceFrameGeometryDTO,
+)
 from application.services.source_geometry_calibration_service.dtos.source_geometry_calibration_dto import (
     SourceGeometryCalibrationDTO,
 )
+from application.services.source_geometry_calibration_service.errors.source_geometry_preview_rejected import (
+    SourceGeometryPreviewRejected,
+)
+from domain.shared_kernel.operation_result import OperationResult
 
 
 class IApiSourceGeometryCalibrationService(ABC):
@@ -32,3 +39,12 @@ class IApiSourceGeometryCalibrationService(ABC):
 
     @abstractmethod
     def get_latest_calibration(self) -> Optional[SourceGeometryCalibrationDTO]: ...
+
+    @abstractmethod
+    def preview_source_frame(
+        self,
+        sphere_diameters_m: List[float],
+        pairwise_distances_ext_m: List[float],
+    ) -> OperationResult[SourceFrameGeometryDTO, SourceGeometryPreviewRejected]:
+        """Reconstruct the sphere positions from not-yet-recorded measurements
+        (live preview while editing) — nothing is persisted or published."""
