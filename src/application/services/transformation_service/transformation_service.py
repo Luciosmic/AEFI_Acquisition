@@ -3,6 +3,7 @@ from typing import Tuple, Optional
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
+from domain.calibration.value_objects.sensor_rotation_angles.sensor_rotation_angles import SensorRotationAngles
 from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
 from domain.shared_kernel.events.sensor_transformation_angles_updated.sensor_transformation_angles_updated import SensorTransformationAnglesUpdated
 from application.services.sensor_calibration_service.sensor_calibration_service import (
@@ -44,8 +45,8 @@ class TransformationService:
     def set_rotation_angles(self, dto: SetRotationAnglesDTO) -> None:
         """
         Set the angles (DEGREES) of the mounting rotation
-        P = Rx·Ry·Rz (scipy 'XYZ', uppercase = intrinsic X->Y'->Z'',
-        i.e. rotations about the fixed sources axes applied Z then Y then X).
+        P = Rx·Ry·Rz (SensorRotationAngles.mounting_matrix(): rotations about
+        the fixed sources axes applied Z then Y then X).
         Measurement: E_sensor = Pᵀ·E_sources; correction: E_sources = P·E_sensor.
         """
         logger.info(
@@ -53,8 +54,8 @@ class TransformationService:
             dto.theta_x, dto.theta_y, dto.theta_z,
         )
         self._angles = np.array([dto.theta_x, dto.theta_y, dto.theta_z])
-        # _rotation = P: sensor -> sources coordinate transform, E_sources = P·E_sensor
-        self._rotation = R.from_euler('XYZ', self._angles, degrees=True)
+        # _rotation = P (from the domain): sensor -> sources coordinate transform, E_sources = P·E_sensor
+        self._rotation = R.from_matrix(SensorRotationAngles(*self._angles).mounting_matrix())
 
         if self._event_bus:
             self._event_bus.publish("sensortransformationanglesupdated", SensorTransformationAnglesUpdated(
