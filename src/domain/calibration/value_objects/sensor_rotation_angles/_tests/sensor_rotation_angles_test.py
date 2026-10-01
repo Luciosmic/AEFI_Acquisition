@@ -24,6 +24,13 @@ class TestSensorRotationAngles(unittest.TestCase):
         with self.assertRaises(Exception):
             angles.theta_x_degrees = 10.0
 
+    def test_from_mounting_matrix_inverts_mounting_matrix(self):
+        angles = SensorRotationAngles(theta_x_degrees=35.3, theta_y_degrees=45.0, theta_z_degrees=-7.5)
+        recovered = SensorRotationAngles.from_mounting_matrix(angles.mounting_matrix())
+        self.assertAlmostEqual(recovered.theta_x_degrees, 35.3)
+        self.assertAlmostEqual(recovered.theta_y_degrees, 45.0)
+        self.assertAlmostEqual(recovered.theta_z_degrees, -7.5)
+
     def test_equal_angles_compare_equal(self):
         angles_a = SensorRotationAngles(theta_x_degrees=-1.84, theta_y_degrees=2.03, theta_z_degrees=1.27)
         angles_b = SensorRotationAngles(theta_x_degrees=-1.84, theta_y_degrees=2.03, theta_z_degrees=1.27)

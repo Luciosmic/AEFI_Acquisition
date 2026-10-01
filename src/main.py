@@ -273,6 +273,10 @@ def main(hardware_config: dict | None = None):
         source_geometry_entry_id=source_geometry_entry_id,
         default_angles=IdealSensorRotationReader().read(),
         event_bus=event_bus,
+        # Automatic calibration: drives the excitation, reads the ADC stream.
+        excitation_service=excitation_service,
+        acquisition_service=continuous_service,
+        task_runner=task_runner,
     )
     logger.info("Services -> SensorCalibrationService created (geometry entry=%s)", source_geometry_entry_id)
 

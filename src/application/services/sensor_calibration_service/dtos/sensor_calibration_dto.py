@@ -32,3 +32,18 @@ class ActiveSensorRotationDTO:
     is_trial: bool
     recorded_at: Optional[datetime]
     mounting_matrix: Tuple[Tuple[float, float, float], ...]
+
+
+@dataclass(frozen=True)
+class AutomaticSensorCalibrationDTO:
+    """Mounting angles fitted by the automatic calibration (applied as a
+    trial, not recorded) and the fit quality: residual misalignment of the
+    corrected X/Y responses from +e_x/+e_y, and the angle between the raw
+    X and Y responses (ideally 90°)."""
+
+    theta_x_degrees: float
+    theta_y_degrees: float
+    theta_z_degrees: float
+    misalignment_x_degrees: float
+    misalignment_y_degrees: float
+    response_separation_degrees: float

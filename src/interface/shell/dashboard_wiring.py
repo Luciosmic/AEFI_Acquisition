@@ -165,6 +165,12 @@ def wire_dashboard(
     calibration_panel.sensor_calibration_panel.reset_to_default_requested.connect(
         sensor_calibration_presenter.on_reset_to_default_requested
     )
+    calibration_panel.sensor_calibration_panel.automatic_calibration_requested.connect(
+        sensor_calibration_presenter.on_automatic_calibration_requested
+    )
+    sensor_calibration_presenter.automatic_calibration_running.connect(
+        calibration_panel.sensor_calibration_panel.set_automatic_calibration_running
+    )
     sensor_calibration_presenter.status_message.connect(calibration_panel.sensor_calibration_panel.set_status_message)
     sensor_calibration_presenter.latest_calibration_updated.connect(
         calibration_panel.sensor_calibration_panel.on_latest_calibration_updated
