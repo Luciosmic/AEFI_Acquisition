@@ -12,8 +12,8 @@ Ce n'est **pas** de l'event sourcing : l'état de l'application n'est jamais rec
 
 Tous les événements sont enregistrés, échantillons compris (ce sont des faits métier) : un run de lecture continue pèse ~150 Mo. **Rien n'est supprimé ni compressé automatiquement** — avec le turnover du labo, un fichier qui disparaît tout seul devient une énigme.
 
-- Le panneau **Logs** (onglet Système) affiche la taille du journal, le nombre de sessions et la date de la plus ancienne ; la ligne passe en orange au-delà de **20 Go**.
-- Le bouton **« Supprimer les sessions de plus de 90 jours… »** supprime, après confirmation, les fichiers de ce dossier démarrés il y a plus de 90 jours (date lue dans le nom du fichier). La session en cours et les `_events.jsonl` des dossiers d'export ne sont jamais touchés. La suppression est tracée dans les logs applicatifs.
+- Le panneau **Logs** (onglet Système) affiche « Journal d'événements : <taille> », en orange au-delà de **20 Go**, et un bouton **« Gérer »** qui ouvre la vue détaillée : taille, nombre de sessions, date de la plus ancienne, dossier, bouton **« Ouvrir le dossier »**.
+- Dans cette vue, le bouton **« Supprimer les sessions de plus de 90 jours… »** supprime, après confirmation, les fichiers de ce dossier démarrés il y a plus de 90 jours (date lue dans le nom du fichier). La session en cours et les `_events.jsonl` des dossiers d'export ne sont jamais touchés. La suppression est tracée dans les logs applicatifs.
 - Ce journal est un filet de sécurité, pas une archive : il n'y a pas de raison de remonter loin.
 
 Code : `application/services/event_log_maintenance_service/` (seuils `RETENTION`, `SIZE_WARNING_BYTES`), `infrastructure/events/file_event_log_storage.py`, `interface/presenters/event_log_presenter.py`.

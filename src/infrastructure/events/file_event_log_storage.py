@@ -24,6 +24,9 @@ class FileEventLogStorage(IEventLogStoragePort):
         self._dir = log_dir
         self._live_name = live_session.name
 
+    def location(self) -> str:
+        return str(self._dir.resolve())
+
     def list_sessions(self) -> List[StoredEventLogSession]:
         sessions = []
         for path in self._dir.glob("events_*.jsonl"):
