@@ -6,7 +6,7 @@ the mounting angles P of the mounted sensor (brings the sensor from the
 sources frame to its current mounting; measurement E_sensor = Pᵀ·E_sources;
 correction E_sources = P·E_sensor), tuned live by trial and error (applied
 without being recorded). Also shows the mounting currently applied to sensor
-readings and launches the 3D sensor visualizer. Definition of the
+readings, in text and in 3D (injected orientation view). Definition of the
 frames and of P: domain/calibration/value_objects/rotation_convention/
 rotation_convention_intention.md.
 """
@@ -15,6 +15,7 @@ from typing import Optional
 
 from PySide6.QtWidgets import (
     QWidget,
+    QHBoxLayout,
     QVBoxLayout,
     QGroupBox,
     QFormLayout,
@@ -45,15 +46,24 @@ class SensorCalibrationPanel(QWidget):
 
     # theta_x, theta_y, theta_z
     save_calibration_requested = Signal(float, float, float)
-    launch_visualizer_requested = Signal()
     # theta_x, theta_y, theta_z — live trial, not recorded
     trial_rotation_requested = Signal(float, float, float)
     reset_to_default_requested = Signal()
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, orientation_view: Optional[QWidget] = None):
+        """orientation_view: QWidget with show_orientation(theta_x, theta_y, theta_z),
+        shown right of the controls and fed with the active mounting."""
         super().__init__(parent)
+        self._orientation_view = orientation_view
 
-        layout = QVBoxLayout(self)
+        root = QHBoxLayout(self)
+        root.setContentsMargins(0, 0, 0, 0)
+        controls = QWidget()
+        root.addWidget(controls)
+        if orientation_view is not None:
+            root.addWidget(orientation_view, 1)
+
+        layout = QVBoxLayout(controls)
         layout.setContentsMargins(5, 5, 5, 5)
         layout.setSpacing(5)
 
@@ -107,10 +117,6 @@ class SensorCalibrationPanel(QWidget):
         )
         layout.addWidget(self.lbl_active_rotation)
 
-        self.btn_launch_visualizer = QPushButton("Lancer le visualiseur 3D")
-        self.btn_launch_visualizer.clicked.connect(self.launch_visualizer_requested.emit)
-        layout.addWidget(self.btn_launch_visualizer)
-
         layout.addStretch()
 
     def _create_angle_spinbox(self) -> QDoubleSpinBox:
@@ -162,6 +168,10 @@ class SensorCalibrationPanel(QWidget):
             spin.blockSignals(True)
             spin.setValue(value)
             spin.blockSignals(False)
+        if self._orientation_view is not None:
+            self._orientation_view.show_orientation(
+                dto.theta_x_degrees, dto.theta_y_degrees, dto.theta_z_degrees
+            )
         angles = (
             f"θx={dto.theta_x_degrees:.2f}°  θy={dto.theta_y_degrees:.2f}°  θz={dto.theta_z_degrees:.2f}°"
         )

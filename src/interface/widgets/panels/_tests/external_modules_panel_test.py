@@ -17,10 +17,14 @@ def test_launch_dispatches_to_the_matching_launcher_entry():
     calls = []
     panel._launch = lambda key, script_parts, label: calls.append((key, script_parts, label))
 
-    panel.launch("cube")
+    panel.launch("post")
 
     assert calls == [
-        ("cube", ("external_modules", "cube_visualizer", "main.py"), "Visualiseur 3D (cube senseur)")
+        (
+            "post",
+            ("external_modules", "aefi_post_processor_module", "composition_root.py"),
+            "Post-processing && visualisation",
+        )
     ]
 
 

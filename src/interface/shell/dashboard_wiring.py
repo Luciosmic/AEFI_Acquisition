@@ -170,9 +170,6 @@ def wire_dashboard(
     sensor_calibration_presenter.active_rotation_updated.connect(
         calibration_panel.sensor_calibration_panel.on_active_rotation_updated
     )
-    calibration_panel.sensor_calibration_panel.launch_visualizer_requested.connect(
-        lambda: dashboard.panels["external_modules"].launch("cube")
-    )
     sensor_calibration_presenter.refresh_state()
 
     calibration_panel.source_geometry_panel.save_calibration_requested.connect(

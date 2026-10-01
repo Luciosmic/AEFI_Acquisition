@@ -75,6 +75,7 @@ from interface.ui_system_lifecycle.view_startup import StartupView
 # --- Interface ---
 from interface.shell.dashboard import Dashboard
 from interface.shell.dashboard_wiring import wire_dashboard
+from cube_visualizer.interface.cube_sensor_widget import configure_qt_opengl  # path set by dashboard
 from interface.widgets.panels.logs_panel import LogsPanel, install_console_capture
 from interface.presenters.motion_presenter import MotionPresenter
 from interface.presenters.excitation_presenter import ExcitationPresenter
@@ -120,7 +121,9 @@ def main(hardware_config: dict | None = None):
     if seeded:
         logger.info(f"Configs initialisées depuis templates : {seeded}")
 
-    # 1. Create QApplication
+    # 1. Create QApplication (GL setup first: the splash is a top-level window
+    # created before the 3D sensor view of the calibration panel)
+    configure_qt_opengl()
     app = QApplication(sys.argv)
     app.setApplicationName("AEFI Acquisition - Interface V2")
     app.setWindowIcon(QIcon(str(root_dir / "interface" / "assets" / "app_icon.ico")))
@@ -428,7 +431,7 @@ def main(hardware_config: dict | None = None):
     event_log_presenter = EventLogPresenter(
         EventLogMaintenanceService(FileEventLogStorage(audit_log.path.parent, live_session=audit_log.path))
     )
-    
+
     # 10. Wire Presenters to Panels
     wire_dashboard(
         dashboard,

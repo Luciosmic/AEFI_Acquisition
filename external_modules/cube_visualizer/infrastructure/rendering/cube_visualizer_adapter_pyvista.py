@@ -1,25 +1,28 @@
 """
 CubeVisualizerAdapter — infrastructure/rendering layer.
 
-Implements ICubeRenderer (outbound port) using PyVista.
-Subscribes to EventBus for asynchronous updates from the application layer.
+Implements ICubeRenderer (outbound port) using PyVista, rendered in an
+embeddable Qt widget. See cube_visualizer_adapter_pyvista_intention.md.
 """
 import pyvista as pv
 from typing import Optional
 from PySide6.QtWidgets import QWidget
+from pyvistaqt import QtInteractor
 from scipy.spatial.transform import Rotation as R
 
 from ...application.cube_visualizer_service.ports.i_cube_renderer import ICubeRenderer
 from ..messaging.event_bus import EventBus, Event, EventType
-from .cube_mesh_factory import create_colored_cube, apply_rotation_to_mesh
+from .cube_mesh_factory import (
+    MARKER_COLOR, apply_rotation_to_mesh, create_colored_cube, create_negative_face_markers,
+)
 
 
 class CubeVisualizerAdapter(ICubeRenderer):
     """
     PyVista rendering adapter implementing ICubeRenderer.
 
-    Manages a single PyVista plotter window and keeps it synchronized
-    with the application layer via EventBus (ANGLES_CHANGED events).
+    `self.widget` is the 3D view (a QWidget) for the host to place in its
+    layout; it is kept in sync via EventBus (ANGLES_CHANGED events).
     """
 
     CAMERA_POSITIONS = {
@@ -31,21 +34,21 @@ class CubeVisualizerAdapter(ICubeRenderer):
 
     def __init__(self, event_bus: EventBus, parent_widget: Optional[QWidget] = None):
         self.event_bus = event_bus
-        self.current_view = '3d'
-        self.parent_widget = parent_widget
         self._last_rotation: Optional[R] = None
 
-        self.plotter = None
-        self.plotter_widget = None
         self.cube_actor = None
-        self.arrows_mes: dict = {}
-        self.arrows_labo: dict = {}
-        self.text_actor = None
+        self.marker_actor = None
+        self.arrows_sensor: dict = {}
+        self.arrows_sources: dict = {}
+
+        # QtInteractor is both the QWidget and the PyVista plotter API
+        self.plotter = QtInteractor(parent_widget)
+        self.widget: QWidget = self.plotter
+        self._initialize_plotter()
+        self._do_initial_render()
 
         self.event_bus.subscribe(EventType.ANGLES_CHANGED, self._on_angles_changed_event)
         self.event_bus.subscribe(EventType.CAMERA_VIEW_CHANGED, self._on_camera_view_changed_event)
-
-        self._create_plotter_standalone()
 
     # ---- ICubeRenderer implementation ----
 
@@ -63,28 +66,11 @@ class CubeVisualizerAdapter(ICubeRenderer):
             pos, zoom = self.CAMERA_POSITIONS[view_name]
             self.plotter.camera_position = pos
             self.plotter.camera.zoom(zoom)
-            self.current_view = view_name
             self.plotter.render()
         except Exception as e:
             print(f"[CubeVisualizerAdapter] reset_camera_view error: {e}")
 
     # ---- private ----
-
-    def _create_plotter_standalone(self):
-        self.plotter = pv.Plotter(title="Cube Sensor - Visualisation 3D")
-        self.plotter_widget = None
-        self._initialize_plotter()
-
-        from PySide6.QtCore import QTimer
-        def show_window():
-            try:
-                self.plotter.show(auto_close=False, interactive_update=True)
-                QTimer.singleShot(200, lambda: self._do_initial_render())
-                QTimer.singleShot(500, lambda: self._do_initial_render())
-            except Exception as e:
-                print(f"[CubeVisualizerAdapter] show_window error: {e}")
-
-        QTimer.singleShot(300, show_window)
 
     def _initialize_plotter(self):
         if self.plotter is None:
@@ -110,12 +96,12 @@ class CubeVisualizerAdapter(ICubeRenderer):
             return
         try:
             # Clear old actors
-            for actor in [self.cube_actor, self.text_actor,
-                          *self.arrows_mes.values(), *self.arrows_labo.values()]:
+            for actor in [self.cube_actor, self.marker_actor,
+                          *self.arrows_sensor.values(), *self.arrows_sources.values()]:
                 if actor is not None:
                     self.plotter.remove_actor(actor)
-            self.arrows_mes.clear()
-            self.arrows_labo.clear()
+            self.arrows_sensor.clear()
+            self.arrows_sources.clear()
 
             # Cube
             cube = create_colored_cube(size=1.0)
@@ -129,7 +115,12 @@ class CubeVisualizerAdapter(ICubeRenderer):
                     cube_rotated, color='lightgray',
                     show_edges=True, edge_color='black', line_width=2)
 
-            # Sensor axes (rotate with cube)
+            # Green-tape markers on the negative faces (rotate with cube)
+            self.marker_actor = self.plotter.add_mesh(
+                apply_rotation_to_mesh(create_negative_face_markers(size=1.0), rotation),
+                color=MARKER_COLOR)
+
+            # Sensor-frame axes (rotate with cube)
             axis_len, r = 2.0, 0.03
             for key, direction, color in [
                 ('x', (1, 0, 0), '#4DA6FF'),
@@ -139,26 +130,19 @@ class CubeVisualizerAdapter(ICubeRenderer):
                 start = tuple(-d * axis_len / 2 for d in direction)
                 arrow = pv.Arrow(start=start, direction=direction, scale=axis_len,
                                  tip_radius=r, tip_length=0.1, shaft_radius=r * 0.6)
-                self.arrows_mes[key] = self.plotter.add_mesh(
+                self.arrows_sensor[key] = self.plotter.add_mesh(
                     apply_rotation_to_mesh(arrow, rotation), color=color)
 
-            # Lab axes (fixed)
-            lab_len, lr = 1.5, 0.03
+            # Sources-frame axes (fixed)
+            sources_len, lr = 1.5, 0.03
             for key, direction, color in [
                 ('x', (1, 0, 0), '#4DA6FF'),
                 ('y', (0, 1, 0), '#FFE633'),
                 ('z', (0, 0, 1), '#FF3333'),
             ]:
-                arrow = pv.Arrow(start=(0, 0, 0), direction=direction, scale=lab_len,
+                arrow = pv.Arrow(start=(0, 0, 0), direction=direction, scale=sources_len,
                                  tip_radius=lr, tip_length=0.15, shaft_radius=lr * 0.6)
-                self.arrows_labo[key] = self.plotter.add_mesh(arrow, color=color)
-
-            euler = rotation.as_euler('XYZ', degrees=True)
-            view_label = {'3d': 'Vue 3D', 'xy': 'Vue X-Y', 'xz': 'Vue X-Z', 'yz': 'Vue Y-Z'}
-            self.text_actor = self.plotter.add_text(
-                f"{view_label.get(self.current_view, '3D')} — "
-                f"X={euler[0]:.1f}° Y={euler[1]:.1f}° Z={euler[2]:.1f}°",
-                position='upper_left', font_size=12, color='black')
+                self.arrows_sources[key] = self.plotter.add_mesh(arrow, color=color)
 
             self.plotter.render()
         except Exception as e:

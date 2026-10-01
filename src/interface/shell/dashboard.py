@@ -1,6 +1,14 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QDockWidget, QHBoxLayout, QLabel, QGroupBox, QComboBox
 from PySide6.QtCore import Qt, Signal
 import os
+import sys
+from pathlib import Path
+
+_EXTERNAL_MODULES = Path(__file__).resolve().parents[3] / "external_modules"
+if str(_EXTERNAL_MODULES) not in sys.path:
+    sys.path.insert(0, str(_EXTERNAL_MODULES))
+
+from cube_visualizer.interface.cube_sensor_widget import CubeSensorWidget  # noqa: E402
 
 from interface.logic.ui_config_store import UIConfigStore
 
@@ -80,7 +88,9 @@ class Dashboard(QWidget):
             "motion": MotionPanelCompact(),
             "excitation": ExcitationPanel(),
             "hardware_config": HardwareAdvancedConfigPanel(),
-            "calibration": CalibrationPanel(),
+            "calibration": CalibrationPanel(
+                sensor_orientation_view=CubeSensorWidget(angle_controls=False)
+            ),
             "external_modules": ExternalModulesPanel(),
             "logs": LogsPanel(),
             "settings": SettingsPanel()
