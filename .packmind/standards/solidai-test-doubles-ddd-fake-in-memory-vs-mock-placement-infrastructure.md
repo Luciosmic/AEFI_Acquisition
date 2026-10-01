@@ -4,8 +4,8 @@ Ce standard formalise la distinction entre Fake et Mock selon DDD, et impose le 
 
 ## Rules
 
-* Vérifier, après placement et validation de contrat, la fidélité de qualité de service du Fake (latence, ordre, débit) sous le pattern d'appel réel du consommateur — voir solidai-fidelite-promesse-doubles-test-qualite-service-implicite ; la conformité de contrat n'établit pas la confiance comportementale
 * Placer les Fakes dans infrastructure/<adapter>/fake/ (co-localisés avec leur Real) avec le trio atomique complet (intention.md + implémentation + _tests/)
 * Utiliser des Fakes (implémentation in-memory fonctionnelle) plutôt que des Mocks (vérification d'interactions) pour tester les use cases applicatifs — le Fake permet la vérification d'état, le Mock vérifie les appels
 * Tester le Fake lui-même pour garantir qu'il respecte le contrat de l'interface Domain — cette validation est le garant de la propagation des tests vers l'infrastructure réelle
 * Créer un Fake quand l'adapter Real a des effets de bord (I/O, réseau, randomness) ou un coût d'exécution non trivial — pour les adapters purement calculatoires sans effets de bord, le Real lui-même tient lieu de double de test
+* Vérifier, après placement et validation de contrat, la fidélité de qualité de service du Fake (latence, ordre, débit) sous le pattern d'appel réel du consommateur — voir solidai-fidelite-promesse-doubles-test-qualite-service-implicite ; la conformité de contrat n'établit pas la confiance comportementale

@@ -5,11 +5,33 @@ from PySide6.QtWidgets import (
 from PySide6.QtGui import QPainter, QColor, QPen, QBrush, QFont, QPolygon
 from PySide6.QtCore import Qt, Signal, QRectF, QPoint
 
+def phase_to_sphere_color(phase_degrees: "float | None") -> QColor:
+    """Color of a sphere from its APPLIED phase (derived from the DDS
+    registers), not from the mode selected in the combo — so a DDS that
+    didn't follow the requested direction shows up as a color mismatch.
+    Canonical phases keep the historical palette; anything else (manual
+    Hardware Config edit, failed write) gets a distinct yellow-gray."""
+    if phase_degrees is None:
+        return QColor(120, 120, 120)  # no hardware reading yet
+    palette = {
+        0: QColor(230, 57, 70),      # red
+        90: QColor(255, 150, 150),   # light red
+        180: QColor(46, 134, 171),   # blue
+        270: QColor(150, 150, 255),  # light blue
+    }
+    for canonical, color in palette.items():
+        # circular distance, 1° tolerance (register resolution is ~0.0055°)
+        if abs((phase_degrees - canonical + 180.0) % 360.0 - 180.0) < 1.0:
+            return color
+    return QColor(180, 180, 120)  # non-canonical phase
+
+
 class SphereVisualizationWidget(QWidget):
     """
-    Visualization of the 4 excitation spheres, coloring each sphere (S1-S4)
-    based on excitation mode (see domain.shared_kernel.excitation.value_objects
-    .sphere_id.SphereId for the confirmed DDS-channel/direct-output wiring).
+    Visualization of the 4 excitation spheres. Each sphere (S1-S4) is colored
+    from its live applied phase (see phase_to_sphere_color and
+    domain.shared_kernel.excitation.value_objects.sphere_id.SphereId for the
+    confirmed DDS-channel/direct-output wiring).
     """
 
     def __init__(self, parent=None):
@@ -19,77 +41,15 @@ class SphereVisualizationWidget(QWidget):
         self.setMinimumSize(140, 110)
         self.setMaximumSize(190, 150)
 
-        # Sphere states, keyed by sphere id (S1-S4, matches domain SphereId)
-        self.sphere_colors = {
-            'S1': QColor(100, 100, 100),  # Gray default
-            'S2': QColor(100, 100, 100),
-            'S3': QColor(100, 100, 100),
-            'S4': QColor(100, 100, 100)
-        }
         # Live phase (degrees), None until the first SynchronousDetectionService
-        # refresh — set via set_sphere_phases(), read in paintEvent.
+        # refresh — set via set_sphere_phases(), read in paintEvent (drives
+        # both the displayed number and the sphere color).
         self.sphere_phases: dict[str, "float | None"] = {'S1': None, 'S2': None, 'S3': None, 'S4': None}
 
     def set_sphere_phases(self, s1: float, s2: float, s3: float, s4: float) -> None:
         self.sphere_phases = {'S1': s1, 'S2': s2, 'S3': s3, 'S4': s4}
         self.update()
 
-    def set_excitation_mode(self, mode: str):
-        """Update colors based on excitation mode."""
-        red = QColor(230, 57, 70)     # Red
-        blue = QColor(46, 134, 171)   # Blue
-        gray = QColor(120, 120, 120)  # Neutral gray
-        
-        # Colors reflect the real, oscilloscope-confirmed phase at each sphere
-        # (see SphereId): S4 and S3 are channel 1 (DDS1 generator, phase
-        # always hardcoded to 0° by the adapter regardless of mode) — they
-        # never change. Only S1 and S2 (channel 2, DDS2 generator) vary with mode.
-        if mode == "Y_DIR":
-            # channel 2 phase=0° → S1(complementary)=180°, S2(direct)=0°
-            self.sphere_colors = {
-                'S4': red,    # 0°
-                'S3': blue,   # 180°
-                'S1': blue,   # 180°
-                'S2': red     # 0°
-            }
-        elif mode == "X_DIR":
-            # channel 2 phase=180° → S1(complementary)=0°, S2(direct)=180°
-            self.sphere_colors = {
-                'S4': red,    # 0°
-                'S3': blue,   # 180°
-                'S1': red,    # 0°
-                'S2': blue    # 180°
-            }
-        elif mode == "CIRCULAR_PLUS":
-            # channel 2 phase=90° → S1(complementary)=270°, S2(direct)=90°
-            light_red = QColor(255, 150, 150)
-            light_blue = QColor(150, 150, 255)
-            self.sphere_colors = {
-                'S4': red,        # 0°
-                'S3': blue,       # 180°
-                'S1': light_blue, # 270°
-                'S2': light_red   # 90°
-            }
-        elif mode == "CIRCULAR_MINUS":
-            # channel 2 phase=270° → S1(complementary)=90°, S2(direct)=270°
-            light_red = QColor(255, 150, 150)
-            light_blue = QColor(150, 150, 255)
-            self.sphere_colors = {
-                'S4': red,        # 0°
-                'S3': blue,       # 180°
-                'S1': light_red,  # 90°
-                'S2': light_blue  # 270°
-            }
-        elif mode == "CUSTOM":
-            # Custom mode: neutral but distinct from off
-            custom_color = QColor(180, 180, 120)  # Yellow-gray
-            self.sphere_colors = {k: custom_color for k in self.sphere_colors.keys()}
-        else:
-            # Off or unknown mode
-            self.sphere_colors = {k: gray for k in self.sphere_colors.keys()}
-        
-        self.update()
-    
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -145,7 +105,7 @@ class SphereVisualizationWidget(QWidget):
 
         # Draw spheres
         for sphere_id, (x, y) in positions.items():
-            color = self.sphere_colors[sphere_id]
+            color = phase_to_sphere_color(self.sphere_phases.get(sphere_id))
 
             # Sphere with 3D effect
             painter.setBrush(QBrush(color))
@@ -193,23 +153,21 @@ class ExcitationPanel(QWidget):
         super().__init__(parent)
         self._build_ui()
         self._connect_signals()
-        
-        # Initialize sphere visualization with default mode
-        default_mode = self._text_to_mode_code(self.mode_combo.currentText())
-        self.sphere_widget.set_excitation_mode(default_mode)
 
     def _build_ui(self):
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(10, 10, 10, 10)
-        layout.setSpacing(10)
-        
-        # Style
+        layout.setContentsMargins(8, 8, 8, 8)
+        layout.setSpacing(6)
+
+        # Style — same compact metrics as MotionPanelCompact so both panels
+        # end up the same height when docked side by side.
         self.setStyleSheet("""
             QGroupBox {
                 border: 1px solid #333;
-                border-radius: 5px;
-                margin-top: 10px;
+                border-radius: 4px;
+                margin-top: 6px;
                 font-weight: bold;
+                font-size: 11px;
                 color: #CCC;
             }
             QGroupBox::title {
@@ -217,14 +175,29 @@ class ExcitationPanel(QWidget):
                 subcontrol-position: top center;
                 padding: 0 5px;
             }
-            QLabel { color: #DDD; }
+            QLabel {
+                color: #DDD;
+                font-size: 11px;
+            }
+            QCheckBox { font-size: 11px; }
+            QPushButton {
+                background-color: #333;
+                color: #EEE;
+                border: 1px solid #555;
+                border-radius: 3px;
+                padding: 3px;
+                font-size: 11px;
+            }
+            QPushButton:hover { background-color: #444; }
+            QPushButton:pressed { background-color: #222; }
             QComboBox {
                 background-color: #353535;
                 color: white;
                 border: 1px solid #2E86AB;
-                border-radius: 4px;
-                padding: 5px;
-                min-width: 120px;
+                border-radius: 3px;
+                padding: 2px;
+                font-size: 11px;
+                min-width: 100px;
             }
             QComboBox::drop-down {
                 border: none;
@@ -238,14 +211,15 @@ class ExcitationPanel(QWidget):
                 background-color: #222;
                 color: #FFF;
                 border: 1px solid #444;
-                padding: 4px;
+                padding: 2px;
+                font-size: 11px;
             }
         """)
 
         group = QGroupBox("Excitation Configuration")
         v_layout = QVBoxLayout(group)
-        v_layout.setSpacing(10)
-        v_layout.setContentsMargins(15, 20, 15, 15)
+        v_layout.setSpacing(8)
+        v_layout.setContentsMargins(10, 15, 10, 10)
 
         # Top row: Mode + Frequency selection
         top_row = QHBoxLayout()
@@ -287,14 +261,13 @@ class ExcitationPanel(QWidget):
 
         v_layout.addLayout(top_row)
 
-        # Main row: excitation level controls (left) — sphere visualization
-        # (center) — Lock-In Detection controls (right). Levels sit next to
-        # the widget they control the color of; Lock-In controls sit on the
-        # opposite side to balance the layout.
-        main_row = QHBoxLayout()
-        main_row.setSpacing(20)
+        # Main column: excitation levels, then the sphere visualization, then
+        # the Lock-In Detection controls — stacked vertically so the panel
+        # stays narrow (it used to be three side-by-side columns).
+        main_column = QVBoxLayout()
+        main_column.setSpacing(8)
 
-        # --- Left: Level Control — S1/S2 and S3/S4 (same S1..S4 naming as
+        # --- Level Control — S1/S2 and S3/S4 (same S1..S4 naming as
         # Motion Control) are each an independent DDS differential pair.
         levels_column = QVBoxLayout()
         levels_column.setSpacing(8)
@@ -334,15 +307,16 @@ class ExcitationPanel(QWidget):
         self.link_checkbox = QCheckBox("Link S1-S2 = S3-S4")
         self.link_checkbox.setChecked(True)
         levels_column.addWidget(self.link_checkbox)
-        levels_column.addStretch()
 
-        main_row.addLayout(levels_column, stretch=1)
+        main_column.addLayout(levels_column)
 
-        # --- Center: Sphere Visualization (now also shows each S1-S4 phase)
+        # --- Sphere Visualization (now also shows each S1-S4 phase), centered
         self.sphere_widget = SphereVisualizationWidget()
-        main_row.addWidget(self.sphere_widget)
+        main_column.addWidget(
+            self.sphere_widget, alignment=Qt.AlignmentFlag.AlignHCenter
+        )
 
-        # --- Right: Lock-In Detection command controls, with the phase
+        # --- Lock-In Detection command controls, with the phase
         # offset display below them.
         lock_in_column = QVBoxLayout()
         lock_in_column.setSpacing(8)
@@ -372,8 +346,6 @@ class ExcitationPanel(QWidget):
         self.compensation_checkbox = QCheckBox("Compensation active")
         lock_in_column.addWidget(self.compensation_checkbox)
 
-        lock_in_column.addStretch()
-
         # Editable in degrees (not raw registers) — lets the user tune the
         # lock-in reference directly from this panel instead of going
         # through Hardware Advanced Config's raw phase field. Locked
@@ -397,16 +369,18 @@ class ExcitationPanel(QWidget):
         self.lock_in_offset_reset_btn.setToolTip(
             "Réinitialiser au point de calibration enregistré pour la fréquence courante."
         )
-        offset_layout.addWidget(offset_label)
         offset_layout.addWidget(self.lock_in_offset_spin)
         offset_layout.addWidget(offset_unit)
         offset_layout.addWidget(self.lock_in_offset_reset_btn)
         offset_layout.addStretch()
+        # Label above its controls rather than beside them: the label is long
+        # and was the widest single row of the panel.
+        lock_in_column.addWidget(offset_label)
         lock_in_column.addLayout(offset_layout)
 
-        main_row.addLayout(lock_in_column, stretch=1)
+        main_column.addLayout(lock_in_column)
 
-        v_layout.addLayout(main_row)
+        v_layout.addLayout(main_column)
 
         layout.addWidget(group)
         layout.addStretch()
@@ -425,8 +399,6 @@ class ExcitationPanel(QWidget):
         self.lock_in_offset_reset_btn.clicked.connect(self.lock_in_phase_offset_reset_requested.emit)
 
     def _on_mode_changed(self, mode_text: str):
-        mode_code = self._text_to_mode_code(mode_text)
-        self.sphere_widget.set_excitation_mode(mode_code)
         self._emit_changed()
 
     def _on_level_s1_s2_value_changed(self, value: float):
@@ -543,9 +515,6 @@ class ExcitationPanel(QWidget):
             self.level_s1_s2_spin.setValue(level_s1_s2)
             self.level_s3_s4_spin.setValue(level_s3_s4)
             self.freq_spin.setValue(freq)
-
-            # Update visualization
-            self.sphere_widget.set_excitation_mode(mode_code)
         finally:
             self.mode_combo.blockSignals(False)
             self.level_s1_s2_spin.blockSignals(False)

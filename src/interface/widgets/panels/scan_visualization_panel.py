@@ -1,5 +1,8 @@
 import numpy as np
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QComboBox, QLabel, QHBoxLayout
+from PySide6.QtWidgets import (
+    QWidget, QVBoxLayout, QComboBox, QLabel, QHBoxLayout,
+    QListWidget, QListWidgetItem
+)
 from PySide6.QtCore import Qt, Signal
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
@@ -37,6 +40,11 @@ class ScanVisualizationPanel(QWidget):
                 padding: 4px;
                 border-radius: 3px;
             }
+            QListWidget {
+                background-color: #222;
+                color: #FFF;
+                border: 1px solid #444;
+            }
         """)
         
         # --- Toolbar ---
@@ -46,6 +54,7 @@ class ScanVisualizationPanel(QWidget):
         toolbar_layout.addWidget(QLabel("View:"))
         self.combo_view_mode = QComboBox()
         view_modes = ["Single View", "6-Channel Grid"] if self._enable_grid_view else ["Single View"]
+        view_modes.append("Profiles")
         self.combo_view_mode.addItems(view_modes)
         self.combo_view_mode.currentTextChanged.connect(self._on_view_mode_changed)
         toolbar_layout.addWidget(self.combo_view_mode)
@@ -57,15 +66,38 @@ class ScanVisualizationPanel(QWidget):
         self.combo_channel = QComboBox()
         self.combo_channel.currentIndexChanged.connect(self._on_channel_index_changed)
         toolbar_layout.addWidget(self.combo_channel)
-        
+
+        # Profile axis selector (only for Profiles view)
+        self.lbl_profile_axis = QLabel("Profiles along:")
+        toolbar_layout.addWidget(self.lbl_profile_axis)
+
+        self.combo_profile_axis = QComboBox()
+        self.combo_profile_axis.addItem("X (fixed X, vs Y)", 'x')
+        self.combo_profile_axis.addItem("Y (fixed Y, vs X)", 'y')
+        self.combo_profile_axis.currentIndexChanged.connect(self._on_profile_axis_changed)
+        toolbar_layout.addWidget(self.combo_profile_axis)
+
+        self.lbl_profile_axis.setVisible(False)
+        self.combo_profile_axis.setVisible(False)
+
         toolbar_layout.addStretch()
         layout.addLayout(toolbar_layout)
-        
-        # --- Matplotlib Canvas ---
+
+        # --- Matplotlib Canvas + profile list ---
+        content_layout = QHBoxLayout()
+
         self.figure = Figure(facecolor='#1E1E1E')
         self.canvas = FigureCanvasQTAgg(self.figure)
-        layout.addWidget(self.canvas)
-        
+        content_layout.addWidget(self.canvas, stretch=1)
+
+        self.list_profiles = QListWidget()
+        self.list_profiles.setMaximumWidth(160)
+        self.list_profiles.itemChanged.connect(self._on_profile_item_changed)
+        self.list_profiles.setVisible(False)
+        content_layout.addWidget(self.list_profiles)
+
+        layout.addLayout(content_layout)
+
         # Initialize visualization
         self.axes_dict = {}  # channel -> ax
         self.ims_dict = {}   # channel -> image artist
@@ -100,11 +132,14 @@ class ScanVisualizationPanel(QWidget):
 
         # Populate channel combo
         self._update_channel_combo()
-        
+        self._update_profile_list()
+
         # Reset visualization
         mode = self.combo_view_mode.currentText()
         if mode == "Single View":
             self._setup_single_view()
+        elif mode == "Profiles":
+            self._setup_profiles_view()
         else:
             self._setup_grid_view()
 
@@ -154,14 +189,65 @@ class ScanVisualizationPanel(QWidget):
             self.update_data_point(x_idx, y_idx, measurements)
 
     def _on_view_mode_changed(self, mode: str):
+        single_channel = mode in ("Single View", "Profiles")
+        profiles = mode == "Profiles"
+
+        self.combo_channel.setVisible(single_channel)
+        self.lbl_channel.setVisible(single_channel)
+        self.lbl_profile_axis.setVisible(profiles)
+        self.combo_profile_axis.setVisible(profiles)
+        self.list_profiles.setVisible(profiles)
+
         if mode == "Single View":
-            self.combo_channel.setVisible(True)
-            self.lbl_channel.setVisible(True)
             self._setup_single_view()
+        elif profiles:
+            self._setup_profiles_view()
         else:
-            self.combo_channel.setVisible(False)
-            self.lbl_channel.setVisible(False)
             self._setup_grid_view()
+
+    def _on_profile_axis_changed(self, index: int):
+        self._update_profile_list()
+        self._refresh_visualization()
+
+    def _on_profile_item_changed(self, item: QListWidgetItem):
+        self._refresh_visualization()
+
+    def _profile_axis(self) -> str:
+        return self.combo_profile_axis.currentData() or 'x'
+
+    def _axis_coords(self, axis: str):
+        """Physical coordinates of the grid along `axis` ('x' or 'y')."""
+        x_min, x_max, y_min, y_max = self.extent
+        y_nb, x_nb = self._grid_shape
+        if axis == 'x':
+            return np.linspace(x_min, x_max, x_nb)
+        return np.linspace(y_min, y_max, y_nb)
+
+    def _update_profile_list(self):
+        """Rebuild the list of available profiles. Nothing is checked by default."""
+        axis = self._profile_axis()
+        coords = self._axis_coords(axis)
+
+        self.list_profiles.blockSignals(True)
+        self.list_profiles.clear()
+        for idx, value in enumerate(coords):
+            item = QListWidgetItem(f"{axis.upper()} = {value:.2f} mm")
+            item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
+            item.setCheckState(Qt.Unchecked)
+            item.setData(Qt.UserRole, idx)
+            self.list_profiles.addItem(item)
+        self.list_profiles.blockSignals(False)
+
+    def _checked_profiles(self):
+        """(grid index, physical coordinate) of every checked profile."""
+        coords = self._axis_coords(self._profile_axis())
+        out = []
+        for row in range(self.list_profiles.count()):
+            item = self.list_profiles.item(row)
+            if item.checkState() == Qt.Checked:
+                idx = item.data(Qt.UserRole)
+                out.append((idx, coords[idx]))
+        return out
 
     def _on_channel_index_changed(self, index: int):
         if index < 0:
@@ -225,14 +311,65 @@ class ScanVisualizationPanel(QWidget):
         self.canvas.draw()
         self._refresh_visualization()
 
+    def _setup_profiles_view(self):
+        """Configure figure for a single line-plot axes."""
+        self.figure.clear()
+        self.axes_dict = {}
+        self.ims_dict = {}
+
+        ax = self.figure.add_subplot(111, facecolor='#2A2A2A')
+        ax.tick_params(colors='white')
+        for spine in ax.spines.values():
+            spine.set_color('#666')
+        self.axes_dict['profiles'] = ax
+
+        self.canvas.draw()
+        self._refresh_visualization()
+
     def _refresh_visualization(self):
         """Refresh the matplotlib display."""
         mode = self.combo_view_mode.currentText()
-        
+
         if mode == "Single View":
             self._update_single_view()
+        elif mode == "Profiles":
+            self._update_profiles_view()
         else:
             self._update_grid_view()
+
+    def _update_profiles_view(self):
+        ax = self.axes_dict.get('profiles')
+        if ax is None:
+            return
+
+        ax.clear()
+        ax.set_facecolor('#2A2A2A')
+        ax.tick_params(colors='white')
+        ax.grid(True, color='#444', linestyle=':')
+
+        axis = self._profile_axis()
+        # A profile at fixed X is plotted against Y, and vice versa.
+        abscissa = self._axis_coords('y' if axis == 'x' else 'x')
+        ax.set_xlabel('Y (mm)' if axis == 'x' else 'X (mm)', color='white')
+        ax.set_ylabel('Value', color='white')
+
+        data = self.data_grids.get(self.current_channel)
+        if data is not None:
+            for idx, coord in self._checked_profiles():
+                # data is indexed [y, x]
+                series = data[:, idx] if axis == 'x' else data[idx, :]
+                ax.plot(abscissa, series, marker='o', markersize=3,
+                        label=f"{axis.upper()} = {coord:.2f} mm")
+
+            if ax.get_legend_handles_labels()[0]:
+                legend = ax.legend(fontsize=8, facecolor='#1E1E1E', edgecolor='#444')
+                for text in legend.get_texts():
+                    text.set_color('white')
+
+        title, color = self._get_channel_metadata(self.current_channel or "")
+        ax.set_title(title, color=color, fontweight='bold')
+        self.figure.tight_layout()
+        self.canvas.draw()
 
     def _update_single_view(self):
         if not self.current_channel or self.current_channel not in self.data_grids:

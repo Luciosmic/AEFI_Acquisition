@@ -27,6 +27,10 @@ from domain.calibration.repositories.i_synchronous_detection_phase_calibration_r
     ISynchronousDetectionPhaseCalibrationRepository,
 )
 from domain.calibration.value_objects.hardware_signature.hardware_signature import HardwareSignature
+from infrastructure.persistence.calibration.hardware_signature_json import (
+    hardware_signature_from_json,
+    hardware_signature_to_json,
+)
 from domain.calibration.value_objects.synchronous_detection_phase_calibration_point.synchronous_detection_phase_calibration_point import (
     SynchronousDetectionPhaseCalibrationPoint,
 )
@@ -97,12 +101,7 @@ class RealSynchronousDetectionPhaseCalibrationRepository(ISynchronousDetectionPh
     def _serialize_entry(entry: SynchronousDetectionPhaseCalibrationEntry) -> Dict[str, Any]:
         return {
             "entry_id": str(entry.entry_id),
-            "hardware_signature": {
-                "excitation_board_version": entry.hardware_signature.excitation_board_version,
-                "conditioning_board_version": entry.hardware_signature.conditioning_board_version,
-                "sensor_version": entry.hardware_signature.sensor_version,
-                "sensor_serial_number": entry.hardware_signature.sensor_serial_number,
-            },
+            "hardware_signature": hardware_signature_to_json(entry.hardware_signature),
             "points": [
                 {"frequency_hz": point.frequency_hz, "delta_phi_degrees": point.delta_phi_degrees}
                 for point in entry.points
@@ -112,13 +111,7 @@ class RealSynchronousDetectionPhaseCalibrationRepository(ISynchronousDetectionPh
 
     @staticmethod
     def _deserialize_entry(raw: Dict[str, Any]) -> SynchronousDetectionPhaseCalibrationEntry:
-        signature_raw = raw["hardware_signature"]
-        signature = HardwareSignature(
-            excitation_board_version=signature_raw["excitation_board_version"],
-            conditioning_board_version=signature_raw["conditioning_board_version"],
-            sensor_version=signature_raw["sensor_version"],
-            sensor_serial_number=signature_raw["sensor_serial_number"],
-        )
+        signature = hardware_signature_from_json(raw["hardware_signature"])
         points = tuple(
             SynchronousDetectionPhaseCalibrationPoint(
                 frequency_hz=point_raw["frequency_hz"],

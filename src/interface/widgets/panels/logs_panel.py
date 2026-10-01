@@ -1,4 +1,5 @@
 import logging
+import os
 import sys
 
 from PySide6.QtCore import QObject, Signal
@@ -22,6 +23,9 @@ class LogsPanel(BasePanel):
         level_row.addWidget(self.warning_checkbox)
         level_row.addStretch()
         self.layout.addLayout(level_row)
+        # A panel built after install_console_capture (the dashboard's) reflects
+        # the level already in force (e.g. AEFI_LOG_LEVEL=DEBUG) instead of showing unchecked.
+        self.debug_checkbox.setChecked(logging.getLogger().getEffectiveLevel() == logging.DEBUG)
 
         self.text_edit = QPlainTextEdit()
         self.text_edit.setReadOnly(True)
@@ -74,11 +78,18 @@ def install_console_capture(logs_panel: LogsPanel) -> EmittingStream:
     sys.stdout = stream
     sys.stderr = stream
 
-    logging.basicConfig(
-        stream=stream,
-        level=logging.INFO,
-        format="%(levelname)s %(name)s: %(message)s",
-        force=True,
-    )
+    # AEFI_LOG_LEVEL=DEBUG / AEFI_LOG_FILE=<path>: headless-readable logs (e.g. for an agent
+    # tailing a run) — the panel alone swallows stdout, so nothing is readable outside the UI.
+    level = getattr(logging, os.environ.get("AEFI_LOG_LEVEL", "INFO").upper(), logging.INFO)
+    panel_handler = logging.StreamHandler(stream)
+    panel_handler.setFormatter(logging.Formatter("%(levelname)s %(name)s: %(message)s"))
+    handlers = [panel_handler]
+    log_file = os.environ.get("AEFI_LOG_FILE")
+    if log_file:
+        file_handler = logging.FileHandler(log_file, mode="w", encoding="utf-8")
+        file_handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s"))
+        handlers.append(file_handler)
+    logging.basicConfig(handlers=handlers, level=level, force=True)
+    logs_panel.debug_checkbox.setChecked(level == logging.DEBUG)
 
     return stream

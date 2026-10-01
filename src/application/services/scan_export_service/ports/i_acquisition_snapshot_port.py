@@ -2,9 +2,11 @@
 Acquisition Snapshot Port Interface
 
 Responsibility:
-- Read whatever acquisition-relevant configuration is currently sitting on
-  disk (last-applied hardware config, static hardware identity) and return
-  it as a flat dict of sections, for inclusion in the per-scan metadata JSON.
+- Return the acquisition context as a flat dict of sections, for inclusion
+  in the per-scan metadata JSON: the hardware configuration known to the
+  domain (mounted boards and their characterization, sensor and source
+  geometry calibrations, with the warnings of an incomplete configuration)
+  and the last-applied hardware configs sitting on disk.
 
 Rationale:
 - AD9106/motion config have no in-memory getter today — the on-disk JSON

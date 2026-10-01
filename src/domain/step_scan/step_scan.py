@@ -80,12 +80,17 @@ class StepScan(SpatialScan):
         if self._expected_points > 0 and len(self._points) >= self._expected_points:
             self.complete()
             
-    def complete(self) -> None:
+    def complete(self) -> bool:
+        """Complete the scan. Returns False (no-op, idempotent) if already
+        completed — a caller that doesn't pre-check status can log this
+        instead of it passing silently (see ODD: idempotence is a log, not
+        a domain event)."""
         if self.status == ScanStatus.COMPLETED:
-            return # Already completed
-            
+            return False
+
         super().complete()
         self._domain_events.append(ScanCompleted(scan_id=self.id, total_points=len(self._points)))
+        return True
         
     def fail(self, reason: str) -> None:
         # Allow failing from RUNNING or PAUSED states
@@ -103,13 +108,15 @@ class StepScan(SpatialScan):
         self._domain_events.append(ScanCancelled(scan_id=self.id))
         
     def pause(self) -> None:
-        """Pause the scan (idempotent)."""
+        """Pause the scan (idempotent only for the already-PAUSED case —
+        pausing a scan in a final status (COMPLETED/FAILED/CANCELLED) is an
+        invariant rejection, not idempotence, and must raise like
+        resume()/fail()/SpatialScan.cancel() already do for the equivalent
+        case — an operator's "Pause" click racing scan completion must be
+        observable to the caller, not silently swallowed."""
         # Idempotent: if already paused, do nothing
         if self.status == ScanStatus.PAUSED:
             return
-        # Cannot pause if already in final state
-        if self.status.is_final():
-            return  # Silently ignore instead of raising
         if self.status != ScanStatus.RUNNING:
             raise ValueError(f"Cannot pause scan when status is {self.status}")
         super().pause()

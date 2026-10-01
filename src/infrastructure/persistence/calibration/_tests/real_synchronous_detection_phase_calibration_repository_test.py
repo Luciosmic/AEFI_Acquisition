@@ -18,10 +18,9 @@ from infrastructure.persistence.calibration.real_synchronous_detection_phase_cal
 
 def _make_signature(serial: str = "SN-1") -> HardwareSignature:
     return HardwareSignature(
-        excitation_board_version="board_v2",
-        conditioning_board_version="cond_v4",
-        sensor_version="v2b",
-        sensor_serial_number=serial,
+        excitation_electronics_board_name="board_v2",
+        conditioning_electronics_board_name="cond_v4",
+        sensor_name=f"v2b_{serial}",
     )
 
 
@@ -139,10 +138,9 @@ def test_storage_file_shape_matches_documented_contract(tmp_path):
     stored_entry = raw["entries"][0]
     assert stored_entry["entry_id"] == str(entry.entry_id)
     assert stored_entry["hardware_signature"] == {
-        "excitation_board_version": "board_v2",
-        "conditioning_board_version": "cond_v4",
-        "sensor_version": "v2b",
-        "sensor_serial_number": "SN-1",
+        "excitation_electronics_board_name": "board_v2",
+        "conditioning_electronics_board_name": "cond_v4",
+        "sensor_name": "v2b_SN-1",
     }
     assert stored_entry["points"] == [{"frequency_hz": 1000.0, "delta_phi_degrees": 12.5}]
     assert stored_entry["recorded_at"] == entry.recorded_at.isoformat()

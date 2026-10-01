@@ -347,9 +347,7 @@ class TestAD9106Adapter(DiagramFriendlyTest):
 
     def test_set_gain_preserves_phase_across_a_mute_unmute_round_trip(self):
         """set_gain(0,0) then set_gain(real) — the differential-scan mute/
-        unmute cycle — must never touch phase, unlike apply_excitation's
-        "full OFF" path which resets both DDS phases to 0 (see
-        test_apply_excitation_off). X_DIR is asymmetric (phases 0/32768) so
+        unmute cycle — must never touch phase. X_DIR is asymmetric (phases 0/32768) so
         a phase reset here would be visible, not accidentally masked like
         it would be with Y_DIR's symmetric (0,0)."""
         self.communicator = MCU_SerialCommunicator()
@@ -431,6 +429,38 @@ class TestAD9106Adapter(DiagramFriendlyTest):
         by_channel = {e.channel: e.phase for e in received}
         self.assertEqual(by_channel[1], phase_before[1])
         self.assertEqual(by_channel[2], phase_before[2])
+
+    def test_direction_change_at_zero_level_writes_dds2_phase(self):
+        """Switching X -> Y while levels are 0% must still move DDS2 phase —
+        otherwise the displayed sphere phases (read from controller memory)
+        and the next non-zero excitation keep the old direction."""
+        controller = AD9106Controller(MCU_SerialCommunicator())
+        adapter = AdapterExcitationConfigurationAD9106(controller)
+        off = dict(level_s1_s2=ExcitationLevel(0.0), level_s3_s4=ExcitationLevel(0.0), frequency=1000.0)
+
+        adapter.apply_excitation(ExcitationParameters(mode=ExcitationMode.X_DIR, **off))
+        self.assertEqual(controller.get_memory_state()["DDS"]["Phase"][2], 32768)
+
+        adapter.apply_excitation(ExcitationParameters(mode=ExcitationMode.Y_DIR, **off))
+        self.assertEqual(controller.get_memory_state()["DDS"]["Phase"][2], 0)
+
+    def test_reapplies_dds2_phase_after_external_register_write(self):
+        """Hardware Config tab shares the controller: if it rewrites DDS2
+        phase, re-selecting the direction must restore it instead of
+        trusting the adapter's own stale cache."""
+        controller = AD9106Controller(MCU_SerialCommunicator())
+        adapter = AdapterExcitationConfigurationAD9106(controller)
+        params = ExcitationParameters(
+            mode=ExcitationMode.Y_DIR,
+            level_s1_s2=ExcitationLevel(20.0),
+            level_s3_s4=ExcitationLevel(20.0),
+            frequency=1000.0,
+        )
+        adapter.apply_excitation(params)
+        controller.set_dds_phase(2, 32768)  # external write (Hardware Config tab)
+
+        adapter.apply_excitation(params)
+        self.assertEqual(controller.get_memory_state()["DDS"]["Phase"][2], 0)
 
 
 if __name__ == '__main__':

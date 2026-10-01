@@ -86,6 +86,15 @@ class StepScanConfig:
             raise ValueError(
                 f"differential_settle_delay_ms must be >= 0, got {self.differential_settle_delay_ms}"
             )
+
+        # COMB is Y-first-columns-only (legacy behavior, see
+        # ScanTrajectoryFactory) — it has no X-first variant, so an explicit
+        # scan_axis=X would otherwise be silently dropped by the factory
+        # with no trace anywhere that the operator's choice was ignored.
+        if self.scan_pattern == ScanPattern.COMB and self.scan_axis != ScanAxis.Y:
+            raise ValueError(
+                f"COMB pattern does not support scan_axis={self.scan_axis} — only Y (columns-first) is supported"
+            )
     
     def total_points(self) -> int:
         """Calculate total number of scan points."""

@@ -24,8 +24,13 @@ knowledge of that file.
 ## Design
 
 - `@dataclass(frozen=True)`.
-- `excitation_board_version: str`, `conditioning_board_version: str`,
-  `sensor_version: str` — required, validated non-empty in `__post_init__`.
+- `excitation_electronics_board_name`, `conditioning_electronics_board_name`
+  (`HardwareComponentName`): references, by identity, to the mounted boards
+  of the hardware component catalog — not copies of their characterization
+  (renamed from `*_board_version` on 2026-09-25 to say so; registries written
+  before are still read, see `hardware_signature_json`).
+- `sensor_version: str` — required; all three validated non-empty in
+  `__post_init__`.
 - `sensor_serial_number: Optional[str]` — legitimately `None` (not every
   sensor is serialized), never validated.
 - Value equality (dataclass default `__eq__`) is used by

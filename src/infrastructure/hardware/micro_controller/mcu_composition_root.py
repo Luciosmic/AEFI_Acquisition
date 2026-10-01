@@ -100,6 +100,7 @@ class MCUCompositionRoot:
             baudrate=baudrate,
             communicator=self._driver,
             ad9106_configurator=self._ad9106_configurator,
+            ads131a04_configurator=self._acquisition_configurator,
         )
         
         # 5. Instantiate Continuous Acquisition Executor

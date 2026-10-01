@@ -10,8 +10,7 @@ Responsibility:
 Rationale:
 - Keeps file I/O out of Qt widgets. This is pure view-state (last folder
   used, form defaults) with no domain/application meaning, so it stays a
-  thin interface-layer utility rather than a port+adapter pair — same
-  reasoning as `interface/logic/coordinate_transformer.py`.
+  thin interface-layer utility rather than a port+adapter pair.
 """
 
 from __future__ import annotations

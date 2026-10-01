@@ -17,6 +17,13 @@ def _json_default(value: Any) -> Any:
     return str(value)
 
 
+def serialize_event(event: Any) -> str:
+    """One JSONL line: `event_type` + the event's fields. Shared with the
+    per-scan event export so both files use the same format."""
+    payload = asdict(event) if is_dataclass(event) else {"data": event}
+    return json.dumps({"event_type": type(event).__name__, **payload}, default=_json_default)
+
+
 class EventAuditLog:
     """Appends every domain event it receives to a JSONL file, one file per app run."""
 
@@ -27,8 +34,7 @@ class EventAuditLog:
 
     def record(self, event: Any) -> None:
         try:
-            payload = asdict(event) if is_dataclass(event) else {"data": event}
-            line = json.dumps({"event_type": type(event).__name__, **payload}, default=_json_default)
+            line = serialize_event(event)
         except Exception:
             logger.exception("EventAuditLog: failed to serialize event %r", type(event).__name__)
             return

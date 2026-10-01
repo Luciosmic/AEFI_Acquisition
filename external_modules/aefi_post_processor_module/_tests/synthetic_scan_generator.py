@@ -117,28 +117,25 @@ class SyntheticScanGenerator:
         
     def rotate_frame(self, data: np.ndarray, rotation_angles: Tuple[float, float, float]) -> np.ndarray:
         """
-        Apply 3D spatial rotation to the vector field (inverse of sensor rotation).
-        If we want to simulate a sensor rotated by angles, the measured field 
-        is R_inv * Field_Laboratory. 
-        Wait, usually: V_sensor = R_sensor_to_lab * V_lab? No.
-        If sensor is rotated by R, a vector V in lab frame is seen as V' = R^(-1) * V in sensor frame.
-        Here we just want to apply a known rotation to verify the rotator.
-        
+        Simulate what the sensor reads of a field given in the sources frame:
+        E_sensor = Pᵀ·E_sources, with P = Rx(theta_x)·Ry(theta_y)·Rz(theta_z)
+        (extrinsic, scipy 'XYZ') the mounting rotation defined by the angles.
+        The pipeline's SensorToEFSourcesFrameRotator applies P and recovers E_sources.
+        Reference: src/domain/calibration/value_objects/rotation_convention/rotation_convention_intention.md
+
         Args:
             data: Input data (N, N, 6)
             rotation_angles: (theta_x, theta_y, theta_z) in degrees
-        
+
         Returns:
             Rotated vector field
         """
-        # Using the existing rotator logic to apply "forward" rotation
-        # We can implement it manually here to be independent
-        
-        rot = R.from_euler('XYZ', rotation_angles, degrees=True)
-        
+        # Pᵀ = P⁻¹: simulates the measurement, inverse of the pipeline's conversion
+        rot = R.from_euler('XYZ', rotation_angles, degrees=True).inv()
+
         data_out = data.copy()
-        
-        # Reshape to (M, 6)
+
+        # Reshape to (N*N, 6)
         flat = data.reshape(-1, 6)
         
         # Vectors (Real parts and Imag parts separate)

@@ -85,7 +85,13 @@ class CubeSensorFieldSimulator:
         sensor = config["sensor"]
         dimension = sensor["dimension"]["value"]
         gain = sensor["calibration"]["gain"]["value"]
-        rot = sensor["calibration"]["sensor_to_lab_rotation"]
+        calibration = sensor["calibration"]
+        if "sources_to_sensor_rotation" not in calibration:
+            raise ValueError(
+                "aefi_device_config.json: sensor.calibration.sources_to_sensor_rotation is missing — "
+                "update .aefi_acquisition/configs/aefi_device_config.json from config_templates/"
+            )
+        rot = calibration["sources_to_sensor_rotation"]
         rotation = rotation_from_euler_xyz(rot["theta_x"], rot["theta_y"], rot["theta_z"])
 
         spheres = point_charge_simulator or PointChargeFieldSimulator.from_config(config)

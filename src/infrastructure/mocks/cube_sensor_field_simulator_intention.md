@@ -14,8 +14,13 @@ The cube's orientation reuses `external_modules/cube_visualizer/domain/
 sensor_rotation.py` (the canonical source of truth for sensor-orientation
 math in this repo, per user pointer 2026-07-31) rather than re-deriving
 rotation math locally, and defaults to `aefi_device_config.json`'s measured
-`sensor.calibration.sensor_to_lab_rotation` — the real calibrated
-orientation, not the arbitrary demo angles `main.py` used to hardcode.
+`sensor.calibration.sources_to_sensor_rotation` — the real calibrated
+orientation, not the arbitrary demo angles `main.py` used to hardcode. The
+configured angles define P (montage): the mounting rotation that brings the
+cube, aligned on the sources frame, to its actual mounting. P converts sensor
+coordinates → sources coordinates (world = P·local); the simulator applies it
+to place each face-grid point in the sources frame. A config missing the key
+is rejected with an explicit error (no legacy fallback).
 
 Noise placement (per user correction 2026-07-31): the MCU/ADC's own
 quantization noise is negligible at this signal scale and stays in
