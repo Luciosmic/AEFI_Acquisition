@@ -212,7 +212,7 @@ def wire_dashboard(
     scan_control_panel = dashboard.panels["scan_control"]
     # Same data, two views: heatmaps and profiles
     aefi_voltage_panels = (dashboard.panels["aefi_voltage_map"], dashboard.panels["aefi_voltage_profiles"])
-    electric_field_map_panel = dashboard.panels["electric_field_map"]
+    electric_field_panels = (dashboard.panels["electric_field_map"], dashboard.panels["electric_field_profiles"])
 
     # Control -> Presenter
     scan_control_panel.scan_start_requested.connect(scan_presenter.on_scan_start_requested)
@@ -243,23 +243,18 @@ def wire_dashboard(
                 config["x_min"], config["x_max"], config["x_nb_points"],
                 config["y_min"], config["y_max"], config["y_nb_points"],
             )
-        for panel in aefi_voltage_panels:
+        for panel in aefi_voltage_panels + electric_field_panels:
             getattr(panel, init)(*geometry)
-        # Channel set depends on the connected probe (mono/bi/tri-axial),
-        # so it's left empty here and populated lazily from the first point.
-        getattr(electric_field_map_panel, init)(*geometry, channels=[])
 
     def on_scan_progress_viz(current, total, data):
-        # data has 'x', 'y', 'value'
-        # ponytail: each panel redraws on every point, even when its dock is hidden;
-        # throttle / skip hidden panels if long scans get sluggish.
+        # data has 'x', 'y', 'value'. Deferred redraw: a panel redraws on its
+        # own timer (and not while hidden), never once per point.
         for panel in aefi_voltage_panels:
-            panel.update_data_point_from_position(data["x"], data["y"], data["value"])
+            panel.update_data_point_from_position(data["x"], data["y"], data["value"], redraw=False)
 
     def on_field_scan_progress_viz(current, total, data):
-        electric_field_map_panel.update_data_point_from_position(
-            data["x"], data["y"], data["value"]
-        )
+        for panel in electric_field_panels:
+            panel.update_data_point_from_position(data["x"], data["y"], data["value"], redraw=False)
 
     scan_presenter.scan_started.connect(on_scan_started_viz)
     scan_presenter.scan_progress.connect(on_scan_progress_viz)
