@@ -680,16 +680,18 @@ class ScanApplicationService:
         self._event_bus.subscribe("aefivoltagesampleacquired", _on_adc_sample)
         self._event_bus.subscribe("positionupdated", _on_position)
 
-        # Same ownership rule as the step loop: only stop what we started.
+        # Same ownership rule as the step loop: only stop what we started, as
+        # the holder of the stream (taken in _start_scan with the excitation).
         adc_started_by_scan = not self._aefi_acquisition_service.is_acquisition_running()
         if adc_started_by_scan:
-            self._aefi_acquisition_service.start_acquisition(AefiAcquisitionConfig())
+            self._aefi_acquisition_service.start_acquisition(AefiAcquisitionConfig(), controller=SCAN_EXCITATION_CONTROLLER)
 
         def _release_streams() -> None:
             self._event_bus.unsubscribe("aefivoltagesampleacquired", _on_adc_sample)
             self._event_bus.unsubscribe("positionupdated", _on_position)
             if adc_started_by_scan:
-                self._aefi_acquisition_service.stop_acquisition()
+                self._aefi_acquisition_service.stop_acquisition(controller=SCAN_EXCITATION_CONTROLLER)
+            self._release_controls()
 
         def _fail(reason: str) -> None:
             # A cancel can land while a line is being swept — nothing left to fail then.

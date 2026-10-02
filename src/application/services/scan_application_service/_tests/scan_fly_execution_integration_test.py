@@ -111,6 +111,7 @@ class TestFlyScanOnTheFaithfulMotionStack(_Stack):
         self._run(make_dto())
 
         self.assertFalse(self.continuous_service.is_acquisition_running())
+        self.assertIsNone(self.continuous_service.get_controller())  # held during the scan only
 
 
 class TestFlyScanFailureModes(_Stack):
