@@ -37,10 +37,13 @@ Design:
   Aligning on the side midpoints alone favored the S1-S3/S4-S2 sides: on
   real measurements the best-fit square came out tilted by half the
   arrangement's shear (0.7°, 2026-10-01).
-- Best-fit square by 4-point DFT over the perimeter S1→S3→S2→S4 (S1<->S2 and
-  S3<->S4 are the diagonals). That order winds clockwise in the source
-  frame, so the square generator is w=-i; the CCW convention silently picks
-  the near-zero harmonic (~1mm "side" on real data instead of ~64mm).
+- Best-fit square in closed form with complex numbers: along the perimeter
+  S1→S3→S2→S4 (S1<->S2 and S3<->S4 are the diagonals) corner k of a perfect
+  square is center + z0·i^(-k), so center and z0 are plain projections
+  (exact least squares, no iteration) — z0 is a 4-point DFT (Discrete
+  Fourier Transform) coefficient. That order winds clockwise in the source
+  frame (-90° per corner); the counter-clockwise convention silently picks
+  the near-zero component (~1mm "side" on real data instead of ~64mm).
 - Impossible measurements raise SourceGeometryInconsistentError.
 """
 
