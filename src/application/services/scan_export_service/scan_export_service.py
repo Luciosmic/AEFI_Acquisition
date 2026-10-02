@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import logging
 import shutil
+import threading
 from datetime import datetime
 from pathlib import Path
 from typing import Optional, Dict, Any, List
@@ -110,6 +111,10 @@ class ScanExportService:
         self._post_processing_port = post_processing_port
         self._task_runner = task_runner
         self._active_ports: List[IScanExportPort] = []
+        # Events come from several threads (ADC worker, motion worker, scan
+        # loop): the recorder must never see a port that is not open yet, or
+        # write into one being closed by another thread.
+        self._events_lock = threading.RLock()
 
         self._config: Optional[ExportConfigDTO] = None
         self._export_active: bool = False  # True between ScanStarted and completion/failure/cancel
@@ -209,9 +214,12 @@ class ScanExportService:
         Relies on the bus dispatching "*" subscribers after typed ones: the
         export is already open when ScanStarted reaches here, and already
         closed for the finishing event (written by _close_export).
-        `_active_ports` is empty whenever no export is open."""
-        for port in self._active_ports:
-            port.write_event(event)
+        `_active_ports` only lists open ports: filled once they are started,
+        emptied before they are closed — an event from another thread landing
+        while a scan export opens or closes is simply not recorded."""
+        with self._events_lock:
+            for port in self._active_ports:
+                port.write_event(event)
 
     def _handle_scan_started(self, event: ScanStarted) -> None:
         logger.info("Handling ScanStarted. scan_id=%s, config present: %s", event.scan_id, self._config is not None)
@@ -227,7 +235,7 @@ class ScanExportService:
             return
 
         # Every scan is exported to both formats simultaneously.
-        self._active_ports = [self._csv_export_port, self._hdf5_export_port]
+        ports = [self._csv_export_port, self._hdf5_export_port]
 
         directory = self._config.output_directory
         # Scan name only — each export port builds its own acquisition folder
@@ -257,10 +265,12 @@ class ScanExportService:
         # Folder/file tag: a fly scan is an exploration map, not a measurement —
         # its files must not be mistaken for a step scan's.
         acquisition_kind = "flyScan" if getattr(event.config, "fly_scan", False) else "stepScan"
-        for port in self._active_ports:
+        for port in ports:
             port.configure(directory, filename_base, metadata, timestamp=timestamp, acquisition_kind=acquisition_kind)
             port.start()
             port.write_metadata(acquisition_metadata)
+        with self._events_lock:  # visible to the event recorder only once open
+            self._active_ports = ports
         self._export_active = True
         self._points_written = 0
         # Reset per-scan field-export state — must not leak into a new scan
@@ -340,7 +350,8 @@ class ScanExportService:
             formats=["CSV"],
             filename_base=config.filename_base,
         ))
-        self._active_ports = [port]
+        with self._events_lock:  # visible to the event recorder only once open
+            self._active_ports = [port]
         self._time_series_active = True
         self._time_series_t0 = None
         self._points_written = 0
@@ -377,16 +388,19 @@ class ScanExportService:
         """Write the finishing event, close every active port, and drop the
         acquisition folder if nothing was written. Returns each active port's
         output path, in `_active_ports` order."""
+        # Hidden from the event recorder before closing: an event from another
+        # thread can no longer reach a port being stopped.
+        with self._events_lock:
+            ports, self._active_ports = self._active_ports, []
         # Read before stop() — ports clear their path once closed.
-        paths = [port.get_output_path() for port in self._active_ports]
+        paths = [port.get_output_path() for port in ports]
         try:
-            for port in self._active_ports:
+            for port in ports:
                 port.write_event(event)  # last event of the export, before its file closes
                 port.stop()
         finally:
             self._export_active = False
             self._time_series_active = False
-            self._active_ports = []
 
         if self._points_written == 0:
             # A scan/reading that ended before any point leaves nothing worth

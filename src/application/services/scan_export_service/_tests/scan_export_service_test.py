@@ -92,6 +92,34 @@ class FakeExportPort(IScanExportPort):
         self.stopped = True
 
 
+class StrictExportPort(FakeExportPort):
+    """Refuses to record an event while not open, like CsvScanExportPort, and
+    publishes an event from inside start()/stop() — what another thread (ADC
+    sample, motion event) does on the bench while the export opens or closes."""
+
+    def __init__(self, event_bus, output_path):
+        super().__init__(output_path=output_path)
+        self._event_bus = event_bus
+        self.open = False
+        self.refused = []
+
+    def start(self):
+        self._event_bus.publish("racingevent", _make_scan_point_acquired_event())
+        super().start()
+        self.open = True
+
+    def stop(self):
+        self.open = False
+        super().stop()
+        self._event_bus.publish("racingevent", _make_scan_point_acquired_event())
+
+    def write_event(self, event):
+        if not self.open:
+            self.refused.append(event)
+            raise RuntimeError("write_event() on a port that is not open")
+        super().write_event(event)
+
+
 class FakePostProcessingPort(IPostProcessingPort):
     """Records `run()` calls instead of driving the real post-processor."""
 
@@ -391,6 +419,38 @@ class TestTimeSeriesExport(unittest.TestCase):
         _publish_reading(self.event_bus, n_samples=2)
 
         self.assertEqual(len(self.export_port.points), 1)
+
+
+class _EmptySnapshotPort(IAcquisitionSnapshotPort):
+    def read(self) -> Dict[str, Any]:
+        return {}
+
+
+class TestScanExportServiceEventRecordingRace(unittest.TestCase):
+    """An event landing while the scan export opens or closes is not written
+    into a port that is not open (it raised and logged an ERROR on the bench)."""
+
+    def test_events_racing_the_export_open_and_close_are_not_written_to_closed_ports(self):
+        bus = InMemoryEventBus()
+        csv_port = StrictExportPort(bus, Path("/fake/scan.csv"))
+        hdf5_port = StrictExportPort(bus, Path("/fake/scan.h5"))
+        service = ScanExportService(
+            bus,
+            csv_export_port=csv_port,
+            hdf5_export_port=hdf5_port,
+            excitation_service=ExcitationConfigurationService(MockExcitationPort(), bus),
+            acquisition_snapshot_port=_EmptySnapshotPort(),
+            task_runner=FakeThreadPoolTaskRunner(),
+        )
+        service.configure_export(ExportConfigDTO(enabled=True, output_directory="", filename_base="scan"))
+
+        started = _make_scan_started_event()
+        bus.publish("scanstarted", started)
+        bus.publish("scanfailed", ScanFailed(scan_id=started.scan_id, reason="motion error"))
+
+        self.assertEqual(csv_port.refused + hdf5_port.refused, [])
+        self.assertTrue(csv_port.stopped and hdf5_port.stopped)
+        self.assertIsInstance(csv_port.events[-1], ScanFailed)  # finishing event still recorded
 
 
 class TestScanExportServiceZeroPointCleanup(unittest.TestCase):
