@@ -13,9 +13,11 @@ from datetime import datetime
 from pathlib import Path
 from typing import Callable, Optional, Sequence, Tuple
 
+from application.shared.acquisition_parameters.acquisition_conditions_dtos import (
+    ExportedFileDTO,
+)
 from application.services.acquisition_throughput_characterization_service.dtos.acquisition_parameters_dtos import (
     AcquisitionParametersDTO,
-    ExportedFileDTO,
 )
 from application.services.acquisition_throughput_characterization_service.dtos.acquisition_throughput_dtos import (
     VALUE_CHANNELS,

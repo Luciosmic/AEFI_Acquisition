@@ -1,9 +1,11 @@
 from abc import ABC, abstractmethod
 from typing import Sequence, Tuple
 
+from application.shared.acquisition_parameters.acquisition_conditions_dtos import (
+    ExportedFileDTO,
+)
 from application.services.acquisition_throughput_characterization_service.dtos.acquisition_parameters_dtos import (
     AcquisitionParametersDTO,
-    ExportedFileDTO,
 )
 from application.services.acquisition_throughput_characterization_service.dtos.acquisition_throughput_dtos import (
     AcquisitionThroughputCharacterizationDTO,

@@ -7,11 +7,13 @@ from datetime import datetime, timezone
 from application.services.acquisition_throughput_characterization_service.acquisition_throughput_characterization_service import (
     EXCITATION_CUT,
 )
-from application.services.acquisition_throughput_characterization_service.dtos.acquisition_parameters_dtos import (
+from application.shared.acquisition_parameters.acquisition_conditions_dtos import (
     AcquisitionConditionsDTO,
-    AcquisitionParametersDTO,
     BenchPositionDTO,
     SynchronousDetectionStateDTO,
+)
+from application.services.acquisition_throughput_characterization_service.dtos.acquisition_parameters_dtos import (
+    AcquisitionParametersDTO,
 )
 from infrastructure.acquisition_conditions.fake.fake_acquisition_conditions_port import make_bench_conditions
 from infrastructure.persistence.acquisition_throughput._tests import (

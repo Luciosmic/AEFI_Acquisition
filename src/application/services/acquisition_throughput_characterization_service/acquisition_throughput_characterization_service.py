@@ -11,13 +11,15 @@ from datetime import datetime, timedelta
 from typing import List, Optional, Sequence, Tuple
 from uuid import uuid4
 
-from application.services.acquisition_throughput_characterization_service.dtos.acquisition_parameters_dtos import (
+from application.shared.acquisition_parameters.acquisition_conditions_dtos import (
     AcquisitionConditionsDTO,
+    ExportedFileDTO,
+    SoftwareProvenanceDTO,
+)
+from application.services.acquisition_throughput_characterization_service.dtos.acquisition_parameters_dtos import (
     AcquisitionParametersDTO,
     ExcitationConditionDTO,
-    ExportedFileDTO,
     OperatorExcitationDTO,
-    SoftwareProvenanceDTO,
     ThroughputActivityDTO,
 )
 from application.services.acquisition_throughput_characterization_service.dtos.acquisition_throughput_dtos import (
@@ -32,10 +34,10 @@ from application.services.acquisition_throughput_characterization_service.i_api_
 from application.services.acquisition_throughput_characterization_service.ports.i_acquisition_averaging_port import (
     IAcquisitionAveragingPort,
 )
-from application.services.acquisition_throughput_characterization_service.ports.i_acquisition_conditions_port import (
+from application.shared.acquisition_parameters.i_acquisition_conditions_port import (
     IAcquisitionConditionsPort,
 )
-from application.services.acquisition_throughput_characterization_service.ports.i_software_provenance_port import (
+from application.shared.acquisition_parameters.i_software_provenance_port import (
     ISoftwareProvenancePort,
 )
 from application.services.acquisition_throughput_characterization_service.ports.i_usb_latency_timer_port import (

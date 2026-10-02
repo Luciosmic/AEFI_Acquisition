@@ -21,8 +21,10 @@ déclaré inconnu.
 
 ## Design
 
-- ABC pure, port sortant (Application → Infrastructure), déclaré dans le
-  dossier du service qui le consomme.
+- ABC pure, port sortant (Application → Infrastructure). Déclaré dans
+  `application/shared/acquisition_parameters/` et non dans un service : il est
+  consommé par plusieurs services (caractérisation du débit, export des scans
+  et séries temporelles), comme `IAsyncTaskRunner` dans `application/shared/ports/`.
 - Implémentations : `AcquisitionConditionsReader` (réutilise
   `AcquisitionSnapshotReader` pour le catalogue), `FakeAcquisitionConditionsPort`.
 - Jamais d'exception pour un fait illisible : c'est une condition attendue

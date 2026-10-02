@@ -13,12 +13,11 @@ registres, registre Windows, git) connaîtrait le format du document.
 
 ## Responsibility
 
-- Conditions lues dans le système (`IAcquisitionConditionsPort`) :
-  composants montés (`MountedComponentDTO`), réglages ADC et AD9106,
-  détection synchrone, montage du capteur et rotation appliquée, liaison
-  série hôte ↔ MCU, backends matériels (réel / simulé), position du banc.
-- Provenance du code (`SoftwareProvenanceDTO`).
-- Fichiers produits (`ExportedFileDTO` : taille, SHA-256).
+- Les conditions communes à toute acquisition (composants, réglages ADC et
+  AD9106, détection synchrone, montage du capteur, liaison série, backends,
+  position du banc, provenance du code, fichiers produits) sont dans
+  `application/shared/acquisition_parameters/acquisition_conditions_dtos.py`
+  (extraites le 2026-10-02 pour être partagées avec l'export des scans).
 - Ce que le balayage a fait (`ThroughputActivityDTO`) : identifiant,
   début / fin, issue, requête, condition d'excitation appliquée
   (`ExcitationConditionDTO` : nom, libellé, définition), contrôles tenus,

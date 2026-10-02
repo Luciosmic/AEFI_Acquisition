@@ -1,6 +1,6 @@
 import unittest
 
-from application.services.acquisition_throughput_characterization_service.dtos.acquisition_parameters_dtos import (
+from application.shared.acquisition_parameters.acquisition_conditions_dtos import (
     BenchPositionDTO,
 )
 from infrastructure.acquisition_conditions.fake.fake_acquisition_conditions_port import (

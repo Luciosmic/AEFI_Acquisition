@@ -12,14 +12,16 @@ application.
 from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional, Sequence
 
-from application.services.acquisition_throughput_characterization_service.dtos.acquisition_parameters_dtos import (
+from application.shared.acquisition_parameters.acquisition_conditions_dtos import (
     AcquisitionConditionsDTO,
-    AcquisitionParametersDTO,
     BenchPositionDTO,
     ExportedFileDTO,
     MountedComponentDTO,
     SignalGenerationSettingsDTO,
     SoftwareProvenanceDTO,
+)
+from application.services.acquisition_throughput_characterization_service.dtos.acquisition_parameters_dtos import (
+    AcquisitionParametersDTO,
     ThroughputActivityDTO,
 )
 from application.services.acquisition_throughput_characterization_service.dtos.acquisition_throughput_dtos import (

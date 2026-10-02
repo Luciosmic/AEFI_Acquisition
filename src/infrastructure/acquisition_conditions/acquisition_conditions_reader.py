@@ -8,7 +8,7 @@ import logging
 from datetime import datetime
 from typing import Any, Callable, Dict, Mapping, Optional, Tuple
 
-from application.services.acquisition_throughput_characterization_service.dtos.acquisition_parameters_dtos import (
+from application.shared.acquisition_parameters.acquisition_conditions_dtos import (
     AcquisitionConditionsDTO,
     AdcSettingsDTO,
     BenchPositionDTO,
@@ -19,7 +19,7 @@ from application.services.acquisition_throughput_characterization_service.dtos.a
     SignalGenerationSettingsDTO,
     SynchronousDetectionStateDTO,
 )
-from application.services.acquisition_throughput_characterization_service.ports.i_acquisition_conditions_port import (
+from application.shared.acquisition_parameters.i_acquisition_conditions_port import (
     IAcquisitionConditionsPort,
 )
 from application.services.motion_control_service.ports.i_motion_port import IMotionPort

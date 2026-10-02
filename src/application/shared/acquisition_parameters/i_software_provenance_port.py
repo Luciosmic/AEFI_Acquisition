@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from application.services.acquisition_throughput_characterization_service.dtos.acquisition_parameters_dtos import (
+from application.shared.acquisition_parameters.acquisition_conditions_dtos import (
     SoftwareProvenanceDTO,
 )
 

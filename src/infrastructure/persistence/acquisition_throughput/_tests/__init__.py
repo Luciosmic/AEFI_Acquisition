@@ -7,10 +7,12 @@ from application.services.acquisition_throughput_characterization_service.acquis
     CONTROLLER,
     EXCITATION_CUT,
 )
-from application.services.acquisition_throughput_characterization_service.dtos.acquisition_parameters_dtos import (
-    AcquisitionParametersDTO,
+from application.shared.acquisition_parameters.acquisition_conditions_dtos import (
     BenchPositionDTO,
     ExportedFileDTO,
+)
+from application.services.acquisition_throughput_characterization_service.dtos.acquisition_parameters_dtos import (
+    AcquisitionParametersDTO,
     OperatorExcitationDTO,
     ThroughputActivityDTO,
 )

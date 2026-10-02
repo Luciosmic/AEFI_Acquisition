@@ -7,7 +7,7 @@ See fake_acquisition_conditions_port_intention.md.
 from datetime import datetime, timezone
 from typing import List, Optional
 
-from application.services.acquisition_throughput_characterization_service.dtos.acquisition_parameters_dtos import (
+from application.shared.acquisition_parameters.acquisition_conditions_dtos import (
     AcquisitionConditionsDTO,
     AdcSettingsDTO,
     BenchPositionDTO,
@@ -18,7 +18,7 @@ from application.services.acquisition_throughput_characterization_service.dtos.a
     SignalGenerationSettingsDTO,
     SynchronousDetectionStateDTO,
 )
-from application.services.acquisition_throughput_characterization_service.ports.i_acquisition_conditions_port import (
+from application.shared.acquisition_parameters.i_acquisition_conditions_port import (
     IAcquisitionConditionsPort,
 )
 from domain.shared_kernel.operation_result import OperationResult
