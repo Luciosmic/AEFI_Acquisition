@@ -135,9 +135,9 @@ class TestCsvScanExportPortMetadata(unittest.TestCase):
         self.assertEqual(data["schema"]["version"], "1.0")
         self.assertEqual(data["provenance"]["activity"]["status"], "running")
         self.assertEqual(data["procedure"]["step_scan"]["pattern"], "SERPENTINE")
-        self.assertEqual(
-            [f["name"] for f in data["data"]["files"]], ["acquisition-parameters.json"]
-        )  # files are listed only once the acquisition has ended
+        # Files are listed only once the acquisition has ended; the document lists itself by its real name.
+        self.assertEqual(len(data["data"]["files"]), 1)
+        self.assertRegex(data["data"]["files"][0]["name"], r"^\d{4}-\d{2}-\d{2}_\d{6}_stepScan_scan_acquisition-parameters\.json$")
 
     def test_final_document_written_after_stop_lists_and_hashes_every_file(self):
         self.port.configure(str(self.tmp_dir), "scan", metadata={})
