@@ -21,6 +21,9 @@ Design:
 - A completion/failure published before wait_for_motion() registers (null
   move: done before move_to() returns its id) is kept and returned at once
   — otherwise the wait missed it and timed out after 30 s.
+- An outcome landing as a wait times out is not lost either: it is set under
+  the lock and the waiter re-checks it there. Polling with short waits (fly
+  scan, live projection) hit this window — a whole line timed out.
 - Always returns OperationResult — never raises for expected outcomes.
 - Unsubscribes on close() to avoid memory leaks in long-lived processes.
 """
@@ -100,6 +103,10 @@ class EventBusMotionSynchronizer(IMotionSynchronizer):
         finally:
             with self._lock:
                 self._pending.pop(motion_id, None)
+                # The outcome may have landed between the wait timing out and
+                # this cleanup: it was set on this slot, take it rather than
+                # lose it (a caller polling with short waits hit this window).
+                signaled = signaled or evt.is_set()
 
         if not signaled:
             return OperationResult.fail(
@@ -150,9 +157,10 @@ class EventBusMotionSynchronizer(IMotionSynchronizer):
                 while len(self._early) > _MAX_EARLY_OUTCOMES:
                     self._early.popitem(last=False)
                 return
-        evt, container = entry
-        container[0] = error
-        evt.set()
+            # Set under the lock: the waiter's cleanup checks evt under it too.
+            evt, container = entry
+            container[0] = error
+            evt.set()
 
     # ------------------------------------------------------------------ #
     # Lifecycle
