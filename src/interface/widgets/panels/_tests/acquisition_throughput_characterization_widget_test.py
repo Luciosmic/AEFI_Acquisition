@@ -53,6 +53,33 @@ def test_points_fill_the_table_and_running_locks_the_button():
     assert widget.table.item(0, 1).text() == "11.00"  # ms
 
 
+def test_start_emits_the_entered_grid_and_samples():
+    QApplication.instance() or QApplication([])
+    widget = _keep(AcquisitionThroughputCharacterizationWidget())
+    widget.set_request_defaults((1, 2, 4), 50)
+    requests = []
+    widget.start_requested.connect(lambda values, samples: requests.append((values, samples)))
+
+    widget.edit_n_avg_values.setText("20, 40 60;80")
+    widget.spin_samples_per_point.setValue(200)
+    widget.btn_start.click()
+
+    assert requests == [((20, 40, 60, 80), 200)]
+
+
+def test_unreadable_grid_is_refused_in_the_panel():
+    QApplication.instance() or QApplication([])
+    widget = _keep(AcquisitionThroughputCharacterizationWidget())
+    requests = []
+    widget.start_requested.connect(lambda values, samples: requests.append(values))
+
+    widget.edit_n_avg_values.setText("20, quarante")
+    widget.btn_start.click()
+
+    assert requests == []
+    assert widget.lbl_status.text().startswith("Erreur")
+
+
 def test_result_shows_the_recommendation():
     QApplication.instance() or QApplication([])
     widget = _keep(AcquisitionThroughputCharacterizationWidget())

@@ -27,6 +27,7 @@ logger = logging.getLogger(__name__)
 
 class AcquisitionThroughputCharacterizationPresenter(QObject, IAcquisitionThroughputOutputPort, metaclass=QABCMeta):
     running_changed = Signal(bool)  # True while the sweep runs (button disabled)
+    request_defaults = Signal(object, int)  # default n_avg values, samples per point
     status_message = Signal(str)
     point_measured = Signal(object)  # AcquisitionThroughputPointDTO
     characterization_succeeded = Signal(object)  # AcquisitionThroughputCharacterizationDTO
@@ -38,11 +39,18 @@ class AcquisitionThroughputCharacterizationPresenter(QObject, IAcquisitionThroug
         self._service = service
         service.set_output_port(self)
 
-    @Slot()
-    def on_start_requested(self) -> None:
+    def refresh_state(self) -> None:
+        """Pre-fill the form with the default request (one source: the DTO)."""
+        defaults = AcquisitionThroughputRequestDTO()
+        self.request_defaults.emit(defaults.n_avg_values, defaults.samples_per_point)
+
+    @Slot(object, int)
+    def on_start_requested(self, n_avg_values, samples_per_point: int) -> None:
         self.running_changed.emit(True)
         self.status_message.emit("Caractérisation lancée…")
-        self._service.start_characterization(AcquisitionThroughputRequestDTO())
+        self._service.start_characterization(
+            AcquisitionThroughputRequestDTO(n_avg_values=tuple(n_avg_values), samples_per_point=samples_per_point)
+        )
 
     # -- IAcquisitionThroughputOutputPort (Service -> Presenter) ------------------
 

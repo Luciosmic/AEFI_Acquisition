@@ -8,12 +8,17 @@ Display only: every value comes computed in the DTOs (SI units, converted
 to ms / µV here).
 """
 
+import re
+
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
+    QFormLayout,
     QGroupBox,
     QHeaderView,
     QLabel,
+    QLineEdit,
     QPushButton,
+    QSpinBox,
     QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
@@ -34,16 +39,26 @@ _COLUMNS = (
     "Bruit en 1 s (µV)",
 )
 _EXPLANATION = (
-    "Excitation coupée. Balaye n_avg = 1 → 127 (50 échantillons par point) au réglage ADC courant "
-    "(OSR de l'onglet ADC, enregistré avec le résultat), puis restaure n_avg et l'excitation. "
-    "« Bruit en 1 s » = σ·√période : le bruit atteignable en moyennant une seconde de mesure, "
-    "le critère qui départage débit et moyennage. Dure environ une minute ; l'excitation est "
-    "verrouillée pendant la mesure."
+    "Excitation coupée. Balaye les n_avg ci-dessous au réglage ADC courant (OSR de l'onglet ADC, "
+    "enregistré avec le résultat), puis restaure n_avg et l'excitation. « Bruit en 1 s » = "
+    "σ·√période : le bruit atteignable en moyennant une seconde de mesure. Excitation, flux "
+    "d'acquisition et réglages MCU/ADC sont verrouillés pendant la mesure."
+)
+_GRID_TOOLTIP = (
+    "Valeurs de n_avg séparées par des virgules ou des espaces (1 à 127).\n"
+    "À OSR 4096 (ODR ≈ 1 kHz), un multiple de 20 moyenne un nombre entier de périodes du 50 Hz "
+    "secteur, qui s'annule : ex. 20, 40, 60, 80, 100, 120."
 )
 
 
+def _parse_n_avg_values(text: str):
+    """'1, 2 4;8' -> (1, 2, 4, 8); ValueError on anything else than integers."""
+    return tuple(int(token) for token in re.split(r"[\s,;]+", text.strip()) if token)
+
+
 class AcquisitionThroughputCharacterizationWidget(QGroupBox):
-    start_requested = Signal()
+    # n_avg values (tuple of int), samples per point
+    start_requested = Signal(object, int)
 
     def __init__(self, parent=None):
         super().__init__("Débit et bruit vs n_avg (mesure)", parent)
@@ -54,8 +69,20 @@ class AcquisitionThroughputCharacterizationWidget(QGroupBox):
         explanation.setStyleSheet(_MUTED)
         layout.addWidget(explanation)
 
+        form = QFormLayout()
+        self.edit_n_avg_values = QLineEdit()
+        self.edit_n_avg_values.setToolTip(_GRID_TOOLTIP)
+        form.addRow("n_avg à mesurer :", self.edit_n_avg_values)
+        self.spin_samples_per_point = QSpinBox()
+        self.spin_samples_per_point.setRange(3, 100000)
+        self.spin_samples_per_point.setToolTip(
+            "Échantillons par n_avg. Le bruit est estimé à ±1/√(2(N−1)) près : 50 → ±10 %, 200 → ±5 %."
+        )
+        form.addRow("Échantillons par point :", self.spin_samples_per_point)
+        layout.addLayout(form)
+
         self.btn_start = QPushButton("Mesurer débit et bruit vs n_avg (excitation coupée)")
-        self.btn_start.clicked.connect(self.start_requested.emit)
+        self.btn_start.clicked.connect(self._on_start_clicked)
         layout.addWidget(self.btn_start)
 
         self.lbl_status = QLabel()
@@ -83,10 +110,25 @@ class AcquisitionThroughputCharacterizationWidget(QGroupBox):
         self._points = []
         self._draw(recommended_n_avg=None)
 
+    def _on_start_clicked(self) -> None:
+        try:
+            values = _parse_n_avg_values(self.edit_n_avg_values.text())
+        except ValueError:
+            self.set_status_message(
+                f"Erreur: n_avg illisibles « {self.edit_n_avg_values.text()} » — entiers séparés par des virgules"
+            )
+            return
+        self.start_requested.emit(values, self.spin_samples_per_point.value())
+
     # -- presenter slots ----------------------------------------------------------
 
+    def set_request_defaults(self, n_avg_values, samples_per_point: int) -> None:
+        self.edit_n_avg_values.setText(", ".join(str(n) for n in n_avg_values))
+        self.spin_samples_per_point.setValue(samples_per_point)
+
     def set_running(self, running: bool) -> None:
-        self.btn_start.setEnabled(not running)
+        for widget in (self.btn_start, self.edit_n_avg_values, self.spin_samples_per_point):
+            widget.setEnabled(not running)
         if running:
             self._points = []
             self.table.setRowCount(0)

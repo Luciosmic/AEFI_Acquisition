@@ -225,6 +225,8 @@ def wire_dashboard(
     microcontroller_panel = calibration_panel.hardware_component_panels.get("microcontroller")
     if microcontroller_panel is not None:
         acquisition_throughput_presenter.component_values_measured.connect(microcontroller_panel.prefill_values)
+    acquisition_throughput_presenter.request_defaults.connect(throughput_widget.set_request_defaults)
+    acquisition_throughput_presenter.refresh_state()
     logger.debug("Calibration panel wired")
 
     # Scan Panels Wiring

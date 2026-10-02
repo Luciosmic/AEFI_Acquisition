@@ -46,20 +46,27 @@ class TestAcquisitionThroughputCharacterizationPresenter(unittest.TestCase):
     def test_registers_itself_as_output_port(self):
         self.assertIs(self.service.output_port, self.presenter)
 
-    def test_start_forwards_the_default_request_and_locks(self):
-        self.presenter.on_start_requested()
-        self.assertEqual(len(self.service.requests), 1)
+    def test_start_forwards_the_entered_grid_and_locks(self):
+        self.presenter.on_start_requested([20, 40, 60], 200)
+        request = self.service.requests[0]
+        self.assertEqual((request.n_avg_values, request.samples_per_point), ((20, 40, 60), 200))
         self.assertEqual(self.running, [True])
 
+    def test_refresh_state_offers_the_default_request(self):
+        defaults = []
+        self.presenter.request_defaults.connect(lambda values, samples: defaults.append((values, samples)))
+        self.presenter.refresh_state()
+        self.assertEqual(defaults, [((1, 2, 4, 8, 16, 32, 64, 96, 127), 50)])
+
     def test_success_unlocks_and_forwards_the_component_values(self):
-        self.presenter.on_start_requested()
+        self.presenter.on_start_requested([1, 8], 50)
         self.presenter.present_throughput_characterization_succeeded(RESULT)
         self.assertEqual(self.running, [True, False])
         self.assertEqual(self.values, [{"max_acquisition_rate_per_s": 90.0}])
         self.assertIn("C:/exports/x", self.messages[-1])
 
     def test_failure_unlocks_with_an_error_message(self):
-        self.presenter.on_start_requested()
+        self.presenter.on_start_requested([1, 8], 50)
         self.presenter.present_throughput_characterization_failed("excitation pilotée par : scan")
         self.assertEqual(self.running, [True, False])
         self.assertTrue(self.messages[-1].startswith("Erreur"))

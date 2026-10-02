@@ -10,8 +10,15 @@ recopier des chiffres — et ne voit jamais la courbe qui justifie le choix de
 
 ## Responsibility
 
+- Grille de `n_avg` (texte : entiers séparés par virgules/espaces) et
+  échantillons par point, pré-remplis par le presenter avec la requête par
+  défaut ; une grille illisible est refusée dans le panneau. Ajouté le
+  2026-10-02 : sur le banc, le bruit est dominé par le 50 Hz secteur et il faut
+  mesurer aux zéros du moyennage (multiples de 20 à OSR 4096), absents de la
+  grille par défaut ; l'infobulle le rappelle.
 - Bouton « Mesurer débit et bruit vs n_avg (excitation coupée) » →
-  `start_requested`, désactivé pendant le balayage.
+  `start_requested(n_avg_values, samples_per_point)`, désactivé (avec la
+  grille) pendant le balayage.
 - Tableau rempli au fil des points : `n_avg`, période (ms), débit, conversions
   ADC/s, σ (µV), bruit en 1 s (µV).
 - Deux courbes en fonction de `n_avg` (échelle log2) : débit, et bruit en 1 s ;
