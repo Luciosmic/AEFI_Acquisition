@@ -463,7 +463,8 @@ class ScanExportService:
             }
 
         metadata = {
-            "metadata_schema_version": "0.2-agile",
+            # 0.3: `hardware_settings` (applied AD9106/ADS131A04/MCU settings) replaces `ad9106_last_config`.
+            "metadata_schema_version": "0.3-agile",
             **header,
             "generated_at": datetime.now().isoformat(),
             "export": {

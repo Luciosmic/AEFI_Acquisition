@@ -9,8 +9,12 @@ Responsibility:
     characterization; the latest sensor calibration and source geometry,
     with the sphere positions reconstructed from it (`source_frame_reconstruction`)
     — plus the `warnings` of an incomplete / not characterized configuration;
-  - the last-applied AD9106/motion configs and the probe connection
-    defaults, still read from their on-disk JSON files.
+  - `hardware_settings`: the settings applied to the AD9106, ADS131A04 and
+    MCU (default + last resolved) — n_avg, ADC oversampling, clock dividers,
+    gains, Vref, DDS gains/phases/frequency. Without them an export cannot be
+    reproduced: n_avg and the oversampling set both the noise and the rate;
+  - the last motion config and the probe connection defaults, still read
+    from their on-disk JSON files.
 
 Rationale:
 - The hardware description in an export must be what the system knows
@@ -40,8 +44,12 @@ from domain.calibration.repositories.i_source_geometry_calibration_repository im
 from domain.calibration.value_objects.hardware_component_kind.hardware_component_kind import (
     HardwareComponentKind,
 )
+from infrastructure.hardware.micro_controller.hardware_config_resolution import resolve_config
 
 logger = logging.getLogger(__name__)
+
+HARDWARE_CONFIGS_DIR = Path(".aefi_acquisition/configs")
+HARDWARE_SETTINGS_CHIPS = ("ad9106", "ads131a04", "mcu")
 
 
 def _load_json(path: Path) -> Optional[Dict[str, Any]]:
@@ -85,7 +93,6 @@ class AcquisitionSnapshotReader:
     """Assembles the acquisition context available at scan start."""
 
     SOURCES = {
-        "ad9106_last_config": Path(".aefi_acquisition/configs/ad9106_last_config.json"),
         "motion_last_config": Path(".aefi_acquisition/configs/motion_last_config.json"),
         "electric_field_probe_connection_defaults": Path("config_templates/electric_field_probe_config.json"),
     }
@@ -101,17 +108,49 @@ class AcquisitionSnapshotReader:
         self._source_geometry_calibration_repository = source_geometry_calibration_repository
 
     def read(self) -> Dict[str, Any]:
-        snapshot: Dict[str, Any] = {"hardware_configuration": self._hardware_configuration()}
+        snapshot: Dict[str, Any] = {
+            "hardware_configuration": self._hardware_configuration(),
+            "hardware_settings": self._hardware_settings(),
+        }
         for key, path in self.SOURCES.items():
             content = _load_json(path)
             if content is not None:
                 snapshot[key] = content
         logger.info(
-            "Acquisition snapshot assembled (hardware_configuration + %d/%d config files)",
-            len(snapshot) - 1,
+            "Acquisition snapshot assembled (hardware_configuration + hardware_settings + %d/%d config files)",
+            len(snapshot) - 2,
             len(self.SOURCES),
         )
         return snapshot
+
+    def _hardware_settings(self) -> Dict[str, Any]:
+        """Settings applied to each configurable chip at scan start: default +
+        last config resolved exactly as the hardware composition root and the
+        configurators do (resolve_config, last wins) — n_avg (MCU averaging),
+        ADC oversampling / clock dividers / gains / Vref, DDS gains/phases/frequency.
+        ponytail: synchronous-detection compensation writes DDS phases without
+        persisting them, so `ad9106` shows the uncompensated phases while it is on."""
+        settings: Dict[str, Any] = {
+            "source": "resolved <chip>_default_config.json + <chip>_last_config.json (last wins)",
+        }
+        warnings: List[str] = []
+        for chip in HARDWARE_SETTINGS_CHIPS:
+            layers = []
+            for layer in ("default", "last"):
+                path = HARDWARE_CONFIGS_DIR / f"{chip}_{layer}_config.json"
+                content = _load_json(path) if path.exists() else {}
+                if content is None:
+                    warnings.append(f"{chip}: {path.name} unreadable — applied settings may differ")
+                    content = {}
+                layers.append(content)
+            resolved = resolve_config(*layers)
+            settings[chip] = resolved or None
+            if not resolved:
+                warnings.append(f"{chip}: no config file — applied settings unknown")
+        settings["warnings"] = warnings
+        for warning in warnings:
+            logger.warning("Acquisition snapshot: %s", warning)
+        return settings
 
     def _hardware_configuration(self) -> Dict[str, Any]:
         warnings: List[str] = []
