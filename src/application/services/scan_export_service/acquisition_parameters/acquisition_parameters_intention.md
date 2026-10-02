@@ -93,9 +93,13 @@ valeur (QUDT `QuantityValue`, SensorThings `unitOfMeasurement`, NeXus `@units`) 
 - Code registre : `code` (brut, pour rejouer exactement) + `value`/`unit`
   physiques quand la conversion est connue.
 - Booléens, énumérations et textes restent des valeurs simples, sans unité.
-- Source unique des unités : la spécification des paramètres des configurateurs
-  (Hardware Advanced Config, champ `unit`) — l'interface et l'export disent la
-  même chose.
+- Source unique de la mise en page et des unités : le module de sérialisation
+  1.0 (`infrastructure/persistence/acquisition_throughput/acquisition_parameters_v1_serializer.py`
+  aujourd'hui, à partager entre les trois exports). Les unités du catalogue des
+  composants y sont traduites en UCUM ; une unité sans équivalent est écrite en
+  annotation **et** signalée. UCUM n'a pas d'exposant fractionnaire :
+  `V/√Hz` s'écrit `V/{sqrt_Hz}`.
+- Un compte s'écrit `{sample}` (singulier, comme `{sample}/s`).
 
 ### Dates
 
@@ -140,11 +144,13 @@ exports entre eux (toutes les acquisitions faites avec telle calibration).
   "schema": { "name": "aefi-acquisition-parameters", "version": "1.0" },
 
   "provenance": {                                   // PROV-O : activité, agents
-    "activity": { "id": "…", "kind": "step_scan | time_series",
+    "activity": { "id": "…", "kind": "step_scan | time_series | mcu_throughput_characterization",
                   "started_at": "…", "ended_at": "… | null",
                   "status": "running | completed | failed | cancelled",
-                  "failure_reason": null },
-    "software": { "name": "AEFI Acquisition", "commit": "…", "branch": "…", "dirty": false },
+                  "failure_reason": null,
+                  "exclusive_control": { "owner": "…", "held": ["excitation", "acquisition_stream", …] } },
+    "software": { "name": "AEFI Acquisition", "version": "…", "commit": "…", "branch": "…", "dirty": false,
+                  "hardware_backends": { "motion": "real", "aefi_device": "mock", … } },
     "operator": { "name": "… | null" },
     "generated_at": "…"
   },
@@ -229,6 +235,39 @@ exports entre eux (toutes les acquisitions faites avec telle calibration).
   "warnings": [ { "path": "components.adc.characterization.noise", "message": "not characterized" } ]
 }
 ```
+
+### Compléments 1.0 (première implémentation : balayage de débit MCU, 2026-10-02)
+
+Ajoutés par le sérialiseur du balayage de débit et adoptés pour les trois
+exports :
+
+- **Matériel réel ou simulé** : `provenance.software.hardware_backends`, et un
+  avertissement dès qu'une partie est simulée — sans ça, une mesure en mock est
+  indiscernable d'une mesure du banc.
+- **Contrôle exclusif** : `provenance.activity.exclusive_control` — qui tenait
+  l'excitation, le flux d'acquisition, la configuration avancée.
+- **Fichiers produits** : `data.files[]` = `{name, format, byte_size {value, "By"},
+  sha256, was_generated_by: "provenance.activity"}` (PROV `wasGeneratedBy`). Le
+  document se liste lui-même, sans empreinte.
+- **Repère des données** : `rotation_applied.applies_to_data` — `false` quand les
+  fichiers sont dans le repère du capteur (rotation non appliquée aux valeurs).
+- **Courbes** : `{"abscissa": {name, value: [...], unit}, "ordinate": {value: [...], unit}}`
+  — une unité par axe.
+- **Objet mesuré** : `feature_of_interest.present` — `false` par construction pour
+  une caractérisation de la chaîne (excitation coupée).
+- **Réglages de l'AD9106 par voie** : `digital_gain`, `phase`, `offset`,
+  `constant` (codes), `mode` ; le gain des voies de l'ADC s'appelle aussi
+  `digital_gain` (valeur 1–16, pas un code).
+- **Liaison série** : `components.microcontroller.settings.host_link` = port,
+  débit (`Bd`), latence USB (`ms`) — la latence FTDI fait varier T₀ d'un facteur 3.
+- **Flux d'acquisition** : `measurement_chain.digitization.stream.origin`
+  (`started_by_activity` / `already_running`).
+- **Position du banc** : `measurement_chain.positioning.state.position_at_start` /
+  `position_at_end` ; avertissement si le banc a bougé sans être réservé.
+- **Section non pertinente vs inconnue** : non pertinente → présente, vide, avec
+  `notes` (ex. `auxiliary_probes.uses: []`) ; inconnue → `null` + avertissement.
+- **Langue** : clés et chemins en anglais, messages d'avertissement et `notes`
+  en français (lecteur : l'opérateur).
 
 ### Avertissements
 
