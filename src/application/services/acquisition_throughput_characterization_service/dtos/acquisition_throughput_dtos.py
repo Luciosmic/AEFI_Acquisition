@@ -4,6 +4,8 @@ from typing import Any, Dict, Optional, Tuple
 
 DEFAULT_N_AVG_VALUES = (1, 2, 4, 8, 16, 32, 64, 96, 127)
 DEFAULT_SAMPLES_PER_POINT = 50
+# Order of `values_v` / `noise_v_rms`; also the column names of the export.
+VALUE_CHANNELS = ("x_in_phase", "y_in_phase", "z_in_phase", "x_quadrature", "y_quadrature", "z_quadrature")
 
 
 @dataclass(frozen=True)

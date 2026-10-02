@@ -16,6 +16,7 @@ from application.services.acquisition_throughput_characterization_service.ports.
     IAcquisitionThroughputOutputPort,
 )
 from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
+from application.services.aefi_acquisition_service.dtos.aefi_acquisition_dtos import AefiAcquisitionConfig
 from application.services.excitation_configuration_service.excitation_configuration_service import (
     ExcitationConfigurationService,
 )
@@ -33,6 +34,17 @@ from infrastructure.mocks.adapter_mock_i_excitation_port import MockExcitationPo
 from infrastructure.persistence.acquisition_throughput.fake.fake_acquisition_throughput_export_port import (
     FakeAcquisitionThroughputExportPort,
 )
+from application.services.acquisition_throughput_characterization_service.dtos.acquisition_parameters_dtos import (
+    BenchPositionDTO,
+    HostLinkDTO,
+)
+from infrastructure.acquisition_conditions.fake.fake_acquisition_conditions_port import (
+    FakeAcquisitionConditionsPort,
+    make_bench_conditions,
+)
+from infrastructure.hardware.serial_link.fake.fake_usb_latency_timer_port import FakeUsbLatencyTimerPort
+from infrastructure.provenance.fake.fake_software_provenance_port import FakeSoftwareProvenancePort
+from dataclasses import replace
 
 ADC_OUTPUT_RATE_HZ = 2000.0
 OPERATOR_N_AVG = 127
@@ -64,7 +76,9 @@ class RecordingOutputPort(IAcquisitionThroughputOutputPort):
         self.failed.append(reason)
 
 
-class TestAcquisitionThroughputCharacterization(unittest.TestCase):
+class _SweepFixture(unittest.TestCase):
+    """Simulated MCU stack + fakes for every port; no test of its own."""
+
     def setUp(self):
         self.event_bus = InMemoryEventBus()
         self.excitation_port = MockExcitationPort()
@@ -85,6 +99,9 @@ class TestAcquisitionThroughputCharacterization(unittest.TestCase):
         )
         self.export = FakeAcquisitionThroughputExportPort()
         self.output = RecordingOutputPort()
+        self.conditions = FakeAcquisitionConditionsPort()
+        self.latency = FakeUsbLatencyTimerPort(latency_ms=1.0)
+        self.software = FakeSoftwareProvenancePort()
 
     def _make_service(self, **overrides):
         kwargs = dict(
@@ -95,6 +112,9 @@ class TestAcquisitionThroughputCharacterization(unittest.TestCase):
             task_runner=FakeThreadPoolTaskRunner(),
             event_bus=self.event_bus,
             hardware_configuration=self.hardware_configuration,
+            conditions_port=self.conditions,
+            software_provenance_port=self.software,
+            usb_latency_timer_port=self.latency,
             settle_delay_s=0.0,
             sample_timeout_s=10.0,
         )
@@ -106,6 +126,8 @@ class TestAcquisitionThroughputCharacterization(unittest.TestCase):
     def _run(self, request=AcquisitionThroughputRequestDTO(n_avg_values=GRID, samples_per_point=12), **overrides):
         self._make_service(**overrides).start_characterization(request)
 
+
+class TestAcquisitionThroughputCharacterization(_SweepFixture):
     def test_measures_every_n_avg_and_recovers_the_adc_output_rate(self):
         self._run()
 
@@ -228,6 +250,131 @@ class TestAcquisitionThroughputCharacterization(unittest.TestCase):
         self._run(export_port=FakeAcquisitionThroughputExportPort(fail=True))
         self.assertEqual(len(self.output.succeeded), 1)
         self.assertIsNone(self.output.succeeded[0].export_path)
+
+
+class TestAcquisitionParametersOfTheSweep(_SweepFixture):
+    """2026-10-02: two sweeps could not be put back in context afterwards
+    (USB latency 16 vs 1 ms, stream started by hand?, reference DDS, bench
+    position, software version). Every sweep hands its acquisition
+    parameters to the export port: at the start (running), then at the end."""
+
+    def test_parameters_are_written_at_the_start_then_at_the_end_with_the_files(self):
+        self._run()
+
+        running, completed = self.export.parameters_writes
+        self.assertEqual(running.activity.status, "running")
+        self.assertIsNone(running.activity.ended_at)
+        self.assertEqual(running.files, ())
+        self.assertEqual(completed.activity.status, "completed")
+        self.assertEqual(completed.activity.activity_id, running.activity.activity_id)
+        self.assertLessEqual(completed.activity.started_at, completed.activity.ended_at)
+        self.assertIsNotNone(completed.activity.started_at.tzinfo)  # ISO 8601 with offset downstream
+        self.assertEqual(completed.files, FakeAcquisitionThroughputExportPort.FILES)
+        self.assertEqual(self.export.opened, [(4096, "coupée")])
+
+    def test_request_cut_and_operator_settings_are_recorded(self):
+        request = AcquisitionThroughputRequestDTO(n_avg_values=GRID, samples_per_point=12)
+        self._run(request)
+
+        activity = self.export.last_parameters.activity
+        self.assertEqual(activity.request, request)
+        self.assertEqual((activity.settle_delay_s, activity.sample_timeout_s), (0.0, 10.0))
+        self.assertEqual(activity.excitation_condition.name, "cut")
+        self.assertIn("DDS3/DDS4", activity.excitation_condition.definition)
+        self.assertEqual(activity.operator_excitation.mode, "X_DIR")
+        self.assertEqual(activity.operator_excitation.level_s1_s2_percent, 40.0)
+        self.assertEqual(activity.operator_n_avg, OPERATOR_N_AVG)
+        self.assertIs(activity.n_avg_restored, True)
+        self.assertIs(activity.excitation_restored, True)
+        self.assertEqual(activity.controller, CONTROLLER)
+        self.assertEqual(
+            activity.held_controls,
+            ("excitation", "acquisition_stream", "hardware_configuration:mcu", "hardware_configuration:ads131a04"),
+        )
+
+    def test_conditions_are_read_while_the_excitation_is_cut(self):
+        levels_when_read = []
+        port = self.conditions
+
+        class ReadWhileCut(FakeAcquisitionConditionsPort):
+            def read_conditions(inner_self):
+                params = self.excitation_port.last_parameters
+                levels_when_read.append((params.level_s1_s2.value, params.level_s3_s4.value))
+                return port.read_conditions()
+
+        self.conditions = ReadWhileCut()
+        self._run()
+
+        self.assertEqual(levels_when_read, [(0.0, 0.0)])
+        self.assertEqual(self.export.last_parameters.conditions, make_bench_conditions())
+
+    def test_stream_origin_started_by_the_sweep_or_already_running(self):
+        self._run()
+        self.assertIs(self.export.last_parameters.activity.stream_started_here, True)
+
+        self.acquisition_service.start_acquisition(AefiAcquisitionConfig())
+        self.export = FakeAcquisitionThroughputExportPort()
+        self._run()
+        self.assertIs(self.export.last_parameters.activity.stream_started_here, False)
+        self.acquisition_service.stop_acquisition()
+
+    def test_usb_latency_of_the_mcu_port_and_software_provenance(self):
+        self._run()
+        parameters = self.export.last_parameters
+        self.assertEqual(self.latency.requested_ports, ["COM10"])
+        self.assertEqual(parameters.activity.usb_latency_timer_ms, 1.0)
+        self.assertIs(parameters.software.dirty, False)
+
+    def test_unreadable_latency_is_recorded_as_unknown_with_its_reason(self):
+        self.latency = FakeUsbLatencyTimerPort(failure="registre FTDI illisible")
+        self._run()
+        activity = self.export.last_parameters.activity
+        self.assertIsNone(activity.usb_latency_timer_ms)
+        self.assertEqual(activity.usb_latency_unknown_reason, "registre FTDI illisible")
+
+    def test_unknown_serial_port_is_not_looked_up(self):
+        self.conditions = FakeAcquisitionConditionsPort(conditions=replace(make_bench_conditions(), host_link=HostLinkDTO()))
+        self._run()
+        self.assertEqual(self.latency.requested_ports, [])
+        self.assertIn("port série", self.export.last_parameters.activity.usb_latency_unknown_reason)
+
+    def test_bench_position_at_the_start_and_at_the_end(self):
+        start, end = BenchPositionDTO(10.0, 20.0), BenchPositionDTO(10.0, 25.0)
+        self.conditions = FakeAcquisitionConditionsPort(positions=[start, end])
+        self._run()
+        activity = self.export.last_parameters.activity
+        self.assertEqual((activity.bench_position_start, activity.bench_position_end), (start, end))
+
+    def test_disconnected_motors_leave_the_position_unknown_with_its_reason(self):
+        self.conditions = FakeAcquisitionConditionsPort(position_failure="moteurs non connectés")
+        self._run()
+        activity = self.export.last_parameters.activity
+        self.assertIsNone(activity.bench_position_start)
+        self.assertEqual(activity.bench_position_unknown_reason, "moteurs non connectés")
+
+    def test_a_failed_sweep_records_its_outcome(self):
+        self.averaging = FakeAcquisitionAveragingPort(n_avg=OPERATOR_N_AVG, fail_on_set=True)
+
+        self._run(averaging_port=self.averaging)
+
+        running, failed = self.export.parameters_writes
+        self.assertEqual(failed.activity.status, "failed")
+        self.assertIn("non inscriptible", failed.activity.failure_reason)
+        self.assertIsNotNone(failed.activity.ended_at)
+        self.assertIs(failed.activity.n_avg_restored, False)
+        self.assertEqual(failed.files, ())
+
+    def test_a_refused_sweep_records_nothing(self):
+        self.excitation_service.take_control("scan")
+        self._run()
+        self.assertEqual(self.export.parameters_writes, [])
+        self.assertEqual(self.export.opened, [])
+
+    def test_no_export_location_means_no_parameters_but_the_result_is_shown(self):
+        self.export = FakeAcquisitionThroughputExportPort(fail=True)
+        self._run()
+        self.assertEqual(self.export.parameters_writes, [])
+        self.assertEqual(len(self.output.succeeded), 1)
 
 
 if __name__ == "__main__":

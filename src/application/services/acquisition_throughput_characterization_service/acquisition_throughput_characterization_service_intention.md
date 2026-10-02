@@ -24,6 +24,18 @@ optimal vs n_avg » du microcontrôleur).
   caractériser le point (domaine), le présenter.
 - Fin : ajustement et `n_avg` recommandé (domaine), export brut + résumé,
   pré-remplissage des grandeurs du microcontrôleur (`component_values`).
+- Paramètres d'acquisition (activité PROV) : une fois l'excitation coupée,
+  rassembler par ses ports tout ce qui influence la mesure — conditions
+  matérielles (`IAcquisitionConditionsPort`), provenance du code
+  (`ISoftwareProvenancePort`), latence USB du port du MCU
+  (`IUsbLatencyTimerPort`), position du banc au début et à la fin — plus ce
+  que le balayage fait lui-même (identifiant, début / fin, issue, requête,
+  condition d'excitation et sa définition, contrôles tenus, `n_avg` et
+  excitation de l'opérateur et leur restauration, origine du flux). Les
+  remettre au port d'export en DTO sans format : au démarrage (`running`),
+  puis à la fin (`completed` / `failed`, avec les fichiers écrits). Un
+  balayage refusé (grille, contrôle pris) ne démarre aucune activité : rien
+  n'est écrit.
 - Restaurer quoi qu'il arrive : `n_avg` d'origine, excitation de
   l'opérateur, flux d'acquisition (arrêté s'il a été démarré ici),
   propriété de l'excitation.
@@ -50,3 +62,18 @@ optimal vs n_avg » du microcontrôleur).
   `sample_timeout_s` (par point, 60 s).
 - L'OSR courant est enregistré avec le résultat : la courbe en dépend. Le
   balayer se fait en changeant l'OSR (onglet ADC) puis en relançant.
+- Le 2026-10-02, deux balayages n'ont pas pu être remis dans leur contexte
+  (latence USB 16 ou 1 ms, flux démarré à la main, voies de référence,
+  position, version) : d'où les paramètres d'acquisition. Le service ne
+  connaît **aucun format** : le schéma `acquisition-parameters.json` 1.0
+  (mise en page, unités UCUM, avertissements) vit dans l'infrastructure
+  (`acquisition_parameters_v1_serializer`), sa cause de changement est le
+  format de fichier, pas le use case.
+- La définition de « coupée » (`EXCITATION_CUT`) est portée par le service :
+  c'est lui qui applique la coupure, et elle n'est que le contrat de
+  `ExcitationConfigurationService.mute()` (gains DDS1/DDS2 à 0, phases,
+  modes, fréquence et DDS3/DDS4 inchangés). ponytail: un value object du
+  domaine quand les conditions X, Y, circulaire deviendront un paramètre.
+- Le dossier d'export est créé au démarrage (le document `running` y est
+  écrit) ; s'il ne peut pas l'être, le balayage continue sans export et
+  le résultat reste affiché.

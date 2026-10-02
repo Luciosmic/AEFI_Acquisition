@@ -28,6 +28,9 @@ from application.services.acquisition_throughput_characterization_service.acquis
 from infrastructure.persistence.acquisition_throughput.csv_acquisition_throughput_export_port import (
     CsvAcquisitionThroughputExportPort,
 )
+from infrastructure.acquisition_conditions.acquisition_conditions_reader import AcquisitionConditionsReader
+from infrastructure.hardware.serial_link.ftdi_usb_latency_timer_reader import FtdiUsbLatencyTimerReader
+from infrastructure.provenance.git_software_provenance_reader import GitSoftwareProvenanceReader
 from application.services.source_geometry_calibration_service.source_geometry_calibration_service import SourceGeometryCalibrationService
 from application.services.hardware_component_service.hardware_component_service import HardwareComponentService
 from application.services.event_log_maintenance_service.event_log_maintenance_service import EventLogMaintenanceService
@@ -381,6 +384,21 @@ def main(hardware_config: dict | None = None):
     # Throughput / noise vs MCU n_avg (microcontroller tab of the Calibration panel).
     # Holds the excitation, the acquisition stream and the n_avg / OSR configuration
     # (Hardware Advanced Config) while it runs.
+    # Its acquisition-parameters.json records the conditions: catalog + resolved
+    # chip configs (same snapshot as the scan export), controller memories,
+    # active rotation, phase compensation, serial link, motors, real/mock backends.
+    acquisition_conditions = AcquisitionConditionsReader(
+        snapshot_reader=acquisition_snapshot_port,
+        hardware_component_repository=hardware_component_repository,
+        sensor_calibration_repository=sensor_calibration_repository,
+        active_rotation=sensor_calibration_service.get_active_rotation,
+        compensation_enabled=synchronous_detection_service.is_compensation_enabled,
+        ad9106_memory_state=hw.mcu_root.ad9106_controller.get_memory_state,
+        oversampling_ratio=hw.acquisition_averaging.get_oversampling_ratio,
+        serial_communicator=hw.mcu_root.lifecycle.get_communicator(),
+        motion_port=hw.motion_port,
+        hardware_backends=hardware_config,
+    )
     acquisition_throughput_service = AcquisitionThroughputCharacterizationService(
         excitation_service=excitation_service,
         acquisition_service=continuous_service,
@@ -389,6 +407,9 @@ def main(hardware_config: dict | None = None):
         task_runner=task_runner,
         event_bus=event_bus,
         hardware_configuration=hardware_config_service,
+        conditions_port=acquisition_conditions,
+        software_provenance_port=GitSoftwareProvenanceReader(),
+        usb_latency_timer_port=FtdiUsbLatencyTimerReader(),
     )
     logger.info("Services -> AcquisitionThroughputCharacterizationService created")
 
