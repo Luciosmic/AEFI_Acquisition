@@ -81,6 +81,120 @@ Dans les deux cas : le fake du port motion devra simuler la position encodeur (e
 sinon les tests applicatifs passeront sans rien prouver (standard fidélité des doubles de test).
 Le code hardware se fera dans le worktree `_dev_hardware`.
 
+## Fly-scan : transmission mécanique au domaine, puis projection en direct
+
+**Statut** (2026-10-02) : worktree `dev_scan` (décision Luis : tout se fait ici, y compris calibration et
+hardware). **Phase A commitée** (`f60ebc1`). **Phases B et C faites, non commitées** (décalage demi-rampe retenu) :
+- projection en direct (`FlyScanLineProjector`), vitesse de croisière et rampe lues sur le port moteur ;
+- redessin différé des panneaux de scan : mesuré 53 ms (carte) + 333 ms (profils) par point sur 81×81, l'UI ne
+  suivait que 2,6 points/s ; avec un fil de fond à 26 points/s pendant 10 s, retard 86 s en immédiat, 0,4 s max en
+  différé ;
+- course corrigée dans `EventBusMotionSynchronizer` (fin de mouvement perdue quand elle tombait à l'expiration
+  d'une attente courte — une ligne entière en timeout lors du premier essai dans l'appli) ;
+- appli réelle en mock (`main` + fake Arcus, fast) : fly-scan 81×81 complet en 348 s, 6561/6561 points, 0 point
+  complété en fin de ligne, retard UI médian 12 ms / p99 28 ms / max 1,7 s (pic isolé, non analysé) ;
+- suite : 918 passés.
+Essai banc (2026-10-02, modèle vitesse constante + demi-rampe) : en fast la projection courait devant le moteur
+(3,80 s réelles pour 3,31 s prévues → ~30 mm d'erreur en bout de ligne), ADC réel ~6 échantillons/s (≈11 mm par
+échantillon en fast, ≈3 mm en slow) ; slow : 11,77 s pour 11,62 s. **Décision Luis : placer par les positions
+rapportées par le contrôleur (`PositionUpdated`)**, synchronisation logicielle assumée pour un scan d'exploration.
+Fait (non commité) : `FlyScanLineProjector` sur trace de positions ; sur le stack fidèle (fake Arcus, signal =
+vraie position) erreur médiane 0, p95 ≤ 0,8 mm, max 8,3 mm en fast à 6 Hz — le fake n'a ni rampe ni latence USB,
+la précision réelle reste à voir au banc. Suite : 916 passés.
+
+**Mise à jour 2026-10-02 (soir)** : tout est commité et poussé sur `origin/dev_scan` (fly-scan placé par les
+positions du contrôleur, panneau de scan regroupé, export `flyScan`, course de l'export d'événements corrigée,
+post-traitement par lot étendu aux `flyScan`). `develop` local fusionné dans `dev_scan` et `origin/develop` poussé.
+**Reste** : fusionner `dev_scan` dans `develop` quand le travail en cours sur `develop` (54 fichiers non commités au
+2026-10-02) sera commité — fichiers touchés des deux côtés : `_system/ops/tasks.md`, `hardware_component_kind.py`
+(sections différentes : ADC côté develop, moteurs côté dev_scan), `dashboard_wiring.py`, `main.py`.
+
+### Contexte
+
+Une première version du fly-scan (non commitée) plaçait les mesures **en fin de ligne**, en
+normalisant par la durée mesurée de la ligne. Lancée dans l'appli (mock), elle a fait planter
+l'application au 27e balayage : le journal d'événements s'arrête net en plein balayage, sans
+`ScanFailed`. Cause soupçonnée, **non prouvée** : 81 points envoyés d'un coup à des panneaux
+matplotlib qui redessinent tout à chaque point. Décision Luis : projeter **en direct**, à
+**vitesse constante**, la vitesse venant de la calibration.
+
+Vitesse = facteur de conversion × fréquence de pas du mode (HS). Le facteur n'est pas propre à
+Arcus : il dépend de toute la chaîne (moteur, driver et son réglage, mécanique). Il doit donc
+vivre au domaine, et l'infrastructure ne parle en Hz/pas que chez elle.
+
+**Faits (doc `_system/documentation/hardware_datasheet/motorisation/` + notes Luis)** :
+- Moteur Igus MOT-AN-S-060-035-060-L-A-AAAA : 200 pas/tour, Nennstrom 4,2 A (datasheet ne
+  précise pas efficace ou crête). Pas d'encodeur. Même modèle sur X et Y.
+- Driver TB6600 : 1/16 de pas (3200 impulsions/tour), courant max du driver 3,5 A (4,0 A crête).
+  1/32 ne fonctionne pas ; 3,0 A saute des pas sur les petits mouvements. Plus de dérive depuis
+  le passage au courant max.
+- 21,8 µm/impulsion pour le 1/16 = 43,6 (1/8, « probablement ») ÷ 2 — calculé, pas re-mesuré
+  en 1/16. D'où une avance de 21,8 µm × 200 × 16 = **69,76 mm par tour moteur**.
+- Aujourd'hui le facteur vient de `arcus_default_config.json` (lu par l'adaptateur, modifiable
+  dans le panneau avancé Arcus). **Piège** : si ce fichier manque, l'adaptateur retombe sans
+  rien dire sur sa constante de classe 43,6 (valeur 1/8) → positions fausses ×2.
+- Le type de composant « Moteurs » déclare `step_um`, `max_speed_mm_per_s`,
+  `acceleration_mm_per_s2` : jamais remplis, les deux derniers jamais demandés.
+
+### Phase A — Transmission mécanique au domaine
+
+Modèle calqué sur le capteur : produit au catalogue, montage dans le journal, ce qui dépend de
+l'assemblage sur ce banc dans une calibration banc qui référence les montages par identité.
+
+1. **Catalogue** (`HardwareComponentKind`) :
+   - « Moteurs » : remplacer les 3 grandeurs par `full_steps_per_revolution` (pas/tour) et
+     `rated_current_a` (courant nominal, A).
+   - Nouveau type « Driver pas à pas » (`stepper_driver`) : `max_current_a` (A).
+2. **Calibration banc « transmission mécanique »** (entité de l'agrégat `Calibration`, trio
+   atomique, entrées datées, la plus récente fait foi, comme la géométrie des sources) :
+   montage moteur, montage driver, micro-pas (16), courant réglé (3,5 A) et sa crête (4,0 A),
+   avance par tour moteur (69,76 mm). Une seule transmission pour X et Y.
+3. **Règles domaine** :
+   - µm/impulsion = avance par tour ÷ (pas/tour du moteur × micro-pas) → 21,8.
+   - Courant réglé < courant nominal du moteur → avertissement (non bloquant) affichant les
+     deux valeurs du driver : « 3,5 A (4,0 A crête) < nominal moteur 4,2 A ». Permanent sur ce
+     banc (le TB6600 plafonne sous 4,2 A) : c'est un fait connu, pas une erreur.
+4. **Amorçage sans saisie** : un template versionné `config_templates/` contient moteur,
+   driver et transmission ci-dessus ; au premier démarrage, la composition root les enregistre
+   via les services (même chemin que l'UI, comme la géométrie des sources) et monte moteur et
+   driver.
+5. **Infrastructure** :
+   - `IMotionPort` reçoit le facteur (µm/impulsion) ; la composition root le lui donne au
+     démarrage, avant tout mouvement.
+   - `ArcusAdapter` ne lit plus `arcus_default_config.json` pour le facteur, plus de constante
+     43,6 : **refuse de bouger** tant qu'il n'a pas reçu de facteur.
+   - Retrait de `microns_per_step` du template Arcus et du panneau avancé Arcus.
+   - Le caractériseur de timing lit le facteur courant comme l'appli.
+6. **Export** : la transmission courante (et l'avertissement de courant) dans les métadonnées
+   d'acquisition, à côté des composants.
+
+Hors périmètre de cette phase : onglet UI pour saisir une nouvelle transmission (changer de
+réglage = éditer le template/registre, puis redémarrer) ; contrôleur PMX-4EX non référencé
+(aucune grandeur utile aujourd'hui).
+
+### Phase B — Projection en direct
+
+1. `IMotionPort` expose la vitesse de croisière du mode courant en mm/s (HS lu sur le
+   contrôleur × facteur reçu). Mock : idem.
+2. Domaine : la règle « vitesse constante » remplace la normalisation par durée de ligne —
+   position = début + vitesse × (t − t_départ − décalage) ; dit quel point de grille vient
+   d'être dépassé. **Décision ouverte** : décalage = demi-rampe du mode (recommandé : sans lui,
+   ~16 mm d'erreur en fast, ~5 mm en medium) ou 0.
+3. Boucle fly : chaque point émis dès qu'il est dépassé (interpolation entre les deux
+   échantillons qui encadrent son instant) ; points restants en fin de ligne = dernier
+   échantillon.
+4. Affichage : mesurer le coût de redessin des panneaux, limiter la cadence si nécessaire
+   (fast, pas 2,5 mm → 24 points/s). Attention : `scan_visualization_panel.py`,
+   `dashboard*.py` ont des modifications non commitées qui ne viennent pas de ce chantier.
+
+### Phase C — Vérification
+
+- Suite de tests.
+- **Appli réelle en mode mock** (`main_mock.py`) : un fly-scan complet sur la grille par défaut
+  (81 × 81) sans plantage, carte remplie en direct, avant de dire que ça marche.
+- Limite connue : le fake Arcus ne valide que la plomberie (position linéaire sur tout le
+  déplacement, pas de rampe, pas de latence USB) ; le calage du décalage se fait au banc.
+
 ## Observabilité : migration vers Observability-Driven Design (ODD)
 
 **Statut** : pas commencé — prompt de démarrage prêt ci-dessous, à lancer dans une nouvelle
@@ -182,6 +296,21 @@ a trouvé `adapter_mock_i_motion_port.py::home()` retournant instantanément alo
 vrai driver Arcus a des timeouts de homing mécanique jusqu'à 120s. Non corrigé, laissé
 en advisory. À mentionner si pertinent, pas à traiter dans ce chantier ODD sauf demande
 explicite.
+
+**Mise à jour 2026-10-01 (worktree `dev_scan`, à reporter dans `dev_hardware`)** : la durée des
+*déplacements* est maintenant fidèle. Caractériseur banc
+`infrastructure/hardware/arcus_performax_4EX/characterization/` (360 mouvements, modèle
+`t = t0 + max(|dx|,|dy|)/v`, synthèse commitée dans `results/`) → constantes nommées dans
+`MockMotionPort` (niveau port, exact) et `FakeArcusPerformax4EXController` (niveau contrôleur,
+exact ; vu depuis le port, t0 sous-estimé d'environ 0,19 s faute de latence USB simulée). Restent
+ouverts :
+- `home()` non caractérisé (toujours instantané/0,2 s) ;
+- rampe d'accélération en fast (environ 0,1 s d'erreur sur 2,5 mm) ;
+- **extrapolé de la mesure** (non mesuré directement, déplacements ≤ 100 mm) : en slow, home → (600, 600) dure environ 35 s, au-delà des 30 s de timeout du scan
+  (`wait_for_motion`) et de `ArcusAdapter._internal_wait_until_stopped` (qui publie alors un
+  `MotionCompleted` alors que le moteur roule encore). Reproductible en test avec `MockMotionPort`.
+- LS=0 et DEC=0 relus sur le contrôleur : le `ls=10`/`dec=300` de `arcus_default_config.json` n'est
+  jamais appliqué.
 
 ## Config hardware : source unique de vérité (AD9106+MCU fait, ADS131A04 restant)
 

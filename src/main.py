@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import sys
@@ -33,6 +34,9 @@ from infrastructure.hardware.serial_link.ftdi_usb_latency_timer_reader import Ft
 from infrastructure.provenance.git_software_provenance_reader import GitSoftwareProvenanceReader
 from application.services.source_geometry_calibration_service.source_geometry_calibration_service import SourceGeometryCalibrationService
 from application.services.hardware_component_service.hardware_component_service import HardwareComponentService
+from application.services.mechanical_transmission_calibration_service.mechanical_transmission_calibration_service import (
+    MechanicalTransmissionCalibrationService,
+)
 from application.services.event_log_maintenance_service.event_log_maintenance_service import EventLogMaintenanceService
 from domain.calibration.calibration import Calibration
 from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
@@ -61,6 +65,9 @@ from infrastructure.persistence.calibration.real_source_geometry_calibration_rep
     RealSourceGeometryCalibrationRepository,
 )
 from infrastructure.persistence.calibration.real_hardware_component_repository import RealHardwareComponentRepository
+from infrastructure.persistence.calibration.real_mechanical_transmission_calibration_repository import (
+    RealMechanicalTransmissionCalibrationRepository,
+)
 from infrastructure.hardware.micro_controller.ad9106.adapter_synchronous_detection_ad9106 import (
     AdapterSynchronousDetectionAD9106,
 )
@@ -281,6 +288,39 @@ def main(hardware_config: dict | None = None):
     )
     logger.info("Services -> HardwareComponentService created (hardware signature=%s)", hardware_signature)
 
+    # Mechanical transmission (motor + stepper driver + their setting): the
+    # only source of the mm/pulse conversion the motion controller needs.
+    # First boot: motor and driver are recorded and mounted, then the
+    # transmission, from the versioned template — same service calls as any
+    # other caller, nothing to type in the UI.
+    transmission_seed = json.loads(
+        (repo_root / "config_templates" / "mechanical_transmission_seed.json").read_text(encoding="utf-8")
+    )
+    for kind_key, component in (("motors", transmission_seed["motor"]), ("stepper_driver", transmission_seed["stepper_driver"])):
+        if not hardware_component_service.list_components(kind_key):
+            hardware_component_service.record_characterization(kind_key, component["name"], component["characterization"])
+            hardware_component_service.mount_component(kind_key, component["name"])
+            logger.info("Seeded %s '%s' from mechanical_transmission_seed.json", kind_key, component["name"])
+    transmission_repository = RealMechanicalTransmissionCalibrationRepository()
+    transmission_service = MechanicalTransmissionCalibrationService(
+        transmission_repository, hardware_component_repository, event_bus
+    )
+    if not transmission_repository.find_all():
+        transmission_service.record_calibration(**transmission_seed["transmission"])
+        logger.info("Seeded mechanical transmission from mechanical_transmission_seed.json")
+    transmission = transmission_service.get_current_calibration()
+    if transmission is not None:
+        hw.motion_port.set_microns_per_pulse(transmission.microns_per_pulse)
+        logger.info(
+            "Services -> MechanicalTransmissionCalibrationService: motion set to %.4f µm/pulse (%s, %s, 1/%d)",
+            transmission.microns_per_pulse, transmission.motor_name, transmission.stepper_driver_name, transmission.microsteps,
+        )
+    else:
+        logger.error(
+            "No usable mechanical transmission for the mounted motor/driver — the motion controller has no "
+            "mm/pulse conversion and will refuse to move"
+        )
+
     # Sensor Calibration Service (mounting angles P of the mounted sensor).
     # Each angle calibration references the sensor's current mounting and the
     # current source geometry entry. Also owns the active rotation applied to
@@ -330,6 +370,7 @@ def main(hardware_config: dict | None = None):
         hardware_component_repository=hardware_component_repository,
         sensor_calibration_repository=sensor_calibration_repository,
         source_geometry_calibration_repository=source_geometry_calibration_repository,
+        mechanical_transmission_calibration_repository=transmission_repository,
     )
     # Facts of every acquisition-parameters.json (schema 1.0) — scans, time
     # series and the throughput sweep: catalog + resolved chip configs (snapshot),

@@ -260,8 +260,9 @@ def wire_dashboard(
 
     # Scan Panels Wiring
     scan_control_panel = dashboard.panels["scan_control"]
-    aefi_voltage_map_panel = dashboard.panels["aefi_voltage_map"]
-    electric_field_map_panel = dashboard.panels["electric_field_map"]
+    # Same data, two views: heatmaps and profiles
+    aefi_voltage_panels = (dashboard.panels["aefi_voltage_map"], dashboard.panels["aefi_voltage_profiles"])
+    electric_field_panels = (dashboard.panels["electric_field_map"], dashboard.panels["electric_field_profiles"])
 
     # Control -> Presenter
     scan_control_panel.scan_start_requested.connect(scan_presenter.on_scan_start_requested)
@@ -280,28 +281,30 @@ def wire_dashboard(
 
     # Presenter -> Visualization
     def on_scan_started_viz(scan_id, config):
-        aefi_voltage_map_panel.initialize_scan(
-            config["x_min"], config["x_max"], config["x_nb_points"],
-            config["y_min"], config["y_max"], config["y_nb_points"]
-        )
-        # Channel set depends on the connected probe (mono/bi/tri-axial),
-        # so it's left empty here and populated lazily from the first point.
-        electric_field_map_panel.initialize_scan(
-            config["x_min"], config["x_max"], config["x_nb_points"],
-            config["y_min"], config["y_max"], config["y_nb_points"],
-            channels=[]
-        )
+        if config.get("scan_kind") == "line":
+            init = "initialize_line"
+            geometry = (
+                config["start_x"], config["start_y"],
+                config["end_x"], config["end_y"], config["n_points"],
+            )
+        else:
+            init = "initialize_scan"
+            geometry = (
+                config["x_min"], config["x_max"], config["x_nb_points"],
+                config["y_min"], config["y_max"], config["y_nb_points"],
+            )
+        for panel in aefi_voltage_panels + electric_field_panels:
+            getattr(panel, init)(*geometry)
 
     def on_scan_progress_viz(current, total, data):
-        # data has 'x', 'y', 'value'
-        aefi_voltage_map_panel.update_data_point_from_position(
-            data["x"], data["y"], data["value"]
-        )
+        # data has 'x', 'y', 'value'. Deferred redraw: a panel redraws on its
+        # own timer (and not while hidden), never once per point.
+        for panel in aefi_voltage_panels:
+            panel.update_data_point_from_position(data["x"], data["y"], data["value"], redraw=False)
 
     def on_field_scan_progress_viz(current, total, data):
-        electric_field_map_panel.update_data_point_from_position(
-            data["x"], data["y"], data["value"]
-        )
+        for panel in electric_field_panels:
+            panel.update_data_point_from_position(data["x"], data["y"], data["value"], redraw=False)
 
     scan_presenter.scan_started.connect(on_scan_started_viz)
     scan_presenter.scan_progress.connect(on_scan_progress_viz)

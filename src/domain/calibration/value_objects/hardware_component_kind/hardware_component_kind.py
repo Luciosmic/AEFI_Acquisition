@@ -34,6 +34,7 @@ class HardwareComponentKind(Enum):
     ADC = "adc"
     MICROCONTROLLER = "microcontroller"
     MOTORS = "motors"
+    STEPPER_DRIVER = "stepper_driver"
 
     @property
     def label(self) -> str:
@@ -52,6 +53,7 @@ _LABELS = {
     HardwareComponentKind.ADC: "ADC",
     HardwareComponentKind.MICROCONTROLLER: "Microcontrôleur",
     HardwareComponentKind.MOTORS: "Moteurs",
+    HardwareComponentKind.STEPPER_DRIVER: "Driver pas à pas",
 }
 
 # The essential physical quantities per kind — edit here to add/remove one.
@@ -89,9 +91,14 @@ _QUANTITIES = {
             "optimal_acquisition_rate_per_s", "Débit d'acquisition optimal", "mesures/s", curve_x_label="n_avg"
         ),
     ),
+    # The motor alone: its distance per pulse depends on the whole chain
+    # (driver microstepping, mechanics) — see MechanicalTransmissionCalibrationEntry.
     HardwareComponentKind.MOTORS: (
-        QuantitySpec("step_um", "Pas", "µm/pas"),
-        QuantitySpec("max_speed_mm_per_s", "Vitesse max", "mm/s"),
-        QuantitySpec("acceleration_mm_per_s2", "Accélération", "mm/s²"),
+        QuantitySpec("full_steps_per_revolution", "Pas par tour", "pas/tour"),
+        QuantitySpec("rated_current_a", "Courant nominal", "A"),
+    ),
+    # Product limit only; the current actually set is part of the transmission.
+    HardwareComponentKind.STEPPER_DRIVER: (
+        QuantitySpec("max_current_a", "Courant max", "A"),
     ),
 }

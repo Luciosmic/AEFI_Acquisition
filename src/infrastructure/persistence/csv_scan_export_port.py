@@ -98,7 +98,7 @@ class CsvScanExportPort(IScanExportPort):
         (this device's data + any probe sidecar file, see
         `configure_field_data`) is written into a single acquisition folder
         `<dir>/YYYY-MM-DD_HHMMSS_<kind>_<name>/`, with files named
-        `YYYY-MM-DD_HHMMSS_<kind>_<name>_<device>.csv` (device last), `<kind>` being `stepScan` or `timeSeries`.
+        `YYYY-MM-DD_HHMMSS_<kind>_<name>_<device>.csv` (device last), `<kind>` being `stepScan`, `flyScan` or `timeSeries`.
         """
         # Resolve base directory
         if directory:

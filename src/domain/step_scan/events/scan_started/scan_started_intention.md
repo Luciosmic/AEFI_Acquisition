@@ -7,7 +7,7 @@ Modéliser le démarrage d'un scan comme un fait immuable passé, portant la con
 ## Responsibility
 
 - `scan_id` : identifiant du scan démarré.
-- `config` : `StepScanConfig` complète au moment du démarrage.
+- `config` : config complète au moment du démarrage — `StepScanConfig` (grille) ou `LineScanConfig` (ligne theta). Les consommateurs discriminent par type.
 
 ## Design
 

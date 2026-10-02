@@ -75,7 +75,11 @@ class Dashboard(QWidget):
         self.panels = {
             "scan_control": ScanControlPanel(),
             "aefi_voltage_map": ScanVisualizationPanel(),
-            "electric_field_map": ScanVisualizationPanel(enable_grid_view=False),
+            "aefi_voltage_profiles": ScanVisualizationPanel(profiles=True),
+            # Field channel set depends on the connected probe (mono/bi/tri-axial):
+            # left empty, populated lazily from the first scan point.
+            "electric_field_map": ScanVisualizationPanel(channels=()),
+            "electric_field_profiles": ScanVisualizationPanel(profiles=True, channels=()),
             "aefi_continuous_reading": AefiContinuousReadingPanel(),
             "electric_field_probe": ElectricFieldProbePanel(),
             "motion": MotionPanelCompact(),
@@ -116,10 +120,14 @@ class Dashboard(QWidget):
         # standalone launcher dropdown (see add_action_group call further down).
         panel_metadata = {
             "scan_control": ("Scan Configuration", "Scan"),
-            "aefi_voltage_map": ("AEFI Voltage Map", "Scan"),
-            "electric_field_map": ("Electric Field Map", "Scan"),
+            # "Narda" = UI label for the electric field probe, for now (panel ids keep
+            # the generic electric_field_* naming).
+            "aefi_voltage_map": ("AEFI Voltage Map Plot", "Scan"),
+            "aefi_voltage_profiles": ("AEFI Voltage Profiles Plot", "Scan"),
+            "electric_field_map": ("Narda Map Plot", "Scan"),
+            "electric_field_profiles": ("Narda Profiles Plot", "Scan"),
             "aefi_continuous_reading": ("AEFI Continuous Reading", "Continuous Reading"),
-            "electric_field_probe": ("Electric Field Continuous Reading", "Continuous Reading"),
+            "electric_field_probe": ("Narda Continuous Reading", "Continuous Reading"),
             "motion": ("Motion Control", "Hardware"),
             "excitation": ("Excitation & Lock-In Detection", "Hardware"),
             "hardware_config": ("Hardware Advanced Config", "Hardware"),

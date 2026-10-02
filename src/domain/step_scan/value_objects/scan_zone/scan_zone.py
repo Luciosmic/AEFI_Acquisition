@@ -11,15 +11,11 @@ Rationale:
 Design:
     - Frozen dataclass (immutable)
     - Validates physical limits in __post_init__
-    - TODO: Inject limits from TestBench entity instead of hardcoding
+    - Limits come from shared_kernel.physical_bench_limits (re-exported here)
 """
 from dataclasses import dataclass
 from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
-
-# Physical limits of the test bench (hardcoded for MVP)
-# TODO: Inject from TestBench entity
-PHYSICAL_X_MAX_MM = 1200.0
-PHYSICAL_Y_MAX_MM = 1200.0
+from domain.shared_kernel.physical_bench_limits import PHYSICAL_X_MAX_MM, PHYSICAL_Y_MAX_MM
 
 @dataclass(frozen=True)
 class ScanZone:

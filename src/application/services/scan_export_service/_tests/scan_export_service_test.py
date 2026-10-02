@@ -96,6 +96,34 @@ class FakeExportPort(IScanExportPort):
         self.stopped = True
 
 
+class StrictExportPort(FakeExportPort):
+    """Refuses to record an event while not open, like CsvScanExportPort, and
+    publishes an event from inside start()/stop() — what another thread (ADC
+    sample, motion event) does on the bench while the export opens or closes."""
+
+    def __init__(self, event_bus, output_path):
+        super().__init__(output_path=output_path)
+        self._event_bus = event_bus
+        self.open = False
+        self.refused = []
+
+    def start(self):
+        self._event_bus.publish("racingevent", _make_scan_point_acquired_event())
+        super().start()
+        self.open = True
+
+    def stop(self):
+        self.open = False
+        super().stop()
+        self._event_bus.publish("racingevent", _make_scan_point_acquired_event())
+
+    def write_event(self, event):
+        if not self.open:
+            self.refused.append(event)
+            raise RuntimeError("write_event() on a port that is not open")
+        super().write_event(event)
+
+
 class FakePostProcessingPort(IPostProcessingPort):
     """Records `run()` calls instead of driving the real post-processor."""
 
@@ -106,7 +134,7 @@ class FakePostProcessingPort(IPostProcessingPort):
         self.calls.append((csv_path, hdf5_path))
 
 
-def _make_scan_started_event():
+def _make_scan_started_event(fly_scan=False):
     zone = ScanZone(x_min=435.0, x_max=835.0, y_min=435.0, y_max=835.0)
     config = StepScanConfig(
         scan_zone=zone,
@@ -117,6 +145,7 @@ def _make_scan_started_event():
         averaging_per_position=10,
         measurement_uncertainty=MeasurementUncertainty(max_uncertainty_volts=1e-6),
         scan_axis=ScanAxis.Y,
+        fly_scan=fly_scan,
     )
     return ScanStarted(scan_id=uuid4(), config=config)
 
@@ -222,6 +251,32 @@ class TestScanExportServiceMetadata(unittest.TestCase):
         activity = self.export_port.parameters[0].activity
         self.assertIn("non câblé", activity.bench_position_unknown_reason)
         self.assertIn("non câblé", activity.usb_latency_unknown_reason)
+
+    def test_files_are_tagged_step_scan_or_fly_scan(self):
+        self.event_bus.publish("scanstarted", _make_scan_started_event())
+        self.assertEqual(self.export_port.configured["acquisition_kind"], "stepScan")
+
+        self.event_bus.publish("scanstarted", _make_scan_started_event(fly_scan=True))
+        self.assertEqual(self.export_port.configured["acquisition_kind"], "flyScan")
+        self.assertTrue(self.export_port.metadata["scan"]["fly_scan"])
+
+    def test_line_scan_metadata_describes_the_line(self):
+        from domain.step_scan.value_objects.line_scan_config.line_scan_config import LineScanConfig
+        config = LineScanConfig(
+            center=Position2D(600.0, 600.0), length_mm=100.0, n_points=11, theta_deg=90.0,
+            stabilization_delay_ms=300, averaging_per_position=10,
+        )
+        self.event_bus.publish("scanstarted", ScanStarted(scan_id=uuid4(), config=config))
+
+        scan = self.export_port.metadata["scan"]
+        self.assertEqual(scan["scan_kind"], "line")
+        self.assertEqual(scan["theta_deg"], 90.0)
+        self.assertEqual(scan["length_mm"], 100.0)
+        self.assertEqual(scan["total_points"], 11)
+        self.assertAlmostEqual(scan["start_y"], 550.0)
+        self.assertAlmostEqual(scan["end_y"], 650.0)
+        self.assertEqual(scan["averaging_per_position"], 10)
+        self.assertEqual(self.export_port.metadata["export"]["units"]["theta_deg"], "deg")
 
     def test_probe_connection_event_is_cached_into_next_metadata(self):
         probe = ElectricFieldProbe(
@@ -411,6 +466,38 @@ class TestTimeSeriesExport(unittest.TestCase):
         _publish_reading(self.event_bus, n_samples=2)
 
         self.assertEqual(len(self.export_port.points), 1)
+
+
+class _EmptySnapshotPort(IAcquisitionSnapshotPort):
+    def read(self) -> Dict[str, Any]:
+        return {}
+
+
+class TestScanExportServiceEventRecordingRace(unittest.TestCase):
+    """An event landing while the scan export opens or closes is not written
+    into a port that is not open (it raised and logged an ERROR on the bench)."""
+
+    def test_events_racing_the_export_open_and_close_are_not_written_to_closed_ports(self):
+        bus = InMemoryEventBus()
+        csv_port = StrictExportPort(bus, Path("/fake/scan.csv"))
+        hdf5_port = StrictExportPort(bus, Path("/fake/scan.h5"))
+        service = ScanExportService(
+            bus,
+            csv_export_port=csv_port,
+            hdf5_export_port=hdf5_port,
+            excitation_service=ExcitationConfigurationService(MockExcitationPort(), bus),
+            acquisition_snapshot_port=_EmptySnapshotPort(),
+            task_runner=FakeThreadPoolTaskRunner(),
+        )
+        service.configure_export(ExportConfigDTO(enabled=True, output_directory="", filename_base="scan"))
+
+        started = _make_scan_started_event()
+        bus.publish("scanstarted", started)
+        bus.publish("scanfailed", ScanFailed(scan_id=started.scan_id, reason="motion error"))
+
+        self.assertEqual(csv_port.refused + hdf5_port.refused, [])
+        self.assertTrue(csv_port.stopped and hdf5_port.stopped)
+        self.assertIsInstance(csv_port.events[-1], ScanFailed)  # finishing event still recorded
 
 
 class TestScanExportServiceZeroPointCleanup(unittest.TestCase):

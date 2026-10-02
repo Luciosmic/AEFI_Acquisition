@@ -15,11 +15,10 @@ from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
 class TestArcusUnitConversion(unittest.TestCase):
     def setUp(self):
         self.adapter = ArcusAdapter()
+        self.adapter.set_microns_per_pulse(21.8)  # bench transmission (1/16 microstepping)
         self.mock_controller = MagicMock(spec=ArcusPerformax4EXController)
         self.adapter.set_controller(self.mock_controller)
 
-        # Read calibration constants from the adapter instance after __init__
-        # so the test stays consistent even if the config file changes.
         self.MM_PER_STEP = self.adapter.MM_PER_STEP
         self.STEPS_PER_MM = self.adapter.STEPS_PER_MM
 

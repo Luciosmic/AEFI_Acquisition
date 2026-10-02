@@ -44,6 +44,12 @@ from domain.calibration.services.source_frame_solver.source_frame_solver import 
 from domain.calibration.events.source_geometry_calibration_entry_added.source_geometry_calibration_entry_added import (
     SourceGeometryCalibrationEntryAdded,
 )
+from domain.calibration.entities.mechanical_transmission_calibration_entry.mechanical_transmission_calibration_entry import (
+    MechanicalTransmissionCalibrationEntry,
+)
+from domain.calibration.events.mechanical_transmission_calibration_entry_added.mechanical_transmission_calibration_entry_added import (
+    MechanicalTransmissionCalibrationEntryAdded,
+)
 from domain.calibration.entities.hardware_component_characterization_entry.hardware_component_characterization_entry import (
     HardwareComponentCharacterizationEntry,
 )
@@ -130,6 +136,53 @@ class Calibration:
         self._domain_events.append(SourceGeometryCalibrationEntryAdded(entry=entry))
         return entry
 
+    def record_mechanical_transmission_calibration_entry(
+        self,
+        motor_mounting_id: Optional[UUID],
+        stepper_driver_mounting_id: Optional[UUID],
+        microsteps: int,
+        driver_current_a: float,
+        driver_peak_current_a: float,
+        travel_per_motor_revolution_mm: float,
+    ) -> MechanicalTransmissionCalibrationEntry:
+        """A transmission is set up with a mounted motor and a mounted
+        driver: either missing, no transmission."""
+        if motor_mounting_id is None:
+            raise ValueError("No motor mounted: mount the motor (Moteurs tab) before recording the transmission")
+        if stepper_driver_mounting_id is None:
+            raise ValueError(
+                "No stepper driver mounted: mount the driver (Driver pas à pas tab) before recording the transmission"
+            )
+        entry = MechanicalTransmissionCalibrationEntry.single(
+            motor_mounting_id,
+            stepper_driver_mounting_id,
+            microsteps,
+            driver_current_a,
+            driver_peak_current_a,
+            travel_per_motor_revolution_mm,
+        )
+        self._domain_events.append(MechanicalTransmissionCalibrationEntryAdded(entry=entry))
+        return entry
+
+    @staticmethod
+    def current_mechanical_transmission(
+        entries: Sequence[MechanicalTransmissionCalibrationEntry],
+        motor_mounting_id: Optional[UUID],
+        stepper_driver_mounting_id: Optional[UUID],
+    ) -> Optional[MechanicalTransmissionCalibrationEntry]:
+        """The current transmission is the latest one set up with the motor
+        and driver mounted now: after a swap, the old setting no longer
+        holds. None if there is none."""
+        current = None
+        for entry in entries:  # recording order breaks timestamp ties (coarse Windows clock)
+            if (
+                entry.motor_mounting_id == motor_mounting_id
+                and entry.stepper_driver_mounting_id == stepper_driver_mounting_id
+                and (current is None or entry.recorded_at >= current.recorded_at)
+            ):
+                current = entry
+        return current
+
     def record_hardware_component_characterization(
         self,
         kind: HardwareComponentKind,
@@ -170,9 +223,11 @@ class Calibration:
     @staticmethod
     def current_mounting(selections: Sequence[HardwareComponentSelection]) -> Optional[HardwareComponentSelection]:
         """The current mounting is the latest selection; None if none ever made."""
-        if not selections:
-            return None
-        return max(selections, key=lambda s: s.selected_at)
+        current = None
+        for selection in selections:  # recording order breaks timestamp ties (coarse Windows clock)
+            if current is None or selection.selected_at >= current.selected_at:
+                current = selection
+        return current
 
     @staticmethod
     def mounted_component_name(selections: Sequence[HardwareComponentSelection]) -> Optional[HardwareComponentName]:

@@ -40,6 +40,15 @@ class TestStepScanEvents(unittest.TestCase):
         self.assertEqual(events[0].scan_id, self.scan.id)
         self.assertEqual(events[0].config, self.config)
 
+    def test_start_with_line_config(self):
+        from domain.step_scan.value_objects.line_scan_config.line_scan_config import LineScanConfig
+        line = LineScanConfig(center=Position2D(600.0, 600.0), length_mm=100.0, n_points=7, theta_deg=30.0)
+        self.scan.start(line)
+        events = self.scan.domain_events
+        self.assertEqual(self.scan.expected_points, 7)
+        self.assertIsInstance(events[0], ScanStarted)
+        self.assertEqual(events[0].config, line)
+
     def test_add_point_emits_event(self):
         print("\n=== Testing Add Point Event ===")
         self.scan.start(self.config)

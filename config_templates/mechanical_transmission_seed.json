@@ -1,0 +1,22 @@
+{
+    "description": "First mechanical transmission of the bench, recorded once on first boot (motor and stepper driver in the component catalog, mounted; then the transmission). Source: _system/documentation/hardware_datasheet/motorisation/ (Moteur_Igus.txt, TB6600_Working_Configuration.md). Same motor, driver and setting on X and Y.",
+    "motor": {
+        "name": "Igus MOT-AN-S-060-035-060-L-A-AAAA",
+        "characterization": {
+            "full_steps_per_revolution": 200,
+            "rated_current_a": 4.2
+        }
+    },
+    "stepper_driver": {
+        "name": "TB6600",
+        "characterization": {
+            "max_current_a": 3.5
+        }
+    },
+    "transmission": {
+        "microsteps": 16,
+        "driver_current_a": 3.5,
+        "driver_peak_current_a": 4.0,
+        "travel_per_motor_revolution_mm": 69.76
+    }
+}

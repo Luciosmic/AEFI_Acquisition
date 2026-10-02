@@ -18,6 +18,7 @@ from __future__ import annotations
 import logging
 import shutil
 from dataclasses import replace
+import threading
 from datetime import datetime
 from pathlib import Path
 from typing import Optional, Dict, Any, List
@@ -44,6 +45,7 @@ from .ports.i_post_processing_port import IPostProcessingPort
 from application.shared.ports.i_async_task_runner import IAsyncTaskRunner
 
 from domain.step_scan.events.scan_started.scan_started import ScanStarted
+from domain.step_scan.value_objects.line_scan_config.line_scan_config import LineScanConfig
 from domain.step_scan.events.scan_point_acquired.scan_point_acquired import ScanPointAcquired
 from domain.step_scan.events.scan_completed.scan_completed import ScanCompleted
 from domain.step_scan.events.scan_failed.scan_failed import ScanFailed
@@ -107,6 +109,10 @@ class ScanExportService:
         self._post_processing_port = post_processing_port
         self._task_runner = task_runner
         self._active_ports: List[IScanExportPort] = []
+        # Events come from several threads (ADC worker, motion worker, scan
+        # loop): the recorder must never see a port that is not open yet, or
+        # write into one being closed by another thread.
+        self._events_lock = threading.RLock()
 
         self._config: Optional[ExportConfigDTO] = None
         self._export_active: bool = False  # True between ScanStarted and completion/failure/cancel
@@ -206,9 +212,12 @@ class ScanExportService:
         Relies on the bus dispatching "*" subscribers after typed ones: the
         export is already open when ScanStarted reaches here, and already
         closed for the finishing event (written by _close_export).
-        `_active_ports` is empty whenever no export is open."""
-        for port in self._active_ports:
-            port.write_event(event)
+        `_active_ports` only lists open ports: filled once they are started,
+        emptied before they are closed — an event from another thread landing
+        while a scan export opens or closes is simply not recorded."""
+        with self._events_lock:
+            for port in self._active_ports:
+                port.write_event(event)
 
     def _handle_scan_started(self, event: ScanStarted) -> None:
         logger.info("Handling ScanStarted. scan_id=%s, config present: %s", event.scan_id, self._config is not None)
@@ -224,11 +233,11 @@ class ScanExportService:
             return
 
         # Every scan is exported to both formats simultaneously.
-        self._active_ports = [self._csv_export_port, self._hdf5_export_port]
+        ports = [self._csv_export_port, self._hdf5_export_port]
 
         directory = self._config.output_directory
         # Scan name only — each export port builds its own acquisition folder
-        # and per-device filenames (timestamp_stepScan_<device>_<name>) from it.
+        # and per-device filenames (timestamp_<stepScan|flyScan>_<device>_<name>) from it.
         filename_base = self._config.filename_base
         # Shared across both ports so CSV and HDF5 land in the same
         # acquisition folder (the post-processing trigger needs both files
@@ -248,10 +257,15 @@ class ScanExportService:
         parameters = self._start_parameters(
             str(event.scan_id), STEP_SCAN, self._config, self._step_scan_procedure(event)
         )
-        for port in self._active_ports:
-            port.configure(directory, filename_base, metadata, timestamp=timestamp)
+        # Folder/file tag: a fly scan is an exploration map, not a measurement —
+        # its files must not be mistaken for a step scan's.
+        acquisition_kind = "flyScan" if getattr(event.config, "fly_scan", False) else "stepScan"
+        for port in ports:
+            port.configure(directory, filename_base, metadata, timestamp=timestamp, acquisition_kind=acquisition_kind)
             port.start()
             port.write_acquisition_parameters(parameters)
+        with self._events_lock:  # visible to the event recorder only once open
+            self._active_ports = ports
         self._export_active = True
         self._points_written = 0
         # Reset per-scan field-export state — must not leak into a new scan
@@ -327,7 +341,8 @@ class ScanExportService:
         )
         port.start()
         port.write_acquisition_parameters(self._start_parameters(str(event.acquisition_id), TIME_SERIES, config))
-        self._active_ports = [port]
+        with self._events_lock:  # visible to the event recorder only once open
+            self._active_ports = [port]
         self._time_series_active = True
         self._time_series_t0 = None
         self._points_written = 0
@@ -364,9 +379,12 @@ class ScanExportService:
         """Write the finishing event, close every active port, and drop the
         acquisition folder if nothing was written. Returns each active port's
         output path, in `_active_ports` order."""
+        # Hidden from the event recorder before closing: an event from another
+        # thread can no longer reach a port being stopped.
+        with self._events_lock:
+            ports, self._active_ports = self._active_ports, []
         # Read before stop() — ports clear their path once closed.
-        paths = [port.get_output_path() for port in self._active_ports]
-        ports = list(self._active_ports)
+        paths = [port.get_output_path() for port in ports]
         finished = self._finish_parameters(event)
         try:
             for port in ports:
@@ -426,12 +444,33 @@ class ScanExportService:
     def _build_metadata(self, event: ScanStarted) -> Dict[str, Any]:
         """Extract basic metadata from the scan configuration."""
         cfg = event.config
+        if isinstance(cfg, LineScanConfig):
+            start, end = cfg.endpoints()
+            return {
+                "scan_id": str(event.scan_id),
+                "scan_kind": "line",
+                "center_x": cfg.center.x,
+                "center_y": cfg.center.y,
+                "length_mm": cfg.length_mm,
+                "theta_deg": cfg.theta_deg,
+                "start_x": start.x,
+                "start_y": start.y,
+                "end_x": end.x,
+                "end_y": end.y,
+                "stabilization_delay_ms": cfg.stabilization_delay_ms,
+                "averaging_per_position": cfg.averaging_per_position,
+                "total_points": cfg.total_points(),
+            }
+
         zone = cfg.scan_zone
 
         return {
             "scan_id": str(event.scan_id),
             "pattern": cfg.scan_pattern.name,
             "scan_axis": cfg.scan_axis.name,
+            # True = exploration map (positions interpolated at constant
+            # speed, no averaging) — not to be read as a measurement.
+            "fly_scan": cfg.fly_scan,
             "x_min": zone.x_min,
             "x_max": zone.x_max,
             "x_nb_points": cfg.x_nb_points,
