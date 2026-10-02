@@ -96,6 +96,9 @@ from interface.presenters.acquisition_throughput_characterization_presenter impo
 from interface.presenters.source_geometry_calibration_presenter import SourceGeometryCalibrationPresenter
 from interface.presenters.hardware_component_presenter import HardwareComponentPresenter
 from interface.presenters.event_log_presenter import EventLogPresenter
+from interface.presenters.operator_presenter import OperatorPresenter
+from application.services.operator_service.operator_service import OperatorService
+from infrastructure.persistence.operator_registry.real_operator_repository import RealOperatorRepository
 from interface.presenters.adc_output_rate_characterization_presenter import AdcOutputRateCharacterizationPresenter
 from application.services.adc_output_rate_characterization_service.adc_output_rate_characterization_service import (
     AdcOutputRateCharacterizationService,
@@ -507,6 +510,10 @@ def main(hardware_config: dict | None = None):
     )
 
     # 10. Wire Presenters to Panels
+    # Operators registry (.aefi_acquisition/operators/) — chosen in the Scan and
+    # Continuous Reading panels, exported in acquisition-parameters.json.
+    operator_presenter = OperatorPresenter(OperatorService(RealOperatorRepository(), event_bus), event_bus)
+
     wire_dashboard(
         dashboard,
         motion_presenter,
@@ -522,6 +529,7 @@ def main(hardware_config: dict | None = None):
         event_log_presenter,
         acquisition_throughput_presenter,
         adc_output_rate_presenter,
+        operator_presenter,
     )
 
     # 11. Startup Sequence (hardware init if real hardware) or Direct Launch (if mocks only)

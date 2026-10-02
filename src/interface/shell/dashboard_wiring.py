@@ -30,6 +30,7 @@ from interface.presenters.acquisition_throughput_characterization_presenter impo
 )
 from interface.presenters.adc_output_rate_characterization_presenter import AdcOutputRateCharacterizationPresenter
 from interface.presenters.event_log_presenter import EventLogPresenter
+from interface.presenters.operator_presenter import OperatorPresenter
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +50,7 @@ def wire_dashboard(
     event_log_presenter: EventLogPresenter,
     acquisition_throughput_presenter: AcquisitionThroughputCharacterizationPresenter,
     adc_output_rate_presenter: AdcOutputRateCharacterizationPresenter,
+    operator_presenter: OperatorPresenter,
 ) -> None:
     """Connect every dashboard panel to its presenter. Called once from
     main.py right after the dashboard and presenters are constructed."""
@@ -62,6 +64,18 @@ def wire_dashboard(
     event_log_presenter.summary_updated.connect(logs_panel.set_event_log_summary)
     event_log_presenter.purge_confirmation_needed.connect(logs_panel.confirm_purge)
     event_log_presenter.refresh()
+
+    # Operator of an acquisition — one registry, one selector per panel that
+    # starts an exported acquisition (Scan, Continuous Reading).
+    for selector in (
+        dashboard.panels["scan_control"].operator_selector,
+        dashboard.panels["aefi_continuous_reading"].operator_selector,
+    ):
+        selector.register_requested.connect(operator_presenter.on_register_requested)
+        operator_presenter.operators_listed.connect(selector.set_operators)
+        operator_presenter.operator_registered.connect(selector.on_operator_registered)
+        operator_presenter.registration_failed.connect(selector.on_registration_failed)
+    operator_presenter.refresh_state()
 
     # Motion Panel
     motion_panel = dashboard.panels["motion"]

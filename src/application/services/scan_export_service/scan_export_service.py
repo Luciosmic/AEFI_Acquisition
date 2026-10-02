@@ -491,6 +491,7 @@ class ScanExportService:
             held_controls=("excitation",) if owner else (),
             procedure=procedure,
             measured_object=config.measured_object.strip() or None,
+            operator_id=config.operator_id or None,
             operator=config.operator.strip() or None,
             probe=ElectricFieldProbeDTO(
                 brand=probe.brand, model=probe.model, serial_number=probe.serial_number,

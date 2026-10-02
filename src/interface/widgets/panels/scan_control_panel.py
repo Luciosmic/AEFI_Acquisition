@@ -3,6 +3,7 @@ from PySide6.QtWidgets import (
     QLineEdit, QComboBox, QPushButton, QGroupBox, QFormLayout,
     QCheckBox, QFileDialog, QGridLayout
 )
+from interface.widgets.operator_selector.operator_selector import OperatorSelector
 from PySide6.QtCore import Signal
 from pathlib import Path
 
@@ -175,16 +176,15 @@ class ScanControlPanel(QWidget):
 
         # Traceability, written in acquisition-parameters.json; empty = flagged
         # as missing in the document. Kept for the session, never saved.
+        # The operator is chosen from the registry (wired to OperatorPresenter).
         self.input_measured_object = QLineEdit("")
         self.input_measured_object.setPlaceholderText("ex. bouteille d'eau, 8 mm des sphères, 350 kΩ")
         self.input_measured_object.setToolTip("Objet mesuré — écrit dans acquisition-parameters.json (feature_of_interest)")
-        self.input_operator = QLineEdit("")
-        self.input_operator.setPlaceholderText("nom")
-        self.input_operator.setToolTip("Opérateur — écrit dans acquisition-parameters.json (provenance.operator)")
+        self.operator_selector = OperatorSelector()
         export_grid.addWidget(QLabel("Objet mesuré:"), 2, 0)
         export_grid.addWidget(self.input_measured_object, 2, 1, 1, 3)
         export_grid.addWidget(QLabel("Opérateur:"), 3, 0)
-        export_grid.addWidget(self.input_operator, 3, 1, 1, 3)
+        export_grid.addWidget(self.operator_selector, 3, 1, 1, 3)
 
         layout.addWidget(export_group)
 
@@ -236,6 +236,7 @@ class ScanControlPanel(QWidget):
 
     def _on_start_clicked(self):
         """Gather parameters and emit signal."""
+        operator = self.operator_selector.current_operator()
         params = {
             "x_min": self.input_x_min.text(),
             "x_max": self.input_x_max.text(),
@@ -253,7 +254,8 @@ class ScanControlPanel(QWidget):
             "export_output_directory": self.input_export_directory.text(),
             "export_filename_base": self.input_export_filename.text(),
             "measured_object": self.input_measured_object.text(),
-            "operator": self.input_operator.text(),
+            "operator_id": operator.operator_id if operator else "",
+            "operator": operator.name if operator else "",
         }
         self.scan_start_requested.emit(params)
 

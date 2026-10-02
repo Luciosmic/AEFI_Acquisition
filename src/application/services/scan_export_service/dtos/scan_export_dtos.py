@@ -15,6 +15,8 @@ class ExportConfigDTO:
     filename_base: str
     include_metadata: bool = True
     # Written in acquisition-parameters.json (feature_of_interest.description,
-    # provenance.operator.name) — empty = declared missing, never guessed.
+    # provenance.operator {id, name}) — empty = declared missing, never guessed.
+    # The operator comes from the operators registry (OperatorService).
     measured_object: str = ""
+    operator_id: str = ""
     operator: str = ""

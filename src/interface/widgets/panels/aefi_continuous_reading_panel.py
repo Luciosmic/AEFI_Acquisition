@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QLineEdit,
 )
+from interface.widgets.operator_selector.operator_selector import OperatorSelector
 from PySide6.QtCore import Qt, Signal
 import pyqtgraph as pg  # type: ignore[import]
 
@@ -121,11 +122,9 @@ class AefiContinuousReadingPanel(QWidget):
         self.input_measured_object = QLineEdit("")
         self.input_measured_object.setPlaceholderText("objet mesuré")
         self.input_measured_object.setToolTip("Objet mesuré — écrit dans acquisition-parameters.json (feature_of_interest)")
-        self.input_operator = QLineEdit("")
-        self.input_operator.setPlaceholderText("opérateur")
-        self.input_operator.setToolTip("Opérateur — écrit dans acquisition-parameters.json (provenance.operator)")
+        self.operator_selector = OperatorSelector()  # registry, wired to OperatorPresenter
         l_ctrl.addWidget(self.input_measured_object, 2, 0, 1, 2)
-        l_ctrl.addWidget(self.input_operator, 2, 2)
+        l_ctrl.addWidget(self.operator_selector, 2, 2)
         controls_layout.addWidget(grp_ctrl)
 
         # 2. Display: scale + Y mode, fixed calibre underneath (Oscillo only)
@@ -304,12 +303,14 @@ class AefiContinuousReadingPanel(QWidget):
 
     def _on_start_clicked(self):
         """Gather parameters and emit signal."""
+        operator = self.operator_selector.current_operator()
         params = {
             "max_duration_s": None,  # Infinite duration
             "export_enabled": self.chk_export.isChecked(),
             "export_filename_base": self.input_export_filename.text(),
             "measured_object": self.input_measured_object.text(),
-            "operator": self.input_operator.text(),
+            "operator_id": operator.operator_id if operator else "",
+            "operator": operator.name if operator else "",
         }
         self.lbl_status.setText("Running...")
         self.btn_start.setEnabled(False)

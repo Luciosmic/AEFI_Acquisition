@@ -38,7 +38,7 @@ def serialize_scan_acquisition_parameters_v1(
         status=activity.status, failure_reason=activity.failure_reason,
         owner=activity.owner, held_controls=activity.held_controls,
         software=parameters.software, conditions=conditions, generated_at=generated_at, warn=warn,
-        operator_name=activity.operator,
+        operator_name=activity.operator, operator_id=activity.operator_id,
     )
     # Typed by the operator at start (Scan / Continuous Reading panels); empty = warning.
     feature_of_interest = v1.feature_of_interest(

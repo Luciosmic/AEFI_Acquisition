@@ -77,6 +77,7 @@ class ScanActivityDTO:
     held_controls: Tuple[str, ...]
     procedure: Optional[StepScanProcedureDTO] = None
     measured_object: Optional[str] = None  # as typed by the operator at start (None = not described)
+    operator_id: Optional[str] = None  # from the operators registry
     operator: Optional[str] = None
     probe: Optional[ElectricFieldProbeDTO] = None
     bench_position_start: Optional[BenchPositionDTO] = None

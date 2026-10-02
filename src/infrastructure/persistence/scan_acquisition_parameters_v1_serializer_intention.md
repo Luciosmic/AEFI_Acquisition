@@ -29,6 +29,6 @@ USB. Un scan exporté ne pouvait pas être rejoué à l'identique.
 - Fonction pure, sans I/O. `CsvScanExportPort` l'appelle au démarrage puis
   après la fermeture de tous les fichiers (qu'il liste et hache).
 - Tensions exportées dans le repère du capteur : `applies_to_data: false`.
-- Objet mesuré et opérateur : saisis au lancement (panneaux Scan et
-  Continuous Reading, `ExportConfigDTO.measured_object` / `operator`) ; un
-  champ vide est signalé en avertissement, jamais omis en silence.
+- Objet mesuré (saisi) et opérateur (choisi dans le registre des opérateurs,
+  `provenance.operator {id, name}`) viennent du lancement (panneaux Scan et
+  Continuous Reading, `ExportConfigDTO`) ; vide = avertissement, jamais omis.

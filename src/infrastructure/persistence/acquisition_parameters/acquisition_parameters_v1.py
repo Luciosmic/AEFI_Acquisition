@@ -109,6 +109,7 @@ def provenance(
     generated_at: datetime,
     warn: Warn,
     operator_name: Optional[str] = None,
+    operator_id: Optional[str] = None,
 ) -> Dict[str, Any]:
     if ended_at is None:
         warn(
@@ -146,7 +147,7 @@ def provenance(
             "dirty": software.dirty,
             "hardware_backends": dict(conditions.hardware_backends),
         },
-        "operator": {"name": operator_name or None},
+        "operator": {"id": operator_id or None, "name": operator_name or None},
         "generated_at": iso(generated_at),
     }
 

@@ -155,7 +155,7 @@ exports entre eux (toutes les acquisitions faites avec telle calibration).
                   "exclusive_control": { "owner": "…", "held": ["excitation", "acquisition_stream", …] } },
     "software": { "name": "AEFI Acquisition", "version": "…", "commit": "…", "branch": "…", "dirty": false,
                   "hardware_backends": { "motion": "real", "aefi_device": "mock", … } },
-    "operator": { "name": "… | null" },
+    "operator": { "id": "<operators registry id> | null", "name": "… | null" },
     "generated_at": "…"
   },
 
@@ -310,6 +310,7 @@ nouveau fichier sans ligne ici fait échouer la suite de tests.
 | `sensor_calibration.json` | `measurement_chain.sensor.deployment.rotation_applied` (l'entrée **appliquée**) |
 | `source_geometry_calibration.json` | `measurement_chain.excitation.sources` (l'entrée **appliquée**) |
 | `synchronous_detection_phase_calibration.json` | `measurement_chain.synchronous_detection.state.phase_calibration_id` |
+| `.aefi_acquisition/operators/operators.json` (registre des opérateurs) | `provenance.operator {id, name}` — l'opérateur choisi au lancement |
 
 État d'exécution sans fichier, à lire chez son service : mode et niveaux
 d'excitation (`ExcitationConfigurationService`), rotation appliquée
@@ -358,12 +359,13 @@ Pas de compatibilité avec 0.2-agile : aucun code ne lit ce fichier
 
 ### Questions ouvertes
 
-- **Saisie de l'objet mesuré et de l'opérateur** : fait le 2026-10-02 — deux
-  champs dans la zone d'export des panneaux Scan et Continuous Reading (vide
-  autorisé, mais signalé). Le texte reste dans le champ pendant la session,
-  n'est jamais sauvegardé : une description d'objet périmée rechargée au
-  démarrage suivant serait une erreur silencieuse. À revoir si la ressaisie
-  de l'opérateur devient pénible (lui seul pourrait être mémorisé).
+- **Saisie de l'objet mesuré et de l'opérateur** : fait le 2026-10-02, dans la
+  zone d'export des panneaux Scan et Continuous Reading (vide autorisé, mais
+  signalé). Objet mesuré : champ texte gardé pendant la session, jamais
+  sauvegardé (une description périmée rechargée serait une erreur
+  silencieuse). Opérateur : choisi dans le **registre des opérateurs**
+  (FA `_system/thoughts_interface/fa_operator_traceability.md`) — une seule
+  orthographe par personne, exporté avec son identifiant.
 - `aefi_device_config.json` contient deux faits physiques présents nulle part
   ailleurs : `sensor.position_relative_to_sources` et
   `sensor.counter_electrode_feedback_mode`. Les migrer dans le catalogue des
