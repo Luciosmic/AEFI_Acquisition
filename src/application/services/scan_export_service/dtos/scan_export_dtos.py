@@ -14,3 +14,7 @@ class ExportConfigDTO:
     output_directory: str
     filename_base: str
     include_metadata: bool = True
+    # Written in acquisition-parameters.json (feature_of_interest.description,
+    # provenance.operator.name) — empty = declared missing, never guessed.
+    measured_object: str = ""
+    operator: str = ""

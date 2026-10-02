@@ -38,9 +38,12 @@ def serialize_scan_acquisition_parameters_v1(
         status=activity.status, failure_reason=activity.failure_reason,
         owner=activity.owner, held_controls=activity.held_controls,
         software=parameters.software, conditions=conditions, generated_at=generated_at, warn=warn,
+        operator_name=activity.operator,
     )
-    # ponytail: no input for the measured object yet — always declared, never silent.
-    feature_of_interest = v1.feature_of_interest(present=True, description=None, notes=None, warn=warn)
+    # Typed by the operator at start (Scan / Continuous Reading panels); empty = warning.
+    feature_of_interest = v1.feature_of_interest(
+        present=True, description=activity.measured_object, notes=None, warn=warn
+    )
     components = v1.components(conditions, warn)
     components["microcontroller"]["settings"] = _microcontroller_settings(activity, conditions, warn)
     components["electric_field_probe"] = _probe(activity)

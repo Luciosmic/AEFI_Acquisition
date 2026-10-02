@@ -38,3 +38,16 @@ def test_released_stream_follows_the_running_state():
     panel.set_acquisition_controller("", False)
     assert panel.btn_start.isEnabled()
     assert not panel.btn_stop.isEnabled()
+
+
+def test_start_carries_the_measured_object_and_the_operator():
+    panel = _panel()
+    emitted = []
+    panel.acquisition_start_requested.connect(emitted.append)
+    panel.input_measured_object.setText("bouteille d'eau, 8 mm")
+    panel.input_operator.setText("Luis")
+
+    panel._on_start_clicked()
+
+    assert emitted[0]["measured_object"] == "bouteille d'eau, 8 mm"
+    assert emitted[0]["operator"] == "Luis"

@@ -192,6 +192,23 @@ class TestScanExportServiceMetadata(unittest.TestCase):
         self.assertEqual(final.bench_position_end, BenchPositionDTO(x_mm=835.0, y_mm=835.0))
         self.assertTrue(self.export_port.stopped)  # written after stop(): every file closed
 
+    def test_measured_object_and_operator_typed_at_start_are_recorded(self):
+        self.service.configure_export(ExportConfigDTO(
+            enabled=True, output_directory="", filename_base="scan",
+            measured_object="  bouteille d'eau, 8 mm  ", operator="Luis",
+        ))
+        self.event_bus.publish("scanstarted", _make_scan_started_event())
+
+        activity = self.export_port.parameters[0].activity
+        self.assertEqual((activity.measured_object, activity.operator), ("bouteille d'eau, 8 mm", "Luis"))
+
+    def test_blank_measured_object_is_not_described(self):
+        self.event_bus.publish("scanstarted", _make_scan_started_event())  # setUp config: fields left empty
+
+        activity = self.export_port.parameters[0].activity
+        self.assertIsNone(activity.measured_object)
+        self.assertIsNone(activity.operator)
+
     def test_missing_fact_readers_still_write_a_document(self):
         self.service._conditions_port = None
         self.service._software_provenance_port = None

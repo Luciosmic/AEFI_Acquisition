@@ -358,9 +358,12 @@ Pas de compatibilité avec 0.2-agile : aucun code ne lit ce fichier
 
 ### Questions ouvertes
 
-- **Saisie de l'objet mesuré et de l'opérateur** : un champ au lancement d'un
-  scan et d'une série temporelle (vide autorisé, mais signalé). Mémoriser la
-  dernière valeur saisie ?
+- **Saisie de l'objet mesuré et de l'opérateur** : fait le 2026-10-02 — deux
+  champs dans la zone d'export des panneaux Scan et Continuous Reading (vide
+  autorisé, mais signalé). Le texte reste dans le champ pendant la session,
+  n'est jamais sauvegardé : une description d'objet périmée rechargée au
+  démarrage suivant serait une erreur silencieuse. À revoir si la ressaisie
+  de l'opérateur devient pénible (lui seul pourrait être mémorisé).
 - `aefi_device_config.json` contient deux faits physiques présents nulle part
   ailleurs : `sensor.position_relative_to_sources` et
   `sensor.counter_electrode_feedback_mode`. Les migrer dans le catalogue des

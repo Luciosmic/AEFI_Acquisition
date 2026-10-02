@@ -173,6 +173,19 @@ class ScanControlPanel(QWidget):
         export_grid.addWidget(self.input_export_directory, 1, 1, 1, 2)
         export_grid.addWidget(self.btn_browse_export_directory, 1, 3)
 
+        # Traceability, written in acquisition-parameters.json; empty = flagged
+        # as missing in the document. Kept for the session, never saved.
+        self.input_measured_object = QLineEdit("")
+        self.input_measured_object.setPlaceholderText("ex. bouteille d'eau, 8 mm des sphères, 350 kΩ")
+        self.input_measured_object.setToolTip("Objet mesuré — écrit dans acquisition-parameters.json (feature_of_interest)")
+        self.input_operator = QLineEdit("")
+        self.input_operator.setPlaceholderText("nom")
+        self.input_operator.setToolTip("Opérateur — écrit dans acquisition-parameters.json (provenance.operator)")
+        export_grid.addWidget(QLabel("Objet mesuré:"), 2, 0)
+        export_grid.addWidget(self.input_measured_object, 2, 1, 1, 3)
+        export_grid.addWidget(QLabel("Opérateur:"), 3, 0)
+        export_grid.addWidget(self.input_operator, 3, 1, 1, 3)
+
         layout.addWidget(export_group)
 
         # --- Control Group ---
@@ -239,6 +252,8 @@ class ScanControlPanel(QWidget):
             "export_enabled": self.checkbox_export_enabled.isChecked(),
             "export_output_directory": self.input_export_directory.text(),
             "export_filename_base": self.input_export_filename.text(),
+            "measured_object": self.input_measured_object.text(),
+            "operator": self.input_operator.text(),
         }
         self.scan_start_requested.emit(params)
 

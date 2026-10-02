@@ -245,7 +245,9 @@ class ScanExportService:
             filename_base,
         )
 
-        parameters = self._start_parameters(str(event.scan_id), STEP_SCAN, self._step_scan_procedure(event))
+        parameters = self._start_parameters(
+            str(event.scan_id), STEP_SCAN, self._config, self._step_scan_procedure(event)
+        )
         for port in self._active_ports:
             port.configure(directory, filename_base, metadata, timestamp=timestamp)
             port.start()
@@ -324,7 +326,7 @@ class ScanExportService:
             acquisition_kind="timeSeries",
         )
         port.start()
-        port.write_acquisition_parameters(self._start_parameters(str(event.acquisition_id), TIME_SERIES))
+        port.write_acquisition_parameters(self._start_parameters(str(event.acquisition_id), TIME_SERIES, config))
         self._active_ports = [port]
         self._time_series_active = True
         self._time_series_t0 = None
@@ -459,7 +461,7 @@ class ScanExportService:
         )
 
     def _start_parameters(
-        self, activity_id: str, kind: str, procedure: Optional[StepScanProcedureDTO] = None
+        self, activity_id: str, kind: str, config: ExportConfigDTO, procedure: Optional[StepScanProcedureDTO] = None
     ) -> ScanAcquisitionParametersDTO:
         """Gather the facts at acquisition start; kept to add the outcome at the end."""
         conditions = (
@@ -488,6 +490,8 @@ class ScanExportService:
             owner=owner,
             held_controls=("excitation",) if owner else (),
             procedure=procedure,
+            measured_object=config.measured_object.strip() or None,
+            operator=config.operator.strip() or None,
             probe=ElectricFieldProbeDTO(
                 brand=probe.brand, model=probe.model, serial_number=probe.serial_number,
                 axis_labels=tuple(probe.axis_labels), battery_voltage_v=probe.battery_voltage_v,

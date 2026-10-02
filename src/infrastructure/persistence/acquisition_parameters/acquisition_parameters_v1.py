@@ -108,6 +108,7 @@ def provenance(
     conditions: AcquisitionConditionsDTO,
     generated_at: datetime,
     warn: Warn,
+    operator_name: Optional[str] = None,
 ) -> Dict[str, Any]:
     if ended_at is None:
         warn(
@@ -125,7 +126,8 @@ def provenance(
         warn("provenance.software.hardware_backends", f"matériel simulé ({', '.join(simulated)}) : ce n'est pas une mesure du banc")
     if not conditions.hardware_backends:
         warn("provenance.software.hardware_backends", "backends matériels (réel / simulé) inconnus")
-    warn("provenance.operator.name", "opérateur non enregistré")
+    if not operator_name:
+        warn("provenance.operator.name", "opérateur non enregistré")
     return {
         "activity": {
             "id": activity_id,
@@ -144,7 +146,7 @@ def provenance(
             "dirty": software.dirty,
             "hardware_backends": dict(conditions.hardware_backends),
         },
-        "operator": {"name": None},
+        "operator": {"name": operator_name or None},
         "generated_at": iso(generated_at),
     }
 
