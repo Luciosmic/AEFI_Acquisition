@@ -28,6 +28,7 @@ from interface.presenters.hardware_component_presenter import HardwareComponentP
 from interface.presenters.acquisition_throughput_characterization_presenter import (
     AcquisitionThroughputCharacterizationPresenter,
 )
+from interface.presenters.adc_output_rate_characterization_presenter import AdcOutputRateCharacterizationPresenter
 from interface.presenters.event_log_presenter import EventLogPresenter
 
 logger = logging.getLogger(__name__)
@@ -47,6 +48,7 @@ def wire_dashboard(
     hardware_component_presenters: List[HardwareComponentPresenter],
     event_log_presenter: EventLogPresenter,
     acquisition_throughput_presenter: AcquisitionThroughputCharacterizationPresenter,
+    adc_output_rate_presenter: AdcOutputRateCharacterizationPresenter,
 ) -> None:
     """Connect every dashboard panel to its presenter. Called once from
     main.py right after the dashboard and presenters are constructed."""
@@ -227,6 +229,19 @@ def wire_dashboard(
         acquisition_throughput_presenter.component_values_measured.connect(microcontroller_panel.prefill_values)
     acquisition_throughput_presenter.request_defaults.connect(throughput_widget.set_request_defaults)
     acquisition_throughput_presenter.refresh_state()
+
+    # ADC output data rate measured on DRDY, in the ADC tab
+    odr_widget = calibration_panel.adc_output_rate_widget
+    odr_widget.start_requested.connect(adc_output_rate_presenter.on_start_requested)
+    adc_output_rate_presenter.running_changed.connect(odr_widget.set_running)
+    adc_output_rate_presenter.status_message.connect(odr_widget.set_status_message)
+    adc_output_rate_presenter.point_measured.connect(odr_widget.add_point)
+    adc_output_rate_presenter.characterization_succeeded.connect(odr_widget.show_result)
+    adc_output_rate_presenter.request_defaults.connect(odr_widget.set_request_defaults)
+    adc_panel = calibration_panel.hardware_component_panels.get("adc")
+    if adc_panel is not None:
+        adc_output_rate_presenter.component_values_measured.connect(adc_panel.prefill_values)
+    adc_output_rate_presenter.refresh_state()
     logger.debug("Calibration panel wired")
 
     # Scan Panels Wiring

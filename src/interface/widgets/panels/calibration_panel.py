@@ -17,8 +17,10 @@ from interface.widgets.panels.hardware_component_panel import HardwareComponentP
 from interface.widgets.panels.acquisition_throughput_characterization_widget import (
     AcquisitionThroughputCharacterizationWidget,
 )
+from interface.widgets.panels.adc_output_rate_characterization_widget import AdcOutputRateCharacterizationWidget
 
 _MICROCONTROLLER_KEY = "microcontroller"  # HardwareComponentKindDTO.key
+_ADC_KEY = "adc"
 
 
 class CalibrationPanel(QWidget):
@@ -32,6 +34,8 @@ class CalibrationPanel(QWidget):
         self.hardware_component_panels: Dict[str, HardwareComponentPanel] = {}
         # Shown in the microcontroller tab, which it characterizes.
         self.acquisition_throughput_widget = AcquisitionThroughputCharacterizationWidget()
+        # Shown in the ADC tab: ODR measured on DRDY at the oscilloscope.
+        self.adc_output_rate_widget = AdcOutputRateCharacterizationWidget()
 
         self._tabs = QTabWidget()
         self._tabs.setUsesScrollButtons(True)
@@ -48,6 +52,8 @@ class CalibrationPanel(QWidget):
         panel = HardwareComponentPanel(kind)
         if kind.key == _MICROCONTROLLER_KEY:
             panel.add_tool(self.acquisition_throughput_widget)
+        if kind.key == _ADC_KEY:
+            panel.add_tool(self.adc_output_rate_widget)
         self.hardware_component_panels[kind.key] = panel
         self._tabs.addTab(panel, kind.label)
         return panel

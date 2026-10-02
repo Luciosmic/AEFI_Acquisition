@@ -93,6 +93,11 @@ from interface.presenters.acquisition_throughput_characterization_presenter impo
 from interface.presenters.source_geometry_calibration_presenter import SourceGeometryCalibrationPresenter
 from interface.presenters.hardware_component_presenter import HardwareComponentPresenter
 from interface.presenters.event_log_presenter import EventLogPresenter
+from interface.presenters.adc_output_rate_characterization_presenter import AdcOutputRateCharacterizationPresenter
+from application.services.adc_output_rate_characterization_service.adc_output_rate_characterization_service import (
+    AdcOutputRateCharacterizationService,
+)
+from infrastructure.persistence.adc_output_rate.csv_adc_output_rate_export_port import CsvAdcOutputRateExportPort
 from interface.presenters.aefi_continuous_reading_presenter import AefiContinuousReadingPresenter
 from interface.presenters.electric_field_probe_presenter import ElectricFieldProbePresenter
 from interface.presenters.scan_presenter import ScanPresenter
@@ -167,6 +172,7 @@ def main(hardware_config: dict | None = None):
             "motion": "real",
             "aefi_device": "real",   # whole MCU stack (ADS131A04 acquisition + AD9106 excitation + lifecycle + continuous)
             "electric_field_probe": "real",  # picks the adapter only, connection is manual (cf. panel)
+            "oscilloscope": "real",  # DSO-X 2014A on DRDY, opened only during an ODR measurement
         }
     NARDA_COM_PORT = "COM8"  # cf. config_templates/electric_field_probe_config.json
     print("--- Starting Interface V2 ---")
@@ -386,6 +392,18 @@ def main(hardware_config: dict | None = None):
     )
     logger.info("Services -> AcquisitionThroughputCharacterizationService created")
 
+    # ADC output data rate on DRDY (ADC tab of the Calibration panel): holds the
+    # ads131a04 configuration and the acquisition stream while it runs.
+    adc_output_rate_service = AdcOutputRateCharacterizationService(
+        oversampling_port=hw.adc_oversampling,
+        capture_port=hw.drdy_capture,
+        export_port=CsvAdcOutputRateExportPort(),
+        acquisition_service=continuous_service,
+        hardware_configuration=hardware_config_service,
+        task_runner=task_runner,
+    )
+    logger.info("Services -> AdcOutputRateCharacterizationService created")
+
     # 7. Create Lifecycle Services (only if real hardware is used)
     # For mock-only, we skip startup
     use_startup = len(hw.lifecycle_adapters) > 0
@@ -438,6 +456,7 @@ def main(hardware_config: dict | None = None):
         for kind in hardware_component_service.list_kinds()
     ]
     acquisition_throughput_presenter = AcquisitionThroughputCharacterizationPresenter(acquisition_throughput_service)
+    adc_output_rate_presenter = AdcOutputRateCharacterizationPresenter(adc_output_rate_service)
 
     # Continuous Presenter needs Transformation Service now
     aefi_continuous_reading_presenter = AefiContinuousReadingPresenter(
@@ -475,6 +494,7 @@ def main(hardware_config: dict | None = None):
         hardware_component_presenters,
         event_log_presenter,
         acquisition_throughput_presenter,
+        adc_output_rate_presenter,
     )
 
     # 11. Startup Sequence (hardware init if real hardware) or Direct Launch (if mocks only)
