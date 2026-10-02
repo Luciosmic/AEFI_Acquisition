@@ -128,6 +128,7 @@ class AcquisitionConditionsDTO:
     synchronous_detection: Optional[SynchronousDetectionStateDTO] = None
     sensor_deployment: Optional[SensorDeploymentDTO] = None
     motors: Optional[MotorsSettingsDTO] = None
+    microcontroller_n_avg: Optional[int] = None  # MCU averaging applied (ADC conversions per sample)
     host_link: HostLinkDTO = HostLinkDTO()
     hardware_backends: Mapping[str, str] = field(default_factory=dict)  # subsystem -> "real" | "mock"
     unknown: Mapping[str, str] = field(default_factory=dict)

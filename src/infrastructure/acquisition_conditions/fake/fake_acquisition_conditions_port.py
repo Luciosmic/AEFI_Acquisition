@@ -83,6 +83,7 @@ def make_bench_conditions() -> AcquisitionConditionsDTO:
             y=AxisMotionSettingsDTO(low_speed_hz=10.0, high_speed_hz=1500.0, acceleration_ms=300.0, deceleration_ms=300.0),
             speed_mode="fast", referential="centered",
         ),
+        microcontroller_n_avg=127,
         host_link=HostLinkDTO(serial_port="COM10", baud_rate=1500000),
         hardware_backends={"motion": "real", "aefi_device": "real", "electric_field_probe": "real"},
     )

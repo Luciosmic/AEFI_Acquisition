@@ -328,6 +328,25 @@ def main(hardware_config: dict | None = None):
         sensor_calibration_repository=sensor_calibration_repository,
         source_geometry_calibration_repository=source_geometry_calibration_repository,
     )
+    # Facts of every acquisition-parameters.json (schema 1.0) — scans, time
+    # series and the throughput sweep: catalog + resolved chip configs (snapshot),
+    # controller memories, active rotation, phase compensation, motors, serial
+    # link, real/mock backends; code provenance (git, read once at startup) and
+    # the USB latency of the serial link.
+    acquisition_conditions = AcquisitionConditionsReader(
+        snapshot_reader=acquisition_snapshot_port,
+        hardware_component_repository=hardware_component_repository,
+        sensor_calibration_repository=sensor_calibration_repository,
+        active_rotation=sensor_calibration_service.get_active_rotation,
+        compensation_enabled=synchronous_detection_service.is_compensation_enabled,
+        ad9106_memory_state=hw.mcu_root.ad9106_controller.get_memory_state,
+        oversampling_ratio=hw.acquisition_averaging.get_oversampling_ratio,
+        serial_communicator=hw.mcu_root.lifecycle.get_communicator(),
+        motion_port=hw.motion_port,
+        hardware_backends=hardware_config,
+    )
+    software_provenance = GitSoftwareProvenanceReader()
+    usb_latency_timer = FtdiUsbLatencyTimerReader()
     active_rotation = sensor_calibration_service.get_active_rotation()
     post_processing_port = AefiPostProcessorPort(
         event_bus,
@@ -341,9 +360,11 @@ def main(hardware_config: dict | None = None):
     scan_export_service = ScanExportService(
         event_bus, csv_export_port, hdf5_export_port,
         excitation_service=excitation_service,
-        acquisition_snapshot_port=acquisition_snapshot_port,
+        conditions_port=acquisition_conditions,
         post_processing_port=post_processing_port,
         task_runner=task_runner,
+        software_provenance_port=software_provenance,
+        usb_latency_timer_port=usb_latency_timer,
     )
     logger.info("Services -> ScanExportService created")
 
@@ -384,21 +405,6 @@ def main(hardware_config: dict | None = None):
     # Throughput / noise vs MCU n_avg (microcontroller tab of the Calibration panel).
     # Holds the excitation, the acquisition stream and the n_avg / OSR configuration
     # (Hardware Advanced Config) while it runs.
-    # Its acquisition-parameters.json records the conditions: catalog + resolved
-    # chip configs (same snapshot as the scan export), controller memories,
-    # active rotation, phase compensation, serial link, motors, real/mock backends.
-    acquisition_conditions = AcquisitionConditionsReader(
-        snapshot_reader=acquisition_snapshot_port,
-        hardware_component_repository=hardware_component_repository,
-        sensor_calibration_repository=sensor_calibration_repository,
-        active_rotation=sensor_calibration_service.get_active_rotation,
-        compensation_enabled=synchronous_detection_service.is_compensation_enabled,
-        ad9106_memory_state=hw.mcu_root.ad9106_controller.get_memory_state,
-        oversampling_ratio=hw.acquisition_averaging.get_oversampling_ratio,
-        serial_communicator=hw.mcu_root.lifecycle.get_communicator(),
-        motion_port=hw.motion_port,
-        hardware_backends=hardware_config,
-    )
     acquisition_throughput_service = AcquisitionThroughputCharacterizationService(
         excitation_service=excitation_service,
         acquisition_service=continuous_service,
@@ -408,8 +414,8 @@ def main(hardware_config: dict | None = None):
         event_bus=event_bus,
         hardware_configuration=hardware_config_service,
         conditions_port=acquisition_conditions,
-        software_provenance_port=GitSoftwareProvenanceReader(),
-        usb_latency_timer_port=FtdiUsbLatencyTimerReader(),
+        software_provenance_port=software_provenance,
+        usb_latency_timer_port=usb_latency_timer,
     )
     logger.info("Services -> AcquisitionThroughputCharacterizationService created")
 

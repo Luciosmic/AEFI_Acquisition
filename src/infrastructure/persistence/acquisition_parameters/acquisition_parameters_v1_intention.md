@@ -32,6 +32,10 @@ fait, deux formes, et des scripts d'analyse qui doivent connaître les deux.
   `state_read` (quand l'état de l'AD9106 a été lu), `applies_to_data` (la
   rotation est-elle appliquée aux valeurs exportées ?), `motors_held`,
   `absent_because`.
+- Le côté fichier, partagé lui aussi par les ports qui écrivent le document,
+  est à part (I/O) : `acquisition_parameters_file.py` — `describe_file`
+  (taille + SHA-256 d'un fichier produit) et `write_document` (écriture
+  atomique : jamais un document à moitié écrit).
 - Extrait le 2026-10-02 du sérialiseur du balayage de débit, à sortie
   identique (seuls deux messages d'avertissement disent désormais
   « acquisition » au lieu de « balayage »).

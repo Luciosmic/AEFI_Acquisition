@@ -89,6 +89,9 @@ class AcquisitionConditionsReader(IAcquisitionConditionsPort):
             ),
             sensor_deployment=self._read("sensor_deployment", unknown, self._sensor_deployment),
             motors=self._read("motors", unknown, _motors_settings),
+            microcontroller_n_avg=self._read(
+                "microcontroller_n_avg", unknown, lambda: int((settings.get("mcu") or {})["n_avg"])
+            ),
             host_link=self._read("host_link", unknown, self._host_link) or HostLinkDTO(),
             hardware_backends=self._hardware_backends,
             unknown=unknown,

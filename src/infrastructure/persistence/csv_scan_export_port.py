@@ -20,10 +20,23 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, Any, Optional, List, TextIO
 
+from dataclasses import replace
+
+from application.services.scan_export_service.dtos.scan_acquisition_parameters_dtos import (
+    ScanAcquisitionParametersDTO,
+)
 from application.services.scan_export_service.ports.i_scan_export_port import (
     IScanExportPort,
 )
 from infrastructure.events.event_audit_log import serialize_event
+from infrastructure.persistence.acquisition_parameters.acquisition_parameters_file import (
+    FORMATS,
+    describe_file,
+    write_document,
+)
+from infrastructure.persistence.scan_acquisition_parameters_v1_serializer import (
+    serialize_scan_acquisition_parameters_v1,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -242,15 +255,25 @@ class CsvScanExportPort(IScanExportPort):
         self._field_writer.writerow(out_row)
         self._field_file.flush()
 
-    def write_metadata(self, metadata: Dict[str, Any]) -> None:
-        """Write the acquisition's parameter snapshot as a JSON file in the
-        acquisition folder: `<timestamp>_stepScan_<name>_acquisition-parameters.json`."""
+    def write_acquisition_parameters(self, parameters: ScanAcquisitionParametersDTO) -> None:
+        """Write `<timestamp>_<kind>_<name>_acquisition-parameters.json` (schema 1.0)
+        in the acquisition folder. Once the acquisition has ended (called after
+        stop()), every file of the folder is listed with its size and SHA-256."""
         if self._dir_path is None or self._timestamp is None:
-            raise RuntimeError("CsvScanExportPort.configure() must be called before write_metadata().")
+            raise RuntimeError("CsvScanExportPort.configure() must be called before write_acquisition_parameters().")
 
-        metadata_path = self._dir_path / f"{self._timestamp}_{self._scan_name}_acquisition-parameters.json"
-        with metadata_path.open(mode="w", encoding="utf-8") as f:
-            json.dump(metadata, f, indent=2, ensure_ascii=False, default=str)
+        path = self._dir_path / f"{self._timestamp}_{self._scan_name}_acquisition-parameters.json"
+        if parameters.activity.ended_at is not None:
+            produced = sorted(p for p in self._dir_path.iterdir() if p.is_file() and p != path and p.suffix != ".tmp")
+            parameters = replace(parameters, files=tuple(describe_file(p, FORMATS.get(p.suffix, p.suffix)) for p in produced))
+        document = serialize_scan_acquisition_parameters_v1(
+            parameters, generated_at=datetime.now().astimezone(), document_name=path.name
+        )
+        write_document(path, document)
+        logger.info(
+            "Acquisition parameters written: %s activity_id=%s status=%s warnings=%d",
+            path, parameters.activity.activity_id, parameters.activity.status, len(document["warnings"]),
+        )
 
     def write_event(self, event) -> None:
         """Append one domain event to `<timestamp>_stepScan_<name>_events.jsonl`,
@@ -283,9 +306,9 @@ class CsvScanExportPort(IScanExportPort):
         self._writer = None
         self._fieldnames = None
         self._configured_path = None
-        self._dir_path = None
-        self._timestamp = None
-        self._scan_name = None
+        # _dir_path / _timestamp / _scan_name are kept until the next configure():
+        # the final acquisition-parameters document is written after stop(),
+        # once every file is closed and can be hashed.
 
         if self._field_file is not None:
             try:

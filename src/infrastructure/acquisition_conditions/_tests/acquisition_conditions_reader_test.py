@@ -38,6 +38,7 @@ SNAPSHOT = {
             "channels": {str(ch): {"gain": 2, "enabled": True} for ch in range(1, 9)},
         },
         "ad9106": {"link_dds1_dds2": True, "enforce_dds3_dds4_quadrature": True},
+        "mcu": {"n_avg": 16},
     },
 }
 AD9106_MEMORY = {
@@ -103,6 +104,9 @@ class TestAcquisitionConditionsReader(unittest.TestCase):
         self.assertEqual(motors.microns_per_step, 21.8)
         self.assertEqual(motors.y.deceleration_ms, 250.0)
         self.assertEqual((motors.speed_mode, motors.referential), ("fast", "centered"))
+
+    def test_applied_n_avg_comes_from_the_resolved_mcu_config(self):
+        self.assertEqual(self.reader().read_conditions().microcontroller_n_avg, 16)
 
     def test_missing_arcus_config_makes_the_motors_unknown_with_a_reason(self):
         from pathlib import Path

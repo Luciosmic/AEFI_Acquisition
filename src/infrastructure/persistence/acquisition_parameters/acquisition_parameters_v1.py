@@ -409,7 +409,10 @@ def position(bench_position: Optional[BenchPositionDTO]) -> Optional[Dict[str, A
 # -- data (PROV wasGeneratedBy, SOSA observedProperty) --------------------------------
 
 
-def data(files: Sequence[ExportedFileDTO], columns: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
+def data(
+    files: Sequence[ExportedFileDTO], columns: Dict[str, Dict[str, Any]],
+    document_name: str = ACQUISITION_PARAMETERS_FILE_NAME,
+) -> Dict[str, Any]:
     listed = [
         {
             "name": f.name,
@@ -421,7 +424,7 @@ def data(files: Sequence[ExportedFileDTO], columns: Dict[str, Dict[str, Any]]) -
         for f in files
     ]
     listed.append({
-        "name": ACQUISITION_PARAMETERS_FILE_NAME,
+        "name": document_name,
         "format": "JSON",
         "was_generated_by": "provenance.activity",
         "notes": "ce document ; pas d'empreinte (il devrait se contenir lui-même)",

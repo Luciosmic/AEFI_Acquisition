@@ -8,6 +8,7 @@ import h5py
 import numpy as np
 
 from infrastructure.persistence.hdf5_scan_export_port import Hdf5ScanExportPort
+from infrastructure.persistence._tests import make_scan_acquisition_parameters
 
 
 class TestHdf5ScanExportPortWritePoint(unittest.TestCase):
@@ -93,19 +94,14 @@ class TestHdf5ScanExportPortMetadata(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.tmp_dir, ignore_errors=True)
 
-    def test_write_metadata_creates_json_sidecar(self):
+    def test_acquisition_parameters_are_left_to_the_csv_port(self):
+        """The CSV port owns the acquisition folder's JSON (it lists this .h5 file)."""
         self.port.configure(str(self.tmp_dir), "scan", metadata={})
         self.port.start()
-        self.port.write_metadata({"scan_id": "abc", "scan": {"pattern": "SERPENTINE"}})
+        self.port.write_acquisition_parameters(make_scan_acquisition_parameters())
         self.port.stop()
 
-        json_files = list(self.tmp_dir.glob("*_stepScan_*/*_stepScan_scan_acquisition-parameters.json"))
-        self.assertEqual(len(json_files), 1)
-
-        with json_files[0].open(encoding="utf-8") as f:
-            data = json.load(f)
-
-        self.assertEqual(data, {"scan_id": "abc", "scan": {"pattern": "SERPENTINE"}})
+        self.assertEqual(list(self.tmp_dir.glob("*/*acquisition-parameters.json")), [])
 
 
 class TestHdf5ScanExportPortDifferentialBaseline(unittest.TestCase):

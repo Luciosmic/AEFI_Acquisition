@@ -6,6 +6,7 @@ import unittest
 from pathlib import Path
 
 from infrastructure.persistence.csv_scan_export_port import CsvScanExportPort
+from infrastructure.persistence._tests import make_scan_acquisition_parameters
 
 
 class TestCsvScanExportPortFieldData(unittest.TestCase):
@@ -118,19 +119,40 @@ class TestCsvScanExportPortMetadata(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.tmp_dir, ignore_errors=True)
 
-    def test_write_metadata_creates_json_in_acquisition_folder(self):
-        self.port.configure(str(self.tmp_dir), "scan", metadata={})
-        self.port.start()
-        self.port.write_metadata({"scan_id": "abc", "scan": {"pattern": "SERPENTINE"}})
-        self.port.stop()
-
+    def _document(self):
         json_files = list(self.tmp_dir.glob("*_stepScan_*/*_stepScan_scan_acquisition-parameters.json"))
         self.assertEqual(len(json_files), 1)
-
         with json_files[0].open(encoding="utf-8") as f:
-            data = json.load(f)
+            return json.load(f)
 
-        self.assertEqual(data, {"scan_id": "abc", "scan": {"pattern": "SERPENTINE"}})
+    def test_start_document_is_schema_1_0_and_still_running(self):
+        self.port.configure(str(self.tmp_dir), "scan", metadata={})
+        self.port.start()
+        self.port.write_acquisition_parameters(make_scan_acquisition_parameters())
+
+        data = self._document()
+        self.port.stop()
+        self.assertEqual(data["schema"]["version"], "1.0")
+        self.assertEqual(data["provenance"]["activity"]["status"], "running")
+        self.assertEqual(data["procedure"]["step_scan"]["pattern"], "SERPENTINE")
+        self.assertEqual(
+            [f["name"] for f in data["data"]["files"]], ["acquisition-parameters.json"]
+        )  # files are listed only once the acquisition has ended
+
+    def test_final_document_written_after_stop_lists_and_hashes_every_file(self):
+        self.port.configure(str(self.tmp_dir), "scan", metadata={})
+        self.port.start()
+        self.port.write_point({"x": 1.0, "y": 2.0})
+        self.port.stop()
+        self.port.write_acquisition_parameters(make_scan_acquisition_parameters(ended=True))
+
+        data = self._document()
+        self.assertEqual(data["provenance"]["activity"]["status"], "completed")
+        files = {f["name"].rsplit("_", 1)[-1]: f for f in data["data"]["files"]}
+        self.assertIn("aefi.csv", files)
+        self.assertIn("events.jsonl", files)
+        self.assertEqual(len(files["aefi.csv"]["sha256"]), 64)
+        self.assertEqual(files["aefi.csv"]["format"], "CSV")
 
 
 class TestCsvScanExportPortLogs(unittest.TestCase):

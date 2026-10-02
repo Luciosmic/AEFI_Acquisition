@@ -93,9 +93,13 @@ valeur (QUDT `QuantityValue`, SensorThings `unitOfMeasurement`, NeXus `@units`) 
 - Code registre : `code` (brut, pour rejouer exactement) + `value`/`unit`
   physiques quand la conversion est connue.
 - Booléens, énumérations et textes restent des valeurs simples, sans unité.
-- Source unique de la mise en page et des unités : le module de sérialisation
-  1.0 (`infrastructure/persistence/acquisition_throughput/acquisition_parameters_v1_serializer.py`
-  aujourd'hui, à partager entre les trois exports). Les unités du catalogue des
+- Source unique de la mise en page et des unités :
+  `infrastructure/persistence/acquisition_parameters/acquisition_parameters_v1.py`
+  (sections communes), complété par un sérialiseur par export qui n'ajoute que
+  ce que son acquisition a fait : `scan_acquisition_parameters_v1_serializer.py`
+  (scan, série temporelle) et `acquisition_throughput/acquisition_parameters_v1_serializer.py`
+  (balayage de débit). Les faits arrivent en DTO sans format
+  (`application/shared/acquisition_parameters/`). Les unités du catalogue des
   composants y sont traduites en UCUM ; une unité sans équivalent est écrite en
   annotation **et** signalée. UCUM n'a pas d'exposant fractionnaire :
   `V/√Hz` s'écrit `V/{sqrt_Hz}`.

@@ -9,6 +9,9 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Dict, Any, Optional
 
+from application.services.scan_export_service.dtos.scan_acquisition_parameters_dtos import (
+    ScanAcquisitionParametersDTO,
+)
 from domain.shared_kernel.events.domain_event import DomainEvent
 
 class IScanExportPort(ABC):
@@ -45,8 +48,12 @@ class IScanExportPort(ABC):
         pass
 
     @abstractmethod
-    def write_metadata(self, metadata: Dict[str, Any]) -> None:
-        """Write a JSON snapshot of the acquisition's parameters, once per scan."""
+    def write_acquisition_parameters(self, parameters: ScanAcquisitionParametersDTO) -> None:
+        """Write the acquisition-parameters document (schema 1.0) from these facts.
+        Called at acquisition start (`activity.status == "running"`) and again
+        after stop() with the outcome: the final call lists and hashes the
+        files produced. Ports that don't own the acquisition folder implement
+        it as a no-op."""
         pass
 
     @abstractmethod

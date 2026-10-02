@@ -5,10 +5,7 @@ See csv_acquisition_throughput_export_port_intention.md.
 """
 
 import csv
-import hashlib
-import json
 import logging
-import os
 from datetime import datetime
 from pathlib import Path
 from typing import Callable, Optional, Sequence, Tuple
@@ -28,6 +25,7 @@ from application.services.acquisition_throughput_characterization_service.ports.
     IAcquisitionThroughputExportPort,
 )
 from domain.shared_kernel.operation_result import OperationResult
+from infrastructure.persistence.acquisition_parameters.acquisition_parameters_file import describe_file, write_document
 from infrastructure.persistence.acquisition_throughput.acquisition_parameters_v1_serializer import (
     ACQUISITION_PARAMETERS_FILE_NAME,
     serialize_acquisition_parameters_v1,
@@ -70,7 +68,7 @@ class CsvAcquisitionThroughputExportPort(IAcquisitionThroughputExportPort):
         try:
             self._write_summary(folder / SUMMARY_FILE_NAME, result)
             self._write_samples(folder / SAMPLES_FILE_NAME, samples)
-            files = tuple(_describe(folder / name, "CSV") for name in (SUMMARY_FILE_NAME, SAMPLES_FILE_NAME))
+            files = tuple(describe_file(folder / name, "CSV") for name in (SUMMARY_FILE_NAME, SAMPLES_FILE_NAME))
         except OSError as error:
             logger.warning("CsvAcquisitionThroughputExportPort: export to %s failed: %s", folder, error)
             return OperationResult.fail(f"export impossible ({folder}) : {error}")
@@ -82,11 +80,8 @@ class CsvAcquisitionThroughputExportPort(IAcquisitionThroughputExportPort):
     ) -> OperationResult[None, str]:
         path = Path(location) / ACQUISITION_PARAMETERS_FILE_NAME
         document = serialize_acquisition_parameters_v1(parameters, generated_at=self._clock())
-        temporary = path.with_suffix(".json.tmp")
         try:
-            with open(temporary, "w", encoding="utf-8") as f:
-                json.dump(document, f, ensure_ascii=False, indent=2)
-            os.replace(temporary, path)  # never a half-written document
+            write_document(path, document)
         except (OSError, TypeError, ValueError) as error:
             logger.warning("CsvAcquisitionThroughputExportPort: cannot write %s: %s", path, error)
             return OperationResult.fail(f"paramètres d'acquisition non écrits ({path}) : {error}")
@@ -127,10 +122,3 @@ class CsvAcquisitionThroughputExportPort(IAcquisitionThroughputExportPort):
                 # ISO 8601 with offset (naive host timestamps are local time).
                 writer.writerow([s.n_avg, s.sample_index, s.timestamp.astimezone().isoformat()] + list(s.values_v))
 
-
-def _describe(path: Path, file_format: str) -> ExportedFileDTO:
-    digest = hashlib.sha256()
-    with open(path, "rb") as f:
-        for block in iter(lambda: f.read(1 << 16), b""):
-            digest.update(block)
-    return ExportedFileDTO(name=path.name, format=file_format, byte_size=path.stat().st_size, sha256=digest.hexdigest())
