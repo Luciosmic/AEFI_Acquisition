@@ -21,6 +21,13 @@ Fait (non commité) : `FlyScanLineProjector` sur trace de positions ; sur le sta
 vraie position) erreur médiane 0, p95 ≤ 0,8 mm, max 8,3 mm en fast à 6 Hz — le fake n'a ni rampe ni latence USB,
 la précision réelle reste à voir au banc. Suite : 916 passés.
 
+**Mise à jour 2026-10-02 (soir)** : tout est commité et poussé sur `origin/dev_scan` (fly-scan placé par les
+positions du contrôleur, panneau de scan regroupé, export `flyScan`, course de l'export d'événements corrigée,
+post-traitement par lot étendu aux `flyScan`). `develop` local fusionné dans `dev_scan` et `origin/develop` poussé.
+**Reste** : fusionner `dev_scan` dans `develop` quand le travail en cours sur `develop` (54 fichiers non commités au
+2026-10-02) sera commité — fichiers touchés des deux côtés : `_system/ops/tasks.md`, `hardware_component_kind.py`
+(sections différentes : ADC côté develop, moteurs côté dev_scan), `dashboard_wiring.py`, `main.py`.
+
 ### Contexte
 
 Une première version du fly-scan (non commitée) plaçait les mesures **en fin de ligne**, en
