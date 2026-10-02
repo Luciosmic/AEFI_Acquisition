@@ -102,7 +102,7 @@ class FakePostProcessingPort(IPostProcessingPort):
         self.calls.append((csv_path, hdf5_path))
 
 
-def _make_scan_started_event():
+def _make_scan_started_event(fly_scan=False):
     zone = ScanZone(x_min=435.0, x_max=835.0, y_min=435.0, y_max=835.0)
     config = StepScanConfig(
         scan_zone=zone,
@@ -113,6 +113,7 @@ def _make_scan_started_event():
         averaging_per_position=10,
         measurement_uncertainty=MeasurementUncertainty(max_uncertainty_volts=1e-6),
         scan_axis=ScanAxis.Y,
+        fly_scan=fly_scan,
     )
     return ScanStarted(scan_id=uuid4(), config=config)
 
@@ -170,6 +171,14 @@ class TestScanExportServiceMetadata(unittest.TestCase):
         self.assertEqual(metadata["excitation"]["level_s3_s4_percent"], 60.0)
         self.assertEqual(metadata["motion_last_config"], {"speed_mode": "fast"})
         self.assertIsNone(metadata["electric_field_probe"])
+
+    def test_files_are_tagged_step_scan_or_fly_scan(self):
+        self.event_bus.publish("scanstarted", _make_scan_started_event())
+        self.assertEqual(self.export_port.configured["acquisition_kind"], "stepScan")
+
+        self.event_bus.publish("scanstarted", _make_scan_started_event(fly_scan=True))
+        self.assertEqual(self.export_port.configured["acquisition_kind"], "flyScan")
+        self.assertTrue(self.export_port.metadata["scan"]["fly_scan"])
 
     def test_line_scan_metadata_describes_the_line(self):
         from domain.step_scan.value_objects.line_scan_config.line_scan_config import LineScanConfig

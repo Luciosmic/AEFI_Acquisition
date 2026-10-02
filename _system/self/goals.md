@@ -304,12 +304,16 @@ mock stack : 11 points à 45°, diagonale de heatmap remplie). Suite : 763 passe
 - *Interface* : onglets Grid | Line dans `ScanControlPanel` (persistés dans
   `scan_default_config.json`).
 - *Visualisation* : `ScanVisualizationPanel.initialize_line(...)` — mode ligne, chaque vue
-  (Single / Grid / Profiles) trace valeur vs distance depuis le départ (mm), quel que soit theta.
-  Points placés par projection sur la ligne. Remplace l'ancienne projection heatmap creuse
-  (`line_heatmap_grid`, supprimé). Scan 2D : panel dédié « AEFI Voltage Profiles Plot »
-  (`aefi_voltage_profiles`, même classe, `view_modes=PROFILE_MODES`) — 6 canaux d'un coup ou
-  un seul, profils à X ou Y constant, lignes cochables (Tout / Aucun). « AEFI Voltage Map »
-  = heatmaps seules.
+  trace valeur vs distance depuis le départ (mm), quel que soit theta. Points placés par
+  projection sur la ligne. Remplace l'ancienne projection heatmap creuse (`line_heatmap_grid`,
+  supprimé).
+- *Panels de visualisation* : une seule classe `ScanVisualizationPanel(profiles=, channels=)`,
+  4 instances — « AEFI Voltage Map Plot » / « AEFI Voltage Profiles Plot » (6 canaux tension),
+  « Narda Map Plot » / « Narda Profiles Plot » (`channels=()` : composantes de champ créées au
+  premier point, selon la sonde). Chaque panel : vue « Single Channel » ou « All Channels ».
+  Profils : X ou Y constant, lignes cochables (Tout / Aucun).
+  « Narda » = libellé UI provisoire de la sonde de champ électrique ; les ids de panels restent
+  `electric_field_*`.
 
 **Reste ouvert :**
 - Post-traitement auto en fin de scan (`aefi_post_processor_module`) : non vérifié sur un CSV
@@ -443,6 +447,13 @@ class SensorReading(Protocol):
 ---
 
 ### Phase D3 — FlyScan [après D2]
+
+> **2026-10-01 — fly-scan simple en cours sur `dev_scan`** (plan et avancement : `_system/ops/tasks.md`,
+> « Fly-scan : transmission mécanique au domaine, puis projection en direct »). Une première version (non
+> commitée) plaçait les mesures en fin de ligne ; lancée dans l'appli elle a planté — elle est remplacée par une
+> projection **en direct à vitesse constante**, la vitesse venant de la calibration (transmission mécanique au
+> domaine). Choix de cette passe, à revoir lors du refactoring du domaine prévu ensuite : même agrégat `StepScan`
+> et même grille que le step-scan (`StepScanConfig.fly_scan`), pas d'agrégat `FlyScan` ni d'entité `FlyScanLine`.
 
 **Objectif** : scan rapide en mouvement continu — la sonde acquiert en permanence pendant que les moteurs se déplacent.
 

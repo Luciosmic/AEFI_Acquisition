@@ -231,7 +231,7 @@ class ScanExportService:
 
         directory = self._config.output_directory
         # Scan name only — each export port builds its own acquisition folder
-        # and per-device filenames (timestamp_stepScan_<device>_<name>) from it.
+        # and per-device filenames (timestamp_<stepScan|flyScan>_<device>_<name>) from it.
         filename_base = self._config.filename_base
         # Shared across both ports so CSV and HDF5 land in the same
         # acquisition folder (the post-processing trigger needs both files
@@ -254,8 +254,11 @@ class ScanExportService:
             formats=["CSV", "HDF5"],
             filename_base=filename_base,
         )
+        # Folder/file tag: a fly scan is an exploration map, not a measurement —
+        # its files must not be mistaken for a step scan's.
+        acquisition_kind = "flyScan" if getattr(event.config, "fly_scan", False) else "stepScan"
         for port in self._active_ports:
-            port.configure(directory, filename_base, metadata, timestamp=timestamp)
+            port.configure(directory, filename_base, metadata, timestamp=timestamp, acquisition_kind=acquisition_kind)
             port.start()
             port.write_metadata(acquisition_metadata)
         self._export_active = True
@@ -453,6 +456,9 @@ class ScanExportService:
             "scan_id": str(event.scan_id),
             "pattern": cfg.scan_pattern.name,
             "scan_axis": cfg.scan_axis.name,
+            # True = exploration map (positions interpolated at constant
+            # speed, no averaging) — not to be read as a measurement.
+            "fly_scan": cfg.fly_scan,
             "x_min": zone.x_min,
             "x_max": zone.x_max,
             "x_nb_points": cfg.x_nb_points,

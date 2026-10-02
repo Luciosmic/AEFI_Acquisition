@@ -513,6 +513,16 @@ class ArcusAdapter(IMotionPort):
         except Exception as e:
             raise RuntimeError(f"Failed to check motion status: {e}")
 
+    def get_cruise_speed_mm_s(self) -> float:
+        """
+        QUERY: High speed (HS, pulses/s) of the X axis x distance per pulse.
+        Both axes share the same setting (set_speed_mode / set_speed).
+        """
+        if not self._controller:
+            raise RuntimeError("Arcus controller not connected")
+        self._require_conversion()
+        return self._controller.get_axis_params("x").hs * self.MM_PER_STEP
+
     def get_axis_limits(self) -> tuple[float, float]:
         """
         QUERY: Get the maximum travel limits for X and Y axes.

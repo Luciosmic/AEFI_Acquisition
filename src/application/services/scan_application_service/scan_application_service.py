@@ -17,6 +17,7 @@ Rationale:
 from dataclasses import dataclass
 from typing import Any, Optional, Callable, List, Dict, Union
 import logging
+import math
 import queue
 import time
 from datetime import datetime
@@ -24,6 +25,7 @@ from datetime import datetime
 from .dtos.scan_dtos import Scan2DConfigDTO, LineScanConfigDTO, ScanStatusDTO
 from domain.step_scan.services.scan_trajectory_factory.scan_trajectory_factory import ScanTrajectoryFactory
 from domain.step_scan.services.line_scan_trajectory_factory.line_scan_trajectory_factory import LineScanTrajectoryFactory
+from domain.step_scan.services.fly_scan_line_projector.fly_scan_line_projector import FlyScanLineProjector
 from domain.step_scan.value_objects.line_scan_config.line_scan_config import LineScanConfig
 from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
 from domain.step_scan.services.measurement_statistics_service.measurement_statistics_service import MeasurementStatisticsService
@@ -57,6 +59,7 @@ from application.services.aefi_acquisition_service.dtos.aefi_acquisition_dtos im
 from application.services.electric_field_probe_service.i_api_electric_field_probe_service import IApiElectricFieldProbeService
 from application.services.electric_field_probe_service.dtos.electric_field_probe_dtos import ElectricFieldProbeAcquisitionConfig
 from domain.shared_kernel.events.aefi_voltage_sample_acquired.aefi_voltage_sample_acquired import AefiVoltageSampleAcquired
+from domain.shared_kernel.events.position_updated.position_updated import PositionUpdated
 
 # Error union (cross-layer translation)
 from .errors.motion_sync_error import (
@@ -79,6 +82,16 @@ def _drain_queue(q: "queue.Queue") -> None:
             q.get_nowait()
         except queue.Empty:
             return
+
+
+def _motion_failure_reason(error: MotionSyncError, where: str) -> str:
+    if isinstance(error, MotionTimeout):
+        return f"Motion timeout ({error.timeout_seconds}s) at {where}"
+    if isinstance(error, MotionHardwareFailed):
+        return f"Motion hardware failure at {where}: {error.error_detail}"
+    if isinstance(error, EmergencyStop):
+        return f"Emergency stop at {where}"
+    return f"Motion stopped externally at {where}: {error.reason}"  # type: ignore[union-attr]
 
 
 from domain.step_scan.step_scan import StepScan
@@ -262,8 +275,10 @@ class ScanApplicationService:
 
             trajectory = create_trajectory(config)
 
+            # Only the grid config knows fly scan (LineScanConfig has no such field).
+            run_loop = self._execute_fly_scan_loop if getattr(config, "fly_scan", False) else self._execute_scan_loop
             self._task_runner.submit(
-                lambda: self._execute_scan_loop(scan, trajectory, config)
+                lambda: run_loop(scan, trajectory, config)
             )
             return True
 
@@ -443,16 +458,7 @@ class ScanApplicationService:
                     sync_result = self._motion_sync.wait_for_motion(motion_id, timeout_seconds=30.0)
 
                     if sync_result.is_failure:
-                        error = sync_result.error
-                        if isinstance(error, MotionTimeout):
-                            reason = f"Motion timeout ({error.timeout_seconds}s) at point {i}"
-                        elif isinstance(error, MotionHardwareFailed):
-                            reason = f"Motion hardware failure at point {i}: {error.error_detail}"
-                        elif isinstance(error, EmergencyStop):
-                            reason = f"Emergency stop at point {i}"
-                        else:
-                            reason = f"Motion stopped externally at point {i}: {error.reason}"  # type: ignore[union-attr]
-                        scan.fail(reason)
+                        scan.fail(_motion_failure_reason(sync_result.error, f"point {i}"))
                         _release_streams()
                         self._publish_events(scan.domain_events)
                         return
@@ -619,6 +625,193 @@ class ScanApplicationService:
             # already ran for this scan.
             _release_streams()
 
+    # ==================================================================================
+    # FLY SCAN LOOP (quick exploration — same background task mechanism)
+    # ==================================================================================
+
+    # Polling period of the motion completion while samples are placed.
+    FLY_MOTION_POLL_S = 0.02
+
+    def _execute_fly_scan_loop(
+        self,
+        scan: StepScan,
+        trajectory: ScanTrajectory,
+        config: StepScanConfig,
+    ) -> None:
+        """
+        Fly-scan loop: each line of the grid is swept in one go while the ADC
+        stream keeps running. The positions the motion controller reports
+        while it moves (PositionUpdated, ~every 150 ms) give the instant each
+        grid point is crossed; the samples are read at that instant
+        (FlyScanLineProjector). Grid points are emitted live, as soon as
+        they are passed — never in a burst at the end of the line.
+
+        Software synchronization (reception timestamps in Python), accepted:
+        an exploration before a step scan, no stabilization, no averaging.
+        Same grid, aggregate and events as the step scan.
+        """
+        adc_queue: "queue.Queue" = queue.Queue()
+        position_queue: "queue.Queue" = queue.Queue()
+
+        def _on_adc_sample(event: AefiVoltageSampleAcquired) -> None:
+            adc_queue.put((time.monotonic(), event.sample))
+
+        def _on_position(event: PositionUpdated) -> None:
+            position_queue.put((time.monotonic(), event.position))
+
+        self._event_bus.subscribe("aefivoltagesampleacquired", _on_adc_sample)
+        self._event_bus.subscribe("positionupdated", _on_position)
+
+        # Same ownership rule as the step loop: only stop what we started.
+        adc_started_by_scan = not self._aefi_acquisition_service.is_acquisition_running()
+        if adc_started_by_scan:
+            self._aefi_acquisition_service.start_acquisition(AefiAcquisitionConfig())
+
+        def _release_streams() -> None:
+            self._event_bus.unsubscribe("aefivoltagesampleacquired", _on_adc_sample)
+            self._event_bus.unsubscribe("positionupdated", _on_position)
+            if adc_started_by_scan:
+                self._aefi_acquisition_service.stop_acquisition()
+
+        def _fail(reason: str) -> None:
+            # A cancel can land while a line is being swept — nothing left to fail then.
+            if scan.status in (ScanStatus.RUNNING, ScanStatus.PAUSED):
+                scan.fail(reason)
+            _release_streams()
+            self._publish_events(scan.domain_events)
+
+        def _may_continue() -> bool:
+            while scan.status == ScanStatus.PAUSED:
+                time.sleep(0.1)
+            return scan.status == ScanStatus.RUNNING
+
+        # Points passed while the scan is paused mid-line wait here: the
+        # aggregate only takes results while RUNNING, the line goes on anyway.
+        pending: List[ScanPointResult] = []
+
+        def _emit(line_index: int, line: List[Position2D], grid_points) -> None:
+            for k, measurement in grid_points:
+                pending.append(ScanPointResult(
+                    position=line[k], measurement=measurement, point_index=line_index * n + k,
+                ))
+            if scan.status != ScanStatus.RUNNING:
+                return
+            while pending:
+                scan.add_point_result(pending.pop(0))
+                # Same rule as the step loop: streams released before
+                # ScanCompleted is published.
+                if scan.status == ScanStatus.COMPLETED:
+                    _release_streams()
+                self._publish_events(scan.domain_events)
+
+        points = list(trajectory)
+        n = config.points_per_line()
+        lines = [points[i:i + n] for i in range(0, len(points), n)]
+        logger.info(
+            "ScanApplicationService: fly scan loop started scan_id=%s lines=%d points_per_line=%d",
+            scan.id, len(lines), n,
+        )
+        # ponytail: AEFI stream only — an auxiliary probe (Narda, ~50 Hz) is
+        # too slow to be swept; give it its own projector if a fly map of the
+        # field probe is ever wanted.
+        ignored = [channel.name for channel in self._auxiliary_probes if channel.is_ready()]
+        if ignored:
+            logger.warning("ScanApplicationService: fly scan scan_id=%s ignores auxiliary probes %s", scan.id, ignored)
+
+        try:
+            for line_index, line in enumerate(lines):
+                if not _may_continue():
+                    return
+
+                # Reach the line start and stop there, then sweep to its end.
+                sync_result = self._motion_sync.wait_for_motion(self._motion_port.move_to(line[0]), timeout_seconds=30.0)
+                if sync_result.is_failure:
+                    _fail(_motion_failure_reason(sync_result.error, f"start of fly line {line_index}"))
+                    return
+                if not _may_continue():
+                    return
+
+                start, end = line[0], line[-1]
+                length_mm = math.hypot(end.x - start.x, end.y - start.y)
+                ux, uy = (end.x - start.x) / length_mm, (end.y - start.y) / length_mm
+
+                def _abscissa(position: Position2D) -> float:
+                    return (position.x - start.x) * ux + (position.y - start.y) * uy
+
+                projector = FlyScanLineProjector(n, length_mm)
+                counts = {"samples": 0, "positions": 0, "live": 0}
+
+                def _drain(t_max: float = math.inf) -> None:
+                    for source, add, key in (
+                        (position_queue, lambda t, p: projector.add_position(t, _abscissa(p)), "positions"),
+                        (adc_queue, projector.add_sample, "samples"),
+                    ):
+                        while True:
+                            try:
+                                t, item = source.get_nowait()
+                            except queue.Empty:
+                                break
+                            if t > t_max:
+                                continue
+                            counts[key] += 1
+                            passed = add(t, item)
+                            counts["live"] += len(passed)
+                            _emit(line_index, line, passed)
+
+                # Only the speed setting, for the time budget of the line:
+                # placement comes from the reported positions.
+                speed_mm_s = self._motion_port.get_cruise_speed_mm_s()
+                _drain_queue(adc_queue)
+                _drain_queue(position_queue)
+                t_start = time.monotonic()
+                motion_id = self._motion_port.move_to(end)
+                deadline = t_start + 2 * length_mm / speed_mm_s + 10.0
+
+                while True:
+                    _drain()
+                    if scan.status == ScanStatus.CANCELLED:
+                        return
+                    sync_result = self._motion_sync.wait_for_motion(motion_id, timeout_seconds=self.FLY_MOTION_POLL_S)
+                    if sync_result.is_success:
+                        break
+                    if not isinstance(sync_result.error, MotionTimeout):
+                        _fail(_motion_failure_reason(sync_result.error, f"fly line {line_index}"))
+                        return
+                    if time.monotonic() > deadline:
+                        _fail(
+                            f"Motion timeout at fly line {line_index}: still moving after "
+                            f"{deadline - t_start:.1f}s ({length_mm:.0f} mm at {speed_mm_s:.1f} mm/s)"
+                        )
+                        return
+
+                t_end = time.monotonic()
+                _drain(t_max=t_end)  # what was queued before the completion was seen
+                # The motor is at the end now: close the trace there.
+                counts["live"] += len(passed := projector.add_position(t_end, _abscissa(self._motion_port.get_current_position())))
+                _emit(line_index, line, passed)
+
+                if counts["samples"] == 0:
+                    _fail(f"Fly line {line_index}: no AEFI sample in {t_end - t_start:.2f}s — nothing to place")
+                    return
+                filled = projector.finish()
+                logger.info(
+                    "ScanApplicationService: fly line swept scan_id=%s line=%d/%d samples=%d positions=%d "
+                    "points_live=%d points_at_end=%d duration_s=%.2f",
+                    scan.id, line_index + 1, len(lines), counts["samples"], counts["positions"],
+                    counts["live"], len(filled), t_end - t_start,
+                )
+                _emit(line_index, line, filled)
+                if not _may_continue():
+                    return
+                _emit(line_index, line, [])  # flush points held by a pause
+
+        except Exception as exc:
+            logger.error("Fly scan loop raised unexpectedly: scan_id=%s error=%s", scan.id, exc)
+            _fail(str(exc))
+
+        finally:
+            _release_streams()
+
     def _collect_samples(
         self, sample_queue: "queue.Queue", count: int, scan: StepScan
     ) -> Optional[List]:
@@ -771,6 +964,7 @@ class ScanApplicationService:
             scan_axis=ScanAxis[dto.scan_axis],
             differential_mode=dto.differential_mode,
             differential_settle_delay_ms=dto.differential_settle_delay_ms,
+            fly_scan=dto.fly_scan,
         )
 
     def _to_line_domain_config(self, dto: LineScanConfigDTO) -> LineScanConfig:

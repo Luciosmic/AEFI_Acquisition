@@ -2,11 +2,24 @@
 
 ## Fly-scan : transmission mécanique au domaine, puis projection en direct
 
-**Statut** (2026-10-01) : worktree `dev_scan` (décision Luis : tout se fait ici, y compris calibration et
-hardware). **Phase A faite** (non commitée) : suite verte hors le test de cadence du fake MCU, instable avant ce
-chantier ; démarrage réel en mock vérifié (amorçage moteur/driver/transmission, adaptateur à 21,8 µm/impulsion,
-avertissement de courant logué, second démarrage sans réamorçage). Phases B et C à faire. Décision ouverte avant B :
-décalage d'une demi-rampe.
+**Statut** (2026-10-02) : worktree `dev_scan` (décision Luis : tout se fait ici, y compris calibration et
+hardware). **Phase A commitée** (`f60ebc1`). **Phases B et C faites, non commitées** (décalage demi-rampe retenu) :
+- projection en direct (`FlyScanLineProjector`), vitesse de croisière et rampe lues sur le port moteur ;
+- redessin différé des panneaux de scan : mesuré 53 ms (carte) + 333 ms (profils) par point sur 81×81, l'UI ne
+  suivait que 2,6 points/s ; avec un fil de fond à 26 points/s pendant 10 s, retard 86 s en immédiat, 0,4 s max en
+  différé ;
+- course corrigée dans `EventBusMotionSynchronizer` (fin de mouvement perdue quand elle tombait à l'expiration
+  d'une attente courte — une ligne entière en timeout lors du premier essai dans l'appli) ;
+- appli réelle en mock (`main` + fake Arcus, fast) : fly-scan 81×81 complet en 348 s, 6561/6561 points, 0 point
+  complété en fin de ligne, retard UI médian 12 ms / p99 28 ms / max 1,7 s (pic isolé, non analysé) ;
+- suite : 918 passés.
+Essai banc (2026-10-02, modèle vitesse constante + demi-rampe) : en fast la projection courait devant le moteur
+(3,80 s réelles pour 3,31 s prévues → ~30 mm d'erreur en bout de ligne), ADC réel ~6 échantillons/s (≈11 mm par
+échantillon en fast, ≈3 mm en slow) ; slow : 11,77 s pour 11,62 s. **Décision Luis : placer par les positions
+rapportées par le contrôleur (`PositionUpdated`)**, synchronisation logicielle assumée pour un scan d'exploration.
+Fait (non commité) : `FlyScanLineProjector` sur trace de positions ; sur le stack fidèle (fake Arcus, signal =
+vraie position) erreur médiane 0, p95 ≤ 0,8 mm, max 8,3 mm en fast à 6 Hz — le fake n'a ni rampe ni latence USB,
+la précision réelle reste à voir au banc. Suite : 916 passés.
 
 ### Contexte
 

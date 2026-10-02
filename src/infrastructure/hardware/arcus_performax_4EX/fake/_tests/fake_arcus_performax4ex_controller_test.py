@@ -105,6 +105,16 @@ class TestFakeArcusPerformax4EXController(unittest.TestCase):
             adapter.move_to(Position2D(10.0, 10.0))
         self.assertFalse(self.controller.is_moving())
 
+    def test_real_adapter_speaks_mm_per_second_from_the_transmission(self):
+        """HS (pulses/s) stays in infrastructure: the port gives mm/s."""
+        self.controller.connect()
+        adapter = ArcusAdapter()
+        adapter.set_microns_per_pulse(21.8)
+        adapter.set_controller(self.controller)
+        adapter.set_speed_mode("fast")  # HS 3000
+
+        self.assertAlmostEqual(adapter.get_cruise_speed_mm_s(), 65.4)
+
     def test_set_axis_params_roundtrip(self):
         self.controller.connect()
         result = self.controller.set_axis_params("x", hs=3000)

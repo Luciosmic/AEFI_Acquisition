@@ -103,6 +103,15 @@ class IMotionPort(ABC):
         pass
 
     @abstractmethod
+    def get_cruise_speed_mm_s(self) -> float:
+        """
+        Speed reached once the acceleration ramp is over, for the current
+        speed setting (mm/s). Derived from the controller's pulse rate and
+        the distance per pulse set by set_microns_per_pulse().
+        """
+        pass
+
+    @abstractmethod
     def set_speed_mode(self, mode: str) -> None:
         """
         Apply a named speed preset ('slow', 'medium', or 'fast') to both axes.

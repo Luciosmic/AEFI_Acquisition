@@ -141,6 +141,9 @@ class MockMotionPort(IMotionPort):
         self.microns_per_pulse = microns_per_pulse
         logger.info(f"set_microns_per_pulse: {microns_per_pulse} µm/pulse")
 
+    def get_cruise_speed_mm_s(self) -> float:
+        return MEASURED_PORT_TIMING[self.last_speed_mode or DEFAULT_SPEED_MODE][1]
+
     def set_speed_mode(self, mode: str) -> None:
         if mode not in MEASURED_PORT_TIMING:
             raise ValueError(f"Unknown speed mode: {mode}")

@@ -29,6 +29,7 @@ class Scan2DConfigDTO:
     motion_speed_mm_s: Optional[float] = None
     differential_mode: bool = False
     differential_settle_delay_ms: float = 50.0
+    fly_scan: bool = False  # quick exploration: lines swept in one go, no stop per point
 
 
 @dataclass(frozen=True)

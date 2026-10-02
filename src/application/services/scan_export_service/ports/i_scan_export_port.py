@@ -30,7 +30,8 @@ class IScanExportPort(ABC):
         HDF5 land in the same acquisition folder; omit to self-generate
         (single-port callers, tests).
         `acquisition_kind`: folder/file name tag — `stepScan` for a 2D scan,
-        `timeSeries` for a continuous reading exported vs time.
+        `flyScan` for a fly-scan exploration map, `timeSeries` for a
+        continuous reading exported vs time.
         """
         pass
 

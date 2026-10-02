@@ -68,6 +68,11 @@ class StepScanConfig:
     # template, and in every fallback site together.
     differential_settle_delay_ms: float = 50.0  # electronic mute settle time, distinct from motor stabilization_delay_ms
 
+    # Fly scan: quick exploration, each line of the fast axis swept in one
+    # go while acquiring (see FlyScanLineProjector). Same grid as the step
+    # scan it prepares; stabilization and averaging don't apply.
+    fly_scan: bool = False
+
     def __post_init__(self):
         """Validate configuration parameters."""
         if self.x_nb_points < 1:
@@ -95,10 +100,24 @@ class StepScanConfig:
             raise ValueError(
                 f"COMB pattern does not support scan_axis={self.scan_axis} — only Y (columns-first) is supported"
             )
-    
+
+        if self.fly_scan and self.differential_mode:
+            raise ValueError("fly_scan does not support differential_mode — the excitation can't be muted mid-line")
+
+        if self.fly_scan and self.points_per_line() < 2:
+            raise ValueError(
+                f"fly_scan needs at least 2 points along the fast axis ({self.scan_axis.name}), "
+                f"got {self.points_per_line()}"
+            )
+
     def total_points(self) -> int:
         """Calculate total number of scan points."""
         return self.x_nb_points * self.y_nb_points
+
+    def points_per_line(self) -> int:
+        """Number of points along the fast axis: ScanTrajectoryFactory visits
+        the grid as consecutive lines of this many points."""
+        return self.y_nb_points if self.scan_axis == ScanAxis.Y else self.x_nb_points
     
     def validate(self):
         """Validate configuration and return ValidationResult.

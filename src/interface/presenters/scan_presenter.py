@@ -183,6 +183,7 @@ class ScanPresenter(QObject, IScanOutputPort, metaclass=QABCMeta):
             uncertainty_volts=0.001,     # Default
             differential_mode=bool(params.get("differential_mode", False)),
             differential_settle_delay_ms=float(params.get("differential_settle_delay_ms", 50.0)),
+            fly_scan=bool(params.get("fly_scan", False)),
         )
 
     @Slot()
