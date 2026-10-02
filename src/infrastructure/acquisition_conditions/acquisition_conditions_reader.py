@@ -4,16 +4,20 @@ Acquisition Conditions Reader
 See acquisition_conditions_reader_intention.md.
 """
 
+import json
 import logging
 from datetime import datetime
+from pathlib import Path
 from typing import Any, Callable, Dict, Mapping, Optional, Tuple
 
 from application.shared.acquisition_parameters.acquisition_conditions_dtos import (
     AcquisitionConditionsDTO,
     AdcSettingsDTO,
+    AxisMotionSettingsDTO,
     BenchPositionDTO,
     DdsChannelSettingsDTO,
     HostLinkDTO,
+    MotorsSettingsDTO,
     MountedComponentDTO,
     SensorDeploymentDTO,
     SignalGenerationSettingsDTO,
@@ -33,6 +37,8 @@ from domain.shared_kernel.operation_result import OperationResult
 logger = logging.getLogger(__name__)
 
 DDS_CHANNELS = (1, 2, 3, 4)
+ARCUS_CONFIG = Path(".aefi_acquisition/configs/arcus_default_config.json")
+MOTION_CONFIG = Path(".aefi_acquisition/configs/motion_last_config.json")
 
 
 class AcquisitionConditionsReader(IAcquisitionConditionsPort):
@@ -82,6 +88,7 @@ class AcquisitionConditionsReader(IAcquisitionConditionsPort):
                 lambda: SynchronousDetectionStateDTO(compensation_enabled=bool(self._compensation_enabled())),
             ),
             sensor_deployment=self._read("sensor_deployment", unknown, self._sensor_deployment),
+            motors=self._read("motors", unknown, _motors_settings),
             host_link=self._read("host_link", unknown, self._host_link) or HostLinkDTO(),
             hardware_backends=self._hardware_backends,
             unknown=unknown,
@@ -189,6 +196,28 @@ class AcquisitionConditionsReader(IAcquisitionConditionsPort):
         port = getattr(self._communicator, "port", None)
         baud_rate = getattr(self._communicator, "baudrate", None)
         return HostLinkDTO(serial_port=port, baud_rate=int(baud_rate) if port and baud_rate else None)
+
+
+def _motors_settings() -> MotorsSettingsDTO:
+    """Arcus profile (the file the Arcus configurator applies and saves) and the
+    Motion panel's speed mode / referential."""
+    with ARCUS_CONFIG.open(encoding="utf-8") as f:
+        arcus = json.load(f)
+    motion: Dict[str, Any] = {}
+    if MOTION_CONFIG.exists():
+        with MOTION_CONFIG.open(encoding="utf-8") as f:
+            motion = json.load(f)
+
+    def axis(name: str) -> AxisMotionSettingsDTO:
+        return AxisMotionSettingsDTO(
+            low_speed_hz=float(arcus[f"{name}_ls"]), high_speed_hz=float(arcus[f"{name}_hs"]),
+            acceleration_ms=float(arcus[f"{name}_acc"]), deceleration_ms=float(arcus[f"{name}_dec"]),
+        )
+
+    return MotorsSettingsDTO(
+        microns_per_step=float(arcus["microns_per_step"]), x=axis("x"), y=axis("y"),
+        speed_mode=motion.get("speed_mode"), referential=motion.get("referential_mode"),
+    )
 
 
 def _components(snapshot: Mapping[str, Any]) -> Tuple[MountedComponentDTO, ...]:

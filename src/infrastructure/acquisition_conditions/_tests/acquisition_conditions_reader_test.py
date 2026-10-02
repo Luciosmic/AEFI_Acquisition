@@ -83,6 +83,38 @@ class TestAcquisitionConditionsReader(unittest.TestCase):
         kwargs.update(overrides)
         return AcquisitionConditionsReader(**kwargs)
 
+    def test_motors_settings_from_the_arcus_and_motion_configs(self):
+        import json
+        import tempfile
+        from pathlib import Path
+        from unittest import mock
+
+        from infrastructure.acquisition_conditions import acquisition_conditions_reader as module
+
+        with tempfile.TemporaryDirectory() as tmp:
+            arcus, motion = Path(tmp) / "arcus.json", Path(tmp) / "motion.json"
+            arcus.write_text(json.dumps({
+                "microns_per_step": 21.8, "x_ls": 10, "x_hs": 1500, "x_acc": 300, "x_dec": 300,
+                "y_ls": 20, "y_hs": 1000, "y_acc": 200, "y_dec": 250,
+            }), encoding="utf-8")
+            motion.write_text(json.dumps({"speed_mode": "fast", "referential_mode": "centered"}), encoding="utf-8")
+            with mock.patch.object(module, "ARCUS_CONFIG", arcus), mock.patch.object(module, "MOTION_CONFIG", motion):
+                motors = self.reader().read_conditions().motors
+        self.assertEqual(motors.microns_per_step, 21.8)
+        self.assertEqual(motors.y.deceleration_ms, 250.0)
+        self.assertEqual((motors.speed_mode, motors.referential), ("fast", "centered"))
+
+    def test_missing_arcus_config_makes_the_motors_unknown_with_a_reason(self):
+        from pathlib import Path
+        from unittest import mock
+
+        from infrastructure.acquisition_conditions import acquisition_conditions_reader as module
+
+        with mock.patch.object(module, "ARCUS_CONFIG", Path("does/not/exist.json")):
+            conditions = self.reader().read_conditions()
+        self.assertIsNone(conditions.motors)
+        self.assertIn("motors", conditions.unknown)
+
     def test_catalog_comes_from_the_snapshot_with_every_kind(self):
         conditions = self.reader().read_conditions()
         by_kind = {c.kind: c for c in conditions.components}

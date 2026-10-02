@@ -95,6 +95,29 @@ class HostLinkDTO:
 
 
 @dataclass(frozen=True)
+class AxisMotionSettingsDTO:
+    """Arcus speed profile of one axis: low / high speed (pulses per second)
+    and acceleration / deceleration ramps."""
+
+    low_speed_hz: float
+    high_speed_hz: float
+    acceleration_ms: float
+    deceleration_ms: float
+
+
+@dataclass(frozen=True)
+class MotorsSettingsDTO:
+    """Motor settings applied — `microns_per_step` turns every commanded
+    position into steps: a scan's positions are only reproducible with it."""
+
+    microns_per_step: float
+    x: AxisMotionSettingsDTO
+    y: AxisMotionSettingsDTO
+    speed_mode: Optional[str] = None  # slow | medium | fast (Motion panel)
+    referential: Optional[str] = None  # absolute | centered (Motion panel)
+
+
+@dataclass(frozen=True)
 class AcquisitionConditionsDTO:
     """Everything the system knows about the hardware conditions. A None
     field is unknown; `unknown[field_name]` says why (never silent)."""
@@ -104,6 +127,7 @@ class AcquisitionConditionsDTO:
     signal_generation: Optional[SignalGenerationSettingsDTO] = None
     synchronous_detection: Optional[SynchronousDetectionStateDTO] = None
     sensor_deployment: Optional[SensorDeploymentDTO] = None
+    motors: Optional[MotorsSettingsDTO] = None
     host_link: HostLinkDTO = HostLinkDTO()
     hardware_backends: Mapping[str, str] = field(default_factory=dict)  # subsystem -> "real" | "mock"
     unknown: Mapping[str, str] = field(default_factory=dict)

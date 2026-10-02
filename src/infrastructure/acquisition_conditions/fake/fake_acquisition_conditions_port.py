@@ -10,9 +10,11 @@ from typing import List, Optional
 from application.shared.acquisition_parameters.acquisition_conditions_dtos import (
     AcquisitionConditionsDTO,
     AdcSettingsDTO,
+    AxisMotionSettingsDTO,
     BenchPositionDTO,
     DdsChannelSettingsDTO,
     HostLinkDTO,
+    MotorsSettingsDTO,
     MountedComponentDTO,
     SensorDeploymentDTO,
     SignalGenerationSettingsDTO,
@@ -74,6 +76,12 @@ def make_bench_conditions() -> AcquisitionConditionsDTO:
         sensor_deployment=SensorDeploymentDTO(
             mounting_id="m-sensor", mounted_at=_RECORDED_AT, theta_x_degrees=0.0, theta_y_degrees=-35.26,
             theta_z_degrees=45.0, rotation_origin="ideal",
+        ),
+        motors=MotorsSettingsDTO(
+            microns_per_step=21.8,
+            x=AxisMotionSettingsDTO(low_speed_hz=10.0, high_speed_hz=1500.0, acceleration_ms=300.0, deceleration_ms=300.0),
+            y=AxisMotionSettingsDTO(low_speed_hz=10.0, high_speed_hz=1500.0, acceleration_ms=300.0, deceleration_ms=300.0),
+            speed_mode="fast", referential="centered",
         ),
         host_link=HostLinkDTO(serial_port="COM10", baud_rate=1500000),
         hardware_backends={"motion": "real", "aefi_device": "real", "electric_field_probe": "real"},

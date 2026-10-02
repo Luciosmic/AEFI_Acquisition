@@ -181,7 +181,31 @@ def components(conditions: AcquisitionConditionsDTO, warn: Warn, *, state_read: 
         conditions.signal_generation, conditions, warn, **chip_kwargs
     )
     blocks.setdefault("microcontroller", dict(empty))
+    blocks.setdefault("motors", dict(empty))["settings"] = motors_settings(conditions, warn)
     return blocks
+
+
+def motors_settings(conditions: AcquisitionConditionsDTO, warn: Warn) -> Optional[Dict[str, Any]]:
+    motors = conditions.motors
+    if motors is None:
+        warn("components.motors.settings", f"réglages moteurs inconnus : {reason(conditions, 'motors')}")
+        return None
+
+    def axis(a) -> Dict[str, Any]:
+        return {
+            "low_speed": quantity(a.low_speed_hz, "Hz"),
+            "high_speed": quantity(a.high_speed_hz, "Hz"),
+            "acceleration": quantity(a.acceleration_ms, "ms"),
+            "deceleration": quantity(a.deceleration_ms, "ms"),
+        }
+
+    return {
+        "step_size": quantity(motors.microns_per_step, "um/{step}"),
+        "x": axis(motors.x),
+        "y": axis(motors.y),
+        "speed_mode": motors.speed_mode,
+        "referential": motors.referential,
+    }
 
 
 def component(mounted: MountedComponentDTO, warn: Warn) -> Dict[str, Any]:
