@@ -39,11 +39,14 @@ MOUNTED_ANGLES = {"theta_x": 36.4, "theta_y": 43.1, "theta_z": 2.5}  # the "real
 
 
 class RecordingOutputPort(ISensorCalibrationOutputPort):
-    def __init__(self):
+    def __init__(self, on_step=None):
         self.steps, self.succeeded, self.failed = [], [], []
+        self._on_step = on_step
 
     def present_automatic_calibration_step(self, message):
         self.steps.append(message)
+        if self._on_step is not None:
+            self._on_step()
 
     def present_automatic_calibration_succeeded(self, result):
         self.succeeded.append(result)
@@ -52,36 +55,37 @@ class RecordingOutputPort(ISensorCalibrationOutputPort):
         self.failed.append(reason)
 
 
-class SilentAcquisitionService:
-    """Acquisition that never delivers a sample (ADC unplugged)."""
+class SilentExecutor:
+    """Continuous acquisition that never delivers a sample (ADC unplugged)."""
 
     def __init__(self):
         self.running = False
 
-    def start_acquisition(self, config):
+    def start(self, config, acquisition_port):
         self.running = True
 
-    def stop_acquisition(self):
+    def stop(self):
         self.running = False
 
-    def is_acquisition_running(self):
+    def is_running(self):
         return self.running
 
 
-class BufferedAcquisitionService:
+class BufferedExecutor:
     """Back-to-back acquisition whose samples reach the event bus LAG samples
     late (serial/USB buffering): at each excitation change, several samples
     acquired under the previous excitation are still in transit."""
 
     LAG = 3
 
-    def __init__(self, event_bus, acquisition_port):
+    def __init__(self, event_bus):
         self._event_bus = event_bus
-        self._port = acquisition_port
+        self._port = None
         self._stop = threading.Event()
         self._thread = None
 
-    def start_acquisition(self, config):
+    def start(self, config, acquisition_port):
+        self._port = acquisition_port
         self._stop.clear()
         self._thread = threading.Thread(target=self._run, daemon=True)
         self._thread.start()
@@ -95,12 +99,12 @@ class BufferedAcquisitionService:
                 self._event_bus.publish("aefivoltagesampleacquired", buffer.pop(0))
             time.sleep(0.002)
 
-    def stop_acquisition(self):
+    def stop(self):
         self._stop.set()
         self._thread.join(timeout=2.0)
         self._thread = None
 
-    def is_acquisition_running(self):
+    def is_running(self):
         return self._thread is not None
 
 
@@ -117,7 +121,9 @@ class TestAutomaticSensorCalibration(unittest.TestCase):
             field_simulator=CubeSensorFieldSimulator.from_config(config),
         )
         self.acquisition_port = acquisition_port
-        self.acquisition_service = AefiAcquisitionService(MockAefiAcquisitionExecutor(self.event_bus), acquisition_port)
+        self.acquisition_service = AefiAcquisitionService(
+            MockAefiAcquisitionExecutor(self.event_bus), acquisition_port, self.event_bus
+        )
         self.output = RecordingOutputPort()
 
     def _make_service(self, acquisition_service=None, sample_timeout_s=10.0):
@@ -161,7 +167,7 @@ class TestAutomaticSensorCalibration(unittest.TestCase):
         started after the excitation settled may enter the mean, otherwise the
         baseline inherits the operator's (circular) excitation and the fit drifts."""
         self._operator_excitation()
-        service = self._make_service(acquisition_service=BufferedAcquisitionService(self.event_bus, self.acquisition_port))
+        service = self._make_service(acquisition_service=AefiAcquisitionService(BufferedExecutor(self.event_bus), self.acquisition_port))
 
         service.start_automatic_calibration()
 
@@ -218,10 +224,22 @@ class TestAutomaticSensorCalibration(unittest.TestCase):
         self.assertEqual(controllers, ["calibration automatique du capteur", None])
         self.assertIsNone(self.excitation_service.get_controller())
 
+    def test_stop_by_hand_is_refused_during_the_calibration(self):
+        self._operator_excitation()
+        refused = []
+        self.output = RecordingOutputPort(
+            on_step=lambda: refused.append(self.acquisition_service.stop_acquisition().is_failure)
+        )
+
+        self._make_service().start_automatic_calibration()
+
+        self.assertEqual(refused, [True, True, True])
+        self.assertIsNone(self.acquisition_service.get_controller())
+
     def test_missing_samples_fail_and_still_restore_the_excitation(self):
         self._operator_excitation()
         before = self.excitation_service.get_current_parameters()
-        silent = SilentAcquisitionService()
+        silent = AefiAcquisitionService(SilentExecutor(), self.acquisition_port)
 
         self._make_service(acquisition_service=silent, sample_timeout_s=0.1).start_automatic_calibration()
 

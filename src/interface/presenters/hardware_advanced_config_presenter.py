@@ -11,7 +11,10 @@ from dataclasses import replace
 from PySide6.QtCore import QObject, Signal, Slot
 from typing import List, Dict, Any, Optional
 
-from application.services.hardware_configuration_service.hardware_configuration_service import HardwareConfigurationService
+from application.services.hardware_configuration_service.hardware_configuration_service import (
+    HARDWARE_CONFIGURATION_CONTROL_CHANGED_TOPIC,
+    HardwareConfigurationService,
+)
 from application.services.excitation_configuration_service.excitation_configuration_service import (
     EXCITATION_FREQUENCY_CHANGED_TOPIC,
 )
@@ -59,6 +62,8 @@ class HardwareAdvancedConfigPresenter(QObject):
     specs_loaded = Signal(str, list)  # hardware_id, list[HardwareAdvancedParameterSchema]
     status_message = Signal(str)  # User feedback
     config_applied = Signal(str)  # hardware_id
+    # who holds the selected hardware's configuration ("" = editable by hand)
+    controller_changed = Signal(str)
 
     def __init__(self, config_service: HardwareConfigurationService, event_bus: IDomainEventBus):
         super().__init__()
@@ -71,6 +76,17 @@ class HardwareAdvancedConfigPresenter(QObject):
         event_bus.subscribe(
             DDS_SYNCHRONOUS_DETECTION_CHANNEL_CHANGED_TOPIC, self._on_dds_channel_config_changed
         )
+        # A characterization holds e.g. "mcu" (n_avg) / "ads131a04" (OSR): lock that hardware's fields.
+        event_bus.subscribe(HARDWARE_CONFIGURATION_CONTROL_CHANGED_TOPIC, self._on_control_changed)
+
+    def _on_control_changed(self, event) -> None:
+        if event.hardware_id != self._current_hardware_id:
+            return
+        if event.controller is None:
+            # Released: reload the specs, the owner may have changed the values (and restored them).
+            self.select_hardware(event.hardware_id)
+            return
+        self.controller_changed.emit(event.controller)
 
     def _on_frequency_changed(self, event: ExcitationFrequencyChanged) -> None:
         """Patch just the frequency_hz spec in place — re-fetching full specs
@@ -135,6 +151,7 @@ class HardwareAdvancedConfigPresenter(QObject):
             self._current_specs = domain_specs
 
             self.specs_loaded.emit(hardware_id, domain_specs)
+            self.controller_changed.emit(self._service.get_controller(hardware_id) or "")
             display_name = self._service.get_hardware_display_name(hardware_id)
             self.status_message.emit(f"Loaded configuration for {display_name}")
             
@@ -154,7 +171,10 @@ class HardwareAdvancedConfigPresenter(QObject):
             return
         
         try:
-            self._service.apply_config(self._current_hardware_id, config)
+            result = self._service.apply_config(self._current_hardware_id, config)
+            if result.is_failure:
+                self.status_message.emit(f"Error: configuration non appliquée — {result.error}")
+                return
             display_name = self._service.get_hardware_display_name(self._current_hardware_id)
             self.status_message.emit(f"Configuration applied to {display_name}")
             self.config_applied.emit(self._current_hardware_id)
@@ -171,7 +191,10 @@ class HardwareAdvancedConfigPresenter(QObject):
             return
         
         try:
-            self._service.save_config_as_default(self._current_hardware_id, config)
+            result = self._service.save_config_as_default(self._current_hardware_id, config)
+            if result.is_failure:
+                self.status_message.emit(f"Error: défaut non enregistré — {result.error}")
+                return
             display_name = self._service.get_hardware_display_name(self._current_hardware_id)
             self.status_message.emit(f"Default configuration saved for {display_name}")
         except Exception as e:
@@ -192,7 +215,10 @@ class HardwareAdvancedConfigPresenter(QObject):
             return
 
         try:
-            self._service.reset_to_default(self._current_hardware_id)
+            result = self._service.reset_to_default(self._current_hardware_id)
+            if result.is_failure:
+                self.status_message.emit(f"Error: reset refusé — {result.error}")
+                return
             domain_specs = self._service.get_parameter_specs(self._current_hardware_id)
             self._current_specs = domain_specs
             self.specs_loaded.emit(self._current_hardware_id, domain_specs)

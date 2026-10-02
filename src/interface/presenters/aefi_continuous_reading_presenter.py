@@ -8,7 +8,10 @@ Adapted from interface v1 for PySide6.
 from PySide6.QtCore import QObject, Signal, Slot
 from typing import Dict, Any
 
-from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
+from application.services.aefi_acquisition_service.aefi_acquisition_service import (
+    AEFI_ACQUISITION_CONTROL_CHANGED_TOPIC,
+    AefiAcquisitionService,
+)
 from application.services.aefi_acquisition_service.ports.i_aefi_acquisition_executor import AefiAcquisitionConfig
 from application.services.scan_export_service.scan_export_service import ScanExportService
 from application.services.scan_export_service.dtos.scan_export_dtos import ExportConfigDTO
@@ -44,6 +47,8 @@ class AefiContinuousReadingPresenter(QObject):
     sample_acquired = Signal(dict)      # {acquisition_id, index, measurement:{...}, timestamp}
     angles_updated = Signal(tuple)      # For updating the read-only display
     correction_states_updated = Signal(bool, bool, bool, str, str, str)  # (noise, phase, primary, noise_str, phase_str, primary_str)
+    # (controller, running): who holds the stream ("" = free, Start/Stop by hand) and whether it runs
+    acquisition_control_changed = Signal(str, bool)
 
     def __init__(self, service: AefiAcquisitionService, event_bus: IDomainEventBus, transformation_service: TransformationService,
                  export_service: ScanExportService):
@@ -63,6 +68,16 @@ class AefiContinuousReadingPresenter(QObject):
         self._event_bus.subscribe("aefivoltagereadingfailed", self._on_failed_event)
         self._event_bus.subscribe("aefivoltagereadingstopped", self._on_stopped_event)
         self._event_bus.subscribe("sensortransformationanglesupdated", self._on_angles_updated_event)
+        # A scan / calibration / characterization holds the stream: lock Start/Stop, show who.
+        self._event_bus.subscribe(AEFI_ACQUISITION_CONTROL_CHANGED_TOPIC, self._on_control_changed_event)
+
+    def _on_control_changed_event(self, event) -> None:
+        self.refresh_control_state()
+
+    def refresh_control_state(self) -> None:
+        self.acquisition_control_changed.emit(
+            self._service.get_controller() or "", self._service.is_acquisition_running()
+        )
 
     def _on_angles_updated_event(self, event: SensorTransformationAnglesUpdated):
         """Handle rotation angles update event."""
@@ -171,12 +186,19 @@ class AefiContinuousReadingPresenter(QObject):
             max_duration_s=params.get("max_duration_s", None),
             target_uncertainty=None,
         )
-        self._service.start_acquisition(config)
+        result = self._service.start_acquisition(config)
+        if result.is_failure:
+            self.acquisition_failed.emit(f"Démarrage refusé : {result.error}")
+            self.refresh_control_state()
 
     @Slot()
     def on_acquisition_stop_requested(self):
         """Handle stop request from panel."""
-        self._service.stop_acquisition()
+        result = self._service.stop_acquisition()
+        if result.is_failure:
+            self.acquisition_failed.emit(f"Arrêt refusé : {result.error}")
+            self.refresh_control_state()
+            return
         if self._current_acquisition_id is not None:
             self.acquisition_stopped.emit(self._current_acquisition_id)
 
