@@ -1,0 +1,452 @@
+date
+06/23/2026
+page
+1 of 9
+SERIES: AMT11 | DESCRIPTION: MODULAR INCREMENTAL ENCODER
+sameskydevices.com
+ELECTRICAL
+parameter conditions/description min typ max units
+power supply VDD 4.5 5 5.5 V
+start-up time1 200 ms
+current consumption with unloaded output 16 mA
+single ended channels
+output high level2
+output low level2
+output current (per channel)
+rise/fall time
+VDD-0.1
+8
+0.1
+15
+V
+V
+mA
+ns
+differential RS-422 channels
+output high level
+output low level
+output current (per channel)
+rise/fall time
+3
+7 11
+0.1
+40
+20
+V
+V
+mA
+ns
+Note: 1. Encoder must be stationary during start-up.
+                        2. Open load.
+INCREMENTAL CHARACTERISTICS
+parameter conditions/description min typ max units
+channels CMOS Voltage (S)
+Quadrature Line Driver (Q)
+A, B, Z
+A, A, B, B, Z, Z
+waveform CMOS voltage square wave
+phase difference A leads B for CCW rotation (viewed from front)
+quadrature resolutions3 48, 96, 100, 125, 192, 200, 250, 256, 360, 384, 400, 500, 
+512, 768, 800, 1000, 1024, 1600, 2000, 2048, 2500, 4096 PPR
+index4 one pulse per 360 degree rotation
+accuracy 0.2 degrees
+quadrature duty cycle (at each 
+resolution)
+48, 96, 100, 125, 192, 256, 384, 512, 1024, 2048, 4096
+200, 250, 360, 400, 768, 800
+500, 1000, 1600
+2000
+2500
+49
+48
+46
+44
+43
+50
+50
+50
+50
+50
+51
+52
+54
+56
+57
+%
+%
+%
+%
+%
+Notes: 3. Resolution programmed with AMT Viewpoint™ PC software. Default resolution set to 2048 PPR. All resolutions are listed as pre-quadrature, meaning the final number of 
+                              counts is PPR x 4.
+ 4. Zero position alignment set with AMT One Touch Zero™ module, AMT Viewpoint™ PC software, or serial commands
+FEATURES
+• proprietary capacitive ASIC technology
+• low power consumption
+• incremental resolutions up to 4096 PPR
+• resolutions programmable with AMT Viewpoint™ PC software
+• differential line driver versions (RS-422)
+• digitally set zero position
+• compact modular package with locking hub for ease of installation
+• radial and axial cable connections
+• 7 different mounting hole options
+• -40~125°C operating temperature
+¯ ¯ ¯
+CUI Devices is now Same Sky!    Learn More
+Additional Resources:    Product Page
+SAME SKY | SERIES: AMT11 | DESCRIPTION: MODULAR INCREMENTAL ENCODER date 06/23/2026 | page 2 of 9
+sameskydevices.com
+WAVEFORMS
+Z
+A
+B
+I
+P
+T
+S     S     S     S
+Quadrature signals with index showing 
+counter-clockwise rotation
+Figure 1
+MECHANICAL
+parameter conditions/description min typ max units
+motor shaft length 9 mm
+motor shaft tolerance NOM +0/-0.015 mm
+weight weight varies by configuration 15.7 g
+axial play ±0.3 mm
+rotational speed (at each   
+resolution)
+48, 96, 100, 125, 192, 200, 250, 256, 384, 400, 500, 512, 
+800, 1000, 1024, 2048 8000 RPM
+360, 768, 1600, 2000, 4096 4000 RPM
+2500 2500 RPM
+ENVIRONMENTAL
+parameter conditions/description min typ max units
+operating temperature -40 125 °C
+humidity non-condensing 85 %
+vibration 10~500 Hz, 5 minute sweep, 2 hours on each XYZ 5 G
+shock 3 pulses, 6 ms, 3 on each XYZ 200 G
+RoHS yes
+SERIAL INTERFACE
+parameter conditions/description min typ max units
+protocol serial UART
+controller driven by onboard Microchip PIC18F25K80.  See Micro-
+chip documentation for additional details.
+data rate 8 data bits, no parity, 1 stop bit, least significant bit first 115200 baud
+Parameter Description Expression Units Notes
+PPR resolution Pulses Per Revolution This is the user selected value and the format 
+all resolutions are listed in
+CPR counts PPR x 4 Counts Per Revolution This is the number of quadrature counts the 
+encoder has
+T period 360/R mechanical degrees
+P pulse width T/2 mechanical degrees
+S A/B state width T/4 mechanical degrees This is the width of a quadrature state
+I index width T/4 mechanical degrees The width of a once per turn index is the state 
+width for A & B lines
+The following parameters are defined by the resolution selected for each encoder. The encoders resolution is listed as Pulses Per 
+Revolution (PPR), which is the number of periods (or high pulses) over the encoders revolution.
+Note:             For more information regarding PPR, CPR, or LPR (Lines Per Revolution) view  https:/ /www.sameskydevices.com/blog/what-is-encoder-ppr-cpr-and-lpr
+Additional Resources:    Product Page
+SAME SKY | SERIES: AMT11 | DESCRIPTION: MODULAR INCREMENTAL ENCODER date 06/23/2026 | page 3 of 9
+sameskydevices.com
+PART NUMBER KEY
+For customers that prefer a specific AMT11 configuration, please reference the custom configuration key below.
+AMT11XX - XXXX - XXXX - X
+Quadrature 
+Resolution (PPR):
+0048
+0096
+0100
+0125
+0192
+0200
+0250
+0256
+0360
+0384
+0400
+0500
+0512
+0768
+0800
+1000
+1024
+1600
+2000
+2048
+2500
+4096
+Sleeve Bore Diameter:
+2000 = 2 mm
+3000 = 3 mm
+3175 = 3.175 mm (1/8”)
+4000 = 4 mm
+4760 = 4.76 mm (3/16”)
+5000 = 5 mm
+6000 = 6 mm
+6350 = 6.35 mm (1/4”)
+8000 = 8 mm
+Orientation:
+2 = Radial
+3 = Axial
+Base Number
+AMT11-V KITS
+In order to provide maximum flexibility for our customers, the AMT11 series is provided in kit form standard.  This allows the user to implement the encoder into a range of applica-
+tions using one sku#, reducing engineering and inventory costs.
+SLEEVES
+2mm3 mm 1/8 inch 
+(3.175mm) 4mm 3/16 inch 
+(4.76mm) 5mm6 mm 1/4 inch 
+(6.35mm) 8mm
+Light Sky 
+Blue Orange Purple Gray YellowG reen RedS nowB lue
+BASE WIDE
+BASE
+TOP
+COVER
+SHAFT
+ADAPTER TOOL A TOOL CBASE WIDE
+BASE
+TOP
+COVER
+SHAFT
+ADAPTER TOOL A TOOL C
+Output Signals:
+S = CMOS Voltage
+Q = Quadrature Line Driver (RS-422)
+AMT11XX-V
+Orientation:
+2 = Radial
+3 = Axial
+Output Signals:
+S = CMOS Voltage
+Q = Quadrature Line Driver
+ORDERING GUIDE
+Mounting Base:
+S = Standard
+W= Wide
+Additional Resources:    Product Page
+SAME SKY | SERIES: AMT11 | DESCRIPTION: MODULAR INCREMENTAL ENCODER date 06/23/2026 | page 4 of 9
+sameskydevices.com
+B
+795 3
+SCALE 4 : 1
+13
+14 12 10 8642
+11
+DETAIL B 
+115
+14
+13
+16
+SCALE 4 : 1
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+SECTION A-A
+17
+AA
+ENCODER INTERFACE
+PINOUT CONNECTOR
+Function
+# AMT112S AMT112Q AMT113S AMT113Q
+1 TX_ENC+ TX_ENC+ RX_ENC+ RX_ENC+
+2 RX_ENC+ RX_ENC+ TX_ENC+ TX_ENC+
+3 N/A N/A N/A N/A
+4 GND1 GND1 GND1 GND1
+5 N/A N/A N/A N/A
+6 +5 V +5 V +5 V +5 V
+7 N/A N/A N/A N/A
+8 B+ B+ B+ B+
+9 N/A B- N/A B-
+10 A+ A+ A+ A+
+11 N/A A- N/A A-
+12 Z+ Z+ Z+ Z+
+13 N/A Z- N/A Z-
+14 MCLRB MCLRB MCLRB MCLRB
+15 N/A N/A N/A N/A
+16 N/A N/A N/A N/A
+17 N/A N/A N/A N/A
+AMT112S & AMT112Q AMT113S & AMT113Q
+Mating Connector: 
+Samtec ISDF-07-D-L
+Mating Connector: 
+JAE FI-W17S
+Note: 1. Connect encoder GND to motor chassis as closely as possible. For additional grounding   
+                             techniques contact Same Sky Application Support.
+Additional Resources:    Product Page
+SAME SKY | SERIES: AMT11 | DESCRIPTION: MODULAR INCREMENTAL ENCODER date 06/23/2026 | page 5 of 9
+sameskydevices.com
+15.33 0.604
+15.30 0.602R 0.61015.49
+28.581 .125
+37.39 1.472
+10.34 0.407
+10.93 0.430
+MECHANICAL DRAWING
+units: mm[inch]
+tolerance: ±0.1
+units: mm[inch]
+tolerance: ±0.1
+AMT112S & AMT112Q
+AMT113S & AMT113Q
+15.33 0.604
+0.60215.30R15.49 0.610
+28.58 1.125
+0.40710.34
+37.25 1.467
+10.34 0.407
+Additional Resources:    Product Page
+SAME SKY | SERIES: AMT11 | DESCRIPTION: MODULAR INCREMENTAL ENCODER date 06/23/2026 | page 6 of 9
+sameskydevices.com
+MECHANICAL DRAWING (CONTINUED)
+units: mm[inch]
+tolerance: ±0.1
+MOUNTING HOLE PATTERNS
+25.40 1.000
+16.00 0.630
+20.90 0.823
+21.55 0.848
+22.00 0.866
+19.05 0.750
+0.275 0.011
+(3 PLCS)A
+0.116
+0.067
+(2 PLCS)
+2.95
+(4 PLCS)
+0.0792.00
+(2 PLCS)
+1.70
+12.60[0.496]
+DETAIL A
+SCALE 4 : 1
+R1.05 0.041
+STANDARD BASE
+units: mm[inch]
+tolerance: ±0.1
+ 0.09 
+ 2.96 
+ 2.87 
+1.81246.02
+32.44 1.277
+DETAIL A
+SCALE 4 : 1
+2.87 X 2.96
+(2 PLCS) A
+3.00 0.118
+(2 PLCS)
+WIDE BASE
+Additional Resources:    Product Page
+SAME SKY | SERIES: AMT11 | DESCRIPTION: MODULAR INCREMENTAL ENCODER date 06/23/2026 | page 7 of 9
+sameskydevices.com
+1. Insert Tool A as a spacer that deﬁnes the distance to 
+the mounting surface.
+2. Slide appropriate sized Sleeve over shaft all the way down to Tool A.
+3. Slide Shaft Adaptor over Sleeve.
+4. Use Tool C to press Shaft Adaptor over Sleeve (ensure Shaft Adapter 
+and Tool C spline alignment) until ﬂush with Tool A.
+1. Remove Tools A and C. 
+2. Place Base on motor, with Tool C used as a centering tool. 
+1. Fasten the Base on the motor (Tool C may need to be 
+rotated to allow for some mounting conﬁgurations).
+2. Remove Tool C.
+1. Make sure the snaps are fully engaged by pressing 
+on the Hub with the reverse side of Tool C.  
+2. When assembly is ﬁnished, the Shaft Adaptor, Sleeve 
+and Rotor Hub should all be ﬂush with the Motor 
+Shaft rotating freely.
+1. Snap the Top Cover onto the Base, carefully observing that the 
+teeth of the Shaft Adaptor align with the grooves in the hub. *
+*  W e recommend no more than three cycles of mounting and  
+removal of the AMT top cover base. Multiple cycles of mounting 
+and removing the top cover can cause base fatigue over time and 
+aﬀect encoder performance.
+1. Align Tool C with ﬂange on Base.
+2. Slide Base and Tool C onto motor, centering onto 
+the Shaft Adapter.
+STEP 1
+STEP 4
+STEP 2
+STEP 5
+STEP 3
+STEP 6
+ Align Tool C with 
+ﬂange on Base
+ASSEMBLY PROCEDURE
+Additional Resources:    Product Page
+SAME SKY | SERIES: AMT11 | DESCRIPTION: MODULAR INCREMENTAL ENCODER date 06/23/2026 | page 8 of 9
+sameskydevices.com
+Command Action Use
+0 This command sends an ascii ‘0’ (hex value 
+0x30).
+This zeros the encoder and sets the index at the current angular position. This 
+position is stored in non-volatile memory and will remain present until a zero 
+command is set again or encoder is reprogrammed via AMT Viewpoint™.
+Q This command sends an ascii ‘Q’ (hex value 
+0x51). This command restarts the encoder as if it were power cycled.
+APPLICATION NOTES
+Pin Description Connection
+TX_ENC+ This is the pin that the encoder transmits 
+serial data on. Connect this pin to the receiver input of your serial/UART interface.
+RX_ENC+ This is the pin that the encoder receives 
+serial commands on. Connect this pin to your serial/UART interface transmitter output.
+MCLRB
+This pin is used to force the encoder into 
+reset for reprogramming via the AMT 
+Viewpoint™ application.
+Connection of this pin is not required for the above serial commands.
+45
+Command: 0 (hex: 0x30, binary: 0b00001100)
+Start 0123
+Response: \r (hex: 0x0d, binary: 0b10110000)
+Stop
+Stop7TX_ENC+ Start 0123456
+RX_ENC+ 67
+The AMT11 series encoder is designed to operate with a serial UART interface. This interface allows the encoder to be configured and programmed by 
+the AMT Viewpoint™ application. Along with programming, the AMT Viewpoint™ application uses the serial interface for diagnostics and index alignment. 
+Below are instructions on how to use the serial interface for position zeroing.
+Serial Commands
+Table 1
+Serial Pins
+Table 2
+Serial Timing Diagram
+Figure 2
+The serial interface operates at 115200 baud with 8 data bits, no parity, and 1 stop bit, and 1 start bit. This is the standard UART   protocol. Data lines 
+TX_ENC+ and RX_ENC+ are high when inactive.
+SERIAL INTERFACE
+Additional Resources:    Product Page
+SAME SKY | SERIES: AMT11 | DESCRIPTION: MODULAR INCREMENTAL ENCODER date 06/23/2026 | page 9 of 9
+Same Sky offers a one (1) year limited warranty.  Complete warranty information is listed on our website.
+Same Sky reserves the right to make changes to the product at any time without notice.  Information provided by Same Sky is believed to be accurate and 
+reliable.  However, no responsibility is assumed by Same Sky for its use, nor for any infringements of patents or other rights of third parties which may result 
+from its use.
+Same Sky products are not authorized or warranted for use as critical components in equipment that requires an extremely high level of reliability.  A critical 
+component is any component of a life support device or system whose failure to perform can be reasonably expected to cause the failure of the life support 
+device or system, or to affect its safety or effectiveness.
+sameskydevices.com
+rev. description date
+1.0 initial release 04/30/2014
+1.01 updated datasheet 06/24/2014
+1.02 updated datasheet 10/13/2015
+1.03 added 360 & 2500 PPR resolutions, increased operating temperature to 125°C 12/18/2017
+1.04 changed outer mounting holes to be oblong on wide base version 10/10/2018
+1.05 brand update 11/21/2019
+1.06 updated quadrature duty cycle details 10/08/2020
+1.07 added motor shaft tolerance details, updated start-up details 09/10/2021
+1.08 logo, datasheet style update 08/05/2022
+1.09 CUI Devices rebranded to Same Sky 09/12/2024
+1.10 updated datasheet 01/23/2026
+1.11 updated features 06/23/2026
+The revision history provided is for informational purposes only and is believed to be accurate.
+REVISION HISTORY
+Additional Resources:    Product Page

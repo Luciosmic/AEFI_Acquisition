@@ -1,0 +1,90 @@
+REV. DESCRIPTION DATE
+A NEW DRAWING 01/09/2014
+SPECIFIED
+±0.05mm UNLESS OTHERWISE
+TOLERANCE:
+Website: www.cui.com
+A
+20050 SW 112th Ave.
+Tualatin, OR 97062
+Phone: 503-612-2300
+800-275-4899
+Fax: 503-612-2383
+RoHS
+2:1
+AMT31X Wide Base
+COPYRIGHT 2013 BY CUI INC.
+TITLE:
+MM [INCHES]AMT31X Wide Base
+AMT31X Wide Base
+PC FILE NAME: APPROVED BY:DRAWN BY:
+UNITS:PART NO.
+SCALE:
+RDS
+REV:
+Sleeve
+Shaft Adaptor
+Tool C
+Base *Wide BaseTop Cover
+Tool A
+AMT Encoder Series
+Sleeve Sizes:
+2 mm= Light Blue
+3 mm= Orange
+3.175 mm (1/8”)= Purple
+4 mm= Gray
+4.76 mm (3/16”)= Yellow
+5 mm= Green
+6 mm= Red
+6.35 mm (1/4”)= White
+8 mm = Blue
+1. Insert Tool A as a spacer that defines the distance 
+to the mounting surface.
+2. Slide appropriate sized Sleeve over shaft all the 
+way down to Tool A. 
+3. Slide Shaft Adaptor over Sleeve.  
+4. Use Tool C to press Shaft Adaptor over Sleeve 
+(ensure Shaft Adapter and Tool C spline 
+alignment) until flush with Tool A.
+1. Remove Tools A and C. 
+2. Place Base on motor, with 
+Tool C used as a centering tool. 
+1. Fasten the Base on the motor 
+(Tool C may need to be rotated to allow 
+for some mounting configurations).
+2. Remove Tool C.
+1. Make sure the snaps are fully engaged by pressing 
+on the Hub with the reverse side of Tool C. 
+2. When assembly is finished, the Shaft Adaptor, 
+Sleeve and Rotor Hub should all be flush with the 
+Motor Shaft rotating freely.
+1. Snap the Top Cover onto the Base, carefully observing 
+that the teeth of the Shaft Adaptor align with the 
+grooves in the hub.*
+* We recommend no more than three cycles of 
+mounting and removal of the AMT top cover base. 
+Multiple cycles of mounting and removing the top 
+cover can cause base fatigue over time and affect 
+encoder performance.
+STEP 1
+STEP 4
+STEP 2
+STEP 5
+STEP 3
+STEP 6
+1. Align Tool C with flange on Base.
+2. Slide Base and Tool C onto motor, 
+centering onto the Shaft Adapter. 
+ Align Tool C with 
+flange on Base
+Assembly Instructions
+Same Sky’s products are not intended for applications where a failure could result in costly, dangerous, or life 
+threatening situations. Same Sky will not be responsible for damages, or losses greater than the cost of the 
+Same Sky replacement parts.
+6405 SW Rosewood St, Ste C 
+Lake Oswego, OR 97035  
+© 2026 Same Sky. All rights reserved.
+Information in this document is subject to change without notice.
+For additional instructions or information contact customer 
+support at: 877.323.3576
+For more information visit www.sameskydevices.com/amt
