@@ -85,3 +85,18 @@ def test_arrow_step_applies_immediately_but_typing_waits_for_enter():
     QTest.keyClick(phase, Qt.Key.Key_Return)
     assert len(applied) == 2
     assert applied[1]["ch2_phase"] == 16384
+
+
+def test_controlled_configuration_locks_fields_and_buttons_even_after_a_specs_refresh():
+    panel = _make_panel()
+
+    panel.set_controller("caractérisation débit MCU")
+    panel.set_parameter_specs("ad9106_dds", [_spec("ch2_gain", 1200.0, 16376.0)])  # live sync rebuild
+
+    assert not panel._content_widget.isEnabled()
+    assert not panel._save_default_btn.isEnabled()
+    assert not panel._reset_default_btn.isEnabled()
+    assert "caractérisation débit MCU" in panel._controller_label.text()
+
+    panel.set_controller("")
+    assert panel._content_widget.isEnabled()

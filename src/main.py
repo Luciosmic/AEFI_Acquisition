@@ -23,6 +23,12 @@ from application.services.scan_application_service.scan_application_service impo
 from application.services.excitation_configuration_service.excitation_configuration_service import ExcitationConfigurationService
 from application.services.synchronous_detection_service.synchronous_detection_service import SynchronousDetectionService
 from application.services.sensor_calibration_service.sensor_calibration_service import SensorCalibrationService
+from application.services.acquisition_throughput_characterization_service.acquisition_throughput_characterization_service import (
+    AcquisitionThroughputCharacterizationService,
+)
+from infrastructure.persistence.acquisition_throughput.csv_acquisition_throughput_export_port import (
+    CsvAcquisitionThroughputExportPort,
+)
 from application.services.source_geometry_calibration_service.source_geometry_calibration_service import SourceGeometryCalibrationService
 from application.services.hardware_component_service.hardware_component_service import HardwareComponentService
 from application.services.mechanical_transmission_calibration_service.mechanical_transmission_calibration_service import (
@@ -88,6 +94,9 @@ from interface.presenters.motion_presenter import MotionPresenter
 from interface.presenters.excitation_presenter import ExcitationPresenter
 from interface.presenters.synchronous_detection_presenter import SynchronousDetectionPresenter
 from interface.presenters.sensor_calibration_presenter import SensorCalibrationPresenter
+from interface.presenters.acquisition_throughput_characterization_presenter import (
+    AcquisitionThroughputCharacterizationPresenter,
+)
 from interface.presenters.source_geometry_calibration_presenter import SourceGeometryCalibrationPresenter
 from interface.presenters.hardware_component_presenter import HardwareComponentPresenter
 from interface.presenters.event_log_presenter import EventLogPresenter
@@ -204,7 +213,7 @@ def main(hardware_config: dict | None = None):
     # through this service's stream (start/stop + subscribe) instead of
     # pulling acquisition_port directly, so it needs the service, not the
     # raw port.
-    continuous_service = AefiAcquisitionService(hw.continuous_executor, hw.acquisition_port)
+    continuous_service = AefiAcquisitionService(hw.continuous_executor, hw.acquisition_port, event_bus)
     logger.info("Services -> AefiAcquisitionService created (continuous acquisition)")
 
     # Electric Field Probe Service
@@ -401,8 +410,22 @@ def main(hardware_config: dict | None = None):
     configurators.extend(hw.mcu_root.configurators)
     logger.info(f"Config -> added {len(hw.mcu_root.configurators)} MCU configurator(s)")
 
-    hardware_config_service = HardwareConfigurationService(configurators)
+    hardware_config_service = HardwareConfigurationService(configurators, event_bus)
     logger.info(f"Config -> service created with {len(configurators)} configurator(s)")
+
+    # Throughput / noise vs MCU n_avg (microcontroller tab of the Calibration panel).
+    # Holds the excitation, the acquisition stream and the n_avg / OSR configuration
+    # (Hardware Advanced Config) while it runs.
+    acquisition_throughput_service = AcquisitionThroughputCharacterizationService(
+        excitation_service=excitation_service,
+        acquisition_service=continuous_service,
+        averaging_port=hw.acquisition_averaging,
+        export_port=CsvAcquisitionThroughputExportPort(),
+        task_runner=task_runner,
+        event_bus=event_bus,
+        hardware_configuration=hardware_config_service,
+    )
+    logger.info("Services -> AcquisitionThroughputCharacterizationService created")
 
     # 7. Create Lifecycle Services (only if real hardware is used)
     # For mock-only, we skip startup
@@ -455,6 +478,7 @@ def main(hardware_config: dict | None = None):
         HardwareComponentPresenter(hardware_component_service, kind, event_bus)
         for kind in hardware_component_service.list_kinds()
     ]
+    acquisition_throughput_presenter = AcquisitionThroughputCharacterizationPresenter(acquisition_throughput_service)
 
     # Continuous Presenter needs Transformation Service now
     aefi_continuous_reading_presenter = AefiContinuousReadingPresenter(
@@ -491,6 +515,7 @@ def main(hardware_config: dict | None = None):
         source_geometry_calibration_presenter,
         hardware_component_presenters,
         event_log_presenter,
+        acquisition_throughput_presenter,
     )
 
     # 11. Startup Sequence (hardware init if real hardware) or Direct Launch (if mocks only)

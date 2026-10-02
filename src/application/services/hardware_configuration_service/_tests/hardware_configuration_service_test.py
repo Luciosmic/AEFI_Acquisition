@@ -198,6 +198,41 @@ class TestHardwareConfigurationServiceResetToDefault(unittest.TestCase):
             self.service.reset_to_default("unknown_hw")
 
 
+class TestHardwareConfigurationControl(unittest.TestCase):
+    """Single owner per hardware: while a controller holds a hardware's
+    configuration, the Hardware Advanced Config panel cannot change it."""
+
+    def setUp(self):
+        from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+
+        self.provider = _FakeResettableProvider()
+        self.event_bus = InMemoryEventBus()
+        self.service = HardwareConfigurationService([self.provider], self.event_bus)
+        self.events = []
+        self.event_bus.subscribe("hardwareconfigurationcontrolchanged", self.events.append)
+
+    def test_changes_by_hand_are_refused_while_controlled(self):
+        self.service.take_control("fake_hw", "caractérisation")
+
+        for result in (
+            self.service.apply_config("fake_hw", {}),
+            self.service.save_config_as_default("fake_hw", {}),
+            self.service.reset_to_default("fake_hw"),
+        ):
+            self.assertTrue(result.is_failure)
+            self.assertIn("caractérisation", result.error)
+        self.assertFalse(self.provider.reset_called)
+
+    def test_release_makes_it_editable_again_and_is_published(self):
+        self.service.take_control("fake_hw", "caractérisation")
+        self.service.release_control("fake_hw", "caractérisation")
+
+        self.assertTrue(self.service.reset_to_default("fake_hw").is_success)
+        self.assertEqual([(e.hardware_id, e.controller) for e in self.events],
+                         [("fake_hw", "caractérisation"), ("fake_hw", None)])
+        self.assertIsNone(self.service.get_controller("fake_hw"))
+
+
 if __name__ == "__main__":
     unittest.main()
 

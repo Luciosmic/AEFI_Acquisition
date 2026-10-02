@@ -49,7 +49,7 @@ class TestAcquisitionSnapshotReader(unittest.TestCase):
     def test_missing_config_files_are_omitted_and_empty_registries_are_flagged(self):
         snapshot = self.reader.read()
 
-        self.assertEqual(set(snapshot), {"hardware_configuration"})
+        self.assertEqual(set(snapshot), {"hardware_configuration", "hardware_settings"})
         hardware = snapshot["hardware_configuration"]
         for kind in HardwareComponentKind:
             self.assertIsNone(hardware[kind.value])
@@ -119,12 +119,55 @@ class TestAcquisitionSnapshotReader(unittest.TestCase):
     def test_present_config_files_land_under_their_section_key(self):
         configs_dir = Path(".aefi_acquisition/configs")
         configs_dir.mkdir(parents=True)
-        (configs_dir / "ad9106_last_config.json").write_text(json.dumps({"frequency_hz": 1000.0}), encoding="utf-8")
+        (configs_dir / "motion_last_config.json").write_text(json.dumps({"speed_mode": "fast"}), encoding="utf-8")
 
         snapshot = self.reader.read()
 
-        self.assertEqual(snapshot["ad9106_last_config"], {"frequency_hz": 1000.0})
+        self.assertEqual(snapshot["motion_last_config"], {"speed_mode": "fast"})
         self.assertNotIn("aefi_device_hardware_identity", snapshot)  # template is no longer copied
+
+    def _write_config(self, name: str, content: dict) -> None:
+        configs_dir = Path(".aefi_acquisition/configs")
+        configs_dir.mkdir(parents=True, exist_ok=True)
+        (configs_dir / name).write_text(json.dumps(content), encoding="utf-8")
+
+    def test_applied_adc_and_mcu_settings_are_exported_for_reproducibility(self):
+        """n_avg and the ADC oversampling set the noise and the sample rate:
+        an export without them cannot be reproduced."""
+        self._write_config("ads131a04_default_config.json", {"oversampling_ratio": 4096, "clkin_divider": 2, "iclk_divider": 2})
+        self._write_config("ads131a04_last_config.json", {"oversampling_ratio": 1024})
+        self._write_config("mcu_default_config.json", {"n_avg": 127})
+        self._write_config("mcu_last_config.json", {"n_avg": 16})
+
+        settings = self.reader.read()["hardware_settings"]
+
+        # What is applied = default + last resolved (last wins), not the last file alone.
+        self.assertEqual(settings["ads131a04"], {"oversampling_ratio": 1024, "clkin_divider": 2, "iclk_divider": 2})
+        self.assertEqual(settings["mcu"], {"n_avg": 16})
+
+    def test_applied_dds_settings_merge_default_and_last_per_channel(self):
+        self._write_config("ad9106_default_config.json", {"frequency_hz": 1000.0, "channels": {"1": {"gain": 0, "phase": 0}}})
+        self._write_config("ad9106_last_config.json", {"channels": {"1": {"gain": 1100}}})
+
+        ad9106 = self.reader.read()["hardware_settings"]["ad9106"]
+
+        self.assertEqual(ad9106, {"frequency_hz": 1000.0, "channels": {"1": {"gain": 1100, "phase": 0}}})
+
+    def test_unknown_settings_are_flagged_not_silently_dropped(self):
+        settings = self.reader.read()["hardware_settings"]
+
+        for name in ("ad9106", "ads131a04", "mcu"):
+            self.assertIsNone(settings[name])
+        self.assertEqual(len(settings["warnings"]), 3)
+
+    def test_unreadable_settings_file_does_not_break_the_export(self):
+        self._write_config("mcu_default_config.json", {"n_avg": 127})
+        Path(".aefi_acquisition/configs/mcu_last_config.json").write_text("{not json", encoding="utf-8")
+
+        settings = self.reader.read()["hardware_settings"]
+
+        self.assertEqual(settings["mcu"], {"n_avg": 127})
+        self.assertTrue(any("mcu_last_config.json" in w for w in settings["warnings"]))
 
 
 if __name__ == "__main__":

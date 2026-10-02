@@ -1,9 +1,8 @@
 import logging
 import queue
-import time
 from uuid import UUID
 from datetime import datetime, timedelta
-from typing import List, Optional, Tuple
+from typing import Optional, Tuple
 
 import numpy as np
 
@@ -28,7 +27,9 @@ from application.services.sensor_calibration_service.i_api_sensor_calibration_se
 from application.services.sensor_calibration_service.ports.i_sensor_calibration_output_port import (
     ISensorCalibrationOutputPort,
 )
+from application.shared.exclusive_control.exclusive_control import take_all
 from application.shared.ports.i_async_task_runner import IAsyncTaskRunner
+from application.shared.settled_sample_collection.settled_sample_collection import collect_settled_samples
 from domain.calibration.errors.sensor_response_degenerate_error import SensorResponseDegenerateError
 from domain.calibration.services.sensor_mounting_solver.sensor_mounting_solver import solve_mounting_angles
 from domain.shared_kernel.excitation.value_objects.excitation_mode import ExcitationMode
@@ -59,6 +60,7 @@ from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
 SENSOR_CALIBRATION_ENTRY_ADDED_TOPIC = "sensorcalibrationentryadded"
 ACTIVE_SENSOR_ROTATION_CHANGED_TOPIC = "activesensorrotationchanged"
 AEFI_VOLTAGE_SAMPLE_ACQUIRED_TOPIC = "aefivoltagesampleacquired"
+# Owner name of the excitation and of the acquisition stream during the automatic calibration.
 EXCITATION_CONTROLLER = "calibration automatique du capteur"
 
 logger = logging.getLogger(__name__)
@@ -113,6 +115,7 @@ class SensorCalibrationService(IApiSensorCalibrationService):
         self._sample_timeout_s = sample_timeout_s
         self._output_port: Optional[ISensorCalibrationOutputPort] = None
         self._automatic_calibration_running = False
+        self._releases: list = []  # controls held by the running automatic calibration
         self._calibration_repository = calibration_repository
         self._sensor_mounting_id = sensor_mounting_id
         self._source_geometry_entry_id = source_geometry_entry_id
@@ -206,11 +209,18 @@ class SensorCalibrationService(IApiSensorCalibrationService):
                 "régler un niveau d'excitation non nul (S1-S2 et S3-S4) avant la calibration automatique"
             )
             return
-        # Single owner: refused during a scan; locks the Excitation panel until released.
-        control = self._excitation_service.take_control(EXCITATION_CONTROLLER)
-        if control.is_failure:
-            self._fail_automatic_calibration(control.error)
+        # Single owner of the excitation and of the acquisition stream: refused
+        # during a scan; locks the Excitation panel and Continuous Reading Start/Stop.
+        taken = take_all([
+            (lambda: self._excitation_service.take_control(EXCITATION_CONTROLLER),
+             lambda: self._excitation_service.release_control(EXCITATION_CONTROLLER)),
+            (lambda: self._acquisition_service.take_control(EXCITATION_CONTROLLER),
+             lambda: self._acquisition_service.release_control(EXCITATION_CONTROLLER)),
+        ])
+        if taken.is_failure:
+            self._fail_automatic_calibration(taken.error)
             return
+        self._releases = taken.value
         self._automatic_calibration_running = True
         self._task_runner.submit(self._run_automatic_calibration)
 
@@ -247,7 +257,9 @@ class SensorCalibrationService(IApiSensorCalibrationService):
                     )
                 )
         finally:
-            self._excitation_service.release_control(EXCITATION_CONTROLLER)
+            for release in self._releases:
+                release()
+            self._releases = []
             self._automatic_calibration_running = False
 
     def _measure_responses(self) -> Tuple[np.ndarray, np.ndarray]:
@@ -265,7 +277,7 @@ class SensorCalibrationService(IApiSensorCalibrationService):
         self._event_bus.subscribe(AEFI_VOLTAGE_SAMPLE_ACQUIRED_TOPIC, _on_sample)
         started_here = not self._acquisition_service.is_acquisition_running()
         if started_here:
-            self._acquisition_service.start_acquisition(AefiAcquisitionConfig())
+            self._acquisition_service.start_acquisition(AefiAcquisitionConfig(), controller=EXCITATION_CONTROLLER)
         levels = (previous.level_s1_s2.value, previous.level_s3_s4.value)
         try:
             baseline = self._measure_step(samples, "baseline (excitation coupée)", ExcitationMode.Y_DIR, (0.0, 0.0), previous.frequency)
@@ -274,7 +286,7 @@ class SensorCalibrationService(IApiSensorCalibrationService):
         finally:
             self._event_bus.unsubscribe(AEFI_VOLTAGE_SAMPLE_ACQUIRED_TOPIC, _on_sample)
             if started_here:
-                self._acquisition_service.stop_acquisition()
+                self._acquisition_service.stop_acquisition(controller=EXCITATION_CONTROLLER)
             logger.info("SensorCalibrationService: restoring the operator's excitation %s", previous)
             if previous.mode == ExcitationMode.CUSTOM:
                 logger.warning(
@@ -290,13 +302,8 @@ class SensorCalibrationService(IApiSensorCalibrationService):
         self, samples: "queue.Queue", label: str, mode: ExcitationMode, levels: Tuple[float, float], frequency: float
     ) -> np.ndarray:
         """Mean in-phase sensor vector over `samples_per_step` samples acquired
-        entirely after the excitation was applied and had `settle_delay_s` to settle.
-
-        A sample's timestamp marks the END of its acquisition window (taken
-        when the MCU answers), and the stream acquires back-to-back: sample i
-        starts after sample i-1 ends. So sample i is clean iff its predecessor
-        (same stream, index i-1) ended after the settle instant — whatever the
-        number of samples buffered or in flight between ADC and event bus."""
+        entirely after the excitation was applied and had `settle_delay_s` to
+        settle (causal rule: application/shared/settled_sample_collection)."""
         if self._output_port is not None:
             self._output_port.present_automatic_calibration_step(f"Mesure {label}…")
         applied = self._excitation_service.set_excitation(
@@ -305,29 +312,10 @@ class SensorCalibrationService(IApiSensorCalibrationService):
         if applied.is_failure:  # programmer error: we hold the control
             raise RuntimeError(f"excitation refused during automatic calibration: {applied.error}")
         settled_at = datetime.now() + timedelta(seconds=self._settle_delay_s)
-
-        collected: List = []
-        rejected = 0
-        predecessor = None
-        deadline = time.monotonic() + self._settle_delay_s + self._sample_timeout_s
-        while len(collected) < self._samples_per_step:
-            remaining = deadline - time.monotonic()
-            if remaining <= 0:
-                break
-            try:
-                event = samples.get(timeout=remaining)
-            except queue.Empty:
-                break
-            if (
-                predecessor is not None
-                and event.acquisition_id == predecessor.acquisition_id
-                and event.sample_index == predecessor.sample_index + 1
-                and predecessor.sample.timestamp > settled_at
-            ):
-                collected.append(event.sample)
-            else:
-                rejected += 1
-            predecessor = event
+        kept, rejected = collect_settled_samples(
+            samples, self._samples_per_step, settled_at, self._settle_delay_s + self._sample_timeout_s
+        )
+        collected = [event.sample for event in kept]
         logger.info(
             "SensorCalibrationService: step '%s' rejected %d sample(s) started before the excitation settled",
             label, rejected,

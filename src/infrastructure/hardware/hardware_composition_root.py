@@ -70,7 +70,16 @@ class HardwareCompositionRoot:
                 FakeMCUSerialCommunicator,
             )
             logger.info("Acquisition -> mock (MCUCompositionRoot, simulated communicator)")
-            self.mcu_root = MCUCompositionRoot(event_bus=event_bus, communicator=FakeMCUSerialCommunicator())
+            # T(n) = 10 ms + n/1 kHz, 30 counts (~9 µV) per conversion: plausible
+            # until the bench throughput characterization measures the real values.
+            # 10 ms keeps n_avg=1 under ~100 samples/s (faster saturates the UI).
+            self.mcu_root = MCUCompositionRoot(
+                event_bus=event_bus,
+                communicator=FakeMCUSerialCommunicator(
+                    acquisition_delay_s=0.01, adc_output_rate_hz=1000.0, noise_std_counts=30.0
+                ),
+            )
+        self.acquisition_averaging = self.mcu_root.acquisition_averaging
 
         base_acquisition_port = self.mcu_root.acquisition
         self.excitation_port: IExcitationPort = self.mcu_root.excitation

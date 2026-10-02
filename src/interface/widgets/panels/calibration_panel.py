@@ -14,6 +14,11 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QTabWidget
 from interface.widgets.panels.sensor_calibration_panel import SensorCalibrationPanel
 from interface.widgets.panels.source_geometry_calibration_panel import SourceGeometryCalibrationPanel
 from interface.widgets.panels.hardware_component_panel import HardwareComponentPanel
+from interface.widgets.panels.acquisition_throughput_characterization_widget import (
+    AcquisitionThroughputCharacterizationWidget,
+)
+
+_MICROCONTROLLER_KEY = "microcontroller"  # HardwareComponentKindDTO.key
 
 
 class CalibrationPanel(QWidget):
@@ -25,6 +30,8 @@ class CalibrationPanel(QWidget):
         self.sensor_calibration_panel = SensorCalibrationPanel(orientation_view=sensor_orientation_view)
         self.source_geometry_panel = SourceGeometryCalibrationPanel()
         self.hardware_component_panels: Dict[str, HardwareComponentPanel] = {}
+        # Shown in the microcontroller tab, which it characterizes.
+        self.acquisition_throughput_widget = AcquisitionThroughputCharacterizationWidget()
 
         self._tabs = QTabWidget()
         self._tabs.setUsesScrollButtons(True)
@@ -39,6 +46,8 @@ class CalibrationPanel(QWidget):
         """One tab per hardware component kind (`HardwareComponentKindDTO`),
         added at wiring time since the kinds come from the application layer."""
         panel = HardwareComponentPanel(kind)
+        if kind.key == _MICROCONTROLLER_KEY:
+            panel.add_tool(self.acquisition_throughput_widget)
         self.hardware_component_panels[kind.key] = panel
         self._tabs.addTab(panel, kind.label)
         return panel

@@ -69,8 +69,8 @@ class TestScanDifferentialModeIntegration(unittest.TestCase):
         # No sensor rotation configured -> source frame == sensor frame,
         # offset vector applies unrotated.
 
-        continuous_service = AefiAcquisitionService(
-            MockAefiAcquisitionExecutor(self.event_bus), self.acquisition_port
+        self.continuous_service = continuous_service = AefiAcquisitionService(
+            MockAefiAcquisitionExecutor(self.event_bus), self.acquisition_port, self.event_bus
         )
         self.service = ScanApplicationService(
             self.motion_port,
@@ -92,9 +92,9 @@ class TestScanDifferentialModeIntegration(unittest.TestCase):
         self.event_bus.subscribe("scancompleted", lambda e: done.set())
         return done
 
-    def _one_point_scan(self, differential_mode=False):
+    def _one_point_scan(self, differential_mode=False, x_nb_points=1):
         return Scan2DConfigDTO(
-            x_min=0, x_max=1, x_nb_points=1,
+            x_min=0, x_max=1, x_nb_points=x_nb_points,
             y_min=0, y_max=1, y_nb_points=1,
             scan_pattern="RASTER",
             stabilization_delay_ms=0,
@@ -115,6 +115,28 @@ class TestScanDifferentialModeIntegration(unittest.TestCase):
 
         self.assertEqual(controllers, ["scan", None])
         self.assertIsNone(self.excitation_service.get_controller())
+
+    def test_scan_holds_the_acquisition_stream_then_gives_it_back(self):
+        """Stop by hand at the first of 2 points (the last point completes the
+        scan, which releases the stream before publishing it)."""
+        stop_by_hand_refused = []
+        self.event_bus.subscribe(
+            "scanpointacquired",
+            lambda e: stop_by_hand_refused.append(self.continuous_service.stop_acquisition().is_failure),
+        )
+
+        done = self._subscribe_completion()
+        self.assertTrue(self.service.execute_scan(self._one_point_scan(x_nb_points=2)))
+        self.assertTrue(done.wait(timeout=10.0))
+
+        self.assertTrue(stop_by_hand_refused[0])
+        self.assertIsNone(self.continuous_service.get_controller())
+
+    def test_scan_is_refused_while_another_controller_holds_the_stream(self):
+        self.continuous_service.take_control("caractérisation débit MCU")
+
+        self.assertFalse(self.service.execute_scan(self._one_point_scan()))
+        self.assertIsNone(self.excitation_service.get_controller())  # given back
 
     def test_scan_is_refused_while_another_controller_holds_the_excitation(self):
         self.excitation_service.take_control("calibration automatique du capteur")
