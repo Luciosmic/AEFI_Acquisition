@@ -25,6 +25,9 @@ from interface.presenters.hardware_advanced_config_presenter import HardwareAdva
 from interface.presenters.sensor_calibration_presenter import SensorCalibrationPresenter
 from interface.presenters.source_geometry_calibration_presenter import SourceGeometryCalibrationPresenter
 from interface.presenters.hardware_component_presenter import HardwareComponentPresenter
+from interface.presenters.acquisition_throughput_characterization_presenter import (
+    AcquisitionThroughputCharacterizationPresenter,
+)
 from interface.presenters.event_log_presenter import EventLogPresenter
 
 logger = logging.getLogger(__name__)
@@ -43,6 +46,7 @@ def wire_dashboard(
     source_geometry_calibration_presenter: SourceGeometryCalibrationPresenter,
     hardware_component_presenters: List[HardwareComponentPresenter],
     event_log_presenter: EventLogPresenter,
+    acquisition_throughput_presenter: AcquisitionThroughputCharacterizationPresenter,
 ) -> None:
     """Connect every dashboard panel to its presenter. Called once from
     main.py right after the dashboard and presenters are constructed."""
@@ -129,6 +133,10 @@ def wire_dashboard(
 
     aefi_continuous_reading_presenter.acquisition_started.connect(aefi_continuous_reading_panel.on_acquisition_started)
     aefi_continuous_reading_presenter.acquisition_stopped.connect(aefi_continuous_reading_panel.on_acquisition_stopped)
+    aefi_continuous_reading_presenter.acquisition_failed.connect(aefi_continuous_reading_panel.on_acquisition_failed)
+    aefi_continuous_reading_presenter.acquisition_control_changed.connect(
+        aefi_continuous_reading_panel.set_acquisition_controller
+    )
     aefi_continuous_reading_presenter.sample_acquired.connect(aefi_continuous_reading_panel.on_sample_acquired)
     aefi_continuous_reading_presenter.angles_updated.connect(aefi_continuous_reading_panel.update_angles_display)
     logger.debug("Continuous acquisition panel wired")
@@ -206,6 +214,17 @@ def wire_dashboard(
         presenter.mounted_component_updated.connect(component_panel.on_mounted_component_updated)
         presenter.status_message.connect(component_panel.set_status_message)
         presenter.refresh_state()
+
+    # Throughput / noise vs n_avg measurement, in the microcontroller tab
+    throughput_widget = calibration_panel.acquisition_throughput_widget
+    throughput_widget.start_requested.connect(acquisition_throughput_presenter.on_start_requested)
+    acquisition_throughput_presenter.running_changed.connect(throughput_widget.set_running)
+    acquisition_throughput_presenter.status_message.connect(throughput_widget.set_status_message)
+    acquisition_throughput_presenter.point_measured.connect(throughput_widget.add_point)
+    acquisition_throughput_presenter.characterization_succeeded.connect(throughput_widget.show_result)
+    microcontroller_panel = calibration_panel.hardware_component_panels.get("microcontroller")
+    if microcontroller_panel is not None:
+        acquisition_throughput_presenter.component_values_measured.connect(microcontroller_panel.prefill_values)
     logger.debug("Calibration panel wired")
 
     # Scan Panels Wiring
@@ -264,6 +283,7 @@ def wire_dashboard(
     # Presenter -> Panel
     hardware_config_presenter.hardware_list_updated.connect(hardware_config_panel.set_hardware_list)
     hardware_config_presenter.specs_loaded.connect(hardware_config_panel.set_parameter_specs)
+    hardware_config_presenter.controller_changed.connect(hardware_config_panel.set_controller)
     hardware_config_presenter.status_message.connect(hardware_config_panel.set_status_message)
     hardware_config_presenter.config_applied.connect(lambda hw_id: hardware_config_panel.set_status_message(f"Configuration applied to {hw_id}"))
 
