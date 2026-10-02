@@ -6,8 +6,10 @@ Responsibility:
 - Same public contract: connect(), disconnect(), send_command() -> (bool, str).
 """
 
+import math
 import random
 import time
+from typing import Optional
 
 
 class _FakeSerialHandle:
@@ -25,9 +27,24 @@ class FakeMCUSerialCommunicator:
     unmodified — only this transport layer is faked.
     """
 
-    def __init__(self, n_channels: int = 6, acquisition_delay_s: float = 0.05) -> None:
+    def __init__(
+        self,
+        n_channels: int = 6,
+        acquisition_delay_s: float = 0.05,
+        adc_output_rate_hz: Optional[float] = None,
+        noise_std_counts: float = 2.0,
+    ) -> None:
+        """`acquisition_delay_s`: fixed cost T0 of one 'm<n>' round-trip.
+        `adc_output_rate_hz`: if set, the MCU also waits n conversions of the
+        ADC (T(n) = T0 + n/ODR), as the real MCU averaging does. ponytail:
+        T0/ODR are hypotheses until the bench throughput characterization
+        measures them — replace by the measured values.
+        `noise_std_counts`: white noise of ONE ADC conversion (counts); the
+        MCU average of n conversions has σ/√n."""
         self._connected = False
         self._n_channels = n_channels
+        self._adc_output_rate_hz = adc_output_rate_hz
+        self._noise_std_counts = noise_std_counts
         # AdapterAefiAcquisitionAds131a04's continuous loop has NO software
         # pacing of its own — it deliberately relies on the real ADC round-trip
         # (OSR x n_avg) to throttle itself. Without this delay, the fake
@@ -59,16 +76,19 @@ class FakeMCUSerialCommunicator:
         # acquisition command — every other command (AD9106 'a'/'d' register
         # writes, ADS131/MCU config commands) only needs a bare ack.
         if command.startswith('m') and command[1:].replace('*', '').isdigit():
-            if self._acquisition_delay_s > 0:
-                time.sleep(self._acquisition_delay_s)
-            # +/-2 counts: genuine ADS131A04 (ADC) quantization dither, not
-            # an injected noise floor — the MCU itself (this class) only
-            # relays serial commands and introduces no noise of its own.
-            # Was +/-50_000 (~+/-14.5mV), which swamped
-            # CubeSensorFieldSimulator's mV-scale excitation signal; that
-            # noise belongs at the source (DDS jitter) and sensor
-            # (electronics) level instead — see CubeSensorFieldSimulator.
-            codes = [random.randint(-2, 2) for _ in range(self._n_channels)]
+            n_avg = max(1, int(command[1:].replace('*', '')))
+            delay = self._acquisition_delay_s
+            if self._adc_output_rate_hz:
+                delay += n_avg / self._adc_output_rate_hz
+            if delay > 0:
+                time.sleep(delay)
+            # ADC-level noise only (a few counts, µV scale): the MCU itself
+            # (this class) only relays and averages. Was +/-50_000 counts
+            # (~+/-14.5mV), which swamped CubeSensorFieldSimulator's mV-scale
+            # excitation signal; that noise belongs at the source (DDS jitter)
+            # and sensor (electronics) level — see CubeSensorFieldSimulator.
+            sigma = self._noise_std_counts / math.sqrt(n_avg)
+            codes = [round(random.gauss(0.0, sigma)) for _ in range(self._n_channels)]
             return True, "\t".join(str(c) for c in codes)
 
         return True, "OK"

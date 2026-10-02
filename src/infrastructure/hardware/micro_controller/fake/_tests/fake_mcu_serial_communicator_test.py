@@ -57,19 +57,41 @@ class TestFakeMCUSerialCommunicator(unittest.TestCase):
         comm = FakeMCUSerialCommunicator(acquisition_delay_s=0.01)
         comm.connect("COM10")
 
-        start = time.monotonic()
+        start = time.perf_counter()
         comm.send_command("m127")
-        elapsed = time.monotonic() - start
+        elapsed = time.perf_counter() - start
 
         self.assertGreaterEqual(elapsed, 0.01)
+
+    def test_acquisition_waits_n_avg_adc_conversions(self):
+        """T(n) = T0 + n/ODR: the MCU averages n conversions before answering."""
+        comm = FakeMCUSerialCommunicator(acquisition_delay_s=0.0, adc_output_rate_hz=1000.0)
+        comm.connect("COM10")
+
+        start = time.perf_counter()
+        comm.send_command("m50")
+        elapsed = time.perf_counter() - start
+
+        self.assertGreaterEqual(elapsed, 0.05)
+
+    def test_mcu_average_divides_the_noise_by_sqrt_n(self):
+        comm = FakeMCUSerialCommunicator(acquisition_delay_s=0.0, noise_std_counts=100.0)
+        comm.connect("COM10")
+
+        def sigma(n_avg):
+            codes = [int(c) for _ in range(400) for c in comm.send_command(f"m{n_avg}")[1].split("\t")]
+            mean = sum(codes) / len(codes)
+            return (sum((c - mean) ** 2 for c in codes) / (len(codes) - 1)) ** 0.5
+
+        self.assertAlmostEqual(sigma(1) / sigma(100), 10.0, delta=1.5)
 
     def test_non_acquisition_commands_are_not_paced(self):
         comm = FakeMCUSerialCommunicator(acquisition_delay_s=0.5)
         comm.connect("COM10")
 
-        start = time.monotonic()
+        start = time.perf_counter()
         comm.send_command("a100")
-        elapsed = time.monotonic() - start
+        elapsed = time.perf_counter() - start
 
         self.assertLess(elapsed, 0.1)
 
