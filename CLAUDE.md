@@ -22,9 +22,12 @@ src/
   _tests/          # tests unitaires et intégration
 
 _system/           # référence agents — lire en premier
-_docs/             # ADR, analyses architecturales, datasheets hardware
 external_modules/  # modules tiers (aefi_post_processor_module)
 .aefi_acquisition/ # données runtime (configs, scans, calibrations, logs) — gitignored
+archives/          # anciens docs/tests archivés (_INBOX, docs, tests_e2e)
+config_templates/  # templates JSON de configuration hardware par défaut
+inbox/             # notes entrantes non triées (réunions, etc.)
+launch/            # scripts de lancement de l'application (bat/ps1/sh/vbs)
 ```
 
 ## Exports
@@ -46,9 +49,13 @@ Lire `_system/` avant toute décision architecturale :
 | `main`                    | Stable = release/v1.0.1                                          |
 | `develop`                 | Intégration — base pour les nouvelles features                 |
 | `feature/*`               | Feature branch depuis develop                                    |
-| `release/v1.0.1`          | Worktree`AEFI_Acquisition/` — utilisé pour les acquisitions  |
+| `release/v1.0.1`          | Pas de worktree dédié actuellement — le worktree `AEFI_Acquisition/` tourne en réalité sur `main`  |
 | `release/v1.0.0`          | Archive historique                                               |
 | `archive/ddd-refactoring` | Refactoring DDD gelé — documentation uniquement, ne pas merger |
+| `dev_hardware`            | Worktree `AEFI_Acquisition_dev_hardware/` — développement borné au périmètre hardware |
+| `feature/n8n-ddd-workflow-viz` | Worktree `AEFI_Acquisition_n8n-poc/` — POC visualisation workflow DDD via n8n |
+| `dev_scan`                | Worktree `AEFI_Acquisition_dev_scan/` — déjà mergé dans `develop` (442f812) ; worktree probablement à nettoyer, vérifier sa pertinence |
+| `backup-before-rollback-2026-07-10` | Branche de sauvegarde pré-rollback — pas de worktree actif |
 
 ## Contexte borné du worktree
 

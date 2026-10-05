@@ -14,7 +14,7 @@
 - Chemin d'export scan par défaut sur le Bureau
 - `UIConfigStore` déplacé de `infrastructure/` vers `interface/logic/`
 - `ConfigBootstrapper` : seed automatique de `.aefi_acquisition/configs/` depuis `config_templates/` au démarrage (commits 386ecf5, 4e39cf7)
-- Event audit log : chaque événement domain persisté en JSONL (`.aefi_acquisition/logs/events/`) via `EventAuditLog` abonné en wildcard sur `InMemoryEventBus` — voir `_system/self/event_store.md`
+- Event audit log : chaque événement domain persisté en JSONL (`.aefi_acquisition/logs/events/`) via `EventAuditLog` abonné en wildcard sur `InMemoryEventBus` — voir `_system/ops/event_store.md`
 - 236 tests verts
 
 ### Tensions domain identifiées (backlog technique)
