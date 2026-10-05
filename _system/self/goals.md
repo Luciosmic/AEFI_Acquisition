@@ -161,7 +161,7 @@ est pertinent au moment d'implémenter la feature centrée ; sinon archiver la n
 
 ---
 
-## Feature en cours : Scan 1D (ligne theta) & Scan Z
+## Feature : Scan 1D (ligne theta) ✅ FAIT — Scan Z ⏳ EN COURS (fondation domain seulement, pas réellement implémenté)
 
 > Branche dédiée `dev_scan` — worktree long-lived pour tous les développements
 > scan majeurs à venir (dont le futur flyscan). Cette section trace le plan
@@ -454,6 +454,11 @@ class SensorReading(Protocol):
 > projection **en direct à vitesse constante**, la vitesse venant de la calibration (transmission mécanique au
 > domaine). Choix de cette passe, à revoir lors du refactoring du domaine prévu ensuite : même agrégat `StepScan`
 > et même grille que le step-scan (`StepScanConfig.fly_scan`), pas d'agrégat `FlyScan` ni d'entité `FlyScanLine`.
+>
+> **2026-10-05** : mergé dans `develop` (merge `442f812`). L'implémentation livrée reste cette version
+> pragmatique (réutilise `StepScan`/`StepScanConfig.fly_scan`) — **l'agrégat `FlyScan`/`FlyScanLine` décrit
+> ci-dessous n'a pas été construit, mais n'est pas abandonné : c'est un travail futur toujours souhaité**, à
+> garder comme direction cible tant qu'une autre décision ne le remplace pas.
 
 **Objectif** : scan rapide en mouvement continu — la sonde acquiert en permanence pendant que les moteurs se déplacent.
 

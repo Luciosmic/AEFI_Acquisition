@@ -81,10 +81,11 @@ Dans les deux cas : le fake du port motion devra simuler la position encodeur (e
 sinon les tests applicatifs passeront sans rien prouver (standard fidélité des doubles de test).
 Le code hardware se fera dans le worktree `_dev_hardware`.
 
-## Fly-scan : transmission mécanique au domaine, puis projection en direct
+## Fly-scan : transmission mécanique au domaine, puis projection en direct ✅ FAIT
 
-**Statut** (2026-10-02) : worktree `dev_scan` (décision Luis : tout se fait ici, y compris calibration et
-hardware). **Phase A commitée** (`f60ebc1`). **Phases B et C faites, non commitées** (décalage demi-rampe retenu) :
+**Statut** (2026-10-05) : Phases A, B, C committées et mergées dans `develop` via le merge `442f812`
+(commits `f60ebc1`, `3b709c`, `571586b`, `133e4c3`). Historique de la progression (2026-10-02),
+worktree `dev_scan` (décision Luis : tout se fait ici, y compris calibration et hardware) :
 - projection en direct (`FlyScanLineProjector`), vitesse de croisière et rampe lues sur le port moteur ;
 - redessin différé des panneaux de scan : mesuré 53 ms (carte) + 333 ms (profils) par point sur 81×81, l'UI ne
   suivait que 2,6 points/s ; avec un fil de fond à 26 points/s pendant 10 s, retard 86 s en immédiat, 0,4 s max en
@@ -102,12 +103,17 @@ Fait (non commité) : `FlyScanLineProjector` sur trace de positions ; sur le sta
 vraie position) erreur médiane 0, p95 ≤ 0,8 mm, max 8,3 mm en fast à 6 Hz — le fake n'a ni rampe ni latence USB,
 la précision réelle reste à voir au banc. Suite : 916 passés.
 
-**Mise à jour 2026-10-02 (soir)** : tout est commité et poussé sur `origin/dev_scan` (fly-scan placé par les
+**Mise à jour 2026-10-02 (soir)** : tout commité et poussé sur `origin/dev_scan` (fly-scan placé par les
 positions du contrôleur, panneau de scan regroupé, export `flyScan`, course de l'export d'événements corrigée,
-post-traitement par lot étendu aux `flyScan`). `develop` local fusionné dans `dev_scan` et `origin/develop` poussé.
-**Reste** : fusionner `dev_scan` dans `develop` quand le travail en cours sur `develop` (54 fichiers non commités au
-2026-10-02) sera commité — fichiers touchés des deux côtés : `_system/ops/tasks.md`, `hardware_component_kind.py`
-(sections différentes : ADC côté develop, moteurs côté dev_scan), `dashboard_wiring.py`, `main.py`.
+post-traitement par lot étendu aux `flyScan`). **Fusionné dans `develop` le 2026-10-05** (merge `442f812`) :
+plus rien en attente côté branche.
+
+## Autres livrés récents (non détaillés ailleurs dans ce fichier)
+
+- Export `acquisition-parameters.json` v1, colonnes typées unité/axe/référentiel (commits `6bce240`,
+  `58b6c1b`, `2db25c1`).
+- Verrou anti-race-condition sur les ports d'export scan (`982adb2`).
+- Registre opérateur — un seul port, une seule orthographe par personne (`a38db85`, `411a2f1`).
 
 ### Contexte
 
@@ -296,6 +302,8 @@ a trouvé `adapter_mock_i_motion_port.py::home()` retournant instantanément alo
 vrai driver Arcus a des timeouts de homing mécanique jusqu'à 120s. Non corrigé, laissé
 en advisory. À mentionner si pertinent, pas à traiter dans ce chantier ODD sauf demande
 explicite.
+
+## Caractérisation timing moteur (motion timing characterizer)
 
 **Mise à jour 2026-10-01 (worktree `dev_scan`, à reporter dans `dev_hardware`)** : la durée des
 *déplacements* est maintenant fidèle. Caractériseur banc
