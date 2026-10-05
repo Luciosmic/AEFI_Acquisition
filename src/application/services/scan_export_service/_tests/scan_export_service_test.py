@@ -15,6 +15,7 @@ from infrastructure.acquisition_conditions.fake.fake_acquisition_conditions_port
 from infrastructure.hardware.serial_link.fake.fake_usb_latency_timer_port import FakeUsbLatencyTimerPort
 from infrastructure.provenance.fake.fake_software_provenance_port import FakeSoftwareProvenancePort
 from application.services.scan_export_service.ports.i_post_processing_port import IPostProcessingPort
+from application.services.scan_export_service.ports.i_acquisition_snapshot_port import IAcquisitionSnapshotPort
 from application.services.excitation_configuration_service.excitation_configuration_service import (
     ExcitationConfigurationService,
 )
