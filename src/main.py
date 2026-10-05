@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import sys
+import threading
 from pathlib import Path
 
 # Add src to sys.path to allow imports from any location
@@ -75,6 +76,7 @@ from infrastructure.post_processing.aefi_post_processor_port import AefiPostProc
 from application.services.scan_export_service.scan_export_service import ScanExportService
 
 from infrastructure.execution.electric_field_probe_acquisition_executor import ElectricFieldProbeAcquisitionExecutor
+from infrastructure.mcp.observability_mcp_server import run_observability_mcp_server
 
 # --- Hardware composition (motion + MCU + probe, real or mock per hardware_config) ---
 from infrastructure.hardware.hardware_composition_root import HardwareCompositionRoot
@@ -600,6 +602,18 @@ def main(hardware_config: dict | None = None):
         # No hardware lifecycle to run for mocks - finish immediately
         logger.info("No real hardware in lifecycle (mock-only) — skipping startup sequence.")
         on_startup_finished(success=True, errors=[])
+
+    # 12. Observability MCP server (read-only) — lets an LLM client (e.g.
+    # Claude) query scan status in parallel with the UI, over the same
+    # scan_service instance built above (no duplicated services, no state
+    # copy). Scope is deliberately read-only: no mutation tool is exposed,
+    # so a connected LLM cannot drive hardware without human supervision.
+    mcp_thread = threading.Thread(
+        target=run_observability_mcp_server,
+        args=(scan_service,),
+        daemon=True,
+    )
+    mcp_thread.start()
 
     sys.exit(app.exec())
 
