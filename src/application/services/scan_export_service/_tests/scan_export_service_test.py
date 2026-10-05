@@ -15,7 +15,6 @@ from infrastructure.acquisition_conditions.fake.fake_acquisition_conditions_port
 from infrastructure.hardware.serial_link.fake.fake_usb_latency_timer_port import FakeUsbLatencyTimerPort
 from infrastructure.provenance.fake.fake_software_provenance_port import FakeSoftwareProvenancePort
 from application.services.scan_export_service.ports.i_post_processing_port import IPostProcessingPort
-from application.services.scan_export_service.ports.i_acquisition_snapshot_port import IAcquisitionSnapshotPort
 from application.services.excitation_configuration_service.excitation_configuration_service import (
     ExcitationConfigurationService,
 )
@@ -259,7 +258,7 @@ class TestScanExportServiceMetadata(unittest.TestCase):
 
         self.event_bus.publish("scanstarted", _make_scan_started_event(fly_scan=True))
         self.assertEqual(self.export_port.configured["acquisition_kind"], "flyScan")
-        self.assertTrue(self.export_port.metadata["scan"]["fly_scan"])
+        self.assertTrue(self.export_port.configured["metadata"]["fly_scan"])
 
     def test_line_scan_metadata_describes_the_line(self):
         from domain.step_scan.value_objects.line_scan_config.line_scan_config import LineScanConfig
@@ -269,7 +268,7 @@ class TestScanExportServiceMetadata(unittest.TestCase):
         )
         self.event_bus.publish("scanstarted", ScanStarted(scan_id=uuid4(), config=config))
 
-        scan = self.export_port.metadata["scan"]
+        scan = self.export_port.configured["metadata"]
         self.assertEqual(scan["scan_kind"], "line")
         self.assertEqual(scan["theta_deg"], 90.0)
         self.assertEqual(scan["length_mm"], 100.0)
@@ -277,7 +276,6 @@ class TestScanExportServiceMetadata(unittest.TestCase):
         self.assertAlmostEqual(scan["start_y"], 550.0)
         self.assertAlmostEqual(scan["end_y"], 650.0)
         self.assertEqual(scan["averaging_per_position"], 10)
-        self.assertEqual(self.export_port.metadata["export"]["units"]["theta_deg"], "deg")
 
     def test_probe_connection_event_is_cached_into_next_metadata(self):
         probe = ElectricFieldProbe(
@@ -469,11 +467,6 @@ class TestTimeSeriesExport(unittest.TestCase):
         self.assertEqual(len(self.export_port.points), 1)
 
 
-class _EmptySnapshotPort(IAcquisitionSnapshotPort):
-    def read(self) -> Dict[str, Any]:
-        return {}
-
-
 class TestScanExportServiceEventRecordingRace(unittest.TestCase):
     """An event landing while the scan export opens or closes is not written
     into a port that is not open (it raised and logged an ERROR on the bench)."""
@@ -487,7 +480,6 @@ class TestScanExportServiceEventRecordingRace(unittest.TestCase):
             csv_export_port=csv_port,
             hdf5_export_port=hdf5_port,
             excitation_service=ExcitationConfigurationService(MockExcitationPort(), bus),
-            acquisition_snapshot_port=_EmptySnapshotPort(),
             task_runner=FakeThreadPoolTaskRunner(),
         )
         service.configure_export(ExportConfigDTO(enabled=True, output_directory="", filename_base="scan"))

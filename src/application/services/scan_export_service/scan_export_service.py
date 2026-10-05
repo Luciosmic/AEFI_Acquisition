@@ -486,8 +486,10 @@ class ScanExportService:
     # -- acquisition-parameters document (facts only; the port writes schema 1.0) --
 
     @staticmethod
-    def _step_scan_procedure(event: ScanStarted) -> StepScanProcedureDTO:
+    def _step_scan_procedure(event: ScanStarted) -> Optional[StepScanProcedureDTO]:
         cfg = event.config
+        if isinstance(cfg, LineScanConfig):
+            return None
         zone = cfg.scan_zone
         return StepScanProcedureDTO(
             x_min_mm=zone.x_min, x_max_mm=zone.x_max, y_min_mm=zone.y_min, y_max_mm=zone.y_max,
