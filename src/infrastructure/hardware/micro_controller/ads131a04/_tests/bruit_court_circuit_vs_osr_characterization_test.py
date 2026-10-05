@@ -59,7 +59,8 @@ SETTLE_DELAY_S = 0.05  # meme valeur par defaut que AdcOutputRateCharacterizatio
 OSR_TO_RESTORE = 4096
 
 EXPORT_ROOT = r"C:\Users\manip\Desktop\AEFI_Acquisition_Exports\HARDWARE-CHARACTERIZATION\ADC"
-VAULT_ROOT = r"C:\Users\manip\Dropbox\Luis\1 PROJETS\1 - THESE\0_inbox\data-a-interpreter"
+# Pas de copie automatique dans le vault : c'est une decision manuelle de l'operateur,
+# jamais un comportement par defaut d'un script (cf. retour du 2026-10-05).
 
 CHANNEL_LABELS = (
     # (attribut AefiVoltageMeasurement, cle csv/npz, description)
@@ -188,7 +189,7 @@ def main():
             "script": os.path.relpath(__file__, start=os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "..", "..")),
         }, f, indent=2, ensure_ascii=False)
 
-    for destination_root in (EXPORT_ROOT, VAULT_ROOT):
+    for destination_root in (EXPORT_ROOT,):
         destination_dir = os.path.join(destination_root, folder_name)
         os.makedirs(destination_dir, exist_ok=True)
         for src_name in (
