@@ -70,7 +70,30 @@ class HardwareCompositionRoot:
                 FakeMCUSerialCommunicator,
             )
             logger.info("Acquisition -> mock (MCUCompositionRoot, simulated communicator)")
-            self.mcu_root = MCUCompositionRoot(event_bus=event_bus, communicator=FakeMCUSerialCommunicator())
+            # T(n) = 10 ms + n/1 kHz, 30 counts (~9 µV) per conversion: plausible
+            # until the bench throughput characterization measures the real values.
+            # 10 ms keeps n_avg=1 under ~100 samples/s (faster saturates the UI).
+            self.mcu_root = MCUCompositionRoot(
+                event_bus=event_bus,
+                communicator=FakeMCUSerialCommunicator(
+                    acquisition_delay_s=0.01, adc_output_rate_hz=1000.0, noise_std_counts=30.0
+                ),
+            )
+        self.acquisition_averaging = self.mcu_root.acquisition_averaging
+        self.adc_oversampling = self.mcu_root.adc_oversampling
+
+        # --- Oscilloscope on the ADC's DRDY pin (ODR characterization) ---
+        # "real" (default): first VISA instrument naming the DSO-X 2014A, opened
+        # only when a measurement runs; "mock": DRDY edges at f_MOD / OSR.
+        if hardware_config.get("oscilloscope", "real") == "real":
+            from infrastructure.hardware.oscilloscope_dsox2014.adapter_drdy_capture_dsox2014 import (
+                AdapterDrdyCaptureDsox2014,
+            )
+            self.drdy_capture = AdapterDrdyCaptureDsox2014()
+        else:
+            from infrastructure.hardware.oscilloscope_dsox2014.fake.fake_drdy_capture_port import FakeDrdyCapturePort
+            self.drdy_capture = FakeDrdyCapturePort(self.adc_oversampling.get_oversampling_ratio)
+        logger.info("Oscilloscope -> %s (DRDY capture)", hardware_config.get("oscilloscope", "real"))
 
         base_acquisition_port = self.mcu_root.acquisition
         self.excitation_port: IExcitationPort = self.mcu_root.excitation

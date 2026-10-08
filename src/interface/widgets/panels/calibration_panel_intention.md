@@ -21,6 +21,12 @@ them together.
   tab per hardware component kind (boards, signal generation chip, ADC,
   microcontroller, motors), added by the wiring since the kinds are listed by
   the application layer.
+- `adc_output_rate_widget`: the ADC output data rate measured on DRDY at the
+  oscilloscope (current OSR or OSR sweep), inserted into the ADC tab.
+- `acquisition_throughput_widget`: the throughput / noise vs n_avg
+  measurement, inserted into the microcontroller tab (the component it
+  characterizes, where its result is recorded) via
+  `HardwareComponentPanel.add_tool()`.
 - Adding a future calibration type means adding one more sub-panel instance
   + one more `tabs.addTab(...)` line here — the sub-panel itself is built
   exactly like the first two, unaware it lives inside a tab.

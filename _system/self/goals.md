@@ -69,9 +69,16 @@ Supprimé : doublons `TestBench`, `AefiDevice`, modules morts `aefi_physics_engi
 
 **Sous-partie `SourceGeometry` + DGP — extraite hors de `src/` (2026-07-29)**, ne fait plus partie de cette Phase 1 (pas encore `AcquisitionConfiguration` ni les 4 autres sous-VOs).
 
-Implémentée et validée dans `shared_kernel` (2026-07-24 → 2026-07-29), puis **déplacée vers `external_modules/source_geometry/`** : ce n'est pas un aggregate DDD (pas de racine, pas d'identité, pas d'invariant propre à protéger derrière un cycle de vie) — juste des calculs purs + une visualisation, en aval de l'appli. La sortir de `src/` maintenant ne coûte rien et laisse le développement itérer librement. Une intégration plus poussée (API appelée depuis l'appli, pour l'export/positionnement évoqués en tête de cette feature) pourra venir plus tard si le besoin se confirme — voir `external_modules/source_geometry/README.md` pour le contenu, l'historique des corrections (coplanarité, sens de rotation du fit carré, repère physique quadrant-aligné) et l'usage.
+Implémentée et validée dans `shared_kernel` (2026-07-24 → 2026-07-29), puis déplacée vers `external_modules/source_geometry/` le temps d'itérer.
 
-Si `AcquisitionConfiguration` a un jour besoin de la géométrie source (pour le snapshot/export), il faudra soit rappatrier ce module dans `src/`, soit l'appeler comme les autres `external_modules/` (sous-processus lancé par `ExternalModulesPanel`, pas d'import direct depuis `src/`).
+**Réintégrée dans le domain `calibration` (2026-10-01)** — le besoin s'est confirmé : reconstruire les positions depuis les mesures au pied à coulisse, les exporter dans le JSON d'acquisition, et les visualiser en direct dans l'onglet de calibration de la géométrie. Un seul langage : l'entrée est `SourceGeometryCalibrationEntry` (ordre `D_S1_S2, D_S3_S4, D_S1_S3, D_S1_S4, D_S2_S3, D_S2_S4`), le résultat `SourceFrameGeometry` est exprimé dans **le** repère source (centroïde, chaque sphère dans son quadrant `x_neg_y_pos`…) ; le repère de travail du solveur (S1 à l'origine) n'est plus exposé. `external_modules/source_geometry/` est supprimé.
+
+- `domain/calibration/services/source_frame_solver/` — reconstruction DGP coplanaire + carré ajusté (historique des corrections dans son intention).
+- `domain/calibration/value_objects/source_frame_geometry/` — résultat.
+- `domain/calibration/errors/source_geometry_inconsistent_error.py` — chevauchement / triangle qui ne ferme pas ; l'agrégat refuse d'enregistrer une géométrie non reconstructible.
+- `SourceGeometryCalibrationService.preview_source_frame` → `OperationResult` (aperçu live, rien d'enregistré).
+- Export : `hardware_configuration.source_frame_reconstruction` dans le JSON d'acquisition.
+- Non fait : `PointChargeFieldSimulator` suppose toujours un carré parfait.
 
 **Correction 2026-07-29 — le problème était mal posé :** la 1ère version traitait z4 (hauteur de S4) comme une inconnue libre résolue par $z_4=\sqrt{d_{14}^2-x_4^2-y_4^2}$, censée valider la coplanarité après coup. Avec les mesures réelles du banc, ce discriminant devenait négatif — pas un vrai signe de non-planéité, mais l'artefact d'un problème mal posé : les 4 sphères sont coplanaires **par construction du banc** (contrainte connue a priori, pas une hypothèse à tester), donc S4 a 3 distances mesurées ($d_{14},d_{24},d_{34}$) pour seulement 2 inconnues ($x_4,y_4$) — un système réellement sur-déterminé en 2D, pas un problème 3D. Fix : toutes les positions sont résolues avec z=0 imposé ; S4 est résolu par moindres carrés non linéaires (`scipy.optimize.least_squares`) sur les 3 équations de distance, qui distribue correctement le bruit de mesure au lieu de l'injecter dans une hauteur fictive. Plus de flag `is_coplanar` (toujours vrai par construction), plus de `degeneracy_tolerance` sur S4 (le moindres carrés n'a jamais de discriminant à faire échouer).
 
@@ -148,7 +155,7 @@ Panneau de visualisation de la config active avant lancement d'un scan.
 
 L'ordre est imposé par les dépendances : AcquisitionConfiguration d'abord, puis nettoyage domain comme prérequis structurel au multi-capteurs et au fly-scan.
 
-**Prochaine étape architecturale après D1 + AcquisitionConfiguration :** Établir la Context Map (cf. IDDD ch.3). Le refactoring D1 a révélé les sous-domaines réels de l'application (electric_field_probe, motion, excitation, step_scan). Avant D2/D3, formaliser : (1) les frontières du unique Bounded Context "AEFI Acquisition", (2) les relations avec les systèmes externes (cube_visualizer, post_processor_module), (3) le rôle des adaptateurs infrastructure comme ACL implicite face au vocabulaire hardware (steps, pulses → mm, V/m).
+**Prochaine étape architecturale après D1 + AcquisitionConfiguration :** Établir la Context Map (cf. IDDD ch.3). Le refactoring D1 a révélé les sous-domaines réels de l'application (electric_field_probe, motion, excitation, step_scan). Avant D2/D3, formaliser : (1) les frontières du unique Bounded Context "AEFI Acquisition", (2) les relations avec les systèmes externes (post_processor_module ; cube_visualizer réintégré dans src/ le 2026-10-01), (3) le rôle des adaptateurs infrastructure comme ACL implicite face au vocabulaire hardware (steps, pulses → mm, V/m).
 
 ---
 

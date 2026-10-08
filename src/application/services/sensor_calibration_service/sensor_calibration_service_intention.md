@@ -52,8 +52,24 @@ recorded but never used.
 - `preview_rotation(theta_x, theta_y, theta_z)`: set trial angles for the
   trial-and-error tuning and apply them live (publish the active rotation).
   The trial is not persisted; it is discarded by `record_calibration()` and
-  by a source geometry change. A future automatic calibration service will
-  drive this same preview.
+  by a source geometry change. The automatic calibration drives this same
+  preview.
+- `start_automatic_calibration()`: the manual procedure, automated. At the
+  operator's excitation levels (refused if zero — never picked here, the
+  spheres reach ~100 V RMS), in a background task: baseline (excitation
+  off), then X_DIR, then Y_DIR — mean of `samples_per_step` in-phase samples
+  from the ADC stream, keeping only samples acquired entirely after the
+  excitation was applied + `settle_delay_s`. Causal rule, independent of
+  how many samples are buffered in transit: a sample's timestamp is the END
+  of its acquisition window and the stream is back-to-back, so sample i is
+  kept iff sample i-1 (same stream) ended after the settle instant.
+  Responses = excited − baseline; fit by
+  `solve_mounting_angles` (domain); result applied as a **trial**, never
+  recorded on its own (the operator checks, then records). The operator's
+  excitation is restored in every case (CUSTOM: phases not restorable,
+  WARNING). Outcome and steps go to `ISensorCalibrationOutputPort`.
+  Excitation and acquisition are optional constructor dependencies: without
+  them, the command fails with an explicit reason.
 - `reset_to_default()`: take the ideal `default_angles` as trial angles
   (restart the tuning from the ideal mounting).
 - `get_active_rotation()`: the rotation applied to sensor readings — the

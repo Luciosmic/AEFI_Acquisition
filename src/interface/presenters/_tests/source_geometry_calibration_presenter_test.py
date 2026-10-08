@@ -15,6 +15,10 @@ from application.services.source_geometry_calibration_service.dtos.source_geomet
 from application.services.source_geometry_calibration_service.source_geometry_calibration_service import (
     SOURCE_GEOMETRY_CALIBRATION_ENTRY_ADDED_TOPIC,
 )
+from application.services.source_geometry_calibration_service.errors.source_geometry_preview_rejected import (
+    SourceGeometryPreviewRejected,
+)
+from domain.shared_kernel.operation_result import OperationResult
 
 _DIAMETERS_M = [0.0196, 0.0196, 0.0195, 0.0195]
 _DISTANCES_M = [0.11142, 0.10908, 0.08436, 0.08352, 0.08230, 0.08450]
@@ -53,6 +57,9 @@ class FakeSourceGeometryCalibrationService(IApiSourceGeometryCalibrationService)
     def get_latest_calibration(self) -> Optional[SourceGeometryCalibrationDTO]:
         return self.latest
 
+    def preview_source_frame(self, sphere_diameters_m, pairwise_distances_ext_m):
+        return self.preview_result
+
 
 class TestSourceGeometryCalibrationPresenter(unittest.TestCase):
     def setUp(self):
@@ -61,8 +68,29 @@ class TestSourceGeometryCalibrationPresenter(unittest.TestCase):
         self.presenter = SourceGeometryCalibrationPresenter(self.service, self.event_bus)
         self.received_latest = []
         self.received_status_messages = []
+        self.received_previews = []
+        self.received_rejections = []
         self.presenter.latest_calibration_updated.connect(self.received_latest.append)
         self.presenter.status_message.connect(self.received_status_messages.append)
+        self.presenter.source_frame_preview_updated.connect(self.received_previews.append)
+        self.presenter.source_frame_preview_rejected.connect(self.received_rejections.append)
+
+    def test_on_measurements_edited_forwards_the_reconstruction(self):
+        preview = object()
+        self.service.preview_result = OperationResult.ok(preview)
+
+        self.presenter.on_measurements_edited(_DIAMETERS_M, _DISTANCES_M)
+
+        self.assertEqual(self.received_previews, [preview])
+        self.assertEqual(self.received_rejections, [])
+
+    def test_on_measurements_edited_forwards_the_rejection_reason(self):
+        self.service.preview_result = OperationResult.fail(SourceGeometryPreviewRejected(reason="D_S1_S2 overlap"))
+
+        self.presenter.on_measurements_edited(_DIAMETERS_M, _DISTANCES_M)
+
+        self.assertEqual(self.received_rejections, ["D_S1_S2 overlap"])
+        self.assertEqual(self.received_previews, [])
 
     def test_refresh_state_emits_none_when_nothing_recorded(self):
         self.presenter.refresh_state()

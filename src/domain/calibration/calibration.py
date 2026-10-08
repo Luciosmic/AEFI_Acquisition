@@ -40,6 +40,7 @@ from domain.calibration.entities.source_geometry_calibration_entry.source_geomet
     SourceGeometryCalibrationEntry,
 )
 from domain.calibration.value_objects.caliper_measurement.caliper_measurement import CaliperMeasurement
+from domain.calibration.services.source_frame_solver.source_frame_solver import SourceFrameSolver
 from domain.calibration.events.source_geometry_calibration_entry_added.source_geometry_calibration_entry_added import (
     SourceGeometryCalibrationEntryAdded,
 )
@@ -122,7 +123,10 @@ class Calibration:
         sphere_diameters: Tuple[CaliperMeasurement, ...],
         pairwise_distances_ext: Tuple[CaliperMeasurement, ...],
     ) -> SourceGeometryCalibrationEntry:
+        """Only a geometry the 4 spheres can actually take is recorded:
+        SourceGeometryInconsistentError otherwise."""
         entry = SourceGeometryCalibrationEntry.single(sphere_diameters, pairwise_distances_ext)
+        SourceFrameSolver.solve(entry)
         self._domain_events.append(SourceGeometryCalibrationEntryAdded(entry=entry))
         return entry
 

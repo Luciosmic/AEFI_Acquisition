@@ -1,5 +1,86 @@
 # Tâches actives
 
+## Encodeurs AMT112Q-V sur les axes X/Y
+
+**Statut** : documentation rapatriée (2026-10-02), montage pas commencé. Faits hardware (câblage,
+chiffres clés, pièges) : `_system/documentation/hardware_datasheet/motorisation/encodeur_amt11/README.md`.
+
+### Pourquoi
+
+Le moteur pas-à-pas tourne en boucle ouverte : rien ne prouve aujourd'hui que la position commandée
+est la position réelle. Constat déjà noté (`TB6600_Working_Configuration.md`) : ~30–40 steps d'erreur
+au retour à 0, cause inconnue (calibration, drift ou perte de pas), et `microns_per_step` incohérent
+(config 10.9 µm vs ~21.8 µm attendu en 1/16). L'encodeur tranche ces deux questions par la mesure.
+
+### Principe d'ordre
+
+Tester d'abord ce qui peut tout bloquer (mécanique, câble), ensuite valider l'encodeur **hors
+application** avec un script jetable (`query("EX")` via pylablib), et seulement après décider de
+l'intégration logicielle. Un axe complet d'abord (X), puis on répète sur Y.
+
+### Phase 0 — Prérequis bloquants (avant montage)
+
+- **T0.1 Arbre arrière** : vérifier que le moteur Igus a un arbre arrière qui dépasse de ≥ 9 mm,
+  Ø 8.00 mm au pied à coulisse (→ sleeve bleu). Lire aussi l'étiquette : une variante `-M-C-AAAC`
+  aurait déjà un encodeur intégré 500 PPR RS-422 (dans ce cas l'AMT est peut-être inutile).
+  *Si pas d'arbre arrière → stop, montage impossible sans changer de moteur ou d'architecture.*
+  Constat 2026-10-02 : roulement arrière marqué « Z809 » = **608Z lu à l'envers** (8×22×7, une
+  flasque) dans le flasque arrière = palier arrière du rotor (Nanotec, Lin Engineering : 2
+  roulements, un par flasque, entrefer ~0.05 mm). Le garder : l'AMT ne porte pas l'arbre, il se
+  monte à côté. Mesure qui décide : longueur d'arbre au-delà de la face extérieure du roulement
+  (≥ 9 mm) et place libre dans le capot arrière. La variante `-M-C-AAAC` a le même L2 (110 mm) :
+  l'encodeur Igus loge dans ce même capot, donc l'emplacement existe.
+  **Résultat 2026-10-02 : ❌ ne passe pas** (arbre libre insuffisant derrière le roulement).
+  Alternatives à trancher : (a) AMT sur un autre arbre de l'axe (renvoi, bout de vis/poulie) ;
+  (b) moteur Igus `-M-C-AAAC` (même encombrement, encodeur 500 PPR RS-422 + index intégré, M12
+  8 pts → PMX, 2000 counts/tour, SLR = 3200/2000 = 1.6).
+- **T0.2 Fixation** : la base AMT (standard ou wide) doit se visser à plat, centrée sur l'arbre, sur
+  la face arrière du moteur. Si pas de taraudage compatible → platine adaptatrice à usiner/imprimer.
+- **T0.3 Câble** : pas de câble catalogue pour le 17 pts → fabriquer FI-W17S → bornier 3.81 mm PMX
+  (table de câblage dans le README). Au multimètre, **avant** de brancher : continuité des 8
+  conducteurs, aucun court-circuit +5 V/GND ni entre paires.
+
+### Phase 1 — Validation sur un axe, sans code applicatif
+
+Script jetable dans le scratchpad, PMX + un encodeur, moteur à vide puis en charge.
+
+- **T1.1 Mise sous tension** : 5 V présent sur l'encodeur ; moteur immobile, `EX` stable (aucun count
+  parasite sur 10 s). Counts parasites → problème de blindage/masse, à régler avant toute suite.
+- **T1.2 Sens** : SNL off, `EX=0`, `PX=0`, +1000 pulses → `EX` doit être positif. Sinon inverser par
+  `PO` bit 4, pas en recâblant.
+- **T1.3 Ratio** : sur +10 000 pulses, `pulses / EX` ≈ **0.3906** (3200/8192). Un autre ratio indique
+  un microstepping réel ≠ 1/16 ou une résolution ≠ 2048 PPR → à expliquer avant de continuer.
+- **T1.4 Résolution par l'index** : écart entre deux fronts Z = 8192 counts (homing `Z+` ou latch).
+  Valide la résolution indépendamment du moteur.
+- **T1.5 Perte de pas (test qui compte le plus)** : N allers-retours au profil de scan réel, puis à
+  vitesse max → `|EX_final − EX_initial|` ≤ 2 counts. Répond à la question des 30–40 steps : erreur
+  visible à l'encodeur = perte de pas réelle ; pas d'erreur encodeur = problème de calibration.
+- **T1.6 Calibration µm** : déplacement linéaire mesuré (comparateur/règle) vs counts →
+  µm/count, d'où le vrai `microns_per_step`. Corrige la valeur incohérente actuelle.
+
+### Phase 2 — StepNLoop (optionnel, après décision)
+
+Ne pas activer avant la décision de la phase 3 : une fois `SL=1`, les positions **et vitesses**
+d'axe individuel passent en counts encodeur, l'adaptateur Arcus (`microns_per_step`) devient faux.
+
+- **T2.1** : `SLR=0.390625`, `SLT`/`SLE` à choisir, move → `SLS` revient à 0 (idle), `DX` ≤ `SLT`.
+- **T2.2** : bloquer l'axe à la main pendant un move → `SLS=10` (stall) détecté et moteur arrêté.
+
+### Phase 3 — Intégration logicielle (décision à prendre, après Phase 1 verte)
+
+Deux options, à trancher avec les résultats de T1.5 :
+
+1. **Lecture seule** (recommandé pour commencer) : lire `E[axe]` après chaque move et exposer la
+   position encodeur à côté de la position commandée (log + export scan) — vérification, pas de
+   correction. Plus petit changement, aucune unité modifiée.
+2. **Boucle fermée StepNLoop** : correction par le PMX lui-même, mais changement d'unités dans tout
+   l'adaptateur Arcus et nouveaux cas d'erreur (stall, correction range) à traduire en erreurs
+   domain.
+
+Dans les deux cas : le fake du port motion devra simuler la position encodeur (et ses écarts),
+sinon les tests applicatifs passeront sans rien prouver (standard fidélité des doubles de test).
+Le code hardware se fera dans le worktree `_dev_hardware`.
+
 ## Observabilité : migration vers Observability-Driven Design (ODD)
 
 **Statut** : pas commencé — prompt de démarrage prêt ci-dessous, à lancer dans une nouvelle

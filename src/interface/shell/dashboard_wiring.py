@@ -25,6 +25,11 @@ from interface.presenters.hardware_advanced_config_presenter import HardwareAdva
 from interface.presenters.sensor_calibration_presenter import SensorCalibrationPresenter
 from interface.presenters.source_geometry_calibration_presenter import SourceGeometryCalibrationPresenter
 from interface.presenters.hardware_component_presenter import HardwareComponentPresenter
+from interface.presenters.acquisition_throughput_characterization_presenter import (
+    AcquisitionThroughputCharacterizationPresenter,
+)
+from interface.presenters.adc_output_rate_characterization_presenter import AdcOutputRateCharacterizationPresenter
+from interface.presenters.event_log_presenter import EventLogPresenter
 
 logger = logging.getLogger(__name__)
 
@@ -41,10 +46,22 @@ def wire_dashboard(
     sensor_calibration_presenter: SensorCalibrationPresenter,
     source_geometry_calibration_presenter: SourceGeometryCalibrationPresenter,
     hardware_component_presenters: List[HardwareComponentPresenter],
+    event_log_presenter: EventLogPresenter,
+    acquisition_throughput_presenter: AcquisitionThroughputCharacterizationPresenter,
+    adc_output_rate_presenter: AdcOutputRateCharacterizationPresenter,
 ) -> None:
     """Connect every dashboard panel to its presenter. Called once from
     main.py right after the dashboard and presenters are constructed."""
     print("--- Wiring Presenters to Panels ---")
+
+    # Logs Panel — event audit log size + user-confirmed deletion of old sessions
+    logs_panel = dashboard.panels["logs"]
+    logs_panel.manage_requested.connect(event_log_presenter.refresh)
+    logs_panel.purge_requested.connect(event_log_presenter.on_purge_requested)
+    logs_panel.purge_confirmed.connect(event_log_presenter.on_purge_confirmed)
+    event_log_presenter.summary_updated.connect(logs_panel.set_event_log_summary)
+    event_log_presenter.purge_confirmation_needed.connect(logs_panel.confirm_purge)
+    event_log_presenter.refresh()
 
     # Motion Panel
     motion_panel = dashboard.panels["motion"]
@@ -77,6 +94,7 @@ def wire_dashboard(
     excitation_presenter.excitation_updated.connect(excitation_panel.set_state)
     excitation_panel.link_toggled.connect(excitation_presenter.on_link_toggled)
     excitation_presenter.link_state_changed.connect(excitation_panel.set_link_state)
+    excitation_presenter.controller_changed.connect(excitation_panel.set_controller)
     excitation_presenter.refresh_state()
     synchronous_detection_presenter.sphere_phases_updated.connect(excitation_panel.set_synchronous_detection_state)
     excitation_panel.lock_in_detection_toggled.connect(synchronous_detection_presenter.on_lock_in_detection_toggled)
@@ -117,6 +135,10 @@ def wire_dashboard(
 
     aefi_continuous_reading_presenter.acquisition_started.connect(aefi_continuous_reading_panel.on_acquisition_started)
     aefi_continuous_reading_presenter.acquisition_stopped.connect(aefi_continuous_reading_panel.on_acquisition_stopped)
+    aefi_continuous_reading_presenter.acquisition_failed.connect(aefi_continuous_reading_panel.on_acquisition_failed)
+    aefi_continuous_reading_presenter.acquisition_control_changed.connect(
+        aefi_continuous_reading_panel.set_acquisition_controller
+    )
     aefi_continuous_reading_presenter.sample_acquired.connect(aefi_continuous_reading_panel.on_sample_acquired)
     aefi_continuous_reading_presenter.angles_updated.connect(aefi_continuous_reading_panel.update_angles_display)
     logger.debug("Continuous acquisition panel wired")
@@ -153,15 +175,18 @@ def wire_dashboard(
     calibration_panel.sensor_calibration_panel.reset_to_default_requested.connect(
         sensor_calibration_presenter.on_reset_to_default_requested
     )
+    calibration_panel.sensor_calibration_panel.automatic_calibration_requested.connect(
+        sensor_calibration_presenter.on_automatic_calibration_requested
+    )
+    sensor_calibration_presenter.automatic_calibration_running.connect(
+        calibration_panel.sensor_calibration_panel.set_automatic_calibration_running
+    )
     sensor_calibration_presenter.status_message.connect(calibration_panel.sensor_calibration_panel.set_status_message)
     sensor_calibration_presenter.latest_calibration_updated.connect(
         calibration_panel.sensor_calibration_panel.on_latest_calibration_updated
     )
     sensor_calibration_presenter.active_rotation_updated.connect(
         calibration_panel.sensor_calibration_panel.on_active_rotation_updated
-    )
-    calibration_panel.sensor_calibration_panel.launch_visualizer_requested.connect(
-        lambda: dashboard.panels["external_modules"].launch("cube")
     )
     sensor_calibration_presenter.refresh_state()
 
@@ -170,6 +195,15 @@ def wire_dashboard(
     )
     source_geometry_calibration_presenter.latest_calibration_updated.connect(
         calibration_panel.source_geometry_panel.on_latest_calibration_updated
+    )
+    calibration_panel.source_geometry_panel.measurements_edited.connect(
+        source_geometry_calibration_presenter.on_measurements_edited
+    )
+    source_geometry_calibration_presenter.source_frame_preview_updated.connect(
+        calibration_panel.source_geometry_panel.on_source_frame_preview_updated
+    )
+    source_geometry_calibration_presenter.source_frame_preview_rejected.connect(
+        calibration_panel.source_geometry_panel.on_source_frame_preview_rejected
     )
     source_geometry_calibration_presenter.refresh_state()
 
@@ -182,6 +216,32 @@ def wire_dashboard(
         presenter.mounted_component_updated.connect(component_panel.on_mounted_component_updated)
         presenter.status_message.connect(component_panel.set_status_message)
         presenter.refresh_state()
+
+    # Throughput / noise vs n_avg measurement, in the microcontroller tab
+    throughput_widget = calibration_panel.acquisition_throughput_widget
+    throughput_widget.start_requested.connect(acquisition_throughput_presenter.on_start_requested)
+    acquisition_throughput_presenter.running_changed.connect(throughput_widget.set_running)
+    acquisition_throughput_presenter.status_message.connect(throughput_widget.set_status_message)
+    acquisition_throughput_presenter.point_measured.connect(throughput_widget.add_point)
+    acquisition_throughput_presenter.characterization_succeeded.connect(throughput_widget.show_result)
+    microcontroller_panel = calibration_panel.hardware_component_panels.get("microcontroller")
+    if microcontroller_panel is not None:
+        acquisition_throughput_presenter.component_values_measured.connect(microcontroller_panel.prefill_values)
+    acquisition_throughput_presenter.request_defaults.connect(throughput_widget.set_request_defaults)
+    acquisition_throughput_presenter.refresh_state()
+
+    # ADC output data rate measured on DRDY, in the ADC tab
+    odr_widget = calibration_panel.adc_output_rate_widget
+    odr_widget.start_requested.connect(adc_output_rate_presenter.on_start_requested)
+    adc_output_rate_presenter.running_changed.connect(odr_widget.set_running)
+    adc_output_rate_presenter.status_message.connect(odr_widget.set_status_message)
+    adc_output_rate_presenter.point_measured.connect(odr_widget.add_point)
+    adc_output_rate_presenter.characterization_succeeded.connect(odr_widget.show_result)
+    adc_output_rate_presenter.request_defaults.connect(odr_widget.set_request_defaults)
+    adc_panel = calibration_panel.hardware_component_panels.get("adc")
+    if adc_panel is not None:
+        adc_output_rate_presenter.component_values_measured.connect(adc_panel.prefill_values)
+    adc_output_rate_presenter.refresh_state()
     logger.debug("Calibration panel wired")
 
     # Scan Panels Wiring
@@ -240,6 +300,7 @@ def wire_dashboard(
     # Presenter -> Panel
     hardware_config_presenter.hardware_list_updated.connect(hardware_config_panel.set_hardware_list)
     hardware_config_presenter.specs_loaded.connect(hardware_config_panel.set_parameter_specs)
+    hardware_config_presenter.controller_changed.connect(hardware_config_panel.set_controller)
     hardware_config_presenter.status_message.connect(hardware_config_panel.set_status_message)
     hardware_config_presenter.config_applied.connect(lambda hw_id: hardware_config_panel.set_status_message(f"Configuration applied to {hw_id}"))
 

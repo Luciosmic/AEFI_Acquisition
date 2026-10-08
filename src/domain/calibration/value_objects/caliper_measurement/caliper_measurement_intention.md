@@ -22,9 +22,8 @@ hand again for every future re-measurement.
 ## Design
 
 - `@dataclass(frozen=True)`: `value_m`, `uncertainty_expanded_m`, `k`.
-- `__post_init__` rejects a non-finite or non-positive `value_m`
-  (mirrors `SourceGeometry._RAW_FIELDS` validation in
-  `external_modules/source_geometry/source_geometry.py`), and a non-finite
+- `__post_init__` rejects a non-finite or non-positive `value_m` (a caliper
+  never reads 0 or a negative length), and a non-finite
   or negative `uncertainty_expanded_m`/non-positive `k`.
 - `from_resolution(value_m, resolution_m=0.00002, k=2.0)`: `u_c = resolution_m / (2*sqrt(3))`
   (rectangular/uniform distribution, single reading at instrument

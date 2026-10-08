@@ -19,7 +19,7 @@ Design:
 """
 
 from dataclasses import dataclass
-from typing import Dict, Optional, Any, List
+from typing import Callable, Dict, Optional, Any, List
 import logging
 import math
 
@@ -58,13 +58,19 @@ class ADS131A04Adapter(IAcquisitionPort):
     AVAILABLE_OSR = [4096, 2048, 1024, 800, 768, 512, 400, 384, 256, 200, 192, 128, 96, 64, 48, 32]
     MAX_DATA_RATE_HZ = 128000  # Maximum output data rate
     
-    def __init__(self, serial_communicator):
+    def __init__(self, serial_communicator, n_avg_reader: Optional[Callable[[], int]] = None):
         """
         Args:
             serial_communicator: MCU_serial_communicator (singleton)
+            n_avg_reader: where the MCU averaging n_avg is read before each
+                sample — defaults to mcu_last_config.json (re-read live, so a
+                change from Hardware Config applies to the next sample). Tests
+                inject an in-memory reader instead of touching the runtime config.
         """
         self._serial = serial_communicator
         self._current_config: Optional[ADCHardwareConfig] = None
+        self._last_n_avg = 1  # last value read successfully from the config file
+        self._read_n_avg = n_avg_reader or self._read_n_avg_from_config_file
     
     def load_config(self, config_dict: dict) -> None:
         """
@@ -115,22 +121,9 @@ class ADS131A04Adapter(IAcquisitionPort):
             RuntimeError: If acquisition or parsing fails
         """
         from datetime import datetime
-        import json
-        import os
-        
-        # Get n_avg from MCU config (default: 1)
-        n_avg = 1
-        try:
-            mcu_config_path = os.path.join(
-                ".aefi_acquisition", "configs", "mcu_last_config.json"
-            )
-            if os.path.exists(mcu_config_path):
-                with open(mcu_config_path, 'r') as f:
-                    mcu_config = json.load(f)
-                    n_avg = int(mcu_config.get("n_avg", 1))
-        except Exception:
-            logger.exception("Failed to read MCU config, using default n_avg=1")
-        
+
+        n_avg = self._read_n_avg()
+
         # Acquire via MCU: command 'm{n_avg}' (n_avg samples averaged by MCU)
         # DEBUG: Trace acquisition start
         # print(f"[ADS131Adapter] Requesting sample 'm{n_avg}'")
@@ -165,6 +158,22 @@ class ADS131A04Adapter(IAcquisitionPort):
             uncertainty_estimate_volts=self._estimate_uncertainty()
         )
     
+    def _read_n_avg_from_config_file(self) -> int:
+        """n_avg from mcu_last_config.json (1 if it never existed). The writer
+        (MCUAdvancedConfigurator) truncates then writes: a read landing in
+        between sees an empty file — keep the last value read, not 1, or that
+        sample is silently acquired with n_avg=1 (seen 2026-10-02)."""
+        mcu_config_path = os.path.join(".aefi_acquisition", "configs", "mcu_last_config.json")
+        try:
+            if os.path.exists(mcu_config_path):
+                with open(mcu_config_path, 'r') as f:
+                    self._last_n_avg = int(json.load(f).get("n_avg", 1))
+        except (OSError, ValueError) as error:
+            logger.warning(
+                "MCU config unreadable (%s: %s), keeping last n_avg=%d", type(error).__name__, error, self._last_n_avg
+            )
+        return self._last_n_avg
+
     def _convert_raw_to_volts(self, raw_code: int, channel: int) -> float:
         """
         Convert raw 24-bit signed ADC code to volts.

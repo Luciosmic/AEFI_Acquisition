@@ -13,6 +13,7 @@ from application.services.excitation_configuration_service.excitation_configurat
     EXCITATION_FREQUENCY_CHANGED_TOPIC,
     DDS_CHANNEL_CONFIG_CHANGED_TOPIC,
     EXCITATION_DDS_LINK_CHANGED_TOPIC,
+    EXCITATION_CONTROL_CHANGED_TOPIC,
 )
 from domain.shared_kernel.excitation.value_objects.excitation_mode import ExcitationMode
 from domain.shared_kernel.excitation.value_objects.excitation_parameters import ExcitationParameters
@@ -33,6 +34,7 @@ class ExcitationPresenter(QObject):
     excitation_updated = Signal(str, float, float, float)  # mode_name, level_s1_s2_percent, level_s3_s4_percent, frequency
     excitation_error = Signal(str)  # error_message
     link_state_changed = Signal(bool)  # linked
+    controller_changed = Signal(str)  # who drives the excitation ("" = free, settable by hand)
 
     def __init__(self, service: ExcitationConfigurationService, event_bus: IDomainEventBus):
         super().__init__()
@@ -46,9 +48,15 @@ class ExcitationPresenter(QObject):
         event_bus.subscribe(EXCITATION_FREQUENCY_CHANGED_TOPIC, self._on_hardware_config_changed)
         event_bus.subscribe(DDS_CHANNEL_CONFIG_CHANGED_TOPIC, self._on_hardware_config_changed)
         event_bus.subscribe(EXCITATION_DDS_LINK_CHANGED_TOPIC, self._on_link_changed)
+        # A controller (scan, automatic calibration) drives the excitation:
+        # its changes must show up here, and the panel is locked meanwhile.
+        event_bus.subscribe(EXCITATION_CONTROL_CHANGED_TOPIC, self._on_control_changed)
 
     def _on_hardware_config_changed(self, event) -> None:
         self.refresh_state()
+
+    def _on_control_changed(self, event) -> None:
+        self.refresh_state()  # pushes the controller too
 
     def _on_link_changed(self, event) -> None:
         self.link_state_changed.emit(self._service.is_linked())
@@ -60,11 +68,15 @@ class ExcitationPresenter(QObject):
             params.mode.name, params.level_s1_s2.value, params.level_s3_s4.value, params.frequency
         )
         self.link_state_changed.emit(self._service.is_linked())
+        self.controller_changed.emit(self._service.get_controller() or "")
 
     @Slot(bool)
     def on_link_toggled(self, linked: bool) -> None:
         """Handle the Excitation panel's own "Link" checkbox being toggled by the user."""
-        self._service.set_link(linked)
+        result = self._service.set_link(linked)
+        if result.is_failure:
+            self.excitation_error.emit(f"Lien non modifié : {result.error}")
+            self.link_state_changed.emit(self._service.is_linked())
 
     @Slot(str, float, float, float)
     def on_excitation_changed(
@@ -84,7 +96,11 @@ class ExcitationPresenter(QObject):
             mode = self._code_to_mode(mode_code)
 
             # Call service
-            self._service.set_excitation(mode, level_s1_s2_percent, level_s3_s4_percent, frequency)
+            result = self._service.set_excitation(mode, level_s1_s2_percent, level_s3_s4_percent, frequency)
+            if result.is_failure:
+                self.excitation_error.emit(f"Excitation non modifiée : {result.error}")
+                self.refresh_state()  # put the panel back on the real excitation
+                return
 
             # Emit signal for UI confirmation
             self.excitation_updated.emit(mode_code, level_s1_s2_percent, level_s3_s4_percent, frequency)

@@ -32,6 +32,13 @@ from application.services.hardware_configuration_service.ports.i_hardware_advanc
 
 from infrastructure.hardware.micro_controller.ads131a04.ads131a04_advanced_configurator import ADS131A04AdvancedConfigurator
 from infrastructure.hardware.micro_controller.mcu_advanced_configurator import MCUAdvancedConfigurator
+from infrastructure.hardware.micro_controller.adapter_acquisition_averaging_mcu import AdapterAcquisitionAveragingMcu
+from infrastructure.hardware.micro_controller.ads131a04.adapter_adc_oversampling_ads131a04 import (
+    AdapterAdcOversamplingAds131a04,
+)
+from application.services.acquisition_throughput_characterization_service.ports.i_acquisition_averaging_port import (
+    IAcquisitionAveragingPort,
+)
 from infrastructure.hardware.micro_controller.hardware_config_resolution import (
     load_json_if_exists,
     resolve_config,
@@ -92,6 +99,12 @@ class MCUCompositionRoot:
         
         # 3c. Instantiate MCU General Configurator
         self._mcu_configurator = MCUAdvancedConfigurator(self._driver)
+        # 3d. MCU averaging n_avg + ADC OSR, for the throughput characterization
+        self.acquisition_averaging: IAcquisitionAveragingPort = AdapterAcquisitionAveragingMcu(
+            self._mcu_configurator, self._ads131_controller
+        )
+        # 3e. ADC OSR register (temporary writes, not persisted), for the ODR characterization
+        self.adc_oversampling = AdapterAdcOversamplingAds131a04(self._ads131_controller)
         
         # 4. Instantiate Lifecycle Adapter
         # Injects the driver to manage connection

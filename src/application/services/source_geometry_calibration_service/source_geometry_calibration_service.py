@@ -2,13 +2,25 @@ import logging
 from uuid import UUID
 from typing import List, Optional
 
+from application.services.source_geometry_calibration_service.dtos.source_frame_geometry_dto import (
+    SourceFrameGeometryDTO,
+)
 from application.services.source_geometry_calibration_service.dtos.source_geometry_calibration_dto import (
     SourceGeometryCalibrationDTO,
+)
+from application.services.source_geometry_calibration_service.errors.source_geometry_preview_rejected import (
+    SourceGeometryPreviewRejected,
 )
 from application.services.source_geometry_calibration_service.i_api_source_geometry_calibration_service import (
     IApiSourceGeometryCalibrationService,
 )
 from domain.calibration.calibration import Calibration
+from domain.calibration.entities.source_geometry_calibration_entry.source_geometry_calibration_entry import (
+    SourceGeometryCalibrationEntry,
+)
+from domain.calibration.errors.source_geometry_inconsistent_error import SourceGeometryInconsistentError
+from domain.calibration.services.source_frame_solver.source_frame_solver import SourceFrameSolver
+from domain.shared_kernel.operation_result import OperationResult
 from domain.calibration.repositories.i_source_geometry_calibration_repository import (
     ISourceGeometryCalibrationRepository,
 )
@@ -78,6 +90,39 @@ class SourceGeometryCalibrationService(IApiSourceGeometryCalibrationService):
             ),
             k=latest.sphere_diameters[0].k,
             recorded_at=latest.recorded_at,
+        )
+
+    def preview_source_frame(
+        self,
+        sphere_diameters_m: List[float],
+        pairwise_distances_ext_m: List[float],
+    ) -> OperationResult[SourceFrameGeometryDTO, SourceGeometryPreviewRejected]:
+        # debug, not info: called on every edited digit
+        logger.debug(
+            "SourceGeometryCalibrationService: Query preview_source_frame "
+            "sphere_diameters_m=%s pairwise_distances_ext_m=%s",
+            sphere_diameters_m,
+            pairwise_distances_ext_m,
+        )
+        try:
+            entry = SourceGeometryCalibrationEntry.single(
+                tuple(CaliperMeasurement.from_resolution(v) for v in sphere_diameters_m),
+                tuple(CaliperMeasurement.from_resolution(v) for v in pairwise_distances_ext_m),
+            )
+            frame = SourceFrameSolver.solve(entry)
+        except SourceGeometryInconsistentError as e:
+            logger.debug("SourceGeometryCalibrationService: Preview rejected reason=%s", e)
+            return OperationResult.fail(SourceGeometryPreviewRejected(reason=str(e)))
+        return OperationResult.ok(
+            SourceFrameGeometryDTO(
+                sphere_positions_m=frame.sphere_positions_m,
+                sphere_radii_m=frame.sphere_radii_m,
+                best_fit_square_positions_m=frame.best_fit_square_positions_m,
+                best_fit_square_side_m=frame.best_fit_square_side_m,
+                square_residuals_m=frame.square_residuals_m,
+                square_rms_residual_m=frame.square_rms_residual_m,
+                distance_residuals_m=frame.distance_residuals_m,
+            )
         )
 
     def get_current_entry_id(self) -> UUID:

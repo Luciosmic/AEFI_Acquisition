@@ -14,7 +14,12 @@ calibration in one place rather than one dock per calibration type).
   extremity-to-extremity distances) in millimeters — matching how a caliper
   is actually read — and record them as a new calibration entry.
 - Display the last calibration entry recorded (10 values + GUM uncertainty +
-  date), or an explicit "none yet" message.
+  date), or an explicit "none yet" message, and load it into the form as the
+  starting point of the next edit.
+- Show live, before saving, the sphere positions reconstructed from the
+  values being typed (source frame, quadrant-labeled), the best-fit square,
+  the per-sphere deviation and per-distance residuals — so the operator sees
+  the impact of each reading — or the reason the geometry is impossible.
 - No uncertainty/resolution input in v1 — the service defaults (0.02mm
   vernier, k=2) match every value already hand-written in
   `aefi_device_config.json`; exposing them in the UI is deferred until a
@@ -38,5 +43,11 @@ calibration in one place rather than one dock per calibration type).
 - `on_latest_calibration_updated(dto)` — `dto` is `None` when nothing has
   been recorded yet (should not happen once the composition root seeds the
   registry on first boot, but the panel doesn't assume that).
-- No dedicated `_tests/` Qt tests — convention already followed by every
-  other panel in this folder (presenters/services carry the tested logic).
+- Every spinbox `valueChanged` emits `measurements_edited = Signal(list,
+  list)` (meters); loading the latest entry blocks per-field signals and
+  emits once. Spinbox minimum = 0.02mm (a 0 reading is not a measurement).
+- Preview drawn with matplotlib (`FigureCanvasQTAgg`, dark style of
+  `scan_visualization_panel.py`); `_PERIMETER` (S1→S3→S2→S4) is only the
+  drawing order of the quadrilateral — all numbers come from the DTO.
+- `_tests/source_geometry_calibration_panel_test.py`: form loading, edit →
+  preview request, preview/rejection rendering.

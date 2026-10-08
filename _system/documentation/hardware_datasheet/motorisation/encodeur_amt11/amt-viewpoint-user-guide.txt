@@ -1,0 +1,400 @@
+AMT VIEWPOINT™ USER GUIDE
+TABLE OF CONTENTS
+Introduction ..........................................................................................................................................
+Getting Started .................................................................................................................................
+Encoder Specific Windows  ......................................................................................................
+ AMT11 & 13 Series ...................................................................................................................
+ AMT20 Series ............................................................................................................................
+ AMT21 & 2 4 Series ..................................................................................................................
+ AMT22 & 25 Series .................................................................................................................
+ AMT23 Series ............................................................................................................................
+ AMT31 & 33 Series .................................................................................................................
+1
+2
+5
+6
+9
+12
+15
+18
+21
+|  Revision 2.0
+The AMT Viewpoint™ is a Graphical User Interface (GUI) that allows for an unprecedented level of visibility and control thanks to 
+the innovative design of the AMT modular encoder series. Via the simple software interface, users are able to set and control a 
+range of parameters, reducing development time and virtually eliminating tedious steps in the assembly process. Additionally, the 
+software allows engineers access to a range of diagnostic data for quick analysis during design or in the field.
+What You’ll Need:
+1
+AMT11, AMT13, AMT20, AMT21, AMT22, 
+AMT23, AMT24, AMT25, AMT31, 
+or AMT33 Encoder
+The Appropriate AMT Programming 
+Module and Cable
+A Windows PC
+(Windows 10 or higher required)
+INTRODUCTION
+
+|  Revision 2.0
+2
+GETTING STARTED
+1 Download the AMT Viewpoint: 
+www.sameskydevices.com/amt-viewpoint
+2 Plug the AMT Programming Module into your PC using your own 
+USB Mini B to Type A cable.
+3 Connect the encoder to the programming cable.
+4 Open the AMT Viewpoint GUI.
+5 Upon opening, the GUI will search for an encoder (see below).
+6 If the “NO ENCODER DETECTED” message appears, double 
+check your encoder’s connection and click “RE-SCAN”.
+7 Once an encoder has been detected the window will populate 
+with an encoder specific layout.
+
+|  Revision 2.0
+GETTING STARTED
+1 Encoder Overview Card
+When an encoder is connected, this card highlights the 
+firmware revision, date code, and quick link to the datasheet.
+2 Resource Card
+AMT Landing Page - View the most up-to-date information on 
+the AMT Viewpoint. Read the change logs for recent updates 
+and download the latest versions.
+Viewpoint User Guide - This guide.
+Assembly Instructions - Watch the video or text instructions 
+for putting together your AMT encoder.
+Same Sky Blog - Read our ever-expanding selection of 
+encoder-specific blog posts.
+Resource Library - View all of Same Sky’s motion-specific 
+resources from sample code to videos.
+Technical Support - Contact Same Sky for any technical 
+questions or issues you’re experiencing.
+3
+
+|  Revision 2.0
+GETTING STARTED
+1 Help Button
+View a menu with an array of links designed to help you 
+overcome any roadblocks you may hit while using the GUI.
+About AMT Viewpoint - Learn about the details behind the 
+AMT Viewpoint including version number.
+Contact Same Sky - Get in touch with us for any questions 
+you might have on the AMT Viewpoint.
+AMT Viewpoint User Guide - This guide.
+2 Theme Toggle
+Toggle between light and dark themes based on preference.
+4
+
+AMT31 & AMT33
+AMT22 & AMT25 AMT23
+AMT11 & AMT13 AMT20 AMT21 & AMT24
+|  Revision 2.0 5
+ENCODER SPECIFIC WINDOWS
+The AMT Viewpoint’s format and settings will adapt based on the type of encoder that is connected. On the following pages, features and 
+interface instructions for each AMT encoder series is discussed.
+|  Revision 2.0
+AMT11 & 13 SERIES
+6
+Current Configuration Card
+Diagnostics Card
+Alignment Card
+Waveforms Card
+Encoder Overview Card
+Resource Card
+
+|  Revision 2.0
+7
+AMT11 & 13 SERIES
+1 Current Configuration Card
+To program an encoder, select programmable options from 
+the dropdown menus and press the “PROGRAM” button.
+The status circle will spin while the encoder is being 
+programmed. This will take about 30 seconds. When 
+programming is complete, the circle will appear green.
+2 Alignment Card
+Typically when aligning an encoder the user must go 
+through a tedious installation process to accurately align 
+the mechanical disk. The AMT encoder is unique in that its 
+index can be set digitally. With the push of a button (or more 
+accurately, the delivery of a serial command), the encoder 
+can be instantly aligned to its current position.
+To align an encoder using the AMT Viewpoint, simply press 
+the “ALIGN” button. This action will only take a second. It is 
+finished when the status circle appears completely green. 
+The zero position is now stored in the encoder’s memory and 
+will remain there even after power has been removed.
+
+|  Revision 2.0
+8
+AMT11 & 13 SERIES
+3 Diagnostics Card
+Same Sky’s encoders allow for the extraction of diagnostic 
+information for quicker field failure analysis. To gather 
+diagnostics from an encoder, click “ACQUIRE DIAGNOSTICS” 
+and wait for the data to be retrieved.
+Once data has been acquired it will need to be saved and 
+sent to Same Sky for review. The files can be sent to: 
+www.sameskydevices.com/contact
+4 Waveforms Card
+The AMT11 and AMT13 encoders allow for multiple resolutions 
+to be selected. This card calculates the various timing values 
+for each resolution. Select a different resolution to adjust the 
+values.
+
+|  Revision 2.0
+AMT20 SERIES
+9
+Current Configuration Card
+Waveforms Card
+Position CardEncoder Overview Card
+Resource Card
+
+|  Revision 2.0
+10
+AMT20 SERIES
+1 Current Configuration Card
+To program an encoder, select programmable options from 
+the dropdown menus and press the “PROGRAM” button.
+The status circle will spin while the encoder is being 
+programmed. This will take about 4 seconds. When 
+programming is complete, the circle will appear green. 
+The AMT20 does not have the ability to reset itself, so after 
+programming the encoder, it must be power cycled. Once 
+programming is complete a message will appear instructing 
+you to remove the encoder from the programming cable.
+2 Position Card
+The AMT20 is a digital serial absolute encoder, so with the 
+AMT Viewpoint you have the ability to view the current absolute 
+position, along with the ability to zero set that position.
+Typically when aligning an encoder the user must go 
+through a tedious installation process to accurately align 
+the mechanical disk. The AMT encoder is unique in that its 
+zero position can be set digitally. With the push of a button 
+(or more accurately, the delivery of a serial command), the 
+encoder can be instantly aligned to its current position. 
+(continued)
+
+|  Revision 2.0
+11
+AMT20 SERIES
+To align an encoder using the AMT Viewpoint, simply press 
+the “ALIGN” button. This action will only take a second. It is 
+finished when the status circle appears completely green. 
+The zero position is now stored in the encoder’s memory and 
+will remain there even after power has been removed. Again, 
+the AMT20 does not have the ability to reset itself, so after 
+programming the encoder, it must be power cycled. Once 
+programming is complete a message will appear instructing 
+you to remove the encoder from the programming cable.
+3 Waveforms Card
+The AMT20 encoder allows for multiple resolutions to be 
+selected. This card calculates the various timing values for 
+each resolution. Select a different resolution to adjust the 
+values.
+
+|  Revision 2.0
+AMT21 & 24 SERIES
+12
+New Firmware Card
+Current Configuration Card
+Position Card
+Diagnostics Card
+Encoder Overview Card
+Resource Card
+
+|  Revision 2.0
+13
+AMT21 & 24 SERIES
+1 Current Configuration Card
+The AMT21 & AMT24 are able to share a bus with multiple 
+encoders. To do this each encoder must have a unique 
+RS485 node address. Select an address from the dropdown 
+list and click “SET CONFIGURATION” to program the encoder 
+with the new address.
+The status circle will spin while the encoder is being 
+programmed. This will take about 4 seconds. When 
+programming is complete, the circle will appear green. 
+2 Position Card
+The AMT21 & AMT24 are digital serial absolute encoders, so 
+with the AMT Viewpoint you have the ability to view the current 
+absolute position, along with the ability to zero set that position.
+Typically when aligning an encoder the user must go 
+through a tedious installation process to accurately align 
+the mechanical disk. The AMT encoder is unique in that its 
+zero position can be set digitally. With the push of a button 
+(or more accurately, the delivery of a serial command), the 
+encoder can be instantly aligned to its current position. 
+(continued)
+
+|  Revision 2.0
+14
+AMT21 & 24 SERIES
+To align an encoder using the AMT Viewpoint, simply press 
+the “ALIGN” button. This action will only take a second. It is 
+finished when the status circle appears completely green. 
+The zero position is now stored in the encoder’s memory 
+and will remain there even after power has been removed. 
+For multi-turn versions of the AMT21 & AMT24, only the turns 
+counter can be zeroed.
+3 New Firmware Card
+If a firmware update is available, this card will appear 
+showing the newest firmware version. Click “UPDATE 
+FIRMWARE” to update the encoder’s firmware.
+4 Diagnostics Card
+Same Sky’s encoders allow for the extraction of diagnostic 
+information for quicker field failure analysis. To gather 
+diagnostics from an encoder, click “ACQUIRE DIAGNOSTICS” 
+and wait for the data to be retrieved.
+Once data has been acquired it will need to be saved and 
+sent to Same Sky for review. The files can be sent to: 
+www.sameskydevices.com/contact
+
+|  Revision 2.0
+AMT22 & 25 SERIES
+15
+Position Card
+Diagnostics CardEncoder Overview Card
+Resource Card
+
+|  Revision 2.0
+16
+AMT22 & 25 SERIES
+1 Position Card
+The AMT22 & AMT25 are digital serial absolute encoders, 
+so with the AMT Viewpoint you have the ability to view the 
+current absolute position, along with the ability to zero set 
+that position.
+Typically when aligning an encoder the user must go 
+through a tedious installation process to accurately align 
+the mechanical disk. The AMT encoder is unique in that its 
+zero position can be set digitally. With the push of a button 
+(or more accurately, the delivery of a serial command), the 
+encoder can be instantly aligned to its current position.
+To align an encoder using the AMT Viewpoint, simply press 
+the “ALIGN” button. This action will only take a second. It is 
+finished when the status circle appears completely green. 
+The zero position is now stored in the encoder’s memory and 
+will remain there even after power has been removed.
+2 New Firmware Card
+If a firmware update is available, this card will appear 
+showing the newest firmware version. Click “UPDATE 
+FIRMWARE” to update the encoder’s firmware.
+
+|  Revision 2.0
+17
+3 Diagnostics Card
+Same Sky’s encoders allow for the extraction of diagnostic 
+information for quicker field failure analysis. To gather 
+diagnostics from an encoder, click “ACQUIRE DIAGNOSTICS” 
+and wait for the data to be retrieved.
+Once data has been acquired it will need to be saved and 
+sent to Same Sky for review. The files can be sent to: 
+www.sameskydevices.com/contact
+AMT22 & 25 SERIES
+ACQUIRE DIAGNOSTICS
+
+|  Revision 2.0
+AMT23 SERIES
+18
+Position Card
+Diagnostics CardEncoder Overview Card
+Resource Card
+
+|  Revision 2.0
+19
+AMT23 SERIES
+1 Position Card
+The AMT23 is a digital serial absolute encoder, so with 
+the AMT Viewpoint you have the ability to view the current 
+absolute position, along with the ability to zero set that 
+position.
+Typically when aligning an encoder the user must go 
+through a tedious installation process to accurately align 
+the mechanical disk. The AMT encoder is unique in that its 
+zero position can be set digitally. With the push of a button 
+(or more accurately, the delivery of a serial command), the 
+encoder can be instantly aligned to its current position.
+To align an encoder using the AMT Viewpoint, simply press 
+the “ALIGN” button. This action will only take a second. It is 
+finished when the status circle appears completely green. 
+The zero position is now stored in the encoder’s memory and 
+will remain there even after power has been removed.
+2 New Firmware Card
+If a firmware update is available, this card will appear 
+showing the newest firmware version. Click “UPDATE 
+FIRMWARE” to update the encoder’s firmware.
+NEW FIRMWARE AVAILABLE:
+Current: 0x15 | Available: 0x16
+UPDATE FIRMWARE
+
+|  Revision 2.0
+20
+3 Diagnostics Card
+Same Sky’s encoders allow for the extraction of diagnostic 
+information for quicker field failure analysis. To gather 
+diagnostics from an encoder, click “ACQUIRE DIAGNOSTICS” 
+and wait for the data to be retrieved.
+Once data has been acquired it will need to be saved and 
+sent to Same Sky for review. The files can be sent to: 
+www.sameskydevices.com/contact
+AMT23 SERIES
+
+|  Revision 2.0
+AMT31 & 33 SERIES
+21
+Current Configuration Card
+Diagnostics Card
+Alignment Card
+Waveforms Card
+Encoder Overview Card
+Resource Card
+
+|  Revision 2.0
+22
+AMT31 & 33 SERIES
+1 Current Configuration Card
+To program an encoder, select programmable options from 
+the dropdown menus and press the “PROGRAM” button.
+The status circle will spin while the encoder is being 
+programmed. This will take about 30 seconds. When 
+programming is complete, the circle will appear green.
+2 Alignment Card
+When an AMT31 or AMT33 encoder is loaded into the AMT 
+Viewpoint, the current U/V/W signal states are loaded onto 
+the alignment card. Note that these values do not update in 
+real time but are only loaded during connection and after the 
+encoder programs and aligns.
+Typically when aligning an encoder the user must go 
+through a tedious installation process to accurately align 
+the mechanical disk. The AMT encoder is unique in that its 
+index can be set digitally. With the push of a button (or more 
+accurately, the delivery of a serial command), the encoder 
+can be instantly aligned to its current position. 
+(continued)
+
+|  Revision 2.0
+23
+AMT31 & 33 SERIES
+To align an encoder using the AMT Viewpoint, simply press 
+the “ALIGN” button. This action will only take a second. It is 
+finished when the status circle appears completely green. 
+The zero position is now stored in the encoder’s memory 
+and will remain there even after power has been removed. 
+The U/V/W status boxes will update with the newly aligned 
+position.
+3 Diagnostics Card
+Same Sky’s encoders allow for the extraction of diagnostic 
+information for quicker field failure analysis. To gather 
+diagnostics from an encoder, click “ACQUIRE DIAGNOSTICS” 
+and wait for the data to be retrieved.
+Once data has been acquired it will need to be saved and 
+sent to Same Sky for review. The files can be sent to: 
+www.sameskydevices.com/contact
+4 Waveforms Card
+The AMT31 and AMT33 encoders allow for multiple resolutions 
+to be selected. This card calculates the various timing values 
+for each resolution. Select a different resolution to adjust the 
+values.
+
+Thank you for downloading the AMT Viewpoint™. 
+If you have any questions, you can contact us at: www.sameskydevices.com/contact
+© 2025 Same Sky. All rights reserved.
+AMT Viewpoint is a trademark of Same Sky in the U.S. and/or other countries. All other trademarks mentioned are the property of their respective owners.

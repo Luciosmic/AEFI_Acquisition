@@ -51,6 +51,7 @@ from application.services.excitation_configuration_service.excitation_configurat
 # continuous worker owns the driver exclusively).
 from application.services.aefi_acquisition_service.i_api_aefi_acquisition_service import IApiAefiAcquisitionService
 from application.services.aefi_acquisition_service.dtos.aefi_acquisition_dtos import AefiAcquisitionConfig
+from application.shared.exclusive_control.exclusive_control import take_all
 from application.services.electric_field_probe_service.i_api_electric_field_probe_service import IApiElectricFieldProbeService
 from application.services.electric_field_probe_service.dtos.electric_field_probe_dtos import ElectricFieldProbeAcquisitionConfig
 from domain.shared_kernel.events.aefi_voltage_sample_acquired.aefi_voltage_sample_acquired import AefiVoltageSampleAcquired
@@ -65,6 +66,9 @@ from .errors.motion_sync_error import (
 )
 
 logger = logging.getLogger(__name__)
+
+# Owner name of the excitation and of the acquisition stream during a scan.
+SCAN_EXCITATION_CONTROLLER = "scan"
 
 
 def _drain_queue(q: "queue.Queue") -> None:
@@ -196,6 +200,7 @@ class ScanApplicationService:
         self._excitation_service = excitation_service
 
         self._current_scan: Optional[StepScan] = None
+        self._control_releases: List = []  # excitation + acquisition stream, held while a scan runs
 
         # Subscribe to forward events to the output port.
         self._event_bus.subscribe("scanstarted", self._on_domain_event)
@@ -223,6 +228,25 @@ class ScanApplicationService:
                 raise ValueError(f"Invalid configuration: {validation.errors}")
             if config.differential_mode and self._excitation_service is None:
                 raise ValueError("differential_mode requires an ExcitationConfigurationService")
+            # The excitation is a measurement condition of every point, and the
+            # acquisition stream feeds every point: both held for the whole scan
+            # (refused if e.g. the automatic sensor calibration drives them;
+            # Continuous Reading cannot Stop the stream under the scan).
+            # Released with the streams.
+            takes = [
+                (lambda: self._aefi_acquisition_service.take_control(SCAN_EXCITATION_CONTROLLER),
+                 lambda: self._aefi_acquisition_service.release_control(SCAN_EXCITATION_CONTROLLER)),
+            ]
+            if self._excitation_service is not None:
+                takes.insert(0, (
+                    lambda: self._excitation_service.take_control(SCAN_EXCITATION_CONTROLLER),
+                    lambda: self._excitation_service.release_control(SCAN_EXCITATION_CONTROLLER),
+                ))
+            taken = take_all(takes)
+            if taken.is_failure:
+                logger.warning("ScanApplicationService: scan refused — %s", taken.error)
+                return False
+            self._control_releases = taken.value
 
             scan = StepScan()
             scan.start(config)
@@ -238,10 +262,17 @@ class ScanApplicationService:
 
         except Exception as e:
             logger.error(f"Scan failed to start: {e}")
+            self._release_controls()
             if self._current_scan and self._current_scan.status == ScanStatus.RUNNING:
                 self._current_scan.fail(str(e))
                 self._publish_events(self._current_scan.domain_events)
             return False
+
+    def _release_controls(self) -> None:
+        """Give back the excitation and the acquisition stream (idempotent)."""
+        releases, self._control_releases = self._control_releases, []
+        for release in releases:
+            release()
 
     def pause_scan(self) -> None:
         if not self._current_scan:
@@ -333,7 +364,7 @@ class ScanApplicationService:
         # running, untouched, after it.
         adc_started_by_scan = not self._aefi_acquisition_service.is_acquisition_running()
         if adc_started_by_scan:
-            self._aefi_acquisition_service.start_acquisition(AefiAcquisitionConfig())
+            self._aefi_acquisition_service.start_acquisition(AefiAcquisitionConfig(), controller=SCAN_EXCITATION_CONTROLLER)
 
         # Active auxiliary channels: (channel, its queue). A channel that
         # isn't ready (probe not connected) is simply skipped for this scan.
@@ -370,9 +401,10 @@ class ScanApplicationService:
             for topic, handler in channel_handlers:
                 self._event_bus.unsubscribe(topic, handler)
             if adc_started_by_scan:
-                self._aefi_acquisition_service.stop_acquisition()
+                self._aefi_acquisition_service.stop_acquisition(controller=SCAN_EXCITATION_CONTROLLER)
             for channel in channels_started_by_scan:
                 channel.service.stop_acquisition()
+            self._release_controls()
 
         try:
             for i, position in enumerate(trajectory):

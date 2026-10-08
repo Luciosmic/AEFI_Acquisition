@@ -79,6 +79,9 @@ _QUANTITIES = {
         QuantitySpec("lsb_v", "Quantum", "V/LSB"),
         QuantitySpec("noise_v_rms", "Bruit", "V RMS"),
         QuantitySpec("max_sampling_rate_hz", "Fréquence d'échantillonnage max", "Hz"),
+        # Measured on DRDY at the oscilloscope (Calibration -> ADC tab).
+        QuantitySpec("modulator_frequency_hz", "Fréquence du modulateur f_MOD (DRDY)", "Hz"),
+        QuantitySpec("output_data_rate_hz", "Cadence de sortie ODR (DRDY)", "Hz", curve_x_label="OSR"),
     ),
     HardwareComponentKind.MICROCONTROLLER: (
         QuantitySpec("max_acquisition_rate_per_s", "Débit d'acquisition max", "mesures/s"),

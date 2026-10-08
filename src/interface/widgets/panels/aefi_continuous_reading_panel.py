@@ -67,7 +67,8 @@ class AefiContinuousReadingPanel(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.channel_checkboxes = {}
-        
+        self._controller = ""  # who holds the acquisition stream ("" = Start/Stop by hand)
+
         # Data buffers
         self.times: List[float] = []
         self.values: Dict[str, List[float]] = {ch["name"]: [] for ch in self.CHANNELS}
@@ -374,8 +375,30 @@ class AefiContinuousReadingPanel(QWidget):
         self.lbl_status.setText("Running")
         self.lbl_status.setToolTip(f"Acquisition ID: {acquisition_id}")
 
+    def set_acquisition_controller(self, controller: str, running: bool):
+        """Lock Start/Stop while `controller` holds the stream ("" = free:
+        buttons follow `running`)."""
+        self._controller = controller
+        if controller:
+            self.btn_start.setEnabled(False)
+            self.btn_stop.setEnabled(False)
+            self.lbl_status.setText("Piloté")
+            self.lbl_status.setToolTip(f"Flux d'acquisition sous le contrôle de : {controller} — Start/Stop verrouillés")
+            return
+        self.btn_start.setEnabled(not running)
+        self.btn_stop.setEnabled(running)
+        self.lbl_status.setText("Running" if running else "Stopped")
+        self.lbl_status.setToolTip("")
+
+    def on_acquisition_failed(self, reason: str):
+        """Refused Start/Stop or acquisition error (from presenter)."""
+        self.lbl_status.setText("Erreur")
+        self.lbl_status.setToolTip(reason)
+
     def on_acquisition_stopped(self, acquisition_id: str):
         """Called when acquisition stops (from presenter)."""
+        if self._controller:  # the owner stopped its own stream: still locked until it releases it
+            return
         self.lbl_status.setText("Stopped")
         self.lbl_status.setToolTip(f"Acquisition ID: {acquisition_id}")
         self.btn_start.setEnabled(True)

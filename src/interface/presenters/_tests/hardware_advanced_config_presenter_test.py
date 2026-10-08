@@ -171,5 +171,31 @@ class TestHardwareAdvancedConfigPresenterFrequencySync(unittest.TestCase):
         self.assertFalse(link_spec.default_value)
 
 
+class TestHardwareAdvancedConfigPresenterControl(unittest.TestCase):
+    """While a use case holds the selected hardware's configuration, the panel
+    shows who and every change by hand is refused."""
+
+    def setUp(self):
+        self.event_bus = InMemoryEventBus()
+        self.service = HardwareConfigurationService([FakeAD9106Configurator()], self.event_bus)
+        self.presenter = HardwareAdvancedConfigPresenter(self.service, self.event_bus)
+        self.controllers, self.messages = [], []
+        self.presenter.controller_changed.connect(self.controllers.append)
+        self.presenter.status_message.connect(self.messages.append)
+        self.presenter.select_hardware("ad9106_dds")
+
+    def test_selection_then_take_and_release_are_shown(self):
+        self.service.take_control("ad9106_dds", "caractérisation")
+        self.service.release_control("ad9106_dds", "caractérisation")
+        # select (free), taken, released -> reselect (free)
+        self.assertEqual(self.controllers, ["", "caractérisation", ""])
+
+    def test_reset_by_hand_is_refused_with_a_message(self):
+        self.service.take_control("ad9106_dds", "caractérisation")
+        self.presenter.reset_configuration_to_default()
+        self.assertIn("caractérisation", self.messages[-1])
+        self.assertTrue(self.messages[-1].startswith("Error"))
+
+
 if __name__ == "__main__":
     unittest.main()

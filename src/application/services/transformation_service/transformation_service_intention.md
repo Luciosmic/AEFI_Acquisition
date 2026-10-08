@@ -15,7 +15,7 @@ Les angles viennent de la calibration capteur (rotation active : dernière calib
 
 ## Design
 
-- **Purement calculatoire** : repose sur `scipy.spatial.transform.Rotation` — `_rotation = from_euler('XYZ', …)` = P : majuscules = intrinsèque X→Y'→Z'', équivalent aux rotations autour des axes sources fixes appliquées Z puis Y puis X (angles en degrés). Pas d'inversion : les angles saisis sont les angles de montage tels quels. Attention : transposer n'équivaut pas à nier les angles (`Pᵀ = Rz(−θz)·Ry(−θy)·Rx(−θx)`). Aucun port infrastructure dédié.
+- **Purement calculatoire** : P vient du domaine, `SensorRotationAngles.mounting_matrix()` — seul endroit qui transforme les angles en P (même source que la vue 3D et le simulateur mock), jamais re-dérivé ici depuis une chaîne d'Euler. `_rotation = Rotation.from_matrix(P)` (scipy) sert uniquement à appliquer P / Pᵀ. Pas d'inversion : les angles saisis sont les angles de montage tels quels. Attention : transposer n'équivaut pas à nier les angles (`Pᵀ = Rz(−θz)·Ry(−θy)·Rx(−θx)`). `TestRotationConventionGuard` fige la convention. Aucun port infrastructure dédié.
 - **État interne** : angles courants (`_angles: np.ndarray`) + flag `_enabled`.
 - **`IDomainEventBus` optionnel** : injecté au constructeur, peut être `None` (mode test sans bus, pas d'abonnement).
 - **`force_transform_sensor_to_source`** : bypass du flag `_enabled` pour les panneaux de référence.

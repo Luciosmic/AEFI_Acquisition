@@ -261,6 +261,14 @@ class ExcitationPanel(QWidget):
 
         v_layout.addLayout(top_row)
 
+        # Shown while a controller (scan, automatic calibration) owns the
+        # excitation: the settings below are locked and follow its changes.
+        self.controller_label = QLabel()
+        self.controller_label.setWordWrap(True)
+        self.controller_label.setStyleSheet("color: #FFB74D; font-weight: bold;")
+        self.controller_label.hide()
+        v_layout.addWidget(self.controller_label)
+
         # Main column: excitation levels, then the sphere visualization, then
         # the Lock-In Detection controls — stacked vertically so the panel
         # stays narrow (it used to be three side-by-side columns).
@@ -428,6 +436,16 @@ class ExcitationPanel(QWidget):
             self._set_spin_value(self.level_s1_s2_spin, aligned)
             self._set_spin_value(self.level_s3_s4_spin, aligned)
             self._emit_changed()
+
+    def set_controller(self, controller: str):
+        """Lock the excitation settings while `controller` drives the
+        excitation ("" = free, settable by hand again)."""
+        controlled = bool(controller)
+        for widget in (self.mode_combo, self.freq_spin, self.level_s1_s2_spin,
+                       self.level_s3_s4_spin, self.link_checkbox):
+            widget.setEnabled(not controlled)
+        self.controller_label.setText(f"Excitation pilotée par : {controller} — réglages verrouillés")
+        self.controller_label.setVisible(controlled)
 
     def set_link_state(self, linked: bool):
         """Update the "Link" checkbox from external state (Hardware Advanced

@@ -25,6 +25,7 @@ from domain.calibration.events.sensor_calibration_entry_added.sensor_calibration
     SensorCalibrationEntryAdded,
 )
 from domain.calibration.value_objects.caliper_measurement.caliper_measurement import CaliperMeasurement
+from domain.calibration.errors.source_geometry_inconsistent_error import SourceGeometryInconsistentError
 from domain.calibration.entities.source_geometry_calibration_entry.source_geometry_calibration_entry import (
     SourceGeometryCalibrationEntry,
 )
@@ -165,6 +166,17 @@ class TestCalibration(unittest.TestCase):
         self.assertEqual(len(events), 1)
         self.assertIsInstance(events[0], SourceGeometryCalibrationEntryAdded)
         self.assertEqual(events[0].entry, entry)
+
+    def test_record_source_geometry_refuses_a_geometry_the_spheres_cannot_take(self):
+        """No overlap, but S3 cannot reach both S1 and S2: nothing recorded."""
+        calibration = Calibration()
+        measure = lambda values: tuple(CaliperMeasurement.from_resolution(v) for v in values)
+
+        with self.assertRaises(SourceGeometryInconsistentError):
+            calibration.record_source_geometry_calibration_entry(
+                measure((0.02,) * 4), measure((0.11, 0.11, 0.04, 0.08, 0.04, 0.08))
+            )
+        self.assertEqual(calibration.domain_events, [])
 
     def test_record_hardware_component_characterization_emits_event(self):
         calibration = Calibration()

@@ -1,0 +1,171 @@
+© Copyright Same Sky 2026. All Rights Reserved.
+sameskydevices.com
+AMT Encoder Mounting 
+Troubleshooting Guide
+Applicable series: AMT11, AMT11A, AMT20, AMT21, AMT22, AMT23, AMT31
+
+2
+© Copyright Same Sky 2026. All Rights Reserved. sameskydevices.com
+This guide aims to address common issues found when mounting 
+Same Sky’s AMT encoders. If you are experiencing any performance 
+issues or unexpected encoder behavior, please reference the images 
+and instructions below. For additional information and tutorials on 
+AMT encoder mounting, please visit our AMT mounting instructions 
+page at: sameskydevices.com/amt-mounting
+For additional questions or support, please contact us at:  
+sameskydevices.com/contact
+Figure 1 
+Microscopic image 
+of new, undamaged 
+receiver PCB
+DAMAGE TO ENCODER PCB 
+DUE TO IMPROPER MOUNTING
+The below images show what can occur if encoder installation is not followed and the encoder’s 
+rotor was not seated properly onto the shaft adapter and motor shaft. During rotation, friction 
+between the rotor PCB and receiver PCB can cause wear on the receiver PCB, destroying metal 
+traces that can lead to catastrophic failure. Note, that during proper installation an air gap inside 
+the device is established and physical contact of rotating and non-rotating parts inside the encoder 
+does not occur. 
+As shown in the sections beginning on page 4, encoder mounting issues are most often caused by 
+improper mounting of the shaft adapter and sleeve or improper alignment of the internal rotor PCB.
+3
+© Copyright Same Sky 2026. All Rights Reserved. sameskydevices.com
+Figure 3 
+Here is the rotor 
+PCB also showing 
+significant signs of 
+wear from rotation 
+while improperly 
+mounted. Heat 
+damage is also visible 
+due to prolonged 
+use with significant 
+friction.
+Rotor
+Shaft Adapter
+Figure 2   
+This image shows 
+physical wear on 
+the receiver PCB 
+caused by improper 
+mounting. The wear 
+is also in a radial 
+pattern, indicating 
+that damage was 
+caused by the rotor 
+PCB rotating while 
+in contact with the 
+receiver PCB.
+
+4
+© Copyright Same Sky 2026. All Rights Reserved. sameskydevices.com
+IMPROPER MOUNTING OF SHAFT ADAPTER AND SLEEVE
+Figure 4 
+Improperly mounted 
+shaft adapter and 
+sleeve. The green 
+shaft sleeve and 
+black shaft adapter 
+should be completely 
+flush when properly 
+mounted.
+Shaft adapter (black) and 
+sleeve (green) are not flush
+Figure 5 
+When mounting the 
+shaft sleeve and shaft 
+adapter, ensure that 
+Tool A is utilized as 
+a spacer that defines 
+the proper distance 
+to the mounting 
+surface. Next, use 
+Tool C to press the 
+shaft adapter over the 
+sleeve until the shaft 
+adapter is completely 
+flush with Tool A.
+Tool C
+Tool A
+Not following the details outlined in step 1 of the mounting process can lead to a variety of encoder 
+performance issues. Here is what to look out for:
+5
+© Copyright Same Sky 2026. All Rights Reserved. sameskydevices.com
+Figure 6 
+Properly installed 
+shaft adapter and 
+sleeve that are flush 
+and properly spaced 
+from the mounting 
+surface
+Figure 7 
+Improperly mounted 
+encoder shows the 
+way that this encoder 
+was likely mounted 
+with the internal rotor 
+PCB not pushed down 
+into place. This is 
+consistent with the 
+wear marks on the 
+encoder.
+Shaft 
+Sleeve
+Shaft 
+Adapter
+Receiver
+Transmitter Rotor
+IMPROPER ALIGNMENT OF INTERNAL ROTOR PCB
+Not following the details outlined in step 6 of the mounting process can lead to a variety of encoder 
+performance issues. Here is what to look out for:
+6
+© Copyright Same Sky 2026. All Rights Reserved. sameskydevices.com
+Figure 8 
+This shows the front 
+view of the encoder 
+rotor sitting too high 
+and not flush with the 
+shaft adapter. This 
+is caused when Tool 
+C is not utilized as 
+outlined in step 6 of 
+the mounting process 
+shown below.
+Shaft 
+AdapterRotor
+Shaft Adapter
+Rotor
+Figure 9 
+The final step of the 
+mounting process 
+utilizes Tool C to seat 
+the internal rotor 
+PCB into the proper 
+position within the 
+hub assembly.
+Tool C
+Tool C
+7
+© Copyright Same Sky 2026. All Rights Reserved. sameskydevices.com
+Figure 10 
+Properly installed 
+encoder with internal 
+rotor and shaft 
+adapter now flush 
+and properly seated 
+within the encoder 
+assembly. Once Tool C 
+is used, the rotor PCB 
+should be properly 
+seated between 
+the transmitter and 
+receiver PCBs. The 
+image on the right 
+further shows the 
+proper air gap and 
+that there should be 
+no physical contact 
+within the encoder.
+Shaft 
+Adapter
+Rotor

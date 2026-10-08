@@ -111,8 +111,26 @@ class HardwareComponentPanel(QWidget):
         layout.addWidget(grp_values)
 
         layout.addStretch()
+        self._layout = layout
         self.on_mounted_component_updated(None)
         self.btn_mount.setEnabled(False)
+
+    def add_tool(self, widget: QWidget) -> None:
+        """A kind-specific measurement tool shown below the characterization
+        form (e.g. the throughput measurement in the microcontroller tab)."""
+        self._layout.insertWidget(self._layout.count() - 1, widget)
+
+    def prefill_values(self, values: Dict[str, Any]) -> None:
+        """Measured quantities written into the form (unchecking "non
+        caractérisée"); the operator names the component and records it."""
+        for key, value in values.items():
+            if key in self._fields and value is not None:
+                edit, unknown = self._fields[key]
+                unknown.setChecked(False)
+                edit.setText(_format(value))
+        self.set_status_message(
+            "Valeurs mesurées pré-remplies — vérifier, nommer le composant, puis « Enregistrer la caractérisation »."
+        )
 
     # -- user actions -------------------------------------------------------------
 

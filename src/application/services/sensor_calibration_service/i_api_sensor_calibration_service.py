@@ -5,6 +5,9 @@ from application.services.sensor_calibration_service.dtos.sensor_calibration_dto
     ActiveSensorRotationDTO,
     SensorCalibrationDTO,
 )
+from application.services.sensor_calibration_service.ports.i_sensor_calibration_output_port import (
+    ISensorCalibrationOutputPort,
+)
 
 
 class IApiSensorCalibrationService(ABC):
@@ -40,6 +43,15 @@ class IApiSensorCalibrationService(ABC):
 
     @abstractmethod
     def reset_to_default(self) -> None: ...
+
+    @abstractmethod
+    def start_automatic_calibration(self) -> None:
+        """Drive the excitation (off, X, Y), fit the mounting angles on the
+        sensor responses and apply them as a trial. Runs in the background;
+        the outcome goes to the output port."""
+
+    @abstractmethod
+    def set_output_port(self, output_port: "ISensorCalibrationOutputPort") -> None: ...
 
     @abstractmethod
     def get_latest_calibration(self) -> Optional[SensorCalibrationDTO]: ...

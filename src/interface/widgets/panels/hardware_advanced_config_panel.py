@@ -73,6 +73,7 @@ class HardwareAdvancedConfigPanel(QWidget):
         # _display_conversion, so toggling can still read the old widgets
         # back to raw before rebuilding.
         self._physical_units_active = False
+        self._controller = ""  # who holds the selected hardware's configuration ("" = editable)
 
         self._build_ui()
     
@@ -115,6 +116,14 @@ class HardwareAdvancedConfigPanel(QWidget):
         scroll.setWidget(self._content_widget)
         main_layout.addWidget(scroll, 1)
         
+        # Shown while a use case (e.g. the throughput characterization) holds
+        # the selected hardware's configuration: fields and buttons locked.
+        self._controller_label = QLabel()
+        self._controller_label.setWordWrap(True)
+        self._controller_label.setStyleSheet("color: #FFB74D; font-weight: bold;")
+        self._controller_label.hide()
+        main_layout.addWidget(self._controller_label)
+
         # Status label
         self._status_label = QLabel("Ready")
         self._status_label.setStyleSheet("color: gray; font-size: 10px;")
@@ -221,6 +230,7 @@ class HardwareAdvancedConfigPanel(QWidget):
         self._save_default_btn.setEnabled(True)
         self._reset_default_btn.setEnabled(True)
         self._update_synchronous_detection_controls_visibility()
+        self._apply_lock()  # a rebuild while locked (live sync) must stay locked
 
     _SYNCHRONOUS_DETECTION_HARDWARE_ID = "ad9106_dds"
 
@@ -370,6 +380,23 @@ class HardwareAdvancedConfigPanel(QWidget):
                 config[key] = widget.isChecked()
         return config
     
+    def set_controller(self, controller: str):
+        """Lock the selected hardware's fields and Save/Reset while
+        `controller` holds its configuration ("" = editable)."""
+        self._controller = controller
+        self._apply_lock()
+
+    def _apply_lock(self) -> None:
+        locked = bool(self._controller)
+        self._content_widget.setEnabled(not locked)
+        if locked:
+            self._save_default_btn.setEnabled(False)
+            self._reset_default_btn.setEnabled(False)
+            self._controller_label.setText(
+                f"Configuration sous le contrôle de : {self._controller} — réglages verrouillés"
+            )
+        self._controller_label.setVisible(locked)
+
     def set_status_message(self, message: str):
         """Update status label."""
         self._status_label.setText(message)
