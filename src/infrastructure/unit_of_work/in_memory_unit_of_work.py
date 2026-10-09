@@ -3,6 +3,7 @@ from typing import Any, List
 
 from application.services.scan_application_service.ports.i_unit_of_work import IUnitOfWork
 from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from infrastructure.persistence.aefi_line.in_memory_aefi_line_repository import InMemoryAefiLineRepository
 from infrastructure.persistence.aefi_point.in_memory_aefi_point_repository import InMemoryAefiPointRepository
 from infrastructure.persistence.scan.in_memory_scan_repository import InMemoryScanRepository
 
@@ -17,6 +18,7 @@ class InMemoryUnitOfWork(IUnitOfWork):
         self._seen: List[Any] = []
         self._committed = False
         self.aefi_points = InMemoryAefiPointRepository(self)
+        self.aefi_lines = InMemoryAefiLineRepository(self)
         self.scans = InMemoryScanRepository(self)
 
     def __enter__(self) -> "InMemoryUnitOfWork":
