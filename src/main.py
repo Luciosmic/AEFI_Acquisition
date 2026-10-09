@@ -246,10 +246,12 @@ def main(hardware_config: dict | None = None):
     # Scan Application Service — auxiliary probes (currently: Narda EF probe)
     # are registered as blocking channels; see AuxiliaryProbeChannel for what
     # "blocking" means and make_electric_field_probe_channel for the Narda wiring.
+    scan_unit_of_work = InMemoryUnitOfWork(event_bus)
     narda_channel = make_electric_field_probe_channel(
         probe_port=hw.probe_port,
         probe_service=electric_field_probe_service,
         event_bus=event_bus,
+        unit_of_work=scan_unit_of_work,
     )
     # Excitation Service
     excitation_service = ExcitationConfigurationService(hw.excitation_port, event_bus)
@@ -359,9 +361,8 @@ def main(hardware_config: dict | None = None):
     logger.info("Services -> SynchronousDetectionService created (signature=%s)", hardware_signature)
 
     # Handler before service: ScanCompleted must come out during the dispatch of AefiPointAcquired.
-    scan_unit_of_work = InMemoryUnitOfWork(event_bus)
     # One topic per probe aggregate whose acquisitions the Scan references (its source is declared in the Scan).
-    scan_closure_handler = ScanClosureHandler(event_bus, scan_unit_of_work, ("aefipointacquired", "aefilineacquired"))
+    scan_closure_handler = ScanClosureHandler(event_bus, scan_unit_of_work, ("aefipointacquired", "aefilineacquired", "nardapointacquired"))
     scan_service = ScanApplicationService(
         hw.motion_port, continuous_service, event_bus,
         unit_of_work=scan_unit_of_work,

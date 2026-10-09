@@ -54,7 +54,7 @@ class TestScanApplicationService(DiagramFriendlyTest):
         motion_sync = EventBusMotionSynchronizer(self.event_bus)
 
         self.scan_uow = InMemoryUnitOfWork(self.event_bus)
-        ScanClosureHandler(self.event_bus, self.scan_uow, ("aefipointacquired",))
+        ScanClosureHandler(self.event_bus, self.scan_uow, ("aefipointacquired", "nardapointacquired"))
         self.service = ScanApplicationService(
             self.motion_port,
             self.aefi_acquisition_service,
@@ -242,6 +242,7 @@ class TestScanApplicationService(DiagramFriendlyTest):
             probe_port=probe,
             probe_service=field_service,
             event_bus=self.event_bus,
+            unit_of_work=self.scan_uow,
         )
         service = ScanApplicationService(
             self.motion_port, self.aefi_acquisition_service, self.event_bus,
@@ -284,6 +285,7 @@ class TestScanApplicationService(DiagramFriendlyTest):
             probe_port=probe,
             probe_service=field_service,
             event_bus=self.event_bus,
+            unit_of_work=self.scan_uow,
         )
         service = ScanApplicationService(
             self.motion_port, self.aefi_acquisition_service, self.event_bus,

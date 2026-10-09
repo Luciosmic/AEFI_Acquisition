@@ -101,6 +101,9 @@ def _motion_failure_reason(error: MotionSyncError, where: str) -> str:
 from domain.step_scan.step_scan import StepScan
 from domain.scan.scan import Scan
 from domain.scan.value_objects.expected_source.expected_source import ExpectedSource
+from domain.narda_point.events.narda_point_acquired.narda_point_acquired import NARDA_POINT_SOURCE
+from domain.narda_point.narda_point import NardaPoint
+from domain.narda_point.value_objects.narda_point_id.narda_point_id import NardaPointId
 from domain.aefi_point.events.aefi_point_acquired.aefi_point_acquired import AEFI_POINT_SOURCE
 from domain.aefi_line.aefi_line import AefiLine
 from domain.aefi_line.events.aefi_line_acquired.aefi_line_acquired import AEFI_LINE_SOURCE
@@ -132,8 +135,11 @@ class AuxiliaryProbeChannel:
 
     Distinct from the primary AEFI/ADC channel (hardcoded in the loop):
     a primary result feeds scan.point_acquired() directly, while an
-    auxiliary probe publishes its own per-point domain event via
-    publish_point_result. All registered channels are blocking — conservative
+    auxiliary probe commits its own per-point aggregate (own transaction)
+    via record_point_result, and the thin Scan references it as the
+    required source `source`. A probe ready when the scan starts is
+    declared; one that is not ready then is ignored for the whole scan,
+    one that becomes unavailable afterwards fails the scan. All registered channels are blocking — conservative
     default, matching the original Narda-only invariant: if a channel fails
     to collect averaging_per_position samples for a point, the whole scan
     fails rather than publish an incomplete point. Making a given probe
@@ -147,30 +153,52 @@ class AuxiliaryProbeChannel:
     """
 
     name: str
+    source: str
     event_topic: str
     service: Any
     acquisition_config: Any
     is_ready: Callable[[], bool]
-    publish_point_result: Callable[[Any, int, Any, List, Optional[List]], None]
+    record_point_result: Callable[[Any, int, Any, List, Optional[List], int], None]
 
 
 def make_electric_field_probe_channel(
     probe_port: IElectricFieldProbePort,
     probe_service: IApiElectricFieldProbeService,
     event_bus: IDomainEventBus,
+    unit_of_work: IUnitOfWork,
 ) -> AuxiliaryProbeChannel:
-    """Build the Narda EF probe's auxiliary channel registration."""
+    """Build the Narda EF probe's auxiliary channel registration.
 
-    def _publish(
-        scan: StepScan, point_index: int, position, samples: List, baseline_samples: Optional[List] = None
+    `unit_of_work` is the scan service's own instance (only used from the scan loop thread)."""
+
+    def _record(
+        scan: StepScan,
+        point_index: int,
+        position,
+        samples: List,
+        baseline_samples: Optional[List],
+        expected_samples: int,
     ) -> None:
-        field_measurement = FieldMeasurementStatisticsService.calculate_statistics(samples)
-        baseline_field_measurement = (
-            FieldMeasurementStatisticsService.calculate_statistics(baseline_samples)
-            if baseline_samples
-            else None
-        )
         probe = probe_port.get_probe()
+        axis_labels = probe.axis_labels if probe is not None else None
+        point = NardaPoint(
+            id=NardaPointId(uuid4()),
+            scan_id=scan.id,
+            position=position,
+            point_index=point_index,
+            expected_samples=expected_samples,
+            expects_baseline=baseline_samples is not None,
+            axis_labels=axis_labels,
+        )
+        point.record_samples(samples, baseline_samples)
+        field_measurement = point.field_measurement
+        baseline_field_measurement = point.baseline_field_measurement
+        # One aggregate per transaction: the commit publishes NardaPointAcquired, whose handler
+        # references it in the thin Scan. A commit failure propagates to the scan loop (scan fails).
+        with unit_of_work as uow:
+            uow.narda_points.add(point)
+            uow.commit()
+        # Transitional legacy event (export + UI), after the commit.
         event_bus.publish(
             "electricfieldscanpointacquired",
             ElectricFieldScanPointAcquired(
@@ -179,17 +207,18 @@ def make_electric_field_probe_channel(
                 position=position,
                 field_measurement=field_measurement,
                 baseline_field_measurement=baseline_field_measurement,
-                axis_labels=probe.axis_labels if probe is not None else None,
+                axis_labels=axis_labels,
             ),
         )
 
     return AuxiliaryProbeChannel(
         name="Narda probe",
+        source=NARDA_POINT_SOURCE,
         event_topic="fieldsampleacquired",
         service=probe_service,
         acquisition_config=ElectricFieldProbeAcquisitionConfig(),
         is_ready=probe_port.is_ready,
-        publish_point_result=_publish,
+        record_point_result=_record,
     )
 
 
@@ -229,6 +258,8 @@ class ScanApplicationService:
         self._task_runner = task_runner
         self._motion_sync = motion_sync
         self._auxiliary_probes: List[AuxiliaryProbeChannel] = list(auxiliary_probes or [])
+        # Probes whose source the current thin Scan declares as required (set at scan start).
+        self._declared_probe_channels: List[AuxiliaryProbeChannel] = []
         self._output_port = output_port
         self._excitation_service = excitation_service
 
@@ -314,6 +345,11 @@ class ScanApplicationService:
             self._current_scan = scan
             self._publish_events(scan.domain_events)
 
+            # Readiness is decided once, here: a ready probe becomes a required source of the Scan
+            # (step/line scan only - the fly-scan ignores probes).
+            self._declared_probe_channels = (
+                [] if is_fly_scan else [c for c in self._auxiliary_probes if c.is_ready()]
+            )
             self._open_thin_scan(scan, config)
 
             trajectory = create_trajectory(config)
@@ -344,6 +380,10 @@ class ScanApplicationService:
             sources = {AEFI_LINE_SOURCE: ExpectedSource(count=config.total_points() // config.points_per_line())}
         else:
             sources = {AEFI_POINT_SOURCE: ExpectedSource(count=config.total_points())}
+            for channel in self._declared_probe_channels:
+                logger.info("ScanApplicationService: scan_id=%s declares required source=%s (%s)",
+                            scan_id, channel.source, channel.name)
+                sources[channel.source] = ExpectedSource(count=config.total_points(), required=True)
         with self._unit_of_work as uow:
             uow.scans.add(Scan(id=scan_id, expected_sources=sources, total_points=config.total_points()))
             uow.commit()
@@ -504,7 +544,9 @@ class ScanApplicationService:
         channels_started_by_scan: List[AuxiliaryProbeChannel] = []
 
         for channel in self._auxiliary_probes:
-            if not channel.is_ready():
+            # Only probes declared as sources of this Scan at start take part; a declared probe
+            # that is no longer ready is still tracked and fails the scan at the first point.
+            if channel not in self._declared_probe_channels:
                 continue
 
             channel_queue: "queue.Queue" = queue.Queue()
@@ -519,7 +561,7 @@ class ScanApplicationService:
             channel_handlers.append((channel.event_topic, handler))
             active_channels.append((channel, channel_queue))
 
-            if not channel.service.is_acquisition_running():
+            if channel.is_ready() and not channel.service.is_acquisition_running():
                 channel.service.start_acquisition(channel.acquisition_config)
                 channels_started_by_scan.append(channel)
 
@@ -679,6 +721,16 @@ class ScanApplicationService:
                 # (conservative default); making a probe optional instead is
                 # a per-probe policy decision, not made here.
                 for channel, channel_queue in active_channels:
+                    if not channel.is_ready():
+                        # Declared as a required source at start: the Scan could never complete.
+                        # Visible failure, no silent hang, no automatic retry.
+                        scan.fail(
+                            f"{channel.name}: became unavailable at point {i} after being declared "
+                            f"as required source '{channel.source}' - aborting scan"
+                        )
+                        _release_streams()
+                        self._publish_events(scan.domain_events)
+                        return
                     _drain_queue(channel_queue)
                     channel_samples = self._collect_samples(
                         channel_queue, config.averaging_per_position, scan
@@ -696,8 +748,9 @@ class ScanApplicationService:
                         self._publish_events(scan.domain_events)
                         return
 
-                    channel.publish_point_result(
-                        scan, i, position, channel_samples, channel_baseline_samples.get(channel.name)
+                    channel.record_point_result(
+                        scan, i, position, channel_samples, channel_baseline_samples.get(channel.name),
+                        config.averaging_per_position,
                     )
 
                 # --- Add result to aggregate ---
