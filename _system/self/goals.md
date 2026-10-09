@@ -448,6 +448,13 @@ class SensorReading(Protocol):
 
 ### Phase D3 — FlyScan [après D2]
 
+> **2026-10-09 — décision remplacée (ADR-004)** : l'agrégat `FlyScan`/`FlyScanLine` décrit ci-dessous n'est plus la
+> direction cible. Le fly-scan passe par l'agrégat `AefiLine` (ligne atomique exploratoire, points de grille =
+> value objects `LineGridPoint`) et par le `Scan` fin ; la sous-classe transitoire `FlyScan` est supprimée.
+> `Scan` fin + agrégats forts `AefiPoint`/`AefiLine`/`NardaPoint` + Unit of Work (un agrégat par transaction) :
+> implémenté côté domaine/application, **à valider sur matériel**. Dette et suites : `_system/ops/tasks.md`,
+> section « Domaine scan ». La suite de cette section est conservée comme historique de conception.
+
 > **2026-10-01 — fly-scan simple en cours sur `dev_scan`** (plan et avancement : `_system/ops/tasks.md`,
 > « Fly-scan : transmission mécanique au domaine, puis projection en direct »). Une première version (non
 > commitée) plaçait les mesures en fin de ligne ; lancée dans l'appli elle a planté — elle est remplacée par une

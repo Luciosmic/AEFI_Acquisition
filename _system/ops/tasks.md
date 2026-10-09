@@ -1,5 +1,27 @@
 # Tâches actives
 
+## Domaine scan : dette après le refactoring Scan fin + agrégats forts + Unit of Work
+
+**Statut** (2026-10-09) : modèle implémenté côté domaine/application (steps 1-9), décision dans
+`_system/documentation/adr/004_scan_thin_aggregate_strong_aggregates_unit_of_work.md`. `FlyScan` est supprimé
+(remplacé par `AefiLine` + `Scan` fin) ; `Scan` fin, `AefiPoint`, `AefiLine` et `NardaPoint` sont des agrégats,
+un agrégat par transaction (`IUnitOfWork`). Fly-scan et Narda en agrégat : **implémentés côté
+domaine/application, à valider sur matériel** (non éprouvés au banc dans ce modèle). Le scan Z reste
+« fondation domain seulement, pas réellement implémenté » (inchangé).
+
+À faire (pourquoi : fermer les écarts connus de l'ADR-004) :
+- [ ] États terminaux du `Scan` fin (`CANCELLED`/`FAILED`) : aujourd'hui il reste `STARTED` après annulation ou échec.
+- [ ] Commande de réconciliation opérateur (pas de retry automatique : action visible déclenchée par l'opérateur).
+- [ ] Événement d'échec dédié pour les sources facultatives.
+- [ ] Enrichir `AefiPoint` (index, baseline) pour que l'export lise via les repositories au lieu des événements
+      hérités (`ScanPointAcquired`, publié par `StepScan` avant le commit).
+- [ ] `ScanStarted` du nouveau modèle (`Scan.start()` n'émet rien ; le `ScanStarted` hérité a la même forme de topic).
+- [ ] Tests fly-scan : pause/annulation en milieu de ligne.
+- [ ] Déclarer les unités de `Position2D` dans les événements (standard de contrats auto-descriptifs).
+- [ ] Mesurer sur matériel réel le coût par point du nouveau chemin (≈ +25 µs en WARNING, ≈ +150 µs en INFO mesurés en mock).
+- [ ] Valider sur matériel : fly-scan par `AefiLine`, sonde Narda requise au démarrage et échec visible si elle disparaît.
+- Vigilance : ne pas confondre le « line-scan » (step-scan le long d'une droite, sur `AefiPoint`) avec `AefiLine` (ligne du fly-scan).
+
 ## Encodeurs AMT112Q-V sur les axes X/Y
 
 **Statut** : documentation rapatriée (2026-10-02), montage pas commencé. Faits hardware (câblage,
