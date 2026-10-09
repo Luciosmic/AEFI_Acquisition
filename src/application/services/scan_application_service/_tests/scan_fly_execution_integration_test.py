@@ -21,6 +21,7 @@ from infrastructure.hardware.arcus_performax_4EX.adapter_motion_port_arcus_perfo
 from infrastructure.hardware.arcus_performax_4EX.fake.fake_arcus_performax4ex_controller import (
     FakeArcusPerformax4EXController,
 )
+from infrastructure.unit_of_work.in_memory_unit_of_work import InMemoryUnitOfWork
 from infrastructure.mocks.adapter_mock_i_motion_port import MockMotionPort
 from infrastructure.mocks.adapter_mock_i_aefi_acquisition_executor import MockAefiAcquisitionExecutor
 from infrastructure.mocks.adapter_mock_i_acquisition_port import RandomNoiseAcquisitionPort
@@ -51,6 +52,7 @@ class _Stack(unittest.TestCase):
             self.event_bus,
             task_runner=ThreadPoolTaskRunner(),
             motion_sync=EventBusMotionSynchronizer(self.event_bus),
+            unit_of_work=InMemoryUnitOfWork(self.event_bus),
         )
 
     def _run(self, dto, until="scancompleted", timeout=30.0):
@@ -96,6 +98,14 @@ class TestFlyScanOnTheFaithfulMotionStack(_Stack):
             (620.0, 600.0), (620.0, 610.0), (620.0, 620.0), (620.0, 630.0),
         ]))
         self.assertEqual([p.point_index for p in scan.points], list(range(12)))
+
+    def test_fly_scan_keeps_the_legacy_single_scan_completed_even_with_a_unit_of_work(self):
+        completed = []
+        self.event_bus.subscribe("scancompleted", completed.append)
+
+        self._run(make_dto())
+
+        self.assertEqual(len(completed), 1)
 
     def test_points_are_emitted_while_the_line_is_swept(self):
         self._run(make_dto())

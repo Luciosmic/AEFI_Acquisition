@@ -100,6 +100,9 @@ def _motion_failure_reason(error: MotionSyncError, where: str) -> str:
 
 from domain.step_scan.step_scan import StepScan
 from domain.scan.scan import Scan
+from domain.aefi_point.aefi_point import AefiPoint
+from domain.aefi_point.value_objects.aefi_point_id.aefi_point_id import AefiPointId
+from domain.aefi_point.value_objects.sample.sample import Sample
 from domain.scan.value_objects.scan_id.scan_id import ScanId
 from domain.step_scan.value_objects.scan_point_result.scan_point_result import ScanPointResult
 from domain.step_scan.events.scan_started.scan_started import ScanStarted
@@ -333,6 +336,16 @@ class ScanApplicationService:
             uow.commit()
         self._new_flow_scan_id = step_scan.id
 
+    def _record_aefi_point(self, step_scan: StepScan, position: Position2D, measurements: List, expected_samples: int) -> None:
+        """One UoW per point: the commit publishes AefiPointAcquired, whose handler closes the thin Scan."""
+        point = AefiPoint(
+            id=AefiPointId(uuid4()), scan_id=step_scan.id, position=position, expected_samples=expected_samples
+        )
+        point.record_samples([Sample(m) for m in measurements])
+        with self._unit_of_work as uow:
+            uow.aefi_points.add(point)
+            uow.commit()
+
     def _release_controls(self) -> None:
         """Give back the excitation and the acquisition stream (idempotent)."""
         releases, self._control_releases = self._control_releases, []
@@ -418,6 +431,7 @@ class ScanApplicationService:
         owner of each driver at all times.
         """
         adc_queue: "queue.Queue" = queue.Queue()
+        new_flow = self._new_flow_scan_id is not None and self._new_flow_scan_id == scan.id
 
         def _on_adc_sample(event: AefiVoltageSampleAcquired) -> None:
             adc_queue.put(event.sample)
@@ -642,20 +656,34 @@ class ScanApplicationService:
                     baseline_measurement=baseline_measurement,
                 )
                 scan.add_point_result(point_result)
-                # add_point_result() auto-completes the aggregate (and queues
-                # a ScanCompleted event) once the last point is in — release
-                # streams *before* publishing so an observer reacting to
-                # ScanCompleted never sees a stream this scan owns still
-                # running. The Finalize check below is then a no-op for the
-                # common case; it stays as a fallback for the (defensive)
-                # scenario where the aggregate didn't auto-complete.
-                if scan.status == ScanStatus.COMPLETED:
-                    _release_streams()
-                self._publish_events(scan.domain_events)
+                is_last_point = scan.status == ScanStatus.COMPLETED
+                if not new_flow:
+                    # add_point_result() auto-completes the aggregate (and queues
+                    # a ScanCompleted event) once the last point is in — release
+                    # streams *before* publishing so an observer reacting to
+                    # ScanCompleted never sees a stream this scan owns still
+                    # running.
+                    if is_last_point:
+                        _release_streams()
+                    self._publish_events(scan.domain_events)
+                else:
+                    # New flow: the legacy ScanPointAcquired goes out before the
+                    # commit (the export closes on ScanCompleted and would lose
+                    # the last row otherwise); the ScanCompleted queued by StepScan
+                    # is filtered by _publish_events — the thin Scan emits it, via
+                    # ScanClosureHandler, during the commit below.
+                    self._publish_events(scan.domain_events)
+                    if is_last_point:
+                        _release_streams()
+                    self._record_aefi_point(scan, position, measurements, config.averaging_per_position)
 
             # --- Finalize ---
             if scan.status != ScanStatus.COMPLETED:
-                scan.complete()
+                if new_flow:
+                    logger.error("ScanApplicationService: scan_id=%s trajectory exhausted before all points were acquired", scan.id)
+                    scan.fail("trajectory exhausted before all expected points were acquired")
+                else:
+                    scan.complete()
                 _release_streams()
                 self._publish_events(scan.domain_events)
 
@@ -994,6 +1022,9 @@ class ScanApplicationService:
 
     def _publish_events(self, events: List[DomainEvent]) -> None:
         for event in events:
+            if isinstance(event, ScanCompleted) and event.scan_id == self._new_flow_scan_id:
+                logger.info("ScanApplicationService: legacy ScanCompleted scan_id=%s not republished, the thin Scan emits it", event.scan_id)
+                continue
             event_type = type(event).__name__.lower()
             self._event_bus.publish(event_type, event)
 
