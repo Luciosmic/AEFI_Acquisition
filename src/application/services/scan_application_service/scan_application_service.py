@@ -20,6 +20,7 @@ import logging
 import math
 import queue
 import time
+from uuid import UUID, uuid4
 from datetime import datetime
 
 from .dtos.scan_dtos import Scan2DConfigDTO, LineScanConfigDTO, ScanStatusDTO
@@ -98,6 +99,8 @@ def _motion_failure_reason(error: MotionSyncError, where: str) -> str:
 
 
 from domain.step_scan.step_scan import StepScan
+from domain.scan.scan import Scan
+from domain.scan.value_objects.scan_id.scan_id import ScanId
 from domain.step_scan.value_objects.scan_point_result.scan_point_result import ScanPointResult
 from domain.step_scan.events.scan_started.scan_started import ScanStarted
 from domain.step_scan.events.scan_point_acquired.scan_point_acquired import ScanPointAcquired
@@ -219,6 +222,9 @@ class ScanApplicationService:
         self._excitation_service = excitation_service
 
         self._current_scan: Optional[StepScan] = None
+        # Id of the scan running on the new flow (thin Scan + AefiPoint via the UoW);
+        # None for the fly-scan, which keeps the legacy flow. Per scan, never global.
+        self._new_flow_scan_id: Optional[UUID] = None
         self._control_releases: List = []  # excitation + acquisition stream, held while a scan runs
 
         # Subscribe to forward events to the output port.
@@ -290,10 +296,15 @@ class ScanApplicationService:
             self._current_scan = scan
             self._publish_events(scan.domain_events)
 
+            is_fly_scan = getattr(config, "fly_scan", False)
+            self._new_flow_scan_id = None
+            if self._unit_of_work is not None and not is_fly_scan:
+                self._open_thin_scan(scan, config)
+
             trajectory = create_trajectory(config)
 
             # Only the grid config knows fly scan (LineScanConfig has no such field).
-            run_loop = self._execute_fly_scan_loop if getattr(config, "fly_scan", False) else self._execute_scan_loop
+            run_loop = self._execute_fly_scan_loop if is_fly_scan else self._execute_scan_loop
             self._task_runner.submit(
                 lambda: run_loop(scan, trajectory, config)
             )
@@ -306,6 +317,21 @@ class ScanApplicationService:
                 self._current_scan.fail(str(e))
                 self._publish_events(self._current_scan.domain_events)
             return False
+
+    def _open_thin_scan(self, step_scan: StepScan, config: Any) -> None:
+        """Create then start the thin Scan (one aggregate per transaction, both UoW closed
+        before the loop is submitted)."""
+        scan_id = ScanId(step_scan.id)
+        logger.info("ScanApplicationService: creating thin Scan scan_id=%s expected_points=%s",
+                    scan_id, config.total_points())
+        with self._unit_of_work as uow:
+            uow.scans.add(Scan(id=scan_id, expected_points=config.total_points()))
+            uow.commit()
+        with self._unit_of_work as uow:
+            scan = uow.scans.get(scan_id)
+            scan.start()
+            uow.commit()
+        self._new_flow_scan_id = step_scan.id
 
     def _release_controls(self) -> None:
         """Give back the excitation and the acquisition stream (idempotent)."""
