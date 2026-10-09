@@ -131,7 +131,7 @@ class AuxiliaryProbeChannel:
     the Narda EF probe, or any future secondary probe.
 
     Distinct from the primary AEFI/ADC channel (hardcoded in the loop):
-    a primary result feeds scan.add_point_result() directly, while an
+    a primary result feeds scan.point_acquired() directly, while an
     auxiliary probe publishes its own per-point domain event via
     publish_point_result. All registered channels are blocking — conservative
     default, matching the original Narda-only invariant: if a channel fails
