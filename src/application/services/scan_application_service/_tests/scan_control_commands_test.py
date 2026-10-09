@@ -130,6 +130,34 @@ class TestScanControlCommands(unittest.TestCase):
         self.assertNotIn("ScanCompleted", self._names())
         self.assertLess(self.service.get_status().current_point_index, 4)
 
+    def test_cancel_in_the_window_after_the_last_point_is_ignored(self):
+        def cancel_on_last(event):
+            if self.service.get_status().current_point_index == self.service.get_status().total_points:
+                self.service.cancel_scan()
+
+        self.event_bus.subscribe("scanpointacquired", cancel_on_last)
+
+        self.assertTrue(self.service.execute_scan(_dto()))
+        self.assertTrue(self.flags["scancompleted"].wait(10.0))
+        deadline = time.monotonic() + 5.0
+        while self.aefi.is_acquisition_running() and time.monotonic() < deadline:
+            time.sleep(0.05)
+
+        self.assertNotIn("ScanCancelled", self._names())
+        self.assertEqual(self._names().count("ScanCompleted"), 1)
+        self.assertEqual(self.service.get_status().status, "completed")
+        self.assertFalse(self.aefi.is_acquisition_running())
+
+    def test_cancel_after_a_final_status_is_a_no_op_and_does_not_raise(self):
+        self.assertTrue(self.service.execute_scan(_dto()))
+        self.assertTrue(self.flags["scancompleted"].wait(10.0))
+        before = len(self.events)
+
+        self.service.cancel_scan()  # shutdown path: must not raise
+
+        self.assertEqual(len(self.events), before)
+        self.assertEqual(self.service.get_status().status, "completed")
+
 
 if __name__ == "__main__":
     unittest.main()

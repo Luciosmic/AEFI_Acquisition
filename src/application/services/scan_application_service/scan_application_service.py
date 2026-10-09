@@ -381,9 +381,21 @@ class ScanApplicationService:
             self._publish_events(self._current_scan.domain_events)
 
     def cancel_scan(self) -> None:
-        if self._current_scan:
-            self._current_scan.cancel()
-            self._publish_events(self._current_scan.domain_events)
+        if not self._current_scan:
+            return
+        if self._current_scan.status in (ScanStatus.COMPLETED, ScanStatus.FAILED, ScanStatus.CANCELLED):
+            # Shutdown calls this unconditionally: a finished scan is not a failure.
+            logger.info("ScanApplicationService: scan_id=%s déjà terminé (%s), annulation ignorée. Doing nothing.",
+                        self._current_scan.id, self._current_scan.status)
+            return
+        if 0 < self._expected_total <= self._acquired_count:
+            # Same window as pause_scan: the thin Scan will publish ScanCompleted, a ScanCancelled
+            # now would make the export and the UI see cancelled then completed.
+            logger.info("ScanApplicationService: scan_id=%s scan déjà acquis en entier (%d/%d), annulation ignorée",
+                        self._current_scan.id, self._acquired_count, self._expected_total)
+            return
+        self._current_scan.cancel()
+        self._publish_events(self._current_scan.domain_events)
 
     # ==================================================================================
     # QUERIES (Read-Only)
