@@ -208,6 +208,10 @@ class EmittingStream(QObject):
     def flush(self) -> None:
         pass
 
+    def isatty(self) -> bool:
+        # uvicorn (observability MCP server) calls sys.stdout.isatty() during its logging setup.
+        return False
+
 
 def install_console_capture(logs_panel: LogsPanel) -> EmittingStream:
     """Redirect stdout/stderr and the root logger into logs_panel.

@@ -79,4 +79,9 @@ def run_observability_mcp_server(
         "Observability MCP server: starting (read-only) on http://%s:%s%s",
         host, port, mcp.settings.streamable_http_path,
     )
-    mcp.run(transport="streamable-http")
+    try:
+        mcp.run(transport="streamable-http")
+    except BaseException:  # SystemExit (e.g. uvicorn bind failure) is silent in a thread
+        logger.exception("Observability MCP server: thread died on %s:%s", host, port)
+        raise
+    logger.warning("Observability MCP server: run() returned on %s:%s (stopped)", host, port)
