@@ -107,6 +107,7 @@ from domain.narda_point.value_objects.narda_point_id.narda_point_id import Narda
 from domain.aefi_point.events.aefi_point_acquired.aefi_point_acquired import AEFI_POINT_SOURCE
 from domain.aefi_line.aefi_line import AefiLine
 from domain.aefi_line.events.aefi_line_acquired.aefi_line_acquired import AEFI_LINE_SOURCE
+from domain.aefi_line.events.aefi_line_abandoned.aefi_line_abandoned import AefiLineAbandoned
 from domain.aefi_line.events.aefi_line_preview_point_acquired.aefi_line_preview_point_acquired import AefiLinePreviewPointAcquired
 from domain.aefi_line.value_objects.aefi_line_id.aefi_line_id import AefiLineId
 from domain.aefi_line.value_objects.line_grid_point.line_grid_point import LineGridPoint
@@ -256,6 +257,9 @@ class ScanApplicationService:
         # UI / MCP threads (pause/resume/cancel/get_status never touch the UoW or repositories).
         self._acquired_count: int = 0
         self._expected_total: int = 0
+        # Incremented by each accepted pause_scan (reset per scan): the fly loop compares it to tell
+        # that a line was interrupted even if the scan was resumed since. Plain int, like the counters.
+        self._pause_epoch: int = 0
 
         # Subscribe to forward events to the output port.
         self._event_bus.subscribe("scanstarted", self._on_domain_event)
@@ -327,6 +331,7 @@ class ScanApplicationService:
             self._control_releases = taken.value
 
             self._acquired_count = 0
+            self._pause_epoch = 0
             self._expected_total = config.total_points()
             is_fly_scan = getattr(config, "fly_scan", False)
             scan = StepScan()
@@ -425,11 +430,16 @@ class ScanApplicationService:
             logger.info("ScanApplicationService: scan_id=%s en fin d'acquisition (%d/%d), pause ignorée",
                         self._current_scan.id, self._acquired_count, self._expected_total)
             return
+        was_running = self._current_scan.status == ScanStatus.RUNNING
         try:
             self._current_scan.pause(self._acquired_count)
         except ValueError as e:
             logger.warning("ScanApplicationService: pause_scan rejected — %s", e)
             return
+        if was_running:
+            self._pause_epoch += 1
+            logger.info("ScanApplicationService: scan_id=%s paused at %d/%d, pause_epoch=%d",
+                        self._current_scan.id, self._acquired_count, self._expected_total, self._pause_epoch)
         self._publish_events(self._current_scan.domain_events)
 
     def resume_scan(self) -> None:
@@ -793,6 +803,8 @@ class ScanApplicationService:
 
     # Polling period of the motion completion while samples are placed.
     FLY_MOTION_POLL_S = 0.02
+    # Budget to see the motor stop after an abandoned line (stop() decelerates).
+    FLY_STOP_TIMEOUT_S = 10.0
 
     def _execute_fly_scan_loop(
         self,
@@ -848,6 +860,9 @@ class ScanApplicationService:
 
         def _may_continue() -> bool:
             while scan.status == ScanStatus.PAUSED:
+                # Keep the queues from growing while the scan waits.
+                _drain_queue(adc_queue)
+                _drain_queue(position_queue)
                 time.sleep(0.1)
             return scan.status == ScanStatus.RUNNING
 
@@ -865,8 +880,12 @@ class ScanApplicationService:
                     position=line[k], measurement=measurement,
                 ))
 
-        def _publish_line_points(line_index: int, line: List[Position2D]) -> None:
+        def _publish_line_points(line_index: int, line: List[Position2D]) -> bool:
+            """Publish the complete line. A pause landing mid-publication is waited out (the line is
+            complete and will be committed). False if the scan ended meanwhile."""
             for k in sorted(line_points):
+                if not _may_continue():
+                    return False
                 scan.point_acquired(ScanPointResult(
                     position=line[k], measurement=line_points[k], point_index=line_index * n + k,
                 ))
@@ -874,6 +893,7 @@ class ScanApplicationService:
                 # ScanPointAcquired goes out before the line is committed: the export closes
                 # on ScanCompleted, emitted by the thin Scan during the last commit.
                 self._publish_events(scan.domain_events)
+            return True
 
         points = list(trajectory)
         n = config.points_per_line()
@@ -889,101 +909,152 @@ class ScanApplicationService:
         if ignored:
             logger.warning("ScanApplicationService: fly scan scan_id=%s ignores auxiliary probes %s", scan.id, ignored)
 
+        def _interrupted(epoch: int) -> bool:
+            # A pause (even one already resumed) since the attempt began: the line is partial.
+            return self._pause_epoch != epoch or scan.status == ScanStatus.PAUSED
+
+        def _abandon_line(line_index: int, reason: str) -> bool:
+            """Drop the partial line and stop the motor now. False if the motor did not stop (scan failed)."""
+            discarded = len(line_points)
+            logger.info("ScanApplicationService: scan_id=%s line=%d abandoned (%s), %d partial points discarded, "
+                        "stopping motion. Line will be re-acquired from its start.",
+                        scan.id, line_index, reason, discarded)
+            line_points.clear()
+            self._motion_port.stop()
+            deadline = time.monotonic() + self.FLY_STOP_TIMEOUT_S
+            while self._motion_port.is_moving():
+                if time.monotonic() > deadline:
+                    _fail(f"Motion did not stop within {self.FLY_STOP_TIMEOUT_S:.0f}s after abandoning fly line {line_index}")
+                    return False
+                time.sleep(self.FLY_MOTION_POLL_S)
+            _drain_queue(adc_queue)
+            _drain_queue(position_queue)
+            self._event_bus.publish("aefilineabandoned", AefiLineAbandoned(
+                scan_id=scan.id, line_index=line_index, reason=reason, discarded_points=discarded,
+            ))
+            return True
+
+        # Outcomes of one attempt at a line.
+        COMMITTED, ABANDONED, STOP = "committed", "abandoned", "stop"
+
+        def _sweep_line(line_index: int, line: List[Position2D]) -> str:
+            line_points.clear()
+            epoch = self._pause_epoch
+
+            # Reach the line start and stop there, then sweep to its end.
+            sync_result = self._motion_sync.wait_for_motion(self._motion_port.move_to(line[0]), timeout_seconds=30.0)
+            if sync_result.is_failure:
+                _fail(_motion_failure_reason(sync_result.error, f"start of fly line {line_index}"))
+                return STOP
+            if scan.status == ScanStatus.CANCELLED:
+                return STOP
+            if _interrupted(epoch):
+                return ABANDONED
+
+            start, end = line[0], line[-1]
+            length_mm = math.hypot(end.x - start.x, end.y - start.y)
+            ux, uy = (end.x - start.x) / length_mm, (end.y - start.y) / length_mm
+
+            def _abscissa(position: Position2D) -> float:
+                return (position.x - start.x) * ux + (position.y - start.y) * uy
+
+            projector = FlyScanLineProjector(n, length_mm)
+            counts = {"samples": 0, "positions": 0, "live": 0}
+
+            def _drain(t_max: float = math.inf) -> None:
+                for source, add, key in (
+                    (position_queue, lambda t, p: projector.add_position(t, _abscissa(p)), "positions"),
+                    (adc_queue, projector.add_sample, "samples"),
+                ):
+                    while True:
+                        try:
+                            t, item = source.get_nowait()
+                        except queue.Empty:
+                            break
+                        if t > t_max:
+                            continue
+                        counts[key] += 1
+                        passed = add(t, item)
+                        counts["live"] += len(passed)
+                        _emit(line_index, line, passed)
+
+            # Only the speed setting, for the time budget of the line:
+            # placement comes from the reported positions.
+            speed_mm_s = self._motion_port.get_cruise_speed_mm_s()
+            _drain_queue(adc_queue)
+            _drain_queue(position_queue)
+            t_start = time.monotonic()
+            motion_id = self._motion_port.move_to(end)
+            deadline = t_start + 2 * length_mm / speed_mm_s + 10.0
+
+            while True:
+                _drain()
+                if scan.status == ScanStatus.CANCELLED:
+                    return STOP
+                if _interrupted(epoch):
+                    return ABANDONED
+                sync_result = self._motion_sync.wait_for_motion(motion_id, timeout_seconds=self.FLY_MOTION_POLL_S)
+                if sync_result.is_success:
+                    break
+                if not isinstance(sync_result.error, MotionTimeout):
+                    _fail(_motion_failure_reason(sync_result.error, f"fly line {line_index}"))
+                    return STOP
+                if time.monotonic() > deadline:
+                    _fail(
+                        f"Motion timeout at fly line {line_index}: still moving after "
+                        f"{deadline - t_start:.1f}s ({length_mm:.0f} mm at {speed_mm_s:.1f} mm/s)"
+                    )
+                    return STOP
+
+            t_end = time.monotonic()
+            _drain(t_max=t_end)  # what was queued before the completion was seen
+            # The motor is at the end now: close the trace there.
+            counts["live"] += len(passed := projector.add_position(t_end, _abscissa(self._motion_port.get_current_position())))
+            _emit(line_index, line, passed)
+
+            if scan.status == ScanStatus.CANCELLED:
+                return STOP
+            if _interrupted(epoch):
+                return ABANDONED
+            if counts["samples"] == 0:
+                _fail(f"Fly line {line_index}: no AEFI sample in {t_end - t_start:.2f}s — nothing to place")
+                return STOP
+            filled = projector.finish()
+            logger.info(
+                "ScanApplicationService: fly line swept scan_id=%s line=%d/%d samples=%d positions=%d "
+                "points_live=%d points_at_end=%d duration_s=%.2f",
+                scan.id, line_index + 1, len(lines), counts["samples"], counts["positions"],
+                counts["live"], len(filled), t_end - t_start,
+            )
+            _emit(line_index, line, filled)
+
+            # Last comparison: a pause after this point takes effect on the next line
+            # (this one is complete and gets committed).
+            if _interrupted(epoch):
+                return ABANDONED
+            logger.info("ScanApplicationService: scan_id=%s line=%d complete, publishing %d points then committing",
+                        scan.id, line_index, len(line_points))
+            if not _publish_line_points(line_index, line):
+                return STOP
+            is_last_line = line_index == len(lines) - 1
+            # Streams released just before the last commit, which completes the thin Scan.
+            self._record_aefi_line(
+                scan, line_index, line, line_points, n, _release_streams if is_last_line else None
+            )
+            return COMMITTED
+
         try:
             for line_index, line in enumerate(lines):
-                line_points.clear()
-                if not _may_continue():
-                    return
-
-                # Reach the line start and stop there, then sweep to its end.
-                sync_result = self._motion_sync.wait_for_motion(self._motion_port.move_to(line[0]), timeout_seconds=30.0)
-                if sync_result.is_failure:
-                    _fail(_motion_failure_reason(sync_result.error, f"start of fly line {line_index}"))
-                    return
-                if not _may_continue():
-                    return
-
-                start, end = line[0], line[-1]
-                length_mm = math.hypot(end.x - start.x, end.y - start.y)
-                ux, uy = (end.x - start.x) / length_mm, (end.y - start.y) / length_mm
-
-                def _abscissa(position: Position2D) -> float:
-                    return (position.x - start.x) * ux + (position.y - start.y) * uy
-
-                projector = FlyScanLineProjector(n, length_mm)
-                counts = {"samples": 0, "positions": 0, "live": 0}
-
-                def _drain(t_max: float = math.inf) -> None:
-                    for source, add, key in (
-                        (position_queue, lambda t, p: projector.add_position(t, _abscissa(p)), "positions"),
-                        (adc_queue, projector.add_sample, "samples"),
-                    ):
-                        while True:
-                            try:
-                                t, item = source.get_nowait()
-                            except queue.Empty:
-                                break
-                            if t > t_max:
-                                continue
-                            counts[key] += 1
-                            passed = add(t, item)
-                            counts["live"] += len(passed)
-                            _emit(line_index, line, passed)
-
-                # Only the speed setting, for the time budget of the line:
-                # placement comes from the reported positions.
-                speed_mm_s = self._motion_port.get_cruise_speed_mm_s()
-                _drain_queue(adc_queue)
-                _drain_queue(position_queue)
-                t_start = time.monotonic()
-                motion_id = self._motion_port.move_to(end)
-                deadline = t_start + 2 * length_mm / speed_mm_s + 10.0
-
-                while True:
-                    _drain()
-                    if scan.status == ScanStatus.CANCELLED:
+                while True:  # attempts at the same line: an interruption redoes it from its start
+                    if not _may_continue():
                         return
-                    sync_result = self._motion_sync.wait_for_motion(motion_id, timeout_seconds=self.FLY_MOTION_POLL_S)
-                    if sync_result.is_success:
+                    outcome = _sweep_line(line_index, line)
+                    if outcome == STOP:
+                        return
+                    if outcome == COMMITTED:
                         break
-                    if not isinstance(sync_result.error, MotionTimeout):
-                        _fail(_motion_failure_reason(sync_result.error, f"fly line {line_index}"))
+                    if not _abandon_line(line_index, "paused"):
                         return
-                    if time.monotonic() > deadline:
-                        _fail(
-                            f"Motion timeout at fly line {line_index}: still moving after "
-                            f"{deadline - t_start:.1f}s ({length_mm:.0f} mm at {speed_mm_s:.1f} mm/s)"
-                        )
-                        return
-
-                t_end = time.monotonic()
-                _drain(t_max=t_end)  # what was queued before the completion was seen
-                # The motor is at the end now: close the trace there.
-                counts["live"] += len(passed := projector.add_position(t_end, _abscissa(self._motion_port.get_current_position())))
-                _emit(line_index, line, passed)
-
-                if counts["samples"] == 0:
-                    _fail(f"Fly line {line_index}: no AEFI sample in {t_end - t_start:.2f}s — nothing to place")
-                    return
-                filled = projector.finish()
-                logger.info(
-                    "ScanApplicationService: fly line swept scan_id=%s line=%d/%d samples=%d positions=%d "
-                    "points_live=%d points_at_end=%d duration_s=%.2f",
-                    scan.id, line_index + 1, len(lines), counts["samples"], counts["positions"],
-                    counts["live"], len(filled), t_end - t_start,
-                )
-                _emit(line_index, line, filled)
-                # The line is complete: wait out a pause, then publish it whole.
-                if not _may_continue():
-                    return
-                logger.info("ScanApplicationService: scan_id=%s line=%d complete, publishing %d points then committing",
-                            scan.id, line_index, len(line_points))
-                _publish_line_points(line_index, line)
-                is_last_line = line_index == len(lines) - 1
-                # Streams released just before the last commit, which completes the thin Scan.
-                self._record_aefi_line(
-                    scan, line_index, line, line_points, n, _release_streams if is_last_line else None
-                )
 
             # COMPLETED is posed by the thin Scan's ScanCompleted during the last commit.
             if scan.status in (ScanStatus.RUNNING, ScanStatus.PAUSED):

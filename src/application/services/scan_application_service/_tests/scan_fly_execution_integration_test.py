@@ -191,6 +191,91 @@ class TestFlyScanOnTheFaithfulMotionStack(_Stack):
         self.assertIsNone(self.continuous_service.get_controller())  # held during the scan only
 
 
+class TestFlyScanPauseRollsBackTheCurrentLine(_Stack):
+    """A pause inside a line abandons it (AefiLine is atomic) and the line is redone from its start."""
+
+    def setUp(self):
+        self.event_bus = InMemoryEventBus()
+        self.controller = FakeArcusPerformax4EXController()
+        self.controller.connect()
+        self.controller.home_both()
+        for axis in ("x", "y"):
+            self.controller.set_position_reference(axis, round(600.0 * 1000.0 / 21.8))
+        self.adapter = ArcusAdapter(event_bus=self.event_bus)
+        self.adapter.set_microns_per_pulse(21.8)
+        self.adapter.set_controller(self.controller)
+        self.adapter.enable()
+        self.addCleanup(self.adapter.disable)
+        self.adapter.set_speed_mode("fast")
+        self.stops = []
+        real_stop = self.adapter.stop
+        self.adapter.stop = lambda *a, **k: (self.stops.append(1), real_stop(*a, **k))[1]
+        self.service = self._service(self.adapter)
+
+        self.point_indices = []
+        self.abandoned = []
+        self.acquired_lines = []
+        self.event_bus.subscribe("scanpointacquired", lambda e: self.point_indices.append(e.point_index))
+        self.event_bus.subscribe("aefilineabandoned", self.abandoned.append)
+        self.event_bus.subscribe("aefilineacquired", lambda e: self.acquired_lines.append(e.line_index))
+        self.lines_when_paused = None
+
+    def _pause_in_line_1(self, then):
+        """On the first preview point of line 1 (mid-sweep): pause, then `then()`."""
+        fired = []
+
+        def on_preview(event):
+            if event.line_index == 1 and not fired:
+                fired.append(True)
+                self.service.pause_scan()
+                self.lines_when_paused = [l.line_index for l in self._lines(self.service._current_scan)]
+                then()
+
+        self.event_bus.subscribe("aefilinepreviewpointacquired", on_preview)
+
+    def _assert_whole_grid_once(self, scan):
+        self.assertEqual(scan.status, ScanStatus.COMPLETED)
+        self.assertEqual(sorted(self.point_indices), list(range(12)))  # no duplicate, no partial point
+        self.assertEqual(self.acquired_lines, [0, 1, 2])  # one AefiLineAcquired per line
+        points = [p for line in self._lines(scan) for p in line.points]
+        self.assertEqual([p.index_in_line for p in points], [0, 1, 2, 3] * 3)
+        self.assertEqual(len(points), 12)
+
+    def test_pause_mid_line_abandons_the_line_then_redoes_it_from_its_start(self):
+        completed = []
+        self.event_bus.subscribe("scancompleted", completed.append)
+        self._pause_in_line_1(lambda: threading.Timer(0.5, self.service.resume_scan).start())
+
+        scan = self._run(make_dto(), timeout=90.0)
+
+        self.assertEqual(self.lines_when_paused, [0])  # no AefiLine for line 1 while it is partial
+        self._assert_whole_grid_once(scan)
+        self.assertEqual([(a.line_index, a.reason) for a in self.abandoned], [(1, "paused")])
+        self.assertGreaterEqual(len(self.stops), 1)  # the motor was stopped at once
+        self.assertEqual(len(completed), 1)
+        self.assertEqual(completed[0].total_points, 12)
+
+    def test_pause_then_resume_in_the_same_handler_still_abandons_the_line(self):
+        self._pause_in_line_1(self.service.resume_scan)
+
+        scan = self._run(make_dto(), timeout=90.0)
+
+        self._assert_whole_grid_once(scan)
+        self.assertEqual([a.line_index for a in self.abandoned], [1])
+
+    def test_pause_then_cancel_mid_line_commits_nothing_of_that_line(self):
+        self._pause_in_line_1(lambda: threading.Timer(0.3, self.service.cancel_scan).start())
+
+        scan = self._run(make_dto(), until="scancancelled", timeout=90.0)
+        time.sleep(0.5)  # the loop leaves its wait and releases the streams
+
+        self.assertEqual(scan.status, ScanStatus.CANCELLED)
+        self.assertEqual([l.line_index for l in self._lines(scan)], [0])
+        self.assertEqual(sorted(self.point_indices), [0, 1, 2, 3])  # only line 0, published whole
+        self.assertFalse(self.continuous_service.is_acquisition_running())
+        self.assertIsNone(self.continuous_service.get_controller())
+
+
 class TestFlyScanFailureModes(_Stack):
 
     def setUp(self):
