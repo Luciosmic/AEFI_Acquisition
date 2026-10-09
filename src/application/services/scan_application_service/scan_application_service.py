@@ -231,6 +231,10 @@ class ScanApplicationService:
         # None for the fly-scan, which keeps the legacy flow. Per scan, never global.
         self._new_flow_scan_id: Optional[UUID] = None
         self._control_releases: List = []  # excitation + acquisition stream, held while a scan runs
+        # Progress of the running scan: plain ints written by the scan loop, read by the
+        # UI / MCP threads (pause/resume/cancel/get_status never touch the UoW or repositories).
+        self._acquired_count: int = 0
+        self._expected_total: int = 0
 
         # Subscribe to forward events to the output port.
         self._event_bus.subscribe("scanstarted", self._on_domain_event)
@@ -297,6 +301,8 @@ class ScanApplicationService:
                 return False
             self._control_releases = taken.value
 
+            self._acquired_count = 0
+            self._expected_total = config.total_points()
             scan = StepScan()
             scan.start(config)
             self._current_scan = scan
@@ -382,8 +388,8 @@ class ScanApplicationService:
     def get_status(self) -> ScanStatusDTO:
         if self._current_scan:
             status = self._current_scan.status
-            current_idx = len(self._current_scan.points)
-            total_pts = self._current_scan.expected_points
+            current_idx = self._acquired_count
+            total_pts = self._expected_total
         else:
             status = ScanStatus.PENDING
             current_idx = 0
@@ -658,7 +664,8 @@ class ScanApplicationService:
                     baseline_measurement=baseline_measurement,
                 )
                 scan.add_point_result(point_result)
-                is_last_point = scan.status == ScanStatus.COMPLETED
+                self._acquired_count += 1
+                is_last_point = self._acquired_count == self._expected_total
                 # The legacy ScanPointAcquired goes out before the commit (the
                 # export closes on ScanCompleted and would lose the last row
                 # otherwise); the ScanCompleted queued by StepScan is filtered by
@@ -764,6 +771,7 @@ class ScanApplicationService:
                 return
             while pending:
                 scan.add_point_result(pending.pop(0))
+                self._acquired_count += 1
                 # Same rule as the step loop: streams released before
                 # ScanCompleted is published.
                 if scan.status == ScanStatus.COMPLETED:
@@ -972,8 +980,7 @@ class ScanApplicationService:
                 "value": value,
                 "index": event.point_index,
             }
-            total = self._current_scan.expected_points if self._current_scan else 0
-            self._output_port.present_scan_progress(event.point_index, total, data)
+            self._output_port.present_scan_progress(event.point_index, self._expected_total, data)
 
         elif isinstance(event, ScanCompleted):
             self._output_port.present_scan_completed(str(event.scan_id), event.total_points)
@@ -1006,8 +1013,7 @@ class ScanApplicationService:
                 "value": value,
                 "index": event.point_index,
             }
-            total = self._current_scan.expected_points if self._current_scan else 0
-            self._output_port.present_field_scan_progress(event.point_index, total, data)
+            self._output_port.present_field_scan_progress(event.point_index, self._expected_total, data)
 
     def _on_scan_closure_failed(self, event: ScanClosureFailed) -> None:
         """The thin Scan could not be closed (the handler is synchronous and the bus swallows
