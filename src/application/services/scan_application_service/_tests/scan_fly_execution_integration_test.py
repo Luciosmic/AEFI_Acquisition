@@ -43,6 +43,19 @@ def make_dto(**overrides):
     return Scan2DConfigDTO(**params)
 
 
+class _PreviewPort:
+    """Minimal IScanOutputPort fake — records the provisional previews."""
+
+    def __init__(self, shown, service):
+        self.shown = shown
+
+    def present_scan_line_preview(self, line_index, index_in_line, point_data):
+        self.shown.append((line_index, index_in_line, point_data))
+
+    def __getattr__(self, name):
+        return lambda *a, **k: None
+
+
 class _Stack(unittest.TestCase):
     def _service(self, motion_port):
         self.uow = InMemoryUnitOfWork(self.event_bus)
@@ -147,6 +160,29 @@ class TestFlyScanOnTheFaithfulMotionStack(_Stack):
         self.assertEqual(len(completed), 1)
         self.assertEqual(completed[0].total_points, 12)
         self.assertEqual(self.service.get_status().current_point_index, 12)
+
+    def test_a_provisional_preview_is_published_during_the_sweep_and_counts_for_nothing(self):
+        kinds = []
+        self.event_bus.subscribe("aefilinepreviewpointacquired", lambda e: kinds.append(("preview", e.line_index, e.index_in_line)))
+        self.event_bus.subscribe("aefilineacquired", lambda e: kinds.append(("commit", e.line_index, None)))
+        self.event_bus.subscribe("scanpointacquired", lambda e: kinds.append(("point", None, None)))
+        shown = []
+        port = _PreviewPort(shown, self.service)
+        self.service.set_output_port(port)
+
+        self._run(make_dto())
+
+        # Per line, every preview of the line precedes its commit; the definitive points
+        # follow the previews of the same line.
+        for line in range(3):
+            commit = kinds.index(("commit", line, None))
+            previews = [i for i, k in enumerate(kinds) if k[0] == "preview" and k[1] == line]
+            self.assertEqual(len(previews), 4)
+            self.assertTrue(all(i < commit for i in previews), kinds)
+        self.assertEqual(len(shown), 12)
+        # The progress (definitive) count only moves with ScanPointAcquired: 12, not 24.
+        self.assertEqual(self.service.get_status().current_point_index, 12)
+        self.assertEqual(sum(1 for k in kinds if k[0] == "point"), 12)
 
     def test_fly_scan_releases_the_adc_stream_it_started(self):
         self._run(make_dto())

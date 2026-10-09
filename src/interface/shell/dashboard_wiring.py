@@ -302,12 +302,19 @@ def wire_dashboard(
         for panel in aefi_voltage_panels:
             panel.update_data_point_from_position(data["x"], data["y"], data["value"], redraw=False)
 
+    def on_scan_line_preview_viz(line_index, index_in_line, data):
+        # Provisional point of a fly line being swept: same drawing by position as the
+        # definitive point, which overwrites it at the line commit.
+        for panel in aefi_voltage_panels:
+            panel.update_data_point_from_position(data["x"], data["y"], data["value"], redraw=False)
+
     def on_field_scan_progress_viz(current, total, data):
         for panel in electric_field_panels:
             panel.update_data_point_from_position(data["x"], data["y"], data["value"], redraw=False)
 
     scan_presenter.scan_started.connect(on_scan_started_viz)
     scan_presenter.scan_progress.connect(on_scan_progress_viz)
+    scan_presenter.scan_line_preview.connect(on_scan_line_preview_viz)
     scan_presenter.field_scan_progress.connect(on_field_scan_progress_viz)
     logger.debug("Scan panels wired")
 

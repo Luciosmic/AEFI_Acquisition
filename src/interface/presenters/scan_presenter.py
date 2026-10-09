@@ -23,6 +23,7 @@ class ScanPresenter(QObject, IScanOutputPort, metaclass=QABCMeta):
     # Signals to update Views
     scan_started = Signal(str, dict) # scan_id, config
     scan_progress = Signal(int, int, dict) # current, total, point_data
+    scan_line_preview = Signal(int, int, dict) # line_index, index_in_line, point_data (provisional)
     field_scan_progress = Signal(int, int, dict) # current, total, point_data (electric field probe)
     scan_completed = Signal(int) # total_points
     scan_failed = Signal(str) # reason
@@ -95,6 +96,9 @@ class ScanPresenter(QObject, IScanOutputPort, metaclass=QABCMeta):
         percentage = (current_point_index / total_points * 100) if total_points > 0 else 0
         self.status_updated.emit(f"Progress: {current_point_index}/{total_points} ({percentage:.1f}%){eta_str}")
         
+    def present_scan_line_preview(self, line_index: int, index_in_line: int, point_data: Any) -> None:
+        self.scan_line_preview.emit(line_index, index_in_line, point_data)
+
     def present_field_scan_progress(self, current_point_index: int, total_points: int, point_data: Any) -> None:
         self.field_scan_progress.emit(current_point_index, total_points, point_data)
 

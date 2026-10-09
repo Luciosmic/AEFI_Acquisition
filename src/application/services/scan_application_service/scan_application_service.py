@@ -107,6 +107,7 @@ from domain.narda_point.value_objects.narda_point_id.narda_point_id import Narda
 from domain.aefi_point.events.aefi_point_acquired.aefi_point_acquired import AEFI_POINT_SOURCE
 from domain.aefi_line.aefi_line import AefiLine
 from domain.aefi_line.events.aefi_line_acquired.aefi_line_acquired import AEFI_LINE_SOURCE
+from domain.aefi_line.events.aefi_line_preview_point_acquired.aefi_line_preview_point_acquired import AefiLinePreviewPointAcquired
 from domain.aefi_line.value_objects.aefi_line_id.aefi_line_id import AefiLineId
 from domain.aefi_line.value_objects.line_grid_point.line_grid_point import LineGridPoint
 from domain.scan.events.scan_closure_failed.scan_closure_failed import ScanClosureFailed
@@ -267,6 +268,8 @@ class ScanApplicationService:
         self._event_bus.subscribe("scanpaused", self._on_domain_event)
         self._event_bus.subscribe("scanresumed", self._on_domain_event)
         self._event_bus.subscribe("nardapointacquired", self._on_domain_event)
+        # Provisional live preview of a fly line: UI only, never counted nor exported.
+        self._event_bus.subscribe("aefilinepreviewpointacquired", self._on_domain_event)
         self._event_bus.subscribe("scanclosurefailed", self._on_scan_closure_failed)
 
     def set_output_port(self, output_port: IScanOutputPort) -> None:
@@ -855,6 +858,12 @@ class ScanApplicationService:
         def _emit(line_index: int, line: List[Position2D], grid_points) -> None:
             for k, measurement in grid_points:
                 line_points[k] = measurement
+                # Provisional, published while the line is swept: the definitive
+                # ScanPointAcquired only come at the commit and overwrite it.
+                self._event_bus.publish("aefilinepreviewpointacquired", AefiLinePreviewPointAcquired(
+                    scan_id=scan.id, line_index=line_index, index_in_line=k,
+                    position=line[k], measurement=measurement,
+                ))
 
         def _publish_line_points(line_index: int, line: List[Position2D]) -> None:
             for k in sorted(line_points):
@@ -1055,15 +1064,17 @@ class ScanApplicationService:
                 "y_nb_points": event.config.y_nb_points,
             })
 
+        elif isinstance(event, AefiLinePreviewPointAcquired):
+            if event.scan_id != getattr(self._current_scan, "id", None):
+                return
+            self._output_port.present_scan_line_preview(event.line_index, event.index_in_line, {
+                "x": event.position.x,
+                "y": event.position.y,
+                "value": self._voltage_value(event.measurement),
+            })
+
         elif isinstance(event, ScanPointAcquired):
-            value = {
-                "x_in_phase": event.measurement.voltage_x_in_phase,
-                "x_quadrature": event.measurement.voltage_x_quadrature,
-                "y_in_phase": event.measurement.voltage_y_in_phase,
-                "y_quadrature": event.measurement.voltage_y_quadrature,
-                "z_in_phase": event.measurement.voltage_z_in_phase,
-                "z_quadrature": event.measurement.voltage_z_quadrature,
-            }
+            value = self._voltage_value(event.measurement)
             b = event.baseline_measurement
             if b is not None:
                 # Differential mode only — exposed as its own channel so the
@@ -1118,6 +1129,17 @@ class ScanApplicationService:
                 "index": event.point_index,
             }
             self._output_port.present_field_scan_progress(event.point_index, self._expected_total, data)
+
+    @staticmethod
+    def _voltage_value(m: AefiVoltageMeasurement) -> Dict[str, float]:
+        return {
+            "x_in_phase": m.voltage_x_in_phase,
+            "x_quadrature": m.voltage_x_quadrature,
+            "y_in_phase": m.voltage_y_in_phase,
+            "y_quadrature": m.voltage_y_quadrature,
+            "z_in_phase": m.voltage_z_in_phase,
+            "z_quadrature": m.voltage_z_quadrature,
+        }
 
     def _on_scan_completed(self, event: ScanCompleted) -> None:
         """The thin Scan completed: the step/line StepScan follows (no event of its own)."""
