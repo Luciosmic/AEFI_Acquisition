@@ -228,9 +228,6 @@ class ScanApplicationService:
         self._excitation_service = excitation_service
 
         self._current_scan: Optional[StepScan] = None
-        # Id of the scan running on the new flow (thin Scan + AefiPoint via the UoW);
-        # None for the fly-scan, which keeps the legacy flow. Per scan, never global.
-        self._new_flow_scan_id: Optional[UUID] = None
         self._control_releases: List = []  # excitation + acquisition stream, held while a scan runs
         # Progress of the running scan: plain ints written by the scan loop, read by the
         # UI / MCP threads (pause/resume/cancel/get_status never touch the UoW or repositories).
@@ -240,6 +237,8 @@ class ScanApplicationService:
         # Subscribe to forward events to the output port.
         self._event_bus.subscribe("scanstarted", self._on_domain_event)
         self._event_bus.subscribe("scanpointacquired", self._on_domain_event)
+        # Before the presenter forwarding: an observer reacting to ScanCompleted sees the scan COMPLETED.
+        self._event_bus.subscribe("scancompleted", self._on_scan_completed)
         self._event_bus.subscribe("scancompleted", self._on_domain_event)
         self._event_bus.subscribe("scanfailed", self._on_domain_event)
         self._event_bus.subscribe("scancancelled", self._on_domain_event)
@@ -310,7 +309,6 @@ class ScanApplicationService:
             self._current_scan = scan
             self._publish_events(scan.domain_events)
 
-            self._new_flow_scan_id = None
             if not is_fly_scan:
                 self._open_thin_scan(scan, config)
 
@@ -344,7 +342,6 @@ class ScanApplicationService:
             scan = uow.scans.get(scan_id)
             scan.start()
             uow.commit()
-        self._new_flow_scan_id = step_scan.id
 
     def _record_aefi_point(self, step_scan: StepScan, position: Position2D, measurements: List, expected_samples: int) -> None:
         """One UoW per point: the commit publishes AefiPointAcquired, whose handler closes the thin Scan."""
@@ -364,6 +361,12 @@ class ScanApplicationService:
 
     def pause_scan(self) -> None:
         if not self._current_scan:
+            return
+        if 0 < self._expected_total <= self._acquired_count:
+            # Between the last point and ScanCompleted the scan is still RUNNING: pausing
+            # would leave it PAUSED when the thin Scan completes.
+            logger.info("ScanApplicationService: scan_id=%s en fin d'acquisition (%d/%d), pause ignorée",
+                        self._current_scan.id, self._acquired_count, self._expected_total)
             return
         try:
             self._current_scan.pause(self._acquired_count)
@@ -664,23 +667,28 @@ class ScanApplicationService:
                     point_index=i,
                     baseline_measurement=baseline_measurement,
                 )
-                scan.add_point_result(point_result)
+                scan.point_acquired(point_result)
                 self._acquired_count += 1
                 is_last_point = self._acquired_count == self._expected_total
-                # The legacy ScanPointAcquired goes out before the commit (the
-                # export closes on ScanCompleted and would lose the last row
-                # otherwise); the ScanCompleted queued by StepScan is filtered by
-                # _publish_events — the thin Scan emits it, via ScanClosureHandler,
-                # during the commit below, once the streams are released.
+                # ScanPointAcquired goes out before the commit (the export closes
+                # on ScanCompleted and would lose the last row otherwise); the thin
+                # Scan emits ScanCompleted, via ScanClosureHandler, during the
+                # commit below, once the streams are released.
                 self._publish_events(scan.domain_events)
                 if is_last_point:
                     _release_streams()
                 self._record_aefi_point(scan, position, measurements, config.averaging_per_position)
 
             # --- Finalize ---
-            if scan.status != ScanStatus.COMPLETED:
-                logger.error("ScanApplicationService: scan_id=%s trajectory exhausted before all points were acquired", scan.id)
-                scan.fail("trajectory exhausted before all expected points were acquired")
+            # COMPLETED is posed by the thin Scan's ScanCompleted during the last commit;
+            # FAILED/CANCELLED were already published. Still RUNNING/PAUSED means nobody closed the scan.
+            if scan.status in (ScanStatus.RUNNING, ScanStatus.PAUSED):
+                reason = (
+                    f"trajectory exhausted before all expected points were acquired "
+                    f"({self._acquired_count}/{self._expected_total})"
+                )
+                logger.error("ScanApplicationService: scan_id=%s %s", scan.id, reason)
+                scan.fail(reason)
                 _release_streams()
                 self._publish_events(scan.domain_events)
 
@@ -706,7 +714,7 @@ class ScanApplicationService:
 
     def _execute_fly_scan_loop(
         self,
-        scan: StepScan,
+        scan: FlyScan,
         trajectory: ScanTrajectory,
         config: StepScanConfig,
     ) -> None:
@@ -1016,6 +1024,13 @@ class ScanApplicationService:
             }
             self._output_port.present_field_scan_progress(event.point_index, self._expected_total, data)
 
+    def _on_scan_completed(self, event: ScanCompleted) -> None:
+        """The thin Scan completed: the step/line StepScan follows (no event of its own)."""
+        scan = self._current_scan
+        if scan is None or scan.id != event.scan_id:
+            return
+        scan.mark_completed()
+
     def _on_scan_closure_failed(self, event: ScanClosureFailed) -> None:
         """The thin Scan could not be closed (the handler is synchronous and the bus swallows
         exceptions): turn it into a visible failure so the export closes and the UI shows it."""
@@ -1028,18 +1043,11 @@ class ScanApplicationService:
         if scan.status in (ScanStatus.RUNNING, ScanStatus.PAUSED):
             scan.fail(reason)
             self._publish_events(scan.domain_events)
-        elif scan.status == ScanStatus.COMPLETED:
-            # Last point: StepScan is already COMPLETED (cannot fail) but the legacy
-            # ScanCompleted was withheld — ScanFailed is the only terminal event observers get.
-            self._publish_events([ScanFailed(scan_id=scan.id, reason=reason)])
         else:
             logger.info("ScanApplicationService: scan_id=%s already %s, nothing to do", scan.id, scan.status)
 
     def _publish_events(self, events: List[DomainEvent]) -> None:
         for event in events:
-            if isinstance(event, ScanCompleted) and event.scan_id == self._new_flow_scan_id:
-                logger.info("ScanApplicationService: legacy ScanCompleted scan_id=%s not republished, the thin Scan emits it", event.scan_id)
-                continue
             event_type = type(event).__name__.lower()
             self._event_bus.publish(event_type, event)
 

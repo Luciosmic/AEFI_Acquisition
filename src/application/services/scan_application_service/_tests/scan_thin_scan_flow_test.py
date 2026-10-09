@@ -108,6 +108,24 @@ class TestScanThinScanFlow(unittest.TestCase):
         self.assertEqual(names.count("ScanPointAcquired"), 1)  # loop stops after the failure
         self.assertEqual(self.service._current_scan.status.name, "FAILED")
 
+    def test_closure_failure_on_the_last_point_turns_into_scan_failed_not_completed(self):
+        real_get = self.uow.scans.get
+        calls = []
+
+        def get_unless_last(scan_id):  # start + 3 closures succeed, the 4th point's closure does not
+            calls.append(scan_id)
+            return real_get(scan_id) if len(calls) < 5 else None
+
+        self.uow.scans.get = get_unless_last
+        self.assertTrue(self.service.execute_scan(_dto()))
+        self.assertTrue(self._wait_terminal())
+
+        names = [type(e).__name__ for e in self.events]
+        self.assertEqual(names.count("ScanFailed"), 1)
+        self.assertEqual(names.count("ScanCompleted"), 0)
+        self.assertEqual(names.count("ScanPointAcquired"), 4)
+        self.assertEqual(self.service._current_scan.status.name, "FAILED")
+
 
 if __name__ == "__main__":
     unittest.main()

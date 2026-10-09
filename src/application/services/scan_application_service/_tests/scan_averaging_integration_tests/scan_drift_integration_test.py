@@ -97,6 +97,8 @@ class TestScanDriftIntegration(unittest.TestCase):
 
         done = threading.Event()
         event_bus.subscribe("scancompleted", lambda e: done.set())
+        acquired = []  # the scan does not keep its points: read them from the events
+        event_bus.subscribe("scanpointacquired", acquired.append)
 
         # 2. Configure Scan — 5×5 grid, 10 samples/point
         samples_per_point = 10
@@ -116,12 +118,12 @@ class TestScanDriftIntegration(unittest.TestCase):
         service.execute_scan(config_dto)
         self.assertTrue(done.wait(timeout=30.0), "Scan did not complete within timeout")
 
-        scan = service._current_scan
+        points = acquired
 
         # 4. Verify Drift
         print("\n    Verifying Temporal Drift...")
 
-        measured_values = [p.measurement.voltage_x_in_phase for p in scan.points]
+        measured_values = [p.measurement.voltage_x_in_phase for p in points]
 
         errors = []
         for i, val in enumerate(measured_values):
@@ -136,12 +138,12 @@ class TestScanDriftIntegration(unittest.TestCase):
         print(f"    Max Drift Error: {max(errors):.4f}")
 
         # 5. Plotting
-        self.generate_plots(scan, pattern_name)
+        self.generate_plots(points, pattern_name)
 
-    def generate_plots(self, scan, pattern_name):
-        x = [p.position.x for p in scan.points]
-        y = [p.position.y for p in scan.points]
-        values = [p.measurement.voltage_x_in_phase for p in scan.points]
+    def generate_plots(self, points, pattern_name):
+        x = [p.position.x for p in points]
+        y = [p.position.y for p in points]
+        values = [p.measurement.voltage_x_in_phase for p in points]
 
         plt.figure(figsize=(8, 6))
         sc = plt.scatter(x, y, c=values, cmap='plasma', s=100)

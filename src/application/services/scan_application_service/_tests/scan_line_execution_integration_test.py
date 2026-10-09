@@ -39,6 +39,8 @@ class TestScanLineExecution(unittest.TestCase):
             RandomNoiseAcquisitionPort(noise_std=0.0, seed=1),
         )
         self.started = []
+        self.acquired = []
+        self.event_bus.subscribe("scanpointacquired", self.acquired.append)
         scan_uow = InMemoryUnitOfWork(self.event_bus)
         ScanClosureHandler(self.event_bus, scan_uow)
         self.service = ScanApplicationService(
@@ -63,8 +65,8 @@ class TestScanLineExecution(unittest.TestCase):
         scan = self._run(make_dto())
 
         self.assertEqual(scan.status, ScanStatus.COMPLETED)
-        self.assertEqual(scan.expected_points, 5)
-        positions = [(p.position.x, p.position.y) for p in scan.points]
+        self.assertEqual(self.service.get_status().total_points, 5)
+        positions = [(p.position.x, p.position.y) for p in self.acquired]
         expected = [(600.0, 550.0), (600.0, 575.0), (600.0, 600.0), (600.0, 625.0), (600.0, 650.0)]
         self.assertEqual(positions, pytest.approx(expected))
 

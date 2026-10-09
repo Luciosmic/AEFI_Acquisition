@@ -61,6 +61,9 @@ class TestScanDifferentialModeIntegration(unittest.TestCase):
         # Synthetic geometry (not the real hardware config, identity
         # rotation) so the expected offset below is deterministic.
         self.field_simulator = CubeSensorFieldSimulator.from_config(make_synthetic_config())
+        # The scan does not keep its points: they are read from the published events.
+        self.acquired = []
+        self.event_bus.subscribe("scanpointacquired", self.acquired.append)
 
         base_acquisition_port = RandomNoiseAcquisitionPort(noise_std=0.0, seed=42)
         self.acquisition_port = ExcitationAwareAcquisitionPort(
@@ -165,9 +168,8 @@ class TestScanDifferentialModeIntegration(unittest.TestCase):
         self.assertTrue(self.service.execute_scan(scan_dto))
         self.assertTrue(done.wait(timeout=10.0), "Scan did not complete within timeout")
 
-        scan = self.service._current_scan
-        self.assertEqual(len(scan.points), 1)
-        point = scan.points[0]
+        self.assertEqual(len(self.acquired), 1)
+        point = self.acquired[0]
 
         # Same levels on both DDS pairs -> the field's x component cancels by
         # symmetry, only y carries an offset (see PointChargeFieldSimulator/
@@ -226,7 +228,7 @@ class TestScanDifferentialModeIntegration(unittest.TestCase):
 
         self.assertEqual(len(received), 1)
         _, _, data = received[0]
-        point = self.service._current_scan.points[0]
+        point = self.acquired[0]
         self.assertEqual(data["value"]["baseline_x_in_phase"], point.baseline_measurement.voltage_x_in_phase)
         self.assertEqual(data["value"]["baseline_y_in_phase"], point.baseline_measurement.voltage_y_in_phase)
         self.assertEqual(data["value"]["x_in_phase"], point.measurement.voltage_x_in_phase)
@@ -246,7 +248,7 @@ class TestScanDifferentialModeIntegration(unittest.TestCase):
         self.assertTrue(self.service.execute_scan(scan_dto))
         self.assertTrue(done.wait(timeout=10.0), "Scan did not complete within timeout")
 
-        point = self.service._current_scan.points[0]
+        point = self.acquired[0]
         self.assertIsNone(point.baseline_measurement)
 
 

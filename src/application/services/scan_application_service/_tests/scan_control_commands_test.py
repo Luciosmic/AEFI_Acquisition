@@ -75,6 +75,15 @@ class TestScanControlCommands(unittest.TestCase):
         self.assertEqual((final.status, final.current_point_index, final.total_points), ("completed", 4, 4))
         self.assertAlmostEqual(final.progress_percentage, 100.0)
 
+    def test_pause_after_the_last_point_is_ignored(self):
+        self.assertTrue(self.service.execute_scan(_dto()))
+        self.assertTrue(self.flags["scancompleted"].wait(10.0))
+
+        self.service.pause_scan()
+
+        self.assertFalse(self.flags["scanpaused"].is_set())
+        self.assertEqual(self.service.get_status().status, "completed")
+
     def test_pause_then_resume_continues_to_completion(self):
         first = threading.Event()
 

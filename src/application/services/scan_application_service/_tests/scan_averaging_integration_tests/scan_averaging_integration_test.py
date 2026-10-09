@@ -93,6 +93,8 @@ class TestScanAveragingIntegration(unittest.TestCase):
         # Subscribe before executing so we reliably receive scancompleted
         done = threading.Event()
         event_bus.subscribe("scancompleted", lambda e: done.set())
+        acquired = []  # the scan does not keep its points: read them from the events
+        event_bus.subscribe("scanpointacquired", acquired.append)
 
         # 2. Configure Scan — 5×5 grid, 10 samples/point (matches real AEFI
         # usage; the mock's 1kHz simulated rate makes this near-instant)
@@ -118,8 +120,8 @@ class TestScanAveragingIntegration(unittest.TestCase):
         self.assertTrue(done.wait(timeout=30.0), "Scan did not complete within timeout")
         print("    Scan Completed")
 
-        scan = service._current_scan
-        self.assertIsNotNone(scan, "Scan aggregate should not be None")
+        points = acquired
+        self.assertEqual(len(points), 25)
 
         # 4. Verify Results
         print("\n    Verifying Statistics...")
@@ -127,7 +129,7 @@ class TestScanAveragingIntegration(unittest.TestCase):
         errors_mean = []
         errors_std = []
 
-        for point in scan.points:
+        for point in points:
             pos = point.position
             measured = point.measurement
 
@@ -155,13 +157,13 @@ class TestScanAveragingIntegration(unittest.TestCase):
 
         # 5. Plotting
         print("\n    Generating Plots...")
-        self.generate_plots(scan, pattern_name)
+        self.generate_plots(points, pattern_name)
 
-    def generate_plots(self, scan, pattern_name):
-        x = [p.position.x for p in scan.points]
-        y = [p.position.y for p in scan.points]
-        means = [p.measurement.voltage_x_in_phase for p in scan.points]
-        stds = [p.measurement.std_dev_x_in_phase for p in scan.points]
+    def generate_plots(self, points, pattern_name):
+        x = [p.position.x for p in points]
+        y = [p.position.y for p in points]
+        means = [p.measurement.voltage_x_in_phase for p in points]
+        stds = [p.measurement.std_dev_x_in_phase for p in points]
 
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
 

@@ -16,7 +16,6 @@ from typing import List
 from domain.step_scan.step_scan import StepScan
 from domain.step_scan.value_objects.scan_point_result.scan_point_result import ScanPointResult
 from domain.step_scan.value_objects.scan_status.scan_status import ScanStatus
-from domain.step_scan.events.scan_point_acquired.scan_point_acquired import ScanPointAcquired
 
 logger = logging.getLogger(__name__)
 
@@ -41,17 +40,8 @@ class FlyScan(StepScan):
         self._expected_points = config.total_points()
 
     def add_point_result(self, result: ScanPointResult) -> None:
-        if self.status != ScanStatus.RUNNING:
-            raise ValueError(f"Cannot add result when scan is {self.status}")
-
+        self.point_acquired(result)  # refuses when not RUNNING
         self._points.append(result)
-        self._domain_events.append(ScanPointAcquired(
-            scan_id=self.id,
-            point_index=result.point_index,
-            position=result.position,
-            measurement=result.measurement,
-            baseline_measurement=result.baseline_measurement,
-        ))
 
         if self._expected_points > 0 and len(self._points) >= self._expected_points:
             logger.info("FlyScan: scan_id=%s reached %d expected points, completing", self.id, self._expected_points)
