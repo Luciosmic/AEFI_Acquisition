@@ -3,6 +3,7 @@ from typing import Any, List
 
 from application.services.scan_application_service.ports.i_unit_of_work import IUnitOfWork
 from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from infrastructure.persistence.aefi_point.in_memory_aefi_point_repository import InMemoryAefiPointRepository
 
 logger = logging.getLogger(__name__)
 
@@ -14,6 +15,7 @@ class InMemoryUnitOfWork(IUnitOfWork):
         self._event_bus = event_bus
         self._seen: List[Any] = []
         self._committed = False
+        self.aefi_points = InMemoryAefiPointRepository(self)
 
     def __enter__(self) -> "InMemoryUnitOfWork":
         self._seen = []
