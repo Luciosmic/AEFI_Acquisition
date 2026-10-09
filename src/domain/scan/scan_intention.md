@@ -2,7 +2,7 @@
 
 ## Rationale
 
-Aujourd'hui `StepScan` contient ses points et se complète lui-même : il confond le processus physique avec son artefact de traçage, ce qui signifie qu'un agrégat gros et chargé de mesures porte la transaction de chaque point, ce qui force à tout verrouiller pour un seul point acquis. Le `Scan` est l'artefact qui dénote le processus : il référence par identité les acquisitions des agrégats forts et ne se complète que lorsque toutes les sources requises sont présentes. Il est agnostique de la sonde : sans cela, chaque capteur ajouté (AEFI point, AEFI ligne, Narda) modifierait l'agrégat.
+Avant ce modèle, `StepScan` contenait ses points et se complétait lui-même : il confondait le processus physique avec son artefact de traçage, ce qui signifie qu'un agrégat gros et chargé de mesures porte la transaction de chaque point, ce qui force à tout verrouiller pour un seul point acquis. Le `Scan` est l'artefact qui dénote le processus : il référence par identité les acquisitions des agrégats forts et ne se complète que lorsque toutes les sources requises sont présentes. Il est agnostique de la sonde : sans cela, chaque capteur ajouté (AEFI point, AEFI ligne, Narda) modifierait l'agrégat.
 
 ## Responsibility
 
@@ -16,6 +16,6 @@ Aujourd'hui `StepScan` contient ses points et se complète lui-même : il confon
 ## Design
 
 - Les noms de source sont des constantes des agrégats émetteurs (le `Scan` n'en connaît aucune) ; l'événement d'acquisition respecte `ProbeAcquisitionEvent`.
-- Coexiste avec `StepScan` (non modifié ; pause/cancel/failed non migrés).
+- `StepScan` est désormais une coque de cycle de vie (statuts, pause/resume/cancel/fail, événements hérités) sans points ni `ScanCompleted` : le `Scan` fin est l'unique émetteur de `ScanCompleted`. Pause/cancel/failed restent portés par `StepScan`, le `Scan` fin n'a pas de terminal `CANCELLED`/`FAILED` (dette, ADR-004).
 - Réutilise `ScanCompleted` existant (forme `scan_id`, `total_points` adaptée). `ScanStarted` existant exige une config de scan : non réutilisé ni recréé (même nom de topic, forme différente) ; PENDING→STARTED reste observable par `state`.
 - Domaine pur : aucun import application/infrastructure, aucun logger.

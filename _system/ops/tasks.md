@@ -12,11 +12,12 @@ domaine/application, à valider sur matériel** (non éprouvés au banc dans ce 
 À faire (pourquoi : fermer les écarts connus de l'ADR-004) :
 - [ ] États terminaux du `Scan` fin (`CANCELLED`/`FAILED`) : aujourd'hui il reste `STARTED` après annulation ou échec.
 - [ ] Commande de réconciliation opérateur (pas de retry automatique : action visible déclenchée par l'opérateur).
-- [ ] Événement d'échec dédié pour les sources facultatives.
+- [ ] Événement d'échec visible pour une source facultative qui échoue (décision actée dans l'ADR-004, pas encore implémenté).
 - [ ] Enrichir `AefiPoint` (index, baseline) pour que l'export lise via les repositories au lieu des événements
       hérités (`ScanPointAcquired`, publié par `StepScan` avant le commit).
 - [ ] `ScanStarted` du nouveau modèle (`Scan.start()` n'émet rien ; le `ScanStarted` hérité a la même forme de topic).
-- [ ] Tests fly-scan : pause/annulation en milieu de ligne.
+- [x] Tests fly-scan : pause/annulation en milieu de ligne (rollback de ligne sur pause, aperçu provisoire, `AefiLineAbandoned`) : implémenté côté application, à valider sur matériel.
+- [ ] Valider sur banc l'arrêt immédiat du moteur par `stop()` à la pause d'une ligne de fly-scan (comportement de `stop` non vérifié sur le vrai contrôleur Arcus ; testé sur le fake uniquement).
 - [ ] Déclarer les unités de `Position2D` dans les événements (standard de contrats auto-descriptifs).
 - [ ] Mesurer sur matériel réel le coût par point du nouveau chemin (≈ +25 µs en WARNING, ≈ +150 µs en INFO mesurés en mock).
 - [ ] Valider sur matériel : fly-scan par `AefiLine`, sonde Narda requise au démarrage et échec visible si elle disparaît.
