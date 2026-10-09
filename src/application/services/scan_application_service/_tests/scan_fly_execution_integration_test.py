@@ -191,8 +191,7 @@ class TestFlyScanOnTheFaithfulMotionStack(_Stack):
         self.assertIsNone(self.continuous_service.get_controller())  # held during the scan only
 
 
-class TestFlyScanPauseRollsBackTheCurrentLine(_Stack):
-    """A pause inside a line abandons it (AefiLine is atomic) and the line is redone from its start."""
+class _FaithfulFlyStack(_Stack):
 
     def setUp(self):
         self.event_bus = InMemoryEventBus()
@@ -220,18 +219,31 @@ class TestFlyScanPauseRollsBackTheCurrentLine(_Stack):
         self.event_bus.subscribe("aefilineacquired", lambda e: self.acquired_lines.append(e.line_index))
         self.lines_when_paused = None
 
-    def _pause_in_line_1(self, then):
-        """On the first preview point of line 1 (mid-sweep): pause, then `then()`."""
+    def _on_first_preview_of_line(self, line_index, action):
+        """On the first preview point of `line_index` (mid-sweep): run `action()`."""
         fired = []
 
         def on_preview(event):
-            if event.line_index == 1 and not fired:
+            if event.line_index == line_index and not fired:
                 fired.append(True)
-                self.service.pause_scan()
-                self.lines_when_paused = [l.line_index for l in self._lines(self.service._current_scan)]
-                then()
+                action()
 
         self.event_bus.subscribe("aefilinepreviewpointacquired", on_preview)
+
+    def _committed_lines(self, scan):
+        return [l.line_index for l in self._lines(scan)]
+
+
+class TestFlyScanPauseRollsBackTheCurrentLine(_FaithfulFlyStack):
+    """A pause inside a line abandons it (AefiLine is atomic) and the line is redone from its start."""
+
+    def _pause_in_line_1(self, then):
+        def action():
+            self.service.pause_scan()
+            self.lines_when_paused = self._committed_lines(self.service._current_scan)
+            then()
+
+        self._on_first_preview_of_line(1, action)
 
     def _assert_whole_grid_once(self, scan):
         self.assertEqual(scan.status, ScanStatus.COMPLETED)
@@ -274,6 +286,74 @@ class TestFlyScanPauseRollsBackTheCurrentLine(_Stack):
         self.assertEqual(sorted(self.point_indices), [0, 1, 2, 3])  # only line 0, published whole
         self.assertFalse(self.continuous_service.is_acquisition_running())
         self.assertIsNone(self.continuous_service.get_controller())
+
+
+class TestFlyScanLineIsNeverCommittedOnAnEndedScan(_FaithfulFlyStack):
+    """Cancelled or failed scan: the line in progress is neither committed nor exported."""
+
+    def _published_points(self):
+        points = []
+        self.event_bus.subscribe("scanpointacquired", lambda e: points.append(e.point_index))
+        return points
+
+    def test_cancel_mid_line_commits_nothing_of_that_line(self):
+        points = self._published_points()
+        self._on_first_preview_of_line(1, self.service.cancel_scan)
+
+        scan = self._run(make_dto(), until="scancancelled", timeout=90.0)
+        time.sleep(0.5)
+
+        self.assertEqual(scan.status, ScanStatus.CANCELLED)
+        self.assertEqual(self._committed_lines(scan), [0])
+        self.assertEqual(sorted(points), [0, 1, 2, 3])
+
+    def test_cancel_on_the_last_line_commits_nothing_of_that_line(self):
+        points = self._published_points()
+        self._on_first_preview_of_line(2, self.service.cancel_scan)
+
+        scan = self._run(make_dto(), until="scancancelled", timeout=90.0)
+        time.sleep(0.5)
+
+        self.assertEqual(self._committed_lines(scan), [0, 1])
+        self.assertEqual(sorted(points), list(range(8)))
+        self.assertFalse(self.continuous_service.is_acquisition_running())
+
+    def test_failure_mid_line_commits_nothing_of_that_line(self):
+        points = self._published_points()
+
+        def fail_the_scan():
+            self.service._current_scan.fail("boom")
+            self.service._publish_events(self.service._current_scan.domain_events)
+
+        self._on_first_preview_of_line(1, fail_the_scan)
+
+        scan = self._run(make_dto(), until="scanfailed", timeout=90.0)
+        time.sleep(0.5)
+
+        self.assertEqual(scan.status, ScanStatus.FAILED)
+        self.assertEqual(self._committed_lines(scan), [0])
+        self.assertEqual(sorted(points), [0, 1, 2, 3])
+
+    def test_cancel_between_the_publication_and_the_commit_of_a_line_does_not_commit_it(self):
+        self.event_bus.subscribe("scanpointacquired", lambda e: self.service.cancel_scan() if e.point_index == 7 else None)
+
+        scan = self._run(make_dto(), until="scancancelled", timeout=90.0)
+        time.sleep(0.5)
+
+        self.assertEqual(scan.status, ScanStatus.CANCELLED)
+        self.assertEqual(self._committed_lines(scan), [0])
+
+    def test_cancel_after_the_last_point_is_ignored_and_the_scan_completes_once(self):
+        completed, cancelled = [], []
+        self.event_bus.subscribe("scancompleted", completed.append)
+        self.event_bus.subscribe("scancancelled", cancelled.append)
+        self.event_bus.subscribe("scanpointacquired", lambda e: self.service.cancel_scan() if e.point_index == 11 else None)
+
+        scan = self._run(make_dto(), timeout=90.0)
+
+        self.assertEqual(scan.status, ScanStatus.COMPLETED)
+        self.assertEqual((len(completed), len(cancelled)), (1, 0))
+        self.assertEqual(self._committed_lines(scan), [0, 1, 2])
 
 
 class TestFlyScanFailureModes(_Stack):

@@ -909,6 +909,9 @@ class ScanApplicationService:
         if ignored:
             logger.warning("ScanApplicationService: fly scan scan_id=%s ignores auxiliary probes %s", scan.id, ignored)
 
+        def _ended() -> bool:
+            return scan.status in (ScanStatus.CANCELLED, ScanStatus.FAILED)
+
         def _interrupted(epoch: int) -> bool:
             # A pause (even one already resumed) since the attempt began: the line is partial.
             return self._pause_epoch != epoch or scan.status == ScanStatus.PAUSED
@@ -946,7 +949,7 @@ class ScanApplicationService:
             if sync_result.is_failure:
                 _fail(_motion_failure_reason(sync_result.error, f"start of fly line {line_index}"))
                 return STOP
-            if scan.status == ScanStatus.CANCELLED:
+            if _ended():
                 return STOP
             if _interrupted(epoch):
                 return ABANDONED
@@ -989,7 +992,7 @@ class ScanApplicationService:
 
             while True:
                 _drain()
-                if scan.status == ScanStatus.CANCELLED:
+                if _ended():
                     return STOP
                 if _interrupted(epoch):
                     return ABANDONED
@@ -1012,7 +1015,7 @@ class ScanApplicationService:
             counts["live"] += len(passed := projector.add_position(t_end, _abscissa(self._motion_port.get_current_position())))
             _emit(line_index, line, passed)
 
-            if scan.status == ScanStatus.CANCELLED:
+            if _ended():
                 return STOP
             if _interrupted(epoch):
                 return ABANDONED
@@ -1035,6 +1038,11 @@ class ScanApplicationService:
             logger.info("ScanApplicationService: scan_id=%s line=%d complete, publishing %d points then committing",
                         scan.id, line_index, len(line_points))
             if not _publish_line_points(line_index, line):
+                return STOP
+            # A cancel/failure landing after the publication must not commit the line (a pause is waited out).
+            if not _may_continue():
+                logger.info("ScanApplicationService: scan_id=%s line=%d not committed, scan is %s",
+                            scan.id, line_index, scan.status)
                 return STOP
             is_last_line = line_index == len(lines) - 1
             # Streams released just before the last commit, which completes the thin Scan.
