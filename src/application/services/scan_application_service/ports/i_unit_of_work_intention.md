@@ -12,6 +12,6 @@ Sans frontière transactionnelle, les boucles de scan publient les événements 
 
 ## Design
 
-- ABC pure ; les repositories sont des attributs déclarés (`aefi_points`), un par agrégat, ajoutés avec leur implémentation (`scans` viendra avec son repository).
+- ABC pure ; les repositories sont des attributs déclarés (`aefi_points`, `scans`), un par agrégat.
 - Les agrégats exposent `domain_events` (retourne puis vide la liste, convention de `StepScan`).
 - La publication a lieu après fermeture de la transaction : un handler peut ouvrir une autre UoW.

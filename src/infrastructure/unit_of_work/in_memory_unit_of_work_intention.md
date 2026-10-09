@@ -12,6 +12,6 @@ Sans implémentation de `IUnitOfWork`, la règle « un agrégat par transaction 
 
 ## Design
 
-- Le bus est injecté par constructeur ; les repositories (`aefi_points`) sont instanciés avec `self` pour enregistrer les agrégats vus.
+- Le bus est injecté par constructeur ; les repositories (`aefi_points`, `scans`) sont instanciés avec `self` pour enregistrer les agrégats vus.
 - Les événements sont collectés au commit, l'état de transaction est remis à zéro, puis la publication a lieu : réentrance sûre, un handler peut ouvrir une seconde UoW.
 - Pas de restauration d'état des agrégats au rollback (en mémoire) : seule la publication est annulée.

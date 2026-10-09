@@ -15,17 +15,19 @@ Design:
 - Contexte `with uow:` ; rollback implicite si exception ou si commit() jamais appele.
 - register(aggregate) : appele par les repositories ; l'aggregat doit exposer `domain_events`
   (propriete qui retourne puis vide la liste).
-- Repositories exposes en attributs : aefi_points (scans viendra avec son repository).
+- Repositories exposes en attributs : aefi_points, scans.
 """
 
 from abc import ABC, abstractmethod
 from typing import Any
 
 from domain.aefi_point.repositories.i_aefi_point_repository import IAefiPointRepository
+from domain.scan.repositories.i_scan_repository import IScanRepository
 
 
 class IUnitOfWork(ABC):
     aefi_points: IAefiPointRepository
+    scans: IScanRepository
 
     @abstractmethod
     def __enter__(self) -> "IUnitOfWork":
