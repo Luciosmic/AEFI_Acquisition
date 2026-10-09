@@ -99,6 +99,7 @@ def _motion_failure_reason(error: MotionSyncError, where: str) -> str:
 
 
 from domain.step_scan.step_scan import StepScan
+from domain.step_scan.fly_scan import FlyScan
 from domain.scan.scan import Scan
 from domain.scan.events.scan_closure_failed.scan_closure_failed import ScanClosureFailed
 from domain.aefi_point.aefi_point import AefiPoint
@@ -303,12 +304,12 @@ class ScanApplicationService:
 
             self._acquired_count = 0
             self._expected_total = config.total_points()
-            scan = StepScan()
+            is_fly_scan = getattr(config, "fly_scan", False)
+            scan = FlyScan() if is_fly_scan else StepScan()
             scan.start(config)
             self._current_scan = scan
             self._publish_events(scan.domain_events)
 
-            is_fly_scan = getattr(config, "fly_scan", False)
             self._new_flow_scan_id = None
             if not is_fly_scan:
                 self._open_thin_scan(scan, config)
