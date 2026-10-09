@@ -426,13 +426,13 @@ EF probe) — ne pas re-toggler l'excitation par canal.
   `baseline_measurement: AefiVoltageMeasurement | None`
 - `domain/step_scan/events/scan_point_acquired/` : `ScanPointAcquired` + champ optionnel
   `baseline_measurement`
-- `domain/step_scan/events/electric_field_scan_point_acquired/electric_field_scan_point_acquired.py` :
+- ancien événement de champ (supprimé au profit de `NardaPointAcquired`) :
   + champ optionnel `baseline_field_measurement: FieldMeasurement | None`
 - `application/services/excitation_configuration_service/excitation_configuration_service.py` :
   + `mute()` / `unmute()` (gardent mode/fréquence, togglent juste le niveau à 0 puis
   restaurent le niveau précédent)
 - `application/services/scan_application_service/scan_application_service.py` :
-  - `AuxiliaryProbeChannel.publish_point_result` : signature étendue pour accepter des
+  - `AuxiliaryProbeChannel.record_point_result` : signature étendue pour accepter des
     échantillons baseline optionnels (aujourd'hui `Callable[[Any, int, Any, List], None]`,
     l.114)
   - `make_electric_field_probe_channel._publish` (l.124-134) : calculer aussi
@@ -445,7 +445,7 @@ EF probe) — ne pas re-toggler l'excitation par canal.
     3. `excitation_service.unmute()` → délai `differential_settle_delay_ms`
     4. bloc excité existant (l.398-442), inchangé
     5. attacher les baselines aux résultats avant `ScanPointResult(...)` et
-       `channel.publish_point_result(...)`
+       `channel.record_point_result(...)`
 - `application/services/scan_application_service/dtos/scan_dtos.py` : `Scan2DConfigDTO` +
   `differential_mode: bool = False`, + `differential_settle_delay_ms: float`
 - `application/services/scan_export_service/scan_export_service.py` (`_flatten_point`) et
@@ -499,5 +499,5 @@ bout dans `ScanApplicationService`, sans dépendre du hardware réel.
 3. `ScanApplicationService` : test d'intégration avec le mock stack ci-dessus (le test qui
    compte le plus — voir section précédente) avant de coder la boucle
 4. Implémentation de la boucle différentielle
-5. Events (`ScanPointAcquired`, `ElectricFieldScanPointAcquired`) + export CSV
+5. Events (`ScanPointAcquired`, `NardaPointAcquired`) + export CSV
 6. UI (case à cocher)

@@ -12,4 +12,4 @@ Sans fait publié à l'acquisition d'un point de champ, le `Scan` ne peut pas sa
 
 - `@dataclass(frozen=True)` héritant de `DomainEvent`. Émis par `NardaPoint.record_samples` uniquement. Topic : `"nardapointacquired"`.
 - Respecte le contrat `ProbeAcquisitionEvent` du `Scan` sans l'importer : `source` (constante `NARDA_POINT_SOURCE = "narda_point"`) et `acquisition_id` (= `narda_point_id`) sont des propriétés.
-- Remplace l'événement hérité `ElectricFieldScanPointAcquired` (consommé par l'export et l'application).
+- Remplace l'ancien événement de champ publié hors agrégat ; l'export et le service applicatif (UI) s'abonnent à celui-ci.

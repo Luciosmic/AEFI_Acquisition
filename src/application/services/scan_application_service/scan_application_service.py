@@ -122,7 +122,7 @@ from domain.step_scan.events.scan_failed.scan_failed import ScanFailed
 from domain.step_scan.events.scan_cancelled.scan_cancelled import ScanCancelled
 from domain.step_scan.events.scan_paused.scan_paused import ScanPaused
 from domain.step_scan.events.scan_resumed.scan_resumed import ScanResumed
-from domain.step_scan.events.electric_field_scan_point_acquired.electric_field_scan_point_acquired import ElectricFieldScanPointAcquired
+from domain.narda_point.events.narda_point_acquired.narda_point_acquired import NardaPointAcquired
 from domain.shared_kernel.events.domain_event import DomainEvent
 from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
 
@@ -191,25 +191,11 @@ def make_electric_field_probe_channel(
             axis_labels=axis_labels,
         )
         point.record_samples(samples, baseline_samples)
-        field_measurement = point.field_measurement
-        baseline_field_measurement = point.baseline_field_measurement
         # One aggregate per transaction: the commit publishes NardaPointAcquired, whose handler
-        # references it in the thin Scan. A commit failure propagates to the scan loop (scan fails).
+        # references it in the thin Scan (the export and the UI consume it too). A commit failure propagates to the scan loop (scan fails).
         with unit_of_work as uow:
             uow.narda_points.add(point)
             uow.commit()
-        # Transitional legacy event (export + UI), after the commit.
-        event_bus.publish(
-            "electricfieldscanpointacquired",
-            ElectricFieldScanPointAcquired(
-                scan_id=scan.id,
-                point_index=point_index,
-                position=position,
-                field_measurement=field_measurement,
-                baseline_field_measurement=baseline_field_measurement,
-                axis_labels=axis_labels,
-            ),
-        )
 
     return AuxiliaryProbeChannel(
         name="Narda probe",
@@ -280,7 +266,7 @@ class ScanApplicationService:
         self._event_bus.subscribe("scancancelled", self._on_domain_event)
         self._event_bus.subscribe("scanpaused", self._on_domain_event)
         self._event_bus.subscribe("scanresumed", self._on_domain_event)
-        self._event_bus.subscribe("electricfieldscanpointacquired", self._on_domain_event)
+        self._event_bus.subscribe("nardapointacquired", self._on_domain_event)
         self._event_bus.subscribe("scanclosurefailed", self._on_scan_closure_failed)
 
     def set_output_port(self, output_port: IScanOutputPort) -> None:
@@ -1116,7 +1102,7 @@ class ScanApplicationService:
         elif isinstance(event, ScanResumed):
             self._output_port.present_scan_resumed(str(event.scan_id), event.resume_from_point_index)
 
-        elif isinstance(event, ElectricFieldScanPointAcquired):
+        elif isinstance(event, NardaPointAcquired):
             fm = event.field_measurement
             labels = event.axis_labels or tuple(str(i) for i in range(len(fm.components)))
             value = {f"field_{label.lower()}": c for label, c in zip(labels, fm.components)}

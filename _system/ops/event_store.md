@@ -33,7 +33,7 @@ Une ligne JSON par événement :
 ## Comment auditer une session avec ce fichier
 
 1. Identifier le `scan_id`/`acquisition_id` concerné (ou le fichier du bon run, par horodatage).
-2. `grep` ce fichier pour cet ID → reconstitue la séquence complète d'un scan (`ScanStarted` → N × `ScanPointAcquired`/`ElectricFieldScanPointAcquired` → `ScanCompleted`/`ScanFailed`/`ScanCancelled`).
+2. `grep` ce fichier pour cet ID → reconstitue la séquence complète d'un scan (`ScanStarted` → N × `ScanPointAcquired`/`NardaPointAcquired` → `ScanCompleted`/`ScanFailed`/`ScanCancelled`).
 3. Comparer aux invariants attendus décrits dans le `intention.md` du service concerné (ex. `scan_application_service_intention.md`) : nombre de points, ordre des états, valeurs plausibles des mesures, cohérence config demandée (`ScanStarted`) vs mesures obtenues.
 4. Pour les événements système/moteur/excitation (pas de `scan_id`), la corrélation se fait par proximité temporelle (`occurred_on`) et position dans le fichier.
 

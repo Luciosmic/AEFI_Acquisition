@@ -23,7 +23,8 @@ from domain.step_scan.events.scan_started.scan_started import ScanStarted
 from domain.step_scan.events.scan_point_acquired.scan_point_acquired import ScanPointAcquired
 from domain.step_scan.events.scan_completed.scan_completed import ScanCompleted
 from domain.step_scan.events.scan_failed.scan_failed import ScanFailed
-from domain.step_scan.events.electric_field_scan_point_acquired.electric_field_scan_point_acquired import ElectricFieldScanPointAcquired
+from domain.narda_point.events.narda_point_acquired.narda_point_acquired import NardaPointAcquired
+from domain.narda_point.value_objects.narda_point_id.narda_point_id import NardaPointId
 from domain.electric_field_probe.value_objects.field_measurement.field_measurement import FieldMeasurement
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
 from application.services.scan_application_service.scan_closure_handler.scan_closure_handler import ScanClosureHandler
@@ -31,6 +32,13 @@ from infrastructure.unit_of_work.in_memory_unit_of_work import InMemoryUnitOfWor
 from infrastructure.execution.thread_pool_task_runner import ThreadPoolTaskRunner
 from infrastructure.execution.event_bus_motion_synchronizer import EventBusMotionSynchronizer
 from tool.diagram_friendly_test import DiagramFriendlyTest
+
+
+def _narda_event(scan_id, point_index, position, field_measurement, baseline_field_measurement=None, axis_labels=None):
+    return NardaPointAcquired(
+        NardaPointId(uuid4()), scan_id, point_index, position, field_measurement,
+        baseline_field_measurement, axis_labels, 1,
+    )
 
 class TestScanApplicationService(DiagramFriendlyTest):
     def setUp(self):
@@ -195,18 +203,18 @@ class TestScanApplicationService(DiagramFriendlyTest):
         self.assertEqual(len(received_completion), 1)
 
     def test_electric_field_scan_point_forwarded_to_output_port(self):
-        """ElectricFieldScanPointAcquired must be flattened (field_<axis> + norm) and forwarded.
+        """NardaPointAcquired must be flattened (field_<axis> + norm) and forwarded.
         Falls back to field_<index> when the event carries no axis_labels (probe unknown)."""
         received = []
         self.service.set_output_port(_RecordingOutputPort(received))
 
-        event = ElectricFieldScanPointAcquired(
+        event = _narda_event(
             scan_id=uuid4(),
             point_index=3,
             position=Position2D(x=1.0, y=2.0),
             field_measurement=FieldMeasurement(components=(3.0, 4.0), timestamp=datetime.now()),
         )
-        self.event_bus.publish("electricfieldscanpointacquired", event)
+        self.event_bus.publish("nardapointacquired", event)
 
         self.assertEqual(len(received), 1)
         current, total, data = received[0]
@@ -215,14 +223,14 @@ class TestScanApplicationService(DiagramFriendlyTest):
         self.assertEqual(data["y"], 2.0)
         self.assertEqual(data["value"], {"field_0": 3.0, "field_1": 4.0, "norm": 5.0})
 
-        named_event = ElectricFieldScanPointAcquired(
+        named_event = _narda_event(
             scan_id=uuid4(),
             point_index=4,
             position=Position2D(x=1.0, y=2.0),
             field_measurement=FieldMeasurement(components=(3.0, 4.0), timestamp=datetime.now()),
             axis_labels=("X", "Y"),
         )
-        self.event_bus.publish("electricfieldscanpointacquired", named_event)
+        self.event_bus.publish("nardapointacquired", named_event)
         _, _, named_data = received[1]
         self.assertEqual(named_data["value"], {"field_x": 3.0, "field_y": 4.0, "norm": 5.0})
 

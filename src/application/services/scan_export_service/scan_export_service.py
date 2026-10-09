@@ -50,7 +50,7 @@ from domain.step_scan.events.scan_point_acquired.scan_point_acquired import Scan
 from domain.step_scan.events.scan_completed.scan_completed import ScanCompleted
 from domain.step_scan.events.scan_failed.scan_failed import ScanFailed
 from domain.step_scan.events.scan_cancelled.scan_cancelled import ScanCancelled
-from domain.step_scan.events.electric_field_scan_point_acquired.electric_field_scan_point_acquired import ElectricFieldScanPointAcquired
+from domain.narda_point.events.narda_point_acquired.narda_point_acquired import NardaPointAcquired
 from domain.electric_field_probe.electric_field_probe import ElectricFieldProbe
 from domain.electric_field_probe.events.electric_field_probe_connection_changed.electric_field_probe_connection_changed import ElectricFieldProbeConnectionChanged
 from domain.shared_kernel.events.aefi_voltage_reading_started.aefi_voltage_reading_started import AefiVoltageReadingStarted
@@ -71,7 +71,7 @@ class ScanExportService:
     Notes:
     - Works in an event-driven fashion: subscribes to `ScanStarted`,
       `ScanPointAcquired`, `ScanCompleted`, `ScanFailed`, `ScanCancelled`.
-    - Also handles `ElectricFieldScanPointAcquired` events for electric field probe data.
+    - Also handles `NardaPointAcquired` events for electric field probe data.
     - Uses `ExportConfigDTO` to know whether export is enabled and
       where to write files.
     """
@@ -136,7 +136,7 @@ class ScanExportService:
         self._event_bus.subscribe("scanfailed", self._on_event)
         self._event_bus.subscribe("scancancelled", self._on_event)
         # Subscribe to electric field scan events
-        self._event_bus.subscribe("electricfieldscanpointacquired", self._on_event)
+        self._event_bus.subscribe("nardapointacquired", self._on_event)
         # Passively cache the last-connected probe's identity — avoids a
         # constructor dependency on ElectricFieldProbeService.
         self._event_bus.subscribe("electricfieldprobeconnectionchanged", self._on_event)
@@ -189,8 +189,8 @@ class ScanExportService:
                 self._handle_scan_started(event)
             elif isinstance(event, ScanPointAcquired):
                 self._handle_scan_point_acquired(event)
-            elif isinstance(event, ElectricFieldScanPointAcquired):
-                self._handle_electric_field_scan_point_acquired(event)
+            elif isinstance(event, NardaPointAcquired):
+                self._handle_narda_point_acquired(event)
             elif isinstance(event, (ScanCompleted, ScanFailed, ScanCancelled)):
                 self._handle_scan_finished(event)
             elif isinstance(event, ElectricFieldProbeConnectionChanged):
@@ -274,7 +274,7 @@ class ScanExportService:
 
         # Field export rides on every active port that supports it — field
         # data is configured lazily on the first electric field point (see
-        # _handle_electric_field_scan_point_acquired), once the probe's
+        # _handle_narda_point_acquired), once the probe's
         # component count is known from the actual event.
         if any(hasattr(port, 'configure_field_data') for port in self._active_ports):
             self._field_export_active = True
@@ -288,7 +288,7 @@ class ScanExportService:
             port.write_point(data)
         self._points_written += 1
 
-    def _handle_electric_field_scan_point_acquired(self, event: ElectricFieldScanPointAcquired) -> None:
+    def _handle_narda_point_acquired(self, event: NardaPointAcquired) -> None:
         """Handle electric field scan point acquired events."""
         if not self._export_active or not self._field_export_active:
             return
@@ -624,9 +624,9 @@ class ScanExportService:
             "baseline_voltage_z_quadrature": b.voltage_z_quadrature if b else None,
         }
 
-    def _flatten_electric_field_point(self, event: ElectricFieldScanPointAcquired) -> Dict[str, Any]:
+    def _flatten_electric_field_point(self, event: NardaPointAcquired) -> Dict[str, Any]:
         """
-        Flatten an `ElectricFieldScanPointAcquired` event into a dict for export.
+        Flatten an `NardaPointAcquired` event into a dict for export.
 
         Includes:
         - scan_id, point_index

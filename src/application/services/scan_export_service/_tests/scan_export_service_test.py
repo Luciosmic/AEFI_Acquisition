@@ -41,14 +41,20 @@ from domain.electric_field_probe.electric_field_probe import ElectricFieldProbe
 from domain.electric_field_probe.events.electric_field_probe_connection_changed.electric_field_probe_connection_changed import (
     ElectricFieldProbeConnectionChanged,
 )
-from domain.step_scan.events.electric_field_scan_point_acquired.electric_field_scan_point_acquired import (
-    ElectricFieldScanPointAcquired,
-)
+from domain.narda_point.events.narda_point_acquired.narda_point_acquired import NardaPointAcquired
+from domain.narda_point.value_objects.narda_point_id.narda_point_id import NardaPointId
 from domain.electric_field_probe.value_objects.field_measurement.field_measurement import FieldMeasurement
 from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
 from domain.shared_kernel.events.aefi_voltage_reading_started.aefi_voltage_reading_started import AefiVoltageReadingStarted
 from domain.shared_kernel.events.aefi_voltage_sample_acquired.aefi_voltage_sample_acquired import AefiVoltageSampleAcquired
 from domain.shared_kernel.events.aefi_voltage_reading_stopped.aefi_voltage_reading_stopped import AefiVoltageReadingStopped
+
+
+def _narda_event(scan_id, point_index, position, field_measurement, baseline_field_measurement=None, axis_labels=None):
+    return NardaPointAcquired(
+        NardaPointId(uuid4()), scan_id, point_index, position, field_measurement,
+        baseline_field_measurement, axis_labels, 1,
+    )
 
 
 class FakeExportPort(IScanExportPort):
@@ -306,8 +312,8 @@ class TestScanExportServiceMetadata(unittest.TestCase):
         self.event_bus.publish("scanstarted", _make_scan_started_event())
 
         self.event_bus.publish(
-            "electricfieldscanpointacquired",
-            ElectricFieldScanPointAcquired(
+            "nardapointacquired",
+            _narda_event(
                 scan_id=uuid4(), point_index=0, position=Position2D(x=1.0, y=2.0),
                 field_measurement=FieldMeasurement(components=(1.0, 2.0, 3.0), timestamp=None),
             ),
@@ -383,12 +389,12 @@ class TestScanExportServiceMetadata(unittest.TestCase):
 
     def test_differential_field_point_carries_baseline_columns(self):
         self.event_bus.publish("scanstarted", _make_scan_started_event())
-        event = ElectricFieldScanPointAcquired(
+        event = _narda_event(
             scan_id=uuid4(), point_index=0, position=Position2D(x=1.0, y=2.0),
             field_measurement=FieldMeasurement(components=(0.9,), timestamp=None),
             baseline_field_measurement=FieldMeasurement(components=(0.1,), timestamp=None),
         )
-        self.event_bus.publish("electricfieldscanpointacquired", event)
+        self.event_bus.publish("nardapointacquired", event)
 
         row = self.export_port.field_points[0]
         self.assertEqual(row["baseline_field_components"], (0.1,))

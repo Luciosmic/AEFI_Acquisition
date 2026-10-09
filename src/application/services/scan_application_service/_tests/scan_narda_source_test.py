@@ -74,7 +74,7 @@ class TestScanNardaSource(unittest.TestCase):
         ScanClosureHandler(self.bus, self.uow, ("aefipointacquired", "nardapointacquired"))
         self.events: List[DomainEvent] = []
         for topic in ("scanstarted", "scanpointacquired", "scancompleted", "scanfailed",
-                      "nardapointacquired", "aefipointacquired", "electricfieldscanpointacquired"):
+                      "nardapointacquired", "aefipointacquired"):
             self.bus.subscribe(topic, self.events.append)
         self.terminal = threading.Event()
         self.bus.subscribe("scancompleted", lambda e: self.terminal.set())
@@ -130,10 +130,6 @@ class TestScanNardaSource(unittest.TestCase):
         self.assertEqual(names, ["NardaPointAcquired", "AefiPointAcquired"] * 4)
         narda = self._of_type(NardaPointAcquired)
         self.assertEqual([e.point_index for e in narda], [0, 1, 2, 3])
-        # The transitional legacy event follows each commit, one per point.
-        self.assertEqual(
-            len([e for e in self.events if type(e).__name__ == "ElectricFieldScanPointAcquired"]), 4
-        )
 
     def test_probe_not_ready_at_start_leaves_the_source_undeclared(self):
         self.assertTrue(self._service(_FieldProbePort(ready=False)).execute_scan(_dto()))
