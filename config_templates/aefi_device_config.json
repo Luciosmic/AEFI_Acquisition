@@ -1,18 +1,32 @@
 {
-  "schema_version": "2.0",
-  "description": "Hardware identity of the AEFI device: source geometry, excitation electronics, sensor, conditioning electronics",
+  "schema_version": "3.0",
+  "description": "Hardware identity of the AEFI device — single source of truth. Covers: source geometry, DDS-to-sphere wiring, excitation mode phases, sensor calibration, ADC channel mapping. DO NOT duplicate any of these values elsewhere in code or notes.",
+
+  "_changelog": {
+    "v3.0": "Complete rewrite. Fixed chip name swap (AD9106=DDS, ADS131A04=ADC). Removed incorrect 'S1=x+' axis convention (see _naming_warning). Added scan_frame_quadrant and full DDS wiring table. Added excitation_modes with per-sphere phase table. Sources: correspondance note 2025-06-12, position_visualizer.py, adapter_excitation_configuration_ad9106.py.",
+    "v2.0": "Added pairwise_distances, removed scalar d_source.",
+    "v1.0": "Initial version."
+  },
+
+  "_naming_warning": {
+    "Si_labels": "S1–S4 are the labels of the 4 physical connectors on the amplification board (board silkscreen: DDS1–DDS4). They identify an electronic output, NOT a spatial axis. S1 is NOT on the x+ axis. Any code or note that uses 'S1=x+', 'S2=x-', 'S3=y+', 'S4=y-' as pure-axis positions is incorrect and must be corrected. Use scan_frame_quadrant for spatial reference.",
+    "DDS_name_collision": "The term 'DDS' is overloaded: (1) AD9106 chip generator channels (AD9106_CH1, AD9106_CH2) set via the adapter; (2) board output connector labels (DDS1–DDS4 printed on the PCB). These are DIFFERENT things. This config uses 'AD9106_CHx' for the chip channels and 'Si' for board connectors/spheres.",
+    "source": "0_inbox/a-relire-et-renforcer-avant-integration/Notes volantes/ImagerieElectrique - Correspondance Poupette Sortie DDS - Connexion Carte Amplification Excitation.md (2025-06-12)"
+  },
 
   "excitation": {
+
     "sources_geometry": {
+      "_ref": "config_templates/NOTE - Source Frame Geometry.md — coordinate system and Distance Geometry Problem for pairwise distances.",
 
       "_note": "SUPERSEDED AS LIVE SOURCE (2026-09-23): SourceGeometryCalibrationService's append-only registry (.aefi_acquisition/calibrations/source_geometry_calibration.json) is now the source of truth for the current geometric configuration, with a dated, GUM-uncertainty-tracked history. This JSON block is read exactly once by the composition root (main.py), only to seed that registry's first entry when it has never been recorded yet (first boot). Edit values here only to change the seed used on a fresh .aefi_acquisition/ directory — the running application's actual geometry lives in the registry, not here.",
 
       "sphere_labels": {
-        "_note": "Quadrant convention (2026-07-24, corrects the earlier x+/x-/y+/y- half-axis labeling). S_i occupies a quadrant, not a half-axis. Source of truth: 'ImagerieElectrique - Correspondance Poupette Sortie DDS - Connexion Carte Amplification Excitation' and the 'NOTE - Source Frame Geometry' (Luis Saluden's vault, not tracked in this repo).",
-        "S1": "x_neg_y_pos",
-        "S2": "x_pos_y_neg",
-        "S3": "x_pos_y_pos",
-        "S4": "x_neg_y_neg"
+        "_note": "Quadrant convention (2026-07-24, corrects the earlier x+/x-/y+/y- half-axis labeling). S_i occupies a quadrant, not a half-axis. board_connector maps Si to the physical DDS output on the excitation board. Source of truth: 'ImagerieElectrique - Correspondance Poupette Sortie DDS - Connexion Carte Amplification Excitation' and the 'NOTE - Source Frame Geometry' (Luis Saluden's vault, not tracked in this repo).",
+        "S1": { "board_connector": "DDS1", "scan_frame_quadrant": "x_neg_y_pos" },
+        "S2": { "board_connector": "DDS2", "scan_frame_quadrant": "x_pos_y_neg" },
+        "S3": { "board_connector": "DDS3", "scan_frame_quadrant": "x_pos_y_pos" },
+        "S4": { "board_connector": "DDS4", "scan_frame_quadrant": "x_neg_y_neg" }
       },
 
       "sphere_diameters": {
@@ -84,6 +98,7 @@
     "clk_divider": 1,
     "iclk_divider": 1,
     "channels": {
+      "_note": "Logical channel assignment for lock-in demodulated sensor signals. Each of the 3 sensor axes produces real (in-phase I) and imaginary (quadrature Q) components.",
       "U_x_real": 1,
       "U_x_imag": 2,
       "U_y_real": 3,

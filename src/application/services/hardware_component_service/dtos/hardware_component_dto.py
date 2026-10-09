@@ -35,3 +35,12 @@ class HardwareComponentDTO:
     values: Dict[str, Any]
     uncharacterized: Tuple[str, ...]
     recorded_at: datetime
+
+
+@dataclass(frozen=True)
+class RecordCharacterizationResultDTO:
+    """Outcome of a recording. `name_already_recorded` = the name was already in
+    the catalog: the recording went through (history completed), the UI may
+    warn about an involuntary duplicate."""
+
+    name_already_recorded: bool

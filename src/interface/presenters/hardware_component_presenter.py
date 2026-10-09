@@ -56,6 +56,12 @@ class HardwareComponentPresenter(QObject):
         self._report(
             lambda: self._service.record_characterization(self.kind.key, component_name, values),
             f"{self.kind.label} : caractérisation de '{component_name}' enregistrée",
+            warning=lambda result: (
+                f" — attention : '{component_name}' existait déjà dans le catalogue "
+                "(historique complété, pas de nouveau composant)"
+                if result.name_already_recorded
+                else ""
+            ),
         )
 
     @Slot(str)
@@ -65,9 +71,9 @@ class HardwareComponentPresenter(QObject):
             f"{self.kind.label} : '{component_name}' monté",
         )
 
-    def _report(self, action, success_message: str) -> None:
+    def _report(self, action, success_message: str, warning=lambda _result: "") -> None:
         try:
-            action()
+            success_message += warning(action())
             logger.info(success_message)
             self.status_message.emit(success_message)
         except Exception as e:
