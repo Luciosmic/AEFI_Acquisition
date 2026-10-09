@@ -99,10 +99,13 @@ def _motion_failure_reason(error: MotionSyncError, where: str) -> str:
 
 
 from domain.step_scan.step_scan import StepScan
-from domain.step_scan.fly_scan import FlyScan
 from domain.scan.scan import Scan
 from domain.scan.value_objects.expected_source.expected_source import ExpectedSource
 from domain.aefi_point.events.aefi_point_acquired.aefi_point_acquired import AEFI_POINT_SOURCE
+from domain.aefi_line.aefi_line import AefiLine
+from domain.aefi_line.events.aefi_line_acquired.aefi_line_acquired import AEFI_LINE_SOURCE
+from domain.aefi_line.value_objects.aefi_line_id.aefi_line_id import AefiLineId
+from domain.aefi_line.value_objects.line_grid_point.line_grid_point import LineGridPoint
 from domain.scan.events.scan_closure_failed.scan_closure_failed import ScanClosureFailed
 from domain.aefi_point.aefi_point import AefiPoint
 from domain.aefi_point.value_objects.aefi_point_id.aefi_point_id import AefiPointId
@@ -306,13 +309,12 @@ class ScanApplicationService:
             self._acquired_count = 0
             self._expected_total = config.total_points()
             is_fly_scan = getattr(config, "fly_scan", False)
-            scan = FlyScan() if is_fly_scan else StepScan()
+            scan = StepScan()
             scan.start(config)
             self._current_scan = scan
             self._publish_events(scan.domain_events)
 
-            if not is_fly_scan:
-                self._open_thin_scan(scan, config)
+            self._open_thin_scan(scan, config)
 
             trajectory = create_trajectory(config)
 
@@ -337,12 +339,13 @@ class ScanApplicationService:
         scan_id = ScanId(step_scan.id)
         logger.info("ScanApplicationService: creating thin Scan scan_id=%s total_points=%s",
                     scan_id, config.total_points())
+        if getattr(config, "fly_scan", False):
+            # The fly-scan commits one AefiLine per line, not one AefiPoint per grid point.
+            sources = {AEFI_LINE_SOURCE: ExpectedSource(count=config.total_points() // config.points_per_line())}
+        else:
+            sources = {AEFI_POINT_SOURCE: ExpectedSource(count=config.total_points())}
         with self._unit_of_work as uow:
-            uow.scans.add(Scan(
-                id=scan_id,
-                expected_sources={AEFI_POINT_SOURCE: ExpectedSource(count=config.total_points())},
-                total_points=config.total_points(),
-            ))
+            uow.scans.add(Scan(id=scan_id, expected_sources=sources, total_points=config.total_points()))
             uow.commit()
         with self._unit_of_work as uow:
             scan = uow.scans.get(scan_id)
@@ -357,6 +360,25 @@ class ScanApplicationService:
         point.record_samples([Sample(m) for m in measurements])
         with self._unit_of_work as uow:
             uow.aefi_points.add(point)
+            uow.commit()
+
+    def _record_aefi_line(
+        self,
+        scan: StepScan,
+        line_index: int,
+        line: List[Position2D],
+        line_points: Dict[int, AefiVoltageMeasurement],
+        n: int,
+        before_commit: Optional[Callable[[], None]] = None,
+    ) -> None:
+        """One UoW per line: the commit publishes AefiLineAcquired, whose handler closes the thin Scan.
+        An incomplete line raises AefiLineIncompleteError (the loop turns it into a scan failure)."""
+        aefi_line = AefiLine(id=AefiLineId(uuid4()), scan_id=scan.id, line_index=line_index, expected_points=n)
+        aefi_line.record_points([LineGridPoint(k, line[k], m) for k, m in line_points.items()])
+        with self._unit_of_work as uow:
+            uow.aefi_lines.add(aefi_line)
+            if before_commit is not None:
+                before_commit()
             uow.commit()
 
     def _release_controls(self) -> None:
@@ -732,7 +754,7 @@ class ScanApplicationService:
 
     def _execute_fly_scan_loop(
         self,
-        scan: FlyScan,
+        scan: StepScan,
         trajectory: ScanTrajectory,
         config: StepScanConfig,
     ) -> None:
@@ -788,21 +810,22 @@ class ScanApplicationService:
         # Points passed while the scan is paused mid-line wait here: the
         # aggregate only takes results while RUNNING, the line goes on anyway.
         pending: List[ScanPointResult] = []
+        # Every grid point of the current line (held ones included), committed as one AefiLine.
+        line_points: Dict[int, AefiVoltageMeasurement] = {}
 
         def _emit(line_index: int, line: List[Position2D], grid_points) -> None:
             for k, measurement in grid_points:
+                line_points[k] = measurement
                 pending.append(ScanPointResult(
                     position=line[k], measurement=measurement, point_index=line_index * n + k,
                 ))
             if scan.status != ScanStatus.RUNNING:
                 return
             while pending:
-                scan.add_point_result(pending.pop(0))
+                scan.point_acquired(pending.pop(0))
                 self._acquired_count += 1
-                # Same rule as the step loop: streams released before
-                # ScanCompleted is published.
-                if scan.status == ScanStatus.COMPLETED:
-                    _release_streams()
+                # ScanPointAcquired goes out before the line is committed: the export closes
+                # on ScanCompleted, emitted by the thin Scan during the last commit.
                 self._publish_events(scan.domain_events)
 
         points = list(trajectory)
@@ -821,6 +844,7 @@ class ScanApplicationService:
 
         try:
             for line_index, line in enumerate(lines):
+                line_points.clear()
                 if not _may_continue():
                     return
 
@@ -902,9 +926,24 @@ class ScanApplicationService:
                     counts["live"], len(filled), t_end - t_start,
                 )
                 _emit(line_index, line, filled)
-                if not _may_continue():
-                    return
-                _emit(line_index, line, [])  # flush points held by a pause
+                while True:  # flush points held by a pause
+                    if not _may_continue():
+                        return
+                    _emit(line_index, line, [])
+                    if not pending:
+                        break
+                is_last_line = line_index == len(lines) - 1
+                # Streams released just before the last commit, which completes the thin Scan.
+                self._record_aefi_line(
+                    scan, line_index, line, line_points, n, _release_streams if is_last_line else None
+                )
+
+            # COMPLETED is posed by the thin Scan's ScanCompleted during the last commit.
+            if scan.status in (ScanStatus.RUNNING, ScanStatus.PAUSED):
+                _fail(
+                    f"trajectory exhausted before all expected points were acquired "
+                    f"({self._acquired_count}/{self._expected_total})"
+                )
 
         except Exception as exc:
             logger.error("Fly scan loop raised unexpectedly: scan_id=%s error=%s", scan.id, exc)

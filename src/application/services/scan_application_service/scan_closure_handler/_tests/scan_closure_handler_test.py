@@ -150,3 +150,33 @@ def test_undeclared_source_publishes_closure_failed():
     _acquire(uow, scan.id)
 
     assert len(failed) == 1 and "ScanSourceNotDeclaredError" in failed[0].reason
+
+
+def test_three_lines_complete_a_fly_scan_with_grid_point_total():
+    from domain.aefi_line.aefi_line import AefiLine
+    from domain.aefi_line.value_objects.aefi_line_id.aefi_line_id import AefiLineId
+    from domain.aefi_line.value_objects.line_grid_point.line_grid_point import LineGridPoint
+
+    bus = InMemoryEventBus()
+    uow = InMemoryUnitOfWork(bus)
+    ScanClosureHandler(bus, uow, ("aefipointacquired", "aefilineacquired"))
+    completed = []
+    bus.subscribe("scancompleted", completed.append)
+    scan = Scan(ScanId(uuid4()), {"aefi_line": ExpectedSource(3)}, total_points=12)
+    with uow:
+        uow.scans.add(scan)
+        scan.start()
+        uow.commit()
+
+    m = AefiVoltageMeasurement(1, 1, 1, 1, 1, 1, timestamp=datetime(2026, 10, 9, tzinfo=timezone.utc))
+    for line_index in range(3):
+        assert completed == []
+        line = AefiLine(AefiLineId(uuid4()), scan.id, line_index, 4)
+        with uow:
+            uow.aefi_lines.add(line)
+            line.record_points([LineGridPoint(k, Position2D(float(k), float(line_index)), m) for k in range(4)])
+            uow.commit()
+
+    assert scan.state is ScanState.COMPLETED
+    assert len(scan.received("aefi_line")) == 3
+    assert len(completed) == 1 and completed[0].total_points == 12

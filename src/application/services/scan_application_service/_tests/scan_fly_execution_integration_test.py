@@ -12,6 +12,9 @@ import pytest
 
 from application.services.scan_application_service.scan_application_service import ScanApplicationService
 from application.services.scan_application_service.dtos.scan_dtos import Scan2DConfigDTO
+from application.services.scan_application_service.scan_closure_handler.scan_closure_handler import ScanClosureHandler
+from domain.scan.value_objects.scan_id.scan_id import ScanId
+from domain.scan.value_objects.scan_state.scan_state import ScanState
 from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
 from domain.step_scan.value_objects.scan_status.scan_status import ScanStatus
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
@@ -42,6 +45,8 @@ def make_dto(**overrides):
 
 class _Stack(unittest.TestCase):
     def _service(self, motion_port):
+        self.uow = InMemoryUnitOfWork(self.event_bus)
+        ScanClosureHandler(self.event_bus, self.uow, ("aefipointacquired", "aefilineacquired"))
         self.continuous_service = AefiAcquisitionService(
             MockAefiAcquisitionExecutor(self.event_bus),
             RandomNoiseAcquisitionPort(noise_std=0.0, seed=1),
@@ -52,7 +57,7 @@ class _Stack(unittest.TestCase):
             self.event_bus,
             task_runner=ThreadPoolTaskRunner(),
             motion_sync=EventBusMotionSynchronizer(self.event_bus),
-            unit_of_work=InMemoryUnitOfWork(self.event_bus),
+            unit_of_work=self.uow,
         )
 
     def _run(self, dto, until="scancompleted", timeout=30.0):
@@ -62,6 +67,10 @@ class _Stack(unittest.TestCase):
         self.assertTrue(self.service.execute_scan(dto))
         self.assertTrue(done.wait(timeout=timeout), f"No {until} within timeout")
         return self.service._current_scan
+
+    def _lines(self, scan):
+        with self.uow as uow:
+            return uow.aefi_lines.list_by_scan(scan.id)
 
 
 class TestFlyScanOnTheFaithfulMotionStack(_Stack):
@@ -91,21 +100,32 @@ class TestFlyScanOnTheFaithfulMotionStack(_Stack):
         scan = self._run(make_dto())
 
         self.assertEqual(scan.status, ScanStatus.COMPLETED)
-        positions = [(p.position.x, p.position.y) for p in scan.points]
+        points = [p for line in self._lines(scan) for p in line.points]
+        positions = [(p.position.x, p.position.y) for p in points]
         self.assertEqual(positions, pytest.approx([
             (600.0, 600.0), (600.0, 610.0), (600.0, 620.0), (600.0, 630.0),
             (610.0, 630.0), (610.0, 620.0), (610.0, 610.0), (610.0, 600.0),
             (620.0, 600.0), (620.0, 610.0), (620.0, 620.0), (620.0, 630.0),
         ]))
-        self.assertEqual([p.point_index for p in scan.points], list(range(12)))
+        self.assertEqual([p.index_in_line for p in points], [0, 1, 2, 3] * 3)
 
-    def test_fly_scan_keeps_the_legacy_single_scan_completed_even_with_a_unit_of_work(self):
+    def test_scan_completed_is_emitted_once_by_the_thin_scan_after_every_point(self):
+        names = []
+        for topic in ("scanpointacquired", "scancompleted", "aefilineacquired"):
+            self.event_bus.subscribe(topic, lambda e: names.append(type(e).__name__))
         completed = []
         self.event_bus.subscribe("scancompleted", completed.append)
 
-        self._run(make_dto())
+        scan = self._run(make_dto())
 
         self.assertEqual(len(completed), 1)
+        self.assertEqual(completed[0].total_points, 12)
+        self.assertEqual(names.count("ScanPointAcquired"), 12)
+        self.assertEqual(names.count("AefiLineAcquired"), 3)
+        self.assertGreater(names.index("ScanCompleted"), len(names) - 1 - names[::-1].index("ScanPointAcquired"))
+        with self.uow as uow:
+            thin = uow.scans.get(ScanId(scan.id))
+        self.assertEqual(thin.state, ScanState.COMPLETED)
 
     def test_points_are_emitted_while_the_line_is_swept(self):
         self._run(make_dto())
@@ -138,7 +158,7 @@ class TestFlyScanFailureModes(_Stack):
         scan = self._run(make_dto(), until="scanfailed")
 
         self.assertEqual(scan.status, ScanStatus.FAILED)
-        self.assertEqual(len(scan.points), 0)
+        self.assertEqual(self._lines(scan), [])
 
     def test_fly_scan_rejects_differential_mode(self):
         self.assertFalse(self.service.execute_scan(make_dto(differential_mode=True)))
