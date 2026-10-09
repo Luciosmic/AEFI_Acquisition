@@ -15,7 +15,7 @@ Design:
 - Contexte `with uow:` ; rollback implicite si exception ou si commit() jamais appele.
 - register(aggregate) : appele par les repositories ; l'aggregat doit exposer `domain_events`
   (propriete qui retourne puis vide la liste).
-- Repositories exposes en attributs : aefi_points, aefi_lines, scans.
+- Repositories exposes en attributs : aefi_points, aefi_lines, narda_points, scans.
 """
 
 from abc import ABC, abstractmethod
@@ -23,12 +23,14 @@ from typing import Any
 
 from domain.aefi_line.repositories.i_aefi_line_repository import IAefiLineRepository
 from domain.aefi_point.repositories.i_aefi_point_repository import IAefiPointRepository
+from domain.narda_point.repositories.i_narda_point_repository import INardaPointRepository
 from domain.scan.repositories.i_scan_repository import IScanRepository
 
 
 class IUnitOfWork(ABC):
     aefi_points: IAefiPointRepository
     aefi_lines: IAefiLineRepository
+    narda_points: INardaPointRepository
     scans: IScanRepository
 
     @abstractmethod

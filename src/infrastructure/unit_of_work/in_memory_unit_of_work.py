@@ -5,6 +5,7 @@ from application.services.scan_application_service.ports.i_unit_of_work import I
 from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
 from infrastructure.persistence.aefi_line.in_memory_aefi_line_repository import InMemoryAefiLineRepository
 from infrastructure.persistence.aefi_point.in_memory_aefi_point_repository import InMemoryAefiPointRepository
+from infrastructure.persistence.narda_point.in_memory_narda_point_repository import InMemoryNardaPointRepository
 from infrastructure.persistence.scan.in_memory_scan_repository import InMemoryScanRepository
 
 logger = logging.getLogger(__name__)
@@ -19,6 +20,7 @@ class InMemoryUnitOfWork(IUnitOfWork):
         self._committed = False
         self.aefi_points = InMemoryAefiPointRepository(self)
         self.aefi_lines = InMemoryAefiLineRepository(self)
+        self.narda_points = InMemoryNardaPointRepository(self)
         self.scans = InMemoryScanRepository(self)
 
     def __enter__(self) -> "InMemoryUnitOfWork":

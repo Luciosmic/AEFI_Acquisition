@@ -1,0 +1,71 @@
+from datetime import datetime, timezone
+from uuid import uuid4
+
+from domain.electric_field_probe.value_objects.field_measurement.field_measurement import FieldMeasurement
+from domain.narda_point.events.narda_point_acquired.narda_point_acquired import NardaPointAcquired
+from domain.narda_point.narda_point import NardaPoint
+from domain.narda_point.value_objects.narda_point_id.narda_point_id import NardaPointId
+from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
+from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.unit_of_work.in_memory_unit_of_work import InMemoryUnitOfWork
+
+
+def _point(scan_id, n=2) -> NardaPoint:
+    return NardaPoint(NardaPointId(uuid4()), scan_id, Position2D(0.0, 0.0), 0, n)
+
+
+def _samples(n):
+    m = FieldMeasurement((1.0, 2.0), datetime(2026, 10, 9, tzinfo=timezone.utc))
+    return [m for _ in range(n)]
+
+
+def _setup():
+    bus = InMemoryEventBus()
+    received = []
+    bus.subscribe("nardapointacquired", received.append)
+    return InMemoryUnitOfWork(bus), received
+
+
+def test_add_get_and_list_by_scan():
+    uow, _ = _setup()
+    scan_a, scan_b = uuid4(), uuid4()
+    p1, p2, p3 = _point(scan_a), _point(scan_a), _point(scan_b)
+    with uow:
+        for p in (p1, p2, p3):
+            uow.narda_points.add(p)
+        assert uow.narda_points.get(p1.id) is p1
+        assert uow.narda_points.get(NardaPointId(uuid4())) is None
+        assert uow.narda_points.list_by_scan(scan_a) == [p1, p2]
+
+
+def test_event_published_after_commit_only():
+    uow, received = _setup()
+    point = _point(uuid4())
+    with uow:
+        uow.narda_points.add(point)
+        point.record_samples(_samples(2))
+        assert received == []
+        uow.commit()
+    assert len(received) == 1 and isinstance(received[0], NardaPointAcquired)
+    assert received[0].narda_point_id == point.id
+
+
+def test_nothing_published_on_rollback():
+    uow, received = _setup()
+    point = _point(uuid4())
+    with uow:
+        uow.narda_points.add(point)
+        point.record_samples(_samples(2))
+    assert received == []
+
+
+def test_point_fetched_in_a_later_transaction_publishes_its_event():
+    uow, received = _setup()
+    point = _point(uuid4())
+    with uow:
+        uow.narda_points.add(point)
+        uow.commit()
+    with uow:
+        uow.narda_points.get(point.id).record_samples(_samples(2))
+        uow.commit()
+    assert len(received) == 1
