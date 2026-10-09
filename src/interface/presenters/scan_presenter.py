@@ -24,6 +24,7 @@ class ScanPresenter(QObject, IScanOutputPort, metaclass=QABCMeta):
     scan_started = Signal(str, dict) # scan_id, config
     scan_progress = Signal(int, int, dict) # current, total, point_data
     scan_line_preview = Signal(int, int, dict) # line_index, index_in_line, point_data (provisional)
+    scan_line_abandoned = Signal(int, str) # line_index, reason
     field_scan_progress = Signal(int, int, dict) # current, total, point_data (electric field probe)
     scan_completed = Signal(int) # total_points
     scan_failed = Signal(str) # reason
@@ -98,6 +99,10 @@ class ScanPresenter(QObject, IScanOutputPort, metaclass=QABCMeta):
         
     def present_scan_line_preview(self, line_index: int, index_in_line: int, point_data: Any) -> None:
         self.scan_line_preview.emit(line_index, index_in_line, point_data)
+
+    def present_scan_line_abandoned(self, line_index: int, reason: str) -> None:
+        self.scan_line_abandoned.emit(line_index, reason)
+        self.status_updated.emit(f"Line {line_index + 1} abandoned ({reason}): it will be re-acquired from its start.")
 
     def present_field_scan_progress(self, current_point_index: int, total_points: int, point_data: Any) -> None:
         self.field_scan_progress.emit(current_point_index, total_points, point_data)

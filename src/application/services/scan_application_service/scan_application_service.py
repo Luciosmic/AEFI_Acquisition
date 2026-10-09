@@ -274,6 +274,7 @@ class ScanApplicationService:
         self._event_bus.subscribe("nardapointacquired", self._on_domain_event)
         # Provisional live preview of a fly line: UI only, never counted nor exported.
         self._event_bus.subscribe("aefilinepreviewpointacquired", self._on_domain_event)
+        self._event_bus.subscribe("aefilineabandoned", self._on_domain_event)
         self._event_bus.subscribe("scanclosurefailed", self._on_scan_closure_failed)
 
     def set_output_port(self, output_port: IScanOutputPort) -> None:
@@ -1151,6 +1152,11 @@ class ScanApplicationService:
                 "y": event.position.y,
                 "value": self._voltage_value(event.measurement),
             })
+
+        elif isinstance(event, AefiLineAbandoned):
+            if event.scan_id != getattr(self._current_scan, "id", None):
+                return
+            self._output_port.present_scan_line_abandoned(event.line_index, event.reason)
 
         elif isinstance(event, ScanPointAcquired):
             value = self._voltage_value(event.measurement)

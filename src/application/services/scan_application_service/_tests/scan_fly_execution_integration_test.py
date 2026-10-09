@@ -48,9 +48,13 @@ class _PreviewPort:
 
     def __init__(self, shown, service):
         self.shown = shown
+        self.abandoned_seen = []
 
     def present_scan_line_preview(self, line_index, index_in_line, point_data):
         self.shown.append((line_index, index_in_line, point_data))
+
+    def present_scan_line_abandoned(self, line_index, reason):
+        self.abandoned_seen.append((line_index, reason))
 
     def __getattr__(self, name):
         return lambda *a, **k: None
@@ -256,10 +260,13 @@ class TestFlyScanPauseRollsBackTheCurrentLine(_FaithfulFlyStack):
     def test_pause_mid_line_abandons_the_line_then_redoes_it_from_its_start(self):
         completed = []
         self.event_bus.subscribe("scancompleted", completed.append)
+        port = _PreviewPort([], self.service)
+        self.service.set_output_port(port)
         self._pause_in_line_1(lambda: threading.Timer(0.5, self.service.resume_scan).start())
 
         scan = self._run(make_dto(), timeout=90.0)
 
+        self.assertEqual(port.abandoned_seen, [(1, "paused")])  # routed to the output port
         self.assertEqual(self.lines_when_paused, [0])  # no AefiLine for line 1 while it is partial
         self._assert_whole_grid_once(scan)
         self.assertEqual([(a.line_index, a.reason) for a in self.abandoned], [(1, "paused")])
