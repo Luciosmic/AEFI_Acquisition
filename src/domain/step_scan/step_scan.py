@@ -78,9 +78,9 @@ class StepScan(SpatialScan):
         
         # Auto-complete if we reached expected points
         if self._expected_points > 0 and len(self._points) >= self._expected_points:
-            self.complete()
+            self.complete(len(self._points))
             
-    def complete(self) -> bool:
+    def complete(self, total_points: int = 0) -> bool:
         """Complete the scan. Returns False (no-op, idempotent) if already
         completed — a caller that doesn't pre-check status can log this
         instead of it passing silently (see ODD: idempotence is a log, not
@@ -89,7 +89,7 @@ class StepScan(SpatialScan):
             return False
 
         super().complete()
-        self._domain_events.append(ScanCompleted(scan_id=self.id, total_points=len(self._points)))
+        self._domain_events.append(ScanCompleted(scan_id=self.id, total_points=total_points))
         return True
         
     def fail(self, reason: str) -> None:
@@ -107,7 +107,7 @@ class StepScan(SpatialScan):
         super().cancel()
         self._domain_events.append(ScanCancelled(scan_id=self.id))
         
-    def pause(self) -> None:
+    def pause(self, current_point_index: int = 0) -> None:
         """Pause the scan (idempotent only for the already-PAUSED case —
         pausing a scan in a final status (COMPLETED/FAILED/CANCELLED) is an
         invariant rejection, not idempotence, and must raise like
@@ -120,13 +120,11 @@ class StepScan(SpatialScan):
         if self.status != ScanStatus.RUNNING:
             raise ValueError(f"Cannot pause scan when status is {self.status}")
         super().pause()
-        current_index = len(self._points)
-        self._domain_events.append(ScanPaused(scan_id=self.id, current_point_index=current_index))
+        self._domain_events.append(ScanPaused(scan_id=self.id, current_point_index=current_point_index))
         
-    def resume(self) -> None:
+    def resume(self, resume_from_point_index: int = 0) -> None:
         """Resume the scan execution after pause."""
         if self.status != ScanStatus.PAUSED:
             raise ValueError(f"Cannot resume scan when status is {self.status}")
         super().resume()
-        resume_index = len(self._points)
-        self._domain_events.append(ScanResumed(scan_id=self.id, resume_from_point_index=resume_index))
+        self._domain_events.append(ScanResumed(scan_id=self.id, resume_from_point_index=resume_from_point_index))

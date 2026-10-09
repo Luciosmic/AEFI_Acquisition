@@ -365,7 +365,7 @@ class ScanApplicationService:
         if not self._current_scan:
             return
         try:
-            self._current_scan.pause()
+            self._current_scan.pause(self._acquired_count)
         except ValueError as e:
             logger.warning("ScanApplicationService: pause_scan rejected — %s", e)
             return
@@ -373,7 +373,7 @@ class ScanApplicationService:
 
     def resume_scan(self) -> None:
         if self._current_scan:
-            self._current_scan.resume()
+            self._current_scan.resume(self._acquired_count)
             self._publish_events(self._current_scan.domain_events)
 
     def cancel_scan(self) -> None:
