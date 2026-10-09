@@ -802,8 +802,10 @@ class ScanApplicationService:
         stream keeps running. The positions the motion controller reports
         while it moves (PositionUpdated, ~every 150 ms) give the instant each
         grid point is crossed; the samples are read at that instant
-        (FlyScanLineProjector). Grid points are emitted live, as soon as
-        they are passed — never in a burst at the end of the line.
+        (FlyScanLineProjector). The points of a line are buffered and
+        published (ScanPointAcquired) only once the line is complete, just
+        before its commit: AefiLine is atomic, nothing of a line that is not
+        committed may reach the export.
 
         Software synchronization (reception timestamps in Python), accepted:
         an exploration before a step scan, no stabilization, no averaging.
@@ -846,22 +848,19 @@ class ScanApplicationService:
                 time.sleep(0.1)
             return scan.status == ScanStatus.RUNNING
 
-        # Points passed while the scan is paused mid-line wait here: the
-        # aggregate only takes results while RUNNING, the line goes on anyway.
-        pending: List[ScanPointResult] = []
-        # Every grid point of the current line (held ones included), committed as one AefiLine.
+        # Every grid point of the current line (held ones included): published as
+        # ScanPointAcquired and committed as one AefiLine only once the line is complete.
         line_points: Dict[int, AefiVoltageMeasurement] = {}
 
         def _emit(line_index: int, line: List[Position2D], grid_points) -> None:
             for k, measurement in grid_points:
                 line_points[k] = measurement
-                pending.append(ScanPointResult(
-                    position=line[k], measurement=measurement, point_index=line_index * n + k,
+
+        def _publish_line_points(line_index: int, line: List[Position2D]) -> None:
+            for k in sorted(line_points):
+                scan.point_acquired(ScanPointResult(
+                    position=line[k], measurement=line_points[k], point_index=line_index * n + k,
                 ))
-            if scan.status != ScanStatus.RUNNING:
-                return
-            while pending:
-                scan.point_acquired(pending.pop(0))
                 self._acquired_count += 1
                 # ScanPointAcquired goes out before the line is committed: the export closes
                 # on ScanCompleted, emitted by the thin Scan during the last commit.
@@ -965,12 +964,12 @@ class ScanApplicationService:
                     counts["live"], len(filled), t_end - t_start,
                 )
                 _emit(line_index, line, filled)
-                while True:  # flush points held by a pause
-                    if not _may_continue():
-                        return
-                    _emit(line_index, line, [])
-                    if not pending:
-                        break
+                # The line is complete: wait out a pause, then publish it whole.
+                if not _may_continue():
+                    return
+                logger.info("ScanApplicationService: scan_id=%s line=%d complete, publishing %d points then committing",
+                            scan.id, line_index, len(line_points))
+                _publish_line_points(line_index, line)
                 is_last_line = line_index == len(lines) - 1
                 # Streams released just before the last commit, which completes the thin Scan.
                 self._record_aefi_line(

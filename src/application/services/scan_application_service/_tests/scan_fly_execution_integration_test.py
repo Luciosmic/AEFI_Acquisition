@@ -127,15 +127,26 @@ class TestFlyScanOnTheFaithfulMotionStack(_Stack):
             thin = uow.scans.get(ScanId(scan.id))
         self.assertEqual(thin.state, ScanState.COMPLETED)
 
-    def test_points_are_emitted_while_the_line_is_swept(self):
-        self._run(make_dto())
+    def test_points_of_a_line_are_published_only_once_the_line_is_complete(self):
+        completed = []
+        self.event_bus.subscribe("scancompleted", completed.append)
+        scan = self._run(make_dto())
 
-        # Each line: a move to its start, then the sweep. Points 0..3 belong
-        # to the first sweep; at least one must be out before that sweep ends
-        # (the first version emitted the whole line after the motion).
-        first_sweep_done = [i for i, (kind, _) in enumerate(self.timeline) if kind == "motion_done"][1]
-        live = [index for kind, index in self.timeline[:first_sweep_done] if kind == "point"]
-        self.assertTrue(live, f"no point emitted during the first sweep: {self.timeline}")
+        # Per line: 4 ScanPointAcquired, all after the sweep's motion end — none during
+        # a sweep (AefiLine is atomic, nothing of an uncommitted line reaches the export).
+        done = [i for i, (kind, _) in enumerate(self.timeline) if kind == "motion_done"]
+        points = [i for i, (kind, _) in enumerate(self.timeline) if kind == "point"]
+        self.assertEqual(len(points), 12)
+        # moves alternate start/sweep: the sweep ends are motion_done #2, #4, #6 (1-based)
+        for line in range(3):
+            sweep_end = done[2 * line + 1]
+            line_points = points[4 * line:4 * line + 4]
+            self.assertTrue(all(i > sweep_end for i in line_points), self.timeline)
+            if line < 2:
+                self.assertTrue(all(i < done[2 * line + 2] for i in line_points), self.timeline)
+        self.assertEqual(len(completed), 1)
+        self.assertEqual(completed[0].total_points, 12)
+        self.assertEqual(self.service.get_status().current_point_index, 12)
 
     def test_fly_scan_releases_the_adc_stream_it_started(self):
         self._run(make_dto())
