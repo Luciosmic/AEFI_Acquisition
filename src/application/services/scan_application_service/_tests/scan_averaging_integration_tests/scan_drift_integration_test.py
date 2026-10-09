@@ -7,6 +7,8 @@ from datetime import datetime
 
 from domain.shared_kernel.value_objects.acquisition.aefi_voltage_measurement import AefiVoltageMeasurement
 from application.services.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
+from application.services.scan_application_service.scan_closure_handler.scan_closure_handler import ScanClosureHandler
+from infrastructure.unit_of_work.in_memory_unit_of_work import InMemoryUnitOfWork
 from application.services.scan_application_service.scan_application_service import ScanApplicationService
 from application.services.scan_application_service.dtos.scan_dtos import Scan2DConfigDTO
 from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
@@ -84,10 +86,13 @@ class TestScanDriftIntegration(unittest.TestCase):
         )
         task_runner = ThreadPoolTaskRunner()
         motion_sync = EventBusMotionSynchronizer(event_bus)
+        scan_uow = InMemoryUnitOfWork(event_bus)
+        ScanClosureHandler(event_bus, scan_uow)
         service = ScanApplicationService(
             motion_port, continuous_service, event_bus,
             task_runner=task_runner,
             motion_sync=motion_sync,
+            unit_of_work=scan_uow,
         )
 
         done = threading.Event()

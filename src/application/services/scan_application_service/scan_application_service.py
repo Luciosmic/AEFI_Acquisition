@@ -213,7 +213,8 @@ class ScanApplicationService:
         auxiliary_probes: Optional[List[AuxiliaryProbeChannel]] = None,
         output_port: Optional[IScanOutputPort] = None,
         excitation_service: Optional[ExcitationConfigurationService] = None,
-        unit_of_work: Optional[IUnitOfWork] = None,
+        *,
+        unit_of_work: IUnitOfWork,
     ):
         self._unit_of_work = unit_of_work
         self._motion_port = motion_port
@@ -303,7 +304,7 @@ class ScanApplicationService:
 
             is_fly_scan = getattr(config, "fly_scan", False)
             self._new_flow_scan_id = None
-            if self._unit_of_work is not None and not is_fly_scan:
+            if not is_fly_scan:
                 self._open_thin_scan(scan, config)
 
             trajectory = create_trajectory(config)
@@ -433,7 +434,6 @@ class ScanApplicationService:
         owner of each driver at all times.
         """
         adc_queue: "queue.Queue" = queue.Queue()
-        new_flow = self._new_flow_scan_id is not None and self._new_flow_scan_id == scan.id
 
         def _on_adc_sample(event: AefiVoltageSampleAcquired) -> None:
             adc_queue.put(event.sample)
@@ -659,33 +659,20 @@ class ScanApplicationService:
                 )
                 scan.add_point_result(point_result)
                 is_last_point = scan.status == ScanStatus.COMPLETED
-                if not new_flow:
-                    # add_point_result() auto-completes the aggregate (and queues
-                    # a ScanCompleted event) once the last point is in — release
-                    # streams *before* publishing so an observer reacting to
-                    # ScanCompleted never sees a stream this scan owns still
-                    # running.
-                    if is_last_point:
-                        _release_streams()
-                    self._publish_events(scan.domain_events)
-                else:
-                    # New flow: the legacy ScanPointAcquired goes out before the
-                    # commit (the export closes on ScanCompleted and would lose
-                    # the last row otherwise); the ScanCompleted queued by StepScan
-                    # is filtered by _publish_events — the thin Scan emits it, via
-                    # ScanClosureHandler, during the commit below.
-                    self._publish_events(scan.domain_events)
-                    if is_last_point:
-                        _release_streams()
-                    self._record_aefi_point(scan, position, measurements, config.averaging_per_position)
+                # The legacy ScanPointAcquired goes out before the commit (the
+                # export closes on ScanCompleted and would lose the last row
+                # otherwise); the ScanCompleted queued by StepScan is filtered by
+                # _publish_events — the thin Scan emits it, via ScanClosureHandler,
+                # during the commit below, once the streams are released.
+                self._publish_events(scan.domain_events)
+                if is_last_point:
+                    _release_streams()
+                self._record_aefi_point(scan, position, measurements, config.averaging_per_position)
 
             # --- Finalize ---
             if scan.status != ScanStatus.COMPLETED:
-                if new_flow:
-                    logger.error("ScanApplicationService: scan_id=%s trajectory exhausted before all points were acquired", scan.id)
-                    scan.fail("trajectory exhausted before all expected points were acquired")
-                else:
-                    scan.complete()
+                logger.error("ScanApplicationService: scan_id=%s trajectory exhausted before all points were acquired", scan.id)
+                scan.fail("trajectory exhausted before all expected points were acquired")
                 _release_streams()
                 self._publish_events(scan.domain_events)
 

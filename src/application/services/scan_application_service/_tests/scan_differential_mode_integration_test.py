@@ -16,6 +16,8 @@ import threading
 import unittest
 
 from application.services.scan_application_service.scan_application_service import ScanApplicationService
+from application.services.scan_application_service.scan_closure_handler.scan_closure_handler import ScanClosureHandler
+from infrastructure.unit_of_work.in_memory_unit_of_work import InMemoryUnitOfWork
 from application.services.scan_application_service.dtos.scan_dtos import Scan2DConfigDTO
 from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
 from application.services.excitation_configuration_service.excitation_configuration_service import (
@@ -72,6 +74,8 @@ class TestScanDifferentialModeIntegration(unittest.TestCase):
         self.continuous_service = continuous_service = AefiAcquisitionService(
             MockAefiAcquisitionExecutor(self.event_bus), self.acquisition_port, self.event_bus
         )
+        scan_uow = InMemoryUnitOfWork(self.event_bus)
+        ScanClosureHandler(self.event_bus, scan_uow)
         self.service = ScanApplicationService(
             self.motion_port,
             continuous_service,
@@ -79,6 +83,7 @@ class TestScanDifferentialModeIntegration(unittest.TestCase):
             task_runner=ThreadPoolTaskRunner(),
             motion_sync=EventBusMotionSynchronizer(self.event_bus),
             excitation_service=self.excitation_service,
+            unit_of_work=scan_uow,
         )
 
     def _subscribe_completion(self) -> threading.Event:

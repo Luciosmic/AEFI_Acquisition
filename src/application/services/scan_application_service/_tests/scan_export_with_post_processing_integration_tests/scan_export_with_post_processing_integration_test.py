@@ -21,6 +21,8 @@ from typing import Any, Dict, List
 import h5py
 
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from application.services.scan_application_service.scan_closure_handler.scan_closure_handler import ScanClosureHandler
+from infrastructure.unit_of_work.in_memory_unit_of_work import InMemoryUnitOfWork
 from infrastructure.execution.thread_pool_task_runner import ThreadPoolTaskRunner
 from infrastructure.execution.fake.fake_thread_pool_task_runner import FakeThreadPoolTaskRunner
 from infrastructure.execution.event_bus_motion_synchronizer import EventBusMotionSynchronizer
@@ -71,10 +73,13 @@ class ScanExportWithPostProcessingIntegrationTest(unittest.TestCase):
             MockAefiAcquisitionExecutor(self.event_bus), acquisition_port
         )
         motion_sync = EventBusMotionSynchronizer(self.event_bus)
+        scan_uow = InMemoryUnitOfWork(self.event_bus)
+        ScanClosureHandler(self.event_bus, scan_uow)
         self.scan_service = ScanApplicationService(
             motion_port, continuous_service, self.event_bus,
             task_runner=ThreadPoolTaskRunner(),
             motion_sync=motion_sync,
+            unit_of_work=scan_uow,
         )
 
         excitation_service = ExcitationConfigurationService(MockExcitationPort(), self.event_bus)

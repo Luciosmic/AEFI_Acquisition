@@ -25,3 +25,16 @@ Orchestrer le cycle de vie d'un scan 2D step-by-step. Ce service est le point ce
 - Un modèle « vitesse constante + demi-rampe » a été essayé avant : sur le banc en fast il courait devant le moteur (3,31 s prévues pour 3,80 s réelles, ~30 mm d'erreur en bout de ligne). La vitesse de consigne (`get_cruise_speed_mm_s`) ne sert plus qu'au délai max de la ligne.
 - La fin de mouvement est interrogée par attentes courtes (`FLY_MOTION_POLL_S`) pendant que les échantillons sont projetés ; délai max d'une ligne = 2 × durée prévue + 10 s. Par ligne : nombre d'échantillons, de positions, de points émis en direct et en fin de ligne, durée.
 - En fly-scan : une ligne commencée va au bout (le moteur n'est pas arrêté) ; l'annulation arrête aussitôt le traitement ; une pause en cours de ligne garde les points dépassés et les ajoute à la reprise, la ligne suivante attend la reprise ; sondes auxiliaires (Narda) ignorées ; mode différentiel refusé par la config.
+
+### Coexistence `StepScan` / `Scan` fin (step-scan et line-scan, hors fly-scan)
+
+- `IUnitOfWork` est injecté (obligatoire, par mot-clé) ; `main.py` instancie `InMemoryUnitOfWork` puis `ScanClosureHandler` **avant** ce service, pour que `ScanCompleted` sorte pendant la diffusion de `AefiPointAcquired`.
+- `_start_scan` crée le `Scan` fin (même id que le `StepScan`) en deux UoW fermées avant la soumission de la boucle : `PENDING` observable (zéro événement) puis `STARTED`. Le fly-scan n'en crée pas et garde l'héritage.
+- `StepScan` reste porteur des statuts, de pause/resume/cancel/fail, de `_points`, et émet `ScanStarted`, `ScanPointAcquired`, `ScanFailed`, `ScanCancelled`, `ScanPaused`, `ScanResumed`. Chaque point est en plus acquis dans un `AefiPoint` (une UoW par point) ; le handler clôt le `Scan` dans une transaction séparée.
+- **Émetteur unique de `ScanCompleted` par scan** : en step/line-scan c'est le `Scan` fin (via le handler) ; le `ScanCompleted` empilé par `StepScan` est filtré dans `_publish_events` **par scan** (`_new_flow_scan_id`), jamais globalement. En fly-scan, l'événement hérité est publié.
+- Seuls la boucle et le démarrage touchent l'UoW (instance unique, non thread-safe) ; pause/resume/cancel/`get_status` (thread UI) n'y accèdent jamais.
+- Ordre au dernier point : `ScanPointAcquired` hérité (avant le commit — fait publié avant validation transactionnelle, accepté pendant la coexistence, sinon l'export se ferme sur `ScanCompleted` et perd la dernière ligne), libération des flux, puis commit de l'`AefiPoint`.
+- **`ScanClosureFailed`** : le handler est synchrone et le bus avale les exceptions ; ce service s'y abonne, fait échouer le `StepScan` et publie `ScanFailed` (l'export se ferme, l'UI affiche l'échec). Si le `StepScan` est déjà `COMPLETED` (dernier point), `ScanFailed` est publié directement. La boucle s'arrête au point suivant ; les flux sont alors libérés après `ScanFailed` (écart assumé à la règle « flux libérés avant l'événement terminal »).
+- **Scan « zombie »** : le `Scan` fin n'a pas de `CANCELLED`/`FAILED` ; après annulation ou échec il reste `STARTED`.
+- **Journal par scan** : l'`AefiPointAcquired` du dernier point peut manquer, car l'export est déjà fermé quand il est publié.
+- `AefiPoint` n'a pas encore d'index ni de baseline ; la baseline différentielle reste portée par `ScanPointAcquired`.

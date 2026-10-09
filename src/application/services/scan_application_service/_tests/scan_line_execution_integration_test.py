@@ -8,6 +8,8 @@ import unittest
 import pytest
 
 from application.services.scan_application_service.scan_application_service import ScanApplicationService
+from application.services.scan_application_service.scan_closure_handler.scan_closure_handler import ScanClosureHandler
+from infrastructure.unit_of_work.in_memory_unit_of_work import InMemoryUnitOfWork
 from application.services.scan_application_service.dtos.scan_dtos import LineScanConfigDTO
 from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
 from domain.step_scan.value_objects.scan_status.scan_status import ScanStatus
@@ -37,6 +39,8 @@ class TestScanLineExecution(unittest.TestCase):
             RandomNoiseAcquisitionPort(noise_std=0.0, seed=1),
         )
         self.started = []
+        scan_uow = InMemoryUnitOfWork(self.event_bus)
+        ScanClosureHandler(self.event_bus, scan_uow)
         self.service = ScanApplicationService(
             MockMotionPort(event_bus=self.event_bus, motion_delay_ms=1),
             continuous_service,
@@ -44,6 +48,7 @@ class TestScanLineExecution(unittest.TestCase):
             task_runner=ThreadPoolTaskRunner(),
             motion_sync=EventBusMotionSynchronizer(self.event_bus),
             output_port=_StartRecordingOutputPort(self.started),
+            unit_of_work=scan_uow,
         )
 
     def _run(self, dto):

@@ -6,6 +6,8 @@ import unittest
 from domain.shared_kernel.operation_result import OperationResult
 from tool.diagram_friendly_test import DiagramFriendlyTest
 from application.services.scan_application_service.scan_application_service import ScanApplicationService
+from application.services.scan_application_service.scan_closure_handler.scan_closure_handler import ScanClosureHandler
+from infrastructure.unit_of_work.in_memory_unit_of_work import InMemoryUnitOfWork
 from application.services.scan_application_service.ports.i_scan_output_port import IScanOutputPort
 from application.services.scan_application_service.dtos.scan_dtos import Scan2DConfigDTO
 from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
@@ -50,10 +52,13 @@ class TestScanHybridArchitecture(DiagramFriendlyTest):
 
         # 2. CREATE SERVICE
         self.log_interaction("TestAgent", "CREATE", "ScanApplicationService", "Initialize Service")
+        scan_uow = InMemoryUnitOfWork(event_bus)
+        ScanClosureHandler(event_bus, scan_uow)
         service = ScanApplicationService(
             motion_port, aefi_acquisition_service, event_bus,
             task_runner=task_runner,
             motion_sync=motion_sync,
+            unit_of_work=scan_uow,
         )
 
         # 3. WIRE OUTPUT PORT

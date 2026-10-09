@@ -26,6 +26,8 @@ from domain.step_scan.events.scan_failed.scan_failed import ScanFailed
 from domain.step_scan.events.electric_field_scan_point_acquired.electric_field_scan_point_acquired import ElectricFieldScanPointAcquired
 from domain.electric_field_probe.value_objects.field_measurement.field_measurement import FieldMeasurement
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from application.services.scan_application_service.scan_closure_handler.scan_closure_handler import ScanClosureHandler
+from infrastructure.unit_of_work.in_memory_unit_of_work import InMemoryUnitOfWork
 from infrastructure.execution.thread_pool_task_runner import ThreadPoolTaskRunner
 from infrastructure.execution.event_bus_motion_synchronizer import EventBusMotionSynchronizer
 from tool.diagram_friendly_test import DiagramFriendlyTest
@@ -51,12 +53,15 @@ class TestScanApplicationService(DiagramFriendlyTest):
         task_runner = ThreadPoolTaskRunner()
         motion_sync = EventBusMotionSynchronizer(self.event_bus)
 
+        self.scan_uow = InMemoryUnitOfWork(self.event_bus)
+        ScanClosureHandler(self.event_bus, self.scan_uow)
         self.service = ScanApplicationService(
             self.motion_port,
             self.aefi_acquisition_service,
             self.event_bus,
             task_runner=task_runner,
             motion_sync=motion_sync,
+            unit_of_work=self.scan_uow,
         )
 
     def on_event(self, event: DomainEvent):
@@ -243,6 +248,7 @@ class TestScanApplicationService(DiagramFriendlyTest):
             task_runner=ThreadPoolTaskRunner(),
             motion_sync=EventBusMotionSynchronizer(self.event_bus),
             auxiliary_probes=[narda_channel],
+            unit_of_work=self.scan_uow,  # one handler per bus: reuse the setUp UoW
         )
         self.event_bus.subscribe('scanpointacquired', self.on_event)
         self.event_bus.subscribe('scancompleted', self.on_event)
@@ -284,6 +290,7 @@ class TestScanApplicationService(DiagramFriendlyTest):
             task_runner=ThreadPoolTaskRunner(),
             motion_sync=EventBusMotionSynchronizer(self.event_bus),
             auxiliary_probes=[narda_channel],
+            unit_of_work=self.scan_uow,  # one handler per bus: reuse the setUp UoW
         )
         # Speed up the test: no point in waiting the real 30s budget to see
         # the collection time out.

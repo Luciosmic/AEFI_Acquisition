@@ -27,6 +27,8 @@ except ImportError:
 
 from infrastructure.hardware.micro_controller.mcu_composition_root import MCUCompositionRoot
 from application.services.scan_application_service.scan_application_service import ScanApplicationService
+from application.services.scan_application_service.scan_closure_handler.scan_closure_handler import ScanClosureHandler
+from infrastructure.unit_of_work.in_memory_unit_of_work import InMemoryUnitOfWork
 from infrastructure.execution.step_scan_executor import StepScanExecutor
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
 from application.services.scan_application_service.dtos.scan_dtos import Scan2DConfigDTO
@@ -63,11 +65,14 @@ def verify_scan_motion():
         event_bus=event_bus
     )
     
+    scan_uow = InMemoryUnitOfWork(event_bus)
+    ScanClosureHandler(event_bus, scan_uow)
     service = ScanApplicationService(
         motion_port=arcus_root.motion,
         acquisition_port=mcu_root.acquisition,
         event_bus=event_bus,
-        scan_executor=executor
+        scan_executor=executor,
+        unit_of_work=scan_uow,
     )
     
     # 2b. Setup Motion Control Presenter (Subscriber for PositionUpdated)
