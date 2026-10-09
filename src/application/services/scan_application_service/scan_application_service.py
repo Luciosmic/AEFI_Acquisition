@@ -100,6 +100,7 @@ def _motion_failure_reason(error: MotionSyncError, where: str) -> str:
 
 from domain.step_scan.step_scan import StepScan
 from domain.scan.scan import Scan
+from domain.scan.events.scan_closure_failed.scan_closure_failed import ScanClosureFailed
 from domain.aefi_point.aefi_point import AefiPoint
 from domain.aefi_point.value_objects.aefi_point_id.aefi_point_id import AefiPointId
 from domain.aefi_point.value_objects.sample.sample import Sample
@@ -239,6 +240,7 @@ class ScanApplicationService:
         self._event_bus.subscribe("scanpaused", self._on_domain_event)
         self._event_bus.subscribe("scanresumed", self._on_domain_event)
         self._event_bus.subscribe("electricfieldscanpointacquired", self._on_domain_event)
+        self._event_bus.subscribe("scanclosurefailed", self._on_scan_closure_failed)
 
     def set_output_port(self, output_port: IScanOutputPort) -> None:
         self._output_port = output_port
@@ -487,7 +489,7 @@ class ScanApplicationService:
 
         try:
             for i, position in enumerate(trajectory):
-                if scan.status == ScanStatus.CANCELLED:
+                if scan.status in (ScanStatus.CANCELLED, ScanStatus.FAILED):
                     return
 
                 while scan.status == ScanStatus.PAUSED:
@@ -1019,6 +1021,25 @@ class ScanApplicationService:
             }
             total = self._current_scan.expected_points if self._current_scan else 0
             self._output_port.present_field_scan_progress(event.point_index, total, data)
+
+    def _on_scan_closure_failed(self, event: ScanClosureFailed) -> None:
+        """The thin Scan could not be closed (the handler is synchronous and the bus swallows
+        exceptions): turn it into a visible failure so the export closes and the UI shows it."""
+        scan = self._current_scan
+        if scan is None or scan.id != event.scan_id:
+            logger.warning("ScanApplicationService: ScanClosureFailed scan_id=%s is not the current scan, ignored", event.scan_id)
+            return
+        reason = f"scan closure failed: {event.reason}"
+        logger.error("ScanApplicationService: scan_id=%s %s", scan.id, reason)
+        if scan.status in (ScanStatus.RUNNING, ScanStatus.PAUSED):
+            scan.fail(reason)
+            self._publish_events(scan.domain_events)
+        elif scan.status == ScanStatus.COMPLETED:
+            # Last point: StepScan is already COMPLETED (cannot fail) but the legacy
+            # ScanCompleted was withheld — ScanFailed is the only terminal event observers get.
+            self._publish_events([ScanFailed(scan_id=scan.id, reason=reason)])
+        else:
+            logger.info("ScanApplicationService: scan_id=%s already %s, nothing to do", scan.id, scan.status)
 
     def _publish_events(self, events: List[DomainEvent]) -> None:
         for event in events:

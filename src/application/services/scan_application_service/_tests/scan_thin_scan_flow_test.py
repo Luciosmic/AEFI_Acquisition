@@ -90,6 +90,24 @@ class TestScanThinScanFlow(unittest.TestCase):
         self.assertTrue(self._wait_terminal())
         self.assertEqual(self.streams_running_at_completion, [False])
 
+    def test_thin_scan_not_found_turns_into_scan_failed(self):
+        real_get = self.uow.scans.get
+        calls = []
+
+        def get_once(scan_id):  # the start finds it, the closure does not
+            calls.append(scan_id)
+            return real_get(scan_id) if len(calls) == 1 else None
+
+        self.uow.scans.get = get_once
+        self.assertTrue(self.service.execute_scan(_dto()))
+        self.assertTrue(self._wait_terminal())
+
+        names = [type(e).__name__ for e in self.events]
+        self.assertEqual(names.count("ScanFailed"), 1)
+        self.assertEqual(names.count("ScanCompleted"), 0)
+        self.assertEqual(names.count("ScanPointAcquired"), 1)  # loop stops after the failure
+        self.assertEqual(self.service._current_scan.status.name, "FAILED")
+
 
 if __name__ == "__main__":
     unittest.main()
