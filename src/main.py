@@ -360,7 +360,8 @@ def main(hardware_config: dict | None = None):
 
     # Handler before service: ScanCompleted must come out during the dispatch of AefiPointAcquired.
     scan_unit_of_work = InMemoryUnitOfWork(event_bus)
-    scan_closure_handler = ScanClosureHandler(event_bus, scan_unit_of_work)
+    # One topic per probe aggregate whose acquisitions the Scan references (its source is declared in the Scan).
+    scan_closure_handler = ScanClosureHandler(event_bus, scan_unit_of_work, ("aefipointacquired",))
     scan_service = ScanApplicationService(
         hw.motion_port, continuous_service, event_bus,
         unit_of_work=scan_unit_of_work,

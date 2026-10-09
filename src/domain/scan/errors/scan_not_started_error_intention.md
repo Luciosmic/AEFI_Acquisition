@@ -10,4 +10,4 @@ Sans ce refus, un point reçu d'un scan encore PENDING serait compté, ce qui si
 
 ## Design
 
-- Hérite de `ValueError`, porte `scan_id` et `aefi_point_id`.
+- Hérite de `ValueError`, porte `scan_id` et `acquisition_id`.

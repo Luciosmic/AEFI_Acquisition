@@ -31,7 +31,7 @@ class TestScanControlCommands(unittest.TestCase):
     def setUp(self):
         self.event_bus = InMemoryEventBus()
         uow = InMemoryUnitOfWork(self.event_bus)
-        ScanClosureHandler(self.event_bus, uow)
+        ScanClosureHandler(self.event_bus, uow, ("aefipointacquired",))
         self.aefi = AefiAcquisitionService(MockAefiAcquisitionExecutor(self.event_bus), MockAcquisitionPort())
         self.service = ScanApplicationService(
             MockMotionPort(event_bus=self.event_bus, motion_delay_ms=5),

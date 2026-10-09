@@ -10,4 +10,4 @@ Sans ce refus, un point inattendu reçu après complétion ferait dépasser le n
 
 ## Design
 
-- Hérite de `ValueError`, porte `scan_id` et `aefi_point_id`. Un id déjà reçu reste un no-op, pas une erreur.
+- Hérite de `ValueError`, porte `scan_id` et `acquisition_id`. Un id déjà reçu reste un no-op, pas une erreur.

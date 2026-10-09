@@ -74,7 +74,7 @@ class ScanExportWithPostProcessingIntegrationTest(unittest.TestCase):
         )
         motion_sync = EventBusMotionSynchronizer(self.event_bus)
         scan_uow = InMemoryUnitOfWork(self.event_bus)
-        ScanClosureHandler(self.event_bus, scan_uow)
+        ScanClosureHandler(self.event_bus, scan_uow, ("aefipointacquired",))
         self.scan_service = ScanApplicationService(
             motion_port, continuous_service, self.event_bus,
             task_runner=ThreadPoolTaskRunner(),

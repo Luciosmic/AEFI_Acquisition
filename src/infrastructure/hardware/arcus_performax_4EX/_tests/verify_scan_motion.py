@@ -66,7 +66,7 @@ def verify_scan_motion():
     )
     
     scan_uow = InMemoryUnitOfWork(event_bus)
-    ScanClosureHandler(event_bus, scan_uow)
+    ScanClosureHandler(event_bus, scan_uow, ("aefipointacquired",))
     service = ScanApplicationService(
         motion_port=arcus_root.motion,
         acquisition_port=mcu_root.acquisition,

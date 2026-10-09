@@ -54,7 +54,7 @@ class TestScanApplicationService(DiagramFriendlyTest):
         motion_sync = EventBusMotionSynchronizer(self.event_bus)
 
         self.scan_uow = InMemoryUnitOfWork(self.event_bus)
-        ScanClosureHandler(self.event_bus, self.scan_uow)
+        ScanClosureHandler(self.event_bus, self.scan_uow, ("aefipointacquired",))
         self.service = ScanApplicationService(
             self.motion_port,
             self.aefi_acquisition_service,

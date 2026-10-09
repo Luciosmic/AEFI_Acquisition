@@ -1,6 +1,6 @@
 from uuid import uuid4
 
-from domain.aefi_point.value_objects.aefi_point_id.aefi_point_id import AefiPointId
+from domain.scan.value_objects.expected_source.expected_source import ExpectedSource
 from domain.scan.scan import Scan
 from domain.scan.value_objects.scan_id.scan_id import ScanId
 from domain.step_scan.events.scan_completed.scan_completed import ScanCompleted
@@ -13,7 +13,7 @@ def test_add_get_and_event_published_after_commit():
     received = []
     bus.subscribe("scancompleted", received.append)
     uow = InMemoryUnitOfWork(bus)
-    scan = Scan(ScanId(uuid4()), 1)
+    scan = Scan(ScanId(uuid4()), {"aefi_point": ExpectedSource(1)}, 1)
     with uow:
         uow.scans.add(scan)
         assert uow.scans.get(scan.id) is scan
@@ -22,7 +22,7 @@ def test_add_get_and_event_published_after_commit():
     with uow:
         s = uow.scans.get(scan.id)
         s.start()
-        s.mark_point_acquired(AefiPointId(uuid4()))
+        s.mark_acquired("aefi_point", uuid4())
         assert received == []
         uow.commit()
     assert len(received) == 1 and isinstance(received[0], ScanCompleted)

@@ -101,6 +101,8 @@ def _motion_failure_reason(error: MotionSyncError, where: str) -> str:
 from domain.step_scan.step_scan import StepScan
 from domain.step_scan.fly_scan import FlyScan
 from domain.scan.scan import Scan
+from domain.scan.value_objects.expected_source.expected_source import ExpectedSource
+from domain.aefi_point.events.aefi_point_acquired.aefi_point_acquired import AEFI_POINT_SOURCE
 from domain.scan.events.scan_closure_failed.scan_closure_failed import ScanClosureFailed
 from domain.aefi_point.aefi_point import AefiPoint
 from domain.aefi_point.value_objects.aefi_point_id.aefi_point_id import AefiPointId
@@ -333,10 +335,14 @@ class ScanApplicationService:
         """Create then start the thin Scan (one aggregate per transaction, both UoW closed
         before the loop is submitted)."""
         scan_id = ScanId(step_scan.id)
-        logger.info("ScanApplicationService: creating thin Scan scan_id=%s expected_points=%s",
+        logger.info("ScanApplicationService: creating thin Scan scan_id=%s total_points=%s",
                     scan_id, config.total_points())
         with self._unit_of_work as uow:
-            uow.scans.add(Scan(id=scan_id, expected_points=config.total_points()))
+            uow.scans.add(Scan(
+                id=scan_id,
+                expected_sources={AEFI_POINT_SOURCE: ExpectedSource(count=config.total_points())},
+                total_points=config.total_points(),
+            ))
             uow.commit()
         with self._unit_of_work as uow:
             scan = uow.scans.get(scan_id)

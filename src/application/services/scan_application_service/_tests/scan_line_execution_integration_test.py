@@ -42,7 +42,7 @@ class TestScanLineExecution(unittest.TestCase):
         self.acquired = []
         self.event_bus.subscribe("scanpointacquired", self.acquired.append)
         scan_uow = InMemoryUnitOfWork(self.event_bus)
-        ScanClosureHandler(self.event_bus, scan_uow)
+        ScanClosureHandler(self.event_bus, scan_uow, ("aefipointacquired",))
         self.service = ScanApplicationService(
             MockMotionPort(event_bus=self.event_bus, motion_delay_ms=1),
             continuous_service,

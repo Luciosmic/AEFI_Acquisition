@@ -82,7 +82,7 @@ class TestScanAveragingIntegration(unittest.TestCase):
         task_runner = ThreadPoolTaskRunner()
         motion_sync = EventBusMotionSynchronizer(event_bus)
         scan_uow = InMemoryUnitOfWork(event_bus)
-        ScanClosureHandler(event_bus, scan_uow)
+        ScanClosureHandler(event_bus, scan_uow, ("aefipointacquired",))
         service = ScanApplicationService(
             motion_port, continuous_service, event_bus,
             task_runner=task_runner,

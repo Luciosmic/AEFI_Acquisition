@@ -8,6 +8,7 @@ from domain.aefi_point.value_objects.aefi_point_id.aefi_point_id import AefiPoin
 from domain.aefi_point.value_objects.sample.sample import Sample
 from domain.scan.events.scan_closure_failed.scan_closure_failed import ScanClosureFailed
 from domain.scan.scan import Scan
+from domain.scan.value_objects.expected_source.expected_source import ExpectedSource
 from domain.scan.value_objects.scan_id.scan_id import ScanId
 from domain.scan.value_objects.scan_state.scan_state import ScanState
 from domain.shared_kernel.value_objects.acquisition.aefi_voltage_measurement import AefiVoltageMeasurement
@@ -25,7 +26,7 @@ def _samples(n=2):
 def _setup():
     bus = InMemoryEventBus()
     uow = InMemoryUnitOfWork(bus)
-    ScanClosureHandler(bus, uow)
+    ScanClosureHandler(bus, uow, ("aefipointacquired",))
     completed, failed = [], []
     bus.subscribe("scancompleted", completed.append)
     bus.subscribe("scanclosurefailed", failed.append)
@@ -43,7 +44,7 @@ def _acquire(uow, scan_id, point=None):
 
 def test_three_points_complete_the_scan_through_separate_transactions():
     uow, completed, failed = _setup()
-    scan = Scan(ScanId(uuid4()), 3)
+    scan = Scan(ScanId(uuid4()), {"aefi_point": ExpectedSource(3)}, 3)
     with uow:
         uow.scans.add(scan)
         scan.start()
@@ -54,7 +55,7 @@ def test_three_points_complete_the_scan_through_separate_transactions():
         _acquire(uow, scan.id)
 
     assert scan.state is ScanState.COMPLETED
-    assert len(scan.received_point_ids) == 3
+    assert len(scan.received("aefi_point")) == 3
     assert len(completed) == 1 and isinstance(completed[0], ScanCompleted) and completed[0].scan_id == scan.id
     assert failed == []
 
@@ -67,12 +68,12 @@ def test_unknown_scan_publishes_closure_failed_without_propagating():
     assert completed == []
     (event,) = failed
     assert isinstance(event, ScanClosureFailed)
-    assert event.scan_id == scan_id and event.aefi_point_id == point.id and "introuvable" in event.reason
+    assert event.scan_id == scan_id and event.source == "aefi_point" and event.acquisition_id == point.id and "introuvable" in event.reason
 
 
 def test_point_received_before_scan_start_publishes_closure_failed():
     uow, completed, failed = _setup()
-    scan = Scan(ScanId(uuid4()), 1)
+    scan = Scan(ScanId(uuid4()), {"aefi_point": ExpectedSource(1)}, 1)
     with uow:
         uow.scans.add(scan)
         uow.commit()
@@ -84,7 +85,7 @@ def test_point_received_before_scan_start_publishes_closure_failed():
 
 def test_duplicate_event_is_a_logged_noop(caplog):
     uow, completed, failed = _setup()
-    scan = Scan(ScanId(uuid4()), 2)
+    scan = Scan(ScanId(uuid4()), {"aefi_point": ExpectedSource(2)}, 2)
     with uow:
         uow.scans.add(scan)
         scan.start()
@@ -95,7 +96,7 @@ def test_duplicate_event_is_a_logged_noop(caplog):
     with caplog.at_level(logging.INFO):
         uow._event_bus.publish("aefipointacquired", handler_event)
 
-    assert len(scan.received_point_ids) == 1
+    assert len(scan.received("aefi_point")) == 1
     assert failed == [] and completed == []
     assert "rien a faire" in caplog.text
 
@@ -107,3 +108,45 @@ def _first_event(point):
         aefi_point_id=point.id, scan_id=point.scan_id, position=point.position,
         measurement=point.measurement, samples_count=point.expected_samples,
     )
+
+
+def test_handler_listens_to_every_declared_topic_and_any_source():
+    from dataclasses import dataclass
+    from domain.shared_kernel.events.domain_event import DomainEvent
+
+    @dataclass(frozen=True)
+    class NardaPointAcquired(DomainEvent):
+        scan_id: object
+        acquisition_id: object
+        source: str = "narda_point"
+
+    bus = InMemoryEventBus()
+    uow = InMemoryUnitOfWork(bus)
+    ScanClosureHandler(bus, uow, ("nardapointacquired",))
+    completed = []
+    bus.subscribe("scancompleted", completed.append)
+    scan = Scan(ScanId(uuid4()), {"narda_point": ExpectedSource(1)}, 1)
+    with uow:
+        uow.scans.add(scan)
+        scan.start()
+        uow.commit()
+
+    bus.publish("nardapointacquired", NardaPointAcquired(scan_id=scan.id, acquisition_id=uuid4()))
+
+    assert scan.state is ScanState.COMPLETED and len(completed) == 1
+
+
+def test_undeclared_source_publishes_closure_failed():
+    bus = InMemoryEventBus()
+    uow = InMemoryUnitOfWork(bus)
+    ScanClosureHandler(bus, uow, ("aefipointacquired",))
+    failed = []
+    bus.subscribe("scanclosurefailed", failed.append)
+    scan = Scan(ScanId(uuid4()), {"aefi_line": ExpectedSource(1)}, 1)
+    with uow:
+        uow.scans.add(scan)
+        scan.start()
+        uow.commit()
+    _acquire(uow, scan.id)
+
+    assert len(failed) == 1 and "ScanSourceNotDeclaredError" in failed[0].reason

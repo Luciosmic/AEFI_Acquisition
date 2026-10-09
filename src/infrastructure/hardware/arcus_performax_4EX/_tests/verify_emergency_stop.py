@@ -67,7 +67,7 @@ def verify_emergency_stop():
     )
     
     scan_uow = InMemoryUnitOfWork(event_bus)
-    ScanClosureHandler(event_bus, scan_uow)
+    ScanClosureHandler(event_bus, scan_uow, ("aefipointacquired",))
     scan_service = ScanApplicationService(
         motion_port=arcus_root.motion,
         acquisition_port=mock_acquisition, # Use Mock

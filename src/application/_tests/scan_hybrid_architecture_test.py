@@ -53,7 +53,7 @@ class TestScanHybridArchitecture(DiagramFriendlyTest):
         # 2. CREATE SERVICE
         self.log_interaction("TestAgent", "CREATE", "ScanApplicationService", "Initialize Service")
         scan_uow = InMemoryUnitOfWork(event_bus)
-        ScanClosureHandler(event_bus, scan_uow)
+        ScanClosureHandler(event_bus, scan_uow, ("aefipointacquired",))
         service = ScanApplicationService(
             motion_port, aefi_acquisition_service, event_bus,
             task_runner=task_runner,

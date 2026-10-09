@@ -79,7 +79,7 @@ class TestScanExportClosesAfterLastPoint(unittest.TestCase):
         self.journal: List[str] = []
         self.event_bus = InMemoryEventBus()
         uow = InMemoryUnitOfWork(self.event_bus)
-        ScanClosureHandler(self.event_bus, uow)
+        ScanClosureHandler(self.event_bus, uow, ("aefipointacquired",))
 
         excitation_service = ExcitationConfigurationService(MockExcitationPort(), self.event_bus)
         excitation_service.set_excitation(

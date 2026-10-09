@@ -13,3 +13,4 @@ Sans fait publié à l'acquisition d'un point, le handler du `Scan` doit relire 
 - `@dataclass(frozen=True)` héritant de `DomainEvent` ; `occurred_on` vient de la base.
 - Émis par `AefiPoint.record_samples` uniquement. Topic : `"aefipointacquired"`.
 - L'unité de la position n'est pas inlinée : `Position2D` ne la déclare pas, à trancher quand ce VO sera enrichi.
+- Respecte le contrat `ProbeAcquisitionEvent` du `Scan` sans l'importer : `source` (constante `AEFI_POINT_SOURCE = "aefi_point"`) et `acquisition_id` (= `aefi_point_id`) sont des propriétés, aucun champ ajouté.

@@ -18,3 +18,13 @@ def test_event_is_a_frozen_domain_event_with_timestamp():
     assert event.occurred_on is not None
     with pytest.raises(dataclasses.FrozenInstanceError):
         event.samples_count = 1
+
+
+def test_event_respects_the_probe_acquisition_contract():
+    from domain.scan.events.probe_acquisition_event.probe_acquisition_event import ProbeAcquisitionEvent
+
+    m = AefiVoltageMeasurement(0, 0, 0, 0, 0, 0, timestamp=datetime(2026, 10, 9, tzinfo=timezone.utc))
+    point_id = AefiPointId(uuid4())
+    event = AefiPointAcquired(point_id, uuid4(), Position2D(0, 0), m, 5)
+    assert isinstance(event, ProbeAcquisitionEvent)
+    assert event.source == "aefi_point" and event.acquisition_id == point_id

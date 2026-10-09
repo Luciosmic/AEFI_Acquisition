@@ -78,7 +78,7 @@ class TestScanDifferentialModeIntegration(unittest.TestCase):
             MockAefiAcquisitionExecutor(self.event_bus), self.acquisition_port, self.event_bus
         )
         scan_uow = InMemoryUnitOfWork(self.event_bus)
-        ScanClosureHandler(self.event_bus, scan_uow)
+        ScanClosureHandler(self.event_bus, scan_uow, ("aefipointacquired",))
         self.service = ScanApplicationService(
             self.motion_port,
             continuous_service,
