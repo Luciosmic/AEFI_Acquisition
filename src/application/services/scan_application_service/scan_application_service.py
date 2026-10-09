@@ -44,6 +44,7 @@ from application.services.motion_control_service.ports.i_motion_port import IMot
 from application.shared.ports.i_async_task_runner import IAsyncTaskRunner
 from .ports.i_motion_synchronizer import IMotionSynchronizer
 from .ports.i_scan_output_port import IScanOutputPort
+from .ports.i_unit_of_work import IUnitOfWork
 from application.services.electric_field_probe_service.ports.i_electric_field_probe_port import IElectricFieldProbePort
 # ponytail: direct Application-Service-to-Application-Service dependency,
 # same precedent as ScanExportService's excitation_service coupling (see
@@ -205,7 +206,9 @@ class ScanApplicationService:
         auxiliary_probes: Optional[List[AuxiliaryProbeChannel]] = None,
         output_port: Optional[IScanOutputPort] = None,
         excitation_service: Optional[ExcitationConfigurationService] = None,
+        unit_of_work: Optional[IUnitOfWork] = None,
     ):
+        self._unit_of_work = unit_of_work
         self._motion_port = motion_port
         self._aefi_acquisition_service = aefi_acquisition_service
         self._event_bus = event_bus

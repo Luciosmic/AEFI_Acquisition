@@ -74,6 +74,8 @@ from infrastructure.hardware.micro_controller.ad9106.adapter_synchronous_detecti
 )
 from infrastructure.post_processing.aefi_post_processor_port import AefiPostProcessorPort, rotation_origin
 from application.services.scan_export_service.scan_export_service import ScanExportService
+from application.services.scan_application_service.scan_closure_handler.scan_closure_handler import ScanClosureHandler
+from infrastructure.unit_of_work.in_memory_unit_of_work import InMemoryUnitOfWork
 
 from infrastructure.execution.electric_field_probe_acquisition_executor import ElectricFieldProbeAcquisitionExecutor
 from infrastructure.mcp.observability_mcp_server import run_observability_mcp_server
@@ -356,8 +358,12 @@ def main(hardware_config: dict | None = None):
     )
     logger.info("Services -> SynchronousDetectionService created (signature=%s)", hardware_signature)
 
+    # Handler before service: ScanCompleted must come out during the dispatch of AefiPointAcquired.
+    scan_unit_of_work = InMemoryUnitOfWork(event_bus)
+    scan_closure_handler = ScanClosureHandler(event_bus, scan_unit_of_work)
     scan_service = ScanApplicationService(
         hw.motion_port, continuous_service, event_bus,
+        unit_of_work=scan_unit_of_work,
         task_runner=task_runner,
         motion_sync=motion_sync,
         auxiliary_probes=[narda_channel],
