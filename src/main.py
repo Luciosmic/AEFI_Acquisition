@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import sys
+import traceback
 import threading
 from pathlib import Path
 
@@ -177,6 +178,18 @@ def main(hardware_config: dict | None = None):
     startup_view.set_phase("Configuration matérielle...")
     app.processEvents()
 
+    try:
+        _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, splash_logs_panel, log_stream, repo_root)
+    except Exception:
+        # No auto-close: the splash stays open with the traceback until the operator clicks "Fermer".
+        logger.exception("Startup failed")
+        startup_view.show_failure(traceback.format_exc())
+
+    sys.exit(app.exec())
+
+
+def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, splash_logs_panel, log_stream, repo_root):
+    """Steps 2-12 of main(): compose the dependency graph and start the app."""
     # 2. Configuration: Hardware Adapter Registry
     # Simple dict-based configuration: port_name -> adapter_type ("mock" | "real")
     # "mock" builds the REAL composition root/adapters with a faked transport
@@ -622,8 +635,6 @@ def main(hardware_config: dict | None = None):
         daemon=True,
     )
     mcp_thread.start()
-
-    sys.exit(app.exec())
 
 
 if __name__ == "__main__":
