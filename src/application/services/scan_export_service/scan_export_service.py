@@ -42,6 +42,7 @@ from application.shared.acquisition_parameters.i_acquisition_conditions_port imp
 from application.shared.acquisition_parameters.i_software_provenance_port import ISoftwareProvenancePort
 from application.shared.acquisition_parameters.i_usb_latency_timer_port import IUsbLatencyTimerPort
 from .ports.i_post_processing_port import IPostProcessingPort
+from application.shared.scan_config_summary.scan_config_summary import summarize_scan_config
 from application.shared.ports.i_async_task_runner import IAsyncTaskRunner
 
 from domain.step_scan.events.scan_started.scan_started import ScanStarted
@@ -166,6 +167,10 @@ class ScanExportService:
             config.enabled, config.output_directory, config.filename_base,
         )
         logger.debug("ScanExportService configured: %s", config)
+
+    def get_export_config(self) -> Optional[ExportConfigDTO]:
+        """Current scan export configuration (None until configure_export is called)."""
+        return self._config
 
     def configure_time_series_export(self, config: ExportConfigDTO) -> None:
         """Arm (enabled=True) or disarm the export of the next continuous
@@ -443,45 +448,12 @@ class ScanExportService:
 
     def _build_metadata(self, event: ScanStarted) -> Dict[str, Any]:
         """Extract basic metadata from the scan configuration."""
-        cfg = event.config
-        if isinstance(cfg, LineScanConfig):
-            start, end = cfg.endpoints()
-            return {
-                "scan_id": str(event.scan_id),
-                "scan_kind": "line",
-                "center_x": cfg.center.x,
-                "center_y": cfg.center.y,
-                "length_mm": cfg.length_mm,
-                "theta_deg": cfg.theta_deg,
-                "start_x": start.x,
-                "start_y": start.y,
-                "end_x": end.x,
-                "end_y": end.y,
-                "stabilization_delay_ms": cfg.stabilization_delay_ms,
-                "averaging_per_position": cfg.averaging_per_position,
-                "total_points": cfg.total_points(),
-            }
-
-        zone = cfg.scan_zone
-
-        return {
-            "scan_id": str(event.scan_id),
-            "pattern": cfg.scan_pattern.name,
-            "scan_axis": cfg.scan_axis.name,
-            # True = exploration map (positions interpolated at constant
-            # speed, no averaging) — not to be read as a measurement.
-            "fly_scan": cfg.fly_scan,
-            "x_min": zone.x_min,
-            "x_max": zone.x_max,
-            "x_nb_points": cfg.x_nb_points,
-            "y_min": zone.y_min,
-            "y_max": zone.y_max,
-            "y_nb_points": cfg.y_nb_points,
-            "stabilization_delay_ms": cfg.stabilization_delay_ms,
-            "averaging_per_position": cfg.averaging_per_position,
-            "total_points": cfg.total_points(),
-            "estimated_duration_s": cfg.estimated_duration_seconds(),
-        }
+        summary = summarize_scan_config(event.config)
+        # scan_id first, then scan_kind (line scans), then the rest — historical key order.
+        head = {"scan_id": str(event.scan_id)}
+        if "scan_kind" in summary:
+            head["scan_kind"] = summary.pop("scan_kind")
+        return {**head, **summary}
 
     # -- acquisition-parameters document (facts only; the port writes schema 1.0) --
 

@@ -1,5 +1,6 @@
 import json
 import logging
+from dataclasses import replace
 import os
 import sys
 import traceback
@@ -80,6 +81,8 @@ from infrastructure.unit_of_work.in_memory_unit_of_work import InMemoryUnitOfWor
 
 from infrastructure.execution.electric_field_probe_acquisition_executor import ElectricFieldProbeAcquisitionExecutor
 from infrastructure.mcp.observability_mcp_server import run_observability_mcp_server
+from infrastructure.mcp.ring_buffer_log_handler import RingBufferLogHandler
+from infrastructure.events.event_ring_buffer import EventRingBuffer
 
 # --- Hardware composition (motion + MCU + probe, real or mock per hardware_config) ---
 from infrastructure.hardware.hardware_composition_root import HardwareCompositionRoot
@@ -171,6 +174,9 @@ def main(hardware_config: dict | None = None):
     # 1bis. Logs panel + splash: shown first, capture everything from here on
     splash_logs_panel = LogsPanel()
     log_stream = install_console_capture(splash_logs_panel)
+    # After install_console_capture: its basicConfig(force=True) removes every existing root handler.
+    mcp_log_handler = RingBufferLogHandler()
+    logging.getLogger().addHandler(mcp_log_handler)
 
     lifecycle_presenter = SystemLifecyclePresenter()
     startup_view = StartupView(lifecycle_presenter, logs_panel=splash_logs_panel)
@@ -179,7 +185,7 @@ def main(hardware_config: dict | None = None):
     app.processEvents()
 
     try:
-        _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, splash_logs_panel, log_stream, repo_root)
+        _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, splash_logs_panel, log_stream, repo_root, mcp_log_handler)
     except Exception:
         # No auto-close: the splash stays open with the traceback until the operator clicks "Fermer".
         logger.exception("Startup failed")
@@ -188,7 +194,7 @@ def main(hardware_config: dict | None = None):
     sys.exit(app.exec())
 
 
-def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, splash_logs_panel, log_stream, repo_root):
+def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, splash_logs_panel, log_stream, repo_root, mcp_log_handler):
     """Steps 2-12 of main(): compose the dependency graph and start the app."""
     # 2. Configuration: Hardware Adapter Registry
     # Simple dict-based configuration: port_name -> adapter_type ("mock" | "real")
@@ -215,6 +221,8 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
     # traceability/audit (see _system/self/event_store.md).
     audit_log = EventAuditLog(repo_root / ".aefi_acquisition" / "logs" / "events")
     event_bus.subscribe("*", audit_log.record)
+    event_ring_buffer = EventRingBuffer()  # tail served by the observability MCP (get_recent_events)
+    event_bus.subscribe("*", event_ring_buffer.record)
 
     # 4. Instantiate Adapters
     print("\n--- Initializing Hardware Adapters ---")
@@ -629,9 +637,21 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
     # scan_service instance built above (no duplicated services, no state
     # copy). Scope is deliberately read-only: no mutation tool is exposed,
     # so a connected LLM cannot drive hardware without human supervision.
+    def _scan_config_with_export_directory():
+        snapshot = scan_service.get_current_config()
+        export_config = scan_export_service.get_export_config()
+        if snapshot is None or export_config is None:
+            return snapshot
+        return replace(snapshot, export_directory=export_config.output_directory)
+
     mcp_thread = threading.Thread(
         target=run_observability_mcp_server,
         args=(scan_service,),
+        kwargs=dict(
+            recent_events_provider=event_ring_buffer.recent,
+            recent_logs_provider=mcp_log_handler.recent,
+            scan_config_provider=_scan_config_with_export_directory,
+        ),
         daemon=True,
     )
     mcp_thread.start()

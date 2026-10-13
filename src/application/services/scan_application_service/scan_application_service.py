@@ -23,7 +23,10 @@ import time
 from uuid import UUID, uuid4
 from datetime import datetime
 
-from .dtos.scan_dtos import Scan2DConfigDTO, LineScanConfigDTO, ScanStatusDTO
+from .dtos.scan_dtos import (
+    Scan2DConfigDTO, LineScanConfigDTO, ScanStatusDTO, ScanConfigSnapshotDTO, ExcitationSnapshotDTO,
+)
+from application.shared.scan_config_summary.scan_config_summary import summarize_scan_config
 from domain.step_scan.services.scan_trajectory_factory.scan_trajectory_factory import ScanTrajectoryFactory
 from domain.step_scan.services.line_scan_trajectory_factory.line_scan_trajectory_factory import LineScanTrajectoryFactory
 from domain.step_scan.services.fly_scan_line_projector.fly_scan_line_projector import FlyScanLineProjector
@@ -257,6 +260,8 @@ class ScanApplicationService:
         # UI / MCP threads (pause/resume/cancel/get_status never touch the UoW or repositories).
         self._acquired_count: int = 0
         self._expected_total: int = 0
+        # Config of the running/last scan: one immutable reference, swapped whole at scan start.
+        self._current_config: Optional[Union[StepScanConfig, LineScanConfig]] = None
         # Incremented by each accepted pause_scan (reset per scan): the fly loop compares it to tell
         # that a line was interrupted even if the scan was resumed since. Plain int, like the counters.
         self._pause_epoch: int = 0
@@ -334,6 +339,7 @@ class ScanApplicationService:
             self._acquired_count = 0
             self._pause_epoch = 0
             self._expected_total = config.total_points()
+            self._current_config = config
             is_fly_scan = getattr(config, "fly_scan", False)
             scan = StepScan()
             scan.start(config)
@@ -487,6 +493,42 @@ class ScanApplicationService:
             total_points=total_pts,
             progress_percentage=(current_idx / total_pts * 100.0) if total_pts > 0 else 0.0,
             estimated_remaining_seconds=0.0,
+        )
+
+    def get_current_config(self) -> Optional[ScanConfigSnapshotDTO]:
+        """Config of the scan in progress or last started; None before any scan this session."""
+        config = self._current_config
+        scan = self._current_scan
+        if config is None or scan is None:
+            return None
+        summary = summarize_scan_config(config)
+        kind = summary.pop("scan_kind", "step")
+        estimated = summary.pop("estimated_duration_s", None)
+        fly_scan = summary.pop("fly_scan", False)
+        stabilization = summary.pop("stabilization_delay_ms")
+        averaging = summary.pop("averaging_per_position")
+        total = summary.pop("total_points")
+        excitation = None
+        if self._excitation_service is not None:
+            params = self._excitation_service.get_current_parameters()
+            excitation = ExcitationSnapshotDTO(
+                mode=params.mode.name,
+                level_s1_s2_percent=params.level_s1_s2.value,
+                level_s3_s4_percent=params.level_s3_s4.value,
+                frequency_hz=params.frequency,
+            )
+        return ScanConfigSnapshotDTO(
+            scan_kind=kind,
+            scan_id=str(scan.id),
+            fly_scan=fly_scan,
+            stabilization_delay_ms=stabilization,
+            averaging_per_position=averaging,
+            differential_mode=config.differential_mode,
+            differential_settle_delay_ms=config.differential_settle_delay_ms,
+            total_points=total,
+            estimated_duration_s=estimated,
+            geometry=summary,
+            excitation=excitation,
         )
 
     # ==================================================================================
