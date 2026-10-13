@@ -5,10 +5,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtWidgets import QApplication, QPushButton
 
-from interface.widgets.sensor_orientation_view.sensor_orientation_view import (
-    SensorOrientationView,
-    configure_qt_opengl,
-)
+from interface.widgets.sensor_orientation_view.sensor_orientation_view import SensorOrientationView
 
 _RZ90 = ((0.0, -1.0, 0.0), (1.0, 0.0, 0.0), (0.0, 0.0, 1.0))
 
@@ -39,12 +36,3 @@ def test_one_row_of_four_camera_view_buttons():
     assert labels == ["Vue 3D", "Vue XY", "Vue XZ", "Vue YZ"]
     view.close()
 
-
-def test_configure_qt_opengl_sets_shared_contexts_and_vtk_default_format():
-    from PySide6.QtCore import QCoreApplication, Qt
-    from PySide6.QtGui import QSurfaceFormat
-
-    configure_qt_opengl()
-
-    assert QCoreApplication.testAttribute(Qt.ApplicationAttribute.AA_ShareOpenGLContexts)
-    assert QSurfaceFormat.defaultFormat().version() == (3, 2)

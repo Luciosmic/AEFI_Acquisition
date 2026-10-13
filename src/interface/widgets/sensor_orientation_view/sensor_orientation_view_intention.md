@@ -28,7 +28,8 @@ only show the mounting actually applied to the readings.
   (both the Qt widget and the PyVista plotter API). Injected by the
   dashboard into the "Calibration capteur" panel.
 - No text overlay: the host's spinboxes already show the angles.
-- `configure_qt_opengl()` must run before `QApplication()`: the 3D view is a
+- `configure_qt_opengl()` (in `interface/qt_gl_format.py`, PySide6 only so the
+  splash does not wait for pyvista) must run before `QApplication()`: the 3D view is a
   `QOpenGLWidget`, which composites **black** if the GL default format is
   set after the first top-level window exists (AEFI splash `StartupView`),
   or if it is moved to another top-level window (floating QtAds dock)

@@ -18,121 +18,6 @@ from PySide6.QtWidgets import QApplication, QDialog, QVBoxLayout, QLabel, QProgr
 from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtGui import QIcon
 
-# --- Domain & Application Services ---
-from application.services.scan_application_service.scan_application_service import (
-    ScanApplicationService,
-    make_electric_field_probe_channel,
-)
-from application.services.excitation_configuration_service.excitation_configuration_service import ExcitationConfigurationService
-from application.services.synchronous_detection_service.synchronous_detection_service import SynchronousDetectionService
-from application.services.sensor_calibration_service.sensor_calibration_service import SensorCalibrationService
-from application.services.acquisition_throughput_characterization_service.acquisition_throughput_characterization_service import (
-    AcquisitionThroughputCharacterizationService,
-)
-from infrastructure.persistence.acquisition_throughput.csv_acquisition_throughput_export_port import (
-    CsvAcquisitionThroughputExportPort,
-)
-from infrastructure.acquisition_conditions.acquisition_conditions_reader import AcquisitionConditionsReader
-from infrastructure.hardware.serial_link.ftdi_usb_latency_timer_reader import FtdiUsbLatencyTimerReader
-from infrastructure.provenance.git_software_provenance_reader import GitSoftwareProvenanceReader
-from application.services.source_geometry_calibration_service.source_geometry_calibration_service import SourceGeometryCalibrationService
-from application.services.hardware_component_service.hardware_component_service import HardwareComponentService
-from application.services.mechanical_transmission_calibration_service.mechanical_transmission_calibration_service import (
-    MechanicalTransmissionCalibrationService,
-)
-from application.services.event_log_maintenance_service.event_log_maintenance_service import EventLogMaintenanceService
-from domain.calibration.calibration import Calibration
-from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
-from application.services.motion_control_service.motion_control_service import MotionControlService
-from application.services.electric_field_probe_service.electric_field_probe_service import ElectricFieldProbeService
-
-# --- Infrastructure ---
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
-from infrastructure.events.event_audit_log import EventAuditLog
-from infrastructure.events.file_event_log_storage import FileEventLogStorage
-from infrastructure.execution.thread_pool_task_runner import ThreadPoolTaskRunner
-from infrastructure.execution.event_bus_motion_synchronizer import EventBusMotionSynchronizer
-from infrastructure.persistence.csv_scan_export_port import CsvScanExportPort
-from infrastructure.persistence.hdf5_scan_export_port import Hdf5ScanExportPort
-from infrastructure.persistence.acquisition_snapshot_reader import AcquisitionSnapshotReader
-from infrastructure.persistence.calibration.hardware_signature_reader import HardwareSignatureReader
-from infrastructure.persistence.calibration.geometric_configuration_reader import GeometricConfigurationReader
-from infrastructure.persistence.calibration.ideal_sensor_rotation_reader import IdealSensorRotationReader
-from infrastructure.persistence.calibration.real_synchronous_detection_phase_calibration_repository import (
-    RealSynchronousDetectionPhaseCalibrationRepository,
-)
-from infrastructure.persistence.calibration.real_sensor_calibration_repository import (
-    RealSensorCalibrationRepository,
-)
-from infrastructure.persistence.calibration.real_source_geometry_calibration_repository import (
-    RealSourceGeometryCalibrationRepository,
-)
-from infrastructure.persistence.calibration.real_hardware_component_repository import RealHardwareComponentRepository
-from infrastructure.persistence.calibration.real_mechanical_transmission_calibration_repository import (
-    RealMechanicalTransmissionCalibrationRepository,
-)
-from infrastructure.hardware.micro_controller.ad9106.adapter_synchronous_detection_ad9106 import (
-    AdapterSynchronousDetectionAD9106,
-)
-from infrastructure.post_processing.aefi_post_processor_port import AefiPostProcessorPort, rotation_origin
-from application.services.scan_export_service.scan_export_service import ScanExportService
-from application.services.scan_application_service.scan_closure_handler.scan_closure_handler import ScanClosureHandler
-from infrastructure.unit_of_work.in_memory_unit_of_work import InMemoryUnitOfWork
-
-from infrastructure.execution.electric_field_probe_acquisition_executor import ElectricFieldProbeAcquisitionExecutor
-from infrastructure.mcp.observability_mcp_server import run_observability_mcp_server
-from infrastructure.mcp.ring_buffer_log_handler import RingBufferLogHandler
-from infrastructure.events.event_ring_buffer import EventRingBuffer
-
-# --- Hardware composition (motion + MCU + probe, real or mock per hardware_config) ---
-from infrastructure.hardware.hardware_composition_root import HardwareCompositionRoot
-
-# --- System Lifecycle ---
-from application.services.system_lifecycle_service.system_lifecycle_service import (
-    SystemStartupApplicationService,
-    SystemShutdownApplicationService,
-    StartupConfig
-)
-from interface.ui_system_lifecycle.presenter_system_lifecycle import SystemLifecyclePresenter
-from interface.ui_system_lifecycle.view_startup import StartupView
-
-# --- Interface ---
-from interface.shell.dashboard import Dashboard
-from interface.shell.dashboard_wiring import wire_dashboard
-from interface.widgets.sensor_orientation_view.sensor_orientation_view import configure_qt_opengl
-from interface.widgets.panels.logs_panel import LogsPanel, install_console_capture
-from interface.presenters.motion_presenter import MotionPresenter
-from interface.presenters.excitation_presenter import ExcitationPresenter
-from interface.presenters.synchronous_detection_presenter import SynchronousDetectionPresenter
-from interface.presenters.sensor_calibration_presenter import SensorCalibrationPresenter
-from interface.presenters.acquisition_throughput_characterization_presenter import (
-    AcquisitionThroughputCharacterizationPresenter,
-)
-from interface.presenters.source_geometry_calibration_presenter import SourceGeometryCalibrationPresenter
-from interface.presenters.hardware_component_presenter import HardwareComponentPresenter
-from interface.presenters.event_log_presenter import EventLogPresenter
-from interface.presenters.operator_presenter import OperatorPresenter
-from application.services.operator_service.operator_service import OperatorService
-from infrastructure.persistence.operator_registry.real_operator_repository import RealOperatorRepository
-from interface.presenters.adc_output_rate_characterization_presenter import AdcOutputRateCharacterizationPresenter
-from application.services.adc_output_rate_characterization_service.adc_output_rate_characterization_service import (
-    AdcOutputRateCharacterizationService,
-)
-from infrastructure.persistence.adc_output_rate.csv_adc_output_rate_export_port import CsvAdcOutputRateExportPort
-from interface.presenters.aefi_continuous_reading_presenter import AefiContinuousReadingPresenter
-from interface.presenters.electric_field_probe_presenter import ElectricFieldProbePresenter
-from interface.presenters.scan_presenter import ScanPresenter
-
-# --- Transformation Service ---
-from application.services.transformation_service.transformation_service import TransformationService
-from application.services.transformation_service.dtos.transformation_dtos import SetRotationAnglesDTO
-
-# --- Hardware Configuration ---
-from application.services.hardware_configuration_service.hardware_configuration_service import HardwareConfigurationService
-from application.services.hardware_configuration_service.ports.i_hardware_advanced_configurator import IHardwareAdvancedConfigurator
-from interface.presenters.hardware_advanced_config_presenter import HardwareAdvancedConfigPresenter
-from interface.styles.theme import apply_dark_theme
-
 logger = logging.getLogger(__name__)
 
 
@@ -155,6 +40,16 @@ def main(hardware_config: dict | None = None):
     seeded = bootstrapper.ensure_configs_exist()
     if seeded:
         logger.info(f"Configs initialisées depuis templates : {seeded}")
+
+    # Splash-first: only PySide6 + the few light modules below are imported
+    # before the StartupView shows; the heavy imports follow in _compose_and_start,
+    # one phase label each (4 s of silence looked like a crash).
+    from interface.qt_gl_format import configure_qt_opengl
+    from interface.styles.theme import apply_dark_theme
+    from interface.widgets.panels.logs_panel import LogsPanel, install_console_capture
+    from interface.ui_system_lifecycle.presenter_system_lifecycle import SystemLifecyclePresenter
+    from interface.ui_system_lifecycle.view_startup import StartupView
+    from infrastructure.mcp.ring_buffer_log_handler import RingBufferLogHandler
 
     # 1. Create QApplication (GL setup first: the splash is a top-level window
     # created before the 3D sensor view of the calibration panel)
@@ -181,7 +76,7 @@ def main(hardware_config: dict | None = None):
     lifecycle_presenter = SystemLifecyclePresenter()
     startup_view = StartupView(lifecycle_presenter, logs_panel=splash_logs_panel)
     startup_view.show()
-    startup_view.set_phase("Configuration matérielle...")
+    startup_view.set_phase("Démarrage...")
     app.processEvents()
 
     try:
@@ -196,6 +91,114 @@ def main(hardware_config: dict | None = None):
 
 def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, splash_logs_panel, log_stream, repo_root, mcp_log_handler):
     """Steps 2-12 of main(): compose the dependency graph and start the app."""
+    # Heavy imports, grouped by phase so the splash shows what is loading.
+    # Inside the caller's try/except: an ImportError lands in the splash panel.
+    startup_view.set_phase("Domaine et services...")
+    app.processEvents()
+    from application.services.scan_application_service.scan_application_service import (
+        ScanApplicationService,
+        make_electric_field_probe_channel,
+    )
+    from application.services.excitation_configuration_service.excitation_configuration_service import ExcitationConfigurationService
+    from application.services.synchronous_detection_service.synchronous_detection_service import SynchronousDetectionService
+    from application.services.sensor_calibration_service.sensor_calibration_service import SensorCalibrationService
+    from application.services.acquisition_throughput_characterization_service.acquisition_throughput_characterization_service import (
+        AcquisitionThroughputCharacterizationService,
+    )
+    from application.services.source_geometry_calibration_service.source_geometry_calibration_service import SourceGeometryCalibrationService
+    from application.services.hardware_component_service.hardware_component_service import HardwareComponentService
+    from application.services.mechanical_transmission_calibration_service.mechanical_transmission_calibration_service import (
+        MechanicalTransmissionCalibrationService,
+    )
+    from application.services.event_log_maintenance_service.event_log_maintenance_service import EventLogMaintenanceService
+    from domain.calibration.calibration import Calibration
+    from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
+    from application.services.motion_control_service.motion_control_service import MotionControlService
+    from application.services.electric_field_probe_service.electric_field_probe_service import ElectricFieldProbeService
+    from application.services.scan_export_service.scan_export_service import ScanExportService
+    from application.services.scan_application_service.scan_closure_handler.scan_closure_handler import ScanClosureHandler
+    from application.services.system_lifecycle_service.system_lifecycle_service import (
+        SystemStartupApplicationService,
+        SystemShutdownApplicationService,
+        StartupConfig
+    )
+    from application.services.operator_service.operator_service import OperatorService
+    from application.services.adc_output_rate_characterization_service.adc_output_rate_characterization_service import (
+        AdcOutputRateCharacterizationService,
+    )
+    from application.services.transformation_service.transformation_service import TransformationService
+    from application.services.transformation_service.dtos.transformation_dtos import SetRotationAnglesDTO
+    from application.services.hardware_configuration_service.hardware_configuration_service import HardwareConfigurationService
+    from application.services.hardware_configuration_service.ports.i_hardware_advanced_configurator import IHardwareAdvancedConfigurator
+
+    startup_view.set_phase("Pilotes...")
+    app.processEvents()
+    from infrastructure.persistence.acquisition_throughput.csv_acquisition_throughput_export_port import (
+        CsvAcquisitionThroughputExportPort,
+    )
+    from infrastructure.acquisition_conditions.acquisition_conditions_reader import AcquisitionConditionsReader
+    from infrastructure.hardware.serial_link.ftdi_usb_latency_timer_reader import FtdiUsbLatencyTimerReader
+    from infrastructure.provenance.git_software_provenance_reader import GitSoftwareProvenanceReader
+    from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+    from infrastructure.events.event_audit_log import EventAuditLog
+    from infrastructure.events.file_event_log_storage import FileEventLogStorage
+    from infrastructure.execution.thread_pool_task_runner import ThreadPoolTaskRunner
+    from infrastructure.execution.event_bus_motion_synchronizer import EventBusMotionSynchronizer
+    from infrastructure.persistence.csv_scan_export_port import CsvScanExportPort
+    from infrastructure.persistence.hdf5_scan_export_port import Hdf5ScanExportPort
+    from infrastructure.persistence.acquisition_snapshot_reader import AcquisitionSnapshotReader
+    from infrastructure.persistence.calibration.hardware_signature_reader import HardwareSignatureReader
+    from infrastructure.persistence.calibration.geometric_configuration_reader import GeometricConfigurationReader
+    from infrastructure.persistence.calibration.ideal_sensor_rotation_reader import IdealSensorRotationReader
+    from infrastructure.persistence.calibration.real_synchronous_detection_phase_calibration_repository import (
+        RealSynchronousDetectionPhaseCalibrationRepository,
+    )
+    from infrastructure.persistence.calibration.real_sensor_calibration_repository import (
+        RealSensorCalibrationRepository,
+    )
+    from infrastructure.persistence.calibration.real_source_geometry_calibration_repository import (
+        RealSourceGeometryCalibrationRepository,
+    )
+    from infrastructure.persistence.calibration.real_hardware_component_repository import RealHardwareComponentRepository
+    from infrastructure.persistence.calibration.real_mechanical_transmission_calibration_repository import (
+        RealMechanicalTransmissionCalibrationRepository,
+    )
+    from infrastructure.hardware.micro_controller.ad9106.adapter_synchronous_detection_ad9106 import (
+        AdapterSynchronousDetectionAD9106,
+    )
+    from infrastructure.post_processing.aefi_post_processor_port import AefiPostProcessorPort, rotation_origin
+    from infrastructure.unit_of_work.in_memory_unit_of_work import InMemoryUnitOfWork
+    from infrastructure.execution.electric_field_probe_acquisition_executor import ElectricFieldProbeAcquisitionExecutor
+    from infrastructure.mcp.observability_mcp_server import run_observability_mcp_server
+    from infrastructure.events.event_ring_buffer import EventRingBuffer
+    from infrastructure.hardware.hardware_composition_root import HardwareCompositionRoot
+    from infrastructure.persistence.operator_registry.real_operator_repository import RealOperatorRepository
+    from infrastructure.persistence.adc_output_rate.csv_adc_output_rate_export_port import CsvAdcOutputRateExportPort
+
+    startup_view.set_phase("Interface...")
+    app.processEvents()
+    from interface.shell.dashboard import Dashboard
+    from interface.shell.dashboard_wiring import wire_dashboard
+    from interface.presenters.motion_presenter import MotionPresenter
+    from interface.presenters.excitation_presenter import ExcitationPresenter
+    from interface.presenters.synchronous_detection_presenter import SynchronousDetectionPresenter
+    from interface.presenters.sensor_calibration_presenter import SensorCalibrationPresenter
+    from interface.presenters.acquisition_throughput_characterization_presenter import (
+        AcquisitionThroughputCharacterizationPresenter,
+    )
+    from interface.presenters.source_geometry_calibration_presenter import SourceGeometryCalibrationPresenter
+    from interface.presenters.hardware_component_presenter import HardwareComponentPresenter
+    from interface.presenters.event_log_presenter import EventLogPresenter
+    from interface.presenters.operator_presenter import OperatorPresenter
+    from interface.presenters.adc_output_rate_characterization_presenter import AdcOutputRateCharacterizationPresenter
+    from interface.presenters.aefi_continuous_reading_presenter import AefiContinuousReadingPresenter
+    from interface.presenters.electric_field_probe_presenter import ElectricFieldProbePresenter
+    from interface.presenters.scan_presenter import ScanPresenter
+    from interface.presenters.hardware_advanced_config_presenter import HardwareAdvancedConfigPresenter
+
+    startup_view.set_phase("Configuration matérielle...")
+    app.processEvents()
+
     # 2. Configuration: Hardware Adapter Registry
     # Simple dict-based configuration: port_name -> adapter_type ("mock" | "real")
     # "mock" builds the REAL composition root/adapters with a faked transport
