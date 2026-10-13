@@ -15,3 +15,4 @@ Adaptateur Real implémentant `IMotionPort` pour le contrôleur Arcus Performax 
 - **Dépend de `DriverArcusPerformax4EX`** pour les appels DLL bas-niveau.
 - **Publie des événements domain** (pas des callbacks directs) : `StepScanExecutor` souscrit au bus pour la synchronisation.
 - `motion_id` est un UUID généré à chaque `move_to()` — corrélation avec `MotionCompleted.motion_id`.
+- **Sans conversion mm/impulsion** (`set_microns_per_pulse` jamais appelé) : `move_to`, `set_speed`, `get_current_position`, `get_cruise_speed_mm_s` lèvent `MotionConversionUnavailableError` ; `is_conversion_available()` expose l'état ; `stop`/`emergency_stop`/`set_speed_mode` (impulsions) restent disponibles. La boucle de surveillance se met en pause avec un seul avertissement, sans trace d'erreur par cycle. Aucune valeur par défaut silencieuse.

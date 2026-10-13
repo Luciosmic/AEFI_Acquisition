@@ -28,6 +28,9 @@ from domain.shared_kernel.events.motion_failed.motion_failed import MotionFailed
 from domain.shared_kernel.events.position_updated.position_updated import PositionUpdated
 
 from application.services.motion_control_service.ports.i_motion_port import IMotionPort
+from application.services.motion_control_service.ports.motion_conversion_unavailable_error import (
+    MotionConversionUnavailableError,
+)
 from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
 from infrastructure.hardware.arcus_performax_4EX.driver_arcus_performax4EX import (
     ArcusPerformax4EXController,
@@ -78,6 +81,8 @@ class ArcusAdapter(IMotionPort):
         self._running = False
         self._last_position: Optional[Position2D] = None
         self._last_moving: bool = False
+        # One warning when the monitor finds the conversion missing, re-armed once it is applied.
+        self._uncalibrated_warning_logged = False
         
         # mm <-> pulse conversion: given by the domain (mechanical
         # transmission calibration), never guessed here — None until
@@ -98,11 +103,13 @@ class ArcusAdapter(IMotionPort):
         self.STEPS_PER_MM = 1.0 / self.MM_PER_STEP
         logger.info("Conversion set: %s microns/pulse (%.2f pulses/mm)", self.MICRONS_PER_STEP, self.STEPS_PER_MM)
 
-    def _require_conversion(self) -> None:
+    def is_conversion_available(self) -> bool:
+        """QUERY: True once set_microns_per_pulse() has been applied."""
+        return self.STEPS_PER_MM is not None
+
+    def _require_conversion(self, operation: str) -> None:
         if self.STEPS_PER_MM is None:
-            raise RuntimeError(
-                "Arcus adapter has no mm/pulse conversion: no mechanical transmission calibration applied"
-            )
+            raise MotionConversionUnavailableError(operation)
 
     def set_controller(self, controller: ArcusPerformax4EXController) -> None:
         """Inject controller."""
@@ -234,6 +241,21 @@ class ArcusAdapter(IMotionPort):
                 if not self._controller or not self._controller.is_connected():
                     time.sleep(1.0)
                     continue
+
+                # Not calibrated: no mm position to publish. An explicit state,
+                # one warning at the transition — not an exception per cycle.
+                if not self.is_conversion_available():
+                    if not self._uncalibrated_warning_logged:
+                        logger.warning(
+                            "Motion monitoring paused: no mm/pulse conversion applied "
+                            "(mechanical transmission not calibrated)"
+                        )
+                        self._uncalibrated_warning_logged = True
+                    time.sleep(1.0)
+                    continue
+                if self._uncalibrated_warning_logged:
+                    logger.info("Motion monitoring resumed: mm/pulse conversion applied")
+                    self._uncalibrated_warning_logged = False
                 
                 # Get current state
                 current_pos = self.get_current_position()
@@ -326,7 +348,7 @@ class ArcusAdapter(IMotionPort):
         """
         if not self._controller:
             raise RuntimeError("Arcus controller not connected")
-        self._require_conversion()
+        self._require_conversion("move_to")
 
         motion_id = str(uuid4())
         
@@ -397,7 +419,7 @@ class ArcusAdapter(IMotionPort):
         """
         if not self._controller:
             raise RuntimeError("Arcus controller not connected")
-        self._require_conversion()
+        self._require_conversion("set_speed")
         
         try:
             # Convert mm/s to Hz (steps/s)
@@ -481,7 +503,7 @@ class ArcusAdapter(IMotionPort):
         """
         if not self._controller:
             raise RuntimeError("Arcus controller not connected")
-        self._require_conversion()
+        self._require_conversion("get_current_position")
 
         try:
             steps_x = self._controller.get_position(self._axis_x)
@@ -520,7 +542,7 @@ class ArcusAdapter(IMotionPort):
         """
         if not self._controller:
             raise RuntimeError("Arcus controller not connected")
-        self._require_conversion()
+        self._require_conversion("get_cruise_speed_mm_s")
         return self._controller.get_axis_params("x").hs * self.MM_PER_STEP
 
     def get_axis_limits(self) -> tuple[float, float]:

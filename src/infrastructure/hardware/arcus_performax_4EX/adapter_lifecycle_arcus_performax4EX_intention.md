@@ -14,3 +14,5 @@ Adaptateur gérant le cycle de vie de la connexion au contrôleur Arcus (ouvertu
 ## Design
 
 - **Séparation lifecycle / motion** : l'adaptateur lifecycle est utilisé au démarrage/arrêt, l'adaptateur motion l'est en permanence pendant les scans.
+
+- `verify_all()` lit la position brute en impulsions via le contrôleur : l'absence de conversion mm/impulsion (transmission non calibrée) ne fait pas échouer le démarrage ; un contrôleur qui ne répond pas échoue toujours.

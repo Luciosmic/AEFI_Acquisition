@@ -103,6 +103,16 @@ class IMotionPort(ABC):
         pass
 
     @abstractmethod
+    def is_conversion_available(self) -> bool:
+        """
+        Whether the distance per pulse has been applied
+        (set_microns_per_pulse). While False, commands and position
+        queries in mm raise MotionConversionUnavailableError; stop and
+        emergency_stop stay available.
+        """
+        pass
+
+    @abstractmethod
     def get_cruise_speed_mm_s(self) -> float:
         """
         Speed reached once the acceleration ramp is over, for the current

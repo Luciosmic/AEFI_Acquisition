@@ -141,6 +141,11 @@ class MockMotionPort(IMotionPort):
         self.microns_per_pulse = microns_per_pulse
         logger.info(f"set_microns_per_pulse: {microns_per_pulse} µm/pulse")
 
+    def is_conversion_available(self) -> bool:
+        # ponytail: always True — this mock works in mm and has no
+        # uncalibrated state; the uncalibrated path is tested on ArcusAdapter.
+        return True
+
     def get_cruise_speed_mm_s(self) -> float:
         return MEASURED_PORT_TIMING[self.last_speed_mode or DEFAULT_SPEED_MODE][1]
 
