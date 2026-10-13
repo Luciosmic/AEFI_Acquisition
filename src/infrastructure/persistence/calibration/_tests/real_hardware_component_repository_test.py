@@ -119,3 +119,35 @@ def test_legacy_mounting_without_identity_gets_a_stable_one(tmp_path):
     second_read = repository.find_selections(HardwareComponentKind.ADC)[0].mounting_id
 
     assert first_read == second_read
+
+
+def test_historical_motor_file_without_full_steps_per_revolution_leaves_the_conversion_missing_not_broken(tmp_path):
+    """Pre-transmission motor file (step_um, ...): no 'Pas par tour' — the startup must see a gap, not an error."""
+    from application.services.mechanical_transmission_calibration_service.mechanical_transmission_calibration_service import (
+        MechanicalTransmissionCalibrationService,
+    )
+    from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+    from infrastructure.persistence.calibration.fake.fake_mechanical_transmission_calibration_repository import (
+        FakeMechanicalTransmissionCalibrationRepository,
+    )
+
+    (tmp_path / "motors_calibration.json").write_text(json.dumps({
+        "entries": [{"entry_id": "d65023fc-cc9c-4ee4-9170-98679b44b203", "component_name": "IGUS-S-AN-060-035-060",
+                     "characterization": {"step_um": None, "max_speed_mm_per_s": None, "acceleration_mm_per_s2": None},
+                     "recorded_at": "2026-09-25T18:21:14.486147+00:00"}],
+        "selections": [{"component_name": "IGUS-S-AN-060-035-060", "selected_at": "2026-09-25T18:21:16.085699+00:00"}],
+    }), encoding="utf-8")
+    components = RealHardwareComponentRepository(tmp_path)
+    driver = _entry(HardwareComponentKind.STEPPER_DRIVER, "TB6600", {"max_current_a": 3.5})
+    components.add(driver)
+    components.add_selection(HardwareComponentSelection.now(HardwareComponentKind.STEPPER_DRIVER, "TB6600"))
+    service = MechanicalTransmissionCalibrationService(
+        FakeMechanicalTransmissionCalibrationRepository(), components, InMemoryEventBus()
+    )
+    service.record_calibration(
+        microsteps=16, driver_current_a=3.5, driver_peak_current_a=4.0, travel_per_motor_revolution_mm=69.76
+    )
+
+    assert service.get_current_calibration() is None
+    gap = service.get_current_gap()
+    assert (gap.motor_name, gap.missing_quantity) == ("IGUS-S-AN-060-035-060", "Pas par tour")

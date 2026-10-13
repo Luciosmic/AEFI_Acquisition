@@ -24,6 +24,7 @@ class ScanControlPanel(QWidget):
     def __init__(self, parent=None, config_store: UIConfigStore = None):
         super().__init__(parent)
         self._config_store = config_store or UIConfigStore()
+        self._start_blocked = False
         self._build_ui()
         self._connect_signals()
         self._load_config()
@@ -298,6 +299,16 @@ class ScanControlPanel(QWidget):
 
         layout.addWidget(control_group)
 
+        # --- "Bench not calibrated" banner (START refused until calibrated) ---
+        self.lbl_start_blocked = QLabel()
+        self.lbl_start_blocked.setWordWrap(True)
+        self.lbl_start_blocked.setStyleSheet(
+            "background-color: #4E3B00; color: #FFD54F; border: 1px solid #FFC107; "
+            "border-radius: 4px; padding: 4px; font-size: 11px; font-weight: bold;"
+        )
+        self.lbl_start_blocked.setVisible(False)
+        layout.addWidget(self.lbl_start_blocked)
+
         # --- Status ---
         self.lbl_status = QLabel("Status: Ready")
         self.lbl_status.setStyleSheet("color: #AAA; font-size: 11px;")
@@ -443,8 +454,16 @@ class ScanControlPanel(QWidget):
         self.btn_pause.setEnabled(True)
         self.btn_resume.setEnabled(False)
 
+    def set_start_availability(self, banner):
+        """Block START (with the reason shown) while the bench is not calibrated."""
+        self._start_blocked = banner.visible
+        self.lbl_start_blocked.setText(banner.text)
+        self.lbl_start_blocked.setVisible(banner.visible)
+        if banner.visible or not self.btn_stop.isEnabled():
+            self.btn_start.setEnabled(not banner.visible)
+
     def _reset_buttons(self):
-        self.btn_start.setEnabled(True)
+        self.btn_start.setEnabled(not self._start_blocked)
         self.btn_stop.setEnabled(False)
         self.btn_pause.setEnabled(False)
         self.btn_resume.setEnabled(False)

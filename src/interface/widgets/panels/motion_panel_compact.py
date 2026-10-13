@@ -33,6 +33,7 @@ class MotionPanelCompact(QWidget):
         self._last_x = 0.0
         self._last_y = 0.0
         self._referential_mode = self._load_referential_mode()
+        self._not_calibrated = False
         self._build_ui()
         self._connect_signals()
         self._load_speed_mode()
@@ -249,6 +250,16 @@ class MotionPanelCompact(QWidget):
         v_layout.addLayout(bottom_layout)
         v_layout.addStretch()
 
+        # "Bench not calibrated" banner: hidden until the presenter says so.
+        self.lbl_calibration_banner = QLabel()
+        self.lbl_calibration_banner.setWordWrap(True)
+        self.lbl_calibration_banner.setStyleSheet(
+            "background-color: #4E3B00; color: #FFD54F; border: 1px solid #FFC107; "
+            "border-radius: 4px; padding: 4px; font-size: 11px; font-weight: bold;"
+        )
+        self.lbl_calibration_banner.setVisible(False)
+        layout.addWidget(self.lbl_calibration_banner)
+
         layout.addWidget(group)
 
         self._apply_axis_range()
@@ -346,8 +357,23 @@ class MotionPanelCompact(QWidget):
             self.spin_to_x.setRange(0.0, self._max_x)
             self.spin_to_y.setRange(0.0, self._max_y)
 
+    def set_calibration_banner(self, banner):
+        """Show/hide the "bench not calibrated" banner and block every
+        command that moves the bench (stop and emergency stop stay usable)."""
+        self._not_calibrated = banner.visible
+        self.lbl_calibration_banner.setText(banner.text)
+        self.lbl_calibration_banner.setVisible(banner.visible)
+        enabled = not banner.visible
+        for widget in (
+            self.btn_go_x, self.btn_go_y, self.btn_go_both, self.btn_to_center,
+            self.btn_home_x, self.btn_home_y, self.btn_home_xy,
+        ):
+            widget.setEnabled(enabled)
+        self.set_jog_enabled(enabled)
+
     def set_jog_enabled(self, enabled: bool):
         """Enable/disable jog buttons based on motion state."""
+        enabled = enabled and not self._not_calibrated
         self.btn_up.setEnabled(enabled)
         self.btn_down.setEnabled(enabled)
         self.btn_left.setEnabled(enabled)

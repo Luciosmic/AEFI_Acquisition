@@ -14,3 +14,5 @@ Ce dossier contient les presenters PySide6 qui servent de pont entre les service
 - Les presenters s'enregistrent comme port de sortie dans leur `__init__` via `service.set_output_port(self)`.
 - Aucun import domaine direct : les données circulent uniquement sous forme de DTOs ou de types primitifs dans les signaux Qt.
 - Les calculs métier (ETA) sont effectués dans le presenter à titre exceptionnel car l'information de durée par point n'est pas disponible dans le service.
+
+- `MotionPresenter` / `ScanPresenter` : relayer l'état « banc non calibré » (`MotionConversionFoundMissing` / `MotionConversionBecameAvailable`, relu via `get_conversion_status()` / `get_start_refusal()`) sous forme de `MotionConversionBannerViewModel` — bandeau visible dans les panneaux Mouvement et Scan, qui désactivent déplacements et START (stop et arrêt d'urgence restent actifs).

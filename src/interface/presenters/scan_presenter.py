@@ -8,6 +8,7 @@ from application.services.scan_export_service.scan_export_service import ScanExp
 from application.services.scan_application_service.dtos.scan_dtos import Scan2DConfigDTO, LineScanConfigDTO
 from application.services.scan_export_service.dtos.scan_export_dtos import ExportConfigDTO
 from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from interface.presentation.motion_conversion_banner_model import MotionConversionBannerViewModel
 from interface.qt_abc import QABCMeta
 
 class ScanPresenter(QObject, IScanOutputPort, metaclass=QABCMeta):
@@ -32,6 +33,7 @@ class ScanPresenter(QObject, IScanOutputPort, metaclass=QABCMeta):
     scan_paused = Signal(str, int) # scan_id, current_point_index
     scan_resumed = Signal(str, int) # scan_id, resume_from_point_index
     status_updated = Signal(str) # status message
+    start_availability_changed = Signal(object) # MotionConversionBannerViewModel (visible = start refused)
     
     def __init__(self, service: ScanApplicationService, export_service: ScanExportService, event_bus: IDomainEventBus):
         super().__init__()
@@ -47,6 +49,23 @@ class ScanPresenter(QObject, IScanOutputPort, metaclass=QABCMeta):
         
         # Register myself as the output port
         self._service.set_output_port(self)
+
+        # Start availability follows the bench calibration state.
+        if self._event_bus is not None:
+            self._event_bus.subscribe("motionconversionfoundmissing", self.refresh_start_availability)
+            self._event_bus.subscribe("motionconversionbecameavailable", self.refresh_start_availability)
+
+    def refresh_start_availability(self, _event=None) -> None:
+        """Ask the service why a scan could not start now and tell the panel."""
+        refusal = self._service.get_start_refusal()
+        if refusal is None:
+            self.start_availability_changed.emit(MotionConversionBannerViewModel.calibrated())
+        else:
+            self.start_availability_changed.emit(MotionConversionBannerViewModel.not_calibrated(
+                getattr(refusal, "motor_name", None),
+                getattr(refusal, "missing_quantity", None),
+                getattr(refusal, "where_to_enter", None),
+            ))
         
     # ==================================================================================
     # IScanOutputPort Implementation (Service -> Presenter)
@@ -171,7 +190,8 @@ class ScanPresenter(QObject, IScanOutputPort, metaclass=QABCMeta):
 
             success = execute(dto)
             if not success:
-                self.status_updated.emit("Failed to start scan (check logs).")
+                refusal = self._service.get_start_refusal()
+                self.status_updated.emit(refusal.message if refusal is not None else "Failed to start scan (check logs).")
 
         except ValueError as e:
             self.status_updated.emit(f"Invalid parameters: {e}")

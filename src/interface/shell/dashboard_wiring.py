@@ -92,6 +92,7 @@ def wire_dashboard(
     motion_presenter.status_updated.connect(motion_panel.update_status)
     motion_presenter.jog_enabled_changed.connect(motion_panel.set_jog_enabled)
     motion_presenter.limits_updated.connect(motion_panel.set_axis_limits)
+    motion_presenter.conversion_banner_changed.connect(motion_panel.set_calibration_banner)
 
     # Settings Panel -> Motion Panel (referential mode: limit-switch raw vs. centered/4-quadrants)
     settings_panel = dashboard.panels["settings"]
@@ -272,6 +273,8 @@ def wire_dashboard(
 
     # Presenter -> Control
     scan_presenter.status_updated.connect(scan_control_panel.update_status)
+    scan_presenter.start_availability_changed.connect(scan_control_panel.set_start_availability)
+    scan_presenter.refresh_start_availability()
     scan_presenter.scan_started.connect(lambda scan_id, _: scan_control_panel.on_scan_started(scan_id))
     scan_presenter.scan_completed.connect(scan_control_panel.on_scan_completed)
     scan_presenter.scan_failed.connect(scan_control_panel.on_scan_failed)
