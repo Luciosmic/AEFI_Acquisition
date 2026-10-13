@@ -20,6 +20,7 @@ from interface.presenters.excitation_presenter import ExcitationPresenter
 from interface.presenters.synchronous_detection_presenter import SynchronousDetectionPresenter
 from interface.presenters.aefi_continuous_reading_presenter import AefiContinuousReadingPresenter
 from interface.presenters.electric_field_probe_presenter import ElectricFieldProbePresenter
+from interface.presenters.inertial_sensor_presenter import InertialSensorPresenter
 from interface.presenters.scan_presenter import ScanPresenter
 from interface.presenters.hardware_advanced_config_presenter import HardwareAdvancedConfigPresenter
 from interface.presenters.sensor_calibration_presenter import SensorCalibrationPresenter
@@ -42,6 +43,7 @@ def wire_dashboard(
     synchronous_detection_presenter: SynchronousDetectionPresenter,
     aefi_continuous_reading_presenter: AefiContinuousReadingPresenter,
     electric_field_probe_presenter: ElectricFieldProbePresenter,
+    inertial_sensor_presenter: InertialSensorPresenter,
     scan_presenter: ScanPresenter,
     hardware_config_presenter: HardwareAdvancedConfigPresenter,
     sensor_calibration_presenter: SensorCalibrationPresenter,
@@ -176,6 +178,20 @@ def wire_dashboard(
     electric_field_probe_presenter.noise_state_updated.connect(electric_field_probe_panel.update_correction_states)
     electric_field_probe_presenter.frequency_correction_changed.connect(electric_field_probe_panel.on_frequency_correction_changed)
     logger.debug("Electric field probe panel wired")
+
+    # Inertial Sensor Panel — connection and start are operator actions only.
+    inertial_sensor_panel = dashboard.panels["inertial_sensor"]
+    inertial_sensor_panel.connect_requested.connect(inertial_sensor_presenter.on_connect_requested)
+    inertial_sensor_panel.disconnect_requested.connect(inertial_sensor_presenter.on_disconnect_requested)
+    inertial_sensor_panel.start_requested.connect(inertial_sensor_presenter.on_start_requested)
+    inertial_sensor_panel.stop_requested.connect(inertial_sensor_presenter.on_stop_requested)
+
+    inertial_sensor_presenter.connection_changed.connect(inertial_sensor_panel.on_connection_changed)
+    inertial_sensor_presenter.acquisition_started.connect(inertial_sensor_panel.on_acquisition_started)
+    inertial_sensor_presenter.acquisition_stopped.connect(inertial_sensor_panel.on_acquisition_stopped)
+    inertial_sensor_presenter.acquisition_failed.connect(inertial_sensor_panel.on_acquisition_failed)
+    inertial_sensor_presenter.reading_updated.connect(inertial_sensor_panel.on_reading_updated)
+    logger.debug("Inertial sensor panel wired")
 
     # Calibration Panel (capteur, géométrie source, carte de conditionnement — un seul dock à onglets)
     calibration_panel = dashboard.panels["calibration"]

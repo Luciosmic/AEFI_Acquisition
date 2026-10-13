@@ -196,6 +196,7 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
     from interface.presenters.adc_output_rate_characterization_presenter import AdcOutputRateCharacterizationPresenter
     from interface.presenters.aefi_continuous_reading_presenter import AefiContinuousReadingPresenter
     from interface.presenters.electric_field_probe_presenter import ElectricFieldProbePresenter
+    from interface.presenters.inertial_sensor_presenter import InertialSensorPresenter
     from interface.presenters.scan_presenter import ScanPresenter
     from interface.presenters.hardware_advanced_config_presenter import HardwareAdvancedConfigPresenter
 
@@ -593,6 +594,9 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
 
     # Electric Field Probe Presenter
     electric_field_probe_presenter = ElectricFieldProbePresenter(electric_field_probe_service, event_bus)
+
+    # Inertial Sensor Presenter
+    inertial_sensor_presenter = InertialSensorPresenter(inertial_sensor_service, event_bus)
     
     
     
@@ -619,6 +623,7 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
         synchronous_detection_presenter,
         aefi_continuous_reading_presenter,
         electric_field_probe_presenter,
+        inertial_sensor_presenter,
         scan_presenter,
         hardware_config_presenter,
         sensor_calibration_presenter,
