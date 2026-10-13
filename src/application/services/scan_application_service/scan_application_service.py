@@ -44,7 +44,14 @@ from domain.shared_kernel.value_objects.acquisition.aefi_voltage_measurement imp
 from domain.step_scan.value_objects.scan_trajectory.scan_trajectory import ScanTrajectory
 
 # Ports
+from application.services.motion_control_service.ports.i_motion_conversion_status_port import (
+    IMotionConversionStatusPort,
+)
 from application.services.motion_control_service.ports.i_motion_port import IMotionPort
+from application.services.scan_application_service.errors.scan_start_error import (
+    ScanRefusedBenchNotCalibrated,
+    ScanStartError,
+)
 from application.shared.ports.i_async_task_runner import IAsyncTaskRunner
 from .ports.i_motion_synchronizer import IMotionSynchronizer
 from .ports.i_scan_output_port import IScanOutputPort
@@ -241,8 +248,10 @@ class ScanApplicationService:
         excitation_service: Optional[ExcitationConfigurationService] = None,
         *,
         unit_of_work: IUnitOfWork,
+        conversion_status: Optional[IMotionConversionStatusPort] = None,
     ):
         self._unit_of_work = unit_of_work
+        self._conversion_status = conversion_status
         self._motion_port = motion_port
         self._aefi_acquisition_service = aefi_acquisition_service
         self._event_bus = event_bus
@@ -289,6 +298,18 @@ class ScanApplicationService:
     # COMMANDS (State Mutators)
     # ==================================================================================
 
+    def get_start_refusal(self) -> Optional[ScanStartError]:
+        """QUERY: why a scan cannot start now (typed), None when it can.
+        The bench must have its mm/pulse conversion — no default value."""
+        if self._motion_port.is_conversion_available():
+            return None
+        status = self._conversion_status.get_status() if self._conversion_status is not None else None
+        return ScanRefusedBenchNotCalibrated(
+            motor_name=status.motor_name if status else None,
+            missing_quantity=status.missing_quantity if status else None,
+            where_to_enter=status.where_to_enter if status else None,
+        )
+
     def execute_scan(self, scan_dto: Scan2DConfigDTO) -> bool:
         def build() -> StepScanConfig:
             config = self._to_domain_config(scan_dto)
@@ -311,6 +332,10 @@ class ScanApplicationService:
     def _start_scan(self, build_config: Callable[[], Any], create_trajectory: Callable[[Any], ScanTrajectory]) -> bool:
         """Shared start for every scan shape: same aggregate, same loop —
         only the config type and its trajectory factory differ."""
+        refusal = self.get_start_refusal()
+        if refusal is not None:
+            logger.warning("ScanApplicationService: scan refused — %s", refusal.message)
+            return False
         try:
             config = build_config()
 

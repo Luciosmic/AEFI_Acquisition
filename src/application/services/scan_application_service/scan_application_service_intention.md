@@ -43,3 +43,5 @@ Orchestrer le cycle de vie d'un scan 2D step-by-step. Ce service est le point ce
 - **Scan « zombie »** : le `Scan` fin n'a pas de `CANCELLED`/`FAILED` ; après annulation ou échec il reste `STARTED`.
 - **Journal par scan** : l'`AefiPointAcquired` du dernier point peut manquer, car l'export est déjà fermé quand il est publié.
 - `AefiPoint` n'a pas encore d'index ni de baseline ; la baseline différentielle reste portée par `ScanPointAcquired`.
+
+- **Banc non calibré** : `get_start_refusal()` renvoie `ScanRefusedBenchNotCalibrated` tant que le port de mouvement n'a pas sa conversion mm/impulsion ; `execute_scan` / `execute_line_scan` renvoient `False` sans rien démarrer (pas de verrous, pas d'agrégat).

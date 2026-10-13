@@ -1,7 +1,19 @@
 import logging
 from typing import Optional
 
+from application.services.motion_control_service.dtos.motion_conversion_status_dto import MotionConversionStatusDTO
+from application.services.motion_control_service.errors.motion_control_error import (
+    MotionCommandFailed,
+    MotionControlError,
+    MotionConversionUnavailable,
+)
+from application.services.motion_control_service.ports.i_motion_conversion_status_port import (
+    IMotionConversionStatusPort,
+)
 from application.services.motion_control_service.ports.i_motion_port import IMotionPort
+from application.services.motion_control_service.ports.motion_conversion_unavailable_error import (
+    MotionConversionUnavailableError,
+)
 from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
 from domain.shared_kernel.operation_result import OperationResult
 from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
@@ -20,10 +32,59 @@ class MotionControlService:
 
     SPEED_MODES = ("slow", "medium", "fast")
 
-    def __init__(self, motion_port: IMotionPort, event_bus: IDomainEventBus):
+    def __init__(
+        self,
+        motion_port: IMotionPort,
+        event_bus: IDomainEventBus,
+        conversion_status: Optional[IMotionConversionStatusPort] = None,
+    ):
         self._motion_port = motion_port
         self._event_bus = event_bus
+        self._conversion_status = conversion_status
         self._last_target_position: Optional[Position2D] = None
+
+    # ------------------------------------------------------------------ #
+    # Calibration state (mm/pulse conversion)
+    # ------------------------------------------------------------------ #
+
+    def get_conversion_status(self) -> MotionConversionStatusDTO:
+        """Whether the bench can move; if not, what is missing and where to enter it."""
+        if self._motion_port.is_conversion_available():
+            if self._conversion_status is not None and self._conversion_status.get_status().is_available:
+                return self._conversion_status.get_status()
+            return MotionConversionStatusDTO(is_available=True)
+        if self._conversion_status is not None:
+            status = self._conversion_status.get_status()
+            if not status.is_available:
+                return status
+        return MotionConversionStatusDTO(is_available=False, missing_quantity="conversion mm/impulsion")
+
+    def _refusal(self, operation: str) -> Optional[MotionConversionUnavailable]:
+        """Typed refusal when the bench is not calibrated; None when it can move."""
+        if self._motion_port.is_conversion_available():
+            return None
+        status = self.get_conversion_status()
+        logger.warning("MotionControlService: %s refused — no mm/pulse conversion (%s)", operation, status.missing_quantity)
+        return MotionConversionUnavailable(
+            operation=operation,
+            motor_name=status.motor_name,
+            missing_quantity=status.missing_quantity,
+            where_to_enter=status.where_to_enter,
+        )
+
+    def _failure(self, operation: str, error: Exception) -> OperationResult[None, MotionControlError]:
+        """Translate a port exception into the use-case error union."""
+        if isinstance(error, MotionConversionUnavailableError):
+            status = self.get_conversion_status()
+            return OperationResult.fail(MotionConversionUnavailable(
+                operation=operation,
+                motor_name=status.motor_name,
+                missing_quantity=status.missing_quantity,
+                where_to_enter=status.where_to_enter,
+            ))
+        failed = MotionCommandFailed(operation=operation, error_detail=str(error))
+        logger.error(failed.message)
+        return OperationResult.fail(failed)
 
     def _get_reference_position(self) -> Position2D:
         """
@@ -49,9 +110,12 @@ class MotionControlService:
         """Reset target tracking (e.g. on stop)."""
         self._last_target_position = None
 
-    def move_relative(self, dx: float, dy: float) -> OperationResult[None, str]:
+    def move_relative(self, dx: float, dy: float) -> OperationResult[None, MotionControlError]:
         """Move relative to current position (or last target). Returns Result for explicit error handling."""
         logger.info("Command: move relative dx=%s dy=%s", dx, dy)
+        refusal = self._refusal("Move relative")
+        if refusal is not None:
+            return OperationResult.fail(refusal)
         try:
             current = self._get_reference_position()
             target_x = current.x + dx
@@ -69,13 +133,14 @@ class MotionControlService:
             
             return OperationResult.ok(None)
         except Exception as e:
-            error_msg = f"Move relative failed: {str(e)}"
-            logger.error(error_msg)
-            return OperationResult.fail(error_msg)
+            return self._failure("Move relative", e)
 
-    def move_absolute(self, x: float, y: float) -> OperationResult[None, str]:
+    def move_absolute(self, x: float, y: float) -> OperationResult[None, MotionControlError]:
         """Move to absolute position. Returns Result for explicit error handling."""
         logger.info("Command: move absolute x=%s y=%s", x, y)
+        refusal = self._refusal("Move absolute")
+        if refusal is not None:
+            return OperationResult.fail(refusal)
         try:
             target = Position2D(x=x, y=y)
             
@@ -84,13 +149,14 @@ class MotionControlService:
             
             return OperationResult.ok(None)
         except Exception as e:
-            error_msg = f"Move absolute failed: {str(e)}"
-            logger.error(error_msg)
-            return OperationResult.fail(error_msg)
+            return self._failure("Move absolute", e)
 
-    def move_absolute_x(self, target_x: float) -> OperationResult[None, str]:
+    def move_absolute_x(self, target_x: float) -> OperationResult[None, MotionControlError]:
         """Move X axis to absolute position, keeping Y. Returns Result for explicit error handling."""
         logger.info("Command: move absolute X target_x=%s", target_x)
+        refusal = self._refusal("Move absolute X")
+        if refusal is not None:
+            return OperationResult.fail(refusal)
         try:
             current = self._get_reference_position()
             target = Position2D(x=target_x, y=current.y)
@@ -100,13 +166,14 @@ class MotionControlService:
             
             return OperationResult.ok(None)
         except Exception as e:
-            error_msg = f"Move absolute X failed: {str(e)}"
-            logger.error(error_msg)
-            return OperationResult.fail(error_msg)
+            return self._failure("Move absolute X", e)
 
-    def move_absolute_y(self, target_y: float) -> OperationResult[None, str]:
+    def move_absolute_y(self, target_y: float) -> OperationResult[None, MotionControlError]:
         """Move Y axis to absolute position, keeping X. Returns Result for explicit error handling."""
         logger.info("Command: move absolute Y target_y=%s", target_y)
+        refusal = self._refusal("Move absolute Y")
+        if refusal is not None:
+            return OperationResult.fail(refusal)
         try:
             current = self._get_reference_position()
             target = Position2D(x=current.x, y=target_y)
@@ -116,60 +183,61 @@ class MotionControlService:
             
             return OperationResult.ok(None)
         except Exception as e:
-            error_msg = f"Move absolute Y failed: {str(e)}"
-            logger.error(error_msg)
-            return OperationResult.fail(error_msg)
+            return self._failure("Move absolute Y", e)
 
-    def home_x(self) -> OperationResult[None, str]:
+    def home_x(self) -> OperationResult[None, MotionControlError]:
         """Home X axis using hardware homing sequence. Returns Result for explicit error handling."""
         logger.info("Command: home X axis")
+        refusal = self._refusal("Home X")
+        if refusal is not None:
+            return OperationResult.fail(refusal)
         try:
             self._motion_port.home(axis="x")
             self._reset_target() # Homing invalidates position tracking
             return OperationResult.ok(None)
         except Exception as e:
-            error_msg = f"Home X failed: {str(e)}"
-            logger.error(error_msg)
-            return OperationResult.fail(error_msg)
+            return self._failure("Home X", e)
 
-    def home_y(self) -> OperationResult[None, str]:
+    def home_y(self) -> OperationResult[None, MotionControlError]:
         """Home Y axis using hardware homing sequence. Returns Result for explicit error handling."""
         logger.info("Command: home Y axis")
+        refusal = self._refusal("Home Y")
+        if refusal is not None:
+            return OperationResult.fail(refusal)
         try:
             self._motion_port.home(axis="y")
             self._reset_target() # Homing invalidates position tracking
             return OperationResult.ok(None)
         except Exception as e:
-            error_msg = f"Home Y failed: {str(e)}"
-            logger.error(error_msg)
-            return OperationResult.fail(error_msg)
+            return self._failure("Home Y", e)
 
-    def home_xy(self) -> OperationResult[None, str]:
+    def home_xy(self) -> OperationResult[None, MotionControlError]:
         """Home both axes using hardware homing sequence. Returns Result for explicit error handling."""
         logger.info("Command: home X and Y axes")
+        refusal = self._refusal("Home XY")
+        if refusal is not None:
+            return OperationResult.fail(refusal)
         try:
             self._motion_port.home(axis=None)  # None = both axes
             self._reset_target() # Homing invalidates position tracking
             return OperationResult.ok(None)
         except Exception as e:
-            error_msg = f"Home XY failed: {str(e)}"
-            logger.error(error_msg)
-            return OperationResult.fail(error_msg)
+            return self._failure("Home XY", e)
 
-    def set_speed_mode(self, mode: str) -> OperationResult[None, str]:
+    def set_speed_mode(self, mode: str) -> OperationResult[None, MotionControlError]:
         """Apply a named speed preset ('slow', 'medium', 'fast'). Returns Result for explicit error handling."""
         logger.info("Command: set speed mode=%s", mode)
         if mode not in self.SPEED_MODES:
-            return OperationResult.fail(f"Invalid speed mode: {mode}. Must be one of {self.SPEED_MODES}")
+            return OperationResult.fail(MotionCommandFailed(
+                operation="Set speed mode", error_detail=f"Invalid speed mode: {mode}. Must be one of {self.SPEED_MODES}"
+            ))
         try:
             self._motion_port.set_speed_mode(mode)
             return OperationResult.ok(None)
         except Exception as e:
-            error_msg = f"Set speed mode failed: {str(e)}"
-            logger.error(error_msg)
-            return OperationResult.fail(error_msg)
+            return self._failure("Set speed mode", e)
 
-    def stop(self) -> OperationResult[None, str]:
+    def stop(self) -> OperationResult[None, MotionControlError]:
         """Stop motion normally (deceleration). Returns Result for explicit error handling."""
         logger.info("Command: stop (deceleration)")
         try:
@@ -177,11 +245,9 @@ class MotionControlService:
             self._reset_target() # Stop invalidates target
             return OperationResult.ok(None)
         except Exception as e:
-            error_msg = f"Stop failed: {str(e)}"
-            logger.error(error_msg)
-            return OperationResult.fail(error_msg)
+            return self._failure("Stop", e)
 
-    def emergency_stop(self) -> OperationResult[None, str]:
+    def emergency_stop(self) -> OperationResult[None, MotionControlError]:
         """Stop motion immediately (E-Stop). Returns Result for explicit error handling."""
         logger.info("Command: emergency stop (E-Stop)")
         try:
@@ -190,11 +256,9 @@ class MotionControlService:
             self._event_bus.publish("emergencystoptriggered", EmergencyStopTriggered())
             return OperationResult.ok(None)
         except Exception as e:
-            error_msg = f"Emergency stop failed: {str(e)}"
-            logger.error(error_msg)
-            return OperationResult.fail(error_msg)
+            return self._failure("Emergency stop", e)
 
-    def set_reference(self, axis: str, position: float = 0.0) -> OperationResult[None, str]:
+    def set_reference(self, axis: str, position: float = 0.0) -> OperationResult[None, MotionControlError]:
         """
         Set the current position of the specified axis as a reference (e.g. 0).
 
@@ -208,9 +272,7 @@ class MotionControlService:
             self._reset_target() # Reference change invalidates tracking
             return OperationResult.ok(None)
         except Exception as e:
-            error_msg = f"Set reference failed: {str(e)}"
-            logger.error(error_msg)
-            return OperationResult.fail(error_msg)
+            return self._failure("Set reference", e)
 
     def get_axis_limits(self) -> tuple[float, float]:
         """Get the maximum travel limits for X and Y axes."""

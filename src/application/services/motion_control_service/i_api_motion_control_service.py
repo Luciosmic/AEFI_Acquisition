@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 
+from application.services.motion_control_service.dtos.motion_conversion_status_dto import MotionConversionStatusDTO
 from domain.shared_kernel.operation_result import OperationResult
 
 
@@ -50,3 +51,6 @@ class IApiMotionControlService(ABC):
 
     @abstractmethod
     def get_axis_limits(self) -> tuple[float, float]: ...
+
+    @abstractmethod
+    def get_conversion_status(self) -> MotionConversionStatusDTO: ...

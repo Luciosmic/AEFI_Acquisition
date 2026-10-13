@@ -105,3 +105,38 @@ def test_no_factor_without_the_motor_steps_per_revolution(components, service):
     service.record_calibration(**BENCH_SETTING)
 
     assert service.get_current_calibration() is None
+
+
+def test_gap_names_the_missing_steps_per_revolution(components, service):
+    mount(components, MOTORS, "IGUS-S-AN-060-035-060", {"rated_current_a": 4.2})
+    mount(components, DRIVER, "TB6600", {"max_current_a": 3.5})
+    service.record_calibration(**BENCH_SETTING)
+
+    assert service.get_current_calibration() is None
+    gap = service.get_current_gap()
+
+    assert gap.motor_name == "IGUS-S-AN-060-035-060"
+    assert gap.missing_quantity == "Pas par tour"
+    assert "Moteurs" in gap.where_to_enter
+
+
+def test_gap_when_nothing_is_recorded(bench, service):
+    gap = service.get_current_gap()
+
+    assert gap is not None
+    assert "transmission mécanique" in gap.missing_quantity
+
+
+def test_no_gap_when_conversion_is_derivable(bench, service):
+    service.record_calibration(**BENCH_SETTING)
+
+    assert service.get_current_gap() is None
+
+
+def test_motor_file_without_full_steps_per_revolution_gives_no_conversion_not_an_exception(components, service):
+    # Historical motor file: characterized, but the quantity was never entered.
+    mount(components, MOTORS, "IGUS-S-AN-060-035-060", {})
+    mount(components, DRIVER, "TB6600", {})
+    service.record_calibration(**BENCH_SETTING)
+
+    assert service.get_current_calibration() is None

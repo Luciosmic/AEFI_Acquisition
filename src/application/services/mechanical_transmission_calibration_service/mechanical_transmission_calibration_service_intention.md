@@ -40,3 +40,5 @@ current — positions converted with one factor, recorded with another.
 - Applying the factor to the motion controller happens at startup only
   (composition root): a new transmission is applied after a restart (said in
   the log when one is recorded).
+
+- `get_current_gap()`: when `get_current_calibration()` is `None`, says what is missing (motor, quantity such as « Pas par tour », where to enter it) so the dashboard can tell the operator instead of closing the application.

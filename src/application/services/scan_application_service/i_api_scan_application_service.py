@@ -3,6 +3,7 @@ from typing import Callable, Dict, Any, Optional
 
 from .dtos.scan_dtos import Scan2DConfigDTO, LineScanConfigDTO, ScanStatusDTO, ScanConfigSnapshotDTO
 from .ports.i_scan_output_port import IScanOutputPort
+from .errors.scan_start_error import ScanStartError
 from domain.shared_kernel.events.domain_event import DomainEvent
 
 
@@ -21,6 +22,9 @@ class IApiScanApplicationService(ABC):
     - Pure ABC, no state.
     - Implemented by ScanApplicationService.
     """
+
+    @abstractmethod
+    def get_start_refusal(self) -> Optional[ScanStartError]: ...
 
     @abstractmethod
     def execute_scan(self, scan_dto: Scan2DConfigDTO) -> bool: ...

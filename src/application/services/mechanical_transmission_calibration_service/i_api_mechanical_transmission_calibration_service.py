@@ -4,6 +4,9 @@ from typing import Optional
 from application.services.mechanical_transmission_calibration_service.dtos.mechanical_transmission_calibration_dto import (
     MechanicalTransmissionCalibrationDTO,
 )
+from application.services.mechanical_transmission_calibration_service.dtos.mechanical_transmission_gap_dto import (
+    MechanicalTransmissionGapDTO,
+)
 
 
 class IApiMechanicalTransmissionCalibrationService(ABC):
@@ -30,3 +33,6 @@ class IApiMechanicalTransmissionCalibrationService(ABC):
 
     @abstractmethod
     def get_current_calibration(self) -> Optional[MechanicalTransmissionCalibrationDTO]: ...
+
+    @abstractmethod
+    def get_current_gap(self) -> Optional[MechanicalTransmissionGapDTO]: ...

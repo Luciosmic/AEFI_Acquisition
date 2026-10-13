@@ -117,7 +117,7 @@ class MotionPresenter(QObject):
                 # Unlock on failure
                 self._is_moving = False
                 self.jog_enabled_changed.emit(True)
-                self.operation_failed.emit(result.error)
+                self.operation_failed.emit(result.error.message)
 
     @Slot(str, float)
     def on_move_to_requested(self, axis: str, target: float):
@@ -131,7 +131,7 @@ class MotionPresenter(QObject):
                 return
             
             if result.is_failure:
-                self.operation_failed.emit(result.error)
+                self.operation_failed.emit(result.error.message)
 
     @Slot(float, float)
     def on_move_both_requested(self, target_x: float, target_y: float):
@@ -139,7 +139,7 @@ class MotionPresenter(QObject):
         if self._service:
             result = self._service.move_absolute(target_x, target_y)
             if result.is_failure:
-                self.operation_failed.emit(result.error)
+                self.operation_failed.emit(result.error.message)
 
     @Slot()
     def on_move_to_center_requested(self):
@@ -149,7 +149,7 @@ class MotionPresenter(QObject):
             center_y = self._max_y / 2.0
             result = self._service.move_absolute(center_x, center_y)
             if result.is_failure:
-                self.operation_failed.emit(result.error)
+                self.operation_failed.emit(result.error.message)
 
     @Slot(str)
     def on_home_requested(self, axis: str):
@@ -165,7 +165,7 @@ class MotionPresenter(QObject):
                 return
             
             if result.is_failure:
-                self.operation_failed.emit(result.error)
+                self.operation_failed.emit(result.error.message)
 
     @Slot(str)
     def on_speed_mode_requested(self, mode: str):
@@ -173,7 +173,7 @@ class MotionPresenter(QObject):
         if self._service:
             result = self._service.set_speed_mode(mode)
             if result.is_failure:
-                self.operation_failed.emit(result.error)
+                self.operation_failed.emit(result.error.message)
 
     @Slot()
     def on_stop_requested(self):
@@ -181,7 +181,7 @@ class MotionPresenter(QObject):
         if self._service:
             result = self._service.stop()
             if result.is_failure:
-                self.operation_failed.emit(result.error)
+                self.operation_failed.emit(result.error.message)
 
     @Slot()
     def on_estop_requested(self):
@@ -189,4 +189,4 @@ class MotionPresenter(QObject):
         if self._service:
             result = self._service.emergency_stop()
             if result.is_failure:
-                self.operation_failed.emit(result.error)
+                self.operation_failed.emit(result.error.message)
