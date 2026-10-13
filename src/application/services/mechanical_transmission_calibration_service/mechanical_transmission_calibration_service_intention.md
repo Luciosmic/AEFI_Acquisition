@@ -37,8 +37,10 @@ current — positions converted with one factor, recorded with another.
   carried in the DTO for the export: permanent on this bench (TB6600 max
   3.5 A, Igus motor rated 4.2 A), a fact to keep visible, not a blocker.
 - Topic: `mechanicaltransmissioncalibrationentryadded`.
-- Applying the factor to the motion controller happens at startup only
-  (composition root): a new transmission is applied after a restart (said in
-  the log when one is recorded).
+- Applying the factor to the motion controller is done by
+  `MotionConversionHandler`: at startup, and live only while no factor has
+  been applied yet (uncalibrated -> calibrated: nothing could have moved). A
+  factor already applied is never changed in a session: a different
+  transmission is taken at the next startup.
 
 - `get_current_gap()`: when `get_current_calibration()` is `None`, says what is missing (motor, quantity such as « Pas par tour », where to enter it) so the dashboard can tell the operator instead of closing the application.

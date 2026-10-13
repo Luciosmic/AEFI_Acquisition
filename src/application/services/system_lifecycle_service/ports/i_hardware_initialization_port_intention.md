@@ -14,3 +14,5 @@ Abstraire la séquence d'initialisation et de fermeture de tous les périphériq
 
 - **Port outbound** dans `system_lifecycle_service/`.
 - Implémenté typiquement par un `CompositeHardwareInitializationPort` qui agrège les initialiseurs individuels (MCU, Arcus).
+
+- `verify_all()` ne doit pas dépendre d'une calibration : l'adaptateur Arcus vérifie le contrôleur en impulsions brutes pour que l'absence de conversion mm/impulsion ne ferme pas l'application.

@@ -114,6 +114,7 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
     from domain.calibration.calibration import Calibration
     from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
     from application.services.motion_control_service.motion_control_service import MotionControlService
+    from application.services.motion_control_service.motion_conversion_handler import MotionConversionHandler
     from application.services.electric_field_probe_service.electric_field_probe_service import ElectricFieldProbeService
     from application.services.scan_export_service.scan_export_service import ScanExportService
     from application.services.scan_application_service.scan_closure_handler.scan_closure_handler import ScanClosureHandler
@@ -338,18 +339,17 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
     if not transmission_repository.find_all():
         transmission_service.record_calibration(**transmission_seed["transmission"])
         logger.info("Seeded mechanical transmission from mechanical_transmission_seed.json")
-    transmission = transmission_service.get_current_calibration()
-    if transmission is not None:
-        hw.motion_port.set_microns_per_pulse(transmission.microns_per_pulse)
-        logger.info(
-            "Services -> MechanicalTransmissionCalibrationService: motion set to %.4f µm/pulse (%s, %s, 1/%d)",
-            transmission.microns_per_pulse, transmission.motor_name, transmission.stepper_driver_name, transmission.microsteps,
-        )
-    else:
-        logger.error(
-            "No usable mechanical transmission for the mounted motor/driver — the motion controller has no "
-            "mm/pulse conversion and will refuse to move"
-        )
+    # The bench starts even without mm/pulse conversion (motor steps per
+    # revolution not characterized, ...): motion and scan are then REFUSED with
+    # the missing quantity named on the dashboard, never run on a guessed value.
+    # Entering the quantity (Calibration panel, "Moteurs" tab) applies the
+    # conversion live, no restart.
+    motion_conversion_handler = MotionConversionHandler(hw.motion_port, transmission_service, event_bus)
+    motion_conversion_handler.apply_current_transmission()
+    logger.info(
+        "Services -> MotionConversionHandler created (calibrated=%s)",
+        motion_conversion_handler.get_status().is_available,
+    )
 
     # Sensor Calibration Service (mounting angles P of the mounted sensor).
     # Each angle calibration references the sensor's current mounting and the
@@ -394,6 +394,7 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
         motion_sync=motion_sync,
         auxiliary_probes=[narda_channel],
         excitation_service=excitation_service,
+        conversion_status=motion_conversion_handler,
     )
     logger.info("Services -> ScanApplicationService created (auxiliary_probes=1)")
 
@@ -447,7 +448,7 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
     logger.info("Services -> ScanExportService created")
 
     # Motion Control Service
-    motion_control_service = MotionControlService(hw.motion_port, event_bus)
+    motion_control_service = MotionControlService(hw.motion_port, event_bus, conversion_status=motion_conversion_handler)
     logger.info("Services -> MotionControlService created")
 
     # Transformation Service — applies E_sources = P·E_sensor with the active

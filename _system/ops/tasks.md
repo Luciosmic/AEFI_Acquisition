@@ -1,5 +1,22 @@
 # Tâches actives
 
+## Démarrage « banc non calibré » : parcours de calibration de la transmission mécanique
+
+**Statut** (2026-10-13, branche `fix/arcus-startup-uncalibrated`) : l'application démarre sans conversion
+mm/impulsion (p. ex. moteur « IGUS-S-AN-060-035-060 » sans « Pas par tour ») ; mouvement, homing et scan sont
+refusés par erreur typée, un bandeau nomme la grandeur manquante et l'onglet où la saisir. La saisie de la
+grandeur (panneau Calibration, onglet « Moteurs ») applique la conversion en direct, sans redémarrage.
+
+À faire (pourquoi : l'opérateur ne doit pas avoir à éditer des fichiers ni relire les logs pour calibrer) :
+- [ ] Parcours de calibration de la transmission mécanique sans UI : `record_calibration` (micro-pas, courant,
+      avance par tour) n'a pas d'écran dédié ; aujourd'hui seule la graine `mechanical_transmission_seed.json`
+      l'enregistre au premier démarrage. Un écran (ou un bouton « enregistrer la transmission ») est à décider.
+- [ ] Redémarrage requis : une transmission déjà appliquée n'est pas changée en session ; ajouter un état visible
+      « transmission modifiée, redémarrer l'application » (voir `_system/ops/ponytail-debt.md`).
+- [ ] Mode mock : démarre non calibré avec la donnée runtime ; décider d'une transmission de test explicite.
+- [ ] Valider sur banc réel : démarrage avec le contrôleur Arcus sans conversion (vérification en impulsions) et
+      application en direct après saisie. Non testé sur matériel.
+
 ## Domaine scan : dette après le refactoring Scan fin + agrégats forts + Unit of Work
 
 **Statut** (2026-10-09) : modèle implémenté côté domaine/application (steps 1-9), décision dans

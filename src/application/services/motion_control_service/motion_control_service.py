@@ -59,6 +59,9 @@ class MotionControlService:
                 return status
         return MotionConversionStatusDTO(is_available=False, missing_quantity="conversion mm/impulsion")
 
+    # ponytail: homing is refused too while not calibrated (it would work in
+    # pulses, but positions are meaningless until the factor is known) — allow it
+    # if a bench needs to home before its transmission is characterized.
     def _refusal(self, operation: str) -> Optional[MotionConversionUnavailable]:
         """Typed refusal when the bench is not calibrated; None when it can move."""
         if self._motion_port.is_conversion_available():

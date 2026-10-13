@@ -16,6 +16,10 @@ Scan : `grep -rnE '(#|//) ?ponytail:' .`
 - **[scan_application_service.py:877](../../src/application/services/scan_application_service/scan_application_service.py#L877)** — le fly-scan n'utilise que le flux AEFI ; une sonde auxiliaire (Narda, ~50 Hz) est ignorée (avertissement loggé). Trigger : si une carte de champ en fly-scan est un jour voulue, lui donner son propre projecteur.
 - **[scan_application_service.py:50](../../src/application/services/scan_application_service/scan_application_service.py#L50)** — dépendance directe service applicatif -> `ExcitationConfigurationService` (mute/unmute), faute d'événement « excitation demandée ». Trigger : remplacer par un échange par événements si un tel événement existe.
 
+- **[motion_conversion_handler.py](../../src/application/services/motion_control_service/motion_conversion_handler.py)** et **[mechanical_transmission_calibration_service.py](../../src/application/services/mechanical_transmission_calibration_service/mechanical_transmission_calibration_service.py)** — seule la transition non calibré -> calibré est appliquée en direct ; une conversion déjà appliquée n'est pas changée en session (les positions en impulsions du contrôleur seraient réinterprétées). Aucun bandeau ne signale qu'une transmission enregistrée diffère de celle appliquée. Trigger : si un changement de transmission en cours de session devient courant, publier un événement « redémarrage requis » (ou recaler le contrôleur) plutôt que de laisser le log seul.
+- **[motion_control_service.py](../../src/application/services/motion_control_service/motion_control_service.py)** — le homing est aussi refusé tant que le banc n'est pas calibré (il fonctionnerait en impulsions, mais les positions n'ont pas de sens). Trigger : l'autoriser si un banc doit être référencé avant la caractérisation de sa transmission.
+- **[hardware_composition_root.py](../../src/infrastructure/hardware/hardware_composition_root.py)** — le mode mock démarre non calibré avec la donnée runtime (même chemin que le réel). Trigger : décider d'une transmission de test explicite pour le mock (valeur injectée, nommée, visible), ou de laisser le développeur saisir « Pas par tour » dans l'onglet « Moteurs ».
+
 ## Sans trigger (`no-trigger` — risque de pourrir silencieusement)
 
 - **[electric_field_probe_post_processor.py:20](../../external_modules/electric_field_probe_post_processor/electric_field_probe_post_processor.py#L20)** — remplissage des trous NaN par moyenne des voisins directs, répété jusqu'à stabilité. Ceiling : heuristique naïve, pas d'interpolation physique.
@@ -23,4 +27,4 @@ Scan : `grep -rnE '(#|//) ?ponytail:' .`
 - **[electric_field_probe_acquisition_executor.py:54](../../src/infrastructure/execution/electric_field_probe_acquisition_executor.py#L54)** — cadence de simulation fixe à 50Hz (`_SAMPLE_INTERVAL_S`), pas configurable. Ceiling : hardcodé plutôt qu'un paramètre de débit.
 - **[adapter_mock_i_aefi_acquisition_executor.py:26](../../src/infrastructure/mocks/adapter_mock_i_aefi_acquisition_executor.py#L26)** — cadence de simulation fixe à 1kHz (`_SIMULATION_INTERVAL_S`), pas configurable. Ceiling : hardcodé plutôt qu'un paramètre de débit.
 
-**7 markers, 4 with no trigger.**
+**10 markers, 4 with no trigger.** (3 ajoutés à la main le 2026-10-13, hors régénération)

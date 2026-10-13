@@ -52,6 +52,9 @@ class HardwareCompositionRoot:
             from infrastructure.hardware.arcus_performax_4EX.fake.fake_arcus_performax4ex_controller import (
                 FakeArcusPerformax4EXController,
             )
+            # ponytail: the mock reads the same runtime calibration as the real
+            # path, so it starts "not calibrated" when the motor file lacks its
+            # steps per revolution — no test transmission injected here (to decide).
             logger.info("Motion -> mock (ArcusCompositionRoot, simulated controller)")
             self.arcus_root = ArcusCompositionRoot(event_bus=event_bus, controller=FakeArcusPerformax4EXController())
         self.motion_port: IMotionPort = self.arcus_root.motion
