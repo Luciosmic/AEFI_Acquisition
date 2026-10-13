@@ -13,9 +13,8 @@ Responsibility:
 Design:
 - Non-blocking `start(config, stream_port)`; `stop()` uses an Event flag and a
   join with timeout. An operator stop publishes no failure event.
-- ponytail: the lidar (a distance) travels as one channel of the same stream
-  (see IInertialSensorStreamPort). Ceiling: one worker, one stream, one event
-  carry both. Upgrade: a separate lidar port and executor.
+- The lidar travels as one channel of the same stream (see the ponytail note
+  below).
 """
 
 from __future__ import annotations
@@ -49,6 +48,9 @@ SAMPLE_ACQUIRED_TOPIC = "inertialsensorsampleacquired"
 STREAM_FAILED_TOPIC = "inertialsensorstreamfailed"
 
 
+# ponytail: the lidar (a distance) travels as one channel of the same stream (see
+# IInertialSensorStreamPort). Ceiling: one worker, one stream, one event carry
+# both. Upgrade: a separate lidar port and executor.
 class InertialSensorAcquisitionExecutor(IInertialSensorAcquisitionExecutor):
     MAX_CONSECUTIVE_READ_ERRORS = 2
     # Silence longer than this (no sample, no exception) is a stalled board.

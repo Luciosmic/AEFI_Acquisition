@@ -7,10 +7,8 @@ Responsibility:
 
 Design:
 - No rest calibration applied: raw values are converted only.
-- ponytail: the lidar passes through as a channel of the same stream
-  (lidar_raw, lidar_distance_mm). Ceiling: one stream carries inertial sensors
-  and a distance. Upgrade: a separate lidar port; the shared board/serial link
-  stays an infrastructure detail of this module.
+- The lidar passes through as a channel of the same stream (see the ponytail
+  note below).
 """
 
 import logging
@@ -40,6 +38,10 @@ from infrastructure.hardware.lsm9ds1.lsm9ds1_stream_protocol import (
 logger = logging.getLogger(__name__)
 
 
+# ponytail: the lidar passes through as a channel of the same stream (lidar_raw,
+# lidar_distance_mm). Ceiling: one stream carries inertial sensors and a distance.
+# Upgrade: a separate lidar port; the shared board/serial link stays an
+# infrastructure detail of this module.
 class Lsm9ds1InertialSensorStreamAdapter(IInertialSensorStreamPort):
     def __init__(self, port: str, baudrate: int, rate_hz: Optional[int] = None) -> None:
         self._driver = LSM9DS1StreamDriver(port=port, baudrate=baudrate)

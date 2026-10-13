@@ -17,11 +17,7 @@ Rationale:
 Design:
 - Connection and start are operator actions: no automatic reconnection or
   restart (visible state, user-triggered actions).
-- ponytail: the lidar (a distance, not an inertial quantity) is one channel of
-  the same stream because it sits on the same board and serial link — an
-  infrastructure fact. Ceiling: one service and one stream carry both.
-  Upgrade: a separate lidar concept and port; the shared board stays an
-  infrastructure detail.
+- The lidar is one channel of the same stream (see the ponytail note below).
 """
 
 from __future__ import annotations
@@ -52,6 +48,10 @@ CONNECTION_CHANGED_TOPIC = "inertialsensorconnectionchanged"
 logger = logging.getLogger(__name__)
 
 
+# ponytail: the lidar (a distance, not an inertial quantity) is one channel of the
+# same stream because it sits on the same board and serial link — an
+# infrastructure fact. Ceiling: one service and one stream carry both. Upgrade: a
+# separate lidar concept and port; the shared board stays an infrastructure detail.
 class InertialSensorService(IApiInertialSensorService):
     """Application service for the streamed inertial sensor."""
 

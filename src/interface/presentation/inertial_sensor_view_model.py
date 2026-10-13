@@ -4,11 +4,6 @@ Inertial sensor view model (pure, no Qt, no domain import).
 Responsibility:
 - Static descriptors of the displayed channels (explicit labels, "unverified"
   flags) and a frozen, ready-to-display reading built from primitives.
-
-ponytail: the lidar is displayed as a channel of the inertial sensor panel only
-because it travels in the same stream (same board, same serial link). Ceiling:
-one panel and one reading carry both. Upgrade: a separate lidar panel and view
-model once the lidar has its own concept and port.
 """
 
 from dataclasses import dataclass
@@ -56,6 +51,10 @@ CHANNELS: Tuple[ChannelDescriptor, ...] = (
         signed=True,
         unverified_reason="valeur non vérifiée : facteur 2^15 contre 2^16 non tranché",
     ),
+    # ponytail: the lidar is displayed as a channel of the inertial sensor panel only
+    # because it travels in the same stream (same board, same serial link). Ceiling:
+    # one panel and one reading carry both. Upgrade: a separate lidar panel and view
+    # model once the lidar has its own concept and port.
     ChannelDescriptor(
         key="lidar",
         label="Distance lidar (mm)",

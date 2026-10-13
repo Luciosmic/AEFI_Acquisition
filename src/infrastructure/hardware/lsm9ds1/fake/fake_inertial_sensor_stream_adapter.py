@@ -3,7 +3,6 @@ Fake inertial sensor stream adapter
 
 Responsibility:
 - Deterministic double of IInertialSensorStreamPort.
-- ponytail: the simulated lidar is a channel of the same stream (see the port).
 """
 
 import math
@@ -31,6 +30,9 @@ LIDAR_CAP_HZ = 25.0
 NOMINAL_RATE_HZ = 25.0
 
 
+# ponytail: the simulated lidar is a channel of the same stream, like the real one
+# (see IInertialSensorStreamPort). Ceiling: one stream carries both. Upgrade: a
+# separate fake lidar port when the lidar gets its own port.
 class FakeInertialSensorStreamAdapter(IInertialSensorStreamPort):
     def __init__(
         self,

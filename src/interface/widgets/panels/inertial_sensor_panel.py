@@ -7,10 +7,6 @@ operator actions, never tied to application startup.
 
 The widget never imports domain/ types: it receives booleans, strings and the
 frozen InertialSensorReadingViewModel.
-
-ponytail: the lidar row is displayed here only because the lidar travels in the
-same stream (same board, same serial link). Ceiling: one panel carries both.
-Upgrade: a separate lidar panel once it has its own concept and port.
 """
 
 from typing import Dict, List
@@ -37,6 +33,9 @@ _NOTE_STYLE = "color: #888; font-size: 11px; font-style: italic;"
 _VALUE_STYLE = "font-family: Consolas, monospace; font-size: 18px; min-width: 110px;"
 
 
+# ponytail: the lidar row is displayed here only because the lidar travels in the
+# same stream (same board, same serial link). Ceiling: one panel carries both.
+# Upgrade: a separate lidar panel once it has its own concept and port.
 class InertialSensorPanel(QWidget):
     connect_requested = Signal()
     disconnect_requested = Signal()

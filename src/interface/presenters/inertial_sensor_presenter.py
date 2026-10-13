@@ -9,10 +9,6 @@ Bridges InertialSensorService and InertialSensorPanel.
   ready-to-display view model at ~10 Hz.
 - The measured rate comes from the samples' reception timestamps (sliding
   window), never from the display instants.
-
-ponytail: the lidar channel is displayed by this presenter only because it
-travels in the same stream (same board, same serial link). Ceiling: one
-presenter carries both. Upgrade: a separate lidar presenter with its own port.
 """
 
 import logging
@@ -45,6 +41,9 @@ RATE_WINDOW_SAMPLES = 50  # ~2 s at 25 Hz
 logger = logging.getLogger(__name__)
 
 
+# ponytail: the lidar channel is displayed by this presenter only because it
+# travels in the same stream (same board, same serial link). Ceiling: one
+# presenter carries both. Upgrade: a separate lidar presenter with its own port.
 class InertialSensorPresenter(QObject):
     connection_changed = Signal(bool, str)  # connected, label
     acquisition_started = Signal()

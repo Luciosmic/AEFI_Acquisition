@@ -18,10 +18,7 @@ Design:
 - disconnect() must send the stream stop to the board (the board keeps its
   stream active with the port closed) and be idempotent.
 - No nominal rate presumed: the consumer measures it from timestamp_s.
-- ponytail: the lidar (a distance, not an inertial quantity) is a channel of
-  this same stream because it sits on the same board and serial link — an
-  infrastructure fact. Ceiling: a single stream carries both. Upgrade: a
-  separate lidar port; the shared board/link stays an infrastructure detail.
+- The lidar is a channel of this same stream (see the ponytail note below).
 """
 
 from abc import ABC, abstractmethod
@@ -32,6 +29,10 @@ from application.services.inertial_sensor_service.dtos.inertial_sensor_dtos impo
 )
 
 
+# ponytail: the lidar (a distance, not an inertial quantity) is a channel of this
+# same stream because it sits on the same board and serial link — an
+# infrastructure fact. Ceiling: a single stream carries both. Upgrade: a separate
+# lidar port; the shared board/link stays an infrastructure detail.
 class IInertialSensorStreamPort(ABC):
     """Port interface for a streamed inertial sensor (connection + stream)."""
 
