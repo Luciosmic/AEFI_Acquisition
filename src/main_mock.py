@@ -12,5 +12,6 @@ if __name__ == "__main__":
         "motion": "mock",
         "aefi_device": "mock",
         "electric_field_probe": "mock",
+        "inertial_sensor": "mock",
         "oscilloscope": "mock",
     })
