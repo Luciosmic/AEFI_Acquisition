@@ -32,12 +32,15 @@ the caller (see `src/main.py`) starts it in a daemon `threading.Thread`,
 bound to localhost only.
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import asdict
 from datetime import datetime, timezone
-from typing import Any, Callable, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
-from mcp.server.fastmcp import FastMCP
+if TYPE_CHECKING:  # imported at call time: ~1 s of import cost kept out of the startup critical path
+    from mcp.server.fastmcp import FastMCP
 
 from application.services.scan_application_service.scan_application_service import (
     ScanApplicationService,
@@ -83,6 +86,8 @@ def build_observability_mcp_server(
     only when their provider is given. No new service instance is created
     and no hardware port is touched here.
     """
+    from mcp.server.fastmcp import FastMCP  # in the MCP thread, not at module import
+
     mcp = FastMCP("aefi-observability", host=host, port=port)
 
     @mcp.tool()
