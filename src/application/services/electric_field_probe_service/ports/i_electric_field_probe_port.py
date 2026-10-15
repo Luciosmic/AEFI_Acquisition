@@ -18,8 +18,8 @@ Design:
 from abc import ABC, abstractmethod
 from typing import Optional
 
-from domain.electric_field_probe.electric_field_probe import ElectricFieldProbe
-from domain.electric_field_probe.value_objects.field_measurement.field_measurement import (
+from domain.detection_devices.electric_field_probes.electric_field_probe import ElectricFieldProbe
+from domain.detection_devices.electric_field_probes.value_objects.field_measurement.field_measurement import (
     FieldMeasurement,
 )
 from application.services.electric_field_probe_service.dtos.electric_field_probe_dtos import (

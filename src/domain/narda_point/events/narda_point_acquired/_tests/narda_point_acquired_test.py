@@ -4,7 +4,7 @@ from uuid import uuid4
 
 import pytest
 
-from domain.electric_field_probe.value_objects.field_measurement.field_measurement import FieldMeasurement
+from domain.detection_devices.electric_field_probes.value_objects.field_measurement.field_measurement import FieldMeasurement
 from domain.narda_point.events.narda_point_acquired.narda_point_acquired import NardaPointAcquired
 from domain.narda_point.value_objects.narda_point_id.narda_point_id import NardaPointId
 from domain.shared_kernel.events.domain_event import DomainEvent

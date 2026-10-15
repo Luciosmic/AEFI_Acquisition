@@ -13,5 +13,5 @@ Modéliser le démarrage d'une lecture continue de la sonde electric field probe
 
 - `@dataclass(frozen=True)` héritant de `DomainEvent`.
 - Nommé "Reading" et non "Acquisition" : rien n'est persisté par ce flux, c'est une lecture en direct.
-- Placé dans `domain/electric_field_probe/events/` (et non `shared_kernel`) : c'est un événement propre à l'agrégat `ElectricFieldProbe`, au même titre que `FieldSampleAcquired`/`ElectricFieldProbeConnectionChanged` — il ne partage plus de classe générique avec le flux AEFI/MCU.
+- Placé dans `domain/detection_devices/electric_field_probes/events/` (et non `shared_kernel`) : c'est un événement propre à l'agrégat `ElectricFieldProbe`, au même titre que `FieldSampleAcquired`/`ElectricFieldProbeConnectionChanged` — il ne partage plus de classe générique avec le flux AEFI/MCU.
 - Publié comme première instruction du worker, avant la boucle — symétrique à `Stopped`/`Failed` publiés dans son `finally`.

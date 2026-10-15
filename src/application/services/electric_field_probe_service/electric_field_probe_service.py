@@ -34,13 +34,13 @@ from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
 from domain.shared_kernel.excitation.events.excitation_frequency_changed.excitation_frequency_changed import (
     ExcitationFrequencyChanged,
 )
-from domain.electric_field_probe.events.electric_field_probe_connection_changed.electric_field_probe_connection_changed import (
+from domain.detection_devices.electric_field_probes.events.electric_field_probe_connection_changed.electric_field_probe_connection_changed import (
     ElectricFieldProbeConnectionChanged,
 )
-from domain.electric_field_probe.events.electric_field_probe_battery_refreshed.electric_field_probe_battery_refreshed import (
+from domain.detection_devices.electric_field_probes.events.electric_field_probe_battery_refreshed.electric_field_probe_battery_refreshed import (
     ElectricFieldProbeBatteryRefreshed,
 )
-from domain.electric_field_probe.events.electric_field_probe_frequency_correction_changed.electric_field_probe_frequency_correction_changed import (
+from domain.detection_devices.electric_field_probes.events.electric_field_probe_frequency_correction_changed.electric_field_probe_frequency_correction_changed import (
     ElectricFieldProbeFrequencyCorrectionChanged,
 )
 

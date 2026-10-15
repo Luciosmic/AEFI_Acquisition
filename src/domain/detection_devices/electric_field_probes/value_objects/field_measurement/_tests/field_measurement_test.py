@@ -3,7 +3,7 @@ from datetime import datetime
 
 import pytest
 
-from domain.electric_field_probe.value_objects.field_measurement.field_measurement import (
+from domain.detection_devices.electric_field_probes.value_objects.field_measurement.field_measurement import (
     FieldMeasurement,
 )
 

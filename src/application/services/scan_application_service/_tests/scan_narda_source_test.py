@@ -13,7 +13,7 @@ from application.services.scan_application_service.scan_application_service impo
     make_electric_field_probe_channel,
 )
 from application.services.scan_application_service.scan_closure_handler.scan_closure_handler import ScanClosureHandler
-from domain.electric_field_probe.value_objects.field_measurement.field_measurement import FieldMeasurement
+from domain.detection_devices.electric_field_probes.value_objects.field_measurement.field_measurement import FieldMeasurement
 from domain.narda_point.events.narda_point_acquired.narda_point_acquired import NardaPointAcquired
 from domain.scan.value_objects.expected_source.expected_source import ExpectedSource
 from domain.scan.value_objects.scan_id.scan_id import ScanId

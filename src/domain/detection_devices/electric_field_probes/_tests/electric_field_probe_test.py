@@ -2,7 +2,7 @@ from datetime import datetime
 
 import pytest
 
-from domain.electric_field_probe.electric_field_probe import ElectricFieldProbe
+from domain.detection_devices.electric_field_probes.electric_field_probe import ElectricFieldProbe
 
 
 def _probe(axis_labels=("X", "Y", "Z")):

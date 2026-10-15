@@ -3,8 +3,8 @@ Tests for FieldMeasurementStatisticsService
 """
 
 from datetime import datetime
-from domain.electric_field_probe.value_objects.field_measurement.field_measurement import FieldMeasurement
-from domain.electric_field_probe.services.field_measurement_statistics_service.field_measurement_statistics_service import FieldMeasurementStatisticsService
+from domain.detection_devices.electric_field_probes.value_objects.field_measurement.field_measurement import FieldMeasurement
+from domain.detection_devices.electric_field_probes.services.field_measurement_statistics_service.field_measurement_statistics_service import FieldMeasurementStatisticsService
 
 
 class TestFieldMeasurementStatisticsService:
