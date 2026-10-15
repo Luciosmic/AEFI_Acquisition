@@ -3,8 +3,8 @@
 ## Démarrage « banc non calibré » : parcours de calibration de la transmission mécanique
 
 **Statut** (2026-10-13, branche `fix/arcus-startup-uncalibrated`) : l'application démarre sans conversion
-mm/impulsion (p. ex. moteur « IGUS-S-AN-060-035-060 » sans « Pas par tour ») ; mouvement, homing et scan sont
-refusés par erreur typée, un bandeau nomme la grandeur manquante et l'onglet où la saisir. La saisie de la
+mm/impulsion (p. ex. moteur « IGUS-S-AN-060-035-060 » sans « Pas par tour ») ; mouvement en mm et scan sont
+refusés par erreur typée (le homing, en impulsions sur les fins de course, reste autorisé), un bandeau nomme la grandeur manquante et l'onglet où la saisir. La saisie de la
 grandeur (panneau Calibration, onglet « Moteurs ») applique la conversion en direct, sans redémarrage.
 
 À faire (pourquoi : l'opérateur ne doit pas avoir à éditer des fichiers ni relire les logs pour calibrer) :

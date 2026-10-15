@@ -100,9 +100,9 @@ def test_motion_panel_blocks_moves_but_not_stop_while_not_calibrated():
 
     assert not panel.lbl_calibration_banner.isHidden()
     assert not panel.btn_go_both.isEnabled()
-    assert not panel.btn_home_xy.isEnabled()
     assert not panel.btn_up.isEnabled()
     assert panel.btn_stop.isEnabled() and panel.btn_estop.isEnabled()
+    assert panel.btn_home_xy.isEnabled()  # homing works in pulses, the bar calibration needs it
 
     panel.set_jog_enabled(True)  # a motion event must not unlock a not calibrated bench
     assert not panel.btn_up.isEnabled()
