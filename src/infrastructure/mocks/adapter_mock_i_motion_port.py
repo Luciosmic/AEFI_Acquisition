@@ -52,6 +52,8 @@ class MockMotionPort(IMotionPort):
         self.last_speed: float | None = None
         self.last_speed_mode: str | None = None
         self._is_moving: bool = False
+        # Set by stop()/emergency_stop() to interrupt the simulated move in progress.
+        self._interrupt: threading.Event = threading.Event()
 
     def move_to(self, position: Position2D) -> str:
         """
@@ -70,6 +72,7 @@ class MockMotionPort(IMotionPort):
         
         self.move_history.append(position)
         self._is_moving = True
+        self._interrupt = threading.Event()  # a new move is not interrupted by an earlier stop
         
         # Simulate motion in background thread (like real hardware)
         if self._event_bus:
@@ -81,7 +84,7 @@ class MockMotionPort(IMotionPort):
                 )
             threading.Thread(
                 target=self._simulate_motion,
-                args=(motion_id, position, delay_s),
+                args=(motion_id, self._current_pos, position, delay_s, self._interrupt),
                 daemon=True
             ).start()
         else:
@@ -92,11 +95,23 @@ class MockMotionPort(IMotionPort):
         
         return motion_id
     
-    def _simulate_motion(self, motion_id: str, target: Position2D, delay_s: float):
-        """Simulate motion with delay and publish MotionCompleted event."""
+    def _simulate_motion(
+        self, motion_id: str, start: Position2D, target: Position2D, delay_s: float, interrupt: threading.Event
+    ):
+        """Simulate motion with delay and publish MotionCompleted event — unless stop() interrupts
+        it: then the motor rests where it was, and neither the final position nor MotionCompleted
+        ever appear (like a real controller's aborted move)."""
         start_time = time.time()
-        time.sleep(delay_s)
-        
+        if interrupt.wait(delay_s):
+            # ponytail: linear position at the stop instant, deceleration ramp ignored.
+            fraction = min(1.0, (time.time() - start_time) / delay_s) if delay_s > 0 else 1.0
+            self._current_pos = Position2D(
+                start.x + (target.x - start.x) * fraction, start.y + (target.y - start.y) * fraction
+            )
+            logger.info(f"move_to: motion_id={motion_id} interrupted by stop at {self._current_pos}, "
+                        f"no MotionCompleted")
+            return
+
         # Update position
         self._current_pos = target
         self._is_moving = False
@@ -156,7 +171,8 @@ class MockMotionPort(IMotionPort):
         logger.info(f"set_speed_mode: Speed mode set to {mode}")
 
     def stop(self) -> None:
-        """Regular stop with deceleration."""
+        """Regular stop with deceleration: interrupts the simulated move in progress."""
+        self._interrupt.set()
         self._is_moving = False
         logger.info("stop: Normal Stop triggered (decelerating...)")
         
@@ -168,6 +184,7 @@ class MockMotionPort(IMotionPort):
 
     def emergency_stop(self) -> None:
         """Emergency stop - immediate halt."""
+        self._interrupt.set()
         self._is_moving = False
         logger.warning("emergency_stop: EMERGENCY STOP triggered! (Immediate Halt)")
         

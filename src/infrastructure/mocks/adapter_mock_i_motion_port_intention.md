@@ -8,6 +8,7 @@ Mock de `IMotionPort` pour les tests applicatifs de `ScanApplicationService`, `M
 
 - Implémenter `IMotionPort` en mémoire : `move_to()` enregistre la position et retourne un `motion_id`.
 - Publier immédiatement `MotionCompleted` sur le bus après chaque `move_to()` (comportement synchrone simulé).
+- `stop()` / `emergency_stop()` interrompent réellement le mouvement simulé en cours : ni `MotionCompleted`, ni `PositionUpdated` de la cible, ni position finale — le moteur reste où il a été arrêté (interpolation linéaire, rampe ignorée). Un double qui « finit » un mouvement arrêté valide à tort un consommateur qui compte sur l'arrêt (fly-scan : abandon de ligne sur pause/annulation).
 - Exposer des spy attributes : `move_count`, `last_position`, etc. pour les assertions de test.
 
 ## Design

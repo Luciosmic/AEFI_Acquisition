@@ -681,11 +681,17 @@ class ScanApplicationService:
                 channel.service.start_acquisition(channel.acquisition_config)
                 channels_started_by_scan.append(channel)
 
+        released: List[bool] = []  # one-shot guard: the streams are released once per scan
+
         def _release_streams() -> None:
             # Called before every terminal event publication (as well as in
             # `finally`, as a safety net — idempotent, safe to call twice):
             # an observer reacting to scancompleted/scanfailed must never see
             # a stream this scan owns still running.
+            if released:
+                logger.debug("ScanApplicationService: scan_id=%s streams already released. Doing nothing.", scan.id)
+                return
+            released.append(True)
             self._event_bus.unsubscribe("aefivoltagesampleacquired", _on_adc_sample)
             for topic, handler in channel_handlers:
                 self._event_bus.unsubscribe(topic, handler)
@@ -961,7 +967,13 @@ class ScanApplicationService:
         if adc_started_by_scan:
             self._aefi_acquisition_service.start_acquisition(AefiAcquisitionConfig(), controller=SCAN_EXCITATION_CONTROLLER)
 
+        released: List[bool] = []  # one-shot guard: before the last commit, on failure, and in `finally`
+
         def _release_streams() -> None:
+            if released:
+                logger.debug("ScanApplicationService: scan_id=%s fly streams already released. Doing nothing.", scan.id)
+                return
+            released.append(True)
             self._event_bus.unsubscribe("aefivoltagesampleacquired", _on_adc_sample)
             self._event_bus.unsubscribe("positionupdated", _on_position)
             if adc_started_by_scan:
@@ -1046,15 +1058,23 @@ class ScanApplicationService:
         def _abandon_line(line_index: int, reason: str) -> bool:
             """Drop the partial line and stop the motor now. False if the motor did not stop (scan failed)."""
             discarded = len(line_points)
-            logger.info("ScanApplicationService: scan_id=%s line=%d abandoned (%s), %d partial points discarded, "
-                        "stopping motion. Line will be re-acquired from its start.",
-                        scan.id, line_index, reason, discarded)
+            if discarded:
+                logger.info("ScanApplicationService: scan_id=%s line=%d abandoned (%s), %d partial points discarded, "
+                            "stopping motion. Line will be re-acquired from its start.",
+                            scan.id, line_index, reason, discarded)
+            else:
+                # e.g. paused while moving to the line start: no data to roll back, but the motor still stops.
+                logger.info("ScanApplicationService: scan_id=%s line=%d interrupted (%s). No point acquired yet, "
+                            "nothing to abandon; stopping motion, line will start from its beginning.",
+                            scan.id, line_index, reason)
             line_points.clear()
             if not _stop_motion(line_index, f"abandoning the line, {reason}"):
                 _fail(f"Motion did not stop within {self.FLY_STOP_TIMEOUT_S:.0f}s after abandoning fly line {line_index}")
                 return False
             _drain_queue(adc_queue)
             _drain_queue(position_queue)
+            if not discarded:
+                return True
             self._event_bus.publish("aefilineabandoned", AefiLineAbandoned(
                 scan_id=scan.id, line_index=line_index, reason=reason, discarded_points=discarded,
             ))

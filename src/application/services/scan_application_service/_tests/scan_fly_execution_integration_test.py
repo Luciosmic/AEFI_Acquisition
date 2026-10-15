@@ -4,6 +4,7 @@ emits its grid points live, while the motor moves — on the same motion stack
 as the app's mock mode (real ArcusAdapter over the bench-faithful fake
 controller), no hardware.
 """
+import logging
 import threading
 import time
 import unittest
@@ -200,6 +201,19 @@ class TestFlyScanOnTheFaithfulMotionStack(_Stack):
         self.assertEqual(self.service.get_status().current_point_index, 12)
         self.assertEqual(sum(1 for k in kinds if k[0] == "point"), 12)
 
+    def test_streams_are_released_once_without_unsubscribe_warnings(self):
+        # Released before the last commit, then again by the loop's `finally`: the second call is a no-op.
+        messages = []
+        handler = logging.Handler(level=logging.WARNING)
+        handler.emit = lambda record: messages.append(record.getMessage())
+        logging.getLogger().addHandler(handler)
+        self.addCleanup(logging.getLogger().removeHandler, handler)
+
+        self._run(make_dto())
+        time.sleep(0.3)  # the loop's `finally` runs after ScanCompleted
+
+        self.assertEqual([m for m in messages if "Handler not found" in m], [])
+
     def test_fly_scan_releases_the_adc_stream_it_started(self):
         self._run(make_dto())
 
@@ -293,6 +307,31 @@ class TestFlyScanPauseRollsBackTheCurrentLine(_FaithfulFlyStack):
 
         self._assert_whole_grid_once(scan)
         self.assertEqual([a.line_index for a in self.abandoned], [1])
+
+    def test_pause_while_moving_to_the_line_start_abandons_nothing_but_stops_the_motor(self):
+        line_1_start = (610.0, 630.0)
+        real_move_to = self.adapter.move_to
+        fired = []
+
+        def move_to(position):
+            motion_id = real_move_to(position)
+            if (position.x, position.y) == pytest.approx(line_1_start) and not fired:
+                fired.append(True)
+                # Lands during the ~0.7 s move to the start of line 1, before any point of it.
+                threading.Timer(0.1, self.service.pause_scan).start()
+                threading.Timer(0.8, self.service.resume_scan).start()
+            return motion_id
+
+        self.adapter.move_to = move_to
+        port = _PreviewPort([], self.service)
+        self.service.set_output_port(port)
+
+        scan = self._run(make_dto(), timeout=90.0)
+
+        self.assertEqual(self.abandoned, [])  # no point acquired yet: nothing to abandon
+        self.assertEqual(port.abandoned_seen, [])
+        self.assertEqual(len(self.stops), 1)  # the motor is stopped all the same
+        self._assert_whole_grid_once(scan)
 
     def test_pause_then_cancel_mid_line_commits_nothing_of_that_line(self):
         self._pause_in_line_1(lambda: threading.Timer(0.3, self.service.cancel_scan).start())
