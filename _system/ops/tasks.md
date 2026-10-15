@@ -40,6 +40,37 @@ domaine/application, à valider sur matériel** (non éprouvés au banc dans ce 
 - [ ] Valider sur matériel : fly-scan par `AefiLine`, sonde Narda requise au démarrage et échec visible si elle disparaît.
 - Vigilance : ne pas confondre le « line-scan » (step-scan le long d'une droite, sur `AefiPoint`) avec `AefiLine` (ligne du fly-scan).
 
+## Capteur inertiel LSM9DS1 : panneau en direct (fait côté code), dette lidar et vérifications au banc
+
+**Statut** (2026-10-13, branche `feature/inertial-sensor-panel`) : panneau « Capteur inertiel » en
+direct (accéléromètre, gyroscope, magnétomètre, lidar) implémenté et testé avec le fake ; **non
+éprouvé sur la carte réelle dans ce dépôt** (le driver a été validé sur COM5 dans le dossier de
+travail `Hardware - Drivers/LSM9DS1` de la thèse). Pourquoi : à terme, ces valeurs serviront à
+attendre la stabilisation mécanique du banc avant une mesure de scan — pas dans cet incrément.
+Service `inertial_sensor_service`, adaptateur `lsm9ds1/`, config `config_templates/lsm9ds1_config.json`.
+
+À faire :
+- [ ] **Dette lidar (non silencieuse)** : le lidar mesure une distance, ce n'est pas un capteur
+      inertiel ; il est un canal du même flux (même carte, même liaison série = considération
+      d'infrastructure). Lui donner un concept et un port distincts (DTO, port, événement, panneau),
+      la carte partagée restant un détail d'infrastructure (un driver, deux adaptateurs). Voir
+      `_system/ops/ponytail-debt.md`.
+- [ ] Valider sur la carte réelle depuis cette application : connexion, démarrage du flux (≈ 0,5 s,
+      dans le thread de travail), cadence mesurée ≈ 25 Hz avec lidar, arrêt `S*` à la fermeture de
+      l'application (la carte garde son flux actif port fermé).
+- [ ] Vérifier les valeurs signalées « non vérifiées » : plage du gyroscope (490 °/s repris d'un
+      VI), diviseur 2^15 contre 2^16 du magnétomètre, lidar en mm (3 distances connues), plage de
+      l'accéléromètre (6 orientations).
+- [ ] Calibration au repos : facteur 0,9673 issu d'une seule orientation, **non appliqué** ; à
+      refaire sur 6 orientations avant de l'appliquer.
+- [ ] Sous-ensembles de capteurs sans accéléromètre (magnétomètre+lidar, gyroscope+lidar,
+      magnétomètre+gyroscope) : ordre des champs supposé, jamais observé.
+- [ ] Le « COM8 » du Narda est encore codé en dur dans `main.py` (`NARDA_COM_PORT`) alors que
+      `config_templates/electric_field_probe_config.json` existe : même traitement que la carte
+      LSM9DS1 (hors périmètre de cet incrément).
+- [ ] Le LSM9DS1 de `config_templates/additional_sensors_config.json` (lu via l'ADC) est-il le même
+      capteur que celui de la carte série ? Deux chemins de lecture coexistent.
+
 ## Encodeurs AMT112Q-V sur les axes X/Y
 
 **Statut** : documentation rapatriée (2026-10-02), montage pas commencé. Faits hardware (câblage,

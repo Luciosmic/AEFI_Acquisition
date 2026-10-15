@@ -18,6 +18,7 @@ from interface.widgets.panels.motion_panel_compact import MotionPanelCompact
 from interface.widgets.panels.excitation_panel import ExcitationPanel
 from interface.widgets.panels.aefi_continuous_reading_panel import AefiContinuousReadingPanel
 from interface.widgets.panels.electric_field_probe_panel import ElectricFieldProbePanel
+from interface.widgets.panels.inertial_sensor_panel import InertialSensorPanel
 from interface.widgets.panels.hardware_advanced_config_panel import HardwareAdvancedConfigPanel
 from interface.widgets.panels.calibration_panel import CalibrationPanel
 from interface.widgets.panels.external_modules_panel import ExternalModulesPanel
@@ -82,6 +83,7 @@ class Dashboard(QWidget):
             "electric_field_profiles": ScanVisualizationPanel(profiles=True, channels=()),
             "aefi_continuous_reading": AefiContinuousReadingPanel(),
             "electric_field_probe": ElectricFieldProbePanel(),
+            "inertial_sensor": InertialSensorPanel(),
             "motion": MotionPanelCompact(),
             "excitation": ExcitationPanel(),
             "hardware_config": HardwareAdvancedConfigPanel(),
@@ -128,6 +130,7 @@ class Dashboard(QWidget):
             "electric_field_profiles": ("Narda Profiles Plot", "Scan"),
             "aefi_continuous_reading": ("AEFI Continuous Reading", "Continuous Reading"),
             "electric_field_probe": ("Narda Continuous Reading", "Continuous Reading"),
+            "inertial_sensor": ("Capteur inertiel", "Continuous Reading"),
             "motion": ("Motion Control", "Hardware"),
             "excitation": ("Excitation & Lock-In Detection", "Hardware"),
             "hardware_config": ("Hardware Advanced Config", "Hardware"),
