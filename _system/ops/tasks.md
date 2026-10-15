@@ -314,7 +314,9 @@ n'existaient pas au moment où ce travail a été planifié :
 Ces deux standards ont été synchronisés dans ce repo ET propagés dans les 4 autres
 worktrees (`AEFI_Acquisition`, `AEFI_Acquisition_dev_hardware`,
 `AEFI_Acquisition_dev_scan`, `AEFI_Acquisition_n8n-poc`) via
-`npx @packmind/cli@latest install`. Si le tunnel SSH vers le serveur Packmind (port
+`npx @packmind/cli@latest install`. (Le worktree `AEFI_Acquisition_n8n-poc` a
+depuis été supprimé ; le POC n8n est archivé sur `origin/feature/n8n-ddd-workflow-viz`,
+dossier `tools/n8n_workflow_poc/`.) Si le tunnel SSH vers le serveur Packmind (port
 8081, localhost via tunnel) n'est plus ouvert, la skill `get-solidai-standards`
 documente comment le rétablir.
 

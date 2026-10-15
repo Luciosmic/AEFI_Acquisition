@@ -57,7 +57,7 @@ Lire `_system/` avant toute décision architecturale :
 | `release/v1.0.1`          | Pas de worktree dédié actuellement — le worktree `AEFI_Acquisition/` tourne en réalité sur `main`  |
 | `release/v1.0.0`          | Archive historique                                               |
 | `archive/ddd-refactoring` | Refactoring DDD gelé — documentation uniquement, ne pas merger |
-| `feature/n8n-ddd-workflow-viz` | Worktree `AEFI_Acquisition_n8n-poc/` — POC visualisation workflow DDD via n8n |
+| `feature/n8n-ddd-workflow-viz` | Worktree supprimé, branche locale supprimée — POC visualisation workflow DDD via n8n archivé sur la branche distante `origin/feature/n8n-ddd-workflow-viz` (dossier `tools/n8n_workflow_poc/`) |
 | `backup-before-rollback-2026-07-10` | Branche de sauvegarde pré-rollback — pas de worktree actif |
 
 ## Contexte borné du worktree
