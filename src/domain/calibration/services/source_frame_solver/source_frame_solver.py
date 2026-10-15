@@ -51,7 +51,6 @@ import cmath
 import math
 
 import numpy as np
-from scipy.optimize import least_squares
 
 from domain.calibration.entities.source_geometry_calibration_entry.source_geometry_calibration_entry import (
     SourceGeometryCalibrationEntry,
@@ -103,6 +102,8 @@ def _solve_work_frame(d):
     # all 4 centers refined together: the measurement inconsistency is spread
     # over the 6 distances instead of being dumped on whichever sphere is
     # solved last. Rigid-motion gauge left free, removed by _to_source_frame.
+    from scipy.optimize import least_squares  # here, not at import: scipy kept out of app startup
+
     return list(least_squares(residuals, x0=seed).x.reshape(4, 2))
 
 

@@ -115,5 +115,32 @@ class TestRotationConventionGuard(unittest.TestCase):
         self.assertFalse(np.allclose(p_negated, p.T, atol=1e-6))
 
 
+class TestSameResultsAsScipyRotation(unittest.TestCase):
+    """Non-regression: the plain P @ v (P.T @ v) product replaced
+    scipy's Rotation.from_matrix(P).apply(v[, inverse=True])."""
+
+    def test_both_directions_match_scipy_rotation(self):
+        from scipy.spatial.transform import Rotation
+
+        rng = np.random.default_rng(0)
+        for theta in rng.uniform(-180.0, 180.0, size=(20, 3)):
+            service = TransformationService()
+            service.set_rotation_angles(SetRotationAnglesDTO(*theta))
+            service.set_enabled(True)
+            reference = Rotation.from_matrix(SensorRotationAngles(*theta).mounting_matrix())
+            vector = tuple(rng.normal(size=3))
+
+            np.testing.assert_allclose(service.transform_sensor_to_source(vector), reference.apply(vector), atol=1e-12)
+            np.testing.assert_allclose(
+                service.transform_source_to_sensor(vector), reference.apply(vector, inverse=True), atol=1e-12
+            )
+            np.testing.assert_allclose(service.force_transform_sensor_to_source(vector), reference.apply(vector), atol=1e-12)
+
+    def test_identity_before_any_angles_are_set(self):
+        service = TransformationService()
+        service.set_enabled(True)
+        self.assertEqual(service.transform_sensor_to_source((1.0, 2.0, 3.0)), (1.0, 2.0, 3.0))
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -12,7 +12,6 @@ Responsibility:
 from dataclasses import dataclass, field
 
 import numpy as np
-from scipy.spatial.transform import Rotation
 
 from domain.calibration.value_objects.rotation_convention.rotation_convention import RotationConvention
 
@@ -44,5 +43,7 @@ class SensorRotationAngles:
     def from_mounting_matrix(cls, matrix: np.ndarray) -> "SensorRotationAngles":
         """Inverse of mounting_matrix(): the angles whose P is `matrix` (a rotation).
         Uppercase 'XYZ' = Rx·Ry·Rz (see rotation_convention_intention.md)."""
+        from scipy.spatial.transform import Rotation  # here, not at import: scipy kept out of app startup
+
         theta_x, theta_y, theta_z = Rotation.from_matrix(matrix).as_euler("XYZ", degrees=True)
         return cls(float(theta_x), float(theta_y), float(theta_z))

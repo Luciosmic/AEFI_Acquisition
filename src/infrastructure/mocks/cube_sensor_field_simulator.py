@@ -10,7 +10,6 @@ from pathlib import Path
 from typing import Optional, Tuple
 
 import numpy as np
-from scipy.spatial.transform import Rotation
 
 from domain.calibration.value_objects.sensor_rotation_angles.sensor_rotation_angles import (
     SensorRotationAngles,
@@ -88,6 +87,8 @@ class CubeSensorFieldSimulator:
                 "update .aefi_acquisition/configs/aefi_device_config.json from config_templates/"
             )
         rot = calibration["sources_to_sensor_rotation"]
+        from scipy.spatial.transform import Rotation  # here, not at import: scipy kept out of app startup
+
         rotation = Rotation.from_matrix(
             SensorRotationAngles(rot["theta_x"], rot["theta_y"], rot["theta_z"]).mounting_matrix()
         )
