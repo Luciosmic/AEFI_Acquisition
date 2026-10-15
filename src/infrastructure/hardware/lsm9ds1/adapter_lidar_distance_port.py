@@ -26,8 +26,6 @@ from application.services.inertial_sensor_service.ports.i_inertial_sensor_acquis
 from application.services.inertial_sensor_service.ports.i_inertial_sensor_stream_port import (
     IInertialSensorStreamPort,
 )
-from domain.shared_kernel.value_objects.lidar_distance.lidar_distance import LidarDistance
-from infrastructure.hardware.lsm9ds1.lsm9ds1_conversion import LIDAR_MM_PER_LSB
 
 logger = logging.getLogger(__name__)
 
@@ -124,9 +122,9 @@ class LidarDistanceStreamAdapter(ILidarDistancePort):
                     return
                 continue
             errors = 0
-            if sample is None or sample.lidar_raw is None:
+            if sample is None or sample.lidar_distance is None:
                 continue
-            distance = LidarDistance.from_raw(sample.lidar_raw, LIDAR_MM_PER_LSB)
+            distance = sample.lidar_distance
             self._readings.put(LidarDistanceReading(sample.timestamp_s, distance))
             count += 1
             no_return += not distance.has_return

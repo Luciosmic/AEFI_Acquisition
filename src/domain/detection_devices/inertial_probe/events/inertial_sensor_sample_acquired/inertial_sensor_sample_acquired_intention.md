@@ -15,16 +15,18 @@ l'interface à une lecture bloquante.
   - `acceleration_g` : accélération, UCUM `[g]` ;
   - `angular_rate_dps` : vitesse angulaire, UCUM `deg/s` ;
   - `magnetic_field_ut` : champ magnétique, UCUM `uT` ;
-  - `lidar_distance_mm` : distance lidar, UCUM `mm` (canal provisoire, non
+  - `lidar_distance` : `LidarDistance` du noyau partagé — distance en UCUM `mm`
+    (`distance_mm`) ou « pas de retour » (le LIDAR envoie 0 quand il ne mesure
+    rien), une seule règle pour tout le système (canal provisoire, non
     inertiel : voir dette).
 - Chaque canal est `None` s'il n'est pas dans le flux.
 
 ## Design
 
-- `@dataclass(frozen=True)` héritant de `DomainEvent`, payload en primitives
-  et tuples (pas de DTO d'application).
+- `@dataclass(frozen=True)` héritant de `DomainEvent`, payload en primitives,
+  tuples et value objects du domaine (pas de DTO d'application).
 - Topic de publication : `"inertialsensorsampleacquired"`.
 - Valeurs brutes converties uniquement : aucune calibration au repos (facteur
   issu d'une seule orientation).
-- Dette `ponytail:` : `lidar_distance_mm` n'est pas une grandeur inertielle ;
+- Dette `ponytail:` : `lidar_distance` n'est pas une grandeur inertielle ;
   il est dans cet événement parce qu'il voyage dans le même flux.

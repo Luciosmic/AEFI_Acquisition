@@ -13,6 +13,8 @@ lidar distance `mm`.
 from dataclasses import dataclass
 from typing import Optional, Tuple
 
+from domain.shared_kernel.value_objects.lidar_distance.lidar_distance import LidarDistance
+
 Vector3 = Tuple[float, float, float]
 
 ACCELEROMETER_CHANNEL = "accelerometer"
@@ -43,9 +45,9 @@ class InertialSensorStreamSample:
     acceleration_g: Optional[Vector3] = None
     angular_rate_dps: Optional[Vector3] = None
     magnetic_field_ut: Optional[Vector3] = None
-    # ponytail: lidar fields in the inertial sensor sample (see LIDAR_CHANNEL).
-    lidar_raw: Optional[int] = None  # integer as received from the board
-    lidar_distance_mm: Optional[float] = None  # unit given by the user, unverified
+    # ponytail: lidar field in the inertial sensor sample (see LIDAR_CHANNEL).
+    # None: channel not streamed; LidarDistance.no_return() when the LIDAR sent 0.
+    lidar_distance: Optional[LidarDistance] = None
 
 
 @dataclass(frozen=True)

@@ -77,6 +77,12 @@ def test_reading_updates_values_rate_and_count():
     assert "120" in panel.lbl_rate.text()
 
 
+def test_lidar_without_return_shows_no_return():
+    panel = _make_panel()
+    panel.on_reading_updated(build_reading_view_model(None, None, None, None, 25.0, 1, lidar_streamed=True))
+    assert panel.value_texts("lidar") == ["pas de retour"]
+
+
 def test_failure_shows_reason_and_resets_buttons():
     panel = _make_panel()
     panel.on_connection_changed(True, "Connecté")
