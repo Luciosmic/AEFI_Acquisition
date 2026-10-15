@@ -16,6 +16,11 @@ Design:
 - register(aggregate) : appele par les repositories ; l'aggregat doit exposer `domain_events`
   (propriete qui retourne puis vide la liste).
 - Repositories exposes en attributs : aefi_points, aefi_lines, narda_points, scans.
+- Concurrence : une meme instance peut etre partagee par plusieurs threads. La transaction en cours
+  (agregats enregistres, commit fait) est propre a chaque thread : le `with`, le commit ou le rollback
+  d'un thread ne touche pas la transaction ouverte par un autre. Le stockage est partage : un agregat
+  commite par un thread est lisible par les autres. Aucune garantie d'isolation au-dela (pas de verrou
+  sur le stockage, un agregat partage n'est pas protege contre deux mutations concurrentes).
 - Ordre de livraison : un evenement est livre a tous ses abonnes avant ceux qu'un handler commit
   en reaction (file FIFO par thread) ; le consommateur peut s'appuyer sur la causalite observee
   (ex. ScanCompleted apres la derniere acquisition qui le declenche).

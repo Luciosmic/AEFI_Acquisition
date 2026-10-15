@@ -18,8 +18,21 @@ logger = logging.getLogger(__name__)
 _dispatch = threading.local()
 
 
+class _Transaction(threading.local):
+    """Transaction en cours d'UN thread sur UNE instance : __init__ est rejoue a la premiere lecture par thread."""
+
+    def __init__(self) -> None:
+        self.seen: List[Any] = []
+        self.committed = False
+
+
 class InMemoryUnitOfWork(IUnitOfWork):
     """UoW mono-processus sans DB : collecte les events des agregats vus, les publie apres commit.
+
+    La transaction en cours (agregats vus, commit fait) est propre a chaque thread : une meme instance
+    est partagee par tous les threads (main.py), et un `with uow:` du thread UI ne doit pas vider celle
+    que la boucle de scan a ouverte. Le stockage (repositories) reste partage : un agregat commite par
+    un thread est lisible par un autre.
 
     Le commit le plus externe d'un thread possede une file FIFO et la vide : chaque evenement est livre
     a tous ses abonnes ("*" compris) avant le suivant. Un commit imbrique (fait par un handler pendant
@@ -29,32 +42,32 @@ class InMemoryUnitOfWork(IUnitOfWork):
 
     def __init__(self, event_bus: IDomainEventBus):
         self._event_bus = event_bus
-        self._seen: List[Any] = []
-        self._committed = False
+        self._tx = _Transaction()
         self.aefi_points = InMemoryAefiPointRepository(self)
         self.aefi_lines = InMemoryAefiLineRepository(self)
         self.narda_points = InMemoryNardaPointRepository(self)
         self.scans = InMemoryScanRepository(self)
 
     def __enter__(self) -> "InMemoryUnitOfWork":
-        self._seen = []
-        self._committed = False
+        self._tx.seen = []
+        self._tx.committed = False
         return self
 
     def __exit__(self, exc_type, exc, tb) -> None:
-        if not self._committed:
+        if not self._tx.committed:
             reason = f"exception {exc_type.__name__}" if exc_type else "commit non appele"
             logger.info("InMemoryUnitOfWork: rollback (%s), aucun evenement publie", reason)
-        self._seen = []
+        self._tx.seen = []
 
     def register(self, aggregate: Any) -> None:
-        if not any(a is aggregate for a in self._seen):
-            self._seen.append(aggregate)
+        seen = self._tx.seen
+        if not any(a is aggregate for a in seen):
+            seen.append(aggregate)
 
     def commit(self) -> None:
-        events = [e for aggregate in self._seen for e in aggregate.domain_events]
+        events = [e for aggregate in self._tx.seen for e in aggregate.domain_events]
         # Transaction fermee avant publication : un handler peut ouvrir une UoW (meme instance incluse).
-        self._seen = []
+        self._tx.seen = []
         try:
             if not events:
                 logger.info("InMemoryUnitOfWork: commit, rien a publier")
@@ -71,7 +84,7 @@ class InMemoryUnitOfWork(IUnitOfWork):
             logger.info("InMemoryUnitOfWork: commit, publication de %d evenement(s)", len(events))
             self._dispatch_queue([(self._event_bus, e) for e in events])
         finally:
-            self._committed = True
+            self._tx.committed = True
 
     @staticmethod
     def _dispatch_queue(queue: List[Tuple[IDomainEventBus, Any]]) -> None:

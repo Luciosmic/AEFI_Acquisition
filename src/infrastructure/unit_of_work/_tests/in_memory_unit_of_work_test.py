@@ -170,3 +170,105 @@ def test_two_threads_dispatching_at_the_same_time_do_not_share_the_queue():
 
     assert [n for name, n in delivered if name == "t1"] == [1, 2]
     assert [n for name, n in delivered if name == "t10"] == [10, 11]
+
+
+def _run_in_thread(target):
+    """Runs target in a thread and re-raises its exception in the test thread."""
+    errors = []
+
+    def wrapped():
+        try:
+            target()
+        except BaseException as e:  # noqa: BLE001 - surfaced to the test thread below
+            errors.append(e)
+
+    thread = threading.Thread(target=wrapped)
+    thread.start()
+    return thread, errors
+
+
+def _open_transaction_paused_in_thread(uow, aggregate, finish):
+    """Thread A: opens `with uow`, registers aggregate, waits for `resume`, then finish(uow) inside the with."""
+    registered, resume = threading.Event(), threading.Event()
+
+    def transaction():
+        with uow:
+            uow.register(aggregate)
+            registered.set()
+            assert resume.wait(timeout=5)
+            finish(uow)
+
+    thread, errors = _run_in_thread(transaction)
+    assert registered.wait(timeout=5)
+    return thread, errors, resume
+
+
+def _join(thread, errors):
+    thread.join(timeout=10)
+    assert not thread.is_alive()
+    if errors:
+        raise errors[0]
+
+
+def test_a_commit_on_another_thread_does_not_empty_the_open_transaction():
+    # The UI thread committing between the scan loop's `with` and its commit used to drop the scan's aggregate.
+    bus, uow, received = _setup()
+    thread_a, errors, resume = _open_transaction_paused_in_thread(
+        uow, Aggregate([SomethingHappened(1)]), lambda u: u.commit()
+    )
+
+    thread_b, errors_b = _run_in_thread(lambda: _commit(uow, 2))
+    _join(thread_b, errors_b)
+    resume.set()
+    _join(thread_a, errors)
+
+    assert sorted(e.n for e in received) == [1, 2]
+
+
+def test_a_rollback_on_another_thread_does_not_touch_the_open_transaction():
+    bus, uow, received = _setup()
+    thread_a, errors, resume = _open_transaction_paused_in_thread(
+        uow, Aggregate([SomethingHappened(1)]), lambda u: u.commit()
+    )
+
+    def rolled_back():
+        with uow:
+            uow.register(Aggregate([SomethingHappened(2)]))  # exits without commit
+
+    thread_b, errors_b = _run_in_thread(rolled_back)
+    _join(thread_b, errors_b)
+    resume.set()
+    _join(thread_a, errors)
+
+    assert received == [SomethingHappened(1)]
+
+
+@dataclass
+class Point:
+    id: str
+    scan_id: str
+    _events: list = field(default_factory=list)
+
+    @property
+    def domain_events(self):
+        events, self._events = list(self._events), []
+        return events
+
+
+def test_an_aggregate_committed_by_one_thread_is_readable_from_another():
+    bus, uow, received = _setup()
+    point = Point("p1", "s1", [SomethingHappened(1)])
+
+    def add_and_commit():
+        with uow:
+            uow.aefi_points.add(point)
+            uow.commit()
+
+    thread_a, errors = _run_in_thread(add_and_commit)
+    _join(thread_a, errors)
+
+    with uow:  # storage is shared: only the transaction in progress is per thread
+        assert uow.aefi_points.get("p1") is point
+        assert uow.aefi_points.list_by_scan("s1") == [point]
+        uow.commit()
+    assert received == [SomethingHappened(1)]  # already drained by thread A's commit, not republished
