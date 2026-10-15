@@ -5,7 +5,6 @@ Ce dossier contient les valeurs objets domaine représentant les données brutes
 
 ## Responsibility
 - `AefiVoltageMeasurement` : représenter une mesure de tension complète du capteur à 3 axes (X, Y, Z) en composantes en phase et en quadrature (6 flottants au total), avec un timestamp et une estimation optionnelle d'incertitude. Fournit optionnellement les écarts-types pour les mesures moyennées.
-- `AcquisitionSample` : alias de `AefiVoltageMeasurement` pour homogénéité du langage ubiquitaire dans les contextes d'acquisition continue.
 
 ## Design
 - `AefiVoltageMeasurement` est une dataclass `frozen=True` : immuable, égalité par valeur, sérialisable.
