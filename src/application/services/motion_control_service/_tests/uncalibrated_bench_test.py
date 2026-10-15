@@ -117,18 +117,34 @@ def test_move_is_refused_with_a_typed_error_before_reaching_the_port(stack):
         lambda s: s.move_relative(1.0, 1.0),
         lambda s: s.move_absolute_x(1.0),
         lambda s: s.move_absolute_y(1.0),
-        lambda s: s.home_x(),
-        lambda s: s.home_y(),
-        lambda s: s.home_xy(),
     ],
 )
-def test_every_move_and_home_is_refused_when_not_calibrated(stack, command):
+def test_every_mm_move_is_refused_when_not_calibrated(stack, command):
     _state, handler, service, _received = stack
     handler.apply_current_transmission()
 
     result = command(service)
 
     assert isinstance(result.error, MotionConversionUnavailable)
+
+
+@pytest.mark.parametrize(
+    "command, axis",
+    [
+        (lambda s: s.home_x(), "x"),
+        (lambda s: s.home_y(), "y"),
+        (lambda s: s.home_xy(), None),
+    ],
+)
+def test_homing_reaches_the_port_when_not_calibrated(stack, command, axis):
+    """Homing works in pulses on the limit switches: the bar calibration needs it before any conversion."""
+    state, handler, service, _received = stack
+    handler.apply_current_transmission()
+
+    result = command(service)
+
+    assert result.is_success
+    state.port.home.assert_called_once_with(axis=axis)
 
 
 def test_stop_and_emergency_stop_stay_available(stack):

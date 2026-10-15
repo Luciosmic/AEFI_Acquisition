@@ -17,4 +17,4 @@ Exposer des commandes de motion manuel (jog, absolu, homing) à la UI sans que l
 - **Toutes les commandes retournent `OperationResult[None, str]`** : interface explicitement non-exceptionnelle pour la UI.
 - **`get_axis_limits`** : délègue au port avec fallback (1000, 1000) si le hardware ne répond pas — le fallback permissif évite de bloquer la UI.
 
-- **Banc non calibré** : tant que le port n'a pas sa conversion mm/impulsion, `move_*` et `home_*` sont refusés par `MotionConversionUnavailable` (union `MotionControlError`) avant tout appel au port ; arrêt, arrêt d'urgence et préréglages de vitesse (impulsions) restent disponibles. `get_conversion_status()` dit ce qui manque et où le saisir.
+- **Banc non calibré** : tant que le port n'a pas sa conversion mm/impulsion, `move_*` sont refusés par `MotionConversionUnavailable` (union `MotionControlError`) avant tout appel au port ; homing (impulsions sur les fins de course, nécessaire à la calibration de la transmission par barre), arrêt, arrêt d'urgence et préréglages de vitesse (impulsions) restent disponibles. `get_conversion_status()` dit ce qui manque et où le saisir.
