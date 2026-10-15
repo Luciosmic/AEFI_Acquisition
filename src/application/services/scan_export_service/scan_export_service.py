@@ -216,7 +216,11 @@ class ScanExportService:
 
         Relies on the bus dispatching "*" subscribers after typed ones: the
         export is already open when ScanStarted reaches here, and already
-        closed for the finishing event (written by _close_export).
+        closed for the finishing event (written by _close_export). The
+        acquisition that completes the scan (last AefiLineAcquired /
+        AefiPointAcquired) reaches here before ScanCompleted closes the
+        export: the unit of work delivers the ScanCompleted committed by the
+        closure handler only once that acquisition reached every subscriber.
         `_active_ports` only lists open ports: filled once they are started,
         emptied before they are closed — an event from another thread landing
         while a scan export opens or closes is simply not recorded."""

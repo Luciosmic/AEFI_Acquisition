@@ -16,6 +16,9 @@ Design:
 - register(aggregate) : appele par les repositories ; l'aggregat doit exposer `domain_events`
   (propriete qui retourne puis vide la liste).
 - Repositories exposes en attributs : aefi_points, aefi_lines, narda_points, scans.
+- Ordre de livraison : un evenement est livre a tous ses abonnes avant ceux qu'un handler commit
+  en reaction (file FIFO par thread) ; le consommateur peut s'appuyer sur la causalite observee
+  (ex. ScanCompleted apres la derniere acquisition qui le declenche).
 """
 
 from abc import ABC, abstractmethod

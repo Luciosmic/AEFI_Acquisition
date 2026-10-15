@@ -87,6 +87,24 @@ class TestScanThinScanFlow(unittest.TestCase):
         self.assertEqual(scan.state, ScanState.COMPLETED)
         self.assertEqual(len(scan.received("aefi_point")), 4)
 
+    def test_a_catch_all_subscriber_sees_scan_completed_after_the_last_point_that_triggers_it(self):
+        # Registered after the closure handler, like the export's event journal.
+        names, seen_completed = [], threading.Event()
+
+        def record(event):
+            names.append(type(event).__name__)
+            if names[-1] == "ScanCompleted":
+                seen_completed.set()
+
+        self.event_bus.subscribe("*", record)
+        self.assertTrue(self.service.execute_scan(_dto(3, 4)))
+        self.assertTrue(seen_completed.wait(timeout=10.0))  # "*" runs after the typed handlers
+
+        points = [i for i, name in enumerate(names) if name == "AefiPointAcquired"]
+        self.assertEqual(len(points), 12)
+        self.assertEqual(names.count("ScanCompleted"), 1)
+        self.assertGreater(names.index("ScanCompleted"), points[-1], names[-8:])
+
     def test_streams_are_released_before_scan_completed(self):
         self.assertTrue(self.service.execute_scan(_dto()))
         self.assertTrue(self._wait_terminal())

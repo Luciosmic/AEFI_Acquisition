@@ -103,6 +103,19 @@ class _Stack(unittest.TestCase):
         with self.uow as uow:
             return uow.aefi_lines.list_by_scan(scan.id)
 
+    def _record_every_event(self):
+        """A "*" subscriber registered after the closure handler (like the export's event journal).
+        Returns (names, seen_completed): "*" runs after the typed handlers, so wait on the latter."""
+        names, seen_completed = [], threading.Event()
+
+        def record(event):
+            names.append(type(event).__name__)
+            if names[-1] == "ScanCompleted":
+                seen_completed.set()
+
+        self.event_bus.subscribe("*", record)
+        return names, seen_completed
+
 
 class TestFlyScanOnTheFaithfulMotionStack(_Stack):
 
@@ -157,6 +170,17 @@ class TestFlyScanOnTheFaithfulMotionStack(_Stack):
         with self.uow as uow:
             thin = uow.scans.get(ScanId(scan.id))
         self.assertEqual(thin.state, ScanState.COMPLETED)
+
+    def test_a_catch_all_subscriber_sees_scan_completed_after_the_last_line_that_triggers_it(self):
+        names, seen_completed = self._record_every_event()
+
+        self._run(make_dto())
+        self.assertTrue(seen_completed.wait(timeout=5.0))
+
+        lines = [i for i, name in enumerate(names) if name == "AefiLineAcquired"]
+        self.assertEqual(len(lines), 3)
+        self.assertEqual(names.count("ScanCompleted"), 1)
+        self.assertGreater(names.index("ScanCompleted"), lines[-1], names[-8:])
 
     def test_points_of_a_line_are_published_only_once_the_line_is_complete(self):
         completed = []
@@ -628,6 +652,17 @@ class TestFlyScanExportHoldsOnlyCommittedLines(_FaithfulFlyStack):
         recorded = [type(e).__name__ for e in self.csv_port.events]
         self.assertEqual(recorded.count("AefiLinePreviewPointAcquired"), len(previews))
         self.assertEqual(recorded.count("AefiLineAbandoned"), 1)
+
+    def test_event_journal_holds_every_line_before_scan_completed(self):
+        self._run(make_dto(), timeout=90.0)
+
+        for port in (self.csv_port, self.hdf5_port):
+            recorded = [type(e).__name__ for e in port.events]
+            lines = [i for i, name in enumerate(recorded) if name == "AefiLineAcquired"]
+            self.assertEqual(len(lines), 3, recorded[-8:])  # the last one used to arrive after the export closed
+            self.assertEqual(recorded[-1], "ScanCompleted")
+            self.assertGreater(len(recorded) - 1, lines[-1])
+            self.assertTrue(port.stopped)
 
     def test_cancel_mid_sweep_exports_no_point_of_the_swept_line(self):
         self._on_first_preview_of_line(1, self.service.cancel_scan)
