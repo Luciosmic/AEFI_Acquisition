@@ -329,6 +329,22 @@ class ArcusPerformax4EXController:
             
             self._stage.move_by(axis_lower, displacement)
     
+    def jog(self, axis: str, direction: str) -> None:
+        """
+        Run the axis in `direction` ('+' or '-') until stopped or until a
+        limit switch stops it (pylablib leaves limit errors disabled: the
+        limited axis just stops). Non-blocking.
+        """
+        with self._lock:
+            if not self._stage:
+                raise RuntimeError("Not connected")
+            if direction not in ("+", "-"):
+                raise ValueError(f"direction must be '+' or '-', got {direction!r}")
+            axis_lower = axis.lower()
+            if not self._is_homed[axis_lower]:
+                raise RuntimeError(f"Axis {axis.upper()} must be homed before movement")
+            self._stage.jog(axis_lower, direction)
+
     def stop(self, axis: str, immediate: bool = False) -> None:
         """
         Stop axis motion.
@@ -474,3 +490,11 @@ class ArcusPerformax4EXController:
                 raise RuntimeError("Not connected")
             
             return self._stage.get_status(axis.lower())
+
+    def is_at_limit(self, axis: str, direction: str) -> bool:
+        """
+        True when the hard limit switch on the `direction` ('+' or '-') side
+        is active (status bits sw_plus_lim / sw_minus_lim of the MST query).
+        """
+        flag = {"+": "sw_plus_lim", "-": "sw_minus_lim"}[direction]
+        return flag in self.get_status(axis)

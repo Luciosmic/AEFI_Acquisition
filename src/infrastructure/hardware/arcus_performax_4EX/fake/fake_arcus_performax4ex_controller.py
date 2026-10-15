@@ -30,6 +30,12 @@ _MEASURED_TIMING_BY_HS: Dict[int, Tuple[float, float]] = {  # hs: (t0_s, speed_s
 # HS no preset uses (set_speed with a custom value): medium's t0, nominal HS speed.
 _UNMEASURED_T0_S = 0.188
 
+# Position of the + hard limit switch, in increments: the 1270 mm travel of
+# ArcusAdapter.get_axis_limits at the seeded 21.8 µm/increment
+# (config_templates/mechanical_transmission_seed.json). Only jog runs into it:
+# move_to stays unclamped, as before.
+FAKE_PLUS_LIMIT_INCREMENTS = 58_257
+
 
 class FakeArcusPerformax4EXController:
     """
@@ -53,6 +59,7 @@ class FakeArcusPerformax4EXController:
         # axis -> (t_start, t_end, start_position, target) of the move in progress
         self._moves: Dict[str, Tuple[float, float, float, float]] = {}
         self._lock = threading.RLock()
+        self.plus_limit_increments = FAKE_PLUS_LIMIT_INCREMENTS
 
     # ------------------------------------------------------------------ #
     # Setup
@@ -147,6 +154,24 @@ class FakeArcusPerformax4EXController:
             raise RuntimeError(f"Axis {axis.upper()} must be homed before movement")
         self._start_move(axis, target=self._current_position(axis) + displacement)
 
+    def jog(self, axis: str, direction: str) -> None:
+        """Runs until the limit switch on that side (+: FAKE_PLUS_LIMIT_INCREMENTS,
+        -: 0, the home side), like the real axis stopped by its hard switch."""
+        if not self._connected:
+            raise RuntimeError("Not connected")
+        if direction not in ("+", "-"):
+            raise ValueError(f"direction must be '+' or '-', got {direction!r}")
+        axis = axis.lower()
+        if not self._is_homed[axis]:
+            raise RuntimeError(f"Axis {axis.upper()} must be homed before movement")
+        self._start_move(axis, target=float(self.plus_limit_increments if direction == "+" else 0))
+
+    def is_at_limit(self, axis: str, direction: str) -> bool:
+        if not self._connected:
+            raise RuntimeError("Not connected")
+        position = self._current_position(axis.lower())
+        return position >= self.plus_limit_increments if direction == "+" else position <= 0
+
     def stop(self, axis: str, immediate: bool = False) -> None:
         if not self._connected:
             raise RuntimeError("Not connected")
@@ -199,6 +224,8 @@ class FakeArcusPerformax4EXController:
             status.append("sw_minus_lim")
         if self.is_moving(axis):
             status.append("moving")
+        if self._current_position(axis.lower()) >= self.plus_limit_increments:
+            status.append("sw_plus_lim")
         return status
 
     # ------------------------------------------------------------------ #
