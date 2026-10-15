@@ -132,7 +132,6 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
     from application.services.aefi_signal_processing_service.aefi_signal_processing_service import (
         AefiSignalProcessingService,
     )
-    from application.services.spectral_analysis_service.spectral_analysis_service import SpectralAnalysisService
     from application.services.hardware_configuration_service.hardware_configuration_service import HardwareConfigurationService
     from application.services.hardware_configuration_service.ports.i_hardware_advanced_configurator import IHardwareAdvancedConfigurator
 
@@ -197,7 +196,6 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
     from interface.presenters.operator_presenter import OperatorPresenter
     from interface.presenters.adc_output_rate_characterization_presenter import AdcOutputRateCharacterizationPresenter
     from interface.presenters.aefi_continuous_reading_presenter import AefiContinuousReadingPresenter
-    from interface.presenters.aefi_spectral_analysis_presenter import AefiSpectralAnalysisPresenter
     from interface.presenters.electric_field_probe_presenter import ElectricFieldProbePresenter
     from interface.presenters.scan_presenter import ScanPresenter
     from interface.presenters.hardware_advanced_config_presenter import HardwareAdvancedConfigPresenter
@@ -569,19 +567,17 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
     acquisition_throughput_presenter = AcquisitionThroughputCharacterizationPresenter(acquisition_throughput_service)
     adc_output_rate_presenter = AdcOutputRateCharacterizationPresenter(adc_output_rate_service)
 
-    # Signal correction (noise/phase/primary) + continuous FFT on the corrected
-    # signal — both react to the continuous acquisition stream via the event
-    # bus, built before the presenters that consume their events.
+    # Signal correction (noise/phase/primary) — reacts to the continuous
+    # acquisition stream via the event bus, built before the presenters that
+    # consume its events.
     signal_processing_service = AefiSignalProcessingService(event_bus, transformation_service)
-    spectral_analysis_service = SpectralAnalysisService(event_bus, window_duration_s=2.0)
-    logger.info("Services -> AefiSignalProcessingService, SpectralAnalysisService created")
+    logger.info("Services -> AefiSignalProcessingService created")
 
     # Continuous Presenter needs Transformation Service and AefiSignalProcessingService now
     aefi_continuous_reading_presenter = AefiContinuousReadingPresenter(
         continuous_service, event_bus, transformation_service, signal_processing_service,
         export_service=scan_export_service
     )
-    aefi_spectral_analysis_presenter = AefiSpectralAnalysisPresenter(spectral_analysis_service, event_bus)
 
     # Electric Field Probe Presenter
     electric_field_probe_presenter = ElectricFieldProbePresenter(electric_field_probe_service, event_bus)
@@ -610,7 +606,6 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
         excitation_presenter,
         synchronous_detection_presenter,
         aefi_continuous_reading_presenter,
-        aefi_spectral_analysis_presenter,
         electric_field_probe_presenter,
         scan_presenter,
         hardware_config_presenter,
