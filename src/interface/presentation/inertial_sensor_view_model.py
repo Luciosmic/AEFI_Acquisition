@@ -10,6 +10,8 @@ from dataclasses import dataclass
 from typing import Optional, Tuple
 
 ABSENT = "—"
+# The LIDAR sent 0: it measured nothing (out of range, dropout), not a distance of 0.
+NO_RETURN = "pas de retour"
 
 
 @dataclass(frozen=True)
@@ -102,7 +104,10 @@ def build_reading_view_model(
     lidar_distance_mm: Optional[float],
     measured_rate_hz: Optional[float],
     sample_count: int,
+    lidar_streamed: Optional[bool] = None,
 ) -> InertialSensorReadingViewModel:
+    """`lidar_streamed`: the LIDAR channel was in the sample; with no distance,
+    the LIDAR had no return (None: streamed iff a distance is given)."""
     raw_by_key = {
         "accelerometer": acceleration_g,
         "gyroscope": angular_rate_dps,
@@ -114,7 +119,8 @@ def build_reading_view_model(
             key=d.key,
             label=d.label,
             axis_labels=d.axis_labels,
-            values=_format(d, raw_by_key[d.key]),
+            values=(NO_RETURN,) if d.key == "lidar" and lidar_streamed and lidar_distance_mm is None
+            else _format(d, raw_by_key[d.key]),
             unverified_reason=d.unverified_reason,
             note=d.note,
         )

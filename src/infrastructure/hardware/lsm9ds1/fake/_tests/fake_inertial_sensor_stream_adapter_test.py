@@ -41,7 +41,7 @@ def test_only_requested_channels_are_filled():
     f.connect()
     f.start_stream(["accelerometer", "lidar"])
     s = f.read_sample()
-    assert s.acceleration_g is not None and s.lidar_distance_mm is not None
+    assert s.acceleration_g is not None and s.lidar_distance.has_return
     assert s.angular_rate_dps is None and s.magnetic_field_ut is None
 
 

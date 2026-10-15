@@ -16,7 +16,9 @@ fixe le nom, l'unité et l'optionalité de chaque canal à la frontière du port
   - `acceleration_g` : accélération, en g (UCUM `[g]`).
   - `angular_rate_dps` : vitesse angulaire, en °/s (UCUM `deg/s`).
   - `magnetic_field_ut` : champ magnétique, en µT (UCUM `uT`).
-  - `lidar_raw`, `lidar_distance_mm` : canal lidar, voir dette ci-dessous.
+  - `lidar_distance` : canal lidar, `LidarDistance` du domaine (distance en mm
+    ou « pas de retour ») construite par l'adaptateur avec `LidarDistance.from_raw` ;
+    voir dette ci-dessous.
 - `InertialSensorAcquisitionConfig` : canaux demandés pour une acquisition.
 - Constantes de noms de canaux (`ACCELEROMETER_CHANNEL`, ...).
 

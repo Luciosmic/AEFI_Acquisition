@@ -6,6 +6,7 @@ from application.services.bar_transmission_calibration_service.ports.lidar_strea
     LidarStreamBusyError,
     LidarUnavailableError,
 )
+from domain.shared_kernel.value_objects.lidar_distance.lidar_distance import LidarDistance
 from infrastructure.hardware.lsm9ds1.adapter_lidar_distance_port import LidarDistanceStreamAdapter
 from infrastructure.hardware.lsm9ds1.fake.fake_inertial_sensor_stream_adapter import (
     FakeInertialSensorStreamAdapter,
@@ -18,7 +19,7 @@ class _ZeroEveryOtherStream(FakeInertialSensorStreamAdapter):
     def read_sample(self, timeout_s=1.0):
         sample = super().read_sample(timeout_s)
         if sample is not None and self._k % 2 == 0:
-            sample = dataclasses.replace(sample, lidar_raw=0, lidar_distance_mm=0.0)
+            sample = dataclasses.replace(sample, lidar_distance=LidarDistance.from_raw(0, 1.0))
         return sample
 
 

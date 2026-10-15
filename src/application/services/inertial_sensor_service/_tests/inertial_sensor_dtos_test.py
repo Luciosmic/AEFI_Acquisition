@@ -12,7 +12,7 @@ from application.services.inertial_sensor_service.dtos.inertial_sensor_dtos impo
 def test_all_channels_but_timestamp_are_optional():
     s = InertialSensorStreamSample(timestamp_s=1.5)
     assert s.acceleration_g is None and s.angular_rate_dps is None and s.magnetic_field_ut is None
-    assert s.lidar_raw is None and s.lidar_distance_mm is None
+    assert s.lidar_distance is None
 
 
 def test_sample_is_frozen():

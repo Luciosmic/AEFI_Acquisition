@@ -15,7 +15,8 @@ from application.services.inertial_sensor_service.dtos.inertial_sensor_dtos impo
 from application.services.inertial_sensor_service.ports.i_inertial_sensor_stream_port import (
     IInertialSensorStreamPort,
 )
-from infrastructure.hardware.lsm9ds1.lsm9ds1_conversion import lidar_raw_to_mm
+from domain.shared_kernel.value_objects.lidar_distance.lidar_distance import LidarDistance
+from infrastructure.hardware.lsm9ds1.lsm9ds1_conversion import LIDAR_MM_PER_LSB
 from infrastructure.hardware.lsm9ds1.lsm9ds1_stream_protocol import (
     ACCELEROMETER,
     GYROSCOPE,
@@ -106,6 +107,5 @@ class FakeInertialSensorStreamAdapter(IInertialSensorStreamPort):
             fields["magnetic_field_ut"] = (20.0 + 2.0 * math.sin(p), -5.0 + 2.0 * math.cos(p), 40.0)
         if LIDAR in self._channels:
             raw = 1250 + (k + 1) % 11
-            fields["lidar_raw"] = raw
-            fields["lidar_distance_mm"] = lidar_raw_to_mm(raw)
+            fields["lidar_distance"] = LidarDistance.from_raw(raw, LIDAR_MM_PER_LSB)
         return InertialSensorStreamSample(timestamp_s=t, **fields)

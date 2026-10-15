@@ -22,7 +22,7 @@ def make():
     return Lsm9ds1InertialSensorStreamAdapter(port="COM5", baudrate=256000)
 
 
-def test_converts_raw_to_physical_and_keeps_lidar_raw_and_mm(driver):
+def test_converts_raw_to_physical_and_the_lidar_raw_to_a_lidar_distance(driver):
     driver.read_sample.return_value = (
         12.5,
         {
@@ -40,7 +40,15 @@ def test_converts_raw_to_physical_and_keeps_lidar_raw_and_mm(driver):
     assert s.acceleration_g == (0.0, 0.0, 1.0)
     assert s.angular_rate_dps == (245.0, 0.0, 0.0)
     assert s.magnetic_field_ut == (0.0, 200.0, 0.0)
-    assert s.lidar_raw == 1250 and s.lidar_distance_mm == 1250.0
+    assert s.lidar_distance.distance_mm == 1250.0
+
+
+def test_lidar_raw_zero_is_no_return_not_a_distance_of_zero(driver):
+    driver.read_sample.return_value = (1.0, {"lidar": (0,)})
+    a = make()
+    a.connect()
+    s = a.read_sample()
+    assert s.lidar_distance is not None and not s.lidar_distance.has_return
 
 
 def test_subset_leaves_other_channels_none(driver):
@@ -49,7 +57,7 @@ def test_subset_leaves_other_channels_none(driver):
     a.connect()
     s = a.read_sample()
     assert s.angular_rate_dps is None and s.magnetic_field_ut is None
-    assert s.lidar_distance_mm is None
+    assert s.lidar_distance is None
 
 
 def test_timeout_returns_none(driver):

@@ -52,6 +52,14 @@ def test_build_formats_present_channels_and_dashes_for_absent_ones():
     assert vm.measured_rate_hz == 24.96 and vm.sample_count == 42
 
 
+def test_lidar_without_return_reads_no_return_not_zero():
+    vm = build_reading_view_model(None, None, None, None, None, 1, lidar_streamed=True)
+    lidar = next(c for c in vm.channels if c.key == "lidar")
+    assert lidar.values == ("pas de retour",)
+    not_streamed = build_reading_view_model(None, None, None, None, None, 1, lidar_streamed=False)
+    assert next(c for c in not_streamed.channels if c.key == "lidar").values == ("—",)
+
+
 def test_view_model_is_frozen():
     vm = build_reading_view_model(None, None, None, None, None, 0)
     assert isinstance(vm, InertialSensorReadingViewModel)

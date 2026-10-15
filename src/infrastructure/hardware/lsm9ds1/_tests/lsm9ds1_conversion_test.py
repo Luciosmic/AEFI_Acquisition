@@ -3,7 +3,6 @@ from infrastructure.hardware.lsm9ds1.lsm9ds1_conversion import (
     GYROSCOPE_FULL_SCALE_DPS,
     MAGNETOMETER_FULL_SCALE_UT,
     LIDAR_MM_PER_LSB,
-    lidar_raw_to_mm,
     raw_to_physical,
 )
 
@@ -27,8 +26,6 @@ def test_gyroscope_and_magnetometer_use_their_own_full_scale():
 
 def test_lidar_raw_is_millimetres_factor_one():
     assert LIDAR_MM_PER_LSB == 1.0
-    assert lidar_raw_to_mm(1234) == 1234.0
-    assert isinstance(lidar_raw_to_mm(1234), float)
 
 
 def test_returns_tuple():

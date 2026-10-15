@@ -143,7 +143,7 @@ class InertialSensorAcquisitionExecutor(IInertialSensorAcquisitionExecutor):
                         acceleration_g=sample.acceleration_g,
                         angular_rate_dps=sample.angular_rate_dps,
                         magnetic_field_ut=sample.magnetic_field_ut,
-                        lidar_distance_mm=sample.lidar_distance_mm,
+                        lidar_distance=sample.lidar_distance,
                     ),
                 )
                 index += 1
