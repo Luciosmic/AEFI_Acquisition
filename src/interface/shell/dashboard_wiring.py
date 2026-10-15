@@ -32,6 +32,7 @@ from interface.presenters.acquisition_throughput_characterization_presenter impo
 from interface.presenters.adc_output_rate_characterization_presenter import AdcOutputRateCharacterizationPresenter
 from interface.presenters.event_log_presenter import EventLogPresenter
 from interface.presenters.operator_presenter import OperatorPresenter
+from interface.shell.fly_line_preview_overlay.fly_line_preview_overlay import wire_fly_line_preview
 
 logger = logging.getLogger(__name__)
 
@@ -321,19 +322,15 @@ def wire_dashboard(
         for panel in aefi_voltage_panels:
             panel.update_data_point_from_position(data["x"], data["y"], data["value"], redraw=False)
 
-    def on_scan_line_preview_viz(line_index, index_in_line, data):
-        # Provisional point of a fly line being swept: same drawing by position as the
-        # definitive point, which overwrites it at the line commit.
-        for panel in aefi_voltage_panels:
-            panel.update_data_point_from_position(data["x"], data["y"], data["value"], redraw=False)
-
     def on_field_scan_progress_viz(current, total, data):
         for panel in electric_field_panels:
             panel.update_data_point_from_position(data["x"], data["y"], data["value"], redraw=False)
 
     scan_presenter.scan_started.connect(on_scan_started_viz)
     scan_presenter.scan_progress.connect(on_scan_progress_viz)
-    scan_presenter.scan_line_preview.connect(on_scan_line_preview_viz)
+    # Provisional points of a fly line being swept: drawn, then erased if the line is not
+    # confirmed (abandoned, scan cancelled or failed).
+    wire_fly_line_preview(scan_presenter, aefi_voltage_panels)
     scan_presenter.field_scan_progress.connect(on_field_scan_progress_viz)
     logger.debug("Scan panels wired")
 
