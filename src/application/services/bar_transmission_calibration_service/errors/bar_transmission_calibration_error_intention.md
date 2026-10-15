@@ -11,7 +11,7 @@ exception non typée ferait tomber la tâche de fond sans rien dire.
 ## Responsibility
 
 - Énumérer les échecs de `measure_axis`, `record` et `compare` : mesure déjà en
-  cours, scan en cours, flux LIDAR déjà diffusé, LIDAR indisponible, chaîne de
+  cours, ressource tenue par un autre propriétaire (moteurs pendant un scan, flux LIDAR — refus d'`ExclusiveControl` repris tel quel), flux LIDAR déjà diffusé par le panneau, LIDAR indisponible, chaîne de
   mouvement incomplète, demande invalide, mouvement en échec, butée + non atteinte,
   barre non trouvée, encadrement non vérifié, annulation, mesures X/Y non
   combinables, erreur interne.

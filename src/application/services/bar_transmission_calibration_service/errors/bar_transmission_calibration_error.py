@@ -30,10 +30,15 @@ class MeasurementAlreadyRunning(BarTransmissionCalibrationError):
 
 
 @dataclass(frozen=True)
-class ScanRunning(BarTransmissionCalibrationError):
+class BenchResourceControlled(BarTransmissionCalibrationError):
+    """A resource the measurement needs (motors, LIDAR stream) is held by another
+    owner, e.g. a running scan: the ExclusiveControl refusal, as is."""
+
+    refusal: str
+
     @property
     def message(self) -> str:
-        return "un scan est en cours : la calibration attend sa fin"
+        return f"calibration refusée — {self.refusal}"
 
 
 @dataclass(frozen=True)

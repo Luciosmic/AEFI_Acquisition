@@ -22,6 +22,7 @@ from application.services.bar_transmission_calibration_service.errors.bar_transm
     BarNotFound,
     BarTransmissionCalibrationError,
     BenchMotionFailed,
+    BenchResourceControlled,
     EdgeNotBracketed,
     InternalCalibrationError,
     InvalidMeasurementRequest,
@@ -32,7 +33,6 @@ from application.services.bar_transmission_calibration_service.errors.bar_transm
     MeasurementsNotComparable,
     MotionChainIncomplete,
     PositiveLimitNotReached,
-    ScanRunning,
 )
 from application.services.bar_transmission_calibration_service.i_api_bar_transmission_calibration_service import (
     IApiBarTransmissionCalibrationService,
@@ -53,7 +53,7 @@ from application.services.bar_transmission_calibration_service.ports.lidar_strea
 from application.services.bar_transmission_calibration_service.ports.raw_increment_motion_error import (
     RawIncrementMotionError,
 )
-from application.shared.exclusive_control.exclusive_control import ExclusiveControl
+from application.shared.exclusive_control.exclusive_control import ExclusiveControl, take_all
 from application.shared.ports.i_async_task_runner import IAsyncTaskRunner
 from domain.calibration.calibration import Calibration
 from domain.calibration.errors.bar_profile_unusable_error import BarProfileUnusableError
@@ -86,10 +86,8 @@ from domain.shared_kernel.operation_result import OperationResult
 
 logger = logging.getLogger(__name__)
 
-# Owner name of the LIDAR stream while a measurement runs.
-LIDAR_STREAM_CONTROLLER = "calibration de la transmission (barre)"
-SCAN_STARTED_TOPIC = "scanstarted"
-SCAN_ENDED_TOPICS = ("scancompleted", "scanfailed", "scancancelled")
+# Owner name of the motors and of the LIDAR stream while a measurement runs.
+CALIBRATION_CONTROLLER = "calibration de la transmission (barre)"
 
 # Repositioning between probes: the "fast" preset (HS 3000 Hz).
 TRAVEL_SPEED_INCREMENTS_PER_S = 3000
@@ -136,10 +134,15 @@ class BarTransmissionCalibrationService(IApiBarTransmissionCalibrationService):
         event_bus: IDomainEventBus,
         task_runner: IAsyncTaskRunner,
         lidar_stream_control: Optional[ExclusiveControl] = None,
+        motion_control: Optional[ExclusiveControl] = None,
         clock=None,
     ) -> None:
-        """`lidar_stream_control`: shared owner of the LIDAR stream (the sensor
-        panel is refused while it is held). `clock`: now()/sleep(), perf_counter by default."""
+        """`lidar_stream_control` and `motion_control`: single owners of the LIDAR
+        stream (shared with the sensor panel) and of the bench motors (shared with
+        the scan), taken together for the whole measurement. `clock`:
+        now()/sleep(), perf_counter by default."""
+        self._motion_control = motion_control
+        self._releases: list = []  # controls held by the running measurement
         self._motion = motion
         self._lidar = lidar
         self._calibration_repository = calibration_repository
@@ -152,10 +155,6 @@ class BarTransmissionCalibrationService(IApiBarTransmissionCalibrationService):
         self._lock = threading.Lock()
         self._running_axis: Optional[str] = None
         self._cancel = threading.Event()
-        self._scan_running = False
-        event_bus.subscribe(SCAN_STARTED_TOPIC, self._on_scan_started)
-        for topic in SCAN_ENDED_TOPICS:
-            event_bus.subscribe(topic, self._on_scan_ended)
 
     # -- commands -----------------------------------------------------------------
 
@@ -176,8 +175,6 @@ class BarTransmissionCalibrationService(IApiBarTransmissionCalibrationService):
         invalid = self._validate_request(axis, bar_length_mm, bar_length_uncertainty_mm, settings)
         if invalid is not None:
             return self._refuse(invalid)
-        if self._scan_running:
-            return self._refuse(ScanRunning())
         chain = self._resolve_chain()
         if chain.is_failure:
             return self._refuse(chain.error)
@@ -187,10 +184,17 @@ class BarTransmissionCalibrationService(IApiBarTransmissionCalibrationService):
                 return self._refuse(MeasurementAlreadyRunning(self._running_axis))
             if self._lidar.is_streamed_elsewhere():
                 return self._refuse(LidarStreamBusy("le panneau du capteur inertiel"))
-            if self._lidar_stream_control is not None:
-                taken = self._lidar_stream_control.take(LIDAR_STREAM_CONTROLLER)
-                if taken.is_failure:
-                    return self._refuse(LidarStreamBusy(taken.error))
+            # Single owner of the motors (refused during a scan; a scan is refused
+            # meanwhile) and of the LIDAR stream (the sensor panel is refused meanwhile).
+            takes = [
+                (lambda c=control: c.take(CALIBRATION_CONTROLLER), lambda c=control: c.release(CALIBRATION_CONTROLLER))
+                for control in (self._motion_control, self._lidar_stream_control)
+                if control is not None
+            ]
+            taken = take_all(takes)
+            if taken.is_failure:
+                return self._refuse(BenchResourceControlled(taken.error))
+            self._releases = taken.value
             self._running_axis = axis
             self._cancel.clear()
         measurement_id = uuid4()
@@ -336,8 +340,9 @@ class BarTransmissionCalibrationService(IApiBarTransmissionCalibrationService):
             except Exception as error:
                 logger.error("BarTransmissionCalibrationService: LIDAR close failed measurement=%s error=%s",
                              measurement_id, error)
-            if self._lidar_stream_control is not None:
-                self._lidar_stream_control.release(LIDAR_STREAM_CONTROLLER)
+            for release in self._releases:
+                release()
+            self._releases = []
             with self._lock:
                 self._running_axis = None
             logger.info("BarTransmissionCalibrationService: measurement %s axis=%s ended", measurement_id, axis)
@@ -672,11 +677,3 @@ class BarTransmissionCalibrationService(IApiBarTransmissionCalibrationService):
             axes_agree=mean.axes_agree,
             entry_id=entry_id,
         )
-
-    # -- events -------------------------------------------------------------------
-
-    def _on_scan_started(self, event=None) -> None:
-        self._scan_running = True
-
-    def _on_scan_ended(self, event=None) -> None:
-        self._scan_running = False

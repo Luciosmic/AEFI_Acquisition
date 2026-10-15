@@ -181,21 +181,58 @@ def test_entering_steps_per_revolution_applies_the_conversion_without_restart(st
     assert service.move_absolute(10.0, 10.0).is_success
 
 
-def test_already_applied_conversion_is_not_changed_by_a_later_event(stack, components):
+def _calibrated(stack, components, bus):
     state, handler, _service, received = stack
     components.record_characterization(
         "motors", "IGUS-S-AN-060-035-060", {"full_steps_per_revolution": 200, "rated_current_a": 4.2}
     )
     handler.apply_current_transmission()
-    applied = state.microns_per_pulse
+    changes: List[object] = []
+    bus.subscribe("motionconversionchanged", changes.append)
     received.clear()
+    return state, handler, received, changes
+
+
+def test_new_transmission_entry_is_applied_live_without_restart(stack, components, bus):
+    """Recalibration (bar measurement): the new entry replaces the applied conversion at once."""
+    state, handler, received, changes = _calibrated(stack, components, bus)
+    transmission = MechanicalTransmissionCalibrationService(
+        handler._transmission_service._calibration_repository, components._repository, bus
+    )
+
+    transmission.record_calibration(**{**BENCH_SETTING, "travel_per_motor_revolution_mm": 70.4})
+
+    assert state.microns_per_pulse == pytest.approx(22.0)
+    assert handler.get_status().microns_per_pulse == pytest.approx(22.0)
+    assert [(c.previous_microns_per_pulse, round(c.microns_per_pulse, 4)) for c in changes] == [
+        (pytest.approx(21.8), 22.0)
+    ]
+    assert received == []  # not "became available": it already was
+
+
+def test_same_conversion_is_not_reapplied(stack, components, bus):
+    state, handler, received, changes = _calibrated(stack, components, bus)
+
+    components.record_characterization("motors", "IGUS-S-AN-060-035-060", {"full_steps_per_revolution": 200})
+
+    assert changes == []
+    assert state.microns_per_pulse == pytest.approx(21.8)
+
+
+def test_entry_arriving_during_a_scan_is_not_applied_nor_deferred(stack, components, bus):
+    """Abnormal case (calibration and scan exclude each other): warning, nothing applied, no deferral."""
+    state, handler, received, changes = _calibrated(stack, components, bus)
+    bus.publish("scanstarted", object())
 
     components.record_characterization(
         "motors", "IGUS-S-AN-060-035-060", {"full_steps_per_revolution": 400, "rated_current_a": 4.2}
     )
+    bus.publish("scancompleted", object())
 
-    assert state.microns_per_pulse == applied
-    assert received == []
+    assert state.microns_per_pulse == pytest.approx(21.8)
+    assert changes == []
+    handler.apply_current_transmission()  # the operator applies it again after the scan
+    assert state.microns_per_pulse == pytest.approx(10.9)
 
 
 def test_unchanged_gap_is_not_republished(stack, components):

@@ -18,6 +18,7 @@ import unittest
 from application.services.scan_application_service.scan_application_service import ScanApplicationService
 from application.services.scan_application_service.scan_closure_handler.scan_closure_handler import ScanClosureHandler
 from infrastructure.unit_of_work.in_memory_unit_of_work import InMemoryUnitOfWork
+from application.shared.exclusive_control.exclusive_control import ExclusiveControl
 from application.services.scan_application_service.dtos.scan_dtos import Scan2DConfigDTO
 from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
 from application.services.excitation_configuration_service.excitation_configuration_service import (
@@ -77,6 +78,7 @@ class TestScanDifferentialModeIntegration(unittest.TestCase):
         self.continuous_service = continuous_service = AefiAcquisitionService(
             MockAefiAcquisitionExecutor(self.event_bus), self.acquisition_port, self.event_bus
         )
+        self.motion_control = ExclusiveControl("moteurs du banc", lambda owner: None)
         scan_uow = InMemoryUnitOfWork(self.event_bus)
         ScanClosureHandler(self.event_bus, scan_uow, ("aefipointacquired",))
         self.service = ScanApplicationService(
@@ -87,6 +89,7 @@ class TestScanDifferentialModeIntegration(unittest.TestCase):
             motion_sync=EventBusMotionSynchronizer(self.event_bus),
             excitation_service=self.excitation_service,
             unit_of_work=scan_uow,
+            motion_control=self.motion_control,
         )
 
     def _subscribe_completion(self) -> threading.Event:
@@ -151,6 +154,23 @@ class TestScanDifferentialModeIntegration(unittest.TestCase):
 
         self.assertFalse(self.service.execute_scan(self._one_point_scan()))
         self.assertEqual(self.excitation_service.get_controller(), "calibration automatique du capteur")
+
+    def test_scan_is_refused_while_the_bar_calibration_drives_the_motors(self):
+        self.motion_control.take("calibration de la transmission (barre)")
+
+        self.assertFalse(self.service.execute_scan(self._one_point_scan()))
+        self.assertIsNone(self.excitation_service.get_controller())  # all or nothing
+
+    def test_scan_holds_the_motors_then_gives_them_back(self):
+        owners = []
+        self.event_bus.subscribe("scanpointacquired", lambda e: owners.append(self.motion_control.controller))
+
+        done = self._subscribe_completion()
+        self.assertTrue(self.service.execute_scan(self._one_point_scan(x_nb_points=2)))
+        self.assertTrue(done.wait(timeout=10.0))
+
+        self.assertEqual(owners[0], "scan")
+        self.assertIsNone(self.motion_control.controller)
 
     def test_mute_eliminates_excitation_offset_for_baseline_window(self):
         scan_dto = Scan2DConfigDTO(

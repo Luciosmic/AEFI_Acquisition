@@ -70,6 +70,7 @@ Le moteur se pilote à l'incrément près. La mesure fine se fait donc **à l'ar
 - **Grandeur** : `travel_per_motor_revolution_mm`.
 - **Axes** : on mesure X puis Y, l'un après l'autre. Le domaine garde une transmission commune : on écrit la moyenne des deux, et l'écart X/Y est affiché à l'opérateur, jamais masqué. Une transmission par axe ne viendra que si l'écart mesuré la justifie.
 - **Recalibration** : une nouvelle entrée doit s'appliquer sans redémarrage.
+- **Exclusion avec le scan** : la calibration et le scan s'excluent mutuellement, car tous deux pilotent les moteurs. Une calibration pendant un scan n'a aucun sens physique. La conversion n'est jamais reportée à la fin d'un scan.
 - **Stratégie** : repérage par fly scan, puis affinage pas à pas par encadrement (voir plus haut).
 - **Sens d'approche** : aller-retour libre pendant la dichotomie. On n'impose pas de sens pour l'instant.
 - **Flux LIDAR** : la calibration le démarre et l'arrête elle-même. Si le panneau du capteur diffuse déjà ce flux, la calibration refuse de démarrer, par erreur typée et visible : le port série ne doit avoir qu'un seul propriétaire.

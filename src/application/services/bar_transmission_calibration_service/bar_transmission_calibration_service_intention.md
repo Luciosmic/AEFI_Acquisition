@@ -14,8 +14,8 @@ Spécification : `_system/documentation/l-ecart-en-impulsions-entre-les-deux-fro
 
 ## Responsibility
 
-- `measure_axis(axe, L, ΔL, réglages)` : refus immédiat et typé si un scan tourne,
-  si une mesure tourne, si la chaîne (pas par tour, micro-pas) est incomplète, si le
+- `measure_axis(axe, L, ΔL, réglages)` : refus immédiat et typé si les moteurs sont tenus\r
+  (un scan tourne), si une mesure tourne, si la chaîne (pas par tour, micro-pas) est incomplète, si le
   panneau capteur diffuse déjà le flux LIDAR, ou si la demande est invalide. Sinon,
   hors thread Qt :
   1. ouvrir le flux LIDAR (la calibration le démarre elle-même) ;
@@ -45,9 +45,13 @@ Spécification : `_system/documentation/l-ecart-en-impulsions-entre-les-deux-fro
   `AxisBarTransmissionMeasurement`, `BarTransmissionMean`) ; le service orchestre.
 - Seul site de traduction des erreurs : ports et domaine → union
   `BarTransmissionCalibrationError`, présentée par le port de sortie.
-- Propriétaire unique du flux LIDAR : refus si le panneau diffuse ; pendant la
-  mesure, l'`ExclusiveControl` partagé est tenu, le panneau capteur refuse alors de
-  démarrer son acquisition.
+- Exclusion par le mécanisme du projet, comme `sensor_calibration_service` :\r
+  `take_all` sur les `ExclusiveControl` des moteurs (partagé avec le scan, qui le\r
+  prend aussi : scan et calibration se refusent mutuellement) et du flux LIDAR\r
+  (partagé avec le panneau capteur, qui refuse alors démarrage et déconnexion),\r
+  tenus toute la mesure, relâchés dans tous les cas. Le refus est repris tel quel\r
+  (`BenchResourceControlled`). En plus, refus si l'exécuteur du panneau diffuse\r
+  déjà le flux.
 - Réglages : constantes nommées par défaut (`BarCalibrationSettingsDTO`),
   surchargeables depuis l'interface, valeurs initiales à ajuster sur le banc.
   Vitesse de repositionnement (préréglage « fast »), délais et nombre
@@ -57,6 +61,5 @@ Spécification : `_system/documentation/l-ecart-en-impulsions-entre-les-deux-fro
 - Aller-retour libre pendant la dichotomie (décision du 2026-10-15) : aucun sens
   d'approche imposé, le jeu n'est pas compensé.
 - Logs d'intention à chaque étape avec l'identifiant de mesure et l'axe.
-- Ne verrouille pas le banc contre une commande manuelle de mouvement pendant la
-  mesure (pas de contrôle exclusif du mouvement dans l'application aujourd'hui) :
-  point ouvert. Un scan en cours, lui, fait refuser la mesure.
+- Les commandes manuelles du panneau Mouvement ne prennent pas le contrôle des\r
+  moteurs : elles ne sont pas bloquées pendant la mesure (point ouvert).

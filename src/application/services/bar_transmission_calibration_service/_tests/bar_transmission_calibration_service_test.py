@@ -17,6 +17,7 @@ from application.services.bar_transmission_calibration_service.dtos.bar_transmis
 )
 from application.services.bar_transmission_calibration_service.errors.bar_transmission_calibration_error import (
     BarNotFound,
+    BenchResourceControlled,
     BenchMotionFailed,
     InvalidMeasurementRequest,
     LidarStreamBusy,
@@ -25,7 +26,6 @@ from application.services.bar_transmission_calibration_service.errors.bar_transm
     MeasurementsNotComparable,
     MotionChainIncomplete,
     PositiveLimitNotReached,
-    ScanRunning,
 )
 from application.services.bar_transmission_calibration_service.ports.i_bar_transmission_calibration_output_port import (
     IBarTransmissionCalibrationOutputPort,
@@ -95,10 +95,12 @@ class Bench:
         self.events = []
         self.bus.subscribe("mechanicaltransmissioncalibrationentryadded", self.events.append)
         self.control = ExclusiveControl("flux LIDAR", lambda owner: None)
+        self.motion_control = ExclusiveControl("moteurs du banc", lambda owner: None)
         self.output = Recorder()
         self.service = BarTransmissionCalibrationService(
             self.motion, self.lidar, self.transmissions, self.components, self.bus,
-            FakeThreadPoolTaskRunner(), lidar_stream_control=self.control, clock=self.clock,
+            FakeThreadPoolTaskRunner(), lidar_stream_control=self.control, motion_control=self.motion_control,
+            clock=self.clock,
         )
         self.service.set_output_port(self.output)
 
@@ -184,15 +186,22 @@ def test_refuses_when_the_panel_streams_the_lidar(bench):
 def test_refuses_when_another_owner_holds_the_stream(bench):
     bench.control.take("panneau")
     result = bench.measure("X")
-    assert isinstance(result.error, LidarStreamBusy)
+    assert isinstance(result.error, BenchResourceControlled)
+    assert bench.motion_control.controller is None  # released: all or nothing
 
 
-def test_refuses_during_a_scan(bench):
-    bench.bus.publish("scanstarted", object())
-    assert isinstance(bench.measure("X").error, ScanRunning)
-    bench.bus.publish("scancompleted", object())
+def test_refuses_during_a_scan_and_holds_the_motors_meanwhile(bench):
+    bench.motion_control.take("scan")
+    result = bench.measure("X")
+    assert isinstance(result.error, BenchResourceControlled)
+    assert "scan" in result.error.message
+    assert bench.control.controller is None  # all or nothing: the LIDAR stream was not kept
+    bench.motion_control.release("scan")
+    owners = []
+    bench.output.on_progress = lambda message: owners.append(bench.motion_control.controller)
     assert bench.measure("X").is_success
-
+    assert set(owners) == {"calibration de la transmission (barre)"}
+    assert bench.motion_control.controller is None
 
 def test_refuses_without_a_complete_motion_chain():
     bare = Bench()
