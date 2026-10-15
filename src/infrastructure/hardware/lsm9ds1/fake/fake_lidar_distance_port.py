@@ -5,7 +5,8 @@ See fake_lidar_distance_port_intention.md.
 """
 
 import random
-from typing import Callable, Optional
+from collections import deque
+from typing import Callable, Deque, Optional
 
 from application.services.bar_transmission_calibration_service.dtos.bar_transmission_calibration_dtos import (
     LidarDistanceReading,
@@ -25,7 +26,8 @@ SAMPLE_PERIOD_S = 1.0 / LIDAR_CAP_HZ
 
 
 class FakeLidarDistancePort(ILidarDistancePort):
-    """A reading every SAMPLE_PERIOD_S of the injected clock, from `distance_mm()`."""
+    """A reading every SAMPLE_PERIOD_S of the injected clock, from `distance_mm()`,
+    queued whether or not anyone reads (a slow reader falls behind)."""
 
     def __init__(
         self,
@@ -53,7 +55,9 @@ class FakeLidarDistancePort(ILidarDistancePort):
         self._silent_after = silent_after_samples
         self._open = False
         self._next_sample_at = 0.0
-        self.samples_sent = 0
+        self._queue: Deque[LidarDistanceReading] = deque()
+        self.samples_sent = 0  # sent by the board (queued)
+        self.samples_read = 0  # taken out of the queue by the reader
         self.open_count = 0
         self.close_count = 0
 
@@ -67,6 +71,7 @@ class FakeLidarDistancePort(ILidarDistancePort):
             raise LidarUnavailableError("échec simulé à l'ouverture du flux LIDAR")
         self._open = True
         self.open_count += 1
+        self._queue.clear()
         self._next_sample_at = self._clock.now() + SAMPLE_PERIOD_S
 
     @property
@@ -76,22 +81,32 @@ class FakeLidarDistancePort(ILidarDistancePort):
     def read_distance(self, timeout_s: float) -> Optional[LidarDistanceReading]:
         if not self._open:
             raise LidarUnavailableError("flux LIDAR non ouvert")
-        silent = self._silent_after is not None and self.samples_sent >= self._silent_after
-        now = self._clock.now()
-        if silent or self._next_sample_at > now + timeout_s:
+        self._receive()
+        if not self._queue and not self._silent() and self._next_sample_at <= self._clock.now() + timeout_s:
+            self._clock.sleep(max(0.0, self._next_sample_at - self._clock.now()))
+            self._receive()
+        if not self._queue:
             self._clock.sleep(timeout_s)
             return None
-        # Reception order, like the real adapter's queue: readings that arrived
-        # while nobody read come out at once, with their arrival time.
-        if self._next_sample_at > now:
-            self._clock.sleep(self._next_sample_at - now)
-        timestamp = self._next_sample_at
-        self._next_sample_at += SAMPLE_PERIOD_S
-        self.samples_sent += 1
-        # ponytail: the distance is evaluated now, not at `timestamp` — exact for
-        # the readings taken at once (fly scan) and at rest; a buffered reading
-        # from during a move carries the position at reading time (the service
-        # discards those: they precede the settling).
+        self.samples_read += 1
+        return self._queue.popleft()
+
+    def _silent(self) -> bool:
+        return self._silent_after is not None and self.samples_sent >= self._silent_after
+
+    def _receive(self) -> None:
+        """Queue every reading the board sent up to now, like the real adapter's
+        reader thread: the stream runs at SAMPLE_PERIOD_S whether or not anyone reads."""
+        now = self._clock.now() + 1e-9  # a sleep up to the next arrival lands on it despite rounding
+        while self._next_sample_at <= now and not self._silent():
+            # ponytail: the distance is evaluated when the reading is queued (at the
+            # reader's next call), not at its arrival time — off by at most one turn
+            # of the reader's loop during a move; exact at rest.
+            self._queue.append(self._reading(self._next_sample_at))
+            self._next_sample_at += SAMPLE_PERIOD_S
+            self.samples_sent += 1
+
+    def _reading(self, timestamp: float) -> LidarDistanceReading:
         distance_mm = self._distance_mm()
         if distance_mm is not None and self._no_return_ratio and self._rng.random() < self._no_return_ratio:
             distance_mm = None

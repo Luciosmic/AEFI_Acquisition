@@ -115,7 +115,7 @@ class Bench:
         Floor out of range: no return (None) unless the spot is mostly on the bar."""
         coverage = 0.0
         if self.bar_present:
-            n = self.motion.get_position(self.axis)
+            n = self.motion.physical_position(self.axis)
             start, end = self.bars[self.axis]
             coverage = _sigmoid((n - start) / 3.0) * _sigmoid((end - n) / 3.0)
         if self.floor_mm is None:
@@ -271,6 +271,19 @@ def test_no_valid_return_at_all_fails_with_an_explicit_profile_error():
     assert isinstance(bench.output.failed[0], BarNotFound)
     assert "aucun retour valide" in bench.output.failed[0].message
     assert bench.lidar.close_count == 1
+
+
+def test_fly_scan_consumes_the_whole_lidar_stream_at_bench_rates(bench):
+    """Bench case 2026-10-15: one LIDAR reading per loop turn, each turn making two
+    ~44 ms motor requests, consumed 11.4 Hz of a 25 Hz stream (803 readings out of
+    1820): the profile stopped at mid-travel and the bar seemed to reach the limit."""
+    left_unread = []
+    bench.output.on_progress = lambda message: (
+        left_unread.append(bench.lidar.samples_sent - bench.lidar.samples_read) if "Barre repérée" in message else None
+    )
+    assert bench.measure("X").is_success
+    _assert_n_is_right(bench)
+    assert left_unread and left_unread[0] <= 1
 
 
 def test_targets_stay_away_from_the_limit_switches():

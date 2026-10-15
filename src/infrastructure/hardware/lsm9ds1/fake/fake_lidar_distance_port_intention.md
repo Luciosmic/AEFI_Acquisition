@@ -24,4 +24,8 @@ les distances arrivées pendant la stabilisation doivent être écartées.
 
 - Ordre de réception comme la file de l'adaptateur réel : les distances arrivées
   pendant qu'on ne lisait pas sortent tout de suite, avec leur heure d'arrivée.
+- Le flux tourne à 25 Hz que le lecteur suive ou non : les lectures s'accumulent
+  dans une file (`samples_sent` envoyées, `samples_read` lues). Un lecteur plus lent
+  que 25 Hz prend du retard, comme au banc le 2026-10-15 (fly scan lu à 11,4 Hz :
+  803 lectures consommées sur 1820, profil tronqué).
 - Co-localisé avec l'adaptateur réel (`infrastructure/hardware/lsm9ds1/fake/`).

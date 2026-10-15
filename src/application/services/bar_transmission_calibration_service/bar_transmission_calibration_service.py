@@ -393,10 +393,12 @@ class BarTransmissionCalibrationService(IApiBarTransmissionCalibrationService):
         deadline = started + 2 * NOMINAL_TRAVEL_INCREMENTS / speed + FLY_SCAN_EXTRA_TIMEOUT_S
         while True:
             self._abort_if_cancelled(axis)
-            reading = self._lidar.read_distance(LIDAR_READ_TIMEOUT_S)
+            # Each turn makes two serial motor requests (~44 ms each on the bench):
+            # one reading per turn falls behind the 25 Hz stream, so the turn
+            # empties the queue.
+            received = self._read_all_lidar(samples, LIDAR_READ_TIMEOUT_S)
             now = self._clock.now()
-            if reading is not None:
-                samples.append((reading.timestamp_s, reading.distance))
+            if received:
                 last_sample = now
             elif now - last_sample > LIDAR_SILENCE_S:
                 self._motion.stop(axis)
@@ -407,15 +409,22 @@ class BarTransmissionCalibrationService(IApiBarTransmissionCalibrationService):
             if now > deadline:
                 self._motion.stop(axis)
                 raise _Abort(BenchMotionFailed(axis, f"fly scan non terminé après {deadline - started:.0f} s"))
-        limit = self._motion.get_position(axis)
+        # Readings still queued when the motor stopped belong to the end of travel.
+        self._read_all_lidar(samples, 0.0)
+        positions.append((self._clock.now(), self._motion.get_position(axis)))
+        limit = positions[-1][1]
         if not self._motion.is_at_positive_limit(axis):
             raise _Abort(PositiveLimitNotReached(axis, limit))
         profile = pair_by_reception_time(positions, samples)
+        duration_s = self._clock.now() - started
+        extent = (f"[{min(n for n, _ in profile):.0f}, {max(n for n, _ in profile):.0f}]" if profile else "[]")
         logger.info(
             "BarTransmissionCalibrationService: measurement %s axis=%s fly scan done limit=%d increments "
-            "duration_s=%.1f lidar_samples=%d rejected_zero=%d positions=%d profile_points=%d",
-            measurement_id, axis, limit, self._clock.now() - started, len(samples),
-            sum(1 for _, distance in samples if not distance.has_return), len(positions), len(profile),
+            "duration_s=%.1f lidar_readings_received=%d (≈%d expected at %.0f Hz) lidar_readings_consumed=%d "
+            "rejected_zero=%d positions=%d profile_extent=%s increments",
+            measurement_id, axis, limit, duration_s, len(samples), round(duration_s * LIDAR_NOMINAL_RATE_HZ),
+            LIDAR_NOMINAL_RATE_HZ, len(profile), sum(1 for _, distance in samples if not distance.has_return),
+            len(positions), extent,
         )
         try:
             located = locate_bar(profile, MIN_CONTRAST_MM)
@@ -555,6 +564,17 @@ class BarTransmissionCalibrationService(IApiBarTransmissionCalibrationService):
         self._progress(axis, f"Retour de l'axe {axis} près de l'origine ({LIMIT_GUARD_INCREMENTS} incréments)…")
         self._motion.move_to(axis, LIMIT_GUARD_INCREMENTS)
         self._motion.wait_until_stopped(axis, MOVE_TIMEOUT_S)
+
+    def _read_all_lidar(self, samples: List[Tuple[float, LidarDistance]], first_timeout_s: float) -> int:
+        """Every reading queued so far appended to `samples` (waiting up to
+        `first_timeout_s` for the first one); returns how many."""
+        count = 0
+        reading = self._lidar.read_distance(first_timeout_s)
+        while reading is not None:
+            samples.append((reading.timestamp_s, reading.distance))
+            count += 1
+            reading = self._lidar.read_distance(0.0)
+        return count
 
     def _drain_lidar(self) -> None:
         """Drop the distances buffered before the fly scan (e.g. during homing)."""

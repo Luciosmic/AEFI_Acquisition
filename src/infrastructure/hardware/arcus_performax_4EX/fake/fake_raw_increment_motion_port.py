@@ -25,6 +25,10 @@ WAIT_POLL_S = 0.02
 # The home switch trips before the origin homing set on it: measured on the bench
 # (2026-10-15), a move to 0 stopped at 7 increments.
 HOME_SWITCH_TRIP_INCREMENTS = 7
+# Duration of one serial status request (position, moving): measured on the bench
+# (2026-10-15), the fly scan loop turned at 11.4 Hz with two such requests per
+# turn, i.e. about 44 ms each.
+POSITION_REQUEST_S = 1.0 / (11.4 * 2)
 
 
 class _RealClock:
@@ -49,12 +53,15 @@ class FakeRawIncrementMotionPort(IRawIncrementMotionPort):
         limit_switch_present: bool = True,
         fail_on: Iterable[str] = (),
         home_switch_trip_increments: int = HOME_SWITCH_TRIP_INCREMENTS,
+        position_request_s: float = POSITION_REQUEST_S,
     ) -> None:
         """`clock`: object with now()/sleep() (FakeClock in tests; real time by default).
         `limit_switch_present=False`: the axis stops at the end of travel but the
         switch never reads active. `fail_on`: method names raising RawIncrementMotionError.
         `home_switch_trip_increments`: a move towards the origin stops there, the
-        home switch tripping before the origin."""
+        home switch tripping before the origin. `position_request_s`: duration of a
+        get_position / is_moving request; the position is read halfway through."""
+        self._position_request_s = position_request_s
         self._home_switch_trip = home_switch_trip_increments
         self._clock = clock or _RealClock()
         self.plus_limit_increments = plus_limit_increments
@@ -110,11 +117,23 @@ class FakeRawIncrementMotionPort(IRawIncrementMotionPort):
 
     def is_moving(self, axis: str) -> bool:
         state = self._check("is_moving", axis)
+        self._clock.sleep(self._position_request_s / 2)
         self._settle(state)
-        return state.move is not None
+        moving = state.move is not None
+        self._clock.sleep(self._position_request_s / 2)
+        return moving
 
     def get_position(self, axis: str) -> int:
-        return int(round(self._settle(self._check("get_position", axis))))
+        state = self._check("get_position", axis)
+        self._clock.sleep(self._position_request_s / 2)
+        position = int(round(self._settle(state)))
+        self._clock.sleep(self._position_request_s / 2)
+        return position
+
+    def physical_position(self, axis: str) -> float:
+        """Where the axis is now, without a serial request: for a simulated scene
+        (e.g. the LIDAR seeing the bar), not part of the port."""
+        return self._settle(self._axes[axis])
 
     def is_at_positive_limit(self, axis: str) -> bool:
         state = self._check("is_at_positive_limit", axis)

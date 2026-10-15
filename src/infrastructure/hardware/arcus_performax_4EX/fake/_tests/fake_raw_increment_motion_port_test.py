@@ -6,6 +6,7 @@ from application.services.bar_transmission_calibration_service.ports.raw_increme
 from infrastructure.execution.fake.fake_clock import FakeClock
 from infrastructure.hardware.arcus_performax_4EX.fake.fake_raw_increment_motion_port import (
     HOME_SWITCH_TRIP_INCREMENTS,
+    POSITION_REQUEST_S,
     FakeRawIncrementMotionPort,
 )
 
@@ -13,7 +14,8 @@ from infrastructure.hardware.arcus_performax_4EX.fake.fake_raw_increment_motion_
 class FakeRawIncrementMotionPortTest(unittest.TestCase):
     def setUp(self):
         self.clock = FakeClock()
-        self.port = FakeRawIncrementMotionPort(clock=self.clock, plus_limit_increments=8000)
+        # Kinematics alone: status requests without their serial duration.
+        self.port = FakeRawIncrementMotionPort(clock=self.clock, plus_limit_increments=8000, position_request_s=0.0)
         self.port.home("X")
 
     def test_moves_linearly_in_time_at_the_set_speed(self):
@@ -59,6 +61,21 @@ class FakeRawIncrementMotionPortTest(unittest.TestCase):
         port = FakeRawIncrementMotionPort(clock=self.clock, fail_on={"home"})
         with self.assertRaises(RawIncrementMotionError):
             port.home("X")
+
+
+class PositionRequestCostTest(unittest.TestCase):
+    def test_each_status_request_takes_its_bench_duration_and_reads_halfway(self):
+        clock = FakeClock()
+        port = FakeRawIncrementMotionPort(clock=clock, plus_limit_increments=8000)
+        port.home("X")
+        port.set_speed("X", 1000)
+        port.move_to("X", 5000)
+        position = port.get_position("X")
+        self.assertAlmostEqual(clock.now(), POSITION_REQUEST_S)
+        self.assertEqual(position, round(1000 * POSITION_REQUEST_S / 2))
+        port.is_moving("X")
+        self.assertAlmostEqual(clock.now(), 2 * POSITION_REQUEST_S)
+        self.assertAlmostEqual(POSITION_REQUEST_S, 0.044, delta=0.001)
 
 
 class HomeSwitchTripTest(unittest.TestCase):

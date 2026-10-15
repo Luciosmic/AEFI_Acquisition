@@ -30,6 +30,16 @@ class FakeLidarDistancePortTest(unittest.TestCase):
         reading = self.port.read_distance(0.0)
         self.assertLess(reading.timestamp_s, 0.5)
 
+    def test_the_stream_runs_at_its_rate_whether_or_not_anyone_reads(self):
+        self.port.open()
+        self.clock.sleep(1.0)
+        backlog = []
+        while (reading := self.port.read_distance(0.0)) is not None:
+            backlog.append(reading)
+        self.assertEqual(len(backlog), round(1.0 / SAMPLE_PERIOD_S))
+        self.assertEqual((self.port.samples_sent, self.port.samples_read), (len(backlog), len(backlog)))
+        self.assertAlmostEqual(self.clock.now(), 1.0)  # draining waits for nothing
+
     def test_failure_modes(self):
         with self.assertRaises(LidarStreamBusyError):
             FakeLidarDistancePort(lambda: 1.0, self.clock, streamed_elsewhere=True).open()

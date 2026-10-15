@@ -25,5 +25,11 @@ bouge dans le temps, mais dans un temps qu'on peut accélérer.
   (797,7 incréments/s, `fake_arcus_performax4ex_controller`). Le temps mort t0 des
   mouvements n'est pas simulé : la calibration ne dépend que de la position pendant
   le mouvement, pas de la durée exacte d'un déplacement court.
+- Chaque requête d'état (`get_position`, `is_moving`) coûte `POSITION_REQUEST_S`
+  (≈ 44 ms) de l'horloge, la position étant lue à mi-requête : mesuré au banc le
+  2026-10-15 (boucle du fly scan à 11,4 Hz avec deux requêtes par tour). Une
+  requête instantanée cachait qu'un lecteur du LIDAR qui interroge le moteur à
+  chaque lecture tombe sous les 25 Hz du flux. Les autres commandes restent
+  instantanées : elles ne régulent aucune boucle.
 - Homing instantané (contrat bloquant) : sa durée n'a pas d'effet sur la mesure.
 - Co-localisé avec l'adaptateur réel (`infrastructure/hardware/arcus_performax_4EX/fake/`).
