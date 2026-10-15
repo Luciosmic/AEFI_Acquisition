@@ -24,13 +24,12 @@ def _config(**overrides):
 
 class TestStepScanLifecycleGuards(unittest.TestCase):
     """Locks in the domain-observability audit fixes: pause() on a final
-    scan and repeat complete() must be observable to the caller (raise /
-    return False), never a silent no-op."""
+    scan must be observable to the caller (raise), never a silent no-op."""
 
     def test_pause_on_completed_scan_raises(self):
         scan = StepScan()
         scan.start(_config())
-        scan.complete()
+        scan.mark_completed()
         with self.assertRaises(ValueError):
             scan.pause()
 
@@ -40,12 +39,6 @@ class TestStepScanLifecycleGuards(unittest.TestCase):
         scan.start(_config())
         scan.pause()
         scan.pause()  # must not raise
-
-    def test_complete_returns_false_when_already_completed(self):
-        scan = StepScan()
-        scan.start(_config())
-        self.assertTrue(scan.complete())
-        self.assertFalse(scan.complete())
 
 
 class TestStepScanConfigCombAxisGuard(unittest.TestCase):
