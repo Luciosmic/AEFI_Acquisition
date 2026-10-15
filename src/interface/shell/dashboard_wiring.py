@@ -288,6 +288,11 @@ def wire_dashboard(
         bar_transmission_presenter.axis_result_updated.connect(bar_panel.on_axis_result)
         bar_transmission_presenter.mean_updated.connect(bar_panel.on_mean)
         bar_transmission_presenter.status_message.connect(bar_panel.set_status_message)
+        bar_transmission_presenter.plot_reset.connect(bar_panel.reset_plot)
+        bar_transmission_presenter.profile_points_added.connect(bar_panel.add_profile_points)
+        bar_transmission_presenter.coarse_localization_shown.connect(bar_panel.show_coarse_localization)
+        bar_transmission_presenter.rest_point_added.connect(bar_panel.add_rest_point)
+        bar_transmission_presenter.front_bracket_updated.connect(bar_panel.show_front_bracket)
     logger.debug("Calibration panel wired")
 
     # Scan Panels Wiring

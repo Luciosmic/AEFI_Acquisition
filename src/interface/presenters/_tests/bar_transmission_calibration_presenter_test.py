@@ -11,7 +11,11 @@ from application.services.bar_transmission_calibration_service.dtos.bar_transmis
     AxisBarTransmissionDTO,
     BarCalibrationSettingsDTO,
     BarTransmissionMeanDTO,
+    CoarseLocalizationDTO,
     EdgeBracketDTO,
+    FrontBracketDTO,
+    ProfilePointDTO,
+    RestPointDTO,
 )
 from application.services.bar_transmission_calibration_service.errors.bar_transmission_calibration_error import (
     BarNotFound,
@@ -92,6 +96,11 @@ class Rig:
         p.axis_result_updated.connect(w.on_axis_result)
         p.mean_updated.connect(w.on_mean)
         p.status_message.connect(w.set_status_message)
+        p.plot_reset.connect(w.reset_plot)
+        p.profile_points_added.connect(w.add_profile_points)
+        p.coarse_localization_shown.connect(w.show_coarse_localization)
+        p.rest_point_added.connect(w.add_rest_point)
+        p.front_bracket_updated.connect(w.show_front_bracket)
 
 
 def test_registers_as_output_port_and_relays_increments():
@@ -140,3 +149,32 @@ def test_record_needs_both_axes_then_shows_mean_and_deviation():
     rig.panel.btn_record.click()
     assert rig.service.recorded == [("X", "Y")]
     assert "enregistrée" in rig.panel.lbl_status.text()
+
+
+def test_live_plot_shows_profile_no_return_threshold_fronts_points_and_brackets():
+    rig = Rig()
+    p, w = rig.presenter, rig.panel
+    p.present_profile_points("X", [ProfilePointDTO(10.0, 1250.0), ProfilePointDTO(42.0, None)])
+    p.present_profile_points("X", [ProfilePointDTO(2_000.0, 250.0)])
+    p.present_coarse_localization("X", CoarseLocalizationDTO(250.0, 1250.0, 750.0, 1_990.0, 6_010.0))
+    p.present_rest_point("X", RestPointDTO(2_100, 251.0, 1.5, 10, 10, "on_bar"))
+    p.present_rest_point("X", RestPointDTO(1_600, None, None, 0, 40, "off_bar"))
+    p.present_front_bracket("X", FrontBracketDTO("front 1", 2_100, 1_600))
+    w.redraw_plot_if_needed()
+    labels = w.figure.axes[0].get_legend_handles_labels()[1]
+    assert {"fly scan", "pas de retour", "seuil", "sur la barre", "hors barre"} <= set(labels)
+    assert w._profile == [(10.0, 1250.0), (42.0, None), (2_000.0, 250.0)]
+    assert w._threshold_mm == 750.0 and w._coarse_fronts == (1_990.0, 6_010.0)
+    assert w._brackets == {"front 1": (2_100, 1_600)}
+
+
+def test_plot_is_redrawn_only_when_data_changed_and_reset_at_each_measurement():
+    rig = Rig()
+    w = rig.panel
+    rig.presenter.present_profile_points("X", [ProfilePointDTO(10.0, 1250.0)])
+    w.redraw_plot_if_needed()
+    first = w.figure.axes[0]
+    w.redraw_plot_if_needed()
+    assert w.figure.axes[0] is first  # nothing new: no redraw
+    rig.panel.btn_measure.click()
+    assert w._profile == [] and w._brackets == {} and w._threshold_mm is None

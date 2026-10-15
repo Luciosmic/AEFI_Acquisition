@@ -12,14 +12,23 @@ grandeur lisible quand le banc n'est pas calibré.
 
 - Afficher la position moteur X/Y en incréments, en direct, calibré ou non.
 - Saisir L (mm) et l'axe ; boutons « Mesurer », « Annuler », « Enregistrer ».
+- Tracer la mesure en direct (incréments en x, distance LIDAR en mm en y) : points
+  du fly scan au fil de l'eau, « pas de retour » repérés en bas de l'axe, seuil et
+  fronts approximatifs après le repérage, points lus à l'arrêt (moyenne ± écart-type,
+  couleur selon sur barre / hors barre / indécidable) et encadrement courant de chaque
+  front ; tracé remis à zéro à chaque mesure. L'opérateur contrôle la mesure pendant
+  qu'elle se fait au lieu de découvrir un échec en fin de course.
 - Afficher la progression (homing, fly scan, encadrements, affinage), le résultat de
   chaque axe (encadrements, N ± δ, transmission ± incertitude), la moyenne et l'écart
   X/Y, et les refus en clair.
 
 ## Design
 
-- Widget passif : signaux vers le presenter, slots qui reçoivent des chaînes et des
-  entiers ; aucun import du domaine ni du service.
+- Widget passif : signaux vers le presenter, slots qui reçoivent des chaînes, des
+  nombres et des listes de tuples ; aucun import du domaine ni du service.
+- Tracé matplotlib embarqué (`FigureCanvasQTAgg`, comme les autres panneaux) ; les
+  slots ne font qu'accumuler, un `QTimer` redessine au plus toutes les 150 ms et
+  seulement si quelque chose a changé, pour ne pas geler le thread Qt.
 - Version minimale (tranche testable au banc) : réglages (stabilisation, k, k_σ,
   vitesse, marge) et incertitude sur L pas encore exposés, valeurs par défaut.
 - Pendant une mesure, seuls les boutons de l'onglet sont désactivés ; le scan est

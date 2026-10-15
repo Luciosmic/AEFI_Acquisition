@@ -6,14 +6,18 @@ See bar_transmission_calibration_presenter_intention.md.
 
 import logging
 import threading
-from typing import Dict
+from typing import Dict, Sequence
 
 from PySide6.QtCore import QObject, Signal, Slot
 
 from application.services.bar_transmission_calibration_service.dtos.bar_transmission_calibration_dtos import (
     AxisBarTransmissionDTO,
     BarTransmissionMeanDTO,
+    CoarseLocalizationDTO,
     EdgeBracketDTO,
+    FrontBracketDTO,
+    ProfilePointDTO,
+    RestPointDTO,
 )
 from application.services.bar_transmission_calibration_service.i_api_bar_transmission_calibration_service import (
     IApiBarTransmissionCalibrationService,
@@ -39,6 +43,12 @@ class BarTransmissionCalibrationPresenter(QObject, IBarTransmissionCalibrationOu
     axis_result_updated = Signal(str, str)  # axis, formatted result
     mean_updated = Signal(str)  # formatted X/Y mean and deviation (empty: none yet)
     status_message = Signal(str)
+    # Live plot (primitives only): cleared at each measurement start.
+    plot_reset = Signal(str)  # axis
+    profile_points_added = Signal(object)  # list of (increment, distance_mm or None: no return)
+    coarse_localization_shown = Signal(object, float, float)  # threshold_mm or None, front 1, front 2
+    rest_point_added = Signal(int, object, object, str)  # increment, mean_mm|None, std_mm|None, classification
+    front_bracket_updated = Signal(str, int, int)  # front, bar side, floor side
 
     def __init__(self, service: IApiBarTransmissionCalibrationService, event_bus: IDomainEventBus) -> None:
         super().__init__()
@@ -56,6 +66,7 @@ class BarTransmissionCalibrationPresenter(QObject, IBarTransmissionCalibrationOu
         if result.is_failure:
             self.status_message.emit(f"Mesure {axis} refusée : {result.error.message}")
             return
+        self.plot_reset.emit(axis)
         self.running_changed.emit(True)
         self.status_message.emit(f"Mesure de l'axe {axis} lancée (L = {bar_length_mm:.3f} mm)…")
 
@@ -85,6 +96,20 @@ class BarTransmissionCalibrationPresenter(QObject, IBarTransmissionCalibrationOu
 
     def present_measurement_progress(self, axis: str, message: str) -> None:
         self.progress_message.emit(f"[{axis}] {message}")
+
+    def present_profile_points(self, axis: str, points: Sequence[ProfilePointDTO]) -> None:
+        self.profile_points_added.emit([(p.increment, p.distance_mm) for p in points])
+
+    def present_coarse_localization(self, axis: str, located: CoarseLocalizationDTO) -> None:
+        self.coarse_localization_shown.emit(
+            located.threshold_mm, located.first_front_increment, located.second_front_increment
+        )
+
+    def present_rest_point(self, axis: str, point: RestPointDTO) -> None:
+        self.rest_point_added.emit(point.increment, point.mean_distance_mm, point.std_distance_mm, point.classification)
+
+    def present_front_bracket(self, axis: str, bracket: FrontBracketDTO) -> None:
+        self.front_bracket_updated.emit(bracket.front, bracket.on_bar_increment, bracket.off_bar_increment)
 
     def present_axis_measured(self, result: AxisBarTransmissionDTO) -> None:
         with self._lock:

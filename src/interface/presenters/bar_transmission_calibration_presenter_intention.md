@@ -19,6 +19,9 @@ connaître le service, le bus d'événements et les DTO, et l'opérateur verrait
 - Afficher la moyenne et l'écart X/Y dès que les deux axes sont mesurés (`compare`),
   puis après l'enregistrement.
 - Relayer la position moteur en incréments (`motorincrementsupdated`), calibré ou non.
+- Relayer le tracé en direct : points du fly scan, seuil et fronts approximatifs,
+  points lus à l'arrêt, encadrement courant de chaque front ; remettre le tracé à
+  zéro quand une mesure démarre.
 
 ## Design
 

@@ -12,6 +12,10 @@ largeur ?) ne serait porté que par la position.
 - `BarCalibrationSettingsDTO` : réglages surchargeables depuis l'interface, avec leurs
   valeurs initiales nommées (à ajuster sur le banc).
 - `LidarDistanceReading` : une distance horodatée à sa réception (sortie du port LIDAR).
+- `ProfilePointDTO`, `CoarseLocalizationDTO`, `RestPointDTO`, `FrontBracketDTO` : le
+  tracé en direct (points du fly scan, seuil et fronts approximatifs, points lus à
+  l'arrêt avec leur classement `on_bar` / `off_bar` / `undecidable`, encadrement
+  courant d'un front).
 - `EdgeBracketDTO`, `AxisBarTransmissionDTO` : la mesure d'un axe, encadrements,
   N ± δ, transmission ± incertitude, plateaux et seuil.
 - `BarTransmissionMeanDTO` : moyenne X/Y, incertitude, écart, compatibilité, et

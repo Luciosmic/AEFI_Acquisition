@@ -35,6 +35,10 @@ Spécification : `_system/documentation/l-ecart-en-impulsions-entre-les-deux-fro
   courante ; publie `mechanicaltransmissioncalibrationentryadded`. Seule voie
   d'écriture, déclenchée par l'opérateur.
 - `compare(X, Y)` : moyenne et écart sans rien écrire.
+- Pendant la mesure, donner au port de sortie de quoi la contrôler en direct :
+  points du fly scan (incrément interpolé, distance ou « pas de retour »), seuil et
+  fronts approximatifs, chaque point lu à l'arrêt (moyenne ± écart-type,
+  classement) et l'encadrement courant de chaque front.
 
 ## Design
 

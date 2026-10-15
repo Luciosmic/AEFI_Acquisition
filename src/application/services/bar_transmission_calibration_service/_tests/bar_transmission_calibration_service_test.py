@@ -60,7 +60,20 @@ SETTINGS = BarCalibrationSettingsDTO(settle_time_s=0.3, samples_per_point=6, k_s
 class Recorder(IBarTransmissionCalibrationOutputPort):
     def __init__(self):
         self.progress, self.measured, self.failed = [], [], []
+        self.profile, self.located, self.rest_points, self.brackets = [], [], [], []
         self.on_progress = None
+
+    def present_profile_points(self, axis, points):
+        self.profile.extend(points)
+
+    def present_coarse_localization(self, axis, located):
+        self.located.append(located)
+
+    def present_rest_point(self, axis, point):
+        self.rest_points.append(point)
+
+    def present_front_bracket(self, axis, bracket):
+        self.brackets.append(bracket)
 
     def present_measurement_progress(self, axis, message):
         self.progress.append(message)
@@ -284,6 +297,35 @@ def test_fly_scan_consumes_the_whole_lidar_stream_at_bench_rates(bench):
     assert bench.measure("X").is_success
     _assert_n_is_right(bench)
     assert left_unread and left_unread[0] <= 1
+
+
+def test_the_measurement_is_shown_live_profile_threshold_fronts_points_and_brackets(bench):
+    bench.measure("X")
+    out = bench.output
+    increments = [p.increment for p in out.profile]
+    assert increments == sorted(increments)  # in travel order, as it happens
+    assert min(increments) < 100 and max(increments) > TRAVEL - 100  # the whole travel
+    on_bar = [p.distance_mm for p in out.profile if BAR["X"][0] + 50 < p.increment < BAR["X"][1] - 50]
+    assert on_bar and max(on_bar) < 300
+    located = out.located[0]
+    assert located.threshold_mm == pytest.approx(750.0, abs=2.0)
+    assert abs(located.first_front_increment - BAR["X"][0]) < 100
+    assert {p.classification for p in out.rest_points} >= {"on_bar", "off_bar"}
+    on_bar_point = next(p for p in out.rest_points if p.classification == "on_bar")
+    assert on_bar_point.mean_distance_mm == pytest.approx(250.0, abs=5.0) and on_bar_point.std_distance_mm > 0
+    last = {b.front: b for b in out.brackets}
+    measured = out.measured[0]
+    assert [(b.on_bar_increment, b.off_bar_increment) for b in last.values()] == [
+        (measured.first_front.on_bar_increment, measured.first_front.off_bar_increment),
+        (measured.second_front.on_bar_increment, measured.second_front.off_bar_increment),
+    ]
+
+
+def test_no_return_is_shown_as_such_in_the_live_profile():
+    bench = Bench(bar_mm=95.0, floor_mm=None, noise_mm=1.0).mount_chain()
+    bench.measure("X")
+    assert any(p.distance_mm is None for p in bench.output.profile)
+    assert bench.output.located[0].threshold_mm is None
 
 
 def test_targets_stay_away_from_the_limit_switches():

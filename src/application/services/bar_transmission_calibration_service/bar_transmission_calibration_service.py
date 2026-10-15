@@ -13,10 +13,17 @@ from typing import List, Optional, Tuple
 from uuid import UUID, uuid4
 
 from application.services.bar_transmission_calibration_service.dtos.bar_transmission_calibration_dtos import (
+    OFF_BAR,
+    ON_BAR,
+    UNDECIDABLE,
     AxisBarTransmissionDTO,
     BarCalibrationSettingsDTO,
     BarTransmissionMeanDTO,
+    CoarseLocalizationDTO,
     EdgeBracketDTO,
+    FrontBracketDTO,
+    ProfilePointDTO,
+    RestPointDTO,
 )
 from application.services.bar_transmission_calibration_service.errors.bar_transmission_calibration_error import (
     BarNotFound,
@@ -116,6 +123,12 @@ MAX_BRACKET_WIDENINGS = 3
 LIMIT_GUARD_INCREMENTS = 100
 # Plateau contrast below which the fly scan saw no bar.
 MIN_CONTRAST_MM = 10.0
+
+_CLASSIFICATION_KEYS = {
+    BarPointClassification.ON_BAR: ON_BAR,
+    BarPointClassification.OFF_BAR: OFF_BAR,
+    BarPointClassification.UNDECIDABLE: UNDECIDABLE,
+}
 
 FIRST_FRONT, SECOND_FRONT = "front 1 (entrée sur la barre)", "front 2 (sortie de la barre)"
 
@@ -388,6 +401,7 @@ class BarTransmissionCalibrationService(IApiBarTransmissionCalibrationService):
         self._drain_lidar()
         positions: List[Tuple[float, float]] = [(self._clock.now(), self._motion.get_position(axis))]
         samples: List[Tuple[float, LidarDistance]] = []
+        shown = 0  # samples already handed to the live display
         self._motion.run_to_positive_limit(axis)
         started = last_sample = self._clock.now()
         deadline = started + 2 * NOMINAL_TRAVEL_INCREMENTS / speed + FLY_SCAN_EXTRA_TIMEOUT_S
@@ -404,6 +418,7 @@ class BarTransmissionCalibrationService(IApiBarTransmissionCalibrationService):
                 self._motion.stop(axis)
                 raise _Abort(LidarUnavailable(f"aucune lecture depuis {LIDAR_SILENCE_S:.0f} s pendant le fly scan"))
             positions.append((self._clock.now(), self._motion.get_position(axis)))
+            shown = self._show_profile(axis, positions, samples, shown)
             if not self._motion.is_moving(axis):
                 break
             if now > deadline:
@@ -412,6 +427,7 @@ class BarTransmissionCalibrationService(IApiBarTransmissionCalibrationService):
         # Readings still queued when the motor stopped belong to the end of travel.
         self._read_all_lidar(samples, 0.0)
         positions.append((self._clock.now(), self._motion.get_position(axis)))
+        self._show_profile(axis, positions, samples, shown)
         limit = positions[-1][1]
         if not self._motion.is_at_positive_limit(axis):
             raise _Abort(PositiveLimitNotReached(axis, limit))
@@ -436,6 +452,14 @@ class BarTransmissionCalibrationService(IApiBarTransmissionCalibrationService):
             measurement_id, axis, located.on_bar_distance_mm, located.off_bar_distance_mm, located.threshold_mm,
             located.plateau_noise_mm, located.first_front_increment, located.second_front_increment,
         )
+        if self._output_port is not None:
+            self._output_port.present_coarse_localization(axis, CoarseLocalizationDTO(
+                on_bar_distance_mm=located.on_bar_distance_mm,
+                off_bar_distance_mm=located.off_bar_distance_mm,
+                threshold_mm=located.threshold_mm,
+                first_front_increment=located.first_front_increment,
+                second_front_increment=located.second_front_increment,
+            ))
         if located.floor_returns:
             plateaus = (f"plateaux {located.on_bar_distance_mm:.1f} / {located.off_bar_distance_mm:.1f} mm, "
                         f"seuil {located.threshold_mm:.1f} mm")
@@ -473,6 +497,7 @@ class BarTransmissionCalibrationService(IApiBarTransmissionCalibrationService):
             on_side = self._classify(axis, bracket.on_bar_increment, located, settings)
             off_side = self._classify(axis, bracket.off_bar_increment, located, settings)
             if on_side is BarPointClassification.ON_BAR and off_side is BarPointClassification.OFF_BAR:
+                self._show_bracket(axis, name, bracket)
                 self._progress(axis, f"{name} encadré : [{bracket.on_bar_increment}, {bracket.off_bar_increment}]")
                 return bracket
             logger.info(
@@ -502,6 +527,7 @@ class BarTransmissionCalibrationService(IApiBarTransmissionCalibrationService):
             probe = bracket.next_probe()
             classification = self._classify(axis, probe, located, settings)
             bracket = bracket.narrowed(probe, classification)
+            self._show_bracket(axis, name, bracket)
             self._progress(
                 axis,
                 f"{name} : {classification.value} à {probe} → [{bracket.on_bar_increment}, {bracket.off_bar_increment}]",
@@ -522,6 +548,17 @@ class BarTransmissionCalibrationService(IApiBarTransmissionCalibrationService):
             samples, settings.samples_per_point, located.threshold_mm, settings.k_sigma
         )
         valid = sum(1 for s in samples if s.has_return)
+        if self._output_port is not None:
+            summary = BarPointReading.from_lidar(samples) if valid >= 2 else None
+            single = next((s.distance_mm for s in samples if s.has_return), None)
+            self._output_port.present_rest_point(axis, RestPointDTO(
+                increment=increment,
+                mean_distance_mm=summary.mean_distance_mm if summary else single,
+                std_distance_mm=summary.std_distance_mm if summary else None,
+                valid_returns=valid,
+                samples=len(samples),
+                classification=_CLASSIFICATION_KEYS[classification],
+            ))
         logger.debug(
             "BarTransmissionCalibrationService: axis=%s point %d valid=%d rejected_zero=%d -> %s",
             axis, increment, valid, len(samples) - valid, classification.value,
@@ -575,6 +612,34 @@ class BarTransmissionCalibrationService(IApiBarTransmissionCalibrationService):
             count += 1
             reading = self._lidar.read_distance(0.0)
         return count
+
+    def _show_profile(
+        self,
+        axis: str,
+        positions: List[Tuple[float, float]],
+        samples: List[Tuple[float, LidarDistance]],
+        shown: int,
+    ) -> int:
+        """Live display of the samples received since `shown` that the last two
+        positions bracket in time; later ones wait for the next position.
+        Returns the new `shown`."""
+        if self._output_port is None:
+            return len(samples)
+        ready = shown
+        while ready < len(samples) and samples[ready][0] <= positions[-1][0]:
+            ready += 1
+        if ready > shown:
+            profile = pair_by_reception_time(positions[-2:], samples[shown:ready])
+            self._output_port.present_profile_points(
+                axis, [ProfilePointDTO(increment=n, distance_mm=d.distance_mm) for n, d in profile]
+            )
+        return ready
+
+    def _show_bracket(self, axis: str, name: str, bracket: EdgeBracket) -> None:
+        if self._output_port is not None:
+            self._output_port.present_front_bracket(
+                axis, FrontBracketDTO(name, bracket.on_bar_increment, bracket.off_bar_increment)
+            )
 
     def _drain_lidar(self) -> None:
         """Drop the distances buffered before the fly scan (e.g. during homing)."""

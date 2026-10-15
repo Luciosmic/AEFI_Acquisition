@@ -51,6 +51,50 @@ class LidarDistanceReading:
 
 
 @dataclass(frozen=True)
+class ProfilePointDTO:
+    """One fly scan LIDAR sample at its interpolated motor position (increments)."""
+
+    increment: float
+    distance_mm: Optional[float]  # None: no LIDAR return
+
+
+@dataclass(frozen=True)
+class CoarseLocalizationDTO:
+    """What the fly scan found: plateaus, threshold and approximate fronts."""
+
+    on_bar_distance_mm: float
+    off_bar_distance_mm: Optional[float]  # None: the floor gives no LIDAR return
+    threshold_mm: Optional[float]  # None: any valid return is the bar
+    first_front_increment: float
+    second_front_increment: float
+
+
+# Classification keys of a point read at rest (stable, not display text).
+ON_BAR, OFF_BAR, UNDECIDABLE = "on_bar", "off_bar", "undecidable"
+
+
+@dataclass(frozen=True)
+class RestPointDTO:
+    """A point read at rest while bracketing or refining a front."""
+
+    increment: int
+    mean_distance_mm: Optional[float]  # None: no valid return
+    std_distance_mm: Optional[float]  # None: fewer than 2 valid returns
+    valid_returns: int
+    samples: int
+    classification: str  # ON_BAR | OFF_BAR | UNDECIDABLE
+
+
+@dataclass(frozen=True)
+class FrontBracketDTO:
+    """Current bracket of a front: bar side and floor side (increments)."""
+
+    front: str
+    on_bar_increment: int
+    off_bar_increment: int
+
+
+@dataclass(frozen=True)
 class EdgeBracketDTO:
     on_bar_increment: int
     off_bar_increment: int
