@@ -490,6 +490,26 @@ class TestFlyScanExportHoldsOnlyCommittedLines(_FaithfulFlyStack):
             self.assertEqual(self._rows(port), self._committed_positions(scan))
             self.assertTrue(port.stopped)
 
+    def test_preview_reaches_the_event_store_but_never_the_measurement_files(self):
+        previews = []
+        self.event_bus.subscribe("aefilinepreviewpointacquired", previews.append)
+        # A pause abandons line 1: its previews never get a definitive point.
+        self._on_first_preview_of_line(1, lambda: (
+            self.service.pause_scan(), threading.Timer(0.5, self.service.resume_scan).start()))
+
+        scan = self._run(make_dto(), timeout=90.0)
+
+        self.assertGreater(len(previews), 12)  # the abandoned attempt of line 1 previewed too
+        for port in (self.csv_port, self.hdf5_port):
+            # Measurement rows: exactly the 12 committed grid points, none from a preview.
+            self.assertEqual(len(port.points), 12)
+            self.assertEqual(self._rows(port), self._committed_positions(scan))
+            self.assertEqual(sorted(r["point_index"] for r in port.points), list(range(12)))
+        # The event store (CSV port's _events.jsonl) keeps every preview and the abandon (safety net).
+        recorded = [type(e).__name__ for e in self.csv_port.events]
+        self.assertEqual(recorded.count("AefiLinePreviewPointAcquired"), len(previews))
+        self.assertEqual(recorded.count("AefiLineAbandoned"), 1)
+
     def test_cancel_mid_sweep_exports_no_point_of_the_swept_line(self):
         self._on_first_preview_of_line(1, self.service.cancel_scan)
 
