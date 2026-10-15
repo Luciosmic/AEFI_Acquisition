@@ -22,6 +22,7 @@ class AefiPoint:
     id: AefiPointId
     scan_id: UUID
     position: Position2D
+    point_index: int
     expected_samples: int
     _measurement: Optional[AefiVoltageMeasurement] = None
     _domain_events: List[DomainEvent] = field(default_factory=list)
@@ -29,6 +30,8 @@ class AefiPoint:
     def __post_init__(self):
         if self.expected_samples < 1:
             raise ValueError("expected_samples must be >= 1")
+        if self.point_index < 0:
+            raise ValueError("point_index must be >= 0")
 
     @property
     def measurement(self) -> Optional[AefiVoltageMeasurement]:
@@ -55,6 +58,7 @@ class AefiPoint:
             AefiPointAcquired(
                 aefi_point_id=self.id,
                 scan_id=self.scan_id,
+                point_index=self.point_index,
                 position=self.position,
                 measurement=self._measurement,
                 samples_count=self.expected_samples,

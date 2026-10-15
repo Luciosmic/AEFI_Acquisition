@@ -251,6 +251,35 @@ class TestScanDifferentialModeIntegration(unittest.TestCase):
         point = self.acquired[0]
         self.assertIsNone(point.baseline_measurement)
 
+    def _assert_aefi_points_match_legacy_points(self, differential_mode: bool):
+        """Each AefiPointAcquired carries the same scan, index, position and measurement
+        (standard deviations included) as the StepScan ScanPointAcquired of the same
+        point — so the export can read the former instead of the latter."""
+        aefi_points = []
+        self.event_bus.subscribe("aefipointacquired", aefi_points.append)
+
+        done = self._subscribe_completion()
+        self.assertTrue(self.service.execute_scan(self._one_point_scan(differential_mode, x_nb_points=3)))
+        self.assertTrue(done.wait(timeout=10.0), "Scan did not complete within timeout")
+
+        self.assertEqual(len(aefi_points), 3)
+        self.assertEqual(len(self.acquired), 3)
+        legacy_by_index = {p.point_index: p for p in self.acquired}
+        self.assertEqual(sorted(p.point_index for p in aefi_points), [0, 1, 2])
+        for aefi in aefi_points:
+            legacy = legacy_by_index[aefi.point_index]
+            self.assertEqual(aefi.scan_id, legacy.scan_id)
+            self.assertEqual(aefi.position, legacy.position)
+            self.assertEqual(aefi.measurement, legacy.measurement)  # dataclass equality: std devs included
+            self.assertIsNotNone(aefi.measurement.std_dev_x_in_phase)
+            self.assertEqual(aefi.measurement_unit, "http://qudt.org/vocab/unit/V")
+
+    def test_aefi_point_acquired_matches_scan_point_acquired_in_differential_mode(self):
+        self._assert_aefi_points_match_legacy_points(differential_mode=True)
+
+    def test_aefi_point_acquired_matches_scan_point_acquired_without_differential_mode(self):
+        self._assert_aefi_points_match_legacy_points(differential_mode=False)
+
 
 class _RecordingOutputPort:
     """Minimal IScanOutputPort fake — records present_scan_progress calls only."""

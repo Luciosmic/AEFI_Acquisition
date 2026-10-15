@@ -426,10 +426,16 @@ class ScanApplicationService:
             scan.start()
             uow.commit()
 
-    def _record_aefi_point(self, step_scan: StepScan, position: Position2D, measurements: List, expected_samples: int) -> None:
+    def _record_aefi_point(
+        self, step_scan: StepScan, point_index: int, position: Position2D, measurements: List, expected_samples: int
+    ) -> None:
         """One UoW per point: the commit publishes AefiPointAcquired, whose handler closes the thin Scan."""
         point = AefiPoint(
-            id=AefiPointId(uuid4()), scan_id=step_scan.id, position=position, expected_samples=expected_samples
+            id=AefiPointId(uuid4()),
+            scan_id=step_scan.id,
+            position=position,
+            point_index=point_index,
+            expected_samples=expected_samples,
         )
         point.record_samples([Sample(m) for m in measurements])
         with self._unit_of_work as uow:
@@ -892,7 +898,7 @@ class ScanApplicationService:
                 self._publish_events(scan.domain_events)
                 if is_last_point:
                     _release_streams()
-                self._record_aefi_point(scan, position, measurements, config.averaging_per_position)
+                self._record_aefi_point(scan, i, position, measurements, config.averaging_per_position)
 
             # --- Finalize ---
             # COMPLETED is posed by the thin Scan's ScanCompleted during the last commit;

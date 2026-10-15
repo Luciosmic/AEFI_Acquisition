@@ -6,7 +6,7 @@ Sans fait publié à l'acquisition d'un point, le handler du `Scan` doit relire 
 
 ## Responsibility
 
-- Fait passé : un point a reçu exactement N échantillons valides ; porte identité, scan, position, mesure moyennée et nombre d'échantillons. L'unité de la mesure est inline (URI QUDT) pour que le fait soit rejouable sans convention externe.
+- Fait passé : un point a reçu exactement N échantillons valides ; porte identité, scan, index global du point, position, mesure moyennée (avec écarts-types) et nombre d'échantillons. L'unité de la mesure est inline (URI QUDT) pour que le fait soit rejouable sans convention externe. `point_index` est un rang, sans unité.
 
 ## Design
 
