@@ -130,6 +130,9 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
     )
     from application.services.transformation_service.transformation_service import TransformationService
     from application.services.transformation_service.dtos.transformation_dtos import SetRotationAnglesDTO
+    from application.services.aefi_signal_processing_service.aefi_signal_processing_service import (
+        AefiSignalProcessingService,
+    )
     from application.services.hardware_configuration_service.hardware_configuration_service import HardwareConfigurationService
     from application.services.hardware_configuration_service.ports.i_hardware_advanced_configurator import IHardwareAdvancedConfigurator
 
@@ -588,9 +591,16 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
     acquisition_throughput_presenter = AcquisitionThroughputCharacterizationPresenter(acquisition_throughput_service)
     adc_output_rate_presenter = AdcOutputRateCharacterizationPresenter(adc_output_rate_service)
 
-    # Continuous Presenter needs Transformation Service now
+    # Signal correction (noise/phase/primary) — reacts to the continuous
+    # acquisition stream via the event bus, built before the presenters that
+    # consume its events.
+    signal_processing_service = AefiSignalProcessingService(event_bus, transformation_service)
+    logger.info("Services -> AefiSignalProcessingService created")
+
+    # Continuous Presenter needs Transformation Service and AefiSignalProcessingService now
     aefi_continuous_reading_presenter = AefiContinuousReadingPresenter(
-        continuous_service, event_bus, transformation_service, export_service=scan_export_service
+        continuous_service, event_bus, transformation_service, signal_processing_service,
+        export_service=scan_export_service
     )
 
     # Electric Field Probe Presenter
