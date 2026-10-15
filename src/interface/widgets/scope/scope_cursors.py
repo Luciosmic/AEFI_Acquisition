@@ -11,6 +11,7 @@ from typing import List, Optional
 
 from PySide6.QtWidgets import QGroupBox, QVBoxLayout, QLabel, QPushButton
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QFontDatabase
 import pyqtgraph as pg  # type: ignore[import]
 
 _TOGGLE_STYLE = (
@@ -40,7 +41,9 @@ class ScopeCursors(QGroupBox):
         self.btn_toggle.setStyleSheet(_TOGGLE_STYLE)
         self.btn_toggle.toggled.connect(self._on_toggled)
         self.lbl_readout = QLabel("—")
-        self.lbl_readout.setStyleSheet("color: #888; font-size: 10px; font-family: monospace;")
+        # A generic family name like "monospace" in a style sheet makes Qt scan every installed font.
+        self.lbl_readout.setFont(QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont))
+        self.lbl_readout.setStyleSheet("color: #888; font-size: 10px;")
         layout.addWidget(self.btn_toggle)
         layout.addWidget(self.lbl_readout)
 

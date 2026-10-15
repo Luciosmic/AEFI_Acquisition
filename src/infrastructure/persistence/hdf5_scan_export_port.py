@@ -15,10 +15,12 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import TYPE_CHECKING, Dict, Any, Optional
 
-import h5py
 import numpy as np
+
+if TYPE_CHECKING:
+    import h5py  # imported in start(): only an export needs it, not app startup
 
 from application.services.scan_export_service.ports.i_scan_export_port import (
     IScanExportPort,
@@ -122,6 +124,8 @@ class Hdf5ScanExportPort(IScanExportPort):
         if self._file is not None:
             # Already started.
             return
+
+        import h5py
 
         self._file = h5py.File(self._file_path, "w")
         root = self._file

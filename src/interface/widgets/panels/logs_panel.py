@@ -83,7 +83,7 @@ class LogsPanel(BasePanel):
         self.text_edit = QPlainTextEdit()
         self.text_edit.setReadOnly(True)
         self.text_edit.setMaximumBlockCount(5000)
-        self.text_edit.setStyleSheet("font-family: Consolas, monospace; font-size: 11px;")
+        self.text_edit.setStyleSheet("font-family: Consolas; font-size: 11px;")
         logs_layout.addWidget(self.text_edit)
 
     def _build_manage_page(self) -> QWidget:

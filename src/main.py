@@ -636,39 +636,14 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
         operator_presenter,
     )
 
-    # 11. Startup Sequence (hardware init if real hardware) or Direct Launch (if mocks only)
-    # StartupView has been visible since the very start of main(); the log
-    # panel it hosted moves into the Dashboard once it's shown.
-    def on_startup_finished(success: bool, errors: list):
-        if success:
-            logger.info("Hardware initialization successful.")
-            motion_presenter.on_speed_mode_requested(dashboard.panels["motion"].get_current_speed_mode())
-            startup_view.close()
-
-            print("\n--- Launching Dashboard ---")
-            dashboard.show()
-            logger.info("Dashboard launched successfully.")
-        else:
-            logger.error(f"Hardware initialization failed: {errors}")
-            # StartupView will display the error
-            # User can close the window manually
-
-    lifecycle_presenter.startup_finished.connect(on_startup_finished)
-
-    if use_startup:
-        startup_view.set_phase("Initialisation matérielle...")
-        app.processEvents()
-        startup_view.start_hardware_init()
-    else:
-        # No hardware lifecycle to run for mocks - finish immediately
-        logger.info("No real hardware in lifecycle (mock-only) — skipping startup sequence.")
-        on_startup_finished(success=True, errors=[])
-
-    # 12. Observability MCP server (read-only) — lets an LLM client (e.g.
+    # 11. Observability MCP server (read-only) — lets an LLM client (e.g.
     # Claude) query scan status in parallel with the UI, over the same
     # scan_service instance built above (no duplicated services, no state
     # copy). Scope is deliberately read-only: no mutation tool is exposed,
     # so a connected LLM cannot drive hardware without human supervision.
+    # Started once startup has finished (success or failure), after
+    # dashboard.show(): its thread imports compete for the GIL with the
+    # first paint of the dashboard.
     def _scan_config_with_export_directory():
         snapshot = scan_service.get_current_config()
         export_config = scan_export_service.get_export_config()
@@ -686,7 +661,40 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
         ),
         daemon=True,
     )
-    mcp_thread.start()
+
+    def start_mcp_server_once():
+        if mcp_thread.ident is None:  # startup_finished may fire again (retry)
+            mcp_thread.start()
+
+    # 12. Startup Sequence (hardware init if real hardware) or Direct Launch (if mocks only)
+    # StartupView has been visible since the very start of main(); the log
+    # panel it hosted moves into the Dashboard once it's shown.
+    def on_startup_finished(success: bool, errors: list):
+        if success:
+            logger.info("Hardware initialization successful.")
+            motion_presenter.on_speed_mode_requested(dashboard.panels["motion"].get_current_speed_mode())
+            startup_view.close()
+
+            print("\n--- Launching Dashboard ---")
+            dashboard.show()
+            logger.info("Dashboard launched successfully.")
+        else:
+            logger.error(f"Hardware initialization failed: {errors}")
+            # StartupView will display the error
+            # User can close the window manually
+        # Next event-loop turn: the dashboard gets its first paint before the MCP imports.
+        QTimer.singleShot(0, start_mcp_server_once)
+
+    lifecycle_presenter.startup_finished.connect(on_startup_finished)
+
+    if use_startup:
+        startup_view.set_phase("Initialisation matérielle...")
+        app.processEvents()
+        startup_view.start_hardware_init()
+    else:
+        # No hardware lifecycle to run for mocks - finish immediately
+        logger.info("No real hardware in lifecycle (mock-only) — skipping startup sequence.")
+        on_startup_finished(success=True, errors=[])
 
 
 if __name__ == "__main__":

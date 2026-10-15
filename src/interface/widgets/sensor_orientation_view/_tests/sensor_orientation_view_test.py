@@ -15,10 +15,26 @@ def _make_view() -> SensorOrientationView:
     return SensorOrientationView()
 
 
-def test_3d_view_is_embedded_and_drawn_at_construction():
+def test_3d_view_is_embedded_and_not_drawn_before_the_host_feeds_p():
     view = _make_view()
     assert view.isAncestorOf(view.plotter)
+    assert view.cube_actor is None
+    view.close()
+
+
+def test_view_never_shown_empty_when_no_p_was_fed():
+    view = _make_view()
+    view.show()
     assert view.cube_actor is not None and view.marker_actor is not None
+    view.close()
+
+
+def test_show_keeps_the_fed_p_instead_of_redrawing_identity():
+    view = _make_view()
+    view.show_mounting(_RZ90)
+    cube = view.cube_actor
+    view.show()
+    assert view.cube_actor is cube
     view.close()
 
 

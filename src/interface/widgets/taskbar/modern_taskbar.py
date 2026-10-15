@@ -44,7 +44,7 @@ class ModernTaskbar(TaskbarWidget):
                 border: none;
                 border-radius: 6px;
                 padding: 6px 10px;
-                font-family: 'Segoe UI', sans-serif;
+                font-family: 'Segoe UI';
                 font-size: 11px;
                 font-weight: 500;
             }

@@ -52,7 +52,14 @@ class SensorOrientationView(QWidget):
         self.plotter.show_grid()
         self.plotter.enable_trackball_style()
         self.set_camera_view('3d')
-        self.show_mounting(_IDENTITY)  # never shown empty; the host feeds the active P
+        # No identity draw here: the host feeds the active P right after
+        # construction, and drawing twice cost startup time. showEvent covers
+        # a host that never feeds one.
+
+    def showEvent(self, event) -> None:
+        if self.cube_actor is None:
+            self.show_mounting(_IDENTITY)  # never shown empty
+        super().showEvent(event)
 
     def show_mounting(self, matrix) -> None:
         """Redraw the cube for the mounting matrix P (rows; columns = sensor axes in sources frame)."""
