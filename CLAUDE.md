@@ -57,9 +57,7 @@ Lire `_system/` avant toute décision architecturale :
 | `release/v1.0.1`          | Pas de worktree dédié actuellement — le worktree `AEFI_Acquisition/` tourne en réalité sur `main`  |
 | `release/v1.0.0`          | Archive historique                                               |
 | `archive/ddd-refactoring` | Refactoring DDD gelé — documentation uniquement, ne pas merger |
-| `dev_hardware`            | Worktree `AEFI_Acquisition_dev_hardware/` — développement borné au périmètre hardware |
 | `feature/n8n-ddd-workflow-viz` | Worktree `AEFI_Acquisition_n8n-poc/` — POC visualisation workflow DDD via n8n |
-| `dev_scan`                | Worktree `AEFI_Acquisition_dev_scan/` — déjà mergé dans `develop` (442f812) ; worktree probablement à nettoyer, vérifier sa pertinence |
 | `backup-before-rollback-2026-07-10` | Branche de sauvegarde pré-rollback — pas de worktree actif |
 
 ## Contexte borné du worktree
