@@ -147,8 +147,17 @@ def run_observability_mcp_server(
         "Observability MCP server: starting (read-only) on http://%s:%s%s",
         host, port, mcp.settings.streamable_http_path,
     )
+    import uvicorn  # comes with mcp; imported at call time like FastMCP
+
+    # Same server as mcp.run(transport="streamable-http"), but log_config=None:
+    # uvicorn's default dictConfig closes every handler of the application
+    # (AEFI_LOG_FILE stopped being written when this server started).
+    config = uvicorn.Config(
+        mcp.streamable_http_app(), host=host, port=port,
+        log_level=mcp.settings.log_level.lower(), log_config=None,
+    )
     try:
-        mcp.run(transport="streamable-http")
+        uvicorn.Server(config).run()
     except BaseException:  # SystemExit (e.g. uvicorn bind failure) is silent in a thread
         logger.exception("Observability MCP server: thread died on %s:%s", host, port)
         raise
