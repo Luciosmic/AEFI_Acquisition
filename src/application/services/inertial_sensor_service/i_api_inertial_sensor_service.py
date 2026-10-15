@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Optional
 
 
 class IApiInertialSensorService(ABC):
@@ -33,6 +34,11 @@ class IApiInertialSensorService(ABC):
 
     @abstractmethod
     def is_acquisition_running(self) -> bool: ...
+
+    @abstractmethod
+    def get_control_refusal(self) -> Optional[str]:
+        """Why the panel may not start or disconnect the stream now (another owner,
+        e.g. the bar calibration, holds it); None when it may."""
 
     @abstractmethod
     def shutdown(self) -> None:

@@ -94,6 +94,10 @@ class InertialSensorPresenter(QObject):
 
     @Slot()
     def on_disconnect_requested(self) -> None:
+        refusal = self._service.get_control_refusal()
+        if refusal is not None:
+            self.acquisition_failed.emit(f"déconnexion refusée — {refusal}")
+            return
         self._service.disconnect_sensor()
         self._finish_acquisition()
 
@@ -109,6 +113,10 @@ class InertialSensorPresenter(QObject):
             self._acquiring = True
             self._timer.start()
             self.acquisition_started.emit()
+            return
+        refusal = self._service.get_control_refusal()
+        if refusal is not None:
+            self.acquisition_failed.emit(f"démarrage refusé — {refusal}")
 
     @Slot()
     def on_stop_requested(self) -> None:

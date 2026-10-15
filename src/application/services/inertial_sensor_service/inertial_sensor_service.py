@@ -23,7 +23,7 @@ Design:
 from __future__ import annotations
 
 import logging
-from typing import Sequence
+from typing import Optional, Sequence
 
 from application.services.inertial_sensor_service.dtos.inertial_sensor_dtos import (
     ALL_CHANNELS,
@@ -41,6 +41,7 @@ from application.services.inertial_sensor_service.ports.i_inertial_sensor_stream
 from domain.inertial_sensor.events.inertial_sensor_connection_changed.inertial_sensor_connection_changed import (
     InertialSensorConnectionChanged,
 )
+from application.shared.exclusive_control.exclusive_control import ExclusiveControl
 from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
 
 CONNECTION_CHANGED_TOPIC = "inertialsensorconnectionchanged"
@@ -61,11 +62,15 @@ class InertialSensorService(IApiInertialSensorService):
         stream_port: IInertialSensorStreamPort,
         event_bus: IDomainEventBus,
         channels: Sequence[str] = ALL_CHANNELS,
+        stream_control: Optional[ExclusiveControl] = None,
     ) -> None:
+        """`stream_control`: shared owner of the board stream — while another
+        owner (the bar calibration) holds it, start and disconnect are refused."""
         self._executor = executor
         self._stream_port = stream_port
         self._event_bus = event_bus
         self._channels = tuple(channels)
+        self._stream_control = stream_control
 
     def connect_sensor(self) -> None:
         logger.info("InertialSensorService: Command connect_sensor")
@@ -87,6 +92,8 @@ class InertialSensorService(IApiInertialSensorService):
 
     def disconnect_sensor(self) -> None:
         logger.info("InertialSensorService: Command disconnect_sensor")
+        if self._refused("disconnect_sensor"):
+            return
         self._executor.stop()
         try:
             self._stream_port.disconnect()
@@ -103,6 +110,8 @@ class InertialSensorService(IApiInertialSensorService):
 
     def start_acquisition(self) -> None:
         logger.info("InertialSensorService: Command start_acquisition channels=%s", self._channels)
+        if self._refused("start_acquisition"):
+            return
         if not self._stream_port.is_connected():
             logger.warning("InertialSensorService: start_acquisition refused, not connected.")
             return
@@ -119,6 +128,17 @@ class InertialSensorService(IApiInertialSensorService):
 
     def is_acquisition_running(self) -> bool:
         return self._executor.is_running()
+
+    def get_control_refusal(self) -> Optional[str]:
+        if self._stream_control is None:
+            return None
+        return self._stream_control.refusal(None, "inertial sensor panel")
+
+    def _refused(self, command: str) -> bool:
+        refusal = self.get_control_refusal()
+        if refusal is not None:
+            logger.warning("InertialSensorService: %s refused — %s", command, refusal)
+        return refusal is not None
 
     def shutdown(self) -> None:
         logger.info("InertialSensorService: Command shutdown (safety stop at application exit)")

@@ -140,3 +140,23 @@ def test_shutdown_disconnects_the_port_which_sends_the_stream_stop(bus):
 
     assert calls == ["disconnect"]
     assert not port.is_connected()
+
+
+def test_start_and_disconnect_refused_while_another_owner_holds_the_stream(bus):
+    from application.shared.exclusive_control.exclusive_control import ExclusiveControl
+
+    control = ExclusiveControl("flux LIDAR", lambda owner: None)
+    port = FakeInertialSensorStreamAdapter(realtime=False)
+    executor = MockInertialSensorAcquisitionExecutor()
+    service = InertialSensorService(executor, port, bus, stream_control=control)
+    service.connect_sensor()
+    control.take("calibration de la transmission (barre)")
+
+    service.start_acquisition()
+    service.disconnect_sensor()
+
+    assert not service.is_acquisition_running()
+    assert port.is_connected()
+    assert "calibration de la transmission" in service.get_control_refusal()
+    control.release("calibration de la transmission (barre)")
+    assert service.get_control_refusal() is None
