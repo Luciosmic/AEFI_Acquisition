@@ -161,7 +161,13 @@ est pertinent au moment d'implémenter la feature centrée ; sinon archiver la n
 
 ---
 
-## Feature : Scan 1D (ligne theta) ✅ FAIT — Scan Z ⏳ EN COURS (fondation domain seulement, pas réellement implémenté)
+## Feature : Scan 1D (ligne theta) ✅ FAIT — Scan Z ❌ SUPPRIMÉ (2026-10-15)
+
+> **Scan Z supprimé le 2026-10-15, à recréer quand il sera développé.** Il n'était
+> qu'une fondation domain (`ZAxisScanConfig`, `ZAxisTrajectory`,
+> `ZAxisScanTrajectoryFactory`, borne `PHYSICAL_Z_MAX_MM`) sans aucun lecteur en
+> production. Git garde l'implémentation à `c4dc0e3` (parent du commit de
+> suppression). Les mentions Z ci-dessous sont l'historique du plan de départ.
 
 > Branche dédiée `dev_scan` — worktree long-lived pour tous les développements
 > scan majeurs à venir (dont le futur flyscan). Cette section trace le plan
@@ -283,7 +289,7 @@ uv run pytest src/ -v   # non-régression complète (149+ tests existants, dont 
 
 - [x] `physical_bench_limits.py` créé, `scan_zone.py` migré sans régression
 - [x] `LineScanConfig` + `LineScanTrajectoryFactory` + tests (theta=0/45/90/-90, n=1)
-- [x] `ZAxisScanConfig` + `ZAxisTrajectory` + `ZAxisScanTrajectoryFactory` + tests
+- [x] `ZAxisScanConfig` + `ZAxisTrajectory` + `ZAxisScanTrajectoryFactory` + tests (supprimés le 2026-10-15, voir en tête de section)
 - [x] Tous les `_intention.md` rédigés (Trio Atomique)
 - [x] Suite complète `uv run pytest src/` verte (2026-10-01 : 745 passed ; seul échec = le
       test de timing intermittent `scan_differential_mode_integration_test`, déjà connu, vert en isolé)

@@ -23,8 +23,8 @@ grandeur (panneau Calibration, onglet « Moteurs ») applique la conversion en d
 `_system/documentation/adr/004_scan_thin_aggregate_strong_aggregates_unit_of_work.md`. `FlyScan` est supprimé
 (remplacé par `AefiLine` + `Scan` fin) ; `Scan` fin, `AefiPoint`, `AefiLine` et `NardaPoint` sont des agrégats,
 un agrégat par transaction (`IUnitOfWork`). Fly-scan et Narda en agrégat : **implémentés côté
-domaine/application, à valider sur matériel** (non éprouvés au banc dans ce modèle). Le scan Z reste
-« fondation domain seulement, pas réellement implémenté » (inchangé).
+domaine/application, à valider sur matériel** (non éprouvés au banc dans ce modèle). Le scan Z est
+supprimé le 2026-10-15, à recréer quand il sera développé ; git garde l'implémentation à `c4dc0e3`.
 
 À faire (pourquoi : fermer les écarts connus de l'ADR-004) :
 - [ ] États terminaux du `Scan` fin (`CANCELLED`/`FAILED`) : aujourd'hui il reste `STARTED` après annulation ou échec.

@@ -6,7 +6,6 @@ from domain.step_scan.value_objects.scan_zone import scan_zone
 def test_limits_are_positive():
     assert limits.PHYSICAL_X_MAX_MM > 0
     assert limits.PHYSICAL_Y_MAX_MM > 0
-    assert limits.PHYSICAL_Z_MAX_MM > 0
 
 
 def test_scan_zone_uses_shared_limits():
