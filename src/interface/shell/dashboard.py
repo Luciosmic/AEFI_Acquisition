@@ -17,6 +17,7 @@ from interface.widgets.panels.scan_visualization_panel import ScanVisualizationP
 from interface.widgets.panels.motion_panel_compact import MotionPanelCompact
 from interface.widgets.panels.excitation_panel import ExcitationPanel
 from interface.widgets.panels.aefi_continuous_reading_panel import AefiContinuousReadingPanel
+from interface.widgets.panels.aefi_spectral_analysis_panel import AefiSpectralAnalysisPanel
 from interface.widgets.panels.electric_field_probe_panel import ElectricFieldProbePanel
 from interface.widgets.panels.hardware_advanced_config_panel import HardwareAdvancedConfigPanel
 from interface.widgets.panels.calibration_panel import CalibrationPanel
@@ -81,6 +82,7 @@ class Dashboard(QWidget):
             "electric_field_map": ScanVisualizationPanel(channels=()),
             "electric_field_profiles": ScanVisualizationPanel(profiles=True, channels=()),
             "aefi_continuous_reading": AefiContinuousReadingPanel(),
+            "aefi_spectral_analysis": AefiSpectralAnalysisPanel(),
             "electric_field_probe": ElectricFieldProbePanel(),
             "motion": MotionPanelCompact(),
             "excitation": ExcitationPanel(),
@@ -127,6 +129,7 @@ class Dashboard(QWidget):
             "electric_field_map": ("Narda Map Plot", "Scan"),
             "electric_field_profiles": ("Narda Profiles Plot", "Scan"),
             "aefi_continuous_reading": ("AEFI Continuous Reading", "Continuous Reading"),
+            "aefi_spectral_analysis": ("AEFI Spectral Analysis (FFT)", "Continuous Reading"),
             "electric_field_probe": ("Narda Continuous Reading", "Continuous Reading"),
             "motion": ("Motion Control", "Hardware"),
             "excitation": ("Excitation & Lock-In Detection", "Hardware"),

@@ -19,6 +19,7 @@ from interface.presenters.motion_presenter import MotionPresenter
 from interface.presenters.excitation_presenter import ExcitationPresenter
 from interface.presenters.synchronous_detection_presenter import SynchronousDetectionPresenter
 from interface.presenters.aefi_continuous_reading_presenter import AefiContinuousReadingPresenter
+from interface.presenters.aefi_spectral_analysis_presenter import AefiSpectralAnalysisPresenter
 from interface.presenters.electric_field_probe_presenter import ElectricFieldProbePresenter
 from interface.presenters.scan_presenter import ScanPresenter
 from interface.presenters.hardware_advanced_config_presenter import HardwareAdvancedConfigPresenter
@@ -41,6 +42,7 @@ def wire_dashboard(
     excitation_presenter: ExcitationPresenter,
     synchronous_detection_presenter: SynchronousDetectionPresenter,
     aefi_continuous_reading_presenter: AefiContinuousReadingPresenter,
+    aefi_spectral_analysis_presenter: AefiSpectralAnalysisPresenter,
     electric_field_probe_presenter: ElectricFieldProbePresenter,
     scan_presenter: ScanPresenter,
     hardware_config_presenter: HardwareAdvancedConfigPresenter,
@@ -157,6 +159,12 @@ def wire_dashboard(
     aefi_continuous_reading_presenter.sample_acquired.connect(aefi_continuous_reading_panel.on_sample_acquired)
     aefi_continuous_reading_presenter.angles_updated.connect(aefi_continuous_reading_panel.update_angles_display)
     logger.debug("Continuous acquisition panel wired")
+
+    # Spectral Analysis (FFT) Panel — continuous spectrum of the corrected AEFI signal
+    aefi_spectral_analysis_panel = dashboard.panels["aefi_spectral_analysis"]
+    aefi_spectral_analysis_panel.window_duration_changed.connect(aefi_spectral_analysis_presenter.on_window_duration_changed)
+    aefi_spectral_analysis_presenter.spectrum_updated.connect(aefi_spectral_analysis_panel.on_spectrum_updated)
+    logger.debug("Spectral analysis panel wired")
 
     # Electric Field Probe Panel
     electric_field_probe_panel = dashboard.panels["electric_field_probe"]
