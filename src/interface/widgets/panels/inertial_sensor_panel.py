@@ -30,7 +30,7 @@ from interface.presentation.inertial_sensor_view_model import (
 
 _UNVERIFIED_STYLE = "color: #E67E22; font-size: 11px; font-weight: bold;"
 _NOTE_STYLE = "color: #888; font-size: 11px; font-style: italic;"
-_VALUE_STYLE = "font-family: Consolas, monospace; font-size: 18px; min-width: 110px;"
+_VALUE_STYLE = "font-family: Consolas; font-size: 18px; min-width: 110px;"
 
 
 # ponytail: the lidar row is displayed here only because the lidar travels in the

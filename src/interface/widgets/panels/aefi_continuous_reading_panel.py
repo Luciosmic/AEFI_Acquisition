@@ -418,17 +418,20 @@ class AefiContinuousReadingPanel(QWidget):
         self.btn_start.setEnabled(True)
         self.btn_stop.setEnabled(False)
 
-    def on_sample_acquired(self, data: Dict[str, Any]):
-        """Called for each new sample (from presenter)."""
+    def on_sample_acquired(self, vm: Any):
+        """Called for each new sample (from presenter). `vm` is an
+        AefiContinuousReadingSampleViewModel — kept as Any here to avoid an
+        interface-widget -> interface-view-model import cycle concern; the
+        panel only relies on its as_channel_dict()/timestamp_iso contract."""
         import datetime as _dt
 
-        ts = _dt.datetime.fromisoformat(data["timestamp"]).timestamp()
+        ts = _dt.datetime.fromisoformat(vm.timestamp_iso).timestamp()
         if self._t0 is None:
             self._t0 = ts
         t_rel = ts - self._t0
         self.times.append(t_rel)
 
-        meas: Dict[str, float] = data.get("measurement", {})
+        meas: Dict[str, float] = vm.as_channel_dict()
         for ch in self.CHANNELS:
             name = ch["name"]
             val = float(meas.get(name, 0.0))

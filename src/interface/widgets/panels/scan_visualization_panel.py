@@ -53,6 +53,10 @@ class ScanVisualizationPanel(QWidget):
         self._redraw_timer.timeout.connect(self._redraw_now)
         self._redraw_interval_ms = self.MIN_REDRAW_INTERVAL_MS
         self._stale = False
+        # matplotlib draws hidden canvases too: while hidden, _render only
+        # records that a draw (and a tight_layout) is owed to the next show.
+        self._render_pending = False
+        self._layout_pending = False
 
         self._build_ui()
 
@@ -225,6 +229,22 @@ class ScanVisualizationPanel(QWidget):
         if self._stale:
             self._stale = False
             self._refresh_visualization()
+        if self._render_pending:
+            self._render()
+
+    def _render(self, layout: bool = False):
+        """Draw the canvas if visible, else defer to showEvent. `layout`: the
+        figure structure changed and needs a tight_layout — done once at the
+        draw that follows, not on every deferred redraw."""
+        self._layout_pending |= layout
+        if not self.isVisible():
+            self._render_pending = True
+            return
+        self._render_pending = False
+        if self._layout_pending:
+            self._layout_pending = False
+            self.figure.tight_layout()
+        self.canvas.draw()
 
     def update_data_point_from_position(self, x, y, measurements: dict, redraw: bool = True):
         """Update data point by calculating indices from physical coordinates."""
@@ -363,7 +383,7 @@ class ScanVisualizationPanel(QWidget):
         ax.tick_params(colors='white')
         self.axes_dict['single'] = ax
 
-        self.canvas.draw()
+        self._render()
         self._refresh_visualization()
 
     def _setup_grid_view(self):
@@ -386,8 +406,7 @@ class ScanVisualizationPanel(QWidget):
             ax.set_title(title, color=color, fontweight='bold', fontsize=10)
             self.axes_dict[channel] = ax
 
-        self.figure.tight_layout()
-        self.canvas.draw()
+        self._render(layout=True)
         self._refresh_visualization()
 
     def _refresh_visualization(self):
@@ -409,8 +428,7 @@ class ScanVisualizationPanel(QWidget):
             compact = key != 'single'
             channel = key if compact else self.current_channel
             draw(ax, channel, compact, legend=(ax is first_ax))
-        self.figure.tight_layout()
-        self.canvas.draw()
+        self._render(layout=True)
 
     def _prepare_curve_ax(self, ax, channel, compact, xlabel):
         ax.clear()
@@ -489,7 +507,7 @@ class ScanVisualizationPanel(QWidget):
         ax.set_title(title, color=color, fontweight='bold')
 
         self._autoscale_im(im, data)
-        self.canvas.draw()
+        self._render()
 
     def _update_grid_view(self):
         for channel, ax in self.axes_dict.items():
@@ -515,7 +533,7 @@ class ScanVisualizationPanel(QWidget):
             im.set_extent(self.extent)
             self._autoscale_im(im, data)
 
-        self.canvas.draw()
+        self._render()
 
     def _autoscale_im(self, im, data):
         """Auto-scale colormap based on data range."""
