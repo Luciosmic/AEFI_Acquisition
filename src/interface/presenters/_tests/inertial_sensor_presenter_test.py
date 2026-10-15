@@ -4,7 +4,7 @@ from uuid import uuid4
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 import pytest
-from PySide6.QtCore import QCoreApplication
+from PySide6.QtWidgets import QApplication
 
 from application.services.inertial_sensor_service.inertial_sensor_service import InertialSensorService
 from domain.detection_devices.inertial_probe.events.inertial_sensor_connection_changed.inertial_sensor_connection_changed import (
@@ -28,7 +28,9 @@ from interface.presenters.inertial_sensor_presenter import InertialSensorPresent
 
 @pytest.fixture(scope="module", autouse=True)
 def qt_app():
-    return QCoreApplication.instance() or QCoreApplication([])
+    # QApplication, not QCoreApplication: a later test module that builds widgets
+    # would otherwise reuse a core-only instance and crash the interpreter.
+    return QApplication.instance() or QApplication([])
 
 
 class Rig:
