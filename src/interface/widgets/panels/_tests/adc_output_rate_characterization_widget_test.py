@@ -43,7 +43,9 @@ def test_points_and_result_are_shown():
     widget.show_result(SimpleNamespace(points=(_point(4096), _point(32)), mean_modulator_frequency_hz=4.096e6,
                                        max_modulator_frequency_relative_deviation=1e-6, restored_oversampling_ratio=4096,
                                        instrument="DSO-X 2014A"))
+    widget.show()  # hidden widgets plot at their first show
     widget.canvas.draw()
+    assert len(widget.figure.axes[0].get_lines()) == 2
     assert widget.table.rowCount() == 2
     assert widget.table.item(1, 1).text() == "128000.0000"
     assert "OSR remis à 4096" in widget.lbl_result.text()
@@ -54,5 +56,14 @@ def test_the_widget_lives_in_the_adc_tab():
     calibration = _keep(CalibrationPanel())
     kind = SimpleNamespace(key="adc", label="ADC", quantities=())
     panel = calibration.add_hardware_component_tab(kind)
-    calibration.adc_output_rate_widget.canvas.draw()  # empty plot must draw
     assert calibration.adc_output_rate_widget.parent() is panel
+
+
+def test_hidden_widget_plots_at_first_show_and_empty_plot_draws():
+    QApplication.instance() or QApplication([])
+    widget = _keep(AdcOutputRateCharacterizationWidget())
+    assert widget.figure.axes == []  # nothing plotted while hidden (startup)
+
+    widget.show()
+    assert len(widget.figure.axes) == 1
+    widget.canvas.draw()  # empty plot must draw (no log axes without data)

@@ -45,6 +45,7 @@ class SourceGeometryCalibrationPanel(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self._draw_pending = False
 
         layout = QHBoxLayout(self)
         layout.setContentsMargins(5, 5, 5, 5)
@@ -157,7 +158,7 @@ class SourceGeometryCalibrationPanel(QWidget):
         ax.legend(loc="center", fontsize=7)  # every corner holds a sphere, the middle is empty
         ax.relim()
         ax.autoscale_view()
-        self.canvas.draw_idle()
+        self._draw_canvas()
 
         square = "  ".join(
             f"{label} {math.hypot(dx, dy) * 1e6:.0f}µm"
@@ -173,9 +174,22 @@ class SourceGeometryCalibrationPanel(QWidget):
 
     def on_source_frame_preview_rejected(self, reason: str) -> None:
         self._reset_axes()
-        self.canvas.draw_idle()
+        self._draw_canvas()
         self.lbl_preview.setStyleSheet("color: #F44336; font-weight: bold;")
         self.lbl_preview.setText(f"Géométrie impossible : {reason}")
+
+    def _draw_canvas(self) -> None:
+        # matplotlib draws hidden canvases too: the startup preview of this
+        # tab waits for its first show.
+        self._draw_pending = not self.isVisible()
+        if not self._draw_pending:
+            self.canvas.draw_idle()
+
+    def showEvent(self, event) -> None:
+        super().showEvent(event)
+        if self._draw_pending:
+            self._draw_pending = False
+            self.canvas.draw_idle()
 
     def _reset_axes(self):
         self.figure.clear()

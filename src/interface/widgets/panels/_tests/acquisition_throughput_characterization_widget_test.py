@@ -94,6 +94,19 @@ def test_result_shows_the_recommendation():
     assert "non résolue" in widget.lbl_result.text()
 
 
+def test_hidden_widget_plots_the_latest_state_at_first_show():
+    QApplication.instance() or QApplication([])
+    widget = _keep(AcquisitionThroughputCharacterizationWidget())
+    widget.add_point(_point(1))
+    widget.add_point(_point(8))
+    assert widget.figure.axes == []  # nothing plotted while hidden (startup)
+
+    widget.show()
+    rate_ax, noise_ax = widget.figure.axes
+    assert len(rate_ax.get_lines()[0].get_xdata()) == 2
+    widget.canvas.draw()
+
+
 def test_the_widget_lives_in_the_microcontroller_tab_and_prefills_its_form():
     QApplication.instance() or QApplication([])
     calibration = _keep(CalibrationPanel())
