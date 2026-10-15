@@ -254,7 +254,7 @@ src/domain/step_scan/services/z_axis_scan_trajectory_factory/
 ```
 
 Ne pas toucher : `step_scan.py`, `spatial_scan.py`, `scan_type.py` (mort — 0
-usage), `scan_pattern.py`, `scan_axis.py`, `scan_trajectory_factory.py`.
+usage, supprimé depuis), `scan_pattern.py`, `scan_axis.py`, `scan_trajectory_factory.py`.
 
 ### Vérification
 
