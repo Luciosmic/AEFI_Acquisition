@@ -8,6 +8,7 @@ import logging
 import threading
 import time
 import unittest
+from datetime import datetime
 
 import pytest
 
@@ -299,6 +300,85 @@ class TestFlyScanPauseRollsBackTheCurrentLine(_FaithfulFlyStack):
         self.assertGreaterEqual(len(self.stops), 1)  # the motor was stopped at once
         self.assertEqual(len(completed), 1)
         self.assertEqual(completed[0].total_points, 12)
+
+    def test_pause_late_in_a_line_brings_the_motor_back_to_its_start_and_reacquires_it_whole(self):
+        dto = make_dto()
+        # Line 1 of the grid, from the DTO: X column 1, Y swept backwards (serpentine, odd line).
+        x_1 = dto.x_min + (dto.x_max - dto.x_min) / (dto.x_nb_points - 1)
+        ys = [dto.y_min + k * (dto.y_max - dto.y_min) / (dto.y_nb_points - 1) for k in range(dto.y_nb_points)]
+        line_1 = [(x_1, y) for y in reversed(ys)]
+
+        log = []  # ("move", (x, y)) | ("preview", line, k, measurement) | ("pause",) | ("resume", datetime) | ("point", index, ...)
+        real_move_to = self.adapter.move_to
+
+        def move_to(position):
+            log.append(("move", (position.x, position.y)))
+            return real_move_to(position)
+
+        self.adapter.move_to = move_to
+        self.event_bus.subscribe("aefilinepreviewpointacquired", lambda e: log.append(
+            ("preview", e.line_index, e.index_in_line, e.measurement)))
+        self.event_bus.subscribe("scanpointacquired", lambda e: log.append(
+            ("point", e.point_index, (e.position.x, e.position.y), e.measurement)))
+        completed = []
+        self.event_bus.subscribe("scancompleted", completed.append)
+
+        def resume():
+            log.append(("resume", datetime.now()))
+            self.service.resume_scan()
+
+        fired = []
+
+        def on_preview(event):
+            # 3rd point of line 1: 3 of its 4 points are already acquired, the motor is near the line end.
+            if event.line_index == 1 and event.index_in_line == 2 and not fired:
+                fired.append(True)
+                self.service.pause_scan()
+                log.append(("pause",))
+                threading.Timer(0.5, resume).start()
+
+        self.event_bus.subscribe("aefilinepreviewpointacquired", on_preview)
+
+        scan = self._run(dto, timeout=90.0)
+
+        pause_at = log.index(("pause",))
+        resume_at = next(i for i, e in enumerate(log) if e[0] == "resume")
+        resumed_at = log[resume_at][1]
+        before_pause = log[:pause_at]
+        after_resume = log[resume_at + 1:]
+        # 1. The first passage started at line[0]; after the resume the motor goes back to that same
+        # line[0] before any new preview of line 1.
+        first_moves_of_line_1 = [e[1] for e in before_pause if e[0] == "move"]
+        self.assertEqual(first_moves_of_line_1[-2], pytest.approx(line_1[0]))  # start of the first passage
+        first_move_after = next(i for i, e in enumerate(after_resume) if e[0] == "move")
+        self.assertEqual(after_resume[first_move_after][1], pytest.approx(line_1[0]))
+        first_preview_after = next(i for i, e in enumerate(after_resume) if e[0] == "preview" and e[1] == 1)
+        self.assertLess(first_move_after, first_preview_after, log)
+        # 2. The partial line is abandoned with its 3 points.
+        self.assertEqual(
+            [(a.line_index, a.reason, a.discarded_points) for a in self.abandoned], [(1, "paused", 3)])
+        # 3. Line 1 committed (and published) on exactly its grid positions, in sweep order.
+        committed = {l.line_index: l for l in self._lines(scan)}
+        self.assertEqual([(p.position.x, p.position.y) for p in committed[1].points], pytest.approx(line_1))
+        published_1 = [e for e in log if e[0] == "point" and 4 <= e[1] < 8]
+        self.assertEqual([e[1] for e in published_1], [4, 5, 6, 7])
+        self.assertEqual([e[2] for e in published_1], pytest.approx(line_1))
+        # 4. Every measurement of the committed line 1 comes from the sweep after the resume: the mock
+        # ADC stamps each sample with datetime.now() at generation, and a grid point carries the stamp
+        # of a sample of its own sweep — so a stamp after the resume instant proves the second sweep.
+        self.assertTrue(all(p.measurement.timestamp > resumed_at for p in committed[1].points),
+                        [(p.measurement.timestamp, resumed_at) for p in committed[1].points])
+        # 5. Nothing of the abandoned attempt was ever published as a definitive point.
+        early_previews = [e[3] for e in before_pause if e[0] == "preview" and e[1] == 1]
+        self.assertEqual(len(early_previews), 3)
+        self.assertFalse([e for e in log[:resume_at] if e[0] == "point" and e[1] >= 4], log)
+        published_measurements = [e[3] for e in log if e[0] == "point"]
+        self.assertFalse([m for m in early_previews if m in published_measurements])
+        self.assertEqual(sorted(e[1] for e in log if e[0] == "point"), list(range(12)))
+        self.assertEqual(len(completed), 1)
+        self.assertEqual(completed[0].total_points, 12)
+        self.assertEqual(self._committed_lines(scan), [0, 1, 2])
+        self.assertEqual(scan.status, ScanStatus.COMPLETED)
 
     def test_pause_then_resume_in_the_same_handler_still_abandons_the_line(self):
         self._pause_in_line_1(self.service.resume_scan)
