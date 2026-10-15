@@ -27,7 +27,7 @@ Spécification : `_system/documentation/l-ecart-en-impulsions-entre-les-deux-fro
      encore s'ils ne se confirment pas) ;
   6. affinage des deux fronts à l'arrêt par dichotomie (stabilisation, k
      retours valides reçus après la stabilisation, classification) ;
-  7. résultat N ± δ, transmission ± incertitude ; retour de l'axe à l'origine ;
+  7. résultat N ± δ, transmission ± incertitude ; retour de l'axe près de l'origine ;
   8. arrêt du flux LIDAR **dans tous les cas**.
 - `cancel_measurement()` : arrêter l'axe et abandonner.
 - `record(X, Y)` : nouvelle `MechanicalTransmissionCalibrationEntry` avec la moyenne
@@ -58,6 +58,11 @@ Spécification : `_system/documentation/l-ecart-en-impulsions-entre-les-deux-fro
   d'élargissements : constantes du module.
 - Horloge injectée (`now`, `sleep`) : `perf_counter` au banc, la même que celle qui
   horodate les distances LIDAR ; horloge virtuelle en test.
+- Aucune cible à moins de `LIMIT_GUARD_INCREMENTS` des fins de course connues
+  (origine du homing, butée + du fly scan) : le fin de course d'origine se
+  déclenche avant l'origine (premier essai au banc, 2026-10-15 : arrêté à 7 au
+  lieu de 0, la mesure échouait). Les bornes d'encadrement sont ramenées dans
+  cette zone, le retour final vise la garde et non 0.
 - Aller-retour libre pendant la dichotomie (décision du 2026-10-15) : aucun sens
   d'approche imposé, le jeu n'est pas compensé.
 - « Pas de retour » LIDAR (le capteur envoie 0 quand il ne mesure rien ; premier

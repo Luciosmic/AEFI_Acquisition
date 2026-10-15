@@ -10,6 +10,7 @@ import random
 import pytest
 
 from application.services.bar_transmission_calibration_service.bar_transmission_calibration_service import (
+    LIMIT_GUARD_INCREMENTS,
     BarTransmissionCalibrationService,
 )
 from application.services.bar_transmission_calibration_service.dtos.bar_transmission_calibration_dtos import (
@@ -82,7 +83,7 @@ def mount(components, kind, name, values):
 
 class Bench:
     def __init__(self, bar_present=True, noise_mm=2.0, bar_mm=250.0, floor_mm=1250.0, no_return_ratio=0.0,
-                 **motion_options):
+                 bars=None, **motion_options):
         """`floor_mm=None`: floor out of LIDAR range, no return off the bar;
         `no_return_ratio`: sporadic dropouts (the LIDAR's 0) among valid distances."""
         self.clock = FakeClock()
@@ -91,6 +92,7 @@ class Bench:
         self.bar_present = bar_present
         self.noise_mm = noise_mm
         self.bar_mm, self.floor_mm = bar_mm, floor_mm
+        self.bars = bars or BAR
         self.axis = "X"
         self.lidar = FakeLidarDistancePort(self.distance_mm, self.clock, no_return_ratio=no_return_ratio, seed=3)
         self.components = FakeHardwareComponentRepository()
@@ -114,7 +116,7 @@ class Bench:
         coverage = 0.0
         if self.bar_present:
             n = self.motion.get_position(self.axis)
-            start, end = BAR[self.axis]
+            start, end = self.bars[self.axis]
             coverage = _sigmoid((n - start) / 3.0) * _sigmoid((end - n) / 3.0)
         if self.floor_mm is None:
             return self.bar_mm + self.rng.gauss(0.0, self.noise_mm) if coverage >= 0.5 else None
@@ -159,7 +161,7 @@ def test_measures_n_and_the_transmission_with_its_uncertainty(bench):
     assert measured.travel_per_motor_revolution_mm == pytest.approx(69.76, rel=5e-3)
     assert measured.threshold_mm == pytest.approx(750.0, abs=2.0)
     assert (measured.microsteps, measured.full_steps_per_revolution) == (16, 200.0)
-    assert bench.motion.get_position("X") == 0  # parked at the origin
+    assert bench.motion.get_position("X") == LIMIT_GUARD_INCREMENTS  # parked next to the origin
     assert (bench.lidar.open_count, bench.lidar.close_count) == (1, 1)
     assert not bench.service.is_measuring()
     assert bench.control.controller is None
@@ -233,7 +235,7 @@ def test_absent_bar_fails_typed_and_closes_the_stream():
 def _assert_n_is_right(bench, axis="X"):
     assert bench.output.failed == []
     measured = bench.output.measured[-1]
-    true_n = BAR[axis][1] - BAR[axis][0]
+    true_n = bench.bars[axis][1] - bench.bars[axis][0]
     assert abs(measured.increments_between_fronts - true_n) <= measured.increments_uncertainty + 2
     assert measured.increments_uncertainty < 20
     return measured
@@ -269,6 +271,19 @@ def test_no_valid_return_at_all_fails_with_an_explicit_profile_error():
     assert isinstance(bench.output.failed[0], BarNotFound)
     assert "aucun retour valide" in bench.output.failed[0].message
     assert bench.lidar.close_count == 1
+
+
+def test_targets_stay_away_from_the_limit_switches():
+    """Bench case 2026-10-15: a bracket side clamped to the origin stopped at 7
+    increments (home switch) and the measurement failed."""
+    bench = Bench(bars={"X": (300.4, 4300.4)}).mount_chain()  # first bracket reaches past the origin
+    targets = []
+    move_to = bench.motion.move_to
+    bench.motion.move_to = lambda axis, increment: (targets.append(increment), move_to(axis, increment))[1]
+    bench.measure("X")
+    _assert_n_is_right(bench)
+    assert min(targets) == LIMIT_GUARD_INCREMENTS
+    assert max(targets) <= TRAVEL - LIMIT_GUARD_INCREMENTS
 
 
 def test_axis_stopping_without_limit_switch_fails_typed():

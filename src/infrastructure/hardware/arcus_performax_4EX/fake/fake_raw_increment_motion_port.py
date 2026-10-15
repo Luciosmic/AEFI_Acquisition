@@ -22,6 +22,9 @@ from infrastructure.hardware.arcus_performax_4EX.fake.fake_arcus_performax4ex_co
 # measured 797.7 increments/s on the bench (fake_arcus_performax4ex_controller).
 DEFAULT_SPEED_INCREMENTS_PER_S = 800
 WAIT_POLL_S = 0.02
+# The home switch trips before the origin homing set on it: measured on the bench
+# (2026-10-15), a move to 0 stopped at 7 increments.
+HOME_SWITCH_TRIP_INCREMENTS = 7
 
 
 class _RealClock:
@@ -45,10 +48,14 @@ class FakeRawIncrementMotionPort(IRawIncrementMotionPort):
         plus_limit_increments: int = FAKE_PLUS_LIMIT_INCREMENTS,
         limit_switch_present: bool = True,
         fail_on: Iterable[str] = (),
+        home_switch_trip_increments: int = HOME_SWITCH_TRIP_INCREMENTS,
     ) -> None:
         """`clock`: object with now()/sleep() (FakeClock in tests; real time by default).
         `limit_switch_present=False`: the axis stops at the end of travel but the
-        switch never reads active. `fail_on`: method names raising RawIncrementMotionError."""
+        switch never reads active. `fail_on`: method names raising RawIncrementMotionError.
+        `home_switch_trip_increments`: a move towards the origin stops there, the
+        home switch tripping before the origin."""
+        self._home_switch_trip = home_switch_trip_increments
         self._clock = clock or _RealClock()
         self.plus_limit_increments = plus_limit_increments
         self._limit_switch_present = limit_switch_present
@@ -92,7 +99,10 @@ class FakeRawIncrementMotionPort(IRawIncrementMotionPort):
 
     def move_to(self, axis: str, increment: int) -> None:
         state = self._check("move_to", axis)
-        self._start_move(state, float(increment))
+        target = float(increment)
+        if target < self._home_switch_trip < self._settle(state):
+            target = float(self._home_switch_trip)  # the home switch trips on the way
+        self._start_move(state, target)
 
     def run_to_positive_limit(self, axis: str) -> None:
         state = self._check("run_to_positive_limit", axis)

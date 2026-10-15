@@ -5,6 +5,7 @@ from application.services.bar_transmission_calibration_service.ports.raw_increme
 )
 from infrastructure.execution.fake.fake_clock import FakeClock
 from infrastructure.hardware.arcus_performax_4EX.fake.fake_raw_increment_motion_port import (
+    HOME_SWITCH_TRIP_INCREMENTS,
     FakeRawIncrementMotionPort,
 )
 
@@ -58,6 +59,18 @@ class FakeRawIncrementMotionPortTest(unittest.TestCase):
         port = FakeRawIncrementMotionPort(clock=self.clock, fail_on={"home"})
         with self.assertRaises(RawIncrementMotionError):
             port.home("X")
+
+
+class HomeSwitchTripTest(unittest.TestCase):
+    def test_a_move_to_the_origin_stops_where_the_home_switch_trips(self):
+        clock = FakeClock()
+        port = FakeRawIncrementMotionPort(clock=clock, plus_limit_increments=8000)
+        port.home("X")
+        port.move_to("X", 500)
+        port.wait_until_stopped("X", 10.0)
+        port.move_to("X", 0)
+        port.wait_until_stopped("X", 10.0)
+        self.assertEqual(port.get_position("X"), HOME_SWITCH_TRIP_INCREMENTS)
 
 
 if __name__ == "__main__":

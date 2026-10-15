@@ -109,6 +109,11 @@ LIDAR_NOMINAL_RATE_HZ = 25.0
 POINT_READ_TIMEOUT_FACTOR = 4.0
 # Coarse bracket that does not check out at rest: widened by one margin, at most this often.
 MAX_BRACKET_WIDENINGS = 3
+# Targets stay this far from the known limit switches (origin set by homing,
+# positive limit reached by the fly scan): the home switch trips before the
+# origin (bench 2026-10-15: a move to 0 stopped at 7 increments). 100 increments
+# ≈ 2.2 mm at 21.8 µm/increment.
+LIMIT_GUARD_INCREMENTS = 100
 # Plateau contrast below which the fly scan saw no bar.
 MIN_CONTRAST_MM = 10.0
 
@@ -449,7 +454,10 @@ class BarTransmissionCalibrationService(IApiBarTransmissionCalibrationService):
         widened by one margin when it does not check out."""
         bracket = EdgeBracket.around(front, direction, margin)
         for attempt in range(MAX_BRACKET_WIDENINGS + 1):
-            clamped = [min(max(side, 0), limit) for side in (bracket.on_bar_increment, bracket.off_bar_increment)]
+            clamped = [
+                min(max(side, LIMIT_GUARD_INCREMENTS), limit - LIMIT_GUARD_INCREMENTS)
+                for side in (bracket.on_bar_increment, bracket.off_bar_increment)
+            ]
             if clamped[0] == clamped[1]:
                 break
             bracket = bracket.with_sides(*clamped)
@@ -542,9 +550,10 @@ class BarTransmissionCalibrationService(IApiBarTransmissionCalibrationService):
         return samples
 
     def _park(self, axis: str) -> None:
-        """Measured axis back to its origin: the bench is left where homing would leave it."""
-        self._progress(axis, f"Retour de l'axe {axis} à l'origine…")
-        self._motion.move_to(axis, 0)
+        """Measured axis back next to its origin (LIMIT_GUARD_INCREMENTS away from
+        the home switch, which would trip before 0)."""
+        self._progress(axis, f"Retour de l'axe {axis} près de l'origine ({LIMIT_GUARD_INCREMENTS} incréments)…")
+        self._motion.move_to(axis, LIMIT_GUARD_INCREMENTS)
         self._motion.wait_until_stopped(axis, MOVE_TIMEOUT_S)
 
     def _drain_lidar(self) -> None:

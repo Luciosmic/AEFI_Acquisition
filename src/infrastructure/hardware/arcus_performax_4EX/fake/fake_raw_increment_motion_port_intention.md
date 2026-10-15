@@ -15,7 +15,9 @@ bouge dans le temps, mais dans un temps qu'on peut accélérer.
   butée + à `plus_limit_increments`.
 - Reproduire les modes de défaillance du réel : `RawIncrementMotionError` sur une
   opération (`fail_on`), axe arrêté en fin de course sans fin de course lu
-  (`limit_switch_present=False`), attente d'arrêt dépassée.
+  (`limit_switch_present=False`), attente d'arrêt dépassée, fin de course
+  d'origine qui se déclenche avant l'origine posée par le homing (mouvement vers
+  0 arrêté à 7 incréments, mesuré au banc le 2026-10-15).
 
 ## Design
 
