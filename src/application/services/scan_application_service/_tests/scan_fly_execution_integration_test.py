@@ -326,6 +326,28 @@ class TestFlyScanLineIsNeverCommittedOnAnEndedScan(_FaithfulFlyStack):
         self.assertEqual(self._committed_lines(scan), [0])
         self.assertEqual(sorted(points), [0, 1, 2, 3])
 
+    def test_cancel_mid_line_stops_the_motor_like_a_pause(self):
+        self._on_first_preview_of_line(1, self.service.cancel_scan)
+
+        self._run(make_dto(), until="scancancelled", timeout=90.0)
+        time.sleep(0.5)
+
+        self.assertEqual(len(self.stops), 1)  # stopped at once, not left to finish its sweep
+        self.assertFalse(self.adapter.is_moving())
+
+    def test_failure_mid_line_stops_the_motor(self):
+        def fail_the_scan():
+            self.service._current_scan.fail("boom")
+            self.service._publish_events(self.service._current_scan.domain_events)
+
+        self._on_first_preview_of_line(1, fail_the_scan)
+
+        self._run(make_dto(), until="scanfailed", timeout=90.0)
+        time.sleep(0.5)
+
+        self.assertEqual(len(self.stops), 1)
+        self.assertFalse(self.adapter.is_moving())
+
     def test_cancel_on_the_last_line_commits_nothing_of_that_line(self):
         points = self._published_points()
         self._on_first_preview_of_line(2, self.service.cancel_scan)

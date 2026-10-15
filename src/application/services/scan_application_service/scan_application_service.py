@@ -1030,6 +1030,19 @@ class ScanApplicationService:
             # A pause (even one already resumed) since the attempt began: the line is partial.
             return self._pause_epoch != epoch or scan.status == ScanStatus.PAUSED
 
+        def _stop_motion(line_index: int, why: str) -> bool:
+            """Stop the motor now (decelerating stop) and wait until it no longer moves.
+            False if it is still moving after FLY_STOP_TIMEOUT_S."""
+            self._motion_port.stop()
+            deadline = time.monotonic() + self.FLY_STOP_TIMEOUT_S
+            while self._motion_port.is_moving():
+                if time.monotonic() > deadline:
+                    logger.error("ScanApplicationService: scan_id=%s line=%d motion did not stop within %.0fs (%s)",
+                                 scan.id, line_index, self.FLY_STOP_TIMEOUT_S, why)
+                    return False
+                time.sleep(self.FLY_MOTION_POLL_S)
+            return True
+
         def _abandon_line(line_index: int, reason: str) -> bool:
             """Drop the partial line and stop the motor now. False if the motor did not stop (scan failed)."""
             discarded = len(line_points)
@@ -1037,13 +1050,9 @@ class ScanApplicationService:
                         "stopping motion. Line will be re-acquired from its start.",
                         scan.id, line_index, reason, discarded)
             line_points.clear()
-            self._motion_port.stop()
-            deadline = time.monotonic() + self.FLY_STOP_TIMEOUT_S
-            while self._motion_port.is_moving():
-                if time.monotonic() > deadline:
-                    _fail(f"Motion did not stop within {self.FLY_STOP_TIMEOUT_S:.0f}s after abandoning fly line {line_index}")
-                    return False
-                time.sleep(self.FLY_MOTION_POLL_S)
+            if not _stop_motion(line_index, f"abandoning the line, {reason}"):
+                _fail(f"Motion did not stop within {self.FLY_STOP_TIMEOUT_S:.0f}s after abandoning fly line {line_index}")
+                return False
             _drain_queue(adc_queue)
             _drain_queue(position_queue)
             self._event_bus.publish("aefilineabandoned", AefiLineAbandoned(
@@ -1107,6 +1116,10 @@ class ScanApplicationService:
             while True:
                 _drain()
                 if _ended():
+                    # Cancelled/failed mid-sweep: the motor must not finish the line on its own, as on a pause.
+                    logger.info("ScanApplicationService: scan_id=%s line=%d scan %s mid-line, stopping motion",
+                                scan.id, line_index, scan.status)
+                    _stop_motion(line_index, f"scan {scan.status} mid-line")  # timeout logged; scan already ended
                     return STOP
                 if _interrupted(epoch):
                     return ABANDONED
