@@ -26,6 +26,7 @@ from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
 from domain.shared_kernel.events.motion_completed.motion_completed import MotionCompleted
 from domain.shared_kernel.events.motion_failed.motion_failed import MotionFailed
 from domain.shared_kernel.events.position_updated.position_updated import PositionUpdated
+from domain.shared_kernel.events.motor_increments_updated.motor_increments_updated import MotorIncrementsUpdated
 
 from application.services.motion_control_service.ports.i_motion_port import IMotionPort
 from application.services.motion_control_service.ports.motion_conversion_unavailable_error import (
@@ -81,6 +82,7 @@ class ArcusAdapter(IMotionPort):
         self._running = False
         self._last_position: Optional[Position2D] = None
         self._last_moving: bool = False
+        self._last_increments: Optional[tuple] = None
         # One warning when the monitor finds the conversion missing, re-armed once it is applied.
         self._uncalibrated_warning_logged = False
         
@@ -242,24 +244,36 @@ class ArcusAdapter(IMotionPort):
                     time.sleep(1.0)
                     continue
 
+                # Increments first: the controller's own unit, published whether
+                # or not the mm conversion exists (display during the bar calibration).
+                steps_x = self._controller.get_position(self._axis_x)
+                steps_y = self._controller.get_position(self._axis_y)
+                is_moving = self.is_moving()
+                increments = (int(round(steps_x)), int(round(steps_y)), is_moving)
+                if increments != self._last_increments:
+                    self._last_increments = increments
+                    if self._event_bus:
+                        self._event_bus.publish("motorincrementsupdated", MotorIncrementsUpdated(
+                            x_increments=increments[0], y_increments=increments[1], is_moving=is_moving,
+                        ))
+
                 # Not calibrated: no mm position to publish. An explicit state,
                 # one warning at the transition — not an exception per cycle.
                 if not self.is_conversion_available():
                     if not self._uncalibrated_warning_logged:
                         logger.warning(
-                            "Motion monitoring paused: no mm/pulse conversion applied "
+                            "Motion monitoring in increments only: no mm/pulse conversion applied "
                             "(mechanical transmission not calibrated)"
                         )
                         self._uncalibrated_warning_logged = True
-                    time.sleep(1.0)
+                    time.sleep(POLL_INTERVAL)
                     continue
                 if self._uncalibrated_warning_logged:
-                    logger.info("Motion monitoring resumed: mm/pulse conversion applied")
+                    logger.info("Motion monitoring in mm resumed: mm/pulse conversion applied")
                     self._uncalibrated_warning_logged = False
-                
-                # Get current state
-                current_pos = self.get_current_position()
-                is_moving = self.is_moving()
+
+                # mm from the same reading (one serial round trip per cycle)
+                current_pos = Position2D(x=steps_x * self.MM_PER_STEP, y=steps_y * self.MM_PER_STEP)
                 
                 # Check for changes
                 pos_changed = False
