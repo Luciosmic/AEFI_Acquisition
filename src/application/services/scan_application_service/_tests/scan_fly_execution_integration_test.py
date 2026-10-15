@@ -28,6 +28,18 @@ from infrastructure.unit_of_work.in_memory_unit_of_work import InMemoryUnitOfWor
 from infrastructure.mocks.adapter_mock_i_motion_port import MockMotionPort
 from infrastructure.mocks.adapter_mock_i_aefi_acquisition_executor import MockAefiAcquisitionExecutor
 from infrastructure.mocks.adapter_mock_i_acquisition_port import RandomNoiseAcquisitionPort
+from infrastructure.mocks.adapter_mock_i_excitation_port import MockExcitationPort
+from infrastructure.acquisition_conditions.fake.fake_acquisition_conditions_port import FakeAcquisitionConditionsPort
+from infrastructure.hardware.serial_link.fake.fake_usb_latency_timer_port import FakeUsbLatencyTimerPort
+from infrastructure.provenance.fake.fake_software_provenance_port import FakeSoftwareProvenancePort
+from application.services.excitation_configuration_service.excitation_configuration_service import (
+    ExcitationConfigurationService,
+)
+from application.services.scan_export_service.dtos.scan_export_dtos import ExportConfigDTO
+from application.services.scan_export_service.scan_export_service import ScanExportService
+from application.services.scan_application_service._tests.scan_export_closes_after_last_point_test import (
+    _RecordingExportPort,
+)
 
 
 def make_dto(**overrides):
@@ -341,14 +353,71 @@ class TestFlyScanLineIsNeverCommittedOnAnEndedScan(_FaithfulFlyStack):
         self.assertEqual(self._committed_lines(scan), [0])
         self.assertEqual(sorted(points), [0, 1, 2, 3])
 
-    def test_cancel_between_the_publication_and_the_commit_of_a_line_does_not_commit_it(self):
-        self.event_bus.subscribe("scanpointacquired", lambda e: self.service.cancel_scan() if e.point_index == 7 else None)
+    def _assert_published_points_are_exactly_the_committed_lines(self, scan, points):
+        # Never N published points without their line: 0 or all of a line, and then it is committed.
+        committed = self._committed_lines(scan)
+        self.assertEqual(sorted(points), [line * 4 + k for line in committed for k in range(4)])
+
+    def _cancel_in_point_handler(self, point_index, before=None):
+        def on_point(event):
+            if event.point_index == point_index:
+                if before is not None:
+                    before()
+                self.service.cancel_scan()
+
+        self.event_bus.subscribe("scanpointacquired", on_point)
+
+    def test_cancel_in_the_handler_of_the_last_point_of_a_line_takes_effect_after_its_commit(self):
+        points = self._published_points()
+        self._cancel_in_point_handler(7)  # last point of line 1
 
         scan = self._run(make_dto(), until="scancancelled", timeout=90.0)
         time.sleep(0.5)
 
         self.assertEqual(scan.status, ScanStatus.CANCELLED)
-        self.assertEqual(self._committed_lines(scan), [0])
+        self.assertEqual(self._committed_lines(scan), [0, 1])
+        self._assert_published_points_are_exactly_the_committed_lines(scan, points)
+
+    def test_cancel_in_the_handler_of_the_first_point_of_a_line_takes_effect_after_its_commit(self):
+        points = self._published_points()
+        self._cancel_in_point_handler(4)  # first point of line 1: the 3 others must still go out
+
+        scan = self._run(make_dto(), until="scancancelled", timeout=90.0)
+        time.sleep(0.5)
+
+        self.assertEqual(scan.status, ScanStatus.CANCELLED)
+        self.assertEqual(self._committed_lines(scan), [0, 1])
+        self._assert_published_points_are_exactly_the_committed_lines(scan, points)
+
+    def test_pause_then_cancel_during_the_publication_take_effect_after_the_commit_in_order(self):
+        points = self._published_points()
+        paused = []
+        self.event_bus.subscribe("scanpaused", paused.append)
+        self._cancel_in_point_handler(5, before=self.service.pause_scan)
+
+        scan = self._run(make_dto(), until="scancancelled", timeout=90.0)
+        time.sleep(0.5)
+
+        self.assertEqual(scan.status, ScanStatus.CANCELLED)
+        self.assertEqual(self._committed_lines(scan), [0, 1])
+        self._assert_published_points_are_exactly_the_committed_lines(scan, points)
+        self.assertEqual(len(paused), 1)  # the pause was applied after the commit, then the cancel
+        self.assertEqual(self.abandoned, [])  # the line was complete: nothing to abandon
+        self.assertFalse(self.continuous_service.is_acquisition_running())
+
+    def test_cancel_during_the_publication_of_the_last_line_is_ignored_and_the_scan_completes(self):
+        completed, cancelled = [], []
+        self.event_bus.subscribe("scancompleted", completed.append)
+        self.event_bus.subscribe("scancancelled", cancelled.append)
+        points = self._published_points()
+        self._cancel_in_point_handler(8)  # first point of the last line
+
+        scan = self._run(make_dto(), timeout=90.0)
+
+        self.assertEqual(scan.status, ScanStatus.COMPLETED)
+        self.assertEqual((len(completed), len(cancelled)), (1, 0))
+        self.assertEqual(self._committed_lines(scan), [0, 1, 2])
+        self._assert_published_points_are_exactly_the_committed_lines(scan, points)
 
     def test_cancel_after_the_last_point_is_ignored_and_the_scan_completes_once(self):
         completed, cancelled = [], []
@@ -361,6 +430,53 @@ class TestFlyScanLineIsNeverCommittedOnAnEndedScan(_FaithfulFlyStack):
         self.assertEqual(scan.status, ScanStatus.COMPLETED)
         self.assertEqual((len(completed), len(cancelled)), (1, 0))
         self.assertEqual(self._committed_lines(scan), [0, 1, 2])
+
+
+class TestFlyScanExportHoldsOnlyCommittedLines(_FaithfulFlyStack):
+    """The real ScanExportService over recording ports: no measurement row of an uncommitted line."""
+
+    def setUp(self):
+        super().setUp()
+        excitation_service = ExcitationConfigurationService(MockExcitationPort(), self.event_bus)
+        self.csv_port = _RecordingExportPort("csv", [])
+        self.hdf5_port = _RecordingExportPort("hdf5", [])
+        export = ScanExportService(
+            self.event_bus,
+            csv_export_port=self.csv_port,
+            hdf5_export_port=self.hdf5_port,
+            excitation_service=excitation_service,
+            conditions_port=FakeAcquisitionConditionsPort(),
+            software_provenance_port=FakeSoftwareProvenancePort(),
+            usb_latency_timer_port=FakeUsbLatencyTimerPort(latency_ms=1.0),
+        )
+        export.configure_export(ExportConfigDTO(enabled=True, output_directory="", filename_base="fly"))
+
+    def _rows(self, port):
+        return sorted((round(r["x"], 6), round(r["y"], 6)) for r in port.points)
+
+    def _committed_positions(self, scan):
+        return sorted((round(p.position.x, 6), round(p.position.y, 6)) for line in self._lines(scan) for p in line.points)
+
+    def test_cancel_during_the_publication_of_a_line_exports_no_orphan_point(self):
+        self.event_bus.subscribe("scanpointacquired", lambda e: self.service.cancel_scan() if e.point_index == 5 else None)
+
+        scan = self._run(make_dto(), until="scancancelled", timeout=90.0)
+        time.sleep(0.5)
+
+        for port in (self.csv_port, self.hdf5_port):
+            self.assertEqual(len(port.points), 8)
+            self.assertEqual(self._rows(port), self._committed_positions(scan))
+            self.assertTrue(port.stopped)
+
+    def test_cancel_mid_sweep_exports_no_point_of_the_swept_line(self):
+        self._on_first_preview_of_line(1, self.service.cancel_scan)
+
+        scan = self._run(make_dto(), until="scancancelled", timeout=90.0)
+        time.sleep(0.5)
+
+        for port in (self.csv_port, self.hdf5_port):
+            self.assertEqual(len(port.points), 4)
+            self.assertEqual(self._rows(port), self._committed_positions(scan))
 
 
 class TestFlyScanFailureModes(_Stack):

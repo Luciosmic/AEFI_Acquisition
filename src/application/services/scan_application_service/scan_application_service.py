@@ -19,6 +19,7 @@ from typing import Any, Optional, Callable, List, Dict, Union
 import logging
 import math
 import queue
+import threading
 import time
 from uuid import UUID, uuid4
 from datetime import datetime
@@ -274,6 +275,13 @@ class ScanApplicationService:
         # Incremented by each accepted pause_scan (reset per scan): the fly loop compares it to tell
         # that a line was interrupted even if the scan was resumed since. Plain int, like the counters.
         self._pause_epoch: int = 0
+        # Publication + commit of a complete fly line is one block that no pause/resume/cancel
+        # interrupts: past the last guard (taken under this lock), a control command arriving is
+        # queued and applied right after the commit. Step scans never open the block.
+        self._control_lock = threading.Lock()
+        self._line_block_open: bool = False
+        self._line_block_index: Optional[int] = None
+        self._deferred_controls: List[Callable[[], None]] = []
 
         # Subscribe to forward events to the output port.
         self._event_bus.subscribe("scanstarted", self._on_domain_event)
@@ -447,53 +455,94 @@ class ScanApplicationService:
                 before_commit()
             uow.commit()
 
+    def _close_line_block(self, scan: StepScan, line_index: int, apply_deferred: bool) -> None:
+        """End of the publication + commit block of a fly line: apply, in arrival order, the
+        control commands deferred meanwhile. Dropped if the commit failed (the failure prevails)."""
+        with self._control_lock:
+            self._line_block_open = False
+            self._line_block_index = None
+            deferred, self._deferred_controls = self._deferred_controls, []
+        if not deferred:
+            return
+        if not apply_deferred:
+            logger.warning("ScanApplicationService: scan_id=%s line=%d commit failed, %d deferred control "
+                           "command(s) dropped", scan.id, line_index, len(deferred))
+            return
+        logger.info("ScanApplicationService: scan_id=%s line=%d committed, applying %d deferred control command(s)",
+                    scan.id, line_index, len(deferred))
+        for command in deferred:
+            try:
+                command()
+            except ValueError as e:  # e.g. a resume whose pause was rejected: same outcome as undeferred
+                logger.warning("ScanApplicationService: scan_id=%s deferred control command rejected — %s", scan.id, e)
+
     def _release_controls(self) -> None:
         """Give back the excitation and the acquisition stream (idempotent)."""
         releases, self._control_releases = self._control_releases, []
         for release in releases:
             release()
 
+    def _defer_if_line_block_open(self, command: Callable[[], None], name: str) -> bool:
+        """Caller holds _control_lock. True if a fly line is being published and committed:
+        the command is queued and runs right after the commit (AefiLine atomicity)."""
+        if not self._line_block_open:
+            return False
+        self._deferred_controls.append(command)
+        logger.info("ScanApplicationService: scan_id=%s line=%s being published and committed, %s deferred "
+                    "until after its commit", self._current_scan.id, self._line_block_index, name)
+        return True
+
     def pause_scan(self) -> None:
         if not self._current_scan:
             return
-        if 0 < self._expected_total <= self._acquired_count:
-            # Between the last point and ScanCompleted the scan is still RUNNING: pausing
-            # would leave it PAUSED when the thin Scan completes.
-            logger.info("ScanApplicationService: scan_id=%s en fin d'acquisition (%d/%d), pause ignorée",
-                        self._current_scan.id, self._acquired_count, self._expected_total)
-            return
-        was_running = self._current_scan.status == ScanStatus.RUNNING
-        try:
-            self._current_scan.pause(self._acquired_count)
-        except ValueError as e:
-            logger.warning("ScanApplicationService: pause_scan rejected — %s", e)
-            return
-        if was_running:
-            self._pause_epoch += 1
-            logger.info("ScanApplicationService: scan_id=%s paused at %d/%d, pause_epoch=%d",
-                        self._current_scan.id, self._acquired_count, self._expected_total, self._pause_epoch)
+        with self._control_lock:
+            if self._defer_if_line_block_open(self.pause_scan, "pause"):
+                return
+            if 0 < self._expected_total <= self._acquired_count:
+                # Between the last point and ScanCompleted the scan is still RUNNING: pausing
+                # would leave it PAUSED when the thin Scan completes.
+                logger.info("ScanApplicationService: scan_id=%s en fin d'acquisition (%d/%d), pause ignorée",
+                            self._current_scan.id, self._acquired_count, self._expected_total)
+                return
+            was_running = self._current_scan.status == ScanStatus.RUNNING
+            try:
+                self._current_scan.pause(self._acquired_count)
+            except ValueError as e:
+                logger.warning("ScanApplicationService: pause_scan rejected — %s", e)
+                return
+            if was_running:
+                self._pause_epoch += 1
+                logger.info("ScanApplicationService: scan_id=%s paused at %d/%d, pause_epoch=%d",
+                            self._current_scan.id, self._acquired_count, self._expected_total, self._pause_epoch)
         self._publish_events(self._current_scan.domain_events)
 
     def resume_scan(self) -> None:
-        if self._current_scan:
+        if not self._current_scan:
+            return
+        with self._control_lock:
+            if self._defer_if_line_block_open(self.resume_scan, "resume"):
+                return
             self._current_scan.resume(self._acquired_count)
-            self._publish_events(self._current_scan.domain_events)
+        self._publish_events(self._current_scan.domain_events)
 
     def cancel_scan(self) -> None:
         if not self._current_scan:
             return
-        if self._current_scan.status in (ScanStatus.COMPLETED, ScanStatus.FAILED, ScanStatus.CANCELLED):
-            # Shutdown calls this unconditionally: a finished scan is not a failure.
-            logger.info("ScanApplicationService: scan_id=%s déjà terminé (%s), annulation ignorée. Doing nothing.",
-                        self._current_scan.id, self._current_scan.status)
-            return
-        if 0 < self._expected_total <= self._acquired_count:
-            # Same window as pause_scan: the thin Scan will publish ScanCompleted, a ScanCancelled
-            # now would make the export and the UI see cancelled then completed.
-            logger.info("ScanApplicationService: scan_id=%s scan déjà acquis en entier (%d/%d), annulation ignorée",
-                        self._current_scan.id, self._acquired_count, self._expected_total)
-            return
-        self._current_scan.cancel()
+        with self._control_lock:
+            if self._defer_if_line_block_open(self.cancel_scan, "cancel"):
+                return
+            if self._current_scan.status in (ScanStatus.COMPLETED, ScanStatus.FAILED, ScanStatus.CANCELLED):
+                # Shutdown calls this unconditionally: a finished scan is not a failure.
+                logger.info("ScanApplicationService: scan_id=%s déjà terminé (%s), annulation ignorée. Doing nothing.",
+                            self._current_scan.id, self._current_scan.status)
+                return
+            if 0 < self._expected_total <= self._acquired_count:
+                # Same window as pause_scan: the thin Scan will publish ScanCompleted, a ScanCancelled
+                # now would make the export and the UI see cancelled then completed.
+                logger.info("ScanApplicationService: scan_id=%s scan déjà acquis en entier (%d/%d), annulation ignorée",
+                            self._current_scan.id, self._acquired_count, self._expected_total)
+                return
+            self._current_scan.cancel()
         self._publish_events(self._current_scan.domain_events)
 
     # ==================================================================================
@@ -948,12 +997,10 @@ class ScanApplicationService:
                     position=line[k], measurement=measurement,
                 ))
 
-        def _publish_line_points(line_index: int, line: List[Position2D]) -> bool:
-            """Publish the complete line. A pause landing mid-publication is waited out (the line is
-            complete and will be committed). False if the scan ended meanwhile."""
+        def _publish_line_points(line_index: int, line: List[Position2D]) -> None:
+            """Publish the complete line, inside the line block: no pause/cancel is consulted
+            (one arriving now is deferred until after the commit), so the scan stays RUNNING."""
             for k in sorted(line_points):
-                if not _may_continue():
-                    return False
                 scan.point_acquired(ScanPointResult(
                     position=line[k], measurement=line_points[k], point_index=line_index * n + k,
                 ))
@@ -961,7 +1008,6 @@ class ScanApplicationService:
                 # ScanPointAcquired goes out before the line is committed: the export closes
                 # on ScanCompleted, emitted by the thin Scan during the last commit.
                 self._publish_events(scan.domain_events)
-            return True
 
         points = list(trajectory)
         n = config.points_per_line()
@@ -1099,24 +1145,29 @@ class ScanApplicationService:
             )
             _emit(line_index, line, filled)
 
-            # Last comparison: a pause after this point takes effect on the next line
-            # (this one is complete and gets committed).
-            if _interrupted(epoch):
-                return ABANDONED
+            # Last guard, atomic with pause/resume/cancel (same lock): past it, the N
+            # ScanPointAcquired and the commit form one block. A command arriving inside
+            # takes effect after the commit (next line, or end of scan).
+            with self._control_lock:
+                if _ended():
+                    return STOP
+                if _interrupted(epoch):
+                    return ABANDONED
+                self._line_block_open = True
+                self._line_block_index = line_index
             logger.info("ScanApplicationService: scan_id=%s line=%d complete, publishing %d points then committing",
                         scan.id, line_index, len(line_points))
-            if not _publish_line_points(line_index, line):
-                return STOP
-            # A cancel/failure landing after the publication must not commit the line (a pause is waited out).
-            if not _may_continue():
-                logger.info("ScanApplicationService: scan_id=%s line=%d not committed, scan is %s",
-                            scan.id, line_index, scan.status)
-                return STOP
-            is_last_line = line_index == len(lines) - 1
-            # Streams released just before the last commit, which completes the thin Scan.
-            self._record_aefi_line(
-                scan, line_index, line, line_points, n, _release_streams if is_last_line else None
-            )
+            committed = False
+            try:
+                _publish_line_points(line_index, line)
+                is_last_line = line_index == len(lines) - 1
+                # Streams released just before the last commit, which completes the thin Scan.
+                self._record_aefi_line(
+                    scan, line_index, line, line_points, n, _release_streams if is_last_line else None
+                )
+                committed = True
+            finally:
+                self._close_line_block(scan, line_index, apply_deferred=committed)
             return COMMITTED
 
         try:
