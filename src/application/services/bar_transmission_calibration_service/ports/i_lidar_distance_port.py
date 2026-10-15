@@ -18,6 +18,11 @@ Design:
 - read_distance(): next reading in reception order, or None on timeout.
   Readings are timestamped when they arrive, not when they are read: a reader
   that waits (settling) can still tell which readings came after the wait.
+- Each reading carries a domain LidarDistance: a valid distance (> 0) or "no
+  return" (the LIDAR sends 0 when it measures nothing: floor out of range,
+  dropout). Only valid distances or explicit "no return" samples: never a
+  distance of 0, and never a "no return" dropped silently (off the bar, it is
+  the floor's signature). The 0 rule itself lives in LidarDistance.
 - close(): idempotent, always stops the stream (the board keeps streaming
   until told to stop).
 - Timestamps share the service clock (time.perf_counter on the bench).
@@ -42,7 +47,8 @@ class ILidarDistancePort(ABC):
 
     @abstractmethod
     def read_distance(self, timeout_s: float) -> Optional[LidarDistanceReading]:
-        """Next distance in reception order; None on timeout; LidarUnavailableError on link failure."""
+        """Next reading in reception order (its LidarDistance may be "no return");
+        None on timeout; LidarUnavailableError on link failure."""
 
     @abstractmethod
     def close(self) -> None:

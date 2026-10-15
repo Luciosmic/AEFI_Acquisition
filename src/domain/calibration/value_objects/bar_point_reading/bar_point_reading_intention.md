@@ -18,6 +18,15 @@ limite réelle de la mesure.
   - **indécidable** si |d̄ − s| < k_σ · σ / √k (ou si d̄ = s) ;
   - **sur la barre** si d̄ < s (la barre est plus proche du LIDAR que le sol) ;
   - **hors barre** sinon.
+- Classer un point à partir de ses échantillons `LidarDistance` (noyau partagé),
+  « pas de retour » compris (le LIDAR renvoie 0 quand il ne mesure rien : sol hors
+  de portée, décrochage) — `classify_lidar`, la moyenne ne portant que sur les
+  retours valides (`from_lidar`) ; `has_enough_returns` dit quand le point a ses k
+  retours valides :
+  - au moins k retours valides → verdict ci-dessus sur leur moyenne (sans seuil,
+    sol sans retour : tout retour valide est **sur la barre**) ;
+  - aucun retour valide → **hors barre** (le sol ne renvoie rien) ;
+  - quelques retours, moins de k → **indécidable**.
 
 ## Design
 

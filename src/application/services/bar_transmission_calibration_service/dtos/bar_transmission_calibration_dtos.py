@@ -13,6 +13,8 @@ from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
+from domain.shared_kernel.value_objects.lidar_distance.lidar_distance import LidarDistance
+
 # Initial values, to be adjusted on the bench (decision 2026-10-15: tunable from the UI).
 # Settling after a stop: the column must stop swinging before the LIDAR is read.
 DEFAULT_SETTLE_TIME_S = 0.5
@@ -41,10 +43,11 @@ class BarCalibrationSettingsDTO:
 
 @dataclass(frozen=True)
 class LidarDistanceReading:
-    """One LIDAR distance, timestamped at its reception on the PC (s, same clock as the service)."""
+    """One LIDAR sample (a valid return or no return, see LidarDistance),
+    timestamped at its reception on the PC (s, same clock as the service)."""
 
     timestamp_s: float
-    distance_mm: float
+    distance: LidarDistance
 
 
 @dataclass(frozen=True)
@@ -75,8 +78,8 @@ class AxisBarTransmissionDTO:
     relative_uncertainty: float
     microns_per_pulse: float
     on_bar_distance_mm: float
-    off_bar_distance_mm: float
-    threshold_mm: float
+    off_bar_distance_mm: Optional[float]  # None: the floor gives no LIDAR return
+    threshold_mm: Optional[float]  # None: any valid return is the bar
     plateau_noise_mm: float
     measured_at: datetime
 

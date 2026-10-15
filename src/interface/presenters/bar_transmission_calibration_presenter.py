@@ -132,8 +132,10 @@ class BarTransmissionCalibrationPresenter(QObject, IBarTransmissionCalibrationOu
             f"travel_per_motor_revolution_mm = {r.travel_per_motor_revolution_mm:.5f} "
             f"± {r.travel_per_motor_revolution_uncertainty_mm:.5f} mm "
             f"({r.relative_uncertainty * 100:.3f} %) → {r.microns_per_pulse:.4f} µm/incrément",
-            f"Plateaux : barre {r.on_bar_distance_mm:.1f} mm, sol {r.off_bar_distance_mm:.1f} mm, "
-            f"seuil {r.threshold_mm:.1f} mm, bruit {r.plateau_noise_mm:.2f} mm "
+            f"Plateaux : barre {r.on_bar_distance_mm:.1f} mm, "
+            + (f"sol {r.off_bar_distance_mm:.1f} mm, seuil {r.threshold_mm:.1f} mm, "
+               if r.off_bar_distance_mm is not None else "sol sans retour LIDAR (hors de portée), ")
+            + f"bruit {r.plateau_noise_mm:.2f} mm "
             f"(L = {r.bar_length_mm:.3f} mm, {r.full_steps_per_revolution:.0f} pas × {r.microsteps} micro-pas)",
         ])
 

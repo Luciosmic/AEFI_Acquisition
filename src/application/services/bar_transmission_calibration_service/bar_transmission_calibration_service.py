@@ -83,6 +83,7 @@ from domain.calibration.value_objects.hardware_component_kind.hardware_component
 )
 from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
 from domain.shared_kernel.operation_result import OperationResult
+from domain.shared_kernel.value_objects.lidar_distance.lidar_distance import LidarDistance
 
 logger = logging.getLogger(__name__)
 
@@ -97,8 +98,15 @@ NOMINAL_TRAVEL_INCREMENTS = 60_000
 FLY_SCAN_EXTRA_TIMEOUT_S = 30.0
 MOVE_TIMEOUT_S = 60.0
 LIDAR_READ_TIMEOUT_S = 0.25
-# No LIDAR distance for this long: the stream is dead (the board streams at ~25 Hz).
+# No LIDAR reading (not even a "no return") for this long: the stream is dead
+# (the board streams at ~25 Hz).
 LIDAR_SILENCE_S = 3.0
+# Rate of the LIDAR stream measured on the board (journal 2026-10-12).
+LIDAR_NOMINAL_RATE_HZ = 25.0
+# A point at rest gets this many times the nominal duration of its k samples to
+# collect k valid returns; past it, it is classified on what it got (none: off
+# the bar, a few: undecidable).
+POINT_READ_TIMEOUT_FACTOR = 4.0
 # Coarse bracket that does not check out at rest: widened by one margin, at most this often.
 MAX_BRACKET_WIDENINGS = 3
 # Plateau contrast below which the fly scan saw no bar.
@@ -374,7 +382,7 @@ class BarTransmissionCalibrationService(IApiBarTransmissionCalibrationService):
         self._motion.set_speed(axis, speed)
         self._drain_lidar()
         positions: List[Tuple[float, float]] = [(self._clock.now(), self._motion.get_position(axis))]
-        samples: List[Tuple[float, float]] = []
+        samples: List[Tuple[float, LidarDistance]] = []
         self._motion.run_to_positive_limit(axis)
         started = last_sample = self._clock.now()
         deadline = started + 2 * NOMINAL_TRAVEL_INCREMENTS / speed + FLY_SCAN_EXTRA_TIMEOUT_S
@@ -383,11 +391,11 @@ class BarTransmissionCalibrationService(IApiBarTransmissionCalibrationService):
             reading = self._lidar.read_distance(LIDAR_READ_TIMEOUT_S)
             now = self._clock.now()
             if reading is not None:
-                samples.append((reading.timestamp_s, reading.distance_mm))
+                samples.append((reading.timestamp_s, reading.distance))
                 last_sample = now
             elif now - last_sample > LIDAR_SILENCE_S:
                 self._motion.stop(axis)
-                raise _Abort(LidarUnavailable(f"aucune distance depuis {LIDAR_SILENCE_S:.0f} s pendant le fly scan"))
+                raise _Abort(LidarUnavailable(f"aucune lecture depuis {LIDAR_SILENCE_S:.0f} s pendant le fly scan"))
             positions.append((self._clock.now(), self._motion.get_position(axis)))
             if not self._motion.is_moving(axis):
                 break
@@ -400,23 +408,28 @@ class BarTransmissionCalibrationService(IApiBarTransmissionCalibrationService):
         profile = pair_by_reception_time(positions, samples)
         logger.info(
             "BarTransmissionCalibrationService: measurement %s axis=%s fly scan done limit=%d increments "
-            "duration_s=%.1f lidar_samples=%d positions=%d profile_points=%d",
-            measurement_id, axis, limit, self._clock.now() - started, len(samples), len(positions), len(profile),
+            "duration_s=%.1f lidar_samples=%d rejected_zero=%d positions=%d profile_points=%d",
+            measurement_id, axis, limit, self._clock.now() - started, len(samples),
+            sum(1 for _, distance in samples if not distance.has_return), len(positions), len(profile),
         )
         try:
             located = locate_bar(profile, MIN_CONTRAST_MM)
         except BarProfileUnusableError as error:
             raise _Abort(BarNotFound(axis, str(error))) from error
         logger.info(
-            "BarTransmissionCalibrationService: measurement %s axis=%s plateaus on_bar=%.1f mm off_bar=%.1f mm "
-            "threshold=%.1f mm noise=%.2f mm coarse fronts %.0f / %.0f",
+            "BarTransmissionCalibrationService: measurement %s axis=%s plateaus on_bar=%.1f mm off_bar=%s mm "
+            "threshold=%s mm noise=%.2f mm coarse fronts %.0f / %.0f",
             measurement_id, axis, located.on_bar_distance_mm, located.off_bar_distance_mm, located.threshold_mm,
             located.plateau_noise_mm, located.first_front_increment, located.second_front_increment,
         )
+        if located.floor_returns:
+            plateaus = (f"plateaux {located.on_bar_distance_mm:.1f} / {located.off_bar_distance_mm:.1f} mm, "
+                        f"seuil {located.threshold_mm:.1f} mm")
+        else:
+            plateaus = f"barre {located.on_bar_distance_mm:.1f} mm, sol sans retour LIDAR (hors de portée)"
         self._progress(
             axis,
-            f"Barre repérée : plateaux {located.on_bar_distance_mm:.1f} / {located.off_bar_distance_mm:.1f} mm, "
-            f"seuil {located.threshold_mm:.1f} mm, fronts ≈ {located.first_front_increment:.0f} et "
+            f"Barre repérée : {plateaus}, fronts ≈ {located.first_front_increment:.0f} et "
             f"{located.second_front_increment:.0f} incréments",
         )
         return located, limit
@@ -487,17 +500,22 @@ class BarTransmissionCalibrationService(IApiBarTransmissionCalibrationService):
     def _classify(
         self, axis: str, increment: int, located: BarCoarseLocalization, settings: BarCalibrationSettingsDTO
     ) -> BarPointClassification:
-        reading = self._read_point(axis, increment, settings)
-        classification = reading.classify(located.threshold_mm, settings.k_sigma)
+        samples = self._read_point(axis, increment, settings)
+        classification = BarPointReading.classify_lidar(
+            samples, settings.samples_per_point, located.threshold_mm, settings.k_sigma
+        )
+        valid = sum(1 for s in samples if s.has_return)
         logger.debug(
-            "BarTransmissionCalibrationService: axis=%s point %d mean=%.2f mm std=%.2f mm k=%d -> %s",
-            axis, increment, reading.mean_distance_mm, reading.std_distance_mm, reading.sample_count,
-            classification.value,
+            "BarTransmissionCalibrationService: axis=%s point %d valid=%d rejected_zero=%d -> %s",
+            axis, increment, valid, len(samples) - valid, classification.value,
         )
         return classification
 
-    def _read_point(self, axis: str, increment: int, settings: BarCalibrationSettingsDTO) -> BarPointReading:
-        """k distances read at rest at `increment`, all received after the settling time."""
+    def _read_point(self, axis: str, increment: int, settings: BarCalibrationSettingsDTO) -> List[LidarDistance]:
+        """LIDAR samples read at rest at `increment`, all received after the
+        settling time: until the point has its k valid returns, or until the
+        point deadline once at least one sample came (a dead stream is told
+        apart by LIDAR_SILENCE_S)."""
         self._abort_if_cancelled(axis)
         self._motion.move_to(axis, increment)
         self._motion.wait_until_stopped(axis, MOVE_TIMEOUT_S)
@@ -506,19 +524,22 @@ class BarTransmissionCalibrationService(IApiBarTransmissionCalibrationService):
             raise _Abort(BenchMotionFailed(axis, f"arrêté à {reached} au lieu de {increment} incréments"))
         self._clock.sleep(settings.settle_time_s)
         settled_at = self._clock.now()
-        distances: List[float] = []
+        deadline = settled_at + POINT_READ_TIMEOUT_FACTOR * settings.samples_per_point / LIDAR_NOMINAL_RATE_HZ
+        samples: List[LidarDistance] = []
         last_sample = settled_at
-        while len(distances) < settings.samples_per_point:
+        while not BarPointReading.has_enough_returns(samples, settings.samples_per_point):
             reading = self._lidar.read_distance(LIDAR_READ_TIMEOUT_S)
             now = self._clock.now()
             if reading is None:
                 if now - last_sample > LIDAR_SILENCE_S:
-                    raise _Abort(LidarUnavailable(f"aucune distance depuis {LIDAR_SILENCE_S:.0f} s à l'arrêt"))
-                continue
-            last_sample = now
-            if reading.timestamp_s >= settled_at:
-                distances.append(reading.distance_mm)
-        return BarPointReading.from_samples(distances)
+                    raise _Abort(LidarUnavailable(f"aucune lecture depuis {LIDAR_SILENCE_S:.0f} s à l'arrêt"))
+            else:
+                last_sample = now
+                if reading.timestamp_s >= settled_at:
+                    samples.append(reading.distance)
+            if now > deadline and samples:
+                break
+        return samples
 
     def _park(self, axis: str) -> None:
         """Measured axis back to its origin: the bench is left where homing would leave it."""

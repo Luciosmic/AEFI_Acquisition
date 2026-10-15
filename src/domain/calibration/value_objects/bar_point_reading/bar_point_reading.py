@@ -8,7 +8,9 @@ import math
 import statistics
 from dataclasses import dataclass
 from enum import Enum
-from typing import Sequence
+from typing import Optional, Sequence
+
+from domain.shared_kernel.value_objects.lidar_distance.lidar_distance import LidarDistance
 
 
 class BarPointClassification(Enum):
@@ -44,6 +46,39 @@ class BarPointReading:
             std_distance_mm=statistics.stdev(distances_mm),
             sample_count=len(distances_mm),
         )
+
+    @staticmethod
+    def from_lidar(samples: Sequence[LidarDistance]) -> "BarPointReading":
+        """Summary of the valid returns only: a "no return" is never averaged."""
+        return BarPointReading.from_samples([s.distance_mm for s in samples if s.has_return])
+
+    @staticmethod
+    def has_enough_returns(samples: Sequence[LidarDistance], required_samples: int) -> bool:
+        """True once the point holds the k valid returns it is classified on."""
+        return sum(1 for s in samples if s.has_return) >= max(required_samples, 2)
+
+    @staticmethod
+    def classify_lidar(
+        samples: Sequence[LidarDistance],
+        required_samples: int,
+        threshold_mm: Optional[float],
+        k_sigma: float,
+    ) -> BarPointClassification:
+        """Verdict on the LIDAR samples of a point read at rest, "no return" included.
+
+        At least `required_samples` valid returns: the usual verdict on their
+        mean (any valid return is the bar when there is no threshold, i.e. the
+        floor gives no return). No valid return at all: off the bar (the floor
+        is out of range). Some, but fewer than required: undecidable."""
+        if not samples:
+            raise ValueError("a point needs at least one LIDAR sample, valid or without return")
+        if BarPointReading.has_enough_returns(samples, required_samples):
+            if threshold_mm is None:
+                return BarPointClassification.ON_BAR
+            return BarPointReading.from_lidar(samples).classify(threshold_mm, k_sigma)
+        if not any(s.has_return for s in samples):
+            return BarPointClassification.OFF_BAR
+        return BarPointClassification.UNDECIDABLE
 
     def undecidable_half_width_mm(self, k_sigma: float) -> float:
         """k_σ · σ / √k: how close to the threshold the mean may not be trusted."""

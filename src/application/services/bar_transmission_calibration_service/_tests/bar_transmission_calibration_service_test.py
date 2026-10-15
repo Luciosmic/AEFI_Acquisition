@@ -81,14 +81,18 @@ def mount(components, kind, name, values):
 
 
 class Bench:
-    def __init__(self, bar_present=True, noise_mm=2.0, **motion_options):
+    def __init__(self, bar_present=True, noise_mm=2.0, bar_mm=250.0, floor_mm=1250.0, no_return_ratio=0.0,
+                 **motion_options):
+        """`floor_mm=None`: floor out of LIDAR range, no return off the bar;
+        `no_return_ratio`: sporadic dropouts (the LIDAR's 0) among valid distances."""
         self.clock = FakeClock()
         self.motion = FakeRawIncrementMotionPort(clock=self.clock, plus_limit_increments=TRAVEL, **motion_options)
         self.rng = random.Random(7)
         self.bar_present = bar_present
         self.noise_mm = noise_mm
+        self.bar_mm, self.floor_mm = bar_mm, floor_mm
         self.axis = "X"
-        self.lidar = FakeLidarDistancePort(self.distance_mm, self.clock)
+        self.lidar = FakeLidarDistancePort(self.distance_mm, self.clock, no_return_ratio=no_return_ratio, seed=3)
         self.components = FakeHardwareComponentRepository()
         self.transmissions = FakeMechanicalTransmissionCalibrationRepository()
         self.bus = InMemoryEventBus()
@@ -105,13 +109,16 @@ class Bench:
         self.service.set_output_port(self.output)
 
     def distance_mm(self):
-        """Bar 1 m above the floor: 250 mm on the bar, 1250 mm off; spot softens the edges."""
-        if not self.bar_present:
-            return 1250.0 + self.rng.gauss(0.0, self.noise_mm)
-        n = self.motion.get_position(self.axis)
-        start, end = BAR[self.axis]
-        coverage = _sigmoid((n - start) / 3.0) * _sigmoid((end - n) / 3.0)
-        return 1250.0 - 1000.0 * coverage + self.rng.gauss(0.0, self.noise_mm)
+        """Bar 1 m above the floor: 250 mm on the bar, 1250 mm off; spot softens the edges.
+        Floor out of range: no return (None) unless the spot is mostly on the bar."""
+        coverage = 0.0
+        if self.bar_present:
+            n = self.motion.get_position(self.axis)
+            start, end = BAR[self.axis]
+            coverage = _sigmoid((n - start) / 3.0) * _sigmoid((end - n) / 3.0)
+        if self.floor_mm is None:
+            return self.bar_mm + self.rng.gauss(0.0, self.noise_mm) if coverage >= 0.5 else None
+        return self.floor_mm - (self.floor_mm - self.bar_mm) * coverage + self.rng.gauss(0.0, self.noise_mm)
 
     def mount_chain(self, microsteps=16):
         mount(self.components, HardwareComponentKind.MOTORS, "Igus", {"full_steps_per_revolution": 200})
@@ -221,6 +228,47 @@ def test_absent_bar_fails_typed_and_closes_the_stream():
     assert isinstance(bench.output.failed[0], BarNotFound)
     assert bench.lidar.close_count == 1
     assert bench.control.controller is None
+
+
+def _assert_n_is_right(bench, axis="X"):
+    assert bench.output.failed == []
+    measured = bench.output.measured[-1]
+    true_n = BAR[axis][1] - BAR[axis][0]
+    assert abs(measured.increments_between_fronts - true_n) <= measured.increments_uncertainty + 2
+    assert measured.increments_uncertainty < 20
+    return measured
+
+
+def test_floor_out_of_lidar_range_gives_no_return_and_the_measurement_succeeds():
+    """Bench case 2026-10-15: bar at ~95 mm, floor out of range (LIDAR 0 only)."""
+    bench = Bench(bar_mm=95.0, floor_mm=None, noise_mm=1.0).mount_chain()
+    assert bench.measure("X").is_success
+    measured = _assert_n_is_right(bench)
+    assert measured.off_bar_distance_mm is None and measured.threshold_mm is None
+    assert measured.on_bar_distance_mm == pytest.approx(95.0, abs=1.0)
+    assert bench.lidar.no_return_sent > 0
+
+
+def test_sporadic_dropouts_on_the_bar_leave_n_unchanged():
+    bench = Bench(bar_mm=95.0, floor_mm=None, noise_mm=1.0, no_return_ratio=0.2).mount_chain()
+    bench.measure("X")
+    measured = _assert_n_is_right(bench)
+    assert measured.on_bar_distance_mm == pytest.approx(95.0, abs=1.0)  # dropouts never averaged as 0
+
+
+def test_dropouts_between_two_valid_plateaus_leave_n_unchanged():
+    bench = Bench(no_return_ratio=0.2).mount_chain()
+    bench.measure("X")
+    measured = _assert_n_is_right(bench)
+    assert measured.threshold_mm == pytest.approx(750.0, abs=2.0)
+
+
+def test_no_valid_return_at_all_fails_with_an_explicit_profile_error():
+    bench = Bench(bar_present=False, floor_mm=None).mount_chain()
+    bench.measure("X")
+    assert isinstance(bench.output.failed[0], BarNotFound)
+    assert "aucun retour valide" in bench.output.failed[0].message
+    assert bench.lidar.close_count == 1
 
 
 def test_axis_stopping_without_limit_switch_fails_typed():

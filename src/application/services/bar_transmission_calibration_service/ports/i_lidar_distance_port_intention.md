@@ -13,6 +13,13 @@ unique du flux.
 
 - Ouvrir le flux LIDAR (refus `LidarStreamBusyError` si le panneau le diffuse déjà),
   lire les distances horodatées à leur réception, fermer le flux dans tous les cas.
+- Ne livrer que des distances valides ou des « pas de retour » explicites : chaque
+  lecture porte un `LidarDistance` du noyau partagé (le LIDAR renvoie 0 quand il
+  ne mesure rien ; premier essai au banc, 2026-10-15 : le sol hors de portée ne
+  renvoie que des 0, la barre a des décrochages). Un 0 n'est jamais une
+  distance ; il n'est pas non plus supprimé, car hors barre il est la seule trace
+  du sol. La règle du 0 vit dans `LidarDistance`, pas dans le port ni
+  l'adaptateur.
 
 ## Design
 

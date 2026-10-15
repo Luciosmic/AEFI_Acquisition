@@ -26,7 +26,7 @@ Spécification : `_system/documentation/l-ecart-en-impulsions-entre-les-deux-fro
   5. encadrements grossiers élargis d'une marge v·τ, vérifiés à l'arrêt (élargis
      encore s'ils ne se confirment pas) ;
   6. affinage des deux fronts à l'arrêt par dichotomie (stabilisation, k
-     échantillons reçus après la stabilisation, classification) ;
+     retours valides reçus après la stabilisation, classification) ;
   7. résultat N ± δ, transmission ± incertitude ; retour de l'axe à l'origine ;
   8. arrêt du flux LIDAR **dans tous les cas**.
 - `cancel_measurement()` : arrêter l'axe et abandonner.
@@ -60,6 +60,17 @@ Spécification : `_system/documentation/l-ecart-en-impulsions-entre-les-deux-fro
   horodate les distances LIDAR ; horloge virtuelle en test.
 - Aller-retour libre pendant la dichotomie (décision du 2026-10-15) : aucun sens
   d'approche imposé, le jeu n'est pas compensé.
+- « Pas de retour » LIDAR (le capteur envoie 0 quand il ne mesure rien ; premier
+  essai au banc, 2026-10-15 : le sol hors de portée ne renvoie que des 0, la barre
+  a des décrochages) : la règle vit dans le value object `LidarDistance` du noyau
+  partagé, la classification et la moyenne sur les seuls retours valides dans
+  `BarPointReading` et `bar_profile_analysis` ; le service ne fait qu'orchestrer.
+  Un point à l'arrêt attend ses k retours valides pendant au plus
+  `POINT_READ_TIMEOUT_FACTOR` × k / 25 Hz ; au-delà le domaine le classe sur ce
+  qu'il a reçu (aucun retour : hors barre ; quelques-uns : indécidable). Le silence total
+  du flux reste une panne (`LIDAR_SILENCE_S`), jamais une boucle sans fin. Nombre
+  de 0 logué de façon agrégée (`rejected_zero=`) : en DEBUG par point, dans le
+  bilan du fly scan — jamais une ligne par échantillon.
 - Logs d'intention à chaque étape avec l'identifiant de mesure et l'axe.
 - Les commandes manuelles du panneau Mouvement ne prennent pas le contrôle des\r
   moteurs : elles ne sont pas bloquées pendant la mesure (point ouvert).

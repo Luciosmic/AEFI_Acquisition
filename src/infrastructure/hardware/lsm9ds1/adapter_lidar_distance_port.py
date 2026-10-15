@@ -26,6 +26,8 @@ from application.services.inertial_sensor_service.ports.i_inertial_sensor_acquis
 from application.services.inertial_sensor_service.ports.i_inertial_sensor_stream_port import (
     IInertialSensorStreamPort,
 )
+from domain.shared_kernel.value_objects.lidar_distance.lidar_distance import LidarDistance
+from infrastructure.hardware.lsm9ds1.lsm9ds1_conversion import LIDAR_MM_PER_LSB
 
 logger = logging.getLogger(__name__)
 
@@ -109,6 +111,7 @@ class LidarDistanceStreamAdapter(ILidarDistancePort):
         (the driver stamps a line when it is read)."""
         errors = 0
         count = 0
+        no_return = 0
         while not self._stop.is_set():
             try:
                 sample = self._stream_port.read_sample(READ_TIMEOUT_S)
@@ -121,11 +124,14 @@ class LidarDistanceStreamAdapter(ILidarDistancePort):
                     return
                 continue
             errors = 0
-            if sample is None or sample.lidar_distance_mm is None:
+            if sample is None or sample.lidar_raw is None:
                 continue
-            self._readings.put(LidarDistanceReading(sample.timestamp_s, sample.lidar_distance_mm))
+            distance = LidarDistance.from_raw(sample.lidar_raw, LIDAR_MM_PER_LSB)
+            self._readings.put(LidarDistanceReading(sample.timestamp_s, distance))
             count += 1
-        logger.info("LidarDistanceStreamAdapter: reader stopped after %d distance(s)", count)
+            no_return += not distance.has_return
+        logger.info("LidarDistanceStreamAdapter: reader stopped after %d reading(s) rejected_zero=%d (no return)",
+                    count, no_return)
 
     def _disconnect_if_connected_here(self) -> None:
         if not self._connected_here:

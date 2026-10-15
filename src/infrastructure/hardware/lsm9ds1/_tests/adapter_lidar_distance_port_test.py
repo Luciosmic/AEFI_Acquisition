@@ -1,3 +1,4 @@
+import dataclasses
 import time
 import unittest
 
@@ -9,6 +10,16 @@ from infrastructure.hardware.lsm9ds1.adapter_lidar_distance_port import LidarDis
 from infrastructure.hardware.lsm9ds1.fake.fake_inertial_sensor_stream_adapter import (
     FakeInertialSensorStreamAdapter,
 )
+
+
+class _ZeroEveryOtherStream(FakeInertialSensorStreamAdapter):
+    """The real LIDAR sends raw 0 when it measures nothing."""
+
+    def read_sample(self, timeout_s=1.0):
+        sample = super().read_sample(timeout_s)
+        if sample is not None and self._k % 2 == 0:
+            sample = dataclasses.replace(sample, lidar_raw=0, lidar_distance_mm=0.0)
+        return sample
 
 
 class _Executor:
@@ -29,7 +40,7 @@ class LidarDistanceStreamAdapterTest(unittest.TestCase):
             first = adapter.read_distance(1.0)
             second = adapter.read_distance(1.0)
             self.assertIsNotNone(first)
-            self.assertGreater(first.distance_mm, 1000.0)
+            self.assertGreater(first.distance.distance_mm, 1000.0)
             self.assertGreater(second.timestamp_s, first.timestamp_s)
         finally:
             adapter.close()
@@ -46,6 +57,15 @@ class LidarDistanceStreamAdapterTest(unittest.TestCase):
             self.assertLess(buffered.timestamp_s, settled_at)
         finally:
             adapter.close()
+
+    def test_raw_zero_is_a_reading_without_return_never_a_distance(self):
+        adapter = LidarDistanceStreamAdapter(_ZeroEveryOtherStream(rate_hz=200.0, realtime=True), _Executor())
+        adapter.open()
+        try:
+            readings = [adapter.read_distance(1.0) for _ in range(6)]
+        finally:
+            adapter.close()
+        self.assertEqual([r.distance.has_return for r in readings], [True, False] * 3)
 
     def test_leaves_an_already_connected_board_connected(self):
         stream = FakeInertialSensorStreamAdapter(realtime=False)

@@ -20,12 +20,20 @@ port série en même temps.
   continue sinon).
 - Lire en continu dans un thread dédié, mettre chaque distance en file avec son
   instant de réception.
+- Construire chaque échantillon par `LidarDistance.from_raw(lidar_raw,
+  LIDAR_MM_PER_LSB)` : la règle « 0 = pas de retour » (premier essai au banc,
+  2026-10-15 : sol hors de portée, décrochages) vit dans ce value object du noyau
+  partagé, pas ici. L'adaptateur ne fournit que la valeur brute et le facteur de
+  conversion du capteur.
 - Traduire les erreurs série en `LidarUnavailableError` (après la même tolérance que
   l'exécuteur du panneau : 2 erreurs consécutives).
 
 ## Design
 
 - Thread démon, arrêté par drapeau + `join` ; `close()` idempotent.
+- Valeur brute, pas les mm : le 0 est une convention du capteur, indépendante du
+  facteur de conversion. Nombre de « pas de retour » logué une fois, à l'arrêt du
+  lecteur (`rejected_zero=`), jamais une ligne par échantillon.
 - L'unité du LIDAR (mm, non vérifiée) vient de `lidar_raw_to_mm` ; la calibration
   n'en dépend pas (seul le seuil compte).
 - ponytail: le LIDAR reste un canal du flux inertiel (voir

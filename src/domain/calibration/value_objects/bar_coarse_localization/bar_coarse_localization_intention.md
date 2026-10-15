@@ -14,13 +14,17 @@ repose la mesure qu'on lui demande d'enregistrer.
 - Porter les plateaux mesurés pendant le fly scan : distance **sur la barre**
   (courte) et **hors barre** (longue), le seuil `s = (d_haut + d_bas) / 2` et le
   bruit des plateaux.
+- Sol hors de portée du LIDAR (premier essai au banc, 2026-10-15 : le sol ne
+  renvoie que des 0, « pas de retour ») : le plateau hors barre est « pas de
+  retour » (`off_bar_distance_mm = None`), il n'y a pas de seuil — tout retour
+  valide est la barre.
 - Porter les deux fronts repérés grossièrement (premier < second, la barre est
   entre les deux) et le nombre de points du profil.
 
 ## Design
 
 - Value object immuable produit par `bar_profile_analysis.locate_bar`.
-- Les invariants (barre plus proche que le sol, premier front avant le second)
+- Les invariants (barre plus proche que le sol quand le sol renvoie une distance, premier front avant le second)
   sont vérifiés à la construction : un profil inversé ne doit jamais atteindre
   l'affinage.
 - Les positions sont en incréments moteur, éventuellement fractionnaires (milieu

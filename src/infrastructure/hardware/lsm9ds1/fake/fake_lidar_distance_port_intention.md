@@ -13,7 +13,11 @@ les distances arrivées pendant la stabilisation doivent être écartées.
   la carte) de l'horloge injectée, valeur donnée par une fonction (scène de barre
   lisant un faux moteur), horodatée à son instant d'arrivée.
 - Reproduire les défaillances du réel : flux déjà diffusé par le panneau
-  (`LidarStreamBusyError`), ouverture impossible, flux muet après n échantillons.
+  (`LidarStreamBusyError`), ouverture impossible, flux muet après n échantillons,
+  et les « pas de retour » (le LIDAR réel envoie 0 quand il ne mesure rien,
+  premier essai au banc 2026-10-15) : la scène renvoie None là où rien ne revient
+  (sol hors de portée), et une proportion paramétrable (`no_return_ratio`) de
+  décrochages sporadiques remplace des distances valides.
 - Compter ouvertures et fermetures (le service doit fermer le flux dans tous les cas).
 
 ## Design

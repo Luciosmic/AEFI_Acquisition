@@ -5,7 +5,7 @@ See bar_profile_analysis_intention.md.
 """
 
 import bisect
-from typing import List, Sequence, Tuple
+from typing import List, Optional, Sequence, Tuple
 
 import numpy as np
 
@@ -13,20 +13,27 @@ from domain.calibration.errors.bar_profile_unusable_error import BarProfileUnusa
 from domain.calibration.value_objects.bar_coarse_localization.bar_coarse_localization import (
     BarCoarseLocalization,
 )
+from domain.shared_kernel.value_objects.lidar_distance.lidar_distance import LidarDistance
 
-# (reception time s, value): a motor position in increments, or a LIDAR distance in mm.
-TimedValue = Tuple[float, float]
-# (motor increment, LIDAR distance mm)
-ProfilePoint = Tuple[float, float]
+# (reception time s, motor position in increments)
+TimedPosition = Tuple[float, float]
+# (reception time s, LIDAR sample — valid return or no return)
+TimedLidarDistance = Tuple[float, LidarDistance]
+# (motor increment, LIDAR sample)
+ProfilePoint = Tuple[float, LidarDistance]
 
 MIN_PROFILE_POINTS = 10
 # Share of "on bar" points tolerated outside the bar run (noise flips).
 MAX_STRAY_ON_BAR_SHARE = 0.05
+# Consecutive samples without return tolerated inside the bar run: a LIDAR
+# dropout on the bar, not the floor (5 samples = 0.2 s at 25 Hz, 160 increments
+# at the default fly speed).
+MAX_NO_RETURN_GAP_POINTS = 5
 _MAD_TO_SIGMA = 1.4826
 
 
 def pair_by_reception_time(
-    positions: Sequence[TimedValue], samples: Sequence[TimedValue]
+    positions: Sequence[TimedPosition], samples: Sequence[TimedLidarDistance]
 ) -> List[ProfilePoint]:
     """Each LIDAR sample paired with the motor position interpolated at its
     reception time. Samples outside the time span of the positions are dropped."""
@@ -49,29 +56,48 @@ def pair_by_reception_time(
 
 
 def locate_bar(profile: Sequence[ProfilePoint], min_contrast_mm: float = 10.0) -> BarCoarseLocalization:
-    """Plateaus, threshold and coarse fronts of the single bar in a fly scan profile."""
+    """Plateaus, threshold and coarse fronts of the single bar in a fly scan profile.
+
+    A sample without return counts as off the bar. When the valid returns show
+    two plateaus, the threshold sits midway; when they show only one and some
+    samples have no return, the floor is out of range: every valid return is
+    the bar and the off-bar plateau is "no return"."""
     if len(profile) < MIN_PROFILE_POINTS:
         raise BarProfileUnusableError(
             f"profil trop court : {len(profile)} point(s) LIDAR apparié(s) pendant le fly scan "
             f"(au moins {MIN_PROFILE_POINTS})"
         )
-    points = sorted(profile)
+    points = sorted(profile, key=lambda point: point[0])
     increments = np.array([n for n, _ in points], dtype=float)
-    distances = np.array([d for _, d in points], dtype=float)
+    returned = np.array([d.has_return for _, d in points], dtype=bool)
+    distances = np.array([d.distance_mm if d.has_return else np.nan for _, d in points], dtype=float)
+    no_return_count = int((~returned).sum())
+    valid = distances[returned]
+    if len(valid) == 0:
+        raise BarProfileUnusableError(
+            f"aucun retour valide du LIDAR pendant le fly scan ({no_return_count} échantillon(s) sans retour, "
+            "le LIDAR renvoie 0 quand il ne mesure rien) : barre hors de portée ou hors de la trajectoire ?"
+        )
 
-    low, high = np.percentile(distances, [5, 95])
-    if high - low < min_contrast_mm:
+    low, high = np.percentile(valid, [5, 95])
+    if high - low >= min_contrast_mm:
+        provisional = (low + high) / 2.0
+        on_bar_distance = float(np.median(valid[valid < provisional]))
+        off_bar_distance: Optional[float] = float(np.median(valid[valid >= provisional]))
+        threshold = (on_bar_distance + off_bar_distance) / 2.0
+        on_bar = returned & (np.nan_to_num(distances, nan=np.inf) < threshold)
+    elif no_return_count > 0:
+        # Floor out of LIDAR range: it gives no return, every valid return is the bar.
+        on_bar_distance = float(np.median(valid))
+        off_bar_distance = None
+        on_bar = returned.copy()
+    else:
         raise BarProfileUnusableError(
             f"pas de créneau : contraste {high - low:.1f} mm < {min_contrast_mm:.1f} mm "
             "(barre absente ou hors de la trajectoire du LIDAR ?)"
         )
-    provisional = (low + high) / 2.0
-    on_bar_distance = float(np.median(distances[distances < provisional]))
-    off_bar_distance = float(np.median(distances[distances >= provisional]))
-    threshold = (on_bar_distance + off_bar_distance) / 2.0
-    on_bar = distances < threshold
 
-    start, end = _longest_true_run(on_bar)
+    start, end = _longest_true_run(_bridge_dropouts(on_bar, returned, MAX_NO_RETURN_GAP_POINTS))
     if start == 0:
         raise BarProfileUnusableError(
             "la barre commence dès le début de la course : pas de plateau hors barre côté origine"
@@ -80,7 +106,7 @@ def locate_bar(profile: Sequence[ProfilePoint], min_contrast_mm: float = 10.0) -
         raise BarProfileUnusableError(
             "la barre va jusqu'à la butée opposée : pas de plateau hors barre côté fin de course"
         )
-    stray = int(on_bar.sum()) - (end - start + 1)
+    stray = int(on_bar.sum()) - int(on_bar[start:end + 1].sum())
     off_count = len(on_bar) - (end - start + 1)
     if stray > MAX_STRAY_ON_BAR_SHARE * off_count:
         raise BarProfileUnusableError(
@@ -88,7 +114,7 @@ def locate_bar(profile: Sequence[ProfilePoint], min_contrast_mm: float = 10.0) -
             "(un seul objet doit passer sous le LIDAR)"
         )
 
-    plateau_noise = max(_robust_sigma(distances[on_bar]), _robust_sigma(distances[~on_bar]))
+    plateau_noise = max(_robust_sigma(distances[on_bar]), _robust_sigma(distances[returned & ~on_bar]))
     return BarCoarseLocalization(
         on_bar_distance_mm=on_bar_distance,
         off_bar_distance_mm=off_bar_distance,
@@ -97,6 +123,24 @@ def locate_bar(profile: Sequence[ProfilePoint], min_contrast_mm: float = 10.0) -
         second_front_increment=float((increments[end] + increments[end + 1]) / 2.0),
         profile_point_count=len(points),
     )
+
+
+def _bridge_dropouts(on_bar: np.ndarray, returned: np.ndarray, max_gap: int) -> np.ndarray:
+    """On-bar flags with short runs of samples without return between two on-bar
+    points counted as on the bar (LIDAR dropouts, not the floor)."""
+    bridged = on_bar.copy()
+    i, count = 0, len(on_bar)
+    while i < count:
+        if returned[i]:
+            i += 1
+            continue
+        j = i
+        while j < count and not returned[j]:
+            j += 1
+        if 0 < i and j < count and on_bar[i - 1] and on_bar[j] and j - i <= max_gap:
+            bridged[i:j] = True
+        i = j
+    return bridged
 
 
 def _longest_true_run(flags: np.ndarray) -> Tuple[int, int]:

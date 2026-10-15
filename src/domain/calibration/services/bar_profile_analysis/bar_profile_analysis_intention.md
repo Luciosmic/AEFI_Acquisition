@@ -22,8 +22,16 @@ nul).
   distance), estimer les plateaux (médianes de part et d'autre d'un seuil
   provisoire), le seuil s, le bruit des plateaux et les deux fronts grossiers
   (milieu entre le dernier point hors barre et le premier point sur la barre, et
-  inversement). Refuser (`BarProfileUnusableError`) un profil sans contraste, une
-  barre qui touche une extrémité de la course, ou plusieurs zones courtes.
+  inversement). Refuser (`BarProfileUnusableError`) un profil sans aucun retour
+  valide, un profil sans contraste, une barre qui touche une extrémité de la
+  course, ou plusieurs zones courtes.
+- Échantillons `LidarDistance` (noyau partagé) « pas de retour » (le LIDAR renvoie 0 quand il ne mesure rien ;
+  premier essai au banc, 2026-10-15 : le sol est hors de portée et ne renvoie que
+  des 0, la barre a des décrochages sporadiques) : un échantillon sans retour vaut
+  « hors barre » et n'entre dans aucune moyenne. Si les retours valides ne forment
+  qu'un plateau et que des échantillons sont sans retour, le sol est hors de
+  portée : le plateau hors barre est « pas de retour », pas de seuil, tout retour
+  valide est la barre.
 
 ## Design
 
@@ -33,7 +41,9 @@ nul).
 - Plateaux par médianes (robustes aux points de transition) ; seuil provisoire au
   milieu des percentiles 5 et 95, puis seuil final au milieu des plateaux.
 - La barre est la plus longue suite continue de points sur la barre : un point isolé
-  basculé par le bruit sur un plateau ne crée pas de faux front. Au-delà de 5 % de
+  basculé par le bruit sur un plateau ne crée pas de faux front. Un trou d'au plus
+  `MAX_NO_RETURN_GAP_POINTS` échantillons sans retour entre deux points sur la
+  barre est un décrochage, pas le sol : il ne coupe pas la suite. Au-delà de 5 % de
   points « sur la barre » hors de cette suite, le profil est refusé (deuxième objet
   sous le LIDAR).
 - Bruit des plateaux : écart absolu médian × 1,4826 (estimateur robuste de σ), le

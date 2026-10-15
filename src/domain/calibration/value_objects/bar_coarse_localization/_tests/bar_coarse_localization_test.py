@@ -27,6 +27,12 @@ class BarCoarseLocalizationTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             make(on=1250.0, off=250.0)
 
+    def test_floor_without_return_has_no_threshold(self):
+        located = make(off=None)
+        self.assertFalse(located.floor_returns)
+        self.assertIsNone(located.threshold_mm)
+        self.assertIsNone(located.contrast_mm)
+
     def test_refuses_fronts_in_the_wrong_order(self):
         with self.assertRaises(ValueError):
             make(first=900.0, second=100.0)
