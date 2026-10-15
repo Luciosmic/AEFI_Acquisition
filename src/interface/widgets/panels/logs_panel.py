@@ -236,7 +236,9 @@ def install_console_capture(logs_panel: LogsPanel) -> EmittingStream:
     handlers = [panel_handler]
     log_file = os.environ.get("AEFI_LOG_FILE")
     if log_file:
-        file_handler = logging.FileHandler(log_file, mode="w", encoding="utf-8")
+        open(log_file, "w", encoding="utf-8").close()  # one file per run
+        # Mode "a": a handler closed by a third-party logging reconfiguration reopens on the next record.
+        file_handler = logging.FileHandler(log_file, mode="a", encoding="utf-8")
         file_handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s"))
         handlers.append(file_handler)
     logging.basicConfig(handlers=handlers, level=level, force=True)
