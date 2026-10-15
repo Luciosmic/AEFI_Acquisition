@@ -68,6 +68,7 @@ class HardwareCompositionRoot:
             logger.info("Motion -> mock (ArcusCompositionRoot, simulated controller)")
             self.arcus_root = ArcusCompositionRoot(event_bus=event_bus, controller=FakeArcusPerformax4EXController())
         self.motion_port: IMotionPort = self.arcus_root.motion
+        self.raw_motion_port = self.arcus_root.raw_motion  # increments, for the bar calibration
         self.lifecycle_adapters.append(self.arcus_root.lifecycle)
 
         # --- Acquisition (ADS131) + Excitation (AD9106) + Continuous — all part of MCU ---

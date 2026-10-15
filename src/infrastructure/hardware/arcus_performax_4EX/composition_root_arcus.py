@@ -18,6 +18,12 @@ from application.services.motion_control_service.ports.i_motion_port import IMot
 from application.services.system_lifecycle_service.ports.i_hardware_initialization_port import IHardwareInitializationPort
 from application.services.hardware_configuration_service.ports.i_hardware_advanced_configurator import IHardwareAdvancedConfigurator
 
+from application.services.bar_transmission_calibration_service.ports.i_raw_increment_motion_port import (
+    IRawIncrementMotionPort,
+)
+from infrastructure.hardware.arcus_performax_4EX.adapter_raw_increment_motion_arcus import (
+    ArcusRawIncrementMotionAdapter,
+)
 from infrastructure.hardware.arcus_performax_4EX.driver_arcus_performax4EX import ArcusPerformax4EXController
 from infrastructure.hardware.arcus_performax_4EX.adapter_motion_port_arcus_performax4EX import ArcusAdapter
 from infrastructure.hardware.arcus_performax_4EX.adapter_lifecycle_arcus_performax4EX import ArcusPerformaxLifecycleAdapter
@@ -74,6 +80,10 @@ class ArcusCompositionRoot:
         # Manages connection/disconnection via the Controller and enables/disables the Motion Adapter
         self.lifecycle: IHardwareInitializationPort = ArcusPerformaxLifecycleAdapter(self.motion, self._driver, port=port)
         
+        # 3bis. Raw increment motion (no mm conversion): the bar calibration
+        # measures that conversion. Same driver, which serializes the serial link.
+        self.raw_motion: IRawIncrementMotionPort = ArcusRawIncrementMotionAdapter(self._driver)
+
         # 4. Instantiate Configurator
         # Uses the same driver to apply configuration
         self.config: IHardwareAdvancedConfigurator = ArcusPerformax4EXAdvancedConfigurator(controller=self._driver)

@@ -115,6 +115,10 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
     from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
     from application.services.motion_control_service.motion_control_service import MotionControlService
     from application.services.motion_control_service.motion_conversion_handler import MotionConversionHandler
+    from application.services.bar_transmission_calibration_service.bar_transmission_calibration_service import (
+        BarTransmissionCalibrationService,
+    )
+    from application.shared.exclusive_control.exclusive_control import ExclusiveControl
     from application.services.electric_field_probe_service.electric_field_probe_service import ElectricFieldProbeService
     from application.services.inertial_sensor_service.inertial_sensor_service import InertialSensorService
     from application.services.scan_export_service.scan_export_service import ScanExportService
@@ -172,6 +176,7 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
     from infrastructure.unit_of_work.in_memory_unit_of_work import InMemoryUnitOfWork
     from infrastructure.execution.electric_field_probe_acquisition_executor import ElectricFieldProbeAcquisitionExecutor
     from infrastructure.execution.inertial_sensor_acquisition_executor import InertialSensorAcquisitionExecutor
+    from infrastructure.hardware.lsm9ds1.adapter_lidar_distance_port import LidarDistanceStreamAdapter
     from infrastructure.hardware.lsm9ds1.lsm9ds1_config_loader import load_lsm9ds1_config
     from infrastructure.mcp.observability_mcp_server import run_observability_mcp_server
     from infrastructure.events.event_ring_buffer import EventRingBuffer
@@ -198,6 +203,7 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
     from interface.presenters.aefi_continuous_reading_presenter import AefiContinuousReadingPresenter
     from interface.presenters.electric_field_probe_presenter import ElectricFieldProbePresenter
     from interface.presenters.inertial_sensor_presenter import InertialSensorPresenter
+    from interface.presenters.bar_transmission_calibration_presenter import BarTransmissionCalibrationPresenter
     from interface.presenters.scan_presenter import ScanPresenter
     from interface.presenters.hardware_advanced_config_presenter import HardwareAdvancedConfigPresenter
 
@@ -283,11 +289,22 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
     # Inertial Sensor Service (LSM9DS1 board). Connection and stream start are
     # operator actions; the only automatic action is the safety stream stop at
     # application exit — the board keeps its stream active with the port closed.
+    # Single owners of shared bench resources (ExclusiveControl, as everywhere):
+    # the board stream carrying the LIDAR (sensor panel vs. bar calibration) and
+    # the motors (scan vs. bar calibration).
+    lidar_stream_control = ExclusiveControl(
+        "flux LIDAR", lambda owner: logger.info("LIDAR stream controlled by %s", owner)
+    )
+    motion_control = ExclusiveControl(
+        "moteurs du banc", lambda owner: logger.info("Bench motors controlled by %s", owner)
+    )
+    inertial_sensor_executor = InertialSensorAcquisitionExecutor(event_bus)
     inertial_sensor_service = InertialSensorService(
-        executor=InertialSensorAcquisitionExecutor(event_bus),
+        executor=inertial_sensor_executor,
         stream_port=hw.inertial_sensor_port,
         event_bus=event_bus,
         channels=inertial_sensor_config.channels,
+        stream_control=lidar_stream_control,
     )
     app.aboutToQuit.connect(inertial_sensor_service.shutdown)
     logger.info("Services -> InertialSensorService created")
@@ -375,6 +392,21 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
         motion_conversion_handler.get_status().is_available,
     )
 
+    # Mechanical transmission measured with a bar seen by the LIDAR (Calibration
+    # panel, "Transmission (barre)" tab): drives the motors in raw increments,
+    # starts/stops the LIDAR stream itself, writes only on the operator's click.
+    bar_transmission_service = BarTransmissionCalibrationService(
+        motion=hw.raw_motion_port,
+        lidar=LidarDistanceStreamAdapter(hw.inertial_sensor_port, inertial_sensor_executor),
+        calibration_repository=transmission_repository,
+        hardware_component_repository=hardware_component_repository,
+        event_bus=event_bus,
+        task_runner=task_runner,
+        lidar_stream_control=lidar_stream_control,
+        motion_control=motion_control,
+    )
+    logger.info("Services -> BarTransmissionCalibrationService created")
+
     # Sensor Calibration Service (mounting angles P of the mounted sensor).
     # Each angle calibration references the sensor's current mounting and the
     # current source geometry entry. Also owns the active rotation applied to
@@ -419,6 +451,7 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
         auxiliary_probes=[narda_channel],
         excitation_service=excitation_service,
         conversion_status=motion_conversion_handler,
+        motion_control=motion_control,
     )
     logger.info("Services -> ScanApplicationService created (auxiliary_probes=1)")
 
@@ -598,6 +631,7 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
 
     # Inertial Sensor Presenter
     inertial_sensor_presenter = InertialSensorPresenter(inertial_sensor_service, event_bus)
+    bar_transmission_presenter = BarTransmissionCalibrationPresenter(bar_transmission_service, event_bus)
     
     
     
@@ -634,6 +668,7 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
         acquisition_throughput_presenter,
         adc_output_rate_presenter,
         operator_presenter,
+        bar_transmission_presenter=bar_transmission_presenter,
     )
 
     # 11. Startup Sequence (hardware init if real hardware) or Direct Launch (if mocks only)

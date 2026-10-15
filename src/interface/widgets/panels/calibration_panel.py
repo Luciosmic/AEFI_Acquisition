@@ -14,6 +14,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QTabWidget
 from interface.widgets.panels.sensor_calibration_panel import SensorCalibrationPanel
 from interface.widgets.panels.source_geometry_calibration_panel import SourceGeometryCalibrationPanel
 from interface.widgets.panels.hardware_component_panel import HardwareComponentPanel
+from interface.widgets.panels.bar_transmission_calibration_panel import BarTransmissionCalibrationPanel
 from interface.widgets.panels.acquisition_throughput_characterization_widget import (
     AcquisitionThroughputCharacterizationWidget,
 )
@@ -41,6 +42,8 @@ class CalibrationPanel(QWidget):
         self._tabs.setUsesScrollButtons(True)
         self._tabs.addTab(self.sensor_calibration_panel, "Calibration capteur")
         self._tabs.addTab(self.source_geometry_panel, "Géométrie source")
+        self.bar_transmission_panel = BarTransmissionCalibrationPanel()
+        self._tabs.addTab(self.bar_transmission_panel, "Transmission (barre)")
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)

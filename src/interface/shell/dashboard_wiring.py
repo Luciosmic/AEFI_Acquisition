@@ -12,9 +12,10 @@ Rationale:
 """
 
 import logging
-from typing import List
+from typing import List, Optional
 
 from interface.shell.dashboard import Dashboard
+from interface.presenters.bar_transmission_calibration_presenter import BarTransmissionCalibrationPresenter
 from interface.presenters.motion_presenter import MotionPresenter
 from interface.presenters.excitation_presenter import ExcitationPresenter
 from interface.presenters.synchronous_detection_presenter import SynchronousDetectionPresenter
@@ -53,6 +54,7 @@ def wire_dashboard(
     acquisition_throughput_presenter: AcquisitionThroughputCharacterizationPresenter,
     adc_output_rate_presenter: AdcOutputRateCharacterizationPresenter,
     operator_presenter: OperatorPresenter,
+    bar_transmission_presenter: Optional[BarTransmissionCalibrationPresenter] = None,
 ) -> None:
     """Connect every dashboard panel to its presenter. Called once from
     main.py right after the dashboard and presenters are constructed."""
@@ -273,6 +275,19 @@ def wire_dashboard(
     if adc_panel is not None:
         adc_output_rate_presenter.component_values_measured.connect(adc_panel.prefill_values)
     adc_output_rate_presenter.refresh_state()
+
+    # Mechanical transmission measured with a bar and the LIDAR
+    if bar_transmission_presenter is not None:
+        bar_panel = calibration_panel.bar_transmission_panel
+        bar_panel.measure_requested.connect(bar_transmission_presenter.on_measure_requested)
+        bar_panel.cancel_requested.connect(bar_transmission_presenter.on_cancel_requested)
+        bar_panel.record_requested.connect(bar_transmission_presenter.on_record_requested)
+        bar_transmission_presenter.increments_updated.connect(bar_panel.on_increments_updated)
+        bar_transmission_presenter.running_changed.connect(bar_panel.set_running)
+        bar_transmission_presenter.progress_message.connect(bar_panel.append_progress)
+        bar_transmission_presenter.axis_result_updated.connect(bar_panel.on_axis_result)
+        bar_transmission_presenter.mean_updated.connect(bar_panel.on_mean)
+        bar_transmission_presenter.status_message.connect(bar_panel.set_status_message)
     logger.debug("Calibration panel wired")
 
     # Scan Panels Wiring
