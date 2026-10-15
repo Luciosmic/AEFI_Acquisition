@@ -51,7 +51,7 @@ class LidarDistanceReading:
 class EdgeBracketDTO:
     on_bar_increment: int
     off_bar_increment: int
-    stopped_undecidable: bool
+    limited_by_lidar_noise: bool  # an undecidable zone bounded the refinement, not the motor
     center_increment: float
     half_width_increments: float
 

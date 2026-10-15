@@ -476,7 +476,7 @@ class BarTransmissionCalibrationService(IApiBarTransmissionCalibrationService):
                 axis,
                 f"{name} : {classification.value} à {probe} → [{bracket.on_bar_increment}, {bracket.off_bar_increment}]",
             )
-        reason = "point indécidable (bruit LIDAR)" if bracket.stopped_undecidable else "1 incrément (moteur)"
+        reason = "zone indécidable (bruit LIDAR)" if bracket.limited_by_lidar_noise else "1 incrément (moteur)"
         logger.info(
             "BarTransmissionCalibrationService: measurement %s axis=%s %s resolved [%d, %d] n=%.1f δ=%.1f — %s",
             measurement_id, axis, name, bracket.on_bar_increment, bracket.off_bar_increment,
@@ -621,7 +621,7 @@ class BarTransmissionCalibrationService(IApiBarTransmissionCalibrationService):
     @staticmethod
     def _to_measurement(dto: AxisBarTransmissionDTO) -> AxisBarTransmissionMeasurement:
         def bracket(b: EdgeBracketDTO) -> EdgeBracket:
-            return EdgeBracket(b.on_bar_increment, b.off_bar_increment, b.stopped_undecidable)
+            return EdgeBracket(b.on_bar_increment, b.off_bar_increment)
 
         return AxisBarTransmissionMeasurement(
             axis=dto.axis,
@@ -639,7 +639,7 @@ class BarTransmissionCalibrationService(IApiBarTransmissionCalibrationService):
             return EdgeBracketDTO(
                 on_bar_increment=b.on_bar_increment,
                 off_bar_increment=b.off_bar_increment,
-                stopped_undecidable=b.stopped_undecidable,
+                limited_by_lidar_noise=b.limited_by_lidar_noise,
                 center_increment=b.center_increment,
                 half_width_increments=b.half_width_increments,
             )

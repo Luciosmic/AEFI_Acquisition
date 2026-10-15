@@ -53,14 +53,31 @@ class EdgeBracketTest(unittest.TestCase):
         self.assertEqual(bracket.narrowed(50, ON), EdgeBracket(50, 0))
         self.assertEqual(bracket.narrowed(50, OFF), EdgeBracket(100, 50))
 
-    def test_undecidable_probe_stops_without_narrowing(self):
+    def test_undecidable_probe_becomes_the_noise_zone_and_refinement_goes_on(self):
         bracket = EdgeBracket(100, 0).narrowed(50, UNDECIDABLE)
-        self.assertTrue(bracket.is_resolved)
-        self.assertIsNone(bracket.next_probe())
-        self.assertEqual((bracket.on_bar_increment, bracket.off_bar_increment), (100, 0))
-        self.assertEqual(bracket.center_increment, 50.0)
-        self.assertEqual(bracket.half_width_increments, 50.0)
+        self.assertTrue(bracket.limited_by_lidar_noise)
+        self.assertFalse(bracket.is_resolved)
+        self.assertEqual(bracket.next_probe(), 75)  # bar side first: between a=100 and the zone
+        bracket = bracket.narrowed(75, ON)
+        self.assertEqual(bracket.next_probe(), 62)
+        bracket = bracket.narrowed(62, UNDECIDABLE)  # zone grows toward the bar side
+        self.assertEqual(bracket.undecidable_near_on, 62)
 
+    def test_each_side_stops_one_increment_from_the_zone(self):
+        bracket = EdgeBracket(on_bar_increment=60, off_bar_increment=40, undecidable_near_on=59,
+                              undecidable_near_off=45)
+        self.assertEqual(bracket.next_probe(), 42)  # bar side done, floor side goes on
+        bracket = bracket.narrowed(42, OFF).narrowed(43, OFF)
+        self.assertEqual(bracket.next_probe(), 44)
+        bracket = bracket.narrowed(44, OFF)
+        self.assertTrue(bracket.is_resolved)
+        self.assertEqual((bracket.on_bar_increment, bracket.off_bar_increment), (60, 44))
+
+    def test_noise_beyond_the_zone_recenters_the_bracket(self):
+        bracket = EdgeBracket(100, 0, undecidable_near_on=50, undecidable_near_off=50)
+        recentred = bracket.narrowed(25, ON)  # on the bar, but past the zone
+        self.assertEqual(recentred, EdgeBracket(25, 0))
+        self.assertFalse(recentred.limited_by_lidar_noise)
     def test_one_increment_wide_is_the_motor_resolution(self):
         bracket = EdgeBracket(11, 10)
         self.assertTrue(bracket.is_resolved)
@@ -84,13 +101,28 @@ class EdgeBracketTest(unittest.TestCase):
             self.assertLessEqual(abs(final.center_increment - edge), final.half_width_increments + 1.0)
             self.assertLess(final.half_width_increments, 20.0)
 
-    def test_noisier_lidar_stops_earlier_with_a_wider_bracket(self):
+    def test_noisier_lidar_is_limited_by_noise_with_a_wider_bracket(self):
         # edge off the first midpoint (1000), where the spot is exactly half on the bar
         quiet, _ = _refine(EdgeBracket(1300, 700), random.Random(2), edge=1093.3, noise_mm=0.5, spot_width=0.2)
         noisy, _ = _refine(EdgeBracket(1300, 700), random.Random(2), edge=1093.3, noise_mm=300.0, k=4)
         self.assertLessEqual(quiet.width_increments, 2)
-        self.assertTrue(noisy.stopped_undecidable)
+        self.assertTrue(noisy.limited_by_lidar_noise)
         self.assertGreater(noisy.width_increments, quiet.width_increments)
+        self.assertLess(noisy.width_increments, 600)
+
+    def test_first_probe_in_the_noise_zone_gives_half_the_zone_not_the_margin(self):
+        """Edge exactly at the coarse front: the first probe is undecidable. The
+        noise zone (|d̄ − s| < k_σ·σ/√k) is ±~5 increments wide here."""
+        rng = random.Random(4)
+        edge, margin = 5_000.0, 400
+        final, probes = _refine(
+            EdgeBracket.around(edge, on_bar_direction=+1, margin_increments=margin), rng, edge,
+            k=10, k_sigma=3.0, spot_width=20.0, noise_mm=150.0,
+        )
+        self.assertTrue(final.limited_by_lidar_noise)
+        self.assertLess(final.half_width_increments, 30)  # not ~400
+        self.assertLessEqual(abs(final.center_increment - edge), final.half_width_increments + 1)
+        self.assertLessEqual(probes, 25)
 
 
 if __name__ == "__main__":
