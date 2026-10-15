@@ -1,0 +1,130 @@
+{
+  "name": "AEFI dev bridge (mocks only)",
+  "nodes": [
+    {
+      "id": "trigger",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [-300, 340],
+      "parameters": {}
+    },
+    {
+      "id": "band_domain",
+      "name": "layer: domain",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-560, -20],
+      "parameters": {"content": "## domain\n(pure logic, no port)", "height": 220, "width": 1150, "color": 4}
+    },
+    {
+      "id": "band_application",
+      "name": "layer: application (driver)",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-560, 280],
+      "parameters": {"content": "## application\n(n8n = dev-time driver — the loop IS the use-case orchestration, like _execute_scan_loop)", "height": 140, "width": 1720, "color": 3}
+    },
+    {
+      "id": "band_infra",
+      "name": "layer: infrastructure",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-560, 580],
+      "parameters": {"content": "## infrastructure\n(mock ports only — never real hardware)", "height": 420, "width": 2050, "color": 5}
+    },
+    {
+      "id": "traj_http",
+      "name": "Trajectory: HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [40, 40],
+      "parameters": {
+        "method": "GET",
+        "url": "http://127.0.0.1:8765/trajectory.create?x_nb_points=3&y_nb_points=3&pattern=RASTER"
+      }
+    },
+    {
+      "id": "split_out",
+      "name": "Split Out Points",
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 3.1,
+      "position": [340, 40],
+      "parameters": {
+        "resource": "itemList",
+        "operation": "splitOutItems",
+        "fieldToSplitOut": "points",
+        "include": "noOtherFields",
+        "options": {}
+      }
+    },
+    {
+      "id": "loop_items",
+      "name": "Loop Over Items",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [640, 340],
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      }
+    },
+    {
+      "id": "scan_complete",
+      "name": "Scan Complete",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [940, 340],
+      "notes": "All trajectory points processed",
+      "notesInFlow": true,
+      "parameters": {}
+    },
+    {
+      "id": "motion_http",
+      "name": "Motion: HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [940, 640],
+      "parameters": {
+        "method": "GET",
+        "url": "=http://127.0.0.1:8765/motion.move_to?x={{ $json.x }}&y={{ $json.y }}"
+      }
+    },
+    {
+      "id": "acq_http",
+      "name": "Acquisition: HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1240, 640],
+      "parameters": {
+        "method": "GET",
+        "url": "http://127.0.0.1:8765/acquisition.sample?count=1"
+      }
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [[{"node": "Trajectory: HTTP Request", "type": "main", "index": 0}]]
+    },
+    "Trajectory: HTTP Request": {
+      "main": [[{"node": "Split Out Points", "type": "main", "index": 0}]]
+    },
+    "Split Out Points": {
+      "main": [[{"node": "Loop Over Items", "type": "main", "index": 0}]]
+    },
+    "Loop Over Items": {
+      "main": [
+        [{"node": "Scan Complete", "type": "main", "index": 0}],
+        [{"node": "Motion: HTTP Request", "type": "main", "index": 0}]
+      ]
+    },
+    "Motion: HTTP Request": {
+      "main": [[{"node": "Acquisition: HTTP Request", "type": "main", "index": 0}]]
+    },
+    "Acquisition: HTTP Request": {
+      "main": [[{"node": "Loop Over Items", "type": "main", "index": 0}]]
+    }
+  },
+  "active": false,
+  "settings": {}
+}

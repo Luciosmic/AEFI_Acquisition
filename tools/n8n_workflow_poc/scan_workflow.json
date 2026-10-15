@@ -1,0 +1,659 @@
+{
+  "name": "test_full_scan_execution",
+  "nodes": [
+    {
+      "id": "n0",
+      "name": "0. Test CREATE ScanApplicationService",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        0,
+        340
+      ],
+      "notes": "Setup service and ports",
+      "notesInFlow": true,
+      "parameters": {}
+    },
+    {
+      "id": "n1",
+      "name": "1. Test SUBSCRIBE EventBus",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        260,
+        640
+      ],
+      "notes": "Subscribe to scan events",
+      "notesInFlow": true,
+      "parameters": {}
+    },
+    {
+      "id": "n2",
+      "name": "2. Test START ScanApplicationService",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        520,
+        340
+      ],
+      "notes": "Start full scan execution test",
+      "notesInFlow": true,
+      "parameters": {}
+    },
+    {
+      "id": "n3",
+      "name": "3. Test CREATE Scan2DConfigDTO",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        780,
+        340
+      ],
+      "notes": "Create scan config",
+      "notesInFlow": true,
+      "parameters": {}
+    },
+    {
+      "id": "n4",
+      "name": "4. Test COMMAND ScanApplicationService",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        340
+      ],
+      "notes": "Execute scan",
+      "notesInFlow": true,
+      "parameters": {}
+    },
+    {
+      "id": "n5",
+      "name": "5. EventBus RECEIVE Test",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1300,
+        40
+      ],
+      "notes": "Received ScanStarted",
+      "notesInFlow": true,
+      "parameters": {}
+    },
+    {
+      "id": "n6",
+      "name": "6. Test ASSERT ScanApplicationService",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1560,
+        340
+      ],
+      "notes": "Verify execution success",
+      "notesInFlow": true,
+      "parameters": {}
+    },
+    {
+      "id": "n7",
+      "name": "7. EventBus RECEIVE Test",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1820,
+        40
+      ],
+      "notes": "Received ScanPointAcquired",
+      "notesInFlow": true,
+      "parameters": {}
+    },
+    {
+      "id": "n8",
+      "name": "8. EventBus RECEIVE Test",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2080,
+        40
+      ],
+      "notes": "Received ScanPointAcquired",
+      "notesInFlow": true,
+      "parameters": {}
+    },
+    {
+      "id": "n9",
+      "name": "9. EventBus RECEIVE Test",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2340,
+        40
+      ],
+      "notes": "Received ScanPointAcquired",
+      "notesInFlow": true,
+      "parameters": {}
+    },
+    {
+      "id": "n10",
+      "name": "10. EventBus RECEIVE Test",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2600,
+        40
+      ],
+      "notes": "Received ScanPointAcquired",
+      "notesInFlow": true,
+      "parameters": {}
+    },
+    {
+      "id": "n11",
+      "name": "11. EventBus RECEIVE Test",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2860,
+        40
+      ],
+      "notes": "Received ScanCompleted",
+      "notesInFlow": true,
+      "parameters": {}
+    },
+    {
+      "id": "n12",
+      "name": "12. Test ASSERT EventBus",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        3120,
+        640
+      ],
+      "notes": "Verify ScanStarted event",
+      "notesInFlow": true,
+      "parameters": {}
+    },
+    {
+      "id": "n13",
+      "name": "13. Test ASSERT EventBus",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        3380,
+        640
+      ],
+      "notes": "Verify ScanCompleted event",
+      "notesInFlow": true,
+      "parameters": {}
+    },
+    {
+      "id": "n14",
+      "name": "14. Test ASSERT EventBus",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        3640,
+        640
+      ],
+      "notes": "Verify points acquired",
+      "notesInFlow": true,
+      "parameters": {}
+    },
+    {
+      "id": "n15",
+      "name": "15. Test ASSERT MotionPort",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        3900,
+        640
+      ],
+      "notes": "Verify move history",
+      "notesInFlow": true,
+      "parameters": {}
+    },
+    {
+      "id": "band_domain",
+      "name": "layer: domain",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -220,
+        -20
+      ],
+      "parameters": {
+        "content": "## domain",
+        "height": 220,
+        "width": 4360,
+        "color": 4
+      }
+    },
+    {
+      "id": "band_application",
+      "name": "layer: application",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -220,
+        280
+      ],
+      "parameters": {
+        "content": "## application",
+        "height": 220,
+        "width": 4620,
+        "color": 4
+      }
+    },
+    {
+      "id": "band_infrastructure",
+      "name": "layer: infrastructure",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -220,
+        580
+      ],
+      "parameters": {
+        "content": "## infrastructure",
+        "height": 220,
+        "width": 4880,
+        "color": 4
+      }
+    }
+  ],
+  "connections": {
+    "0. Test CREATE ScanApplicationService": {
+      "main": [
+        [
+          {
+            "node": "1. Test SUBSCRIBE EventBus",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "1. Test SUBSCRIBE EventBus": {
+      "main": [
+        [
+          {
+            "node": "2. Test START ScanApplicationService",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2. Test START ScanApplicationService": {
+      "main": [
+        [
+          {
+            "node": "3. Test CREATE Scan2DConfigDTO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3. Test CREATE Scan2DConfigDTO": {
+      "main": [
+        [
+          {
+            "node": "4. Test COMMAND ScanApplicationService",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4. Test COMMAND ScanApplicationService": {
+      "main": [
+        [
+          {
+            "node": "5. EventBus RECEIVE Test",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5. EventBus RECEIVE Test": {
+      "main": [
+        [
+          {
+            "node": "6. Test ASSERT ScanApplicationService",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "6. Test ASSERT ScanApplicationService": {
+      "main": [
+        [
+          {
+            "node": "7. EventBus RECEIVE Test",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "7. EventBus RECEIVE Test": {
+      "main": [
+        [
+          {
+            "node": "8. EventBus RECEIVE Test",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8. EventBus RECEIVE Test": {
+      "main": [
+        [
+          {
+            "node": "9. EventBus RECEIVE Test",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "9. EventBus RECEIVE Test": {
+      "main": [
+        [
+          {
+            "node": "10. EventBus RECEIVE Test",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10. EventBus RECEIVE Test": {
+      "main": [
+        [
+          {
+            "node": "11. EventBus RECEIVE Test",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "11. EventBus RECEIVE Test": {
+      "main": [
+        [
+          {
+            "node": "12. Test ASSERT EventBus",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "12. Test ASSERT EventBus": {
+      "main": [
+        [
+          {
+            "node": "13. Test ASSERT EventBus",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "13. Test ASSERT EventBus": {
+      "main": [
+        [
+          {
+            "node": "14. Test ASSERT EventBus",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "14. Test ASSERT EventBus": {
+      "main": [
+        [
+          {
+            "node": "15. Test ASSERT MotionPort",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {
+    "0. Test CREATE ScanApplicationService": [
+      {
+        "json": {
+          "actor": "Test",
+          "action": "CREATE",
+          "target": "ScanApplicationService",
+          "message": "Setup service and ports"
+        }
+      }
+    ],
+    "1. Test SUBSCRIBE EventBus": [
+      {
+        "json": {
+          "actor": "Test",
+          "action": "SUBSCRIBE",
+          "target": "EventBus",
+          "message": "Subscribe to scan events"
+        }
+      }
+    ],
+    "2. Test START ScanApplicationService": [
+      {
+        "json": {
+          "actor": "Test",
+          "action": "START",
+          "target": "ScanApplicationService",
+          "message": "Start full scan execution test"
+        }
+      }
+    ],
+    "3. Test CREATE Scan2DConfigDTO": [
+      {
+        "json": {
+          "actor": "Test",
+          "action": "CREATE",
+          "target": "Scan2DConfigDTO",
+          "message": "Create scan config",
+          "data": {
+            "pattern": "RASTER"
+          }
+        }
+      }
+    ],
+    "4. Test COMMAND ScanApplicationService": [
+      {
+        "json": {
+          "actor": "Test",
+          "action": "COMMAND",
+          "target": "ScanApplicationService",
+          "message": "Execute scan"
+        }
+      }
+    ],
+    "5. EventBus RECEIVE Test": [
+      {
+        "json": {
+          "actor": "EventBus",
+          "action": "RECEIVE",
+          "target": "Test",
+          "message": "Received ScanStarted",
+          "data": {
+            "event": "ScanStarted",
+            "scan_id": "a86623f7-a01c-4132-9490-08564b0b2591",
+            "pattern": "RASTER"
+          }
+        }
+      }
+    ],
+    "6. Test ASSERT ScanApplicationService": [
+      {
+        "json": {
+          "actor": "Test",
+          "action": "ASSERT",
+          "target": "ScanApplicationService",
+          "message": "Verify execution success",
+          "expect": "True",
+          "got": "True"
+        }
+      }
+    ],
+    "7. EventBus RECEIVE Test": [
+      {
+        "json": {
+          "actor": "EventBus",
+          "action": "RECEIVE",
+          "target": "Test",
+          "message": "Received ScanPointAcquired",
+          "data": {
+            "event": "ScanPointAcquired",
+            "point_index": 0,
+            "position": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "measurement": {
+              "x_in_phase": 0.1,
+              "x_quad": 0.0
+            }
+          }
+        }
+      }
+    ],
+    "8. EventBus RECEIVE Test": [
+      {
+        "json": {
+          "actor": "EventBus",
+          "action": "RECEIVE",
+          "target": "Test",
+          "message": "Received ScanPointAcquired",
+          "data": {
+            "event": "ScanPointAcquired",
+            "point_index": 1,
+            "position": {
+              "x": 0.0,
+              "y": 1.0
+            },
+            "measurement": {
+              "x_in_phase": 0.2,
+              "x_quad": 0.0
+            }
+          }
+        }
+      }
+    ],
+    "9. EventBus RECEIVE Test": [
+      {
+        "json": {
+          "actor": "EventBus",
+          "action": "RECEIVE",
+          "target": "Test",
+          "message": "Received ScanPointAcquired",
+          "data": {
+            "event": "ScanPointAcquired",
+            "point_index": 2,
+            "position": {
+              "x": 1.0,
+              "y": 0.0
+            },
+            "measurement": {
+              "x_in_phase": 0.30000000000000004,
+              "x_quad": 0.0
+            }
+          }
+        }
+      }
+    ],
+    "10. EventBus RECEIVE Test": [
+      {
+        "json": {
+          "actor": "EventBus",
+          "action": "RECEIVE",
+          "target": "Test",
+          "message": "Received ScanPointAcquired",
+          "data": {
+            "event": "ScanPointAcquired",
+            "point_index": 3,
+            "position": {
+              "x": 1.0,
+              "y": 1.0
+            },
+            "measurement": {
+              "x_in_phase": 0.4,
+              "x_quad": 0.0
+            }
+          }
+        }
+      }
+    ],
+    "11. EventBus RECEIVE Test": [
+      {
+        "json": {
+          "actor": "EventBus",
+          "action": "RECEIVE",
+          "target": "Test",
+          "message": "Received ScanCompleted",
+          "data": {
+            "event": "ScanCompleted",
+            "scan_id": "a86623f7-a01c-4132-9490-08564b0b2591",
+            "total_points": 4
+          }
+        }
+      }
+    ],
+    "12. Test ASSERT EventBus": [
+      {
+        "json": {
+          "actor": "Test",
+          "action": "ASSERT",
+          "target": "EventBus",
+          "message": "Verify ScanStarted event"
+        }
+      }
+    ],
+    "13. Test ASSERT EventBus": [
+      {
+        "json": {
+          "actor": "Test",
+          "action": "ASSERT",
+          "target": "EventBus",
+          "message": "Verify ScanCompleted event"
+        }
+      }
+    ],
+    "14. Test ASSERT EventBus": [
+      {
+        "json": {
+          "actor": "Test",
+          "action": "ASSERT",
+          "target": "EventBus",
+          "message": "Verify points acquired",
+          "expect": "4",
+          "got": "4"
+        }
+      }
+    ],
+    "15. Test ASSERT MotionPort": [
+      {
+        "json": {
+          "actor": "Test",
+          "action": "ASSERT",
+          "target": "MotionPort",
+          "message": "Verify move history",
+          "expect": "4",
+          "got": "4"
+        }
+      }
+    ]
+  },
+  "active": false,
+  "settings": {}
+}
