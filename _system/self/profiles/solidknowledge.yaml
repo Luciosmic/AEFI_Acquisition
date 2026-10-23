@@ -1,0 +1,18 @@
+# Profil de l'humain dans un dossier de travail de la thèse, lancé par le wrapper VSCode
+# (claude-wrappers/au-vscode/launch.sh). Aucun inject propre : tous sont partagés par lien qualifié,
+# sans copie, depuis GRAPHE-THESE et les packages (modèle : PUBLICATIONS/IEEE-SENSORS-JOURNAL).
+type: agent-profile::au-mcp-sdk
+inject:
+  # Arscontexta
+  - "[[co-inhabitant::GRAPHE-THESE]]"
+  - "[[core-profile::au-writing-style]]"
+  - "[[core-profile::au-rules]]"
+  - "[[capture-correction::au-govern]]"
+  # Contributions de l'humain
+  - "[[orient-work::GRAPHE-THESE]]"
+  - "[[espace-de-travail-agents::sk-agent-os]]"
+# Refuse la première mutation d'une session non inscrite au registre des travaux (chemin relatif à
+# la racine du workspace servi).
+hookConfig:
+  - type: mcp.hook.registre-obligatoire::sk-agent-os
+    registre: ../../PILOTAGE/_system/ops/registre-des-travaux.md

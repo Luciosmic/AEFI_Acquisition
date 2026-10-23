@@ -1,0 +1,10 @@
+# Hors graphe : environnements, caches, données et résultats (liste validée dans
+# dossiers-a-passer-en-repo-ars-umbris.md). Les .md restants deviennent des notes.
+.venv/
+venv/
+__pycache__/
+.pytest_cache/
+.ipynb_checkpoints/
+.claude/
+.packmind/
+archives/
