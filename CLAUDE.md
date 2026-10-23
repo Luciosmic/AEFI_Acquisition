@@ -2,7 +2,7 @@
 
 ## Projet
 
-Système d'acquisition pour l'AEFI (Électromagnétisme par Fluorescence d'Impédance). Pilote un banc de scan 2D avec excitation DDS (AD9106), ADC (ADS131A04), capteur électromagnétique, et post-traitement synchrone. Produit des cartographies 2D de mesures pour un problème direct 4 sphères.
+Système d'acquisition pour l'AEFI (Active Electric Field Imaging). Pilote un banc de scan 2D avec excitation DDS (AD9106), ADC (ADS131A04), capteur électromagnétique, et post-traitement synchrone. Produit des cartographies 2D de mesures pour un problème direct 4 sphères.
 
 ## Stack
 
