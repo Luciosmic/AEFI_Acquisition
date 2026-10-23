@@ -1,3 +1,7 @@
+---
+vault_ref: "0_inbox/events/EVENT - 2026-10-23_convention-de-rotation-du-capteur.md"
+---
+
 # rotation_convention — Intention
 
 **This file is the reference definition of the sensor rotation convention.**
