@@ -1,5 +1,5 @@
 ---
-vault_ref: "0_inbox/events/EVENT - 2026-10-23_convention-de-rotation-du-capteur.md"
+vault_ref: "0_inbox/old-notes-atomiques-ecrites-a-la-main/Opération de rotation du repère de la sonde.md"
 ---
 
 # rotation_convention — Intention
