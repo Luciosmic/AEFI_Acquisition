@@ -10,9 +10,9 @@ inject:
   - "[[capture-correction::au-govern]]"
   # Contributions de l'humain
   - "[[orient-work::GRAPHE-THESE]]"
-  - "[[espace-de-travail-agents::sk-agent-os]]"
+  - "[[espace-de-travail-agents::sh-agent-os]]"
 # Refuse la première mutation d'une session non inscrite au registre des travaux (chemin relatif à
 # la racine du workspace servi).
 hookConfig:
-  - type: mcp.hook.registre-obligatoire::sk-agent-os
+  - type: mcp.hook.registre-obligatoire::sh-agent-os
     registre: ../../PILOTAGE/_system/ops/registre-des-travaux.md

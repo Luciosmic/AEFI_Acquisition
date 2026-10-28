@@ -32,4 +32,4 @@ deps:
   - name: terminal
   - name: au-mcp-adapter-cc
   - name: GRAPHE-THESE
-  - name: sk-agent-os
+  - name: sh-agent-os
