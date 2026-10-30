@@ -51,16 +51,12 @@ Lire `_system/` avant toute décision architecturale :
 
 | Branche                     | Rôle                                                            |
 | --------------------------- | ---------------------------------------------------------------- |
-| `main`                    | Stable = release/v1.0.1                                          |
+| `main`                    | Stable. Une release = un tag sur `main` (`v1.0.2` actuellement), pas une branche `release/*` |
 | `develop`                 | Intégration — base pour les nouvelles features                 |
-| `feature/*`               | Feature branch depuis develop                                    |
-| `release/v1.0.1`          | Pas de worktree dédié actuellement — le worktree `AEFI_Acquisition/` tourne en réalité sur `main`  |
-| `release/v1.0.0`          | Archive historique                                               |
-| `archive/ddd-refactoring` | Refactoring DDD gelé — documentation uniquement, ne pas merger |
-| `dev_hardware`            | Worktree `AEFI_Acquisition_dev_hardware/` — développement borné au périmètre hardware |
-| `feature/n8n-ddd-workflow-viz` | Worktree `AEFI_Acquisition_n8n-poc/` — POC visualisation workflow DDD via n8n |
-| `dev_scan`                | Worktree `AEFI_Acquisition_dev_scan/` — déjà mergé dans `develop` (442f812) ; worktree probablement à nettoyer, vérifier sa pertinence |
-| `backup-before-rollback-2026-07-10` | Branche de sauvegarde pré-rollback — pas de worktree actif |
+| `feature/*`               | Feature branch depuis develop, supprimée une fois fusionnée     |
+| `dev_<contexte>`          | Worktree `AEFI_Acquisition_dev_<contexte>/` — développement borné à un contexte cohésif (ex. `dev_detection_devices`) |
+
+Les anciennes branches (releases, refactoring DDD, sauvegarde pré-rollback, POC n8n) ont été supprimées le 2026-10-30. Leur contenu utile est conservé par les tags `v1.0.0`, `v1.0.1`, `v1.0.2` et `archive/*`.
 
 ## Contexte borné du worktree
 
