@@ -15,4 +15,4 @@ Renomme et remplace l'ancien `ContinuousAcquisitionFailed`, qui était une class
 
 - `@dataclass(frozen=True)` héritant de `DomainEvent`.
 - Nommé "Reading" et non "Acquisition" : rien n'est persisté par ce flux, c'est une lecture en direct.
-- Placé dans `domain/electric_field_probe/events/` : événement propre à l'agrégat `ElectricFieldProbe`, plus de classe générique partagée avec le flux AEFI/MCU.
+- Placé dans `domain/detection_devices/electric_field_probes/events/` : événement propre à l'agrégat `ElectricFieldProbe`, plus de classe générique partagée avec le flux AEFI/MCU.

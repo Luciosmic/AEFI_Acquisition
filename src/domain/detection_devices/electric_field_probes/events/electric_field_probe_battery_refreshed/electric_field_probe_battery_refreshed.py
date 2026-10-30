@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from domain.shared_kernel.events.domain_event import DomainEvent
-from domain.electric_field_probe.electric_field_probe import ElectricFieldProbe
+from domain.detection_devices.electric_field_probes.electric_field_probe import ElectricFieldProbe
 
 
 @dataclass(frozen=True)

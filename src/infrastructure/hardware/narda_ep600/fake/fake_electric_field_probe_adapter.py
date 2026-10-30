@@ -16,7 +16,7 @@ from application.services.electric_field_probe_service.ports.i_electric_field_pr
 from application.services.electric_field_probe_service.dtos.electric_field_probe_dtos import (
     FrequencyCorrectionResult,
 )
-from domain.electric_field_probe.electric_field_probe import ElectricFieldProbe
+from domain.detection_devices.electric_field_probes.electric_field_probe import ElectricFieldProbe
 from infrastructure.hardware.narda_ep600.driver_narda_ep601 import (
     RF_SENSING_RANGE_HZ,
     estimate_battery_percentage,
