@@ -55,6 +55,7 @@ Lire `_system/` avant toute décision architecturale :
 | `develop`                 | Intégration — base pour les nouvelles features                 |
 | `feature/*`               | Feature branch depuis develop, supprimée une fois fusionnée     |
 | `dev_<contexte>`          | Worktree `AEFI_Acquisition_dev_<contexte>/` — développement borné à un contexte cohésif (ex. `dev_detection_devices`) |
+| `archive/bar-lidar-calibration` | Calibration de la transmission par barre + LIDAR, abandonnée le 2026-10-30 au profit de la caractérisation autonome Banc-test-II dans `Hardware - Caracterisation` ; corrections générales récupérées dans develop via `feature/lidar-esp32-and-fixes` |
 
 Les anciennes branches (releases, refactoring DDD, sauvegarde pré-rollback, POC n8n) ont été supprimées le 2026-10-30. Leur contenu utile est conservé par les tags `v1.0.0`, `v1.0.1`, `v1.0.2` et `archive/*`.
 
