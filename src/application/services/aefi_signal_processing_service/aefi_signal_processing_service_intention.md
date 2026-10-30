@@ -2,7 +2,7 @@
 
 ## Rationale
 
-Avant ce service, la correction de signal (bruit/phase/primaire) était exécutée directement par `interface/presenters/aefi_continuous_reading_presenter.py` via `SignalPostProcessor`, sans invariant : une correction activée sans calibration retournait silencieusement un offset nul. L'agrégat `AefiCorrectedSample` (`domain/signal_processing/`) porte maintenant cet invariant et rejette la correction incomplète — mais un agrégat domain ne s'abonne pas lui-même à un event bus et ne republie pas d'events : il faut une couche applicative qui réagit à chaque échantillon brut, invoque l'agrégat, et republie ce qu'il produit, sans dupliquer son invariant ni le contourner.
+Avant ce service, la correction de signal (bruit/phase/primaire) était exécutée directement par `interface/presenters/aefi_continuous_reading_presenter.py` via `SignalPostProcessor`, sans invariant : une correction activée sans calibration retournait silencieusement un offset nul. L'agrégat `AefiCorrectedSample` (`domain/detection_devices/aefi_device/signal_processing/`) porte maintenant cet invariant et rejette la correction incomplète — mais un agrégat domain ne s'abonne pas lui-même à un event bus et ne republie pas d'events : il faut une couche applicative qui réagit à chaque échantillon brut, invoque l'agrégat, et republie ce qu'il produit, sans dupliquer son invariant ni le contourner.
 
 ## Responsibility
 

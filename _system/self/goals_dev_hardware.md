@@ -33,7 +33,7 @@ Nuance à afficher dans l'UI : le protocole ne renvoie **aucun facteur de gain n
 ### Fichiers
 
 #### Domain (nouveaux)
-- `domain/shared_kernel/events/excitation_frequency_changed/excitation_frequency_changed.py` — `ExcitationFrequencyChanged(DomainEvent)`, champ `frequency_hz: float`. + `_intention.md`.
+- `domain/shared_kernel/excitation/events/excitation_frequency_changed/excitation_frequency_changed.py` — `ExcitationFrequencyChanged(DomainEvent)`, champ `frequency_hz: float`. + `_intention.md`.
 - `domain/detection_devices/electric_field_probes/events/electric_field_probe_frequency_correction_changed/electric_field_probe_frequency_correction_changed.py` — `ElectricFieldProbeFrequencyCorrectionChanged(DomainEvent)`, champs `requested_hz: float`, `applied_hz: Optional[float]`, `in_range: bool`, `error: Optional[str] = None`. + `_intention.md`. (Nommé "Changed" et non "Applied" : couvre aussi les cas hors-plage/erreur.)
 
 #### Application (modifiés)
