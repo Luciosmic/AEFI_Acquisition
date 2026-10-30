@@ -38,9 +38,7 @@ current — positions converted with one factor, recorded with another.
   3.5 A, Igus motor rated 4.2 A), a fact to keep visible, not a blocker.
 - Topic: `mechanicaltransmissioncalibrationentryadded`.
 - Applying the factor to the motion controller is done by
-  `MotionConversionHandler`: at startup, and live only while no factor has
-  been applied yet (uncalibrated -> calibrated: nothing could have moved). A
-  factor already applied is never changed in a session: a different
-  transmission is taken at the next startup.
+  `MotionConversionHandler`: at startup, and live on every new entry (a recalibration needs no
+  restart). An entry arriving during a scan is logged and not applied.
 
 - `get_current_gap()`: when `get_current_calibration()` is `None`, says what is missing (motor, quantity such as « Pas par tour », where to enter it) so the dashboard can tell the operator instead of closing the application.

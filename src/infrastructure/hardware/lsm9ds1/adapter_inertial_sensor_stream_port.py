@@ -20,12 +20,13 @@ from application.services.inertial_sensor_service.dtos.inertial_sensor_dtos impo
 from application.services.inertial_sensor_service.ports.i_inertial_sensor_stream_port import (
     IInertialSensorStreamPort,
 )
+from domain.shared_kernel.value_objects.lidar_distance.lidar_distance import LidarDistance
 from infrastructure.hardware.lsm9ds1.driver_lsm9ds1_stream import LSM9DS1StreamDriver
 from infrastructure.hardware.lsm9ds1.lsm9ds1_conversion import (
     ACCELEROMETER_FULL_SCALE_G,
     GYROSCOPE_FULL_SCALE_DPS,
+    LIDAR_MM_PER_LSB,
     MAGNETOMETER_FULL_SCALE_UT,
-    lidar_raw_to_mm,
     raw_to_physical,
 )
 from infrastructure.hardware.lsm9ds1.lsm9ds1_stream_protocol import (
@@ -38,8 +39,7 @@ from infrastructure.hardware.lsm9ds1.lsm9ds1_stream_protocol import (
 logger = logging.getLogger(__name__)
 
 
-# ponytail: the lidar passes through as a channel of the same stream (lidar_raw,
-# lidar_distance_mm). Ceiling: one stream carries inertial sensors and a distance.
+# ponytail: the lidar passes through as a channel of the same stream (lidar_distance). Ceiling: one stream carries inertial sensors and a distance.
 # Upgrade: a separate lidar port; the shared board/serial link stays an
 # infrastructure detail of this module.
 class Lsm9ds1InertialSensorStreamAdapter(IInertialSensorStreamPort):
@@ -88,8 +88,7 @@ class Lsm9ds1InertialSensorStreamAdapter(IInertialSensorStreamPort):
         if MAGNETOMETER in raw:
             fields["magnetic_field_ut"] = raw_to_physical(raw[MAGNETOMETER], MAGNETOMETER_FULL_SCALE_UT)
         if LIDAR in raw:
-            fields["lidar_raw"] = raw[LIDAR][0]
-            fields["lidar_distance_mm"] = lidar_raw_to_mm(raw[LIDAR][0])
+            fields["lidar_distance"] = LidarDistance.from_raw(raw[LIDAR][0], LIDAR_MM_PER_LSB)
         return InertialSensorStreamSample(timestamp_s=timestamp_s, **fields)
 
     def _require_connected(self) -> None:

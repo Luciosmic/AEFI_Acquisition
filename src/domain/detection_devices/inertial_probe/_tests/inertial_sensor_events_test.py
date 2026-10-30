@@ -16,7 +16,7 @@ from domain.detection_devices.inertial_probe.events.inertial_sensor_stream_faile
 
 def test_sample_event_channels_are_optional_and_frozen():
     e = InertialSensorSampleAcquired(acquisition_id=uuid4(), sample_index=0, timestamp_s=1.0)
-    assert e.acceleration_g is None and e.lidar_distance_mm is None
+    assert e.acceleration_g is None and e.lidar_distance is None
     with pytest.raises(dataclasses.FrozenInstanceError):
         e.sample_index = 1
 

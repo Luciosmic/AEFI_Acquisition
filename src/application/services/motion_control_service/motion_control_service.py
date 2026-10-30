@@ -59,9 +59,9 @@ class MotionControlService:
                 return status
         return MotionConversionStatusDTO(is_available=False, missing_quantity="conversion mm/impulsion")
 
-    # ponytail: homing is refused too while not calibrated (it would work in
-    # pulses, but positions are meaningless until the factor is known) — allow it
-    # if a bench needs to home before its transmission is characterized.
+    # Homing is deliberately NOT guarded: it works in pulses on the limit
+    # switches, and the bar calibration of the transmission needs a referenced
+    # bench before any mm/pulse conversion exists.
     def _refusal(self, operation: str) -> Optional[MotionConversionUnavailable]:
         """Typed refusal when the bench is not calibrated; None when it can move."""
         if self._motion_port.is_conversion_available():
@@ -191,9 +191,6 @@ class MotionControlService:
     def home_x(self) -> OperationResult[None, MotionControlError]:
         """Home X axis using hardware homing sequence. Returns Result for explicit error handling."""
         logger.info("Command: home X axis")
-        refusal = self._refusal("Home X")
-        if refusal is not None:
-            return OperationResult.fail(refusal)
         try:
             self._motion_port.home(axis="x")
             self._reset_target() # Homing invalidates position tracking
@@ -204,9 +201,6 @@ class MotionControlService:
     def home_y(self) -> OperationResult[None, MotionControlError]:
         """Home Y axis using hardware homing sequence. Returns Result for explicit error handling."""
         logger.info("Command: home Y axis")
-        refusal = self._refusal("Home Y")
-        if refusal is not None:
-            return OperationResult.fail(refusal)
         try:
             self._motion_port.home(axis="y")
             self._reset_target() # Homing invalidates position tracking
@@ -217,9 +211,6 @@ class MotionControlService:
     def home_xy(self) -> OperationResult[None, MotionControlError]:
         """Home both axes using hardware homing sequence. Returns Result for explicit error handling."""
         logger.info("Command: home X and Y axes")
-        refusal = self._refusal("Home XY")
-        if refusal is not None:
-            return OperationResult.fail(refusal)
         try:
             self._motion_port.home(axis=None)  # None = both axes
             self._reset_target() # Homing invalidates position tracking

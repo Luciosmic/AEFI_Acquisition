@@ -133,7 +133,8 @@ class InertialSensorPresenter(QObject):
                 acceleration_g=latest.acceleration_g,
                 angular_rate_dps=latest.angular_rate_dps,
                 magnetic_field_ut=latest.magnetic_field_ut,
-                lidar_distance_mm=latest.lidar_distance_mm,
+                lidar_streamed=latest.lidar_distance is not None,
+                lidar_distance_mm=latest.lidar_distance.distance_mm if latest.lidar_distance else None,
                 measured_rate_hz=rate_hz,
                 sample_count=count,
             )

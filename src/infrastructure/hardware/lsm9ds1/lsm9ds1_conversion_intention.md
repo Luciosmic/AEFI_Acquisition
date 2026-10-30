@@ -16,8 +16,9 @@ l'I/O pour la vérifier sans matériel.
   **non vérifié**), magnétomètre 400 µT (diviseur 2^15 ou 2^16 **non tranché** :
   avec 2^16 le champ au repos vaut 25 µT, la moitié du champ terrestre attendu).
 - `raw_to_physical(raw, full_scale)` : `brut × pleine échelle / 2^15`.
-- `lidar_raw_to_mm(raw)` : point unique de conversion du lidar. Facteur
-  `LIDAR_MM_PER_LSB = 1.0` : l'unité (mm) vient de l'utilisateur, **non
+- `LIDAR_MM_PER_LSB = 1.0` : facteur du lidar, appliqué par le seul
+  `LidarDistance.from_raw` (domaine, où le brut 0 signifie « pas de retour ») —
+  pas de seconde conversion ici. L'unité (mm) vient de l'utilisateur, **non
   mesurée** ; facteur et offset à vérifier face à des distances connues.
 
 ## Design

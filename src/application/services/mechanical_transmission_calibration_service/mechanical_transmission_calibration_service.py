@@ -66,10 +66,7 @@ class MechanicalTransmissionCalibrationService(IApiMechanicalTransmissionCalibra
             travel_per_motor_revolution_mm,
         )
         self._calibration_repository.add(entry)
-        # ponytail: a factor already applied is NOT re-set live (the controller's
-        # pulse positions would be reinterpreted mid-session) — restart to apply a
-        # changed transmission. The uncalibrated -> calibrated transition IS applied
-        # live (MotionConversionHandler): nothing could have moved before.
+        # Applied live by MotionConversionHandler (never during a scan).
         logger.info("MechanicalTransmissionCalibrationService: transmission %s recorded", entry.entry_id)
         for event in calibration.domain_events:
             self._event_bus.publish(type(event).__name__.lower(), event)

@@ -4,7 +4,7 @@ from uuid import uuid4
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 import pytest
-from PySide6.QtCore import QCoreApplication
+from PySide6.QtWidgets import QApplication
 
 from application.services.inertial_sensor_service.inertial_sensor_service import InertialSensorService
 from domain.detection_devices.inertial_probe.events.inertial_sensor_connection_changed.inertial_sensor_connection_changed import (
@@ -16,6 +16,7 @@ from domain.detection_devices.inertial_probe.events.inertial_sensor_sample_acqui
 from domain.detection_devices.inertial_probe.events.inertial_sensor_stream_failed.inertial_sensor_stream_failed import (
     InertialSensorStreamFailed,
 )
+from domain.shared_kernel.value_objects.lidar_distance.lidar_distance import LidarDistance
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
 from infrastructure.hardware.lsm9ds1.fake.fake_inertial_sensor_stream_adapter import (
     FakeInertialSensorStreamAdapter,
@@ -28,7 +29,9 @@ from interface.presenters.inertial_sensor_presenter import InertialSensorPresent
 
 @pytest.fixture(scope="module", autouse=True)
 def qt_app():
-    return QCoreApplication.instance() or QCoreApplication([])
+    # QApplication, not QCoreApplication: a later test module that builds widgets
+    # would otherwise reuse a core-only instance and crash the interpreter.
+    return QApplication.instance() or QApplication([])
 
 
 class Rig:
@@ -97,6 +100,20 @@ def test_display_keeps_only_the_latest_sample_between_refreshes():
     accelerometer = rig.readings[0].channels[0]
     assert accelerometer.values == ("+0.0000", "+0.0000", "+25.0000")  # latest sample kept
     assert rig.readings[0].sample_count == 25
+    rig.presenter.on_stop_requested()
+
+
+def test_lidar_zero_is_displayed_as_no_return():
+    rig = Rig()
+    rig.presenter.on_connect_requested()
+    rig.presenter.on_start_requested()
+    rig.publish_sample(0, 0.0, lidar_distance=LidarDistance.from_raw(0, 1.0))
+    rig.presenter.refresh_display()
+    lidar = next(c for c in rig.readings[0].channels if c.key == "lidar")
+    assert lidar.values == ("pas de retour",)
+    rig.publish_sample(1, 0.04, lidar_distance=LidarDistance.from_raw(1250, 1.0))
+    rig.presenter.refresh_display()
+    assert next(c for c in rig.readings[1].channels if c.key == "lidar").values == ("1250",)
     rig.presenter.on_stop_requested()
 
 

@@ -23,12 +23,8 @@ LSB_HALF_RANGE = 2**15
 # The lidar is a distance, not an inertial quantity: it is converted here only
 # because it travels in the same stream. Ceiling: one stream carries both.
 # Upgrade: separate lidar port; verify against 3 known distances.
+# Applied by LidarDistance.from_raw only (where 0 means "no return").
 LIDAR_MM_PER_LSB = 1.0
-
-
-def lidar_raw_to_mm(raw: int) -> float:
-    """Single conversion point for the lidar: raw -> millimetres."""
-    return raw * LIDAR_MM_PER_LSB
 
 
 def raw_to_physical(raw: Iterable[int], full_scale: float) -> Tuple[float, ...]:

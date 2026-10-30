@@ -18,6 +18,7 @@ afficheraient deux valeurs différentes pour la même ligne.
 
 - **Aucune calibration au repos** : valeurs brutes converties uniquement (le
   facteur 0,9673 de la source vient d'une seule orientation).
-- Le lidar traverse cet adaptateur comme canal du même flux (`lidar_raw`,
-  `lidar_distance_mm`) : dette `ponytail:` du port.
+- Le lidar traverse cet adaptateur comme canal du même flux (`lidar_distance`,
+  construite ici par `LidarDistance.from_raw` : seul point de conversion du brut,
+  0 = « pas de retour ») : dette `ponytail:` du port.
 - Port série et débit sont injectés par le constructeur (config JSON).

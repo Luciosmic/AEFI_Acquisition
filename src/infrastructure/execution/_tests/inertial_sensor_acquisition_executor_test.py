@@ -59,7 +59,7 @@ def test_publishes_indexed_samples_with_one_acquisition_id(setup):
     assert (first.sample_index, second.sample_index) == (0, 1)
     assert first.acquisition_id == second.acquisition_id
     assert first.acceleration_g == (0.0, 0.0, 1.0)
-    assert first.lidar_distance_mm is not None
+    assert first.lidar_distance is not None
     assert first.angular_rate_dps is None
     assert setup.failures == []
 

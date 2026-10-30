@@ -359,14 +359,14 @@ class MotionPanelCompact(QWidget):
 
     def set_calibration_banner(self, banner):
         """Show/hide the "bench not calibrated" banner and block every
-        command that moves the bench (stop and emergency stop stay usable)."""
+        command that moves the bench in mm (stop, emergency stop and homing —
+        pulses on the limit switches — stay usable)."""
         self._not_calibrated = banner.visible
         self.lbl_calibration_banner.setText(banner.text)
         self.lbl_calibration_banner.setVisible(banner.visible)
         enabled = not banner.visible
         for widget in (
             self.btn_go_x, self.btn_go_y, self.btn_go_both, self.btn_to_center,
-            self.btn_home_x, self.btn_home_y, self.btn_home_xy,
         ):
             widget.setEnabled(enabled)
         self.set_jog_enabled(enabled)
