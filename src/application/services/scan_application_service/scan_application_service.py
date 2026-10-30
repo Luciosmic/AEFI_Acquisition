@@ -69,7 +69,7 @@ from application.services.excitation_configuration_service.excitation_configurat
 # continuous worker owns the driver exclusively).
 from application.services.aefi_acquisition_service.i_api_aefi_acquisition_service import IApiAefiAcquisitionService
 from application.services.aefi_acquisition_service.dtos.aefi_acquisition_dtos import AefiAcquisitionConfig
-from application.shared.exclusive_control.exclusive_control import take_all
+from application.shared.exclusive_control.exclusive_control import ExclusiveControl, take_all
 from application.services.electric_field_probe_service.i_api_electric_field_probe_service import IApiElectricFieldProbeService
 from application.services.electric_field_probe_service.dtos.electric_field_probe_dtos import ElectricFieldProbeAcquisitionConfig
 from domain.shared_kernel.events.aefi_voltage_sample_acquired.aefi_voltage_sample_acquired import AefiVoltageSampleAcquired
@@ -250,7 +250,10 @@ class ScanApplicationService:
         *,
         unit_of_work: IUnitOfWork,
         conversion_status: Optional[IMotionConversionStatusPort] = None,
+        motion_control: Optional[ExclusiveControl] = None,
     ):
+        # Single owner of the bench motors (shared with any other motor driver, e.g. a calibration), held like the excitation.
+        self._motion_control = motion_control
         self._unit_of_work = unit_of_work
         self._conversion_status = conversion_status
         self._motion_port = motion_port
@@ -362,6 +365,12 @@ class ScanApplicationService:
                 takes.insert(0, (
                     lambda: self._excitation_service.take_control(SCAN_EXCITATION_CONTROLLER),
                     lambda: self._excitation_service.release_control(SCAN_EXCITATION_CONTROLLER),
+                ))
+            # The motors: refused while another owner drives them.
+            if self._motion_control is not None:
+                takes.insert(0, (
+                    lambda: self._motion_control.take(SCAN_EXCITATION_CONTROLLER),
+                    lambda: self._motion_control.release(SCAN_EXCITATION_CONTROLLER),
                 ))
             taken = take_all(takes)
             if taken.is_failure:
