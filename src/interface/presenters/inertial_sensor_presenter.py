@@ -18,13 +18,13 @@ from typing import Optional
 from PySide6.QtCore import QObject, QTimer, Signal, Slot
 
 from application.services.inertial_sensor_service.inertial_sensor_service import InertialSensorService
-from domain.inertial_sensor.events.inertial_sensor_connection_changed.inertial_sensor_connection_changed import (
+from domain.detection_devices.inertial_probe.events.inertial_sensor_connection_changed.inertial_sensor_connection_changed import (
     InertialSensorConnectionChanged,
 )
-from domain.inertial_sensor.events.inertial_sensor_sample_acquired.inertial_sensor_sample_acquired import (
+from domain.detection_devices.inertial_probe.events.inertial_sensor_sample_acquired.inertial_sensor_sample_acquired import (
     InertialSensorSampleAcquired,
 )
-from domain.inertial_sensor.events.inertial_sensor_stream_failed.inertial_sensor_stream_failed import (
+from domain.detection_devices.inertial_probe.events.inertial_sensor_stream_failed.inertial_sensor_stream_failed import (
     InertialSensorStreamFailed,
 )
 from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus

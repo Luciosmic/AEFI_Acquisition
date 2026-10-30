@@ -1,4 +1,4 @@
-# inertial_sensor — Intention
+# inertial_probe — Intention
 
 ## Rationale
 

@@ -38,7 +38,7 @@ from application.services.inertial_sensor_service.ports.i_inertial_sensor_acquis
 from application.services.inertial_sensor_service.ports.i_inertial_sensor_stream_port import (
     IInertialSensorStreamPort,
 )
-from domain.inertial_sensor.events.inertial_sensor_connection_changed.inertial_sensor_connection_changed import (
+from domain.detection_devices.inertial_probe.events.inertial_sensor_connection_changed.inertial_sensor_connection_changed import (
     InertialSensorConnectionChanged,
 )
 from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus

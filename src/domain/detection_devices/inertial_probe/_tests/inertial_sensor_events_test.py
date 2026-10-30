@@ -3,13 +3,13 @@ from uuid import uuid4
 
 import pytest
 
-from domain.inertial_sensor.events.inertial_sensor_connection_changed.inertial_sensor_connection_changed import (
+from domain.detection_devices.inertial_probe.events.inertial_sensor_connection_changed.inertial_sensor_connection_changed import (
     InertialSensorConnectionChanged,
 )
-from domain.inertial_sensor.events.inertial_sensor_sample_acquired.inertial_sensor_sample_acquired import (
+from domain.detection_devices.inertial_probe.events.inertial_sensor_sample_acquired.inertial_sensor_sample_acquired import (
     InertialSensorSampleAcquired,
 )
-from domain.inertial_sensor.events.inertial_sensor_stream_failed.inertial_sensor_stream_failed import (
+from domain.detection_devices.inertial_probe.events.inertial_sensor_stream_failed.inertial_sensor_stream_failed import (
     InertialSensorStreamFailed,
 )
 
