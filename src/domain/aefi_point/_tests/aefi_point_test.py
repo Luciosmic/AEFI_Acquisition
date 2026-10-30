@@ -17,8 +17,8 @@ def make_sample(v: float = 1.0) -> Sample:
     return Sample(AefiVoltageMeasurement(v, v, v, v, v, v, timestamp=datetime(2026, 10, 9, tzinfo=timezone.utc)))
 
 
-def make_point(n: int = 3) -> AefiPoint:
-    return AefiPoint(AefiPointId(uuid4()), uuid4(), Position2D(1.0, 2.0), n)
+def make_point(n: int = 3, point_index: int = 7) -> AefiPoint:
+    return AefiPoint(AefiPointId(uuid4()), uuid4(), Position2D(1.0, 2.0), point_index=point_index, expected_samples=n)
 
 
 def test_exactly_n_valid_samples_acquires_point_and_emits_event():
@@ -31,9 +31,10 @@ def test_exactly_n_valid_samples_acquires_point_and_emits_event():
     assert isinstance(event, AefiPointAcquired)
     assert event.aefi_point_id == point.id
     assert event.scan_id == point.scan_id
+    assert event.point_index == 7
     assert event.position == Position2D(1.0, 2.0)
     assert event.samples_count == 3
-    assert event.measurement_unit.endswith("/V")
+    assert event.measurement_unit == "http://qudt.org/vocab/unit/V"
 
 
 def test_domain_events_property_clears_the_list():
@@ -64,3 +65,8 @@ def test_acquired_point_refuses_a_second_recording():
 def test_expected_samples_must_be_positive():
     with pytest.raises(ValueError):
         make_point(0)
+
+
+def test_point_index_must_not_be_negative():
+    with pytest.raises(ValueError):
+        make_point(point_index=-1)

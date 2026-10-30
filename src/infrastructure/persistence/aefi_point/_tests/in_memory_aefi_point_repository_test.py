@@ -12,7 +12,7 @@ from infrastructure.unit_of_work.in_memory_unit_of_work import InMemoryUnitOfWor
 
 
 def _point(scan_id, n=2) -> AefiPoint:
-    return AefiPoint(AefiPointId(uuid4()), scan_id, Position2D(0.0, 0.0), n)
+    return AefiPoint(AefiPointId(uuid4()), scan_id, Position2D(0.0, 0.0), point_index=0, expected_samples=n)
 
 
 def _samples(n):

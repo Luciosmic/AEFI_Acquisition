@@ -34,7 +34,7 @@ def _setup():
 
 
 def _acquire(uow, scan_id, point=None):
-    point = point or AefiPoint(AefiPointId(uuid4()), scan_id, Position2D(0.0, 0.0), 2)
+    point = point or AefiPoint(AefiPointId(uuid4()), scan_id, Position2D(0.0, 0.0), point_index=0, expected_samples=2)
     with uow:
         uow.aefi_points.add(point)
         point.record_samples(_samples(2))
@@ -105,7 +105,7 @@ def _first_event(point):
     from domain.aefi_point.events.aefi_point_acquired.aefi_point_acquired import AefiPointAcquired
 
     return AefiPointAcquired(
-        aefi_point_id=point.id, scan_id=point.scan_id, position=point.position,
+        aefi_point_id=point.id, scan_id=point.scan_id, point_index=point.point_index, position=point.position,
         measurement=point.measurement, samples_count=point.expected_samples,
     )
 

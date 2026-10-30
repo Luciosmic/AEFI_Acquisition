@@ -18,7 +18,6 @@ from domain.step_scan.value_objects.scan_status.scan_status import ScanStatus
 from domain.shared_kernel.events.domain_event import DomainEvent
 from domain.step_scan.events.scan_started.scan_started import ScanStarted
 from domain.step_scan.events.scan_point_acquired.scan_point_acquired import ScanPointAcquired
-from domain.step_scan.events.scan_completed.scan_completed import ScanCompleted
 from domain.step_scan.events.scan_failed.scan_failed import ScanFailed
 from domain.step_scan.events.scan_cancelled.scan_cancelled import ScanCancelled
 from domain.step_scan.events.scan_paused.scan_paused import ScanPaused
@@ -72,18 +71,7 @@ class StepScan(SpatialScan):
         self.end_time = datetime.now()
         return True
 
-    def complete(self, total_points: int = 0) -> bool:
-        """Complete the scan. Returns False (no-op, idempotent) if already
-        completed — a caller that doesn't pre-check status can log this
-        instead of it passing silently (see ODD: idempotence is a log, not
-        a domain event)."""
-        if self.status == ScanStatus.COMPLETED:
-            return False
 
-        super().complete()
-        self._domain_events.append(ScanCompleted(scan_id=self.id, total_points=total_points))
-        return True
-        
     def fail(self, reason: str) -> None:
         # Allow failing from RUNNING or PAUSED states
         if self.status not in (ScanStatus.RUNNING, ScanStatus.PAUSED):

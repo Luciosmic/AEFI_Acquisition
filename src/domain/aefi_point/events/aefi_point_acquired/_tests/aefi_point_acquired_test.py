@@ -13,7 +13,7 @@ from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
 
 def test_event_is_a_frozen_domain_event_with_timestamp():
     m = AefiVoltageMeasurement(0, 0, 0, 0, 0, 0, timestamp=datetime(2026, 10, 9, tzinfo=timezone.utc))
-    event = AefiPointAcquired(AefiPointId(uuid4()), uuid4(), Position2D(0, 0), m, 5)
+    event = AefiPointAcquired(AefiPointId(uuid4()), uuid4(), 0, Position2D(0, 0), m, 5)
     assert isinstance(event, DomainEvent)
     assert event.occurred_on is not None
     with pytest.raises(dataclasses.FrozenInstanceError):
@@ -25,6 +25,17 @@ def test_event_respects_the_probe_acquisition_contract():
 
     m = AefiVoltageMeasurement(0, 0, 0, 0, 0, 0, timestamp=datetime(2026, 10, 9, tzinfo=timezone.utc))
     point_id = AefiPointId(uuid4())
-    event = AefiPointAcquired(point_id, uuid4(), Position2D(0, 0), m, 5)
+    event = AefiPointAcquired(point_id, uuid4(), 0, Position2D(0, 0), m, 5)
     assert isinstance(event, ProbeAcquisitionEvent)
     assert event.source == "aefi_point" and event.acquisition_id == point_id
+
+
+def test_event_is_a_self_contained_snapshot_of_what_the_export_reads():
+    """Index, position, measurement and unit: replayable without the StepScan event."""
+    m = AefiVoltageMeasurement(1, 2, 3, 4, 5, 6, timestamp=datetime(2026, 10, 9, tzinfo=timezone.utc))
+    event = AefiPointAcquired(
+        aefi_point_id=AefiPointId(uuid4()), scan_id=uuid4(), point_index=12, position=Position2D(1.5, 2.5),
+        measurement=m, samples_count=5,
+    )
+    assert (event.point_index, event.position, event.measurement) == (12, Position2D(1.5, 2.5), m)
+    assert event.measurement_unit == "http://qudt.org/vocab/unit/V"

@@ -71,8 +71,7 @@ breaking existing callers.
   back persisted state is not a business transition.
 - Stay "behavioral": it does NOT hold the full, unbounded history of
   calibration entries in memory (append-only, unlimited) — the repository
-  is authoritative for reading history, mirroring the existing separation
-  between `StepScan._points` and `IAcquisitionDataRepository`.
+  is authoritative for reading history.
 
 ## Design
 

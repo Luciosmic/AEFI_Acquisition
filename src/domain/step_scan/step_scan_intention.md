@@ -6,10 +6,10 @@ Coque de cycle de vie, unique pour le step-scan, le line-scan et le fly-scan, en
 
 ## Responsibility
 
-- Gérer le cycle de vie du scan : `start → (pause/resume)* → complete | fail | cancel`.
+- Gérer le cycle de vie du scan : `start → (pause/resume)* → mark_completed | fail | cancel`.
 - Mettre en file `ScanPointAcquired` pour chaque point (`point_acquired`) sans le stocker ni auto-compléter.
 - Suivre la complétion du `Scan` fin (`mark_completed`) : passe à `COMPLETED` sans émettre d'événement, le `ScanCompleted` étant celui du `Scan` fin.
-- Générer et stocker les `DomainEvent` (ScanStarted, ScanPointAcquired, ScanFailed, ScanCancelled, ScanPaused, ScanResumed ; `ScanCompleted` n'est plus émis ici : c'est le `Scan` fin qui l'émet) via `domain_events` (get-and-clear).
+- Générer et stocker les `DomainEvent` (ScanStarted, ScanPointAcquired, ScanFailed, ScanCancelled, ScanPaused, ScanResumed) via `domain_events` (get-and-clear). `StepScan` n'a plus de `complete()` émettant `ScanCompleted` : le `Scan` fin en est l'émetteur unique.
 - Faire respecter les invariants : impossible d'enregistrer un point si le scan n'est pas `RUNNING`.
 
 ## Design
@@ -17,5 +17,5 @@ Coque de cycle de vie, unique pour le step-scan, le line-scan et le fly-scan, en
 - **Hérite de `SpatialScan` (entity)** : récupère l'id UUID et les transitions d'état de base.
 - **`domain_events` est get-and-clear** : le consommateur (service applicatif) vide la liste à chaque publication pour éviter les double-publications.
 - **Idempotence sur `cancel()` et `pause()`** : peut être appelé plusieurs fois sans lever d'exception.
-- **Pas de points ni de total attendu** : le service compte lui-même (`_acquired_count`, `_expected_total`) et passe l'index à `pause(index)` / `resume(index)` / `complete(total_points)` (défaut 0).
+- **Pas de points ni de total attendu** : le service compte lui-même (`_acquired_count`, `_expected_total`) et passe l'index à `pause(index)` / `resume(index)` (défaut 0).
 - `StepScan` est l'unique coque de cycle de vie : le fly-scan l'utilise aussi (plus de sous-classe), ses points de grille étant commités par lignes (`AefiLine`).

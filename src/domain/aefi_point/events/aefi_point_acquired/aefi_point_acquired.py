@@ -16,6 +16,7 @@ AEFI_POINT_SOURCE = "aefi_point"
 class AefiPointAcquired(DomainEvent):
     aefi_point_id: AefiPointId
     scan_id: UUID
+    point_index: int
     position: Position2D
     measurement: AefiVoltageMeasurement
     samples_count: int

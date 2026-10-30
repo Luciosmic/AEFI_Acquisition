@@ -6,7 +6,7 @@ Aujourd'hui les N échantillons ADC d'un point de step-scan sont collectés et m
 
 ## Responsibility
 
-- Aggregate root d'un point de step-scan : identité `AefiPointId`, référence au scan par `scan_id` (identité seule), position, nombre attendu N d'échantillons.
+- Aggregate root d'un point de step-scan : identité `AefiPointId`, référence au scan par `scan_id` (identité seule), position, index global `point_index` dans la trajectoire du scan (≥ 0, refusé sinon), nombre attendu N d'échantillons.
 - `record_samples(samples)` : accepte EXACTEMENT N `Sample` (valides par construction), atomiquement ; sinon `AefiPointIncompleteError` et aucun état modifié.
 - Sur succès : calcule la mesure moyennée (via `MeasurementStatisticsService`) et empile `AefiPointAcquired`.
 - Un point déjà acquis refuse un second enregistrement (`AefiPointAlreadyAcquiredError`).
@@ -17,4 +17,5 @@ Aujourd'hui les N échantillons ADC d'un point de step-scan sont collectés et m
 - Dataclass ; module d'agrégat à part entière (pas sous `step_scan/`, dont la racine porte déjà `StepScan`).
 - Un point « en attente » (avant `record_samples`) n'est que la coquille de l'acquisition en cours ; le service l'ajoute au repository une fois acquis.
 - Aucune logique de moyenne dupliquée : délégation à `MeasurementStatisticsService`.
+- `point_index` calque `NardaPoint` : c'est l'index que l'export lit aujourd'hui de `ScanPointAcquired` (événement hérité de `StepScan`), pour qu'il puisse lire `AefiPointAcquired` à la place.
 - Domaine pur : aucun import infrastructure/application, aucun logger.
