@@ -25,7 +25,7 @@ Tensions ciblées par Phase D1 (branche `worktree-d1-shared-kernel-cleanup`) —
 |---------|----------|---------------------|
 | `aefi_voltage_measurement.py` dans `shared_kernel/value_objects/acquisition/` | `ProbeRawReading` dans `electric_field_probe/` | ⏳ renommé `AefiVoltageMeasurement` (commit fc4fc5b), encore dans `shared_kernel` |
 | Events motion dans `shared_kernel` | `domain/motion/events/` | ⏳ encore dans `shared_kernel` |
-| Events `continuous_acquisition_*` dans `shared_kernel` | `domain/electric_field_probe/events/` | ⏳ encore dans `shared_kernel` |
+| Events `continuous_acquisition_*` dans `shared_kernel` | `domain/detection_devices/electric_field_probes/events/` | ⏳ encore dans `shared_kernel` |
 | Events `system_*` dans `shared_kernel` | `domain/system/events/` | ⏳ encore dans `shared_kernel` |
 | `is_fly_scan: bool` dans `SpatialScan` | supprimé | ⏳ encore présent |
 | `results: List[Dict]` dans `SpatialScan` | supprimé | ⏳ encore présent |
@@ -350,10 +350,10 @@ L'ordre est imposé par les dépendances : AcquisitionConfiguration d'abord, pui
 | `shared_kernel/events/motion_*` | `domain/motion/events/` | ✅ |
 | `shared_kernel/events/position_updated` | `domain/motion/events/` | ✅ |
 | `shared_kernel/events/emergency_stop_triggered` | `domain/motion/events/` | ✅ |
-| `shared_kernel/events/continuous_acquisition_*` | `domain/electric_field_probe/events/` | ✅ |
-| `shared_kernel/events/sensor_transformation_angles_updated` | `domain/electric_field_probe/events/` | ✅ |
+| `shared_kernel/events/continuous_acquisition_*` | `domain/detection_devices/electric_field_probes/events/` | ✅ |
+| `shared_kernel/events/sensor_transformation_angles_updated` | `domain/detection_devices/electric_field_probes/events/` | ✅ |
 | `shared_kernel/events/system_*` | `domain/system/events/` | ✅ |
-| `shared_kernel/value_objects/acquisition/VoltageMeasurement` | `domain/electric_field_probe/value_objects/ProbeRawReading` | ✅ |
+| `shared_kernel/value_objects/acquisition/VoltageMeasurement` | `domain/detection_devices/electric_field_probes/value_objects/ProbeRawReading` | ✅ |
 | `shared_kernel/value_objects/excitation/*` | `domain/electric_field_excitation/value_objects/` | ✅ |
 | `shared_kernel/value_objects/hardware_configuration/*` | Application layer | ✅ (`HardwareAdvancedParameterSchema`) |
 

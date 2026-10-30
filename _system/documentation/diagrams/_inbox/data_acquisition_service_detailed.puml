@@ -11,7 +11,7 @@ class DataAcquisitionService {
   - _is_acquiring: bool
   - _data_listeners: List[Callable]
   - _mode_listeners: List[Callable]
-  - _current_sample: Optional[AcquisitionSample]
+  - _current_sample: Optional[AefiVoltageMeasurement]
   
   ' === Contrôle Acquisition (ex-MetaManager) ===
   + start_acquisition(mode: AcquisitionMode) -> bool
@@ -22,8 +22,8 @@ class DataAcquisitionService {
   + get_current_mode() -> AcquisitionMode
   
   ' === Gestion Données Temps Réel ===
-  + get_latest_sample() -> Optional[AcquisitionSample]
-  + get_sample_buffer(n_samples: int) -> List[AcquisitionSample]
+  + get_latest_sample() -> Optional[AefiVoltageMeasurement]
+  + get_sample_buffer(n_samples: int) -> List[AefiVoltageMeasurement]
   + clear_buffer() -> None
   + get_buffer_size() -> int
   
@@ -38,7 +38,7 @@ class DataAcquisitionService {
   + reset_averaging() -> None
   
   ' === Observateurs (remplace signaux Qt MetaManager) ===
-  + subscribe_data_updates(callback: Callable[[AcquisitionSample], None]) -> None
+  + subscribe_data_updates(callback: Callable[[AefiVoltageMeasurement], None]) -> None
   + subscribe_mode_changes(callback: Callable[[AcquisitionMode], None]) -> None
   + subscribe_acquisition_errors(callback: Callable[[str], None]) -> None
   + unsubscribe_all(callback: Callable) -> None
@@ -47,9 +47,9 @@ class DataAcquisitionService {
   - _on_data_ready(sample: dict) -> None
   - _on_mode_changed(mode: str) -> None
   - _on_acquisition_error(error: str) -> None
-  - _process_sample(raw_sample: dict) -> AcquisitionSample
-  - _update_stats(sample: AcquisitionSample) -> None
-  - _notify_data_listeners(sample: AcquisitionSample) -> None
+  - _process_sample(raw_sample: dict) -> AefiVoltageMeasurement
+  - _update_stats(sample: AefiVoltageMeasurement) -> None
+  - _notify_data_listeners(sample: AefiVoltageMeasurement) -> None
   - _notify_mode_listeners(mode: AcquisitionMode) -> None
 }
 
@@ -60,7 +60,7 @@ enum AcquisitionMode {
   PAUSED
 }
 
-class AcquisitionSample {
+class AefiVoltageMeasurement {
   + timestamp: float
   + channel_data: Dict[int, float]
   + averaged: bool
@@ -80,7 +80,7 @@ class AcquisitionStats {
   + errors_count: int
   --
   + reset() -> None
-  + update(sample: AcquisitionSample) -> None
+  + update(sample: AefiVoltageMeasurement) -> None
 }
 
 ' === Relations avec GUI ===
@@ -91,7 +91,7 @@ class "EFImagingBench_GUI" as GUI {
 }
 
 class "LivePlotWidget" as LivePlot {
-  + update_plot(sample: AcquisitionSample)
+  + update_plot(sample: AefiVoltageMeasurement)
   --
   <<signal>> data_updated
 }
@@ -136,7 +136,7 @@ GUI ..> MetaManager : "<<legacy>> à migrer"
 DataAcquisitionService --> AcquisitionManager : "communication directe"
 MetaManager ..> AcquisitionManager : "<<legacy>>"
 
-DataAcquisitionService ..> AcquisitionSample : "produit"
+DataAcquisitionService ..> AefiVoltageMeasurement : "produit"
 DataAcquisitionService ..> AcquisitionStats : "maintient"
 DataAcquisitionService ..> AcquisitionMode : "utilise"
 

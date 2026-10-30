@@ -2,7 +2,7 @@
 
 ## Rationale
 
-Implémentation HDF5 de `IAcquisitionDataRepository` pour la persistence des `AcquisitionSample` en format haute-performance. HDF5 est choisi pour sa capacité à stocker des arrays numériques compressés et à les étendre incrémentalement (append), adapté à l'accumulation de données de scan.
+Implémentation HDF5 de `IAcquisitionDataRepository` pour la persistence des `AefiVoltageMeasurement` en format haute-performance. HDF5 est choisi pour sa capacité à stocker des arrays numériques compressés et à les étendre incrémentalement (append), adapté à l'accumulation de données de scan.
 
 ## Responsibility
 
