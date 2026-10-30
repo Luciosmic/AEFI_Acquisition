@@ -20,9 +20,9 @@ le voie.
 
 ## Design
 
-- Value object immuable (`frozen=True`) du noyau partagé : deux contextes
-  l'utilisent, la calibration par barre et (à terme) le panneau du capteur
-  inertiel.
+- Value object immuable (`frozen=True`) du noyau partagé : plusieurs lecteurs
+  l'utilisent : les adaptateurs du port LIDAR (carte inertielle, ESP32 série) et le
+  panneau du capteur inertiel.
 - `distance_mm` vaut None pour « pas de retour » ; `has_return` le dit.
 - Le facteur de conversion (unité non vérifiée) reste à l'adaptateur, qui le
   passe à `from_raw` : seule la sémantique du 0 est une règle de domaine.

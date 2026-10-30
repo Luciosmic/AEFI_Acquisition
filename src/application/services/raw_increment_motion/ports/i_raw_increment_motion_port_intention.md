@@ -17,8 +17,10 @@ applicatif dépendrait de l'infrastructure et ne serait testable qu'avec le banc
 
 ## Design
 
-- Port sortant du service `bar_transmission_calibration_service`, placé dans son
-  dossier `ports/`.
+- Port sortant placé dans un dossier neutre `application/services/raw_increment_motion/ports/`
+  (même chemin que le pilote autonome Arcus-Performax-4EX) : son premier consommateur,
+  la calibration par barre, a été abandonné le 2026-10-30 ; le port reste pour tout
+  usage qui doit bouger le banc en incréments bruts.
 - Échec de contrôleur ou de liaison : `RawIncrementMotionError`, erreur déclarée par
   le port ; l'adaptateur traduit les exceptions du driver.
 - `move_to` / `run_to_positive_limit` rendent la main tout de suite (le fly scan

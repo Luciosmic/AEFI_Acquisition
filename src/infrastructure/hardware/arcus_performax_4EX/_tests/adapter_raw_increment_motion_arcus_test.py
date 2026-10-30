@@ -8,7 +8,7 @@ import queue
 import time
 import unittest
 
-from application.services.bar_transmission_calibration_service.ports.raw_increment_motion_error import (
+from application.services.raw_increment_motion.ports.raw_increment_motion_error import (
     RawIncrementMotionError,
 )
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus

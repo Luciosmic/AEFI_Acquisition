@@ -14,4 +14,4 @@ l'infrastructure, et un Fake ne pourrait pas reproduire la même défaillance.
 ## Design
 
 - `RuntimeError` nommée, levée par l'adaptateur Arcus et par le Fake ; traduite en
-  erreur de cas d'usage par `BarTransmissionCalibrationService`.
+  erreur de cas d'usage par le service applicatif qui consomme le port.

@@ -7,7 +7,7 @@ Responsibility:
 
 Design:
 - Raised by the adapter in place of any driver exception; translated by
-  BarTransmissionCalibrationService into its use-case error union.
+  the consuming application service into its use-case error union.
 """
 
 

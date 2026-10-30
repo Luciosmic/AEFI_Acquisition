@@ -8,10 +8,10 @@ import logging
 import time
 from typing import Callable, TypeVar
 
-from application.services.bar_transmission_calibration_service.ports.i_raw_increment_motion_port import (
+from application.services.raw_increment_motion.ports.i_raw_increment_motion_port import (
     IRawIncrementMotionPort,
 )
-from application.services.bar_transmission_calibration_service.ports.raw_increment_motion_error import (
+from application.services.raw_increment_motion.ports.raw_increment_motion_error import (
     RawIncrementMotionError,
 )
 
