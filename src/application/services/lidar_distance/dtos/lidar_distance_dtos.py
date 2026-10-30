@@ -8,7 +8,7 @@ Units: distances in mm (UCUM `mm`), timestamps in s (UCUM `s`).
 
 from dataclasses import dataclass
 
-from domain.shared_kernel.value_objects.lidar_distance.lidar_distance import LidarDistance
+from domain.detection_devices.lidar.lidar_distance.lidar_distance import LidarDistance
 
 
 @dataclass(frozen=True)

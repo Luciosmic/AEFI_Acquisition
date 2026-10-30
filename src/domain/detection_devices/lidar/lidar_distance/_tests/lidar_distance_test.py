@@ -1,6 +1,6 @@
 import unittest
 
-from domain.shared_kernel.value_objects.lidar_distance.lidar_distance import LidarDistance
+from domain.detection_devices.lidar.lidar_distance.lidar_distance import LidarDistance
 
 
 class LidarDistanceTest(unittest.TestCase):

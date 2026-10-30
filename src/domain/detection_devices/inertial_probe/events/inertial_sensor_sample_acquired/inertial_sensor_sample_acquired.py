@@ -3,7 +3,7 @@ from typing import Optional, Tuple
 from uuid import UUID
 
 from domain.shared_kernel.events.domain_event import DomainEvent
-from domain.shared_kernel.value_objects.lidar_distance.lidar_distance import LidarDistance
+from domain.detection_devices.lidar.lidar_distance.lidar_distance import LidarDistance
 
 
 @dataclass(frozen=True)

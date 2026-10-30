@@ -17,7 +17,7 @@ from application.services.lidar_distance.ports.lidar_stream_error import (
     LidarStreamBusyError,
     LidarUnavailableError,
 )
-from domain.shared_kernel.value_objects.lidar_distance.lidar_distance import LidarDistance
+from domain.detection_devices.lidar.lidar_distance.lidar_distance import LidarDistance
 from infrastructure.hardware.lsm9ds1.fake.fake_inertial_sensor_stream_adapter import LIDAR_CAP_HZ
 
 # Measured on the real board (journal 2026-10-12): 25 Hz as soon as the LIDAR is active.

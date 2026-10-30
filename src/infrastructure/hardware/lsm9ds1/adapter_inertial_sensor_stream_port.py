@@ -20,7 +20,7 @@ from application.services.inertial_sensor_service.dtos.inertial_sensor_dtos impo
 from application.services.inertial_sensor_service.ports.i_inertial_sensor_stream_port import (
     IInertialSensorStreamPort,
 )
-from domain.shared_kernel.value_objects.lidar_distance.lidar_distance import LidarDistance
+from domain.detection_devices.lidar.lidar_distance.lidar_distance import LidarDistance
 from infrastructure.hardware.lsm9ds1.driver_lsm9ds1_stream import LSM9DS1StreamDriver
 from infrastructure.hardware.lsm9ds1.lsm9ds1_conversion import (
     ACCELEROMETER_FULL_SCALE_G,

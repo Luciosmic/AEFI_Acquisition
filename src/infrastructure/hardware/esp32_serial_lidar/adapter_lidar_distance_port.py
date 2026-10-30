@@ -21,7 +21,7 @@ from application.services.lidar_distance.ports.i_lidar_distance_port import (
 from application.services.lidar_distance.ports.lidar_stream_error import (
     LidarUnavailableError,
 )
-from domain.shared_kernel.value_objects.lidar_distance.lidar_distance import LidarDistance
+from domain.detection_devices.lidar.lidar_distance.lidar_distance import LidarDistance
 
 logger = logging.getLogger(__name__)
 
