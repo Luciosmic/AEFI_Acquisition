@@ -23,9 +23,9 @@ import queue
 from uuid import uuid4
 from datetime import datetime
 from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
-from domain.shared_kernel.events.motion_completed.motion_completed import MotionCompleted
-from domain.shared_kernel.events.motion_failed.motion_failed import MotionFailed
-from domain.shared_kernel.events.position_updated.position_updated import PositionUpdated
+from domain.shared_kernel.motion.events.motion_completed.motion_completed import MotionCompleted
+from domain.shared_kernel.motion.events.motion_failed.motion_failed import MotionFailed
+from domain.shared_kernel.motion.events.position_updated.position_updated import PositionUpdated
 
 from application.services.motion_control_service.ports.i_motion_port import IMotionPort
 from application.services.motion_control_service.ports.motion_conversion_unavailable_error import (

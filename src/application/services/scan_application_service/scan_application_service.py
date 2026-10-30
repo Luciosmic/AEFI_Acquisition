@@ -73,7 +73,7 @@ from application.shared.exclusive_control.exclusive_control import take_all
 from application.services.electric_field_probe_service.i_api_electric_field_probe_service import IApiElectricFieldProbeService
 from application.services.electric_field_probe_service.dtos.electric_field_probe_dtos import ElectricFieldProbeAcquisitionConfig
 from domain.shared_kernel.events.aefi_voltage_sample_acquired.aefi_voltage_sample_acquired import AefiVoltageSampleAcquired
-from domain.shared_kernel.events.position_updated.position_updated import PositionUpdated
+from domain.shared_kernel.motion.events.position_updated.position_updated import PositionUpdated
 
 # Error union (cross-layer translation)
 from .errors.motion_sync_error import (
