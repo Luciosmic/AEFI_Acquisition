@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from uuid import UUID
 
 from domain.shared_kernel.events.domain_event import DomainEvent
-from domain.signal_processing.value_objects.aefi_corrected_field_measurement.aefi_corrected_field_measurement import (
+from domain.detection_devices.aefi_device.signal_processing.value_objects.aefi_corrected_field_measurement.aefi_corrected_field_measurement import (
     AefiCorrectedFieldMeasurement,
 )
 

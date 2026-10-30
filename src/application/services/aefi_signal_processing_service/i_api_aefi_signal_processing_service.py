@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 
-from domain.signal_processing.value_objects.aefi_signal_correction_calibration.aefi_signal_correction_calibration import (
+from domain.detection_devices.aefi_device.signal_processing.value_objects.aefi_signal_correction_calibration.aefi_signal_correction_calibration import (
     AefiSignalCorrectionCalibration,
 )
 

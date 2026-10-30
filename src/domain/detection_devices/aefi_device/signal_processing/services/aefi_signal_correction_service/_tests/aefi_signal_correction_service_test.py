@@ -4,10 +4,10 @@ from datetime import datetime, timezone
 import pytest
 
 from domain.shared_kernel.value_objects.acquisition.aefi_voltage_measurement import AefiVoltageMeasurement
-from domain.signal_processing.services.aefi_signal_correction_service.aefi_signal_correction_service import (
+from domain.detection_devices.aefi_device.signal_processing.services.aefi_signal_correction_service.aefi_signal_correction_service import (
     AefiSignalCorrectionService,
 )
-from domain.signal_processing.value_objects.aefi_signal_correction_calibration.aefi_signal_correction_calibration import (
+from domain.detection_devices.aefi_device.signal_processing.value_objects.aefi_signal_correction_calibration.aefi_signal_correction_calibration import (
     AefiSignalCorrectionCalibration,
 )
 

@@ -14,11 +14,11 @@ from domain.shared_kernel.events.aefi_voltage_sample_acquired.aefi_voltage_sampl
     AefiVoltageSampleAcquired,
 )
 from domain.shared_kernel.value_objects.acquisition.aefi_voltage_measurement import AefiVoltageMeasurement
-from domain.signal_processing.events.aefi_corrected_field_sample_acquired.aefi_corrected_field_sample_acquired import (
+from domain.detection_devices.aefi_device.signal_processing.events.aefi_corrected_field_sample_acquired.aefi_corrected_field_sample_acquired import (
     AefiCorrectedFieldSampleAcquired,
 )
-from domain.signal_processing.events.aefi_sample_corrected.aefi_sample_corrected import AefiSampleCorrected
-from domain.signal_processing.events.aefi_signal_correction_calibration_updated.aefi_signal_correction_calibration_updated import (
+from domain.detection_devices.aefi_device.signal_processing.events.aefi_sample_corrected.aefi_sample_corrected import AefiSampleCorrected
+from domain.detection_devices.aefi_device.signal_processing.events.aefi_signal_correction_calibration_updated.aefi_signal_correction_calibration_updated import (
     AefiSignalCorrectionCalibrationUpdated,
 )
 

@@ -4,12 +4,12 @@ from uuid import uuid4
 import pytest
 
 from domain.shared_kernel.value_objects.acquisition.aefi_voltage_measurement import AefiVoltageMeasurement
-from domain.signal_processing.aefi_corrected_sample import AefiCorrectedSample
-from domain.signal_processing.errors.signal_correction_calibration_missing_error import (
+from domain.detection_devices.aefi_device.signal_processing.aefi_corrected_sample import AefiCorrectedSample
+from domain.detection_devices.aefi_device.signal_processing.errors.signal_correction_calibration_missing_error import (
     SignalCorrectionCalibrationMissingError,
 )
-from domain.signal_processing.events.aefi_sample_corrected.aefi_sample_corrected import AefiSampleCorrected
-from domain.signal_processing.value_objects.aefi_signal_correction_calibration.aefi_signal_correction_calibration import (
+from domain.detection_devices.aefi_device.signal_processing.events.aefi_sample_corrected.aefi_sample_corrected import AefiSampleCorrected
+from domain.detection_devices.aefi_device.signal_processing.value_objects.aefi_signal_correction_calibration.aefi_signal_correction_calibration import (
     AefiSignalCorrectionCalibration,
 )
 

@@ -28,10 +28,10 @@ from domain.shared_kernel.events.sensor_transformation_angles_updated.sensor_tra
     SensorTransformationAnglesUpdated,
 )
 from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
-from domain.signal_processing.events.aefi_corrected_field_sample_acquired.aefi_corrected_field_sample_acquired import (
+from domain.detection_devices.aefi_device.signal_processing.events.aefi_corrected_field_sample_acquired.aefi_corrected_field_sample_acquired import (
     AefiCorrectedFieldSampleAcquired,
 )
-from domain.signal_processing.events.aefi_signal_correction_calibration_updated.aefi_signal_correction_calibration_updated import (
+from domain.detection_devices.aefi_device.signal_processing.events.aefi_signal_correction_calibration_updated.aefi_signal_correction_calibration_updated import (
     AefiSignalCorrectionCalibrationUpdated,
 )
 from application.services.transformation_service.transformation_service import TransformationService

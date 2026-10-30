@@ -10,23 +10,23 @@ from domain.shared_kernel.events.aefi_voltage_sample_acquired.aefi_voltage_sampl
 )
 from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
 from domain.shared_kernel.value_objects.acquisition.aefi_voltage_measurement import AefiVoltageMeasurement
-from domain.signal_processing.aefi_corrected_sample import AefiCorrectedSample
-from domain.signal_processing.errors.signal_correction_calibration_missing_error import (
+from domain.detection_devices.aefi_device.signal_processing.aefi_corrected_sample import AefiCorrectedSample
+from domain.detection_devices.aefi_device.signal_processing.errors.signal_correction_calibration_missing_error import (
     SignalCorrectionCalibrationMissingError,
 )
-from domain.signal_processing.events.aefi_corrected_field_sample_acquired.aefi_corrected_field_sample_acquired import (
+from domain.detection_devices.aefi_device.signal_processing.events.aefi_corrected_field_sample_acquired.aefi_corrected_field_sample_acquired import (
     AefiCorrectedFieldSampleAcquired,
 )
-from domain.signal_processing.events.aefi_signal_correction_calibration_updated.aefi_signal_correction_calibration_updated import (
+from domain.detection_devices.aefi_device.signal_processing.events.aefi_signal_correction_calibration_updated.aefi_signal_correction_calibration_updated import (
     AefiSignalCorrectionCalibrationUpdated,
 )
-from domain.signal_processing.services.aefi_signal_correction_service.aefi_signal_correction_service import (
+from domain.detection_devices.aefi_device.signal_processing.services.aefi_signal_correction_service.aefi_signal_correction_service import (
     AefiSignalCorrectionService,
 )
-from domain.signal_processing.value_objects.aefi_corrected_field_measurement.aefi_corrected_field_measurement import (
+from domain.detection_devices.aefi_device.signal_processing.value_objects.aefi_corrected_field_measurement.aefi_corrected_field_measurement import (
     AefiCorrectedFieldMeasurement,
 )
-from domain.signal_processing.value_objects.aefi_signal_correction_calibration.aefi_signal_correction_calibration import (
+from domain.detection_devices.aefi_device.signal_processing.value_objects.aefi_signal_correction_calibration.aefi_signal_correction_calibration import (
     AefiSignalCorrectionCalibration,
 )
 

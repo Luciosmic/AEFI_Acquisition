@@ -13,7 +13,7 @@ Aujourd'hui, la correction de signal (bruit/phase/primaire) est une fonction san
 
 ## Design
 
-- Dataclass ; module d'agrégat à part entière sous `domain/signal_processing/` (pas `shared_kernel/` — ces concepts ne sont utilisés que par ce flux, cf. standard shared-domain-concept-extraction du repo).
+- Dataclass ; module d'agrégat à part entière sous `domain/detection_devices/aefi_device/signal_processing/` (pas `shared_kernel/` — ces concepts ne sont utilisés que par ce flux, cf. standard shared-domain-concept-extraction du repo).
 - Pas d'ID dédié ni de repository : contrairement à `AefiPoint`, rien ici n'est persisté entre deux appels — la construction valide via `correct()` est le seul état qui compte, un `AefiCorrectedSample` existe toujours dans un état "corrigé avec succès" (pas d'état "en attente" comme `AefiPoint` avant `record_samples`).
 - L'event `AefiSampleCorrected` n'est émis qu'après validation de l'invariant (cohérent avec le standard EventStore du repo : "émettre un domain event uniquement depuis l'Aggregate Root, après validation de l'invariant").
 - Un rejet d'invariant ne produit pas de domain event (cohérent avec le standard EventStore : "un rejet d'invariant domain ne produit pas de domain event, il produit un log structuré") — le log est de la responsabilité de l'appelant applicatif, pas de l'agrégat (le domain est pur, sans logger).

@@ -1,7 +1,7 @@
 """Refused promise: a correction stage enabled requires calibration for all 3 axes
 (see signal_correction_calibration_missing_error_intention.md)."""
 
-from domain.signal_processing.value_objects.aefi_signal_correction_calibration.aefi_signal_correction_calibration import (
+from domain.detection_devices.aefi_device.signal_processing.value_objects.aefi_signal_correction_calibration.aefi_signal_correction_calibration import (
     AefiSignalCorrectionCalibration,
 )
 
