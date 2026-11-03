@@ -33,3 +33,6 @@ deps:
   - name: au-mcp-adapter-cc
   - name: GRAPHE-THESE
   - name: sh-agent-os
+  - name: solidai-ddd
+  - name: solidai-hexagonal
+  - name: solidai-atome

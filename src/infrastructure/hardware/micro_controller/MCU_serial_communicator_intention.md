@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Couche de communication série bas-niveau avec le microcontrôleur (protocole custom sur USB-UART)."
+code: ["[[src/infrastructure/hardware/micro_controller/MCU_serial_communicator.py]]", "[[src/infrastructure/hardware/micro_controller/adapter_acquisition_averaging_mcu.py]]", "[[src/infrastructure/hardware/micro_controller/adapter_lifecycle_MCU.py]]", "[[src/infrastructure/hardware/micro_controller/hardware_config_resolution.py]]", "[[src/infrastructure/hardware/micro_controller/mcu_advanced_configurator.py]]", "[[src/infrastructure/hardware/micro_controller/mcu_composition_root.py]]"]
+cause_de_changement: outil
+---
 # MCU_serial_communicator — Intention
 
 ## Rationale
