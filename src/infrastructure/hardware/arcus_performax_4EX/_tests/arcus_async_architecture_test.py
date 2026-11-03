@@ -21,11 +21,10 @@ class TestArcusAsyncArchitecture(unittest.TestCase):
         self.mock_controller.get_position.return_value = 0.0
 
         self.adapter = ArcusAdapter()
+        self.adapter.set_microns_per_pulse(21.8)  # bench transmission (1/16 microstepping)
         self.adapter.set_controller(self.mock_controller)
         self.adapter.enable()
 
-        # Read calibration from adapter so assertions are consistent
-        # with whatever arcus_default_config.json sets.
         self._steps_per_mm = self.adapter.STEPS_PER_MM
 
     def tearDown(self):

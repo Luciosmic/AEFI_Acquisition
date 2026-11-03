@@ -5,10 +5,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtWidgets import QApplication, QPushButton
 
-from interface.widgets.sensor_orientation_view.sensor_orientation_view import (
-    SensorOrientationView,
-    configure_qt_opengl,
-)
+from interface.widgets.sensor_orientation_view.sensor_orientation_view import SensorOrientationView
 
 _RZ90 = ((0.0, -1.0, 0.0), (1.0, 0.0, 0.0), (0.0, 0.0, 1.0))
 
@@ -18,10 +15,26 @@ def _make_view() -> SensorOrientationView:
     return SensorOrientationView()
 
 
-def test_3d_view_is_embedded_and_drawn_at_construction():
+def test_3d_view_is_embedded_and_not_drawn_before_the_host_feeds_p():
     view = _make_view()
     assert view.isAncestorOf(view.plotter)
+    assert view.cube_actor is None
+    view.close()
+
+
+def test_view_never_shown_empty_when_no_p_was_fed():
+    view = _make_view()
+    view.show()
     assert view.cube_actor is not None and view.marker_actor is not None
+    view.close()
+
+
+def test_show_keeps_the_fed_p_instead_of_redrawing_identity():
+    view = _make_view()
+    view.show_mounting(_RZ90)
+    cube = view.cube_actor
+    view.show()
+    assert view.cube_actor is cube
     view.close()
 
 
@@ -39,12 +52,3 @@ def test_one_row_of_four_camera_view_buttons():
     assert labels == ["Vue 3D", "Vue XY", "Vue XZ", "Vue YZ"]
     view.close()
 
-
-def test_configure_qt_opengl_sets_shared_contexts_and_vtk_default_format():
-    from PySide6.QtCore import QCoreApplication, Qt
-    from PySide6.QtGui import QSurfaceFormat
-
-    configure_qt_opengl()
-
-    assert QCoreApplication.testAttribute(Qt.ApplicationAttribute.AA_ShareOpenGLContexts)
-    assert QSurfaceFormat.defaultFormat().version() == (3, 2)

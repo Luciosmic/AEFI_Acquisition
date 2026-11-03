@@ -1,6 +1,10 @@
+import json
 import logging
+from dataclasses import replace
 import os
 import sys
+import traceback
+import threading
 from pathlib import Path
 
 # Add src to sys.path to allow imports from any location
@@ -13,107 +17,6 @@ sys.path.insert(0, str(root_dir))
 from PySide6.QtWidgets import QApplication, QDialog, QVBoxLayout, QLabel, QProgressBar
 from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtGui import QIcon
-
-# --- Domain & Application Services ---
-from application.services.scan_application_service.scan_application_service import (
-    ScanApplicationService,
-    make_electric_field_probe_channel,
-)
-from application.services.excitation_configuration_service.excitation_configuration_service import ExcitationConfigurationService
-from application.services.synchronous_detection_service.synchronous_detection_service import SynchronousDetectionService
-from application.services.sensor_calibration_service.sensor_calibration_service import SensorCalibrationService
-from application.services.acquisition_throughput_characterization_service.acquisition_throughput_characterization_service import (
-    AcquisitionThroughputCharacterizationService,
-)
-from infrastructure.persistence.acquisition_throughput.csv_acquisition_throughput_export_port import (
-    CsvAcquisitionThroughputExportPort,
-)
-from infrastructure.acquisition_conditions.acquisition_conditions_reader import AcquisitionConditionsReader
-from infrastructure.hardware.serial_link.ftdi_usb_latency_timer_reader import FtdiUsbLatencyTimerReader
-from infrastructure.provenance.git_software_provenance_reader import GitSoftwareProvenanceReader
-from application.services.source_geometry_calibration_service.source_geometry_calibration_service import SourceGeometryCalibrationService
-from application.services.hardware_component_service.hardware_component_service import HardwareComponentService
-from application.services.event_log_maintenance_service.event_log_maintenance_service import EventLogMaintenanceService
-from domain.calibration.calibration import Calibration
-from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
-from application.services.motion_control_service.motion_control_service import MotionControlService
-from application.services.electric_field_probe_service.electric_field_probe_service import ElectricFieldProbeService
-
-# --- Infrastructure ---
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
-from infrastructure.events.event_audit_log import EventAuditLog
-from infrastructure.events.file_event_log_storage import FileEventLogStorage
-from infrastructure.execution.thread_pool_task_runner import ThreadPoolTaskRunner
-from infrastructure.execution.event_bus_motion_synchronizer import EventBusMotionSynchronizer
-from infrastructure.persistence.csv_scan_export_port import CsvScanExportPort
-from infrastructure.persistence.hdf5_scan_export_port import Hdf5ScanExportPort
-from infrastructure.persistence.acquisition_snapshot_reader import AcquisitionSnapshotReader
-from infrastructure.persistence.calibration.hardware_signature_reader import HardwareSignatureReader
-from infrastructure.persistence.calibration.geometric_configuration_reader import GeometricConfigurationReader
-from infrastructure.persistence.calibration.ideal_sensor_rotation_reader import IdealSensorRotationReader
-from infrastructure.persistence.calibration.real_synchronous_detection_phase_calibration_repository import (
-    RealSynchronousDetectionPhaseCalibrationRepository,
-)
-from infrastructure.persistence.calibration.real_sensor_calibration_repository import (
-    RealSensorCalibrationRepository,
-)
-from infrastructure.persistence.calibration.real_source_geometry_calibration_repository import (
-    RealSourceGeometryCalibrationRepository,
-)
-from infrastructure.persistence.calibration.real_hardware_component_repository import RealHardwareComponentRepository
-from infrastructure.hardware.micro_controller.ad9106.adapter_synchronous_detection_ad9106 import (
-    AdapterSynchronousDetectionAD9106,
-)
-from infrastructure.post_processing.aefi_post_processor_port import AefiPostProcessorPort, rotation_origin
-from application.services.scan_export_service.scan_export_service import ScanExportService
-
-from infrastructure.execution.electric_field_probe_acquisition_executor import ElectricFieldProbeAcquisitionExecutor
-
-# --- Hardware composition (motion + MCU + probe, real or mock per hardware_config) ---
-from infrastructure.hardware.hardware_composition_root import HardwareCompositionRoot
-
-# --- System Lifecycle ---
-from application.services.system_lifecycle_service.system_lifecycle_service import (
-    SystemStartupApplicationService,
-    SystemShutdownApplicationService,
-    StartupConfig
-)
-from interface.ui_system_lifecycle.presenter_system_lifecycle import SystemLifecyclePresenter
-from interface.ui_system_lifecycle.view_startup import StartupView
-
-# --- Interface ---
-from interface.shell.dashboard import Dashboard
-from interface.shell.dashboard_wiring import wire_dashboard
-from interface.widgets.sensor_orientation_view.sensor_orientation_view import configure_qt_opengl
-from interface.widgets.panels.logs_panel import LogsPanel, install_console_capture
-from interface.presenters.motion_presenter import MotionPresenter
-from interface.presenters.excitation_presenter import ExcitationPresenter
-from interface.presenters.synchronous_detection_presenter import SynchronousDetectionPresenter
-from interface.presenters.sensor_calibration_presenter import SensorCalibrationPresenter
-from interface.presenters.acquisition_throughput_characterization_presenter import (
-    AcquisitionThroughputCharacterizationPresenter,
-)
-from interface.presenters.source_geometry_calibration_presenter import SourceGeometryCalibrationPresenter
-from interface.presenters.hardware_component_presenter import HardwareComponentPresenter
-from interface.presenters.event_log_presenter import EventLogPresenter
-from interface.presenters.adc_output_rate_characterization_presenter import AdcOutputRateCharacterizationPresenter
-from application.services.adc_output_rate_characterization_service.adc_output_rate_characterization_service import (
-    AdcOutputRateCharacterizationService,
-)
-from infrastructure.persistence.adc_output_rate.csv_adc_output_rate_export_port import CsvAdcOutputRateExportPort
-from interface.presenters.aefi_continuous_reading_presenter import AefiContinuousReadingPresenter
-from interface.presenters.electric_field_probe_presenter import ElectricFieldProbePresenter
-from interface.presenters.scan_presenter import ScanPresenter
-
-# --- Transformation Service ---
-from application.services.transformation_service.transformation_service import TransformationService
-from application.services.transformation_service.dtos.transformation_dtos import SetRotationAnglesDTO
-
-# --- Hardware Configuration ---
-from application.services.hardware_configuration_service.hardware_configuration_service import HardwareConfigurationService
-from application.services.hardware_configuration_service.ports.i_hardware_advanced_configurator import IHardwareAdvancedConfigurator
-from interface.presenters.hardware_advanced_config_presenter import HardwareAdvancedConfigPresenter
-from interface.styles.theme import apply_dark_theme
 
 logger = logging.getLogger(__name__)
 
@@ -138,6 +41,16 @@ def main(hardware_config: dict | None = None):
     if seeded:
         logger.info(f"Configs initialisées depuis templates : {seeded}")
 
+    # Splash-first: only PySide6 + the few light modules below are imported
+    # before the StartupView shows; the heavy imports follow in _compose_and_start,
+    # one phase label each (4 s of silence looked like a crash).
+    from interface.qt_gl_format import configure_qt_opengl
+    from interface.styles.theme import apply_dark_theme
+    from interface.widgets.panels.logs_panel import LogsPanel, install_console_capture
+    from interface.ui_system_lifecycle.presenter_system_lifecycle import SystemLifecyclePresenter
+    from interface.ui_system_lifecycle.view_startup import StartupView
+    from infrastructure.mcp.ring_buffer_log_handler import RingBufferLogHandler
+
     # 1. Create QApplication (GL setup first: the splash is a top-level window
     # created before the 3D sensor view of the calibration panel)
     configure_qt_opengl()
@@ -156,10 +69,141 @@ def main(hardware_config: dict | None = None):
     # 1bis. Logs panel + splash: shown first, capture everything from here on
     splash_logs_panel = LogsPanel()
     log_stream = install_console_capture(splash_logs_panel)
+    # After install_console_capture: its basicConfig(force=True) removes every existing root handler.
+    mcp_log_handler = RingBufferLogHandler()
+    logging.getLogger().addHandler(mcp_log_handler)
 
     lifecycle_presenter = SystemLifecyclePresenter()
     startup_view = StartupView(lifecycle_presenter, logs_panel=splash_logs_panel)
     startup_view.show()
+    startup_view.set_phase("Démarrage...")
+    app.processEvents()
+
+    try:
+        _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, splash_logs_panel, log_stream, repo_root, mcp_log_handler)
+    except Exception:
+        # No auto-close: the splash stays open with the traceback until the operator clicks "Fermer".
+        logger.exception("Startup failed")
+        startup_view.show_failure(traceback.format_exc())
+
+    sys.exit(app.exec())
+
+
+def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, splash_logs_panel, log_stream, repo_root, mcp_log_handler):
+    """Steps 2-12 of main(): compose the dependency graph and start the app."""
+    # Heavy imports, grouped by phase so the splash shows what is loading.
+    # Inside the caller's try/except: an ImportError lands in the splash panel.
+    startup_view.set_phase("Domaine et services...")
+    app.processEvents()
+    from application.services.scan_application_service.scan_application_service import (
+        ScanApplicationService,
+        make_electric_field_probe_channel,
+    )
+    from application.services.excitation_configuration_service.excitation_configuration_service import ExcitationConfigurationService
+    from application.services.synchronous_detection_service.synchronous_detection_service import SynchronousDetectionService
+    from application.services.sensor_calibration_service.sensor_calibration_service import SensorCalibrationService
+    from application.services.acquisition_throughput_characterization_service.acquisition_throughput_characterization_service import (
+        AcquisitionThroughputCharacterizationService,
+    )
+    from application.services.source_geometry_calibration_service.source_geometry_calibration_service import SourceGeometryCalibrationService
+    from application.services.hardware_component_service.hardware_component_service import HardwareComponentService
+    from application.services.mechanical_transmission_calibration_service.mechanical_transmission_calibration_service import (
+        MechanicalTransmissionCalibrationService,
+    )
+    from application.services.event_log_maintenance_service.event_log_maintenance_service import EventLogMaintenanceService
+    from domain.calibration.calibration import Calibration
+    from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
+    from application.services.motion_control_service.motion_control_service import MotionControlService
+    from application.services.motion_control_service.motion_conversion_handler import MotionConversionHandler
+    from application.services.electric_field_probe_service.electric_field_probe_service import ElectricFieldProbeService
+    from application.services.inertial_sensor_service.inertial_sensor_service import InertialSensorService
+    from application.services.scan_export_service.scan_export_service import ScanExportService
+    from application.services.scan_application_service.scan_closure_handler.scan_closure_handler import ScanClosureHandler
+    from application.services.system_lifecycle_service.system_lifecycle_service import (
+        SystemStartupApplicationService,
+        SystemShutdownApplicationService,
+        StartupConfig
+    )
+    from application.services.operator_service.operator_service import OperatorService
+    from application.services.adc_output_rate_characterization_service.adc_output_rate_characterization_service import (
+        AdcOutputRateCharacterizationService,
+    )
+    from application.services.transformation_service.transformation_service import TransformationService
+    from application.services.transformation_service.dtos.transformation_dtos import SetRotationAnglesDTO
+    from application.services.aefi_signal_processing_service.aefi_signal_processing_service import (
+        AefiSignalProcessingService,
+    )
+    from application.services.hardware_configuration_service.hardware_configuration_service import HardwareConfigurationService
+    from application.services.hardware_configuration_service.ports.i_hardware_advanced_configurator import IHardwareAdvancedConfigurator
+
+    startup_view.set_phase("Pilotes...")
+    app.processEvents()
+    from infrastructure.persistence.acquisition_throughput.csv_acquisition_throughput_export_port import (
+        CsvAcquisitionThroughputExportPort,
+    )
+    from infrastructure.acquisition_conditions.acquisition_conditions_reader import AcquisitionConditionsReader
+    from infrastructure.hardware.serial_link.ftdi_usb_latency_timer_reader import FtdiUsbLatencyTimerReader
+    from infrastructure.provenance.git_software_provenance_reader import GitSoftwareProvenanceReader
+    from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+    from infrastructure.events.event_audit_log import EventAuditLog
+    from infrastructure.events.file_event_log_storage import FileEventLogStorage
+    from infrastructure.execution.thread_pool_task_runner import ThreadPoolTaskRunner
+    from infrastructure.execution.event_bus_motion_synchronizer import EventBusMotionSynchronizer
+    from infrastructure.persistence.csv_scan_export_port import CsvScanExportPort
+    from infrastructure.persistence.hdf5_scan_export_port import Hdf5ScanExportPort
+    from infrastructure.persistence.acquisition_snapshot_reader import AcquisitionSnapshotReader
+    from infrastructure.persistence.calibration.hardware_signature_reader import HardwareSignatureReader
+    from infrastructure.persistence.calibration.geometric_configuration_reader import GeometricConfigurationReader
+    from infrastructure.persistence.calibration.ideal_sensor_rotation_reader import IdealSensorRotationReader
+    from infrastructure.persistence.calibration.real_synchronous_detection_phase_calibration_repository import (
+        RealSynchronousDetectionPhaseCalibrationRepository,
+    )
+    from infrastructure.persistence.calibration.real_sensor_calibration_repository import (
+        RealSensorCalibrationRepository,
+    )
+    from infrastructure.persistence.calibration.real_source_geometry_calibration_repository import (
+        RealSourceGeometryCalibrationRepository,
+    )
+    from infrastructure.persistence.calibration.real_hardware_component_repository import RealHardwareComponentRepository
+    from infrastructure.persistence.calibration.real_mechanical_transmission_calibration_repository import (
+        RealMechanicalTransmissionCalibrationRepository,
+    )
+    from infrastructure.hardware.micro_controller.ad9106.adapter_synchronous_detection_ad9106 import (
+        AdapterSynchronousDetectionAD9106,
+    )
+    from infrastructure.post_processing.aefi_post_processor_port import AefiPostProcessorPort, rotation_origin
+    from infrastructure.unit_of_work.in_memory_unit_of_work import InMemoryUnitOfWork
+    from infrastructure.execution.electric_field_probe_acquisition_executor import ElectricFieldProbeAcquisitionExecutor
+    from infrastructure.execution.inertial_sensor_acquisition_executor import InertialSensorAcquisitionExecutor
+    from infrastructure.hardware.lsm9ds1.lsm9ds1_config_loader import load_lsm9ds1_config
+    from infrastructure.mcp.observability_mcp_server import run_observability_mcp_server
+    from infrastructure.events.event_ring_buffer import EventRingBuffer
+    from infrastructure.hardware.hardware_composition_root import HardwareCompositionRoot
+    from infrastructure.persistence.operator_registry.real_operator_repository import RealOperatorRepository
+    from infrastructure.persistence.adc_output_rate.csv_adc_output_rate_export_port import CsvAdcOutputRateExportPort
+
+    startup_view.set_phase("Interface...")
+    app.processEvents()
+    from interface.shell.dashboard import Dashboard
+    from interface.shell.dashboard_wiring import wire_dashboard
+    from interface.presenters.motion_presenter import MotionPresenter
+    from interface.presenters.excitation_presenter import ExcitationPresenter
+    from interface.presenters.synchronous_detection_presenter import SynchronousDetectionPresenter
+    from interface.presenters.sensor_calibration_presenter import SensorCalibrationPresenter
+    from interface.presenters.acquisition_throughput_characterization_presenter import (
+        AcquisitionThroughputCharacterizationPresenter,
+    )
+    from interface.presenters.source_geometry_calibration_presenter import SourceGeometryCalibrationPresenter
+    from interface.presenters.hardware_component_presenter import HardwareComponentPresenter
+    from interface.presenters.event_log_presenter import EventLogPresenter
+    from interface.presenters.operator_presenter import OperatorPresenter
+    from interface.presenters.adc_output_rate_characterization_presenter import AdcOutputRateCharacterizationPresenter
+    from interface.presenters.aefi_continuous_reading_presenter import AefiContinuousReadingPresenter
+    from interface.presenters.electric_field_probe_presenter import ElectricFieldProbePresenter
+    from interface.presenters.inertial_sensor_presenter import InertialSensorPresenter
+    from interface.presenters.scan_presenter import ScanPresenter
+    from interface.presenters.hardware_advanced_config_presenter import HardwareAdvancedConfigPresenter
+
     startup_view.set_phase("Configuration matérielle...")
     app.processEvents()
 
@@ -175,6 +219,7 @@ def main(hardware_config: dict | None = None):
             "motion": "real",
             "aefi_device": "real",   # whole MCU stack (ADS131A04 acquisition + AD9106 excitation + lifecycle + continuous)
             "electric_field_probe": "real",  # picks the adapter only, connection is manual (cf. panel)
+            "inertial_sensor": "real",  # LSM9DS1 board: picks the adapter only, connection is manual (cf. panel)
             "oscilloscope": "real",  # DSO-X 2014A on DRDY, opened only during an ODR measurement
         }
     NARDA_COM_PORT = "COM8"  # cf. config_templates/electric_field_probe_config.json
@@ -188,10 +233,19 @@ def main(hardware_config: dict | None = None):
     # traceability/audit (see _system/self/event_store.md).
     audit_log = EventAuditLog(repo_root / ".aefi_acquisition" / "logs" / "events")
     event_bus.subscribe("*", audit_log.record)
+    event_ring_buffer = EventRingBuffer()  # tail served by the observability MCP (get_recent_events)
+    event_bus.subscribe("*", event_ring_buffer.record)
 
     # 4. Instantiate Adapters
     print("\n--- Initializing Hardware Adapters ---")
-    hw = HardwareCompositionRoot(hardware_config, event_bus, NARDA_COM_PORT)
+    # LSM9DS1 board: port/baudrate/channels come from the runtime copy of
+    # config_templates/lsm9ds1_config.json (seeded by the ConfigBootstrapper).
+    inertial_sensor_config = load_lsm9ds1_config(
+        repo_root / ".aefi_acquisition" / "configs" / "lsm9ds1_config.json"
+    )
+    hw = HardwareCompositionRoot(
+        hardware_config, event_bus, NARDA_COM_PORT, inertial_sensor_config=inertial_sensor_config
+    )
 
     # 5. Create Hardware Initialization Port
     if hw.lifecycle_adapters:
@@ -229,13 +283,27 @@ def main(hardware_config: dict | None = None):
     )
     logger.info("Services -> ElectricFieldProbeService created")
 
+    # Inertial Sensor Service (LSM9DS1 board). Connection and stream start are
+    # operator actions; the only automatic action is the safety stream stop at
+    # application exit — the board keeps its stream active with the port closed.
+    inertial_sensor_service = InertialSensorService(
+        executor=InertialSensorAcquisitionExecutor(event_bus),
+        stream_port=hw.inertial_sensor_port,
+        event_bus=event_bus,
+        channels=inertial_sensor_config.channels,
+    )
+    app.aboutToQuit.connect(inertial_sensor_service.shutdown)
+    logger.info("Services -> InertialSensorService created")
+
     # Scan Application Service — auxiliary probes (currently: Narda EF probe)
     # are registered as blocking channels; see AuxiliaryProbeChannel for what
     # "blocking" means and make_electric_field_probe_channel for the Narda wiring.
+    scan_unit_of_work = InMemoryUnitOfWork(event_bus)
     narda_channel = make_electric_field_probe_channel(
         probe_port=hw.probe_port,
         probe_service=electric_field_probe_service,
         event_bus=event_bus,
+        unit_of_work=scan_unit_of_work,
     )
     # Excitation Service
     excitation_service = ExcitationConfigurationService(hw.excitation_port, event_bus)
@@ -278,6 +346,38 @@ def main(hardware_config: dict | None = None):
     )
     logger.info("Services -> HardwareComponentService created (hardware signature=%s)", hardware_signature)
 
+    # Mechanical transmission (motor + stepper driver + their setting): the
+    # only source of the mm/pulse conversion the motion controller needs.
+    # First boot: motor and driver are recorded and mounted, then the
+    # transmission, from the versioned template — same service calls as any
+    # other caller, nothing to type in the UI.
+    transmission_seed = json.loads(
+        (repo_root / "config_templates" / "mechanical_transmission_seed.json").read_text(encoding="utf-8")
+    )
+    for kind_key, component in (("motors", transmission_seed["motor"]), ("stepper_driver", transmission_seed["stepper_driver"])):
+        if not hardware_component_service.list_components(kind_key):
+            hardware_component_service.record_characterization(kind_key, component["name"], component["characterization"])
+            hardware_component_service.mount_component(kind_key, component["name"])
+            logger.info("Seeded %s '%s' from mechanical_transmission_seed.json", kind_key, component["name"])
+    transmission_repository = RealMechanicalTransmissionCalibrationRepository()
+    transmission_service = MechanicalTransmissionCalibrationService(
+        transmission_repository, hardware_component_repository, event_bus
+    )
+    if not transmission_repository.find_all():
+        transmission_service.record_calibration(**transmission_seed["transmission"])
+        logger.info("Seeded mechanical transmission from mechanical_transmission_seed.json")
+    # The bench starts even without mm/pulse conversion (motor steps per
+    # revolution not characterized, ...): motion and scan are then REFUSED with
+    # the missing quantity named on the dashboard, never run on a guessed value.
+    # Entering the quantity (Calibration panel, "Moteurs" tab) applies the
+    # conversion live, no restart.
+    motion_conversion_handler = MotionConversionHandler(hw.motion_port, transmission_service, event_bus)
+    motion_conversion_handler.apply_current_transmission()
+    logger.info(
+        "Services -> MotionConversionHandler created (calibrated=%s)",
+        motion_conversion_handler.get_status().is_available,
+    )
+
     # Sensor Calibration Service (mounting angles P of the mounted sensor).
     # Each angle calibration references the sensor's current mounting and the
     # current source geometry entry. Also owns the active rotation applied to
@@ -311,12 +411,17 @@ def main(hardware_config: dict | None = None):
     )
     logger.info("Services -> SynchronousDetectionService created (signature=%s)", hardware_signature)
 
+    # Handler before service: ScanCompleted must come out during the dispatch of AefiPointAcquired.
+    # One topic per probe aggregate whose acquisitions the Scan references (its source is declared in the Scan).
+    scan_closure_handler = ScanClosureHandler(event_bus, scan_unit_of_work, ("aefipointacquired", "aefilineacquired", "nardapointacquired"))
     scan_service = ScanApplicationService(
         hw.motion_port, continuous_service, event_bus,
+        unit_of_work=scan_unit_of_work,
         task_runner=task_runner,
         motion_sync=motion_sync,
         auxiliary_probes=[narda_channel],
         excitation_service=excitation_service,
+        conversion_status=motion_conversion_handler,
     )
     logger.info("Services -> ScanApplicationService created (auxiliary_probes=1)")
 
@@ -327,7 +432,27 @@ def main(hardware_config: dict | None = None):
         hardware_component_repository=hardware_component_repository,
         sensor_calibration_repository=sensor_calibration_repository,
         source_geometry_calibration_repository=source_geometry_calibration_repository,
+        mechanical_transmission_calibration_repository=transmission_repository,
     )
+    # Facts of every acquisition-parameters.json (schema 1.0) — scans, time
+    # series and the throughput sweep: catalog + resolved chip configs (snapshot),
+    # controller memories, active rotation, phase compensation, motors, serial
+    # link, real/mock backends; code provenance (git, read once at startup) and
+    # the USB latency of the serial link.
+    acquisition_conditions = AcquisitionConditionsReader(
+        snapshot_reader=acquisition_snapshot_port,
+        hardware_component_repository=hardware_component_repository,
+        sensor_calibration_repository=sensor_calibration_repository,
+        active_rotation=sensor_calibration_service.get_active_rotation,
+        compensation_enabled=synchronous_detection_service.is_compensation_enabled,
+        ad9106_memory_state=hw.mcu_root.ad9106_controller.get_memory_state,
+        oversampling_ratio=hw.acquisition_averaging.get_oversampling_ratio,
+        serial_communicator=hw.mcu_root.lifecycle.get_communicator(),
+        motion_port=hw.motion_port,
+        hardware_backends=hardware_config,
+    )
+    software_provenance = GitSoftwareProvenanceReader()
+    usb_latency_timer = FtdiUsbLatencyTimerReader()
     active_rotation = sensor_calibration_service.get_active_rotation()
     post_processing_port = AefiPostProcessorPort(
         event_bus,
@@ -341,14 +466,16 @@ def main(hardware_config: dict | None = None):
     scan_export_service = ScanExportService(
         event_bus, csv_export_port, hdf5_export_port,
         excitation_service=excitation_service,
-        acquisition_snapshot_port=acquisition_snapshot_port,
+        conditions_port=acquisition_conditions,
         post_processing_port=post_processing_port,
         task_runner=task_runner,
+        software_provenance_port=software_provenance,
+        usb_latency_timer_port=usb_latency_timer,
     )
     logger.info("Services -> ScanExportService created")
 
     # Motion Control Service
-    motion_control_service = MotionControlService(hw.motion_port, event_bus)
+    motion_control_service = MotionControlService(hw.motion_port, event_bus, conversion_status=motion_conversion_handler)
     logger.info("Services -> MotionControlService created")
 
     # Transformation Service — applies E_sources = P·E_sensor with the active
@@ -384,21 +511,6 @@ def main(hardware_config: dict | None = None):
     # Throughput / noise vs MCU n_avg (microcontroller tab of the Calibration panel).
     # Holds the excitation, the acquisition stream and the n_avg / OSR configuration
     # (Hardware Advanced Config) while it runs.
-    # Its acquisition-parameters.json records the conditions: catalog + resolved
-    # chip configs (same snapshot as the scan export), controller memories,
-    # active rotation, phase compensation, serial link, motors, real/mock backends.
-    acquisition_conditions = AcquisitionConditionsReader(
-        snapshot_reader=acquisition_snapshot_port,
-        hardware_component_repository=hardware_component_repository,
-        sensor_calibration_repository=sensor_calibration_repository,
-        active_rotation=sensor_calibration_service.get_active_rotation,
-        compensation_enabled=synchronous_detection_service.is_compensation_enabled,
-        ad9106_memory_state=hw.mcu_root.ad9106_controller.get_memory_state,
-        oversampling_ratio=hw.acquisition_averaging.get_oversampling_ratio,
-        serial_communicator=hw.mcu_root.lifecycle.get_communicator(),
-        motion_port=hw.motion_port,
-        hardware_backends=hardware_config,
-    )
     acquisition_throughput_service = AcquisitionThroughputCharacterizationService(
         excitation_service=excitation_service,
         acquisition_service=continuous_service,
@@ -408,8 +520,8 @@ def main(hardware_config: dict | None = None):
         event_bus=event_bus,
         hardware_configuration=hardware_config_service,
         conditions_port=acquisition_conditions,
-        software_provenance_port=GitSoftwareProvenanceReader(),
-        usb_latency_timer_port=FtdiUsbLatencyTimerReader(),
+        software_provenance_port=software_provenance,
+        usb_latency_timer_port=usb_latency_timer,
     )
     logger.info("Services -> AcquisitionThroughputCharacterizationService created")
 
@@ -479,13 +591,23 @@ def main(hardware_config: dict | None = None):
     acquisition_throughput_presenter = AcquisitionThroughputCharacterizationPresenter(acquisition_throughput_service)
     adc_output_rate_presenter = AdcOutputRateCharacterizationPresenter(adc_output_rate_service)
 
-    # Continuous Presenter needs Transformation Service now
+    # Signal correction (noise/phase/primary) — reacts to the continuous
+    # acquisition stream via the event bus, built before the presenters that
+    # consume its events.
+    signal_processing_service = AefiSignalProcessingService(event_bus, transformation_service)
+    logger.info("Services -> AefiSignalProcessingService created")
+
+    # Continuous Presenter needs Transformation Service and AefiSignalProcessingService now
     aefi_continuous_reading_presenter = AefiContinuousReadingPresenter(
-        continuous_service, event_bus, transformation_service, export_service=scan_export_service
+        continuous_service, event_bus, transformation_service, signal_processing_service,
+        export_service=scan_export_service
     )
 
     # Electric Field Probe Presenter
     electric_field_probe_presenter = ElectricFieldProbePresenter(electric_field_probe_service, event_bus)
+
+    # Inertial Sensor Presenter
+    inertial_sensor_presenter = InertialSensorPresenter(inertial_sensor_service, event_bus)
     
     
     
@@ -501,6 +623,10 @@ def main(hardware_config: dict | None = None):
     )
 
     # 10. Wire Presenters to Panels
+    # Operators registry (.aefi_acquisition/operators/) — chosen in the Scan and
+    # Continuous Reading panels, exported in acquisition-parameters.json.
+    operator_presenter = OperatorPresenter(OperatorService(RealOperatorRepository(), event_bus), event_bus)
+
     wire_dashboard(
         dashboard,
         motion_presenter,
@@ -508,6 +634,7 @@ def main(hardware_config: dict | None = None):
         synchronous_detection_presenter,
         aefi_continuous_reading_presenter,
         electric_field_probe_presenter,
+        inertial_sensor_presenter,
         scan_presenter,
         hardware_config_presenter,
         sensor_calibration_presenter,
@@ -516,9 +643,40 @@ def main(hardware_config: dict | None = None):
         event_log_presenter,
         acquisition_throughput_presenter,
         adc_output_rate_presenter,
+        operator_presenter,
     )
 
-    # 11. Startup Sequence (hardware init if real hardware) or Direct Launch (if mocks only)
+    # 11. Observability MCP server (read-only) — lets an LLM client (e.g.
+    # Claude) query scan status in parallel with the UI, over the same
+    # scan_service instance built above (no duplicated services, no state
+    # copy). Scope is deliberately read-only: no mutation tool is exposed,
+    # so a connected LLM cannot drive hardware without human supervision.
+    # Started once startup has finished (success or failure), after
+    # dashboard.show(): its thread imports compete for the GIL with the
+    # first paint of the dashboard.
+    def _scan_config_with_export_directory():
+        snapshot = scan_service.get_current_config()
+        export_config = scan_export_service.get_export_config()
+        if snapshot is None or export_config is None:
+            return snapshot
+        return replace(snapshot, export_directory=export_config.output_directory)
+
+    mcp_thread = threading.Thread(
+        target=run_observability_mcp_server,
+        args=(scan_service,),
+        kwargs=dict(
+            recent_events_provider=event_ring_buffer.recent,
+            recent_logs_provider=mcp_log_handler.recent,
+            scan_config_provider=_scan_config_with_export_directory,
+        ),
+        daemon=True,
+    )
+
+    def start_mcp_server_once():
+        if mcp_thread.ident is None:  # startup_finished may fire again (retry)
+            mcp_thread.start()
+
+    # 12. Startup Sequence (hardware init if real hardware) or Direct Launch (if mocks only)
     # StartupView has been visible since the very start of main(); the log
     # panel it hosted moves into the Dashboard once it's shown.
     def on_startup_finished(success: bool, errors: list):
@@ -534,6 +692,8 @@ def main(hardware_config: dict | None = None):
             logger.error(f"Hardware initialization failed: {errors}")
             # StartupView will display the error
             # User can close the window manually
+        # Next event-loop turn: the dashboard gets its first paint before the MCP imports.
+        QTimer.singleShot(0, start_mcp_server_once)
 
     lifecycle_presenter.startup_finished.connect(on_startup_finished)
 
@@ -545,8 +705,6 @@ def main(hardware_config: dict | None = None):
         # No hardware lifecycle to run for mocks - finish immediately
         logger.info("No real hardware in lifecycle (mock-only) — skipping startup sequence.")
         on_startup_finished(success=True, errors=[])
-
-    sys.exit(app.exec())
 
 
 if __name__ == "__main__":

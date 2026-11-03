@@ -64,12 +64,18 @@
 - SW4: OFF, SW5: **OFF**, SW6: OFF → **3.5A (4.0A Peak)**
 - **Résultat**: ✅ Mouvement OK
 
+> **Précision (2026-10-01, Luis)** : à 3.0A le moteur bouge, mais saute des pas sur les petits
+> mouvements demandés et peut donc se bloquer — pas « aucun mouvement » au sens strict.
+
 **Conclusion**: 
 - Ce n'est PAS un problème de courant trop élevé (3.5A > 3.0A)
 - Le problème est spécifique à la configuration 3.0A (SW5=ON, SW4=OFF, SW6=OFF)
 - Possible problème hardware ou incompatibilité avec cette configuration spécifique
 
 ### Erreurs de position observées
+> **Résolu (2026-10-01, Luis)** : écart observé avant le passage au courant maximal (3.5A) —
+> plus aucune dérive depuis.
+
 - Retour à 0 donne ~30-40 steps d'erreur
 - Possible causes:
   - Drift du moteur (courant trop faible?)

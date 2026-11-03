@@ -5,7 +5,6 @@ See sensor_mounting_solver_intention.md.
 """
 
 import numpy as np
-from scipy.spatial.transform import Rotation
 
 from domain.calibration.errors.sensor_response_degenerate_error import SensorResponseDegenerateError
 from domain.calibration.value_objects.sensor_mounting_fit.sensor_mounting_fit import SensorMountingFit
@@ -39,6 +38,8 @@ def solve_mounting_angles(response_x_sensor, response_y_sensor) -> SensorMountin
             f"Réponses X et Y séparées de {separation:.1f}° (attendu ~90°, minimum "
             f"{MIN_RESPONSE_SEPARATION_DEGREES:.0f}°) : le montage n'est pas déterminé"
         )
+
+    from scipy.spatial.transform import Rotation  # here, not at import: scipy kept out of app startup
 
     rotation, _ = Rotation.align_vectors(_TARGETS_SOURCES, np.array([u_x, u_y]))
     p = rotation.as_matrix()

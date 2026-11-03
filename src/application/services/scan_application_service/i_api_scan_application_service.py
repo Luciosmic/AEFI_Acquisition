@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
-from typing import Callable, Dict, Any
+from typing import Callable, Dict, Any, Optional
 
-from .dtos.scan_dtos import Scan2DConfigDTO, ScanStatusDTO
+from .dtos.scan_dtos import Scan2DConfigDTO, LineScanConfigDTO, ScanStatusDTO, ScanConfigSnapshotDTO
 from .ports.i_scan_output_port import IScanOutputPort
+from .errors.scan_start_error import ScanStartError
 from domain.shared_kernel.events.domain_event import DomainEvent
 
 
@@ -23,7 +24,13 @@ class IApiScanApplicationService(ABC):
     """
 
     @abstractmethod
+    def get_start_refusal(self) -> Optional[ScanStartError]: ...
+
+    @abstractmethod
     def execute_scan(self, scan_dto: Scan2DConfigDTO) -> bool: ...
+
+    @abstractmethod
+    def execute_line_scan(self, scan_dto: LineScanConfigDTO) -> bool: ...
 
     @abstractmethod
     def pause_scan(self) -> None: ...
@@ -36,6 +43,9 @@ class IApiScanApplicationService(ABC):
 
     @abstractmethod
     def get_status(self) -> ScanStatusDTO: ...
+
+    @abstractmethod
+    def get_current_config(self) -> Optional[ScanConfigSnapshotDTO]: ...
 
     @abstractmethod
     def set_output_port(self, output_port: IScanOutputPort) -> None: ...

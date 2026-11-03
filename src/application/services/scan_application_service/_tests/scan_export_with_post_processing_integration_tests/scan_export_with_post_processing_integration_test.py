@@ -10,6 +10,7 @@ Responsibility:
     Only the visualization launch (spawns an external GUI process) is
     stubbed out, to keep this test headless.
 """
+import json
 import shutil
 import tempfile
 import threading
@@ -20,6 +21,8 @@ from typing import Any, Dict, List
 import h5py
 
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from application.services.scan_application_service.scan_closure_handler.scan_closure_handler import ScanClosureHandler
+from infrastructure.unit_of_work.in_memory_unit_of_work import InMemoryUnitOfWork
 from infrastructure.execution.thread_pool_task_runner import ThreadPoolTaskRunner
 from infrastructure.execution.fake.fake_thread_pool_task_runner import FakeThreadPoolTaskRunner
 from infrastructure.execution.event_bus_motion_synchronizer import EventBusMotionSynchronizer
@@ -39,14 +42,11 @@ from application.services.excitation_configuration_service.excitation_configurat
 )
 from application.services.scan_export_service.scan_export_service import ScanExportService
 from application.services.scan_export_service.dtos.scan_export_dtos import ExportConfigDTO
-from application.services.scan_export_service.ports.i_acquisition_snapshot_port import IAcquisitionSnapshotPort
+from infrastructure.acquisition_conditions.fake.fake_acquisition_conditions_port import FakeAcquisitionConditionsPort
+from infrastructure.hardware.serial_link.fake.fake_usb_latency_timer_port import FakeUsbLatencyTimerPort
+from infrastructure.provenance.fake.fake_software_provenance_port import FakeSoftwareProvenancePort
 
 from domain.shared_kernel.excitation.value_objects.excitation_mode import ExcitationMode
-
-
-class _FakeSnapshotPort(IAcquisitionSnapshotPort):
-    def read(self) -> Dict[str, Any]:
-        return {}
 
 
 class _RecordingPostProcessorPort(AefiPostProcessorPort):
@@ -73,10 +73,13 @@ class ScanExportWithPostProcessingIntegrationTest(unittest.TestCase):
             MockAefiAcquisitionExecutor(self.event_bus), acquisition_port
         )
         motion_sync = EventBusMotionSynchronizer(self.event_bus)
+        scan_uow = InMemoryUnitOfWork(self.event_bus)
+        ScanClosureHandler(self.event_bus, scan_uow, ("aefipointacquired",))
         self.scan_service = ScanApplicationService(
             motion_port, continuous_service, self.event_bus,
             task_runner=ThreadPoolTaskRunner(),
             motion_sync=motion_sync,
+            unit_of_work=scan_uow,
         )
 
         excitation_service = ExcitationConfigurationService(MockExcitationPort(), self.event_bus)
@@ -90,11 +93,13 @@ class ScanExportWithPostProcessingIntegrationTest(unittest.TestCase):
             csv_export_port=CsvScanExportPort(),
             hdf5_export_port=Hdf5ScanExportPort(),
             excitation_service=excitation_service,
-            acquisition_snapshot_port=_FakeSnapshotPort(),
+            conditions_port=FakeAcquisitionConditionsPort(),
             post_processing_port=self.post_processing_port,
             # Synchronous: by the time "scancompleted" finishes propagating,
             # post-processing (real pipeline, stubbed viz launch) has run.
             task_runner=FakeThreadPoolTaskRunner(),
+            software_provenance_port=FakeSoftwareProvenancePort(),
+            usb_latency_timer_port=FakeUsbLatencyTimerPort(),
         )
         self.export_service.configure_export(
             ExportConfigDTO(enabled=True, output_directory=str(self.output_dir), filename_base="e2e")
@@ -137,6 +142,17 @@ class ScanExportWithPostProcessingIntegrationTest(unittest.TestCase):
             # not just the raw export.
             for step in ("preprocessed", "phase_calibrated", "amplitude_subtracted", "rotated_frame", "interpolated"):
                 self.assertIn(step, f.keys(), f"missing post-processing step '{step}' in HDF5")
+
+        # The acquisition-parameters document (schema 1.0) ends with the
+        # outcome and the produced files, hashed once every file was closed.
+        documents = list(acquisition_dir.glob("*_acquisition-parameters.json"))
+        self.assertEqual(len(documents), 1)
+        with documents[0].open(encoding="utf-8") as f:
+            document = json.load(f)
+        self.assertEqual(document["schema"]["version"], "1.0")
+        self.assertEqual(document["provenance"]["activity"]["status"], "completed")
+        listed = {f["format"] for f in document["data"]["files"] if "sha256" in f}
+        self.assertTrue({"CSV", "HDF5", "JSON Lines"} <= listed, listed)
 
         # Visualizer would have been launched on the acquisition folder
         # (stubbed here, so no real GUI process was spawned).

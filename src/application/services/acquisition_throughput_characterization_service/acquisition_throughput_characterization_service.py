@@ -40,7 +40,7 @@ from application.shared.acquisition_parameters.i_acquisition_conditions_port imp
 from application.shared.acquisition_parameters.i_software_provenance_port import (
     ISoftwareProvenancePort,
 )
-from application.services.acquisition_throughput_characterization_service.ports.i_usb_latency_timer_port import (
+from application.shared.acquisition_parameters.i_usb_latency_timer_port import (
     IUsbLatencyTimerPort,
 )
 from application.services.acquisition_throughput_characterization_service.ports.i_acquisition_throughput_export_port import (

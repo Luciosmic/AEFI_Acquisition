@@ -52,17 +52,32 @@ class ArcusPerformaxLifecycleAdapter(IHardwareInitializationPort):
         
     def verify_all(self) -> bool:
         """
-        Verify connection by checking motion status or reading position.
-        
+        Verify the controller answers, reading raw positions in pulses.
+
+        Deliberately independent of the mm/pulse conversion: an uncalibrated
+        transmission must not fail the startup (the operator calibrates it from
+        the dashboard). A controller that does not answer still fails.
+
         Returns:
-            True if verification succeeds, False otherwise.
+            True if verification succeeds.
+
+        Raises:
+            RuntimeError: If the controller is not connected or does not answer.
         """
         try:
-            pos = self._adapter.get_current_position()
-            logger.info("Verification Success. Current Position: %s", pos)
-            return True
+            if not self._controller.is_connected():
+                raise RuntimeError("controller not connected")
+            pulses_x = self._controller.get_position("X")
+            pulses_y = self._controller.get_position("Y")
         except Exception as e:
             raise RuntimeError(f"Verification failed: {e}")
+        logger.info("Verification Success. Raw position: X=%s pulses, Y=%s pulses", pulses_x, pulses_y)
+        if not self._adapter.is_conversion_available():
+            logger.warning(
+                "Arcus verified WITHOUT mm/pulse conversion: motion stays refused until the mechanical "
+                "transmission is calibrated"
+            )
+        return True
 
     def close_all(self) -> None:
         """

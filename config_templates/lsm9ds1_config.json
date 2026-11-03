@@ -1,0 +1,25 @@
+{
+  "schema_version": "1.0",
+  "description": "Connection and stream parameters of the LSM9DS1 inertial sensor board (accelerometer, gyroscope, magnetometer) read through a microcontroller serial board that also carries a lidar. Units follow UCUM (https://ucum.org). Connection and stream start are manual from the panel, never at app startup.",
+  "subject": {
+    "id": "lsm9ds1_board",
+    "description": "Serial board (unknown firmware) exposing a LSM9DS1 inertial sensor and a lidar; protocol observed, not documented by the manufacturer"
+  },
+
+  "com_port": "COM5",
+  "baudrate": { "value": 256000, "unit": "Bd" },
+
+  "sensors": [
+    { "name": "accelerometer", "unit": "[g]" },
+    { "name": "gyroscope", "unit": "deg/s", "verified": false },
+    { "name": "magnetometer", "unit": "uT", "verified": false },
+    { "name": "lidar", "unit": "mm", "verified": false }
+  ],
+
+  "rate_hz": {
+    "value": null,
+    "unit": "Hz",
+    "allowed": [25, 50, 100],
+    "description": "null keeps the board's persistent rate; the stream is capped at 25 Hz as soon as the lidar is active"
+  }
+}

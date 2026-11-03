@@ -11,15 +11,16 @@ Rationale:
 
 from __future__ import annotations
 
-import json
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import TYPE_CHECKING, Dict, Any, Optional
 
-import h5py
 import numpy as np
+
+if TYPE_CHECKING:
+    import h5py  # imported in start(): only an export needs it, not app startup
 
 from application.services.scan_export_service.ports.i_scan_export_port import (
     IScanExportPort,
@@ -123,6 +124,8 @@ class Hdf5ScanExportPort(IScanExportPort):
         if self._file is not None:
             # Already started.
             return
+
+        import h5py
 
         self._file = h5py.File(self._file_path, "w")
         root = self._file
@@ -374,17 +377,9 @@ class Hdf5ScanExportPort(IScanExportPort):
 
         self._field_index = new_size
 
-    def write_metadata(self, metadata: Dict[str, Any]) -> None:
-        """Write the acquisition's parameter snapshot as a JSON file next to
-        the `.h5` file, in the same acquisition folder (kept as a real file
-        rather than only root attrs, so a JSON manifest always exists
-        regardless of the chosen export format)."""
-        if self._file_path is None:
-            raise RuntimeError("Hdf5ScanExportPort.configure() must be called before write_metadata().")
-
-        metadata_path = self._file_path.parent / f"{self._file_path.stem}_acquisition-parameters.json"
-        with metadata_path.open(mode="w", encoding="utf-8") as f:
-            json.dump(metadata, f, indent=2, ensure_ascii=False, default=str)
+    def write_acquisition_parameters(self, parameters) -> None:
+        """No-op: the CSV port writes acquisition-parameters.json into the shared
+        acquisition folder, listing this `.h5` file with its size and SHA-256."""
 
     def write_event(self, event) -> None:
         """No-op: the CSV port writes the scan's events.jsonl into the shared acquisition folder."""

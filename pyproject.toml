@@ -17,6 +17,7 @@ dependencies = [
     "numba>=0.57.0",
     "pandas>=1.5.0",
     "pyvistaqt>=0.13.1",
+    "mcp<2",
 ]
 
 [project.optional-dependencies]

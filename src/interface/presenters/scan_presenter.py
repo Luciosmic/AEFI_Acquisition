@@ -5,9 +5,10 @@ import time
 from application.services.scan_application_service.scan_application_service import ScanApplicationService
 from application.services.scan_application_service.ports.i_scan_output_port import IScanOutputPort
 from application.services.scan_export_service.scan_export_service import ScanExportService
-from application.services.scan_application_service.dtos.scan_dtos import Scan2DConfigDTO
+from application.services.scan_application_service.dtos.scan_dtos import Scan2DConfigDTO, LineScanConfigDTO
 from application.services.scan_export_service.dtos.scan_export_dtos import ExportConfigDTO
 from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from interface.presentation.motion_conversion_banner_model import MotionConversionBannerViewModel
 from interface.qt_abc import QABCMeta
 
 class ScanPresenter(QObject, IScanOutputPort, metaclass=QABCMeta):
@@ -23,6 +24,8 @@ class ScanPresenter(QObject, IScanOutputPort, metaclass=QABCMeta):
     # Signals to update Views
     scan_started = Signal(str, dict) # scan_id, config
     scan_progress = Signal(int, int, dict) # current, total, point_data
+    scan_line_preview = Signal(int, int, dict) # line_index, index_in_line, point_data (provisional)
+    scan_line_abandoned = Signal(int, str) # line_index, reason
     field_scan_progress = Signal(int, int, dict) # current, total, point_data (electric field probe)
     scan_completed = Signal(int) # total_points
     scan_failed = Signal(str) # reason
@@ -30,6 +33,7 @@ class ScanPresenter(QObject, IScanOutputPort, metaclass=QABCMeta):
     scan_paused = Signal(str, int) # scan_id, current_point_index
     scan_resumed = Signal(str, int) # scan_id, resume_from_point_index
     status_updated = Signal(str) # status message
+    start_availability_changed = Signal(object) # MotionConversionBannerViewModel (visible = start refused)
     
     def __init__(self, service: ScanApplicationService, export_service: ScanExportService, event_bus: IDomainEventBus):
         super().__init__()
@@ -45,6 +49,23 @@ class ScanPresenter(QObject, IScanOutputPort, metaclass=QABCMeta):
         
         # Register myself as the output port
         self._service.set_output_port(self)
+
+        # Start availability follows the bench calibration state.
+        if self._event_bus is not None:
+            self._event_bus.subscribe("motionconversionfoundmissing", self.refresh_start_availability)
+            self._event_bus.subscribe("motionconversionbecameavailable", self.refresh_start_availability)
+
+    def refresh_start_availability(self, _event=None) -> None:
+        """Ask the service why a scan could not start now and tell the panel."""
+        refusal = self._service.get_start_refusal()
+        if refusal is None:
+            self.start_availability_changed.emit(MotionConversionBannerViewModel.calibrated())
+        else:
+            self.start_availability_changed.emit(MotionConversionBannerViewModel.not_calibrated(
+                getattr(refusal, "motor_name", None),
+                getattr(refusal, "missing_quantity", None),
+                getattr(refusal, "where_to_enter", None),
+            ))
         
     # ==================================================================================
     # IScanOutputPort Implementation (Service -> Presenter)
@@ -95,6 +116,13 @@ class ScanPresenter(QObject, IScanOutputPort, metaclass=QABCMeta):
         percentage = (current_point_index / total_points * 100) if total_points > 0 else 0
         self.status_updated.emit(f"Progress: {current_point_index}/{total_points} ({percentage:.1f}%){eta_str}")
         
+    def present_scan_line_preview(self, line_index: int, index_in_line: int, point_data: Any) -> None:
+        self.scan_line_preview.emit(line_index, index_in_line, point_data)
+
+    def present_scan_line_abandoned(self, line_index: int, reason: str) -> None:
+        self.scan_line_abandoned.emit(line_index, reason)
+        self.status_updated.emit(f"Line {line_index + 1} abandoned ({reason}): it will be re-acquired from its start.")
+
     def present_field_scan_progress(self, current_point_index: int, total_points: int, point_data: Any) -> None:
         self.field_scan_progress.emit(current_point_index, total_points, point_data)
 
@@ -132,39 +160,63 @@ class ScanPresenter(QObject, IScanOutputPort, metaclass=QABCMeta):
             # Parse parameters
             # Note: Default values are defined in scan_control_panel.py UI initialization
             # These fallbacks are only used if params are missing (shouldn't happen in normal flow)
-            dto = Scan2DConfigDTO(
-                x_min=float(params.get("x_min", 600.0)),
-                x_max=float(params.get("x_max", 800.0)),
-                x_nb_points=int(params.get("x_nb_points", 81)),  # Aligned with UI default
-                y_min=float(params.get("y_min", 600.0)),
-                y_max=float(params.get("y_max", 800.0)),
-                y_nb_points=int(params.get("y_nb_points", 81)),  # Aligned with UI default
-                scan_pattern=params.get("scan_pattern", "SERPENTINE"),
-                scan_axis=params.get("scan_axis", "Y"),
-                motion_speed_mm_s=None,  # Speed controlled by advanced hardware configuration
-                stabilization_delay_ms=int(params.get("stabilization_delay_ms", 300)),
-                averaging_per_position=int(params.get("averaging_per_position", 10)),
-                uncertainty_volts=0.001,     # Default
-                differential_mode=bool(params.get("differential_mode", False)),
-                differential_settle_delay_ms=float(params.get("differential_settle_delay_ms", 50.0)),
-            )
-            
+            if params.get("scan_kind") == "line":
+                dto = LineScanConfigDTO(
+                    center_x=float(params.get("line_center_x", 700.0)),
+                    center_y=float(params.get("line_center_y", 700.0)),
+                    length_mm=float(params.get("line_length_mm", 200.0)),
+                    n_points=int(params.get("line_n_points", 81)),
+                    theta_deg=float(params.get("line_theta_deg", 0.0)),
+                    stabilization_delay_ms=int(params.get("stabilization_delay_ms", 300)),
+                    averaging_per_position=int(params.get("averaging_per_position", 10)),
+                    differential_mode=bool(params.get("differential_mode", False)),
+                    differential_settle_delay_ms=float(params.get("differential_settle_delay_ms", 50.0)),
+                )
+                execute = self._service.execute_line_scan
+            else:
+                dto = self._grid_dto(params)
+                execute = self._service.execute_scan
+
             # Configure Export
             export_dto = ExportConfigDTO(
                 enabled=params.get("export_enabled", False),
                 output_directory=params.get("export_output_directory", ""),
                 filename_base=params.get("export_filename_base", "scan"),
+                measured_object=params.get("measured_object", ""),
+                operator_id=params.get("operator_id", ""),
+                operator=params.get("operator", ""),
             )
             self._export_service.configure_export(export_dto)
-            
-            success = self._service.execute_scan(dto)
+
+            success = execute(dto)
             if not success:
-                self.status_updated.emit("Failed to start scan (check logs).")
-                
+                refusal = self._service.get_start_refusal()
+                self.status_updated.emit(refusal.message if refusal is not None else "Failed to start scan (check logs).")
+
         except ValueError as e:
             self.status_updated.emit(f"Invalid parameters: {e}")
         except Exception as e:
             self.status_updated.emit(f"Error starting scan: {e}")
+
+    @staticmethod
+    def _grid_dto(params: dict) -> Scan2DConfigDTO:
+        return Scan2DConfigDTO(
+            x_min=float(params.get("x_min", 600.0)),
+            x_max=float(params.get("x_max", 800.0)),
+            x_nb_points=int(params.get("x_nb_points", 81)),  # Aligned with UI default
+            y_min=float(params.get("y_min", 600.0)),
+            y_max=float(params.get("y_max", 800.0)),
+            y_nb_points=int(params.get("y_nb_points", 81)),  # Aligned with UI default
+            scan_pattern=params.get("scan_pattern", "SERPENTINE"),
+            scan_axis=params.get("scan_axis", "Y"),
+            motion_speed_mm_s=None,  # Speed controlled by advanced hardware configuration
+            stabilization_delay_ms=int(params.get("stabilization_delay_ms", 300)),
+            averaging_per_position=int(params.get("averaging_per_position", 10)),
+            uncertainty_volts=0.001,     # Default
+            differential_mode=bool(params.get("differential_mode", False)),
+            differential_settle_delay_ms=float(params.get("differential_settle_delay_ms", 50.0)),
+            fly_scan=bool(params.get("fly_scan", False)),
+        )
 
     @Slot()
     def on_scan_stop_requested(self):

@@ -1,0 +1,116 @@
+{
+  "date": "2026-10-01T18:43:01",
+  "dry_run": false,
+  "model": "t = t0 + max(|dx|,|dy|) / v",
+  "microns_per_step": 21.8,
+  "center_mm": [
+    600.0,
+    600.0
+  ],
+  "distances_mm": [
+    2.5,
+    10.0,
+    25.0,
+    50.0,
+    100.0
+  ],
+  "reps": 3,
+  "axis_params_by_mode": {
+    "slow": {
+      "ls": 0,
+      "hs": 800,
+      "acc": 300,
+      "dec": 0
+    },
+    "medium": {
+      "ls": 0,
+      "hs": 1500,
+      "acc": 300,
+      "dec": 0
+    },
+    "fast": {
+      "ls": 0,
+      "hs": 3000,
+      "acc": 500,
+      "dec": 0
+    }
+  },
+  "theoretical_speed_mm_s": {
+    "slow": 17.44,
+    "medium": 32.7,
+    "fast": 65.4
+  },
+  "fit": {
+    "controller": {
+      "fast": {
+        "speed_mm_s": 57.53132104954473,
+        "t0_s": 0.282943476754344,
+        "residual_std_s": 0.07218433251388395,
+        "max_abs_residual_s": 0.205496617708528,
+        "n": 60,
+        "mean_residual_by_config_s": {
+          "diag": 0.005868511662508443,
+          "x": -0.005868511662507658
+        }
+      },
+      "medium": {
+        "speed_mm_s": 32.330182708466026,
+        "t0_s": 0.1881841085707006,
+        "residual_std_s": 0.02797559138572588,
+        "max_abs_residual_s": 0.06559893112538612,
+        "n": 60,
+        "mean_residual_by_config_s": {
+          "diag": -0.0032653733408856468,
+          "x": 0.003265373340885284
+        }
+      },
+      "slow": {
+        "speed_mm_s": 17.394624176776045,
+        "t0_s": 0.10077951502190155,
+        "residual_std_s": 0.02202889958806174,
+        "max_abs_residual_s": 0.07109889399174829,
+        "n": 60,
+        "mean_residual_by_config_s": {
+          "diag": 0.005809196668753188,
+          "x": -0.0058091966687560965
+        }
+      }
+    },
+    "port": {
+      "fast": {
+        "speed_mm_s": 59.85804217578641,
+        "t0_s": 0.5553262607457571,
+        "residual_std_s": 0.08327987874898714,
+        "max_abs_residual_s": 0.21571348992760409,
+        "n": 60,
+        "mean_residual_by_config_s": {
+          "diag": -0.017868081674289993,
+          "x": 0.017868081674290406
+        }
+      },
+      "medium": {
+        "speed_mm_s": 32.342033266421545,
+        "t0_s": 0.4222083374514078,
+        "residual_std_s": 0.062120188519002986,
+        "max_abs_residual_s": 0.1549552928756035,
+        "n": 60,
+        "mean_residual_by_config_s": {
+          "diag": 0.0059764566656665226,
+          "x": -0.005976456665667026
+        }
+      },
+      "slow": {
+        "speed_mm_s": 17.40320164300831,
+        "t0_s": 0.33301679863308875,
+        "residual_std_s": 0.0868496571992473,
+        "max_abs_residual_s": 0.18687205548542885,
+        "n": 60,
+        "mean_residual_by_config_s": {
+          "diag": -0.01217389499070205,
+          "x": 0.012173894990700406
+        }
+      }
+    }
+  },
+  "raw_csv": "2026-10-01_184301_arcus_motion_timing.csv"
+}

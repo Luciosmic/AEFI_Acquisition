@@ -108,6 +108,7 @@ class AcquisitionThroughputCharacterizationWidget(QGroupBox):
         layout.addWidget(self.lbl_result)
 
         self._points = []
+        self._pending_plot = None
         self._draw(recommended_n_avg=None)
 
     def _on_start_clicked(self) -> None:
@@ -172,6 +173,19 @@ class AcquisitionThroughputCharacterizationWidget(QGroupBox):
     # -- plot ---------------------------------------------------------------------
 
     def _draw(self, recommended_n_avg) -> None:
+        # matplotlib draws hidden canvases too: a tab not opened yet is
+        # plotted (tight_layout included) at its first show, not at startup.
+        self._pending_plot = (recommended_n_avg,)
+        if self.isVisible():
+            self._plot(recommended_n_avg)
+
+    def showEvent(self, event) -> None:
+        super().showEvent(event)
+        if self._pending_plot is not None:
+            self._plot(*self._pending_plot)
+
+    def _plot(self, recommended_n_avg) -> None:
+        self._pending_plot = None
         self.figure.clear()
         rate_ax = self.figure.add_subplot(121, facecolor=_BG)
         noise_ax = self.figure.add_subplot(122, facecolor=_BG)

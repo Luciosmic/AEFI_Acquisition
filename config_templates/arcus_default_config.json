@@ -1,5 +1,4 @@
 {
-    "microns_per_step": 21.8,
     "x_acc": 300,
     "x_dec": 300,
     "x_hs": 1500,

@@ -57,3 +57,13 @@ def test_preview_and_rejection_render():
 
     panel.on_source_frame_preview_rejected("D_S1_S2 overlap")
     assert "D_S1_S2 overlap" in panel.lbl_preview.text()
+
+
+def test_preview_received_while_hidden_is_drawn_at_first_show():
+    panel, _ = _panel()
+    panel.on_source_frame_preview_rejected("D_S1_S2 overlap")
+    assert panel._draw_pending
+
+    panel.show()
+    assert not panel._draw_pending
+    panel.close()

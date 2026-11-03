@@ -2,7 +2,7 @@
 Post-Processor Composition Root
 Orchestrates the full workflow:
 1. Scan the configured export directory (see `_export_output_directory`) for
-   per-acquisition subfolders (`<timestamp>_stepScan_<name>/`), each holding
+   per-acquisition subfolders (`<timestamp>_<stepScan|flyScan>_<name>/`), each holding
    the device's `*_aefi.csv`.
 2. For each subfolder, check if its `.h5` (written alongside the CSV) is
    missing or outdated.
@@ -60,7 +60,7 @@ def sync_scans(raw_dir: Path, force: bool = False):
     """
     Run pipeline on missing/outdated scans.
 
-    Each scan lives in its own acquisition subfolder (`<raw_dir>/<timestamp>_stepScan_<name>/`);
+    Each scan lives in its own acquisition subfolder (`<raw_dir>/<timestamp>_<stepScan|flyScan>_<name>/`);
     the device CSV is found via `<subfolder>/*_aefi.csv` and the processed `.h5`
     is written into that same subfolder.
     """
@@ -70,7 +70,10 @@ def sync_scans(raw_dir: Path, force: bool = False):
         print(f"Error: Raw directory not found: {raw_dir}")
         return
 
-    csv_files = sorted(raw_dir.glob("*_stepScan_*/*_aefi.csv"))
+    # Step scans (measurements) and fly scans (exploration maps): same files, same pipeline.
+    csv_files = sorted(
+        path for kind in ("stepScan", "flyScan") for path in raw_dir.glob(f"*_{kind}_*/*_aefi.csv")
+    )
 
     files_processed_count = 0
 

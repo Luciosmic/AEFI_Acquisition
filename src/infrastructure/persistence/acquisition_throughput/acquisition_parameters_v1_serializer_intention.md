@@ -35,6 +35,13 @@ module unique, à côté de l'écrivain du fichier, remplaçable d'un bloc.
 
 ## Design
 
+- Depuis le 2026-10-02, les sections communes à toute acquisition
+  (provenance, composants, montage du capteur, détection synchrone, liaison
+  série, positions, fichiers) viennent de
+  `infrastructure/persistence/acquisition_parameters/acquisition_parameters_v1.py`,
+  partagé avec l'export des scans et séries temporelles. Ce module n'ajoute
+  que ce que le balayage a fait : procédure, `n_avg` balayé, excitation
+  coupée, origine du flux, colonnes de `summary.csv` / `samples.csv`.
 - Fonction pure, sans I/O : entrée = `AcquisitionParametersDTO` (sans
   format), sortie = `dict`. L'écriture et l'empreinte des fichiers sont
   faites par `CsvAcquisitionThroughputExportPort`.

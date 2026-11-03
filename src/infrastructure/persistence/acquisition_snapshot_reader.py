@@ -6,7 +6,9 @@ Responsibility:
   the per-scan metadata JSON —
   - `hardware_configuration`: built from the domain registries — for every
     hardware component kind, the mounted component and its current
-    characterization; the latest sensor calibration and source geometry,
+    characterization; the current mechanical transmission (with its
+    distance per pulse and driver current warning); the latest sensor
+    calibration and source geometry,
     with the sphere positions reconstructed from it (`source_frame_reconstruction`)
     — plus the `warnings` of an incomplete / not characterized configuration;
   - `hardware_settings`: the settings applied to the AD9106, ADS131A04 and
@@ -37,6 +39,9 @@ from domain.calibration.entities.source_geometry_calibration_entry.source_geomet
 from domain.calibration.errors.source_geometry_inconsistent_error import SourceGeometryInconsistentError
 from domain.calibration.services.source_frame_solver.source_frame_solver import SourceFrameSolver
 from domain.calibration.repositories.i_hardware_component_repository import IHardwareComponentRepository
+from domain.calibration.repositories.i_mechanical_transmission_calibration_repository import (
+    IMechanicalTransmissionCalibrationRepository,
+)
 from domain.calibration.repositories.i_sensor_calibration_repository import ISensorCalibrationRepository
 from domain.calibration.repositories.i_source_geometry_calibration_repository import (
     ISourceGeometryCalibrationRepository,
@@ -102,8 +107,10 @@ class AcquisitionSnapshotReader:
         hardware_component_repository: IHardwareComponentRepository,
         sensor_calibration_repository: ISensorCalibrationRepository,
         source_geometry_calibration_repository: ISourceGeometryCalibrationRepository,
+        mechanical_transmission_calibration_repository: IMechanicalTransmissionCalibrationRepository,
     ):
         self._hardware_component_repository = hardware_component_repository
+        self._mechanical_transmission_calibration_repository = mechanical_transmission_calibration_repository
         self._sensor_calibration_repository = sensor_calibration_repository
         self._source_geometry_calibration_repository = source_geometry_calibration_repository
 
@@ -173,6 +180,8 @@ class AcquisitionSnapshotReader:
             for key in entry.characterization.uncharacterized():
                 warnings.append(f"{kind.value} '{name}': {key} not characterized")
 
+        configuration["mechanical_transmission"] = self._mechanical_transmission(warnings)
+
         sensor = _latest(self._sensor_calibration_repository.find_all())
         configuration["sensor_calibration_latest"] = asdict(sensor) if sensor else None
         if sensor is None:
@@ -193,3 +202,37 @@ class AcquisitionSnapshotReader:
         for warning in warnings:
             logger.warning("Acquisition snapshot: %s", warning)
         return configuration
+
+    def _mechanical_transmission(self, warnings: List[str]) -> Optional[Dict[str, Any]]:
+        """The transmission set up with the mounted motor and driver — what
+        converted every position of this acquisition."""
+        components = self._hardware_component_repository
+        motor = Calibration.current_mounting(components.find_selections(HardwareComponentKind.MOTORS))
+        driver = Calibration.current_mounting(components.find_selections(HardwareComponentKind.STEPPER_DRIVER))
+        entry = Calibration.current_mechanical_transmission(
+            self._mechanical_transmission_calibration_repository.find_all(),
+            motor.mounting_id if motor else None,
+            driver.mounting_id if driver else None,
+        )
+        if entry is None:
+            warnings.append("mechanical_transmission: none recorded for the mounted motor and stepper driver")
+            return None
+        motor_values = Calibration.current_characterization(
+            components.find_all(HardwareComponentKind.MOTORS), motor.component_name
+        ).characterization.values
+        steps = motor_values.get("full_steps_per_revolution")
+        rated_current = motor_values.get("rated_current_a")
+        shortfall = entry.driver_current_shortfall(rated_current) if rated_current is not None else None
+        if shortfall:
+            warnings.append(f"mechanical_transmission: {shortfall}")
+        return {
+            "entry_id": str(entry.entry_id),
+            "recorded_at": entry.recorded_at.isoformat(),
+            "motor_mounting_id": str(entry.motor_mounting_id),
+            "stepper_driver_mounting_id": str(entry.stepper_driver_mounting_id),
+            "microsteps": entry.microsteps,
+            "driver_current_a": entry.driver_current_a,
+            "driver_peak_current_a": entry.driver_peak_current_a,
+            "travel_per_motor_revolution_mm": entry.travel_per_motor_revolution_mm,
+            "microns_per_pulse": entry.microns_per_pulse(steps) if steps else None,
+        }

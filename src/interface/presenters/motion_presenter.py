@@ -13,6 +13,7 @@ from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
 from domain.shared_kernel.events.position_updated.position_updated import PositionUpdated
 from domain.shared_kernel.events.motion_completed.motion_completed import MotionCompleted
 from domain.shared_kernel.events.motion_failed.motion_failed import MotionFailed
+from interface.presentation.motion_conversion_banner_model import MotionConversionBannerViewModel
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +31,7 @@ class MotionPresenter(QObject):
     operation_failed = Signal(str)  # error_message
     jog_enabled_changed = Signal(bool)  # enabled state for jog buttons
     limits_updated = Signal(float, float)  # max_x, max_y
+    conversion_banner_changed = Signal(object)  # MotionConversionBannerViewModel
 
     def __init__(self, service: MotionControlService, event_bus: IDomainEventBus = None):
         super().__init__()
@@ -47,6 +49,19 @@ class MotionPresenter(QObject):
         if self._service:
             limits = self._service.get_axis_limits()
             self._update_limits(limits[0], limits[1])
+            self._refresh_conversion_banner()
+
+    def _refresh_conversion_banner(self, _event=None):
+        """Query the service for the calibration state (no payload read: the
+        events only say it changed) and hand the panel a view model."""
+        status = self._service.get_conversion_status()
+        if status.is_available:
+            banner = MotionConversionBannerViewModel.calibrated()
+        else:
+            banner = MotionConversionBannerViewModel.not_calibrated(
+                status.motor_name, status.missing_quantity, status.where_to_enter
+            )
+        self.conversion_banner_changed.emit(banner)
     
     def _update_limits(self, max_x: float, max_y: float):
         """Update stored limits and emit signal."""
@@ -60,6 +75,8 @@ class MotionPresenter(QObject):
             self._event_bus.subscribe("positionupdated", self._on_position_updated)
             self._event_bus.subscribe("motioncompleted", self._on_motion_completed)
             self._event_bus.subscribe("motionfailed", self._on_motion_failed)
+            self._event_bus.subscribe("motionconversionfoundmissing", self._refresh_conversion_banner)
+            self._event_bus.subscribe("motionconversionbecameavailable", self._refresh_conversion_banner)
 
     def stop_monitoring(self):
         """Unsubscribe from position updates and motion events."""
@@ -67,6 +84,8 @@ class MotionPresenter(QObject):
             self._event_bus.unsubscribe("positionupdated", self._on_position_updated)
             self._event_bus.unsubscribe("motioncompleted", self._on_motion_completed)
             self._event_bus.unsubscribe("motionfailed", self._on_motion_failed)
+            self._event_bus.unsubscribe("motionconversionfoundmissing", self._refresh_conversion_banner)
+            self._event_bus.unsubscribe("motionconversionbecameavailable", self._refresh_conversion_banner)
 
     def _on_position_updated(self, event: PositionUpdated):
         """Handle position update event from domain."""
@@ -117,7 +136,7 @@ class MotionPresenter(QObject):
                 # Unlock on failure
                 self._is_moving = False
                 self.jog_enabled_changed.emit(True)
-                self.operation_failed.emit(result.error)
+                self.operation_failed.emit(result.error.message)
 
     @Slot(str, float)
     def on_move_to_requested(self, axis: str, target: float):
@@ -131,7 +150,7 @@ class MotionPresenter(QObject):
                 return
             
             if result.is_failure:
-                self.operation_failed.emit(result.error)
+                self.operation_failed.emit(result.error.message)
 
     @Slot(float, float)
     def on_move_both_requested(self, target_x: float, target_y: float):
@@ -139,7 +158,7 @@ class MotionPresenter(QObject):
         if self._service:
             result = self._service.move_absolute(target_x, target_y)
             if result.is_failure:
-                self.operation_failed.emit(result.error)
+                self.operation_failed.emit(result.error.message)
 
     @Slot()
     def on_move_to_center_requested(self):
@@ -149,7 +168,7 @@ class MotionPresenter(QObject):
             center_y = self._max_y / 2.0
             result = self._service.move_absolute(center_x, center_y)
             if result.is_failure:
-                self.operation_failed.emit(result.error)
+                self.operation_failed.emit(result.error.message)
 
     @Slot(str)
     def on_home_requested(self, axis: str):
@@ -165,7 +184,7 @@ class MotionPresenter(QObject):
                 return
             
             if result.is_failure:
-                self.operation_failed.emit(result.error)
+                self.operation_failed.emit(result.error.message)
 
     @Slot(str)
     def on_speed_mode_requested(self, mode: str):
@@ -173,7 +192,7 @@ class MotionPresenter(QObject):
         if self._service:
             result = self._service.set_speed_mode(mode)
             if result.is_failure:
-                self.operation_failed.emit(result.error)
+                self.operation_failed.emit(result.error.message)
 
     @Slot()
     def on_stop_requested(self):
@@ -181,7 +200,7 @@ class MotionPresenter(QObject):
         if self._service:
             result = self._service.stop()
             if result.is_failure:
-                self.operation_failed.emit(result.error)
+                self.operation_failed.emit(result.error.message)
 
     @Slot()
     def on_estop_requested(self):
@@ -189,4 +208,4 @@ class MotionPresenter(QObject):
         if self._service:
             result = self._service.emergency_stop()
             if result.is_failure:
-                self.operation_failed.emit(result.error)
+                self.operation_failed.emit(result.error.message)

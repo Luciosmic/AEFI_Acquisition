@@ -1,5 +1,6 @@
 import json
 import logging
+import threading
 from dataclasses import asdict, is_dataclass
 from datetime import date, datetime, timezone
 from pathlib import Path
@@ -34,6 +35,11 @@ class EventAuditLog:
         log_dir.mkdir(parents=True, exist_ok=True)
         session_start = datetime.now(timezone.utc).strftime(SESSION_TIMESTAMP_FORMAT)
         self._path = log_dir / f"events_{session_start}_{uuid4().hex[:6]}.jsonl"
+        # The bus publishes from several threads (scan loop, ADC/motion
+        # workers). On Windows, append mode is seek-to-end then write, not
+        # atomic across handles: two concurrent writes land at the same
+        # offset and one line overwrites the other.
+        self._write_lock = threading.Lock()
 
     @property
     def path(self) -> Path:
@@ -47,5 +53,9 @@ class EventAuditLog:
             logger.exception("EventAuditLog: failed to serialize event %r", type(event).__name__)
             return
 
-        with self._path.open("a", encoding="utf-8") as f:
+        # ponytail: open/write/close under the lock serializes every publisher
+        # on one file open per event. Fine at bench rates; if it ever throttles
+        # the publishing threads, hold the file open or hand lines to a writer
+        # thread through a queue.
+        with self._write_lock, self._path.open("a", encoding="utf-8") as f:
             f.write(line + "\n")

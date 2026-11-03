@@ -5,11 +5,8 @@ Sensor Orientation View
 See sensor_orientation_view_intention.md.
 """
 import pyvista as pv
-from PySide6.QtCore import QCoreApplication, Qt
-from PySide6.QtGui import QSurfaceFormat
 from PySide6.QtWidgets import QHBoxLayout, QPushButton, QVBoxLayout, QWidget
 from pyvistaqt import QtInteractor
-from pyvistaqt.rwi import _default_format  # ponytail: private, the exact format QtInteractor installs
 
 from interface.widgets.sensor_orientation_view.cube_mesh_factory import (
     MARKER_COLOR,
@@ -21,13 +18,6 @@ from interface.widgets.sensor_orientation_view.cube_mesh_factory import (
 _IDENTITY = ((1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0))
 # (key, direction, color) — same colors as the cube faces
 _AXES = (('x', (1, 0, 0), '#4DA6FF'), ('y', (0, 1, 0), '#FFE633'), ('z', (0, 0, 1), '#FF3333'))
-
-
-def configure_qt_opengl() -> None:
-    """Call before QApplication(): without it the 3D view composites black
-    behind a splash window or in a floating dock (see intention)."""
-    QCoreApplication.setAttribute(Qt.ApplicationAttribute.AA_ShareOpenGLContexts)
-    QSurfaceFormat.setDefaultFormat(_default_format())
 
 
 class SensorOrientationView(QWidget):
@@ -62,7 +52,14 @@ class SensorOrientationView(QWidget):
         self.plotter.show_grid()
         self.plotter.enable_trackball_style()
         self.set_camera_view('3d')
-        self.show_mounting(_IDENTITY)  # never shown empty; the host feeds the active P
+        # No identity draw here: the host feeds the active P right after
+        # construction, and drawing twice cost startup time. showEvent covers
+        # a host that never feeds one.
+
+    def showEvent(self, event) -> None:
+        if self.cube_actor is None:
+            self.show_mounting(_IDENTITY)  # never shown empty
+        super().showEvent(event)
 
     def show_mounting(self, matrix) -> None:
         """Redraw the cube for the mounting matrix P (rows; columns = sensor axes in sources frame)."""

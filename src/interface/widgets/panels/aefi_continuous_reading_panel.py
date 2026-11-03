@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QLineEdit,
 )
+from interface.widgets.operator_selector.operator_selector import OperatorSelector
 from PySide6.QtCore import Qt, Signal
 import pyqtgraph as pg  # type: ignore[import]
 
@@ -115,6 +116,15 @@ class AefiContinuousReadingPanel(QWidget):
         l_ctrl.addWidget(self.chk_export, 1, 0)
         l_ctrl.addWidget(QLabel("Filename base:"), 1, 1)
         l_ctrl.addWidget(self.input_export_filename, 1, 2)
+
+        # Traceability, written in acquisition-parameters.json; empty = flagged
+        # as missing in the document. Kept for the session, never saved.
+        self.input_measured_object = QLineEdit("")
+        self.input_measured_object.setPlaceholderText("objet mesuré")
+        self.input_measured_object.setToolTip("Objet mesuré — écrit dans acquisition-parameters.json (feature_of_interest)")
+        self.operator_selector = OperatorSelector()  # registry, wired to OperatorPresenter
+        l_ctrl.addWidget(self.input_measured_object, 2, 0, 1, 2)
+        l_ctrl.addWidget(self.operator_selector, 2, 2)
         controls_layout.addWidget(grp_ctrl)
 
         # 2. Display: scale + Y mode, fixed calibre underneath (Oscillo only)
@@ -293,10 +303,14 @@ class AefiContinuousReadingPanel(QWidget):
 
     def _on_start_clicked(self):
         """Gather parameters and emit signal."""
+        operator = self.operator_selector.current_operator()
         params = {
             "max_duration_s": None,  # Infinite duration
             "export_enabled": self.chk_export.isChecked(),
             "export_filename_base": self.input_export_filename.text(),
+            "measured_object": self.input_measured_object.text(),
+            "operator_id": operator.operator_id if operator else "",
+            "operator": operator.name if operator else "",
         }
         self.lbl_status.setText("Running...")
         self.btn_start.setEnabled(False)
@@ -404,17 +418,20 @@ class AefiContinuousReadingPanel(QWidget):
         self.btn_start.setEnabled(True)
         self.btn_stop.setEnabled(False)
 
-    def on_sample_acquired(self, data: Dict[str, Any]):
-        """Called for each new sample (from presenter)."""
+    def on_sample_acquired(self, vm: Any):
+        """Called for each new sample (from presenter). `vm` is an
+        AefiContinuousReadingSampleViewModel — kept as Any here to avoid an
+        interface-widget -> interface-view-model import cycle concern; the
+        panel only relies on its as_channel_dict()/timestamp_iso contract."""
         import datetime as _dt
 
-        ts = _dt.datetime.fromisoformat(data["timestamp"]).timestamp()
+        ts = _dt.datetime.fromisoformat(vm.timestamp_iso).timestamp()
         if self._t0 is None:
             self._t0 = ts
         t_rel = ts - self._t0
         self.times.append(t_rel)
 
-        meas: Dict[str, float] = data.get("measurement", {})
+        meas: Dict[str, float] = vm.as_channel_dict()
         for ch in self.CHANNELS:
             name = ch["name"]
             val = float(meas.get(name, 0.0))

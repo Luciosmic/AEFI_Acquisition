@@ -12,7 +12,7 @@ Rationale:
 - Adapted from interface V1 for PySide6 compatibility
 """
 
-from PySide6.QtWidgets import QDialog, QVBoxLayout, QLabel, QProgressBar
+from PySide6.QtWidgets import QApplication, QDialog, QVBoxLayout, QLabel, QPlainTextEdit, QProgressBar, QPushButton
 from PySide6.QtCore import Qt
 
 from interface.ui_system_lifecycle.presenter_system_lifecycle import SystemLifecyclePresenter
@@ -46,6 +46,17 @@ class StartupView(QDialog):
         self.progress_bar.setTextVisible(False)
         layout.addWidget(self.progress_bar)
 
+        # Hidden until a startup failure: details + manual close (no auto-close).
+        self.failure_details = QPlainTextEdit()
+        self.failure_details.setReadOnly(True)
+        self.failure_details.hide()
+        layout.addWidget(self.failure_details, 1)
+
+        self.close_button = QPushButton("Fermer")
+        self.close_button.clicked.connect(lambda: QApplication.exit(1))
+        self.close_button.hide()
+        layout.addWidget(self.close_button)
+
         if logs_panel is not None:
             layout.addWidget(logs_panel, 1)
 
@@ -61,6 +72,17 @@ class StartupView(QDialog):
         components, before hardware init (and its own step signals) starts."""
         self.status_label.setText(text)
 
+    def show_failure(self, details: str) -> None:
+        """Keep the splash open on a startup failure: show the details and let
+        the operator quit (non-zero exit code) with the "Fermer" button."""
+        self.status_label.setText("Échec du démarrage")
+        self.progress_bar.hide()
+        self.failure_details.setPlainText(details)
+        self.failure_details.show()
+        self.close_button.show()
+        if not self.isVisible():
+            self.show()
+
     def start_hardware_init(self) -> None:
         """Trigger hardware startup. Call once software composition is done."""
         config = StartupConfig(verify_hardware=True, load_last_calibration=False)
@@ -74,10 +96,7 @@ class StartupView(QDialog):
             self.status_label.setText("Initialization Complete!")
             self.accept()  # Close dialog with QDialog.Accepted
         else:
-            self.status_label.setText(f"Initialization Failed: {'; '.join(errors)}")
-            # We might want to keep it open or reject
-            # For now, let's reject to signal Main to exit or show error
-            self.reject()
+            self.show_failure(f"Initialization Failed: {'; '.join(errors)}")
 
     def _on_error(self, message: str):
         self.status_label.setText(f"Error: {message}")

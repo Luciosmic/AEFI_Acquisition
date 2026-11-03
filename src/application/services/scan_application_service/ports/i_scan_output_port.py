@@ -25,6 +25,16 @@ class IScanOutputPort(ABC):
     def present_scan_progress(self, current_point_index: int, total_points: int, point_data: Any) -> None: ...
 
     @abstractmethod
+    def present_scan_line_preview(self, line_index: int, index_in_line: int, point_data: Any) -> None:
+        """Provisional point of a fly line still being swept (overwritten by the definitive progress)."""
+        ...
+
+    @abstractmethod
+    def present_scan_line_abandoned(self, line_index: int, reason: str) -> None:
+        """A fly line was interrupted (e.g. "paused"): its partial data is dropped, it will be redone."""
+        ...
+
+    @abstractmethod
     def present_field_scan_progress(self, current_point_index: int, total_points: int, point_data: Any) -> None: ...
 
     @abstractmethod

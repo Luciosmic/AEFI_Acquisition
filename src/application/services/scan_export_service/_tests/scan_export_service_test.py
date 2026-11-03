@@ -9,7 +9,11 @@ from uuid import uuid4
 from application.services.scan_export_service.scan_export_service import ScanExportService
 from application.services.scan_export_service.dtos.scan_export_dtos import ExportConfigDTO
 from application.services.scan_export_service.ports.i_scan_export_port import IScanExportPort
-from application.services.scan_export_service.ports.i_acquisition_snapshot_port import IAcquisitionSnapshotPort
+from application.services.scan_export_service.dtos.scan_acquisition_parameters_dtos import STEP_SCAN, TIME_SERIES
+from application.shared.acquisition_parameters.acquisition_conditions_dtos import BenchPositionDTO
+from infrastructure.acquisition_conditions.fake.fake_acquisition_conditions_port import FakeAcquisitionConditionsPort
+from infrastructure.hardware.serial_link.fake.fake_usb_latency_timer_port import FakeUsbLatencyTimerPort
+from infrastructure.provenance.fake.fake_software_provenance_port import FakeSoftwareProvenancePort
 from application.services.scan_export_service.ports.i_post_processing_port import IPostProcessingPort
 from application.services.excitation_configuration_service.excitation_configuration_service import (
     ExcitationConfigurationService,
@@ -33,18 +37,24 @@ from domain.shared_kernel.value_objects.measurement_uncertainty.measurement_unce
     MeasurementUncertainty,
 )
 from domain.shared_kernel.excitation.value_objects.excitation_mode import ExcitationMode
-from domain.electric_field_probe.electric_field_probe import ElectricFieldProbe
-from domain.electric_field_probe.events.electric_field_probe_connection_changed.electric_field_probe_connection_changed import (
+from domain.detection_devices.electric_field_probes.electric_field_probe import ElectricFieldProbe
+from domain.detection_devices.electric_field_probes.events.electric_field_probe_connection_changed.electric_field_probe_connection_changed import (
     ElectricFieldProbeConnectionChanged,
 )
-from domain.step_scan.events.electric_field_scan_point_acquired.electric_field_scan_point_acquired import (
-    ElectricFieldScanPointAcquired,
-)
-from domain.electric_field_probe.value_objects.field_measurement.field_measurement import FieldMeasurement
+from domain.narda_point.events.narda_point_acquired.narda_point_acquired import NardaPointAcquired
+from domain.narda_point.value_objects.narda_point_id.narda_point_id import NardaPointId
+from domain.detection_devices.electric_field_probes.value_objects.field_measurement.field_measurement import FieldMeasurement
 from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
 from domain.shared_kernel.events.aefi_voltage_reading_started.aefi_voltage_reading_started import AefiVoltageReadingStarted
 from domain.shared_kernel.events.aefi_voltage_sample_acquired.aefi_voltage_sample_acquired import AefiVoltageSampleAcquired
 from domain.shared_kernel.events.aefi_voltage_reading_stopped.aefi_voltage_reading_stopped import AefiVoltageReadingStopped
+
+
+def _narda_event(scan_id, point_index, position, field_measurement, baseline_field_measurement=None, axis_labels=None):
+    return NardaPointAcquired(
+        NardaPointId(uuid4()), scan_id, point_index, position, field_measurement,
+        baseline_field_measurement, axis_labels, 1,
+    )
 
 
 class FakeExportPort(IScanExportPort):
@@ -53,7 +63,7 @@ class FakeExportPort(IScanExportPort):
     def __init__(self, output_path: Path = Path("/fake/scan.out")) -> None:
         self.configured: Dict[str, Any] = {}
         self.points: List[Dict[str, Any]] = []
-        self.metadata: Dict[str, Any] = None
+        self.parameters: List[Any] = []  # acquisition-parameters facts, in write order
         self.field_data_config: Dict[str, Any] = None
         self.field_points: List[Dict[str, Any]] = []
         self.events: List[Any] = []
@@ -73,8 +83,8 @@ class FakeExportPort(IScanExportPort):
     def write_point(self, data):
         self.points.append(data)
 
-    def write_metadata(self, metadata):
-        self.metadata = metadata
+    def write_acquisition_parameters(self, parameters):
+        self.parameters.append(parameters)
 
     def configure_field_data(self, n_components, probe_info):
         self.field_data_config = {"n_components": n_components, "probe_info": probe_info}
@@ -92,6 +102,34 @@ class FakeExportPort(IScanExportPort):
         self.stopped = True
 
 
+class StrictExportPort(FakeExportPort):
+    """Refuses to record an event while not open, like CsvScanExportPort, and
+    publishes an event from inside start()/stop() — what another thread (ADC
+    sample, motion event) does on the bench while the export opens or closes."""
+
+    def __init__(self, event_bus, output_path):
+        super().__init__(output_path=output_path)
+        self._event_bus = event_bus
+        self.open = False
+        self.refused = []
+
+    def start(self):
+        self._event_bus.publish("racingevent", _make_scan_point_acquired_event())
+        super().start()
+        self.open = True
+
+    def stop(self):
+        self.open = False
+        super().stop()
+        self._event_bus.publish("racingevent", _make_scan_point_acquired_event())
+
+    def write_event(self, event):
+        if not self.open:
+            self.refused.append(event)
+            raise RuntimeError("write_event() on a port that is not open")
+        super().write_event(event)
+
+
 class FakePostProcessingPort(IPostProcessingPort):
     """Records `run()` calls instead of driving the real post-processor."""
 
@@ -102,7 +140,7 @@ class FakePostProcessingPort(IPostProcessingPort):
         self.calls.append((csv_path, hdf5_path))
 
 
-def _make_scan_started_event():
+def _make_scan_started_event(fly_scan=False):
     zone = ScanZone(x_min=435.0, x_max=835.0, y_min=435.0, y_max=835.0)
     config = StepScanConfig(
         scan_zone=zone,
@@ -113,6 +151,7 @@ def _make_scan_started_event():
         averaging_per_position=10,
         measurement_uncertainty=MeasurementUncertainty(max_uncertainty_volts=1e-6),
         scan_axis=ScanAxis.Y,
+        fly_scan=fly_scan,
     )
     return ScanStarted(scan_id=uuid4(), config=config)
 
@@ -142,34 +181,107 @@ class TestScanExportServiceMetadata(unittest.TestCase):
             mode=ExcitationMode.X_DIR, level_s1_s2_percent=80.0, level_s3_s4_percent=60.0, frequency=1000.0
         )
 
-        class FakeSnapshotPort(IAcquisitionSnapshotPort):
-            def read(self) -> Dict[str, Any]:
-                return {"motion_last_config": {"speed_mode": "fast"}}
-
+        self.conditions_port = FakeAcquisitionConditionsPort(
+            positions=[BenchPositionDTO(x_mm=435.0, y_mm=435.0), BenchPositionDTO(x_mm=835.0, y_mm=835.0)]
+        )
         self.service = ScanExportService(
             self.event_bus,
             csv_export_port=self.export_port,
             hdf5_export_port=self.hdf5_export_port,
             excitation_service=excitation_service,
-            acquisition_snapshot_port=FakeSnapshotPort(),
+            conditions_port=self.conditions_port,
             post_processing_port=self.post_processing_port,
             task_runner=FakeThreadPoolTaskRunner(),
+            software_provenance_port=FakeSoftwareProvenancePort(),
+            usb_latency_timer_port=FakeUsbLatencyTimerPort(latency_ms=1.0),
         )
         self.service.configure_export(
             ExportConfigDTO(enabled=True, output_directory="", filename_base="scan")
         )
 
-    def test_write_metadata_receives_scan_excitation_snapshot(self):
+    def test_scan_start_writes_the_acquisition_facts(self):
+        started = _make_scan_started_event()
+        self.event_bus.publish("scanstarted", started)
+
+        parameters = self.export_port.parameters[0]
+        activity = parameters.activity
+        self.assertEqual((activity.activity_id, activity.kind, activity.status), (str(started.scan_id), STEP_SCAN, "running"))
+        self.assertEqual((activity.procedure.pattern, activity.procedure.fast_axis), ("SERPENTINE", "Y"))
+        self.assertEqual(activity.procedure.measurement_uncertainty_v, 1e-6)
+        self.assertEqual((activity.excitation.level_s1_s2_percent, activity.excitation.level_s3_s4_percent), (80.0, 60.0))
+        self.assertIsNone(activity.probe)
+        self.assertEqual(activity.bench_position_start, BenchPositionDTO(x_mm=435.0, y_mm=435.0))
+        self.assertEqual(activity.usb_latency_timer_ms, 1.0)
+        self.assertEqual(parameters.conditions.motors.microns_per_step, 21.8)
+        self.assertIsNotNone(parameters.software.commit)
+
+    def test_scan_end_rewrites_the_document_with_its_outcome_after_closing_files(self):
+        started = _make_scan_started_event()
+        self.event_bus.publish("scanstarted", started)
+        self.event_bus.publish("scanpointacquired", _make_scan_point_acquired_event())
+        self.event_bus.publish("scanfailed", ScanFailed(scan_id=started.scan_id, reason="motion error"))
+
+        final = self.export_port.parameters[-1].activity
+        self.assertEqual((final.status, final.failure_reason, final.records_written), ("failed", "motion error", 1))
+        self.assertIsNotNone(final.ended_at)
+        self.assertEqual(final.bench_position_end, BenchPositionDTO(x_mm=835.0, y_mm=835.0))
+        self.assertTrue(self.export_port.stopped)  # written after stop(): every file closed
+
+    def test_measured_object_and_operator_typed_at_start_are_recorded(self):
+        self.service.configure_export(ExportConfigDTO(
+            enabled=True, output_directory="", filename_base="scan",
+            measured_object="  bouteille d'eau, 8 mm  ", operator_id="id-luis", operator="Luis",
+        ))
         self.event_bus.publish("scanstarted", _make_scan_started_event())
 
-        self.assertIsNotNone(self.export_port.metadata)
-        metadata = self.export_port.metadata
-        self.assertEqual(metadata["scan"]["pattern"], "SERPENTINE")
-        self.assertEqual(metadata["scan"]["scan_axis"], "Y")
-        self.assertEqual(metadata["excitation"]["level_s1_s2_percent"], 80.0)
-        self.assertEqual(metadata["excitation"]["level_s3_s4_percent"], 60.0)
-        self.assertEqual(metadata["motion_last_config"], {"speed_mode": "fast"})
-        self.assertIsNone(metadata["electric_field_probe"])
+        activity = self.export_port.parameters[0].activity
+        self.assertEqual(
+            (activity.measured_object, activity.operator_id, activity.operator),
+            ("bouteille d'eau, 8 mm", "id-luis", "Luis"),
+        )
+
+    def test_blank_measured_object_is_not_described(self):
+        self.event_bus.publish("scanstarted", _make_scan_started_event())  # setUp config: fields left empty
+
+        activity = self.export_port.parameters[0].activity
+        self.assertIsNone(activity.measured_object)
+        self.assertIsNone(activity.operator)
+        self.assertIsNone(activity.operator_id)
+
+    def test_missing_fact_readers_still_write_a_document(self):
+        self.service._conditions_port = None
+        self.service._software_provenance_port = None
+        self.service._usb_latency_timer_port = None
+        self.event_bus.publish("scanstarted", _make_scan_started_event())
+
+        activity = self.export_port.parameters[0].activity
+        self.assertIn("non câblé", activity.bench_position_unknown_reason)
+        self.assertIn("non câblé", activity.usb_latency_unknown_reason)
+
+    def test_files_are_tagged_step_scan_or_fly_scan(self):
+        self.event_bus.publish("scanstarted", _make_scan_started_event())
+        self.assertEqual(self.export_port.configured["acquisition_kind"], "stepScan")
+
+        self.event_bus.publish("scanstarted", _make_scan_started_event(fly_scan=True))
+        self.assertEqual(self.export_port.configured["acquisition_kind"], "flyScan")
+        self.assertTrue(self.export_port.configured["metadata"]["fly_scan"])
+
+    def test_line_scan_metadata_describes_the_line(self):
+        from domain.step_scan.value_objects.line_scan_config.line_scan_config import LineScanConfig
+        config = LineScanConfig(
+            center=Position2D(600.0, 600.0), length_mm=100.0, n_points=11, theta_deg=90.0,
+            stabilization_delay_ms=300, averaging_per_position=10,
+        )
+        self.event_bus.publish("scanstarted", ScanStarted(scan_id=uuid4(), config=config))
+
+        scan = self.export_port.configured["metadata"]
+        self.assertEqual(scan["scan_kind"], "line")
+        self.assertEqual(scan["theta_deg"], 90.0)
+        self.assertEqual(scan["length_mm"], 100.0)
+        self.assertEqual(scan["total_points"], 11)
+        self.assertAlmostEqual(scan["start_y"], 550.0)
+        self.assertAlmostEqual(scan["end_y"], 650.0)
+        self.assertEqual(scan["averaging_per_position"], 10)
 
     def test_probe_connection_event_is_cached_into_next_metadata(self):
         probe = ElectricFieldProbe(
@@ -183,9 +295,10 @@ class TestScanExportServiceMetadata(unittest.TestCase):
 
         self.event_bus.publish("scanstarted", _make_scan_started_event())
 
-        probe_metadata = self.export_port.metadata["electric_field_probe"]
-        self.assertEqual(probe_metadata["serial_number"], "SN123")
-        self.assertEqual(probe_metadata["axis_labels"], ["x", "y", "z"])
+        probe_facts = self.export_port.parameters[0].activity.probe
+        self.assertEqual(probe_facts.serial_number, "SN123")
+        self.assertEqual(probe_facts.axis_labels, ("x", "y", "z"))
+        self.assertEqual(probe_facts.battery_percentage, 62.0)
 
     def test_field_sidecar_label_is_derived_from_connected_probe(self):
         probe = ElectricFieldProbe(
@@ -199,8 +312,8 @@ class TestScanExportServiceMetadata(unittest.TestCase):
         self.event_bus.publish("scanstarted", _make_scan_started_event())
 
         self.event_bus.publish(
-            "electricfieldscanpointacquired",
-            ElectricFieldScanPointAcquired(
+            "nardapointacquired",
+            _narda_event(
                 scan_id=uuid4(), point_index=0, position=Position2D(x=1.0, y=2.0),
                 field_measurement=FieldMeasurement(components=(1.0, 2.0, 3.0), timestamp=None),
             ),
@@ -276,12 +389,12 @@ class TestScanExportServiceMetadata(unittest.TestCase):
 
     def test_differential_field_point_carries_baseline_columns(self):
         self.event_bus.publish("scanstarted", _make_scan_started_event())
-        event = ElectricFieldScanPointAcquired(
+        event = _narda_event(
             scan_id=uuid4(), point_index=0, position=Position2D(x=1.0, y=2.0),
             field_measurement=FieldMeasurement(components=(0.9,), timestamp=None),
             baseline_field_measurement=FieldMeasurement(components=(0.1,), timestamp=None),
         )
-        self.event_bus.publish("electricfieldscanpointacquired", event)
+        self.event_bus.publish("nardapointacquired", event)
 
         row = self.export_port.field_points[0]
         self.assertEqual(row["baseline_field_components"], (0.1,))
@@ -301,13 +414,6 @@ class TestScanExportServiceMetadata(unittest.TestCase):
 
         self.assertEqual(self.export_port.events, [started, point, completed])
 
-    def test_scan_metadata_carries_units_and_no_uncertainty(self):
-        self.event_bus.publish("scanstarted", _make_scan_started_event())
-
-        metadata = self.export_port.metadata
-        self.assertNotIn("measurement_uncertainty_max_volts", metadata["scan"])
-        self.assertEqual(metadata["export"]["units"]["x"], "mm")
-        self.assertEqual(metadata["export"]["units"]["voltage_*"], "V")
 
 
 def _publish_reading(bus, n_samples):
@@ -346,8 +452,9 @@ class TestTimeSeriesExport(unittest.TestCase):
         self.assertEqual(self.export_port.configured["acquisition_kind"], "timeSeries")
         self.assertEqual([row["t_s"] for row in self.export_port.points], [0.0, 0.5, 1.0])
         self.assertEqual(self.export_port.points[0]["voltage_x_in_phase"], 0.1)
-        self.assertEqual(self.export_port.metadata["acquisition_id"], str(acquisition_id))
-        self.assertEqual(self.export_port.metadata["export"]["units"]["t_s"], "s")
+        first, final = self.export_port.parameters[0].activity, self.export_port.parameters[-1].activity
+        self.assertEqual((first.activity_id, first.kind, first.procedure), (str(acquisition_id), TIME_SERIES, None))
+        self.assertEqual((final.status, final.records_written), ("completed", 3))
         self.assertTrue(self.export_port.stopped)
         self.assertFalse(self.hdf5_export_port.started)
 
@@ -364,6 +471,32 @@ class TestTimeSeriesExport(unittest.TestCase):
         _publish_reading(self.event_bus, n_samples=2)
 
         self.assertEqual(len(self.export_port.points), 1)
+
+
+class TestScanExportServiceEventRecordingRace(unittest.TestCase):
+    """An event landing while the scan export opens or closes is not written
+    into a port that is not open (it raised and logged an ERROR on the bench)."""
+
+    def test_events_racing_the_export_open_and_close_are_not_written_to_closed_ports(self):
+        bus = InMemoryEventBus()
+        csv_port = StrictExportPort(bus, Path("/fake/scan.csv"))
+        hdf5_port = StrictExportPort(bus, Path("/fake/scan.h5"))
+        service = ScanExportService(
+            bus,
+            csv_export_port=csv_port,
+            hdf5_export_port=hdf5_port,
+            excitation_service=ExcitationConfigurationService(MockExcitationPort(), bus),
+            task_runner=FakeThreadPoolTaskRunner(),
+        )
+        service.configure_export(ExportConfigDTO(enabled=True, output_directory="", filename_base="scan"))
+
+        started = _make_scan_started_event()
+        bus.publish("scanstarted", started)
+        bus.publish("scanfailed", ScanFailed(scan_id=started.scan_id, reason="motion error"))
+
+        self.assertEqual(csv_port.refused + hdf5_port.refused, [])
+        self.assertTrue(csv_port.stopped and hdf5_port.stopped)
+        self.assertIsInstance(csv_port.events[-1], ScanFailed)  # finishing event still recorded
 
 
 class TestScanExportServiceZeroPointCleanup(unittest.TestCase):
@@ -386,16 +519,11 @@ class TestScanExportServiceZeroPointCleanup(unittest.TestCase):
         self.hdf5_port = FakeExportPort(output_path=self.hdf5_path)
         excitation_service = ExcitationConfigurationService(MockExcitationPort(), self.event_bus)
 
-        class FakeSnapshotPort(IAcquisitionSnapshotPort):
-            def read(self) -> Dict[str, Any]:
-                return {}
-
         self.service = ScanExportService(
             self.event_bus,
             csv_export_port=self.csv_port,
             hdf5_export_port=self.hdf5_port,
             excitation_service=excitation_service,
-            acquisition_snapshot_port=FakeSnapshotPort(),
         )
         self.service.configure_export(
             ExportConfigDTO(enabled=True, output_directory="", filename_base="scan")

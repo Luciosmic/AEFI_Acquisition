@@ -2,28 +2,26 @@
 
 ## Rationale
 
-Le document de paramètres d'acquisition doit contenir ce que le système sait au
-démarrage d'une acquisition : composants montés et leur caractérisation,
-calibrations, réglages appliqués aux puces. Une partie vit dans des registres
-domaine, une autre dans des fichiers de config sur disque (AD9106, ADS131A04,
-MCU, moteurs n'ont pas tous de getter en mémoire). Sans ce port,
-`ScanExportService` lirait ces fichiers lui-même — de l'I/O directe dans la
-couche application, et un service couplé aux noms et formats de fichiers.
+Une partie des conditions matérielles vit dans des registres domaine
+(catalogue des composants, calibrations), une autre dans des fichiers de
+config sur disque (AD9106, ADS131A04, MCU résolus `default + last`). Il fallait
+un seul endroit qui les rassemble, sans que le code qui les consomme connaisse
+les noms et formats de fichiers.
 
 ## Responsibility
 
-- Une requête en lecture seule, `read()`, qui rend les sections de contexte
-  matériel du document de paramètres, sous forme de dict prêt pour JSON.
-- Ne jamais lever : une source absente ou illisible devient un avertissement
-  dans le document, pas une exception (l'export ne doit pas échouer pour ça).
+- Une requête en lecture seule, `read()`, qui rend ces faits sous forme de
+  dict (`hardware_configuration`, `hardware_settings`, …).
+- Ne jamais lever : une source absente ou illisible devient un avertissement,
+  pas une exception.
 
 ## Design
 
-- ABC pure, sans état ni étape de configuration.
-- Le contenu et l'organisation des sections suivent le schéma de référence
-  `../acquisition_parameters/acquisition_parameters_intention.md`. État actuel
-  (`0.3-agile`) : `hardware_configuration`, `hardware_settings`,
-  `motion_last_config`, `electric_field_probe_connection_defaults` ; la
-  migration vers 1.0 (`components` / `measurement_chain`) changera la forme du
-  retour, pas le rôle du port.
-- Implémenté par `infrastructure/persistence/acquisition_snapshot_reader.py`.
+- ABC pure. Implémenté par `infrastructure/persistence/acquisition_snapshot_reader.py`.
+- Depuis le 2026-10-02, son seul consommateur est
+  `infrastructure/acquisition_conditions/acquisition_conditions_reader.py`,
+  qui le traduit en `AcquisitionConditionsDTO` pour tous les exports
+  (`IAcquisitionConditionsPort`). `ScanExportService` ne le lit plus.
+  `ponytail:` le port reste dans le dossier du service d'export alors qu'il ne
+  sert plus qu'entre deux adaptateurs ; à déplacer en infrastructure le jour où
+  il change.

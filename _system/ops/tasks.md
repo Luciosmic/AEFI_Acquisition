@@ -1,5 +1,83 @@
 # Tâches actives
 
+## Démarrage « banc non calibré » : parcours de calibration de la transmission mécanique
+
+**Statut** (2026-10-13, branche `fix/arcus-startup-uncalibrated`) : l'application démarre sans conversion
+mm/impulsion (p. ex. moteur « IGUS-S-AN-060-035-060 » sans « Pas par tour ») ; mouvement, homing et scan sont
+refusés par erreur typée, un bandeau nomme la grandeur manquante et l'onglet où la saisir. La saisie de la
+grandeur (panneau Calibration, onglet « Moteurs ») applique la conversion en direct, sans redémarrage.
+
+À faire (pourquoi : l'opérateur ne doit pas avoir à éditer des fichiers ni relire les logs pour calibrer) :
+- [ ] Parcours de calibration de la transmission mécanique sans UI : `record_calibration` (micro-pas, courant,
+      avance par tour) n'a pas d'écran dédié ; aujourd'hui seule la graine `mechanical_transmission_seed.json`
+      l'enregistre au premier démarrage. Un écran (ou un bouton « enregistrer la transmission ») est à décider.
+- [ ] Redémarrage requis : une transmission déjà appliquée n'est pas changée en session ; ajouter un état visible
+      « transmission modifiée, redémarrer l'application » (voir `_system/ops/ponytail-debt.md`).
+- [ ] Mode mock : démarre non calibré avec la donnée runtime ; décider d'une transmission de test explicite.
+- [ ] Valider sur banc réel : démarrage avec le contrôleur Arcus sans conversion (vérification en impulsions) et
+      application en direct après saisie. Non testé sur matériel.
+
+## Domaine scan : dette après le refactoring Scan fin + agrégats forts + Unit of Work
+
+**Statut** (2026-10-09) : modèle implémenté côté domaine/application (steps 1-9), décision dans
+`_system/documentation/adr/004_scan_thin_aggregate_strong_aggregates_unit_of_work.md`. `FlyScan` est supprimé
+(remplacé par `AefiLine` + `Scan` fin) ; `Scan` fin, `AefiPoint`, `AefiLine` et `NardaPoint` sont des agrégats,
+un agrégat par transaction (`IUnitOfWork`). Fly-scan et Narda en agrégat : **implémentés côté
+domaine/application, à valider sur matériel** (non éprouvés au banc dans ce modèle). Le scan Z reste
+« fondation domain seulement, pas réellement implémenté » (inchangé).
+
+À faire (pourquoi : fermer les écarts connus de l'ADR-004) :
+- [ ] États terminaux du `Scan` fin (`CANCELLED`/`FAILED`) : aujourd'hui il reste `STARTED` après annulation ou échec.
+- [ ] Commande de réconciliation opérateur (pas de retry automatique : action visible déclenchée par l'opérateur).
+- [ ] Événement d'échec visible pour une source facultative qui échoue (décision actée dans l'ADR-004, pas encore implémenté).
+- [ ] Enrichir `AefiPoint` (index, baseline) pour que l'export lise via les repositories au lieu des événements
+      hérités (`ScanPointAcquired`, publié par `StepScan` avant le commit).
+- [ ] `ScanStarted` du nouveau modèle (`Scan.start()` n'émet rien ; le `ScanStarted` hérité a la même forme de topic).
+- [x] Tests fly-scan : pause/annulation en milieu de ligne (rollback de ligne sur pause, aperçu provisoire, `AefiLineAbandoned`) : implémenté côté application, à valider sur matériel.
+- [x] Fly-scan, trous de l'audit du rollback (branche `feature/fly-scan-rollback-finish`) : publication + commit d'une ligne en un bloc (pause/annulation différées après le commit), arrêt moteur sur annulation/échec en cours de ligne, effacement de l'aperçu non confirmé sur la carte, aperçu absent des fichiers de mesure (présent dans `_events.jsonl`), mock moteur qui s'arrête vraiment, pas d'`AefiLineAbandoned` sans point, libération des flux idempotente : implémenté côté application, à valider sur matériel.
+- [x] Valider sur banc l'arrêt immédiat du moteur par `stop()` à la pause et à l'annulation en cours de ligne de fly-scan : **validé au banc le 2026-10-30** (`develop` f826257). Pause : moteur immobile < 0,41 s après la commande, 13 mm avant la fin de ligne, ligne abandonnée puis refaite depuis son début, export sans doublon. Annulation : arrêt en 382 ms, export limité aux lignes commitées. Le cas « échec en cours de ligne » n'a pas été provoqué au banc.
+- [ ] Anomalies vues au banc le 2026-10-30 :
+  - Une zone de step-scan Y = 0–30 mm a été acceptée alors que le banc touche sa fin de course vers y ≈ 0 (erreur Arcus `LIMIT`). Après l'erreur, X a poursuivi son déplacement, et le CSV a enregistré la position commandée (y = 0) au lieu de la position réelle (0,17).
+  - Un mouvement interrompu par `stop()` publie `MotionCompleted` au lieu d'un événement « arrêté ».
+  - L'appel `stop()` n'est pas tracé dans le log de l'adaptateur Arcus.
+  - Le log applicatif s'arrête au démarrage du serveur MCP. C'est corrigé par abdf1ea, qui n'est pas encore dans `develop`.
+- [ ] Matériel Arcus, concurrence `stop()` / worker : un `MOVE_TO` déjà dépilé par le worker de l'adaptateur mais pas encore envoyé au contrôleur peut partir APRÈS le `STOP` (le moteur repart alors vers la fin de ligne) ; et `is_moving()` lu juste après `STOP` peut encore renvoyer l'ancien état tant que le registre n'est pas rafraîchi (attente ~0,25 s). Vérifier au banc qu'une pause/annulation en début de balayage arrête bien le moteur et que l'attente `is_moving()` du service ne conclut pas trop tôt.
+- [ ] Déclarer les unités de `Position2D` dans les événements (standard de contrats auto-descriptifs).
+- [ ] Mesurer sur matériel réel le coût par point du nouveau chemin (≈ +25 µs en WARNING, ≈ +150 µs en INFO mesurés en mock).
+- [ ] Valider sur matériel : fly-scan par `AefiLine`, sonde Narda requise au démarrage et échec visible si elle disparaît.
+- Vigilance : ne pas confondre le « line-scan » (step-scan le long d'une droite, sur `AefiPoint`) avec `AefiLine` (ligne du fly-scan).
+
+## Capteur inertiel LSM9DS1 : panneau en direct (fait côté code), dette lidar et vérifications au banc
+
+**Statut** (2026-10-13, branche `feature/inertial-sensor-panel`) : panneau « Capteur inertiel » en
+direct (accéléromètre, gyroscope, magnétomètre, lidar) implémenté et testé avec le fake ; **non
+éprouvé sur la carte réelle dans ce dépôt** (le driver a été validé sur COM5 dans le dossier de
+travail `Hardware - Drivers/LSM9DS1` de la thèse). Pourquoi : à terme, ces valeurs serviront à
+attendre la stabilisation mécanique du banc avant une mesure de scan — pas dans cet incrément.
+Service `inertial_sensor_service`, adaptateur `lsm9ds1/`, config `config_templates/lsm9ds1_config.json`.
+
+À faire :
+- [ ] **Dette lidar (non silencieuse)** : le lidar mesure une distance, ce n'est pas un capteur
+      inertiel ; il est un canal du même flux (même carte, même liaison série = considération
+      d'infrastructure). Lui donner un concept et un port distincts (DTO, port, événement, panneau),
+      la carte partagée restant un détail d'infrastructure (un driver, deux adaptateurs). Voir
+      `_system/ops/ponytail-debt.md`.
+- [ ] Valider sur la carte réelle depuis cette application : connexion, démarrage du flux (≈ 0,5 s,
+      dans le thread de travail), cadence mesurée ≈ 25 Hz avec lidar, arrêt `S*` à la fermeture de
+      l'application (la carte garde son flux actif port fermé).
+- [ ] Vérifier les valeurs signalées « non vérifiées » : plage du gyroscope (490 °/s repris d'un
+      VI), diviseur 2^15 contre 2^16 du magnétomètre, lidar en mm (3 distances connues), plage de
+      l'accéléromètre (6 orientations).
+- [ ] Calibration au repos : facteur 0,9673 issu d'une seule orientation, **non appliqué** ; à
+      refaire sur 6 orientations avant de l'appliquer.
+- [ ] Sous-ensembles de capteurs sans accéléromètre (magnétomètre+lidar, gyroscope+lidar,
+      magnétomètre+gyroscope) : ordre des champs supposé, jamais observé.
+- [ ] Le « COM8 » du Narda est encore codé en dur dans `main.py` (`NARDA_COM_PORT`) alors que
+      `config_templates/electric_field_probe_config.json` existe : même traitement que la carte
+      LSM9DS1 (hors périmètre de cet incrément).
+- [ ] Le LSM9DS1 de `config_templates/additional_sensors_config.json` (lu via l'ADC) est-il le même
+      capteur que celui de la carte série ? Deux chemins de lecture coexistent.
+
 ## Encodeurs AMT112Q-V sur les axes X/Y
 
 **Statut** : documentation rapatriée (2026-10-02), montage pas commencé. Faits hardware (câblage,
@@ -80,6 +158,126 @@ Deux options, à trancher avec les résultats de T1.5 :
 Dans les deux cas : le fake du port motion devra simuler la position encodeur (et ses écarts),
 sinon les tests applicatifs passeront sans rien prouver (standard fidélité des doubles de test).
 Le code hardware se fera dans le worktree `_dev_hardware`.
+
+## Fly-scan : transmission mécanique au domaine, puis projection en direct ✅ FAIT
+
+**Statut** (2026-10-05) : Phases A, B, C committées et mergées dans `develop` via le merge `442f812`
+(commits `f60ebc1`, `3b709c`, `571586b`, `133e4c3`). Historique de la progression (2026-10-02),
+worktree `dev_scan` (décision Luis : tout se fait ici, y compris calibration et hardware) :
+- projection en direct (`FlyScanLineProjector`), vitesse de croisière et rampe lues sur le port moteur ;
+- redessin différé des panneaux de scan : mesuré 53 ms (carte) + 333 ms (profils) par point sur 81×81, l'UI ne
+  suivait que 2,6 points/s ; avec un fil de fond à 26 points/s pendant 10 s, retard 86 s en immédiat, 0,4 s max en
+  différé ;
+- course corrigée dans `EventBusMotionSynchronizer` (fin de mouvement perdue quand elle tombait à l'expiration
+  d'une attente courte — une ligne entière en timeout lors du premier essai dans l'appli) ;
+- appli réelle en mock (`main` + fake Arcus, fast) : fly-scan 81×81 complet en 348 s, 6561/6561 points, 0 point
+  complété en fin de ligne, retard UI médian 12 ms / p99 28 ms / max 1,7 s (pic isolé, non analysé) ;
+- suite : 918 passés.
+Essai banc (2026-10-02, modèle vitesse constante + demi-rampe) : en fast la projection courait devant le moteur
+(3,80 s réelles pour 3,31 s prévues → ~30 mm d'erreur en bout de ligne), ADC réel ~6 échantillons/s (≈11 mm par
+échantillon en fast, ≈3 mm en slow) ; slow : 11,77 s pour 11,62 s. **Décision Luis : placer par les positions
+rapportées par le contrôleur (`PositionUpdated`)**, synchronisation logicielle assumée pour un scan d'exploration.
+Fait (non commité) : `FlyScanLineProjector` sur trace de positions ; sur le stack fidèle (fake Arcus, signal =
+vraie position) erreur médiane 0, p95 ≤ 0,8 mm, max 8,3 mm en fast à 6 Hz — le fake n'a ni rampe ni latence USB,
+la précision réelle reste à voir au banc. Suite : 916 passés.
+
+**Mise à jour 2026-10-02 (soir)** : tout commité et poussé sur `origin/dev_scan` (fly-scan placé par les
+positions du contrôleur, panneau de scan regroupé, export `flyScan`, course de l'export d'événements corrigée,
+post-traitement par lot étendu aux `flyScan`). **Fusionné dans `develop` le 2026-10-05** (merge `442f812`) :
+plus rien en attente côté branche.
+
+## Autres livrés récents (non détaillés ailleurs dans ce fichier)
+
+- Export `acquisition-parameters.json` v1, colonnes typées unité/axe/référentiel (commits `6bce240`,
+  `58b6c1b`, `2db25c1`).
+- Verrou anti-race-condition sur les ports d'export scan (`982adb2`).
+- Registre opérateur — un seul port, une seule orthographe par personne (`a38db85`, `411a2f1`).
+
+### Contexte
+
+Une première version du fly-scan (non commitée) plaçait les mesures **en fin de ligne**, en
+normalisant par la durée mesurée de la ligne. Lancée dans l'appli (mock), elle a fait planter
+l'application au 27e balayage : le journal d'événements s'arrête net en plein balayage, sans
+`ScanFailed`. Cause soupçonnée, **non prouvée** : 81 points envoyés d'un coup à des panneaux
+matplotlib qui redessinent tout à chaque point. Décision Luis : projeter **en direct**, à
+**vitesse constante**, la vitesse venant de la calibration.
+
+Vitesse = facteur de conversion × fréquence de pas du mode (HS). Le facteur n'est pas propre à
+Arcus : il dépend de toute la chaîne (moteur, driver et son réglage, mécanique). Il doit donc
+vivre au domaine, et l'infrastructure ne parle en Hz/pas que chez elle.
+
+**Faits (doc `_system/documentation/hardware_datasheet/motorisation/` + notes Luis)** :
+- Moteur Igus MOT-AN-S-060-035-060-L-A-AAAA : 200 pas/tour, Nennstrom 4,2 A (datasheet ne
+  précise pas efficace ou crête). Pas d'encodeur. Même modèle sur X et Y.
+- Driver TB6600 : 1/16 de pas (3200 impulsions/tour), courant max du driver 3,5 A (4,0 A crête).
+  1/32 ne fonctionne pas ; 3,0 A saute des pas sur les petits mouvements. Plus de dérive depuis
+  le passage au courant max.
+- 21,8 µm/impulsion pour le 1/16 = 43,6 (1/8, « probablement ») ÷ 2 — calculé, pas re-mesuré
+  en 1/16. D'où une avance de 21,8 µm × 200 × 16 = **69,76 mm par tour moteur**.
+- Aujourd'hui le facteur vient de `arcus_default_config.json` (lu par l'adaptateur, modifiable
+  dans le panneau avancé Arcus). **Piège** : si ce fichier manque, l'adaptateur retombe sans
+  rien dire sur sa constante de classe 43,6 (valeur 1/8) → positions fausses ×2.
+- Le type de composant « Moteurs » déclare `step_um`, `max_speed_mm_per_s`,
+  `acceleration_mm_per_s2` : jamais remplis, les deux derniers jamais demandés.
+
+### Phase A — Transmission mécanique au domaine
+
+Modèle calqué sur le capteur : produit au catalogue, montage dans le journal, ce qui dépend de
+l'assemblage sur ce banc dans une calibration banc qui référence les montages par identité.
+
+1. **Catalogue** (`HardwareComponentKind`) :
+   - « Moteurs » : remplacer les 3 grandeurs par `full_steps_per_revolution` (pas/tour) et
+     `rated_current_a` (courant nominal, A).
+   - Nouveau type « Driver pas à pas » (`stepper_driver`) : `max_current_a` (A).
+2. **Calibration banc « transmission mécanique »** (entité de l'agrégat `Calibration`, trio
+   atomique, entrées datées, la plus récente fait foi, comme la géométrie des sources) :
+   montage moteur, montage driver, micro-pas (16), courant réglé (3,5 A) et sa crête (4,0 A),
+   avance par tour moteur (69,76 mm). Une seule transmission pour X et Y.
+3. **Règles domaine** :
+   - µm/impulsion = avance par tour ÷ (pas/tour du moteur × micro-pas) → 21,8.
+   - Courant réglé < courant nominal du moteur → avertissement (non bloquant) affichant les
+     deux valeurs du driver : « 3,5 A (4,0 A crête) < nominal moteur 4,2 A ». Permanent sur ce
+     banc (le TB6600 plafonne sous 4,2 A) : c'est un fait connu, pas une erreur.
+4. **Amorçage sans saisie** : un template versionné `config_templates/` contient moteur,
+   driver et transmission ci-dessus ; au premier démarrage, la composition root les enregistre
+   via les services (même chemin que l'UI, comme la géométrie des sources) et monte moteur et
+   driver.
+5. **Infrastructure** :
+   - `IMotionPort` reçoit le facteur (µm/impulsion) ; la composition root le lui donne au
+     démarrage, avant tout mouvement.
+   - `ArcusAdapter` ne lit plus `arcus_default_config.json` pour le facteur, plus de constante
+     43,6 : **refuse de bouger** tant qu'il n'a pas reçu de facteur.
+   - Retrait de `microns_per_step` du template Arcus et du panneau avancé Arcus.
+   - Le caractériseur de timing lit le facteur courant comme l'appli.
+6. **Export** : la transmission courante (et l'avertissement de courant) dans les métadonnées
+   d'acquisition, à côté des composants.
+
+Hors périmètre de cette phase : onglet UI pour saisir une nouvelle transmission (changer de
+réglage = éditer le template/registre, puis redémarrer) ; contrôleur PMX-4EX non référencé
+(aucune grandeur utile aujourd'hui).
+
+### Phase B — Projection en direct
+
+1. `IMotionPort` expose la vitesse de croisière du mode courant en mm/s (HS lu sur le
+   contrôleur × facteur reçu). Mock : idem.
+2. Domaine : la règle « vitesse constante » remplace la normalisation par durée de ligne —
+   position = début + vitesse × (t − t_départ − décalage) ; dit quel point de grille vient
+   d'être dépassé. **Décision ouverte** : décalage = demi-rampe du mode (recommandé : sans lui,
+   ~16 mm d'erreur en fast, ~5 mm en medium) ou 0.
+3. Boucle fly : chaque point émis dès qu'il est dépassé (interpolation entre les deux
+   échantillons qui encadrent son instant) ; points restants en fin de ligne = dernier
+   échantillon.
+4. Affichage : mesurer le coût de redessin des panneaux, limiter la cadence si nécessaire
+   (fast, pas 2,5 mm → 24 points/s). Attention : `scan_visualization_panel.py`,
+   `dashboard*.py` ont des modifications non commitées qui ne viennent pas de ce chantier.
+
+### Phase C — Vérification
+
+- Suite de tests.
+- **Appli réelle en mode mock** (`main_mock.py`) : un fly-scan complet sur la grille par défaut
+  (81 × 81) sans plantage, carte remplie en direct, avant de dire que ça marche.
+- Limite connue : le fake Arcus ne valide que la plomberie (position linéaire sur tout le
+  déplacement, pas de rampe, pas de latence USB) ; le calage du décalage se fait au banc.
 
 ## Observabilité : migration vers Observability-Driven Design (ODD)
 
@@ -182,6 +380,23 @@ a trouvé `adapter_mock_i_motion_port.py::home()` retournant instantanément alo
 vrai driver Arcus a des timeouts de homing mécanique jusqu'à 120s. Non corrigé, laissé
 en advisory. À mentionner si pertinent, pas à traiter dans ce chantier ODD sauf demande
 explicite.
+
+## Caractérisation timing moteur (motion timing characterizer)
+
+**Mise à jour 2026-10-01 (worktree `dev_scan`, à reporter dans `dev_hardware`)** : la durée des
+*déplacements* est maintenant fidèle. Caractériseur banc
+`infrastructure/hardware/arcus_performax_4EX/characterization/` (360 mouvements, modèle
+`t = t0 + max(|dx|,|dy|)/v`, synthèse commitée dans `results/`) → constantes nommées dans
+`MockMotionPort` (niveau port, exact) et `FakeArcusPerformax4EXController` (niveau contrôleur,
+exact ; vu depuis le port, t0 sous-estimé d'environ 0,19 s faute de latence USB simulée). Restent
+ouverts :
+- `home()` non caractérisé (toujours instantané/0,2 s) ;
+- rampe d'accélération en fast (environ 0,1 s d'erreur sur 2,5 mm) ;
+- **extrapolé de la mesure** (non mesuré directement, déplacements ≤ 100 mm) : en slow, home → (600, 600) dure environ 35 s, au-delà des 30 s de timeout du scan
+  (`wait_for_motion`) et de `ArcusAdapter._internal_wait_until_stopped` (qui publie alors un
+  `MotionCompleted` alors que le moteur roule encore). Reproductible en test avec `MockMotionPort`.
+- LS=0 et DEC=0 relus sur le contrôleur : le `ls=10`/`dec=300` de `arcus_default_config.json` n'est
+  jamais appliqué.
 
 ## Config hardware : source unique de vérité (AD9106+MCU fait, ADS131A04 restant)
 
@@ -289,13 +504,13 @@ EF probe) — ne pas re-toggler l'excitation par canal.
   `baseline_measurement: AefiVoltageMeasurement | None`
 - `domain/step_scan/events/scan_point_acquired/` : `ScanPointAcquired` + champ optionnel
   `baseline_measurement`
-- `domain/step_scan/events/electric_field_scan_point_acquired/electric_field_scan_point_acquired.py` :
+- ancien événement de champ (supprimé au profit de `NardaPointAcquired`) :
   + champ optionnel `baseline_field_measurement: FieldMeasurement | None`
 - `application/services/excitation_configuration_service/excitation_configuration_service.py` :
   + `mute()` / `unmute()` (gardent mode/fréquence, togglent juste le niveau à 0 puis
   restaurent le niveau précédent)
 - `application/services/scan_application_service/scan_application_service.py` :
-  - `AuxiliaryProbeChannel.publish_point_result` : signature étendue pour accepter des
+  - `AuxiliaryProbeChannel.record_point_result` : signature étendue pour accepter des
     échantillons baseline optionnels (aujourd'hui `Callable[[Any, int, Any, List], None]`,
     l.114)
   - `make_electric_field_probe_channel._publish` (l.124-134) : calculer aussi
@@ -308,7 +523,7 @@ EF probe) — ne pas re-toggler l'excitation par canal.
     3. `excitation_service.unmute()` → délai `differential_settle_delay_ms`
     4. bloc excité existant (l.398-442), inchangé
     5. attacher les baselines aux résultats avant `ScanPointResult(...)` et
-       `channel.publish_point_result(...)`
+       `channel.record_point_result(...)`
 - `application/services/scan_application_service/dtos/scan_dtos.py` : `Scan2DConfigDTO` +
   `differential_mode: bool = False`, + `differential_settle_delay_ms: float`
 - `application/services/scan_export_service/scan_export_service.py` (`_flatten_point`) et
@@ -362,5 +577,5 @@ bout dans `ScanApplicationService`, sans dépendre du hardware réel.
 3. `ScanApplicationService` : test d'intégration avec le mock stack ci-dessus (le test qui
    compte le plus — voir section précédente) avant de coder la boucle
 4. Implémentation de la boucle différentielle
-5. Events (`ScanPointAcquired`, `ElectricFieldScanPointAcquired`) + export CSV
+5. Events (`ScanPointAcquired`, `NardaPointAcquired`) + export CSV
 6. UI (case à cocher)

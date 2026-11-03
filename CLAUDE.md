@@ -10,6 +10,9 @@ Système d'acquisition pour l'AEFI (Active Electric Field Imaging). Pilote un ba
 - UI : **PySide6**
 - Architecture : **DDD** (domain / application / infrastructure / interface)
 - Tests : pytest (`src/_tests/`)
+- Lancement : `uv run python src/main.py` (matériel réel) ; `uv run python src/main_mock.py` (dev, tout mocké)
+- Logs de debug : `AEFI_LOG_LEVEL=DEBUG` et `AEFI_LOG_FILE=<chemin>` (lisibles sans l'UI)
+- Serveur MCP d'observabilité (`develop` uniquement, lecture seule) : `src/infrastructure/mcp/`, démarré en thread à la fin de `main.py`, `http://127.0.0.1:8765/mcp`, déclaré dans `.mcp.json` (`aefi-observability`, tool `get_scan_status`)
 
 ## Structure
 
@@ -22,9 +25,12 @@ src/
   _tests/          # tests unitaires et intégration
 
 _system/           # référence agents — lire en premier
-_docs/             # ADR, analyses architecturales, datasheets hardware
 external_modules/  # modules tiers (aefi_post_processor_module)
 .aefi_acquisition/ # données runtime (configs, scans, calibrations, logs) — gitignored
+archives/          # anciens docs/tests archivés (_INBOX, docs, tests_e2e)
+config_templates/  # templates JSON de configuration hardware par défaut
+inbox/             # notes entrantes non triées (réunions, etc.)
+launch/            # scripts de lancement de l'application (bat/ps1/sh/vbs)
 ```
 
 ## Exports de données réelles 
@@ -45,12 +51,12 @@ Lire `_system/` avant toute décision architecturale :
 
 | Branche                     | Rôle                                                            |
 | --------------------------- | ---------------------------------------------------------------- |
-| `main`                    | Stable = release/v1.0.1                                          |
+| `main`                    | Stable. Une release = un tag sur `main` (`v1.0.2` actuellement), pas une branche `release/*` |
 | `develop`                 | Intégration — base pour les nouvelles features                 |
-| `feature/*`               | Feature branch depuis develop                                    |
-| `release/v1.0.1`          | Worktree`AEFI_Acquisition/` — utilisé pour les acquisitions  |
-| `release/v1.0.0`          | Archive historique                                               |
-| `archive/ddd-refactoring` | Refactoring DDD gelé — documentation uniquement, ne pas merger |
+| `feature/*`               | Feature branch depuis develop, supprimée une fois fusionnée     |
+| `dev_<contexte>`          | Worktree `AEFI_Acquisition_dev_<contexte>/` — développement borné à un contexte cohésif (ex. `dev_detection_devices`) |
+
+Les anciennes branches (releases, refactoring DDD, sauvegarde pré-rollback, POC n8n) ont été supprimées le 2026-10-30. Leur contenu utile est conservé par les tags `v1.0.0`, `v1.0.1`, `v1.0.2` et `archive/*`.
 
 ## Contexte borné du worktree
 

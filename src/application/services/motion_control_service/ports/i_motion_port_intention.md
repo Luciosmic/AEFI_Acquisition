@@ -14,3 +14,4 @@ Abstraire le contrôleur moteur physique (Arcus Performax 4EX) derrière un port
 - **Port outbound** co-localisé dans `motion_control_service/`.
 - `move_to` retourne un `motion_id` (str) utilisé par `StepScanExecutor` pour la synchronisation event-based (`MotionCompleted.motion_id`).
 - Implémenté par `AdapterMotionPortArcusPerformax4EX` (Real) et `AdapterMockIMotionPort` (Mock).
+- `is_conversion_available() → bool` : le port dit s'il a reçu sa distance par impulsion ; sinon les commandes en mm lèvent `MotionConversionUnavailableError` (voir `motion_conversion_unavailable_error.py`), arrêt et arrêt d'urgence restent disponibles.

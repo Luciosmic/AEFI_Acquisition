@@ -109,6 +109,7 @@ class AdcOutputRateCharacterizationWidget(QGroupBox):
         layout.addWidget(self.lbl_result)
 
         self._points = []
+        self._pending_plot = None
         self._draw(mean_modulator_frequency_hz=None)
 
     def _on_sweep_clicked(self) -> None:
@@ -173,6 +174,19 @@ class AdcOutputRateCharacterizationWidget(QGroupBox):
     # -- plot ---------------------------------------------------------------------
 
     def _draw(self, mean_modulator_frequency_hz) -> None:
+        # matplotlib draws hidden canvases too: a tab not opened yet is
+        # plotted (tight_layout included) at its first show, not at startup.
+        self._pending_plot = (mean_modulator_frequency_hz,)
+        if self.isVisible():
+            self._plot(mean_modulator_frequency_hz)
+
+    def showEvent(self, event) -> None:
+        super().showEvent(event)
+        if self._pending_plot is not None:
+            self._plot(*self._pending_plot)
+
+    def _plot(self, mean_modulator_frequency_hz) -> None:
+        self._pending_plot = None
         self.figure.clear()
         ax = self.figure.add_subplot(111, facecolor=_BG)
         osr = [p.oversampling_ratio for p in self._points]

@@ -18,16 +18,16 @@ from infrastructure.hardware.narda_ep600.fake.fake_electric_field_probe_adapter 
     FakeElectricFieldProbeAdapter,
 )
 
-from domain.electric_field_probe.events.field_sample_acquired.field_sample_acquired import (
+from domain.detection_devices.electric_field_probes.events.field_sample_acquired.field_sample_acquired import (
     FieldSampleAcquired,
 )
-from domain.electric_field_probe.events.electric_field_probe_connection_changed.electric_field_probe_connection_changed import (
+from domain.detection_devices.electric_field_probes.events.electric_field_probe_connection_changed.electric_field_probe_connection_changed import (
     ElectricFieldProbeConnectionChanged,
 )
-from domain.electric_field_probe.events.electric_field_probe_battery_refreshed.electric_field_probe_battery_refreshed import (
+from domain.detection_devices.electric_field_probes.events.electric_field_probe_battery_refreshed.electric_field_probe_battery_refreshed import (
     ElectricFieldProbeBatteryRefreshed,
 )
-from domain.electric_field_probe.events.electric_field_probe_frequency_correction_changed.electric_field_probe_frequency_correction_changed import (
+from domain.detection_devices.electric_field_probes.events.electric_field_probe_frequency_correction_changed.electric_field_probe_frequency_correction_changed import (
     ElectricFieldProbeFrequencyCorrectionChanged,
 )
 from domain.shared_kernel.excitation.events.excitation_frequency_changed.excitation_frequency_changed import (

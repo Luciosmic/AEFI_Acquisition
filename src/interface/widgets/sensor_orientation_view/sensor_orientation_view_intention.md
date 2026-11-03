@@ -20,6 +20,8 @@ only show the mounting actually applied to the readings.
 - `show_mounting(matrix)`: redraw for a given P (3×3, rows; columns = sensor
   axes in the sources frame). The view knows nothing about angles or about
   the rotation convention.
+- Draw once: nothing is drawn at construction (the host feeds the active P
+  right after); the identity cube is drawn at first show only if no P was fed.
 - One row of camera-view buttons (3D, XY, XZ, YZ) above the 3D view.
 
 ## Design
@@ -28,7 +30,8 @@ only show the mounting actually applied to the readings.
   (both the Qt widget and the PyVista plotter API). Injected by the
   dashboard into the "Calibration capteur" panel.
 - No text overlay: the host's spinboxes already show the angles.
-- `configure_qt_opengl()` must run before `QApplication()`: the 3D view is a
+- `configure_qt_opengl()` (in `interface/qt_gl_format.py`, PySide6 only so the
+  splash does not wait for pyvista) must run before `QApplication()`: the 3D view is a
   `QOpenGLWidget`, which composites **black** if the GL default format is
   set after the first top-level window exists (AEFI splash `StartupView`),
   or if it is moved to another top-level window (floating QtAds dock)

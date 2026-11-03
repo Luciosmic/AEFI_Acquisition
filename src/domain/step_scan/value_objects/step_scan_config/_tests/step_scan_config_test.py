@@ -88,3 +88,25 @@ def test_step_scan_config_differential_settle_delay_can_be_set(valid_scan_zone):
 def test_step_scan_config_rejects_negative_differential_settle_delay(valid_scan_zone):
     with pytest.raises(ValueError, match="differential_settle_delay_ms must be >= 0"):
         _make_config(valid_scan_zone, differential_settle_delay_ms=-1.0)
+
+
+def test_step_scan_config_points_per_line_follows_the_fast_axis(valid_scan_zone):
+    from domain.step_scan.value_objects.scan_axis.scan_axis import ScanAxis
+
+    assert _make_config(valid_scan_zone).points_per_line() == 20  # default fast axis: Y
+    assert _make_config(valid_scan_zone, scan_axis=ScanAxis.X).points_per_line() == 10
+
+
+def test_step_scan_config_fly_scan_defaults_to_disabled(valid_scan_zone):
+    assert _make_config(valid_scan_zone).fly_scan is False
+    assert _make_config(valid_scan_zone, fly_scan=True).fly_scan is True
+
+
+def test_step_scan_config_fly_scan_rejects_differential_mode(valid_scan_zone):
+    with pytest.raises(ValueError, match="fly_scan does not support differential_mode"):
+        _make_config(valid_scan_zone, fly_scan=True, differential_mode=True)
+
+
+def test_step_scan_config_fly_scan_rejects_a_single_point_line(valid_scan_zone):
+    with pytest.raises(ValueError, match="at least 2 points along the fast axis"):
+        _make_config(valid_scan_zone, fly_scan=True, y_nb_points=1)

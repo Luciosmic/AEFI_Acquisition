@@ -35,6 +35,15 @@ breaking existing callers.
   the live source of the current geometry, referenced by sensor calibration
   entries through its `entry_id`; the raw JSON device config is only its
   one-time seed on first boot.
+- Mint new `MechanicalTransmissionCalibrationEntry` records via
+  `record_mechanical_transmission_calibration_entry`, emitting
+  `MechanicalTransmissionCalibrationEntryAdded` — the motion chain as set up
+  on the bench (motor and stepper driver mountings by identity, microsteps,
+  driver current, travel per motor revolution), source of the distance per
+  motor pulse. Refused when no motor or no driver is mounted.
+  `current_mechanical_transmission(entries, motor_mounting_id,
+  driver_mounting_id)`: the latest entry set up with the motor and driver
+  mounted now — None after a swap until a new transmission is recorded.
 - Hardware components (boards, signal generation chip, ADC, microcontroller,
   motors — `HardwareComponentKind`) are product modules: each has a unique
   name and a characterization (the kind's essential quantities, each

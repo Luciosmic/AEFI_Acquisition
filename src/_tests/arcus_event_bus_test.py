@@ -35,7 +35,7 @@ class TestArcusEventBus(DiagramFriendlyTest):
         self.mock_controller.is_moving.side_effect = lambda axis: next(_is_moving_values)
         
         # Configure get_position to return target steps (simulating successful move)
-        # Calibration loaded from arcus_default_config.json: 21.8 microns/step → 45.87 steps/mm
+        # Bench transmission: 21.8 microns/pulse → 45.87 pulses/mm (set on the adapter below)
         steps_per_mm = 1000.0 / 21.8
         target_x_steps = int(10.0 * steps_per_mm)
         target_y_steps = int(20.0 * steps_per_mm)
@@ -51,6 +51,7 @@ class TestArcusEventBus(DiagramFriendlyTest):
         
         # 3. Create Adapter
         self.adapter = ArcusAdapter(event_bus=self.event_bus)
+        self.adapter.set_microns_per_pulse(21.8)
         self.adapter.set_controller(self.mock_controller)
         self.log_interaction("Test", "CREATE", "ArcusAdapter", "Created adapter with injected controller")
         

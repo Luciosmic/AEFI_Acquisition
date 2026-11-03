@@ -17,24 +17,43 @@ from __future__ import annotations
 
 import logging
 import shutil
+from dataclasses import replace
+import threading
 from datetime import datetime
 from pathlib import Path
 from typing import Optional, Dict, Any, List
 
 from .dtos.scan_export_dtos import ExportConfigDTO
 from .ports.i_scan_export_port import IScanExportPort
-from .ports.i_acquisition_snapshot_port import IAcquisitionSnapshotPort
+from .dtos.scan_acquisition_parameters_dtos import (
+    STEP_SCAN,
+    TIME_SERIES,
+    ElectricFieldProbeDTO,
+    ExcitationStateDTO,
+    ScanAcquisitionParametersDTO,
+    ScanActivityDTO,
+    StepScanProcedureDTO,
+)
+from application.shared.acquisition_parameters.acquisition_conditions_dtos import (
+    AcquisitionConditionsDTO,
+    SoftwareProvenanceDTO,
+)
+from application.shared.acquisition_parameters.i_acquisition_conditions_port import IAcquisitionConditionsPort
+from application.shared.acquisition_parameters.i_software_provenance_port import ISoftwareProvenancePort
+from application.shared.acquisition_parameters.i_usb_latency_timer_port import IUsbLatencyTimerPort
 from .ports.i_post_processing_port import IPostProcessingPort
+from application.shared.scan_config_summary.scan_config_summary import summarize_scan_config
 from application.shared.ports.i_async_task_runner import IAsyncTaskRunner
 
 from domain.step_scan.events.scan_started.scan_started import ScanStarted
+from domain.step_scan.value_objects.line_scan_config.line_scan_config import LineScanConfig
 from domain.step_scan.events.scan_point_acquired.scan_point_acquired import ScanPointAcquired
 from domain.step_scan.events.scan_completed.scan_completed import ScanCompleted
 from domain.step_scan.events.scan_failed.scan_failed import ScanFailed
 from domain.step_scan.events.scan_cancelled.scan_cancelled import ScanCancelled
-from domain.step_scan.events.electric_field_scan_point_acquired.electric_field_scan_point_acquired import ElectricFieldScanPointAcquired
-from domain.electric_field_probe.electric_field_probe import ElectricFieldProbe
-from domain.electric_field_probe.events.electric_field_probe_connection_changed.electric_field_probe_connection_changed import ElectricFieldProbeConnectionChanged
+from domain.narda_point.events.narda_point_acquired.narda_point_acquired import NardaPointAcquired
+from domain.detection_devices.electric_field_probes.electric_field_probe import ElectricFieldProbe
+from domain.detection_devices.electric_field_probes.events.electric_field_probe_connection_changed.electric_field_probe_connection_changed import ElectricFieldProbeConnectionChanged
 from domain.shared_kernel.events.aefi_voltage_reading_started.aefi_voltage_reading_started import AefiVoltageReadingStarted
 from domain.shared_kernel.events.aefi_voltage_sample_acquired.aefi_voltage_sample_acquired import AefiVoltageSampleAcquired
 from domain.shared_kernel.events.aefi_voltage_reading_stopped.aefi_voltage_reading_stopped import AefiVoltageReadingStopped
@@ -45,25 +64,6 @@ from application.services.excitation_configuration_service.excitation_configurat
 
 logger = logging.getLogger(__name__)
 
-# Unit of every exported column (and of the position bounds in the metadata
-# "scan" section). Written to the acquisition-parameters JSON rather than the
-# CSV headers: aefi_post_processor_module reads the columns by name.
-EXPORT_UNITS: Dict[str, str] = {
-    "x": "mm",
-    "y": "mm",
-    "x_min": "mm",
-    "x_max": "mm",
-    "y_min": "mm",
-    "y_max": "mm",
-    "t_s": "s",
-    "timestamp": "ISO 8601, local time",
-    "voltage_*": "V",
-    "std_dev_*": "V",
-    "baseline_voltage_*": "V",
-    "field_*": "V/m",
-    "baseline_field_*": "V/m",
-}
-
 
 class ScanExportService:
     """
@@ -72,7 +72,7 @@ class ScanExportService:
     Notes:
     - Works in an event-driven fashion: subscribes to `ScanStarted`,
       `ScanPointAcquired`, `ScanCompleted`, `ScanFailed`, `ScanCancelled`.
-    - Also handles `ElectricFieldScanPointAcquired` events for electric field probe data.
+    - Also handles `NardaPointAcquired` events for electric field probe data.
     - Uses `ExportConfigDTO` to know whether export is enabled and
       where to write files.
     """
@@ -83,10 +83,15 @@ class ScanExportService:
         csv_export_port: IScanExportPort,
         hdf5_export_port: IScanExportPort,
         excitation_service: ExcitationConfigurationService,
-        acquisition_snapshot_port: IAcquisitionSnapshotPort,
+        conditions_port: Optional[IAcquisitionConditionsPort] = None,
         post_processing_port: Optional[IPostProcessingPort] = None,
         task_runner: Optional[IAsyncTaskRunner] = None,
+        software_provenance_port: Optional[ISoftwareProvenancePort] = None,
+        usb_latency_timer_port: Optional[IUsbLatencyTimerPort] = None,
     ) -> None:
+        """`conditions_port`, `software_provenance_port`, `usb_latency_timer_port`:
+        the facts of the acquisition-parameters document (schema 1.0). Absent,
+        the document still gets written and declares them unknown."""
         self._event_bus = event_bus
         self._csv_export_port = csv_export_port
         self._hdf5_export_port = hdf5_export_port
@@ -96,10 +101,19 @@ class ScanExportService:
         # instead (unlike the probe, see _handle_probe_connection_changed).
         # Replace with an event subscription once that event exists.
         self._excitation_service = excitation_service
-        self._acquisition_snapshot_port = acquisition_snapshot_port
+        self._conditions_port = conditions_port
+        self._software_provenance_port = software_provenance_port
+        self._usb_latency_timer_port = usb_latency_timer_port
+        # Facts of the open export's acquisition-parameters document; the
+        # final write adds the outcome (see _close_export).
+        self._parameters: Optional[ScanAcquisitionParametersDTO] = None
         self._post_processing_port = post_processing_port
         self._task_runner = task_runner
         self._active_ports: List[IScanExportPort] = []
+        # Events come from several threads (ADC worker, motion worker, scan
+        # loop): the recorder must never see a port that is not open yet, or
+        # write into one being closed by another thread.
+        self._events_lock = threading.RLock()
 
         self._config: Optional[ExportConfigDTO] = None
         self._export_active: bool = False  # True between ScanStarted and completion/failure/cancel
@@ -123,7 +137,7 @@ class ScanExportService:
         self._event_bus.subscribe("scanfailed", self._on_event)
         self._event_bus.subscribe("scancancelled", self._on_event)
         # Subscribe to electric field scan events
-        self._event_bus.subscribe("electricfieldscanpointacquired", self._on_event)
+        self._event_bus.subscribe("nardapointacquired", self._on_event)
         # Passively cache the last-connected probe's identity — avoids a
         # constructor dependency on ElectricFieldProbeService.
         self._event_bus.subscribe("electricfieldprobeconnectionchanged", self._on_event)
@@ -154,6 +168,10 @@ class ScanExportService:
         )
         logger.debug("ScanExportService configured: %s", config)
 
+    def get_export_config(self) -> Optional[ExportConfigDTO]:
+        """Current scan export configuration (None until configure_export is called)."""
+        return self._config
+
     def configure_time_series_export(self, config: ExportConfigDTO) -> None:
         """Arm (enabled=True) or disarm the export of the next continuous
         reading. Call right before starting the reading: the arming is
@@ -176,8 +194,8 @@ class ScanExportService:
                 self._handle_scan_started(event)
             elif isinstance(event, ScanPointAcquired):
                 self._handle_scan_point_acquired(event)
-            elif isinstance(event, ElectricFieldScanPointAcquired):
-                self._handle_electric_field_scan_point_acquired(event)
+            elif isinstance(event, NardaPointAcquired):
+                self._handle_narda_point_acquired(event)
             elif isinstance(event, (ScanCompleted, ScanFailed, ScanCancelled)):
                 self._handle_scan_finished(event)
             elif isinstance(event, ElectricFieldProbeConnectionChanged):
@@ -198,10 +216,17 @@ class ScanExportService:
 
         Relies on the bus dispatching "*" subscribers after typed ones: the
         export is already open when ScanStarted reaches here, and already
-        closed for the finishing event (written by _close_export).
-        `_active_ports` is empty whenever no export is open."""
-        for port in self._active_ports:
-            port.write_event(event)
+        closed for the finishing event (written by _close_export). The
+        acquisition that completes the scan (last AefiLineAcquired /
+        AefiPointAcquired) reaches here before ScanCompleted closes the
+        export: the unit of work delivers the ScanCompleted committed by the
+        closure handler only once that acquisition reached every subscriber.
+        `_active_ports` only lists open ports: filled once they are started,
+        emptied before they are closed — an event from another thread landing
+        while a scan export opens or closes is simply not recorded."""
+        with self._events_lock:
+            for port in self._active_ports:
+                port.write_event(event)
 
     def _handle_scan_started(self, event: ScanStarted) -> None:
         logger.info("Handling ScanStarted. scan_id=%s, config present: %s", event.scan_id, self._config is not None)
@@ -217,11 +242,11 @@ class ScanExportService:
             return
 
         # Every scan is exported to both formats simultaneously.
-        self._active_ports = [self._csv_export_port, self._hdf5_export_port]
+        ports = [self._csv_export_port, self._hdf5_export_port]
 
         directory = self._config.output_directory
         # Scan name only — each export port builds its own acquisition folder
-        # and per-device filenames (timestamp_stepScan_<device>_<name>) from it.
+        # and per-device filenames (timestamp_<stepScan|flyScan>_<device>_<name>) from it.
         filename_base = self._config.filename_base
         # Shared across both ports so CSV and HDF5 land in the same
         # acquisition folder (the post-processing trigger needs both files
@@ -238,16 +263,18 @@ class ScanExportService:
             filename_base,
         )
 
-        scan_section = dict(metadata)
-        acquisition_metadata = self._build_acquisition_metadata(
-            {"scan_id": scan_section.pop("scan_id"), "scan": scan_section},
-            formats=["CSV", "HDF5"],
-            filename_base=filename_base,
+        parameters = self._start_parameters(
+            str(event.scan_id), STEP_SCAN, self._config, self._step_scan_procedure(event)
         )
-        for port in self._active_ports:
-            port.configure(directory, filename_base, metadata, timestamp=timestamp)
+        # Folder/file tag: a fly scan is an exploration map, not a measurement —
+        # its files must not be mistaken for a step scan's.
+        acquisition_kind = "flyScan" if getattr(event.config, "fly_scan", False) else "stepScan"
+        for port in ports:
+            port.configure(directory, filename_base, metadata, timestamp=timestamp, acquisition_kind=acquisition_kind)
             port.start()
-            port.write_metadata(acquisition_metadata)
+            port.write_acquisition_parameters(parameters)
+        with self._events_lock:  # visible to the event recorder only once open
+            self._active_ports = ports
         self._export_active = True
         self._points_written = 0
         # Reset per-scan field-export state — must not leak into a new scan
@@ -256,7 +283,7 @@ class ScanExportService:
 
         # Field export rides on every active port that supports it — field
         # data is configured lazily on the first electric field point (see
-        # _handle_electric_field_scan_point_acquired), once the probe's
+        # _handle_narda_point_acquired), once the probe's
         # component count is known from the actual event.
         if any(hasattr(port, 'configure_field_data') for port in self._active_ports):
             self._field_export_active = True
@@ -270,7 +297,7 @@ class ScanExportService:
             port.write_point(data)
         self._points_written += 1
 
-    def _handle_electric_field_scan_point_acquired(self, event: ElectricFieldScanPointAcquired) -> None:
+    def _handle_narda_point_acquired(self, event: NardaPointAcquired) -> None:
         """Handle electric field scan point acquired events."""
         if not self._export_active or not self._field_export_active:
             return
@@ -322,12 +349,9 @@ class ScanExportService:
             acquisition_kind="timeSeries",
         )
         port.start()
-        port.write_metadata(self._build_acquisition_metadata(
-            {"acquisition_id": str(event.acquisition_id), "acquisition_kind": "timeSeries"},
-            formats=["CSV"],
-            filename_base=config.filename_base,
-        ))
-        self._active_ports = [port]
+        port.write_acquisition_parameters(self._start_parameters(str(event.acquisition_id), TIME_SERIES, config))
+        with self._events_lock:  # visible to the event recorder only once open
+            self._active_ports = [port]
         self._time_series_active = True
         self._time_series_t0 = None
         self._points_written = 0
@@ -341,7 +365,7 @@ class ScanExportService:
         self._csv_export_port.write_point({
             "sample_index": event.sample_index,
             "t_s": (m.timestamp - self._time_series_t0).total_seconds(),
-            "timestamp": m.timestamp.isoformat(),
+            "timestamp": m.timestamp.astimezone().isoformat(),  # ISO 8601 with offset
             "voltage_x_in_phase": m.voltage_x_in_phase,
             "voltage_x_quadrature": m.voltage_x_quadrature,
             "voltage_y_in_phase": m.voltage_y_in_phase,
@@ -364,16 +388,26 @@ class ScanExportService:
         """Write the finishing event, close every active port, and drop the
         acquisition folder if nothing was written. Returns each active port's
         output path, in `_active_ports` order."""
+        # Hidden from the event recorder before closing: an event from another
+        # thread can no longer reach a port being stopped.
+        with self._events_lock:
+            ports, self._active_ports = self._active_ports, []
         # Read before stop() — ports clear their path once closed.
-        paths = [port.get_output_path() for port in self._active_ports]
+        paths = [port.get_output_path() for port in ports]
+        finished = self._finish_parameters(event)
         try:
-            for port in self._active_ports:
+            for port in ports:
                 port.write_event(event)  # last event of the export, before its file closes
                 port.stop()
+            # Once every file is closed: the final document lists and hashes them.
+            if finished is not None:
+                for port in ports:
+                    port.write_acquisition_parameters(finished)
         finally:
             self._export_active = False
             self._time_series_active = False
             self._active_ports = []
+            self._parameters = None
 
         if self._points_written == 0:
             # A scan/reading that ended before any point leaves nothing worth
@@ -418,70 +452,111 @@ class ScanExportService:
 
     def _build_metadata(self, event: ScanStarted) -> Dict[str, Any]:
         """Extract basic metadata from the scan configuration."""
+        summary = summarize_scan_config(event.config)
+        # scan_id first, then scan_kind (line scans), then the rest — historical key order.
+        head = {"scan_id": str(event.scan_id)}
+        if "scan_kind" in summary:
+            head["scan_kind"] = summary.pop("scan_kind")
+        return {**head, **summary}
+
+    # -- acquisition-parameters document (facts only; the port writes schema 1.0) --
+
+    @staticmethod
+    def _step_scan_procedure(event: ScanStarted) -> Optional[StepScanProcedureDTO]:
         cfg = event.config
+        if isinstance(cfg, LineScanConfig):
+            return None
         zone = cfg.scan_zone
+        return StepScanProcedureDTO(
+            x_min_mm=zone.x_min, x_max_mm=zone.x_max, y_min_mm=zone.y_min, y_max_mm=zone.y_max,
+            x_nb_points=cfg.x_nb_points, y_nb_points=cfg.y_nb_points, total_points=cfg.total_points(),
+            pattern=cfg.scan_pattern.name, fast_axis=cfg.scan_axis.name,
+            stabilization_delay_ms=cfg.stabilization_delay_ms, averaging_per_position=cfg.averaging_per_position,
+            measurement_uncertainty_v=cfg.measurement_uncertainty.max_uncertainty_volts,
+            differential_mode=cfg.differential_mode, differential_settle_delay_ms=cfg.differential_settle_delay_ms,
+            estimated_duration_s=cfg.estimated_duration_seconds(),
+        )
 
-        return {
-            "scan_id": str(event.scan_id),
-            "pattern": cfg.scan_pattern.name,
-            "scan_axis": cfg.scan_axis.name,
-            "x_min": zone.x_min,
-            "x_max": zone.x_max,
-            "x_nb_points": cfg.x_nb_points,
-            "y_min": zone.y_min,
-            "y_max": zone.y_max,
-            "y_nb_points": cfg.y_nb_points,
-            "stabilization_delay_ms": cfg.stabilization_delay_ms,
-            "averaging_per_position": cfg.averaging_per_position,
-            "total_points": cfg.total_points(),
-            "estimated_duration_s": cfg.estimated_duration_seconds(),
-        }
+    def _start_parameters(
+        self, activity_id: str, kind: str, config: ExportConfigDTO, procedure: Optional[StepScanProcedureDTO] = None
+    ) -> ScanAcquisitionParametersDTO:
+        """Gather the facts at acquisition start; kept to add the outcome at the end."""
+        conditions = (
+            self._conditions_port.read_conditions() if self._conditions_port is not None
+            else AcquisitionConditionsDTO(unknown={"components": "lecteur de conditions non câblé"})
+        )
+        software = (
+            self._software_provenance_port.read() if self._software_provenance_port is not None
+            else SoftwareProvenanceDTO(name="AEFI Acquisition", unknown_reason="lecteur de provenance non câblé")
+        )
+        position, position_reason = self._bench_position()
+        latency, latency_reason = self._usb_latency(conditions)
+        excitation = self._excitation_service.get_current_parameters()
+        owner = self._excitation_service.get_controller()
+        probe = self._last_known_probe
+        activity = ScanActivityDTO(
+            activity_id=activity_id,
+            kind=kind,
+            started_at=datetime.now().astimezone(),
+            status="running",
+            excitation=ExcitationStateDTO(
+                mode=excitation.mode.name,
+                level_s1_s2_percent=excitation.level_s1_s2.value,
+                level_s3_s4_percent=excitation.level_s3_s4.value,
+            ),
+            owner=owner,
+            held_controls=("excitation",) if owner else (),
+            procedure=procedure,
+            measured_object=config.measured_object.strip() or None,
+            operator_id=config.operator_id or None,
+            operator=config.operator.strip() or None,
+            probe=ElectricFieldProbeDTO(
+                brand=probe.brand, model=probe.model, serial_number=probe.serial_number,
+                axis_labels=tuple(probe.axis_labels), battery_voltage_v=probe.battery_voltage_v,
+                battery_percentage=probe.battery_percentage, battery_remaining_hours=probe.battery_remaining_hours,
+            ) if probe is not None else None,
+            bench_position_start=position,
+            bench_position_unknown_reason=position_reason,
+            usb_latency_timer_ms=latency,
+            usb_latency_unknown_reason=latency_reason,
+        )
+        self._parameters = ScanAcquisitionParametersDTO(activity=activity, conditions=conditions, software=software)
+        return self._parameters
 
-    def _build_acquisition_metadata(
-        self, header: Dict[str, Any], formats: List[str], filename_base: str
-    ) -> Dict[str, Any]:
-        """Bundle every acquisition parameter currently accessible into one
-        JSON-ready snapshot (v0, agile — see i_acquisition_snapshot_port.py
-        and the ExcitationConfigurationService coupling note in __init__ for
-        what's a live getter vs. an on-disk config read).
+    def _finish_parameters(self, event: DomainEvent) -> Optional[ScanAcquisitionParametersDTO]:
+        if self._parameters is None:
+            return None
+        if isinstance(event, ScanFailed):
+            status, reason = "failed", event.reason
+        elif isinstance(event, ScanCancelled):
+            status, reason = "cancelled", None
+        elif isinstance(event, ScanStarted):  # a scan closed this time series
+            status, reason = "cancelled", "interrompue par le démarrage d'un scan"
+        else:  # ScanCompleted, AefiVoltageReadingStopped (stopped by the operator)
+            status, reason = "completed", None
+        position, position_reason = self._bench_position()
+        activity = replace(
+            self._parameters.activity,
+            ended_at=datetime.now().astimezone(), status=status, failure_reason=reason,
+            records_written=self._points_written, bench_position_end=position,
+            bench_position_unknown_reason=self._parameters.activity.bench_position_unknown_reason or position_reason,
+        )
+        return replace(self._parameters, activity=activity)
 
-        `header`: the acquisition's own identity/parameters — `scan_id` +
-        `scan` section for a step scan, `acquisition_id` for a time series."""
-        excitation_params = self._excitation_service.get_current_parameters()
+    def _bench_position(self):
+        if self._conditions_port is None:
+            return None, "lecteur de conditions non câblé"
+        result = self._conditions_port.read_bench_position()
+        return (result.value, None) if result.is_success else (None, result.error)
 
-        probe = None
-        if self._last_known_probe is not None:
-            p = self._last_known_probe
-            probe = {
-                "brand": p.brand,
-                "model": p.model,
-                "serial_number": p.serial_number,
-                "axis_labels": list(p.axis_labels),
-                "battery_voltage_v": p.battery_voltage_v,
-                "battery_percentage": p.battery_percentage,
-                "battery_remaining_hours": p.battery_remaining_hours,
-            }
-
-        metadata = {
-            # 0.3: `hardware_settings` (applied AD9106/ADS131A04/MCU settings) replaces `ad9106_last_config`.
-            "metadata_schema_version": "0.3-agile",
-            **header,
-            "generated_at": datetime.now().isoformat(),
-            "export": {
-                "formats": formats,
-                "filename_base": filename_base,
-                "units": EXPORT_UNITS,
-            },
-            "excitation": {
-                "mode": excitation_params.mode.name,
-                "level_s1_s2_percent": excitation_params.level_s1_s2.value,
-                "level_s3_s4_percent": excitation_params.level_s3_s4.value,
-                "frequency_hz": excitation_params.frequency,
-            },
-            "electric_field_probe": probe,
-        }
-        metadata.update(self._acquisition_snapshot_port.read())
-        return metadata
+    def _usb_latency(self, conditions: AcquisitionConditionsDTO):
+        if self._usb_latency_timer_port is None:
+            return None, "lecteur de latence USB non câblé"
+        serial_port = conditions.host_link.serial_port
+        if serial_port is None:
+            return None, "port série inconnu (non connecté ou simulé)"
+        result = self._usb_latency_timer_port.read_latency_timer_ms(serial_port)
+        return (result.value, None) if result.is_success else (None, result.error)
 
     def _flatten_point(self, event: ScanPointAcquired) -> Dict[str, Any]:
         """
@@ -525,9 +600,9 @@ class ScanExportService:
             "baseline_voltage_z_quadrature": b.voltage_z_quadrature if b else None,
         }
 
-    def _flatten_electric_field_point(self, event: ElectricFieldScanPointAcquired) -> Dict[str, Any]:
+    def _flatten_electric_field_point(self, event: NardaPointAcquired) -> Dict[str, Any]:
         """
-        Flatten an `ElectricFieldScanPointAcquired` event into a dict for export.
+        Flatten an `NardaPointAcquired` event into a dict for export.
 
         Includes:
         - scan_id, point_index

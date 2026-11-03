@@ -93,9 +93,13 @@ valeur (QUDT `QuantityValue`, SensorThings `unitOfMeasurement`, NeXus `@units`) 
 - Code registre : `code` (brut, pour rejouer exactement) + `value`/`unit`
   physiques quand la conversion est connue.
 - Booléens, énumérations et textes restent des valeurs simples, sans unité.
-- Source unique de la mise en page et des unités : le module de sérialisation
-  1.0 (`infrastructure/persistence/acquisition_throughput/acquisition_parameters_v1_serializer.py`
-  aujourd'hui, à partager entre les trois exports). Les unités du catalogue des
+- Source unique de la mise en page et des unités :
+  `infrastructure/persistence/acquisition_parameters/acquisition_parameters_v1.py`
+  (sections communes), complété par un sérialiseur par export qui n'ajoute que
+  ce que son acquisition a fait : `scan_acquisition_parameters_v1_serializer.py`
+  (scan, série temporelle) et `acquisition_throughput/acquisition_parameters_v1_serializer.py`
+  (balayage de débit). Les faits arrivent en DTO sans format
+  (`application/shared/acquisition_parameters/`). Les unités du catalogue des
   composants y sont traduites en UCUM ; une unité sans équivalent est écrite en
   annotation **et** signalée. UCUM n'a pas d'exposant fractionnaire :
   `V/√Hz` s'écrit `V/{sqrt_Hz}`.
@@ -151,7 +155,7 @@ exports entre eux (toutes les acquisitions faites avec telle calibration).
                   "exclusive_control": { "owner": "…", "held": ["excitation", "acquisition_stream", …] } },
     "software": { "name": "AEFI Acquisition", "version": "…", "commit": "…", "branch": "…", "dirty": false,
                   "hardware_backends": { "motion": "real", "aefi_device": "mock", … } },
-    "operator": { "name": "… | null" },
+    "operator": { "id": "<operators registry id> | null", "name": "… | null" },
     "generated_at": "…"
   },
 
@@ -306,6 +310,7 @@ nouveau fichier sans ligne ici fait échouer la suite de tests.
 | `sensor_calibration.json` | `measurement_chain.sensor.deployment.rotation_applied` (l'entrée **appliquée**) |
 | `source_geometry_calibration.json` | `measurement_chain.excitation.sources` (l'entrée **appliquée**) |
 | `synchronous_detection_phase_calibration.json` | `measurement_chain.synchronous_detection.state.phase_calibration_id` |
+| `.aefi_acquisition/operators/operators.json` (registre des opérateurs) | `provenance.operator {id, name}` — l'opérateur choisi au lancement |
 
 État d'exécution sans fichier, à lire chez son service : mode et niveaux
 d'excitation (`ExcitationConfigurationService`), rotation appliquée
@@ -354,9 +359,13 @@ Pas de compatibilité avec 0.2-agile : aucun code ne lit ce fichier
 
 ### Questions ouvertes
 
-- **Saisie de l'objet mesuré et de l'opérateur** : un champ au lancement d'un
-  scan et d'une série temporelle (vide autorisé, mais signalé). Mémoriser la
-  dernière valeur saisie ?
+- **Saisie de l'objet mesuré et de l'opérateur** : fait le 2026-10-02, dans la
+  zone d'export des panneaux Scan et Continuous Reading (vide autorisé, mais
+  signalé). Objet mesuré : champ texte gardé pendant la session, jamais
+  sauvegardé (une description périmée rechargée serait une erreur
+  silencieuse). Opérateur : choisi dans le **registre des opérateurs**
+  (FA `_system/thoughts_interface/fa_operator_traceability.md`) — une seule
+  orthographe par personne, exporté avec son identifiant.
 - `aefi_device_config.json` contient deux faits physiques présents nulle part
   ailleurs : `sensor.position_relative_to_sources` et
   `sensor.counter_electrode_feedback_mode`. Les migrer dans le catalogue des

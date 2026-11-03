@@ -20,6 +20,7 @@ from interface.presenters.excitation_presenter import ExcitationPresenter
 from interface.presenters.synchronous_detection_presenter import SynchronousDetectionPresenter
 from interface.presenters.aefi_continuous_reading_presenter import AefiContinuousReadingPresenter
 from interface.presenters.electric_field_probe_presenter import ElectricFieldProbePresenter
+from interface.presenters.inertial_sensor_presenter import InertialSensorPresenter
 from interface.presenters.scan_presenter import ScanPresenter
 from interface.presenters.hardware_advanced_config_presenter import HardwareAdvancedConfigPresenter
 from interface.presenters.sensor_calibration_presenter import SensorCalibrationPresenter
@@ -30,6 +31,8 @@ from interface.presenters.acquisition_throughput_characterization_presenter impo
 )
 from interface.presenters.adc_output_rate_characterization_presenter import AdcOutputRateCharacterizationPresenter
 from interface.presenters.event_log_presenter import EventLogPresenter
+from interface.presenters.operator_presenter import OperatorPresenter
+from interface.shell.fly_line_preview_overlay.fly_line_preview_overlay import wire_fly_line_preview
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +44,7 @@ def wire_dashboard(
     synchronous_detection_presenter: SynchronousDetectionPresenter,
     aefi_continuous_reading_presenter: AefiContinuousReadingPresenter,
     electric_field_probe_presenter: ElectricFieldProbePresenter,
+    inertial_sensor_presenter: InertialSensorPresenter,
     scan_presenter: ScanPresenter,
     hardware_config_presenter: HardwareAdvancedConfigPresenter,
     sensor_calibration_presenter: SensorCalibrationPresenter,
@@ -49,6 +53,7 @@ def wire_dashboard(
     event_log_presenter: EventLogPresenter,
     acquisition_throughput_presenter: AcquisitionThroughputCharacterizationPresenter,
     adc_output_rate_presenter: AdcOutputRateCharacterizationPresenter,
+    operator_presenter: OperatorPresenter,
 ) -> None:
     """Connect every dashboard panel to its presenter. Called once from
     main.py right after the dashboard and presenters are constructed."""
@@ -62,6 +67,18 @@ def wire_dashboard(
     event_log_presenter.summary_updated.connect(logs_panel.set_event_log_summary)
     event_log_presenter.purge_confirmation_needed.connect(logs_panel.confirm_purge)
     event_log_presenter.refresh()
+
+    # Operator of an acquisition — one registry, one selector per panel that
+    # starts an exported acquisition (Scan, Continuous Reading).
+    for selector in (
+        dashboard.panels["scan_control"].operator_selector,
+        dashboard.panels["aefi_continuous_reading"].operator_selector,
+    ):
+        selector.register_requested.connect(operator_presenter.on_register_requested)
+        operator_presenter.operators_listed.connect(selector.set_operators)
+        operator_presenter.operator_registered.connect(selector.on_operator_registered)
+        operator_presenter.registration_failed.connect(selector.on_registration_failed)
+    operator_presenter.refresh_state()
 
     # Motion Panel
     motion_panel = dashboard.panels["motion"]
@@ -78,6 +95,7 @@ def wire_dashboard(
     motion_presenter.status_updated.connect(motion_panel.update_status)
     motion_presenter.jog_enabled_changed.connect(motion_panel.set_jog_enabled)
     motion_presenter.limits_updated.connect(motion_panel.set_axis_limits)
+    motion_presenter.conversion_banner_changed.connect(motion_panel.set_calibration_banner)
 
     # Settings Panel -> Motion Panel (referential mode: limit-switch raw vs. centered/4-quadrants)
     settings_panel = dashboard.panels["settings"]
@@ -163,6 +181,20 @@ def wire_dashboard(
     electric_field_probe_presenter.frequency_correction_changed.connect(electric_field_probe_panel.on_frequency_correction_changed)
     logger.debug("Electric field probe panel wired")
 
+    # Inertial Sensor Panel — connection and start are operator actions only.
+    inertial_sensor_panel = dashboard.panels["inertial_sensor"]
+    inertial_sensor_panel.connect_requested.connect(inertial_sensor_presenter.on_connect_requested)
+    inertial_sensor_panel.disconnect_requested.connect(inertial_sensor_presenter.on_disconnect_requested)
+    inertial_sensor_panel.start_requested.connect(inertial_sensor_presenter.on_start_requested)
+    inertial_sensor_panel.stop_requested.connect(inertial_sensor_presenter.on_stop_requested)
+
+    inertial_sensor_presenter.connection_changed.connect(inertial_sensor_panel.on_connection_changed)
+    inertial_sensor_presenter.acquisition_started.connect(inertial_sensor_panel.on_acquisition_started)
+    inertial_sensor_presenter.acquisition_stopped.connect(inertial_sensor_panel.on_acquisition_stopped)
+    inertial_sensor_presenter.acquisition_failed.connect(inertial_sensor_panel.on_acquisition_failed)
+    inertial_sensor_presenter.reading_updated.connect(inertial_sensor_panel.on_reading_updated)
+    logger.debug("Inertial sensor panel wired")
+
     # Calibration Panel (capteur, géométrie source, carte de conditionnement — un seul dock à onglets)
     calibration_panel = dashboard.panels["calibration"]
 
@@ -246,8 +278,9 @@ def wire_dashboard(
 
     # Scan Panels Wiring
     scan_control_panel = dashboard.panels["scan_control"]
-    aefi_voltage_map_panel = dashboard.panels["aefi_voltage_map"]
-    electric_field_map_panel = dashboard.panels["electric_field_map"]
+    # Same data, two views: heatmaps and profiles
+    aefi_voltage_panels = (dashboard.panels["aefi_voltage_map"], dashboard.panels["aefi_voltage_profiles"])
+    electric_field_panels = (dashboard.panels["electric_field_map"], dashboard.panels["electric_field_profiles"])
 
     # Control -> Presenter
     scan_control_panel.scan_start_requested.connect(scan_presenter.on_scan_start_requested)
@@ -257,6 +290,8 @@ def wire_dashboard(
 
     # Presenter -> Control
     scan_presenter.status_updated.connect(scan_control_panel.update_status)
+    scan_presenter.start_availability_changed.connect(scan_control_panel.set_start_availability)
+    scan_presenter.refresh_start_availability()
     scan_presenter.scan_started.connect(lambda scan_id, _: scan_control_panel.on_scan_started(scan_id))
     scan_presenter.scan_completed.connect(scan_control_panel.on_scan_completed)
     scan_presenter.scan_failed.connect(scan_control_panel.on_scan_failed)
@@ -266,31 +301,36 @@ def wire_dashboard(
 
     # Presenter -> Visualization
     def on_scan_started_viz(scan_id, config):
-        aefi_voltage_map_panel.initialize_scan(
-            config["x_min"], config["x_max"], config["x_nb_points"],
-            config["y_min"], config["y_max"], config["y_nb_points"]
-        )
-        # Channel set depends on the connected probe (mono/bi/tri-axial),
-        # so it's left empty here and populated lazily from the first point.
-        electric_field_map_panel.initialize_scan(
-            config["x_min"], config["x_max"], config["x_nb_points"],
-            config["y_min"], config["y_max"], config["y_nb_points"],
-            channels=[]
-        )
+        if config.get("scan_kind") == "line":
+            init = "initialize_line"
+            geometry = (
+                config["start_x"], config["start_y"],
+                config["end_x"], config["end_y"], config["n_points"],
+            )
+        else:
+            init = "initialize_scan"
+            geometry = (
+                config["x_min"], config["x_max"], config["x_nb_points"],
+                config["y_min"], config["y_max"], config["y_nb_points"],
+            )
+        for panel in aefi_voltage_panels + electric_field_panels:
+            getattr(panel, init)(*geometry)
 
     def on_scan_progress_viz(current, total, data):
-        # data has 'x', 'y', 'value'
-        aefi_voltage_map_panel.update_data_point_from_position(
-            data["x"], data["y"], data["value"]
-        )
+        # data has 'x', 'y', 'value'. Deferred redraw: a panel redraws on its
+        # own timer (and not while hidden), never once per point.
+        for panel in aefi_voltage_panels:
+            panel.update_data_point_from_position(data["x"], data["y"], data["value"], redraw=False)
 
     def on_field_scan_progress_viz(current, total, data):
-        electric_field_map_panel.update_data_point_from_position(
-            data["x"], data["y"], data["value"]
-        )
+        for panel in electric_field_panels:
+            panel.update_data_point_from_position(data["x"], data["y"], data["value"], redraw=False)
 
     scan_presenter.scan_started.connect(on_scan_started_viz)
     scan_presenter.scan_progress.connect(on_scan_progress_viz)
+    # Provisional points of a fly line being swept: drawn, then erased if the line is not
+    # confirmed (abandoned, scan cancelled or failed).
+    wire_fly_line_preview(scan_presenter, aefi_voltage_panels)
     scan_presenter.field_scan_progress.connect(on_field_scan_progress_viz)
     logger.debug("Scan panels wired")
 

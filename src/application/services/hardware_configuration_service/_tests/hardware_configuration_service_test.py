@@ -43,7 +43,7 @@ class TestHardwareConfigurationService(DiagramFriendlyTest):
             "ArcusPerformax4EXAdvancedConfigurator",
             "Instantiate Arcus hardware advanced configurator",
         )
-        self.arcus_provider = ArcusPerformax4EXAdvancedConfigurator(controller=None, adapter=None)
+        self.arcus_provider = ArcusPerformax4EXAdvancedConfigurator(controller=None)
 
         self.log_interaction(
             "Test",

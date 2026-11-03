@@ -2,12 +2,15 @@
 Step Scan Aggregate
 
 Responsibility:
-- Aggregate Root for Step-by-Step Scans.
-- Manages the collection of ScanPointResults.
-- Ensures consistency of the scan data.
+- Aggregate Root for the lifecycle of step-by-step (and line) scans.
+- Does NOT hold its points: the scan is a tracing artifact, the points live in
+  AefiPoint and the thin Scan references them by identity.
+- Emits the lifecycle events; ScanCompleted is emitted by the thin Scan, not here.
 """
 
+import logging
 from dataclasses import dataclass, field
+from datetime import datetime
 from typing import List
 from domain.step_scan.entities.spatial_scan.spatial_scan import SpatialScan
 from domain.step_scan.value_objects.scan_point_result.scan_point_result import ScanPointResult
@@ -21,22 +24,19 @@ from domain.step_scan.events.scan_cancelled.scan_cancelled import ScanCancelled
 from domain.step_scan.events.scan_paused.scan_paused import ScanPaused
 from domain.step_scan.events.scan_resumed.scan_resumed import ScanResumed
 
+logger = logging.getLogger(__name__)
+
 @dataclass
 class StepScan(SpatialScan):
     """
     Aggregate Root for Step Scans.
     """
     
-    _points: List[ScanPointResult] = field(default_factory=list)
     _domain_events: List[DomainEvent] = field(default_factory=list)
     
     def __post_init__(self):
         self.is_fly_scan = False
         self.scan_type = "step_scan"
-        
-    @property
-    def points(self) -> List[ScanPointResult]:
-        return list(self._points)
         
     @property
     def domain_events(self) -> List[DomainEvent]:
@@ -45,29 +45,15 @@ class StepScan(SpatialScan):
         self._domain_events.clear()
         return events
         
-    @property
-    def expected_points(self) -> int:
-        return self._expected_points
-
-    _expected_points: int = 0
-    
-    def start(self, config) -> None: # Added config for event
+    def start(self, config) -> None:
         super().start()
-        # Calculate expected points based on config
-        # Assuming config has total_points() method or we calculate it
-        if hasattr(config, 'total_points'):
-             self._expected_points = config.total_points()
-        else:
-             # Fallback calculation if method doesn't exist directly on config object passed
-             self._expected_points = config.x_nb_points * config.y_nb_points
-             
         self._domain_events.append(ScanStarted(scan_id=self.id, config=config))
-        
-    def add_point_result(self, result: ScanPointResult) -> None:
+
+    def point_acquired(self, result: ScanPointResult) -> None:
+        """Queue ScanPointAcquired for a point; nothing is stored."""
         if self.status != ScanStatus.RUNNING:
             raise ValueError(f"Cannot add result when scan is {self.status}")
-            
-        self._points.append(result)
+
         self._domain_events.append(ScanPointAcquired(
             scan_id=self.id,
             point_index=result.point_index,
@@ -75,12 +61,18 @@ class StepScan(SpatialScan):
             measurement=result.measurement,
             baseline_measurement=result.baseline_measurement,
         ))
-        
-        # Auto-complete if we reached expected points
-        if self._expected_points > 0 and len(self._points) >= self._expected_points:
-            self.complete()
-            
-    def complete(self) -> bool:
+
+    def mark_completed(self) -> bool:
+        """Follow the thin Scan's completion: COMPLETED, no event (the thin Scan's
+        ScanCompleted is the one that went out). Returns False if there was nothing to do."""
+        if self.status not in (ScanStatus.RUNNING, ScanStatus.PAUSED):
+            logger.info("StepScan: scan_id=%s is %s, completion ignored. Doing nothing.", self.id, self.status)
+            return False
+        self.status = ScanStatus.COMPLETED
+        self.end_time = datetime.now()
+        return True
+
+    def complete(self, total_points: int = 0) -> bool:
         """Complete the scan. Returns False (no-op, idempotent) if already
         completed — a caller that doesn't pre-check status can log this
         instead of it passing silently (see ODD: idempotence is a log, not
@@ -89,7 +81,7 @@ class StepScan(SpatialScan):
             return False
 
         super().complete()
-        self._domain_events.append(ScanCompleted(scan_id=self.id, total_points=len(self._points)))
+        self._domain_events.append(ScanCompleted(scan_id=self.id, total_points=total_points))
         return True
         
     def fail(self, reason: str) -> None:
@@ -107,7 +99,7 @@ class StepScan(SpatialScan):
         super().cancel()
         self._domain_events.append(ScanCancelled(scan_id=self.id))
         
-    def pause(self) -> None:
+    def pause(self, current_point_index: int = 0) -> None:
         """Pause the scan (idempotent only for the already-PAUSED case —
         pausing a scan in a final status (COMPLETED/FAILED/CANCELLED) is an
         invariant rejection, not idempotence, and must raise like
@@ -120,13 +112,11 @@ class StepScan(SpatialScan):
         if self.status != ScanStatus.RUNNING:
             raise ValueError(f"Cannot pause scan when status is {self.status}")
         super().pause()
-        current_index = len(self._points)
-        self._domain_events.append(ScanPaused(scan_id=self.id, current_point_index=current_index))
+        self._domain_events.append(ScanPaused(scan_id=self.id, current_point_index=current_point_index))
         
-    def resume(self) -> None:
+    def resume(self, resume_from_point_index: int = 0) -> None:
         """Resume the scan execution after pause."""
         if self.status != ScanStatus.PAUSED:
             raise ValueError(f"Cannot resume scan when status is {self.status}")
         super().resume()
-        resume_index = len(self._points)
-        self._domain_events.append(ScanResumed(scan_id=self.id, resume_from_point_index=resume_index))
+        self._domain_events.append(ScanResumed(scan_id=self.id, resume_from_point_index=resume_from_point_index))

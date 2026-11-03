@@ -1,7 +1,6 @@
 import logging
 from typing import Tuple, Optional
 import numpy as np
-from scipy.spatial.transform import Rotation as R
 
 from domain.calibration.value_objects.sensor_rotation_angles.sensor_rotation_angles import SensorRotationAngles
 from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
@@ -28,7 +27,7 @@ class TransformationService:
     """
     def __init__(self, event_bus: Optional[IDomainEventBus] = None):
         self._angles = np.array([0.0, 0.0, 0.0]) # degrees [x, y, z]
-        self._rotation = R.identity()
+        self._mounting_matrix = np.eye(3)  # P
         self._enabled = False
         self._event_bus = event_bus
         if event_bus:
@@ -54,8 +53,9 @@ class TransformationService:
             dto.theta_x, dto.theta_y, dto.theta_z,
         )
         self._angles = np.array([dto.theta_x, dto.theta_y, dto.theta_z])
-        # _rotation = P (from the domain): sensor -> sources coordinate transform, E_sources = P·E_sensor
-        self._rotation = R.from_matrix(SensorRotationAngles(*self._angles).mounting_matrix())
+        # P (from the domain): sensor -> sources coordinate transform, E_sources = P·E_sensor.
+        # A plain matrix product: scipy's Rotation would cost ~0.7 s of import at startup.
+        self._mounting_matrix = SensorRotationAngles(*self._angles).mounting_matrix()
 
         if self._event_bus:
             self._event_bus.publish("sensortransformationanglesupdated", SensorTransformationAnglesUpdated(
@@ -84,8 +84,7 @@ class TransformationService:
         if not self._enabled:
             return vector
             
-        v_in = np.array(vector)
-        v_out = self._rotation.apply(v_in)
+        v_out = self._mounting_matrix @ np.asarray(vector, dtype=float)
         return tuple(v_out)
 
     def transform_source_to_sensor(self, vector: Tuple[float, float, float]) -> Tuple[float, float, float]:
@@ -96,12 +95,10 @@ class TransformationService:
         if not self._enabled:
             return vector
             
-        v_in = np.array(vector)
-        v_out = self._rotation.apply(v_in, inverse=True)  # Pᵀ
+        v_out = self._mounting_matrix.T @ np.asarray(vector, dtype=float)  # Pᵀ
         return tuple(v_out)
     
     # Ignores the enabled flag.
     def force_transform_sensor_to_source(self, vector: Tuple[float, float, float]) -> Tuple[float, float, float]:
-        v_in = np.array(vector)
-        v_out = self._rotation.apply(v_in)
+        v_out = self._mounting_matrix @ np.asarray(vector, dtype=float)
         return tuple(v_out)

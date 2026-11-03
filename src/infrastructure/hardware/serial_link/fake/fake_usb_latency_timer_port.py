@@ -6,7 +6,7 @@ See fake_usb_latency_timer_port_intention.md.
 
 from typing import List, Optional
 
-from application.services.acquisition_throughput_characterization_service.ports.i_usb_latency_timer_port import (
+from application.shared.acquisition_parameters.i_usb_latency_timer_port import (
     IUsbLatencyTimerPort,
 )
 from domain.shared_kernel.operation_result import OperationResult
