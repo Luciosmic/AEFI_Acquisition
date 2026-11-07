@@ -70,32 +70,32 @@ class ADS131A04UIAdapter:
                 label='Channel 1 Gain',
                 type='combo',
                 default='1',
-                options=['1', '2', '4', '8', '16', '32', '64', '128'],
-                tooltip='Programmable gain for channel 1'
+                options=['1', '2', '4', '8', '16'],
+                tooltip='Digital gain (scaling) for channel 1, datasheet SBAS590E 9.6.2'
             ),
             ParameterSpec(
                 name='gain_ch2',
                 label='Channel 2 Gain',
                 type='combo',
                 default='1',
-                options=['1', '2', '4', '8', '16', '32', '64', '128'],
-                tooltip='Programmable gain for channel 2'
+                options=['1', '2', '4', '8', '16'],
+                tooltip='Digital gain (scaling) for channel 2, datasheet SBAS590E 9.6.2'
             ),
             ParameterSpec(
                 name='gain_ch3',
                 label='Channel 3 Gain',
                 type='combo',
                 default='1',
-                options=['1', '2', '4', '8', '16', '32', '64', '128'],
-                tooltip='Programmable gain for channel 3'
+                options=['1', '2', '4', '8', '16'],
+                tooltip='Digital gain (scaling) for channel 3, datasheet SBAS590E 9.6.2'
             ),
             ParameterSpec(
                 name='gain_ch4',
                 label='Channel 4 Gain',
                 type='combo',
                 default='1',
-                options=['1', '2', '4', '8', '16', '32', '64', '128'],
-                tooltip='Programmable gain for channel 4'
+                options=['1', '2', '4', '8', '16'],
+                tooltip='Digital gain (scaling) for channel 4, datasheet SBAS590E 9.6.2'
             ),
             
             # Reference Configuration
@@ -146,13 +146,11 @@ class ADS131A04UIAdapter:
         if osr >= 4096 and sampling_rate > 32:
             return False, f"OSR {osr} too high for sampling rate {sampling_rate_str} (max 32 kSPS)"
         
-        # Check gain settings
+        # Check gain settings: digital gain 1 to 16 only (datasheet SBAS590E 9.6.2)
         for ch in range(1, 5):
             gain = int(config.get(f'gain_ch{ch}', 1))
-            
-            # High gain with high sampling rate may saturate
-            if gain >= 64 and sampling_rate >= 32:
-                return False, f"Ch{ch}: Gain {gain} too high for sampling rate {sampling_rate_str} (max gain 32)"
+            if gain not in (1, 2, 4, 8, 16):
+                return False, f"Ch{ch}: Gain {gain} not supported (digital gain 1, 2, 4, 8, 16)"
         
         return True, ""
     
