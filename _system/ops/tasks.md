@@ -1,5 +1,49 @@
 # Tâches actives
 
+## Reprise sur une autre machine : bilan git du 2026-11-10 (PC du labo)
+
+**But :** permettre d'auditer vite l'état du dépôt depuis le Mac, sans la mémoire de Claude du PC.
+
+**État git au 2026-11-10 :**
+- `develop` = `origin/develop`, rien en attente. Les 13 commits du Mac (3 au 7 nov.) ont été fusionnés
+  (`29241e8`, sans conflit, 1528 tests verts sur `src/`, 0 échec). Commits suivants : calibration → `test_bench`
+  (`67e4350`) et onglet « Transmission » (`1b85d0c`).
+- `main` reste à `v1.0.2`, en retard sur `develop` mais en avance rapide possible. Le passage sur `main` n'a pas
+  encore été décidé.
+- Tests : lancer `uv run pytest src`. Sans `src`, pytest ramasse `archives/` et `external_modules/` et s'arrête
+  sur 27 erreurs d'import sans rapport avec le code.
+
+**Fait depuis le 2026-10-30 (voir `git log`) :**
+- début du retrait de StepScan ;
+- rangement du domaine (`detection_devices`, `shared_kernel/motion`, `test_bench`) ;
+- abandon de la calibration par barre et LIDAR, archivée dans `archive/bar-lidar-calibration` ; ses corrections
+  générales sont dans `develop` ;
+- transmission exprimée en µm par incrément (20,62, référence du seed) ;
+- panneau de mouvement en incréments ;
+- `InertialProbe` utilisé dans toutes les couches.
+
+**À faire, noté nulle part ailleurs dans le dépôt :**
+- [ ] **Suite du retrait de StepScan**, dans cet ordre, sur une branche neuve depuis `develop` :
+      1. retrait du mode différentiel par point (la section `differential` de l'export v1 reste, avec
+         `enabled=false`) ;
+      2. index de trajectoire (`ScanTrajectory.lines()`, `global_index()`, `line_count` ; l'index global va dans
+         `LineGridPoint`) ;
+      3. l'export et le presenter lisent `AefiPointAcquired` et `AefiLineAcquired`.
+- [ ] **Promesse au chantier `detection_devices` :** ne pas déplacer `narda_point`, `aefi_point` et `aefi_line`
+      avant que les 3 étapes ci-dessus soient fusionnées dans `develop`.
+- [ ] **Exclusion entre scan et moteurs :** `ExclusiveControl` existe mais n'est pas branché dans `src/main.py`.
+      Le branchement vivait dans un commit propre à la barre, resté dans l'archive.
+- [ ] **Ménage git :**
+      - supprimer `feature/lidar-esp32-and-fixes`, en local et sur origin (entièrement dans `develop`) ;
+      - sur le PC seulement, supprimer le worktree orphelin `AEFI_Acquisition/.claude/worktrees/agent-a97ccaca7cf5d7cb8`
+        et la branche locale `feature/scan-remove-step-scan` (déjà dans `develop`).
+- [ ] **`CLAUDE.md` :** l'import `@../../_system/manual/convention-des-notes-hors-graphe.md` ajouté depuis le Mac
+      ne se résout pas sur le PC, où le dépôt est dans `C:\Users\manip\AEFI_Acquisition_dev`. À rendre valable
+      sur les deux machines.
+
+**Ce qui n'est pas dans git :** la mémoire de Claude propre à chaque machine, et les données de fonctionnement
+de `.aefi_acquisition/` (configs, calibrations saisies dans l'application, scans).
+
 ## Démarrage « banc non calibré » : parcours de calibration de la transmission mécanique
 
 **Statut** (2026-10-13, branche `fix/arcus-startup-uncalibrated`) : l'application démarre sans conversion
