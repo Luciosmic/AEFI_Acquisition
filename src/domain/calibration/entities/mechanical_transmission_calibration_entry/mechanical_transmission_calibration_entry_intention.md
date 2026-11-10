@@ -51,5 +51,6 @@ calibration that references their mountings.
   at: changing the microstepping means a new measurement, a new entry. History:
   until 2026-11-10 the entry stored a travel per motor revolution (69.76 mm =
   21.8 µm × 200 × 16, itself 43.6 µm at 1/8 ÷ 2, never measured at 1/16); the
-  lidar then measured 21.11 µm/pulse at 1/16
+  lidar then measured µm/pulse at 1/16 — 21.11 and 21.46 tried on the bench,
+  20.62 validated on 2026-11-10 and used as the seed value
   (`_system/documentation/hardware_datasheet/motorisation/TB6600_Working_Configuration.md`).

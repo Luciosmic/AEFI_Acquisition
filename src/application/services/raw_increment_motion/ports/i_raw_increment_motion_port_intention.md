@@ -20,7 +20,8 @@ applicatif dépendrait de l'infrastructure et ne serait testable qu'avec le banc
 - Port sortant placé dans un dossier neutre `application/services/raw_increment_motion/ports/`
   (même chemin que le pilote autonome Arcus-Performax-4EX) : son premier consommateur,
   la calibration par barre, a été abandonné le 2026-10-30 ; le port reste pour tout
-  usage qui doit bouger le banc en incréments bruts.
+  usage qui doit bouger le banc en incréments bruts. Depuis le 2026-11-10, `MotionControlService.move_to_increments`
+  l'utilise pour les consignes en incréments du panneau de mouvement.
 - Échec de contrôleur ou de liaison : `RawIncrementMotionError`, erreur déclarée par
   le port ; l'adaptateur traduit les exceptions du driver.
 - `move_to` / `run_to_positive_limit` rendent la main tout de suite (le fly scan

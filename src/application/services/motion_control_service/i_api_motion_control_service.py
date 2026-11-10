@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Optional
 
 from application.services.motion_control_service.dtos.motion_conversion_status_dto import MotionConversionStatusDTO
 from domain.shared_kernel.operation_result import OperationResult
@@ -24,6 +25,9 @@ class IApiMotionControlService(ABC):
 
     @abstractmethod
     def move_absolute(self, x: float, y: float) -> OperationResult: ...
+
+    @abstractmethod
+    def move_to_increments(self, x_increments: Optional[int], y_increments: Optional[int]) -> OperationResult: ...
 
     @abstractmethod
     def move_absolute_x(self, target_x: float) -> OperationResult: ...

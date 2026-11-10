@@ -13,12 +13,16 @@ class MotionPanelCompact(QWidget):
     SPEED_MODES = ("slow", "medium", "fast")
     DEFAULT_SPEED_MODE = "medium"
     REFERENTIAL_MODES = ("limit_switch", "centered")
+    UNIT_MM = "mm"
+    UNIT_INCREMENTS = "incréments"
+    MAX_INCREMENTS = 1_000_000  # spinbox ceiling only; the service refuses a setpoint beyond the travel
     DEFAULT_REFERENTIAL_MODE = "limit_switch"
 
     # Signals to be connected to a Presenter
     jog_requested = Signal(float, float)  # dx, dy
     move_to_requested = Signal(str, float)  # axis ('x' or 'y'), target_position
     move_both_requested = Signal(float, float)  # target_x, target_y
+    move_to_increments_requested = Signal(object, object)  # x, y in increments; None = axis left alone
     move_to_center_requested = Signal()  # move to center of bench
     home_requested = Signal(str)  # 'x', 'y', 'xy'
     stop_requested = Signal()
@@ -32,6 +36,8 @@ class MotionPanelCompact(QWidget):
         self._max_y = 1270.0
         self._last_x = 0.0
         self._last_y = 0.0
+        self._last_increments = (0, 0)
+        self._unit = self.UNIT_MM
         self._referential_mode = self._load_referential_mode()
         self._not_calibrated = False
         self._build_ui()
@@ -121,7 +127,8 @@ class MotionPanelCompact(QWidget):
         main_grid.setSpacing(6)
         
         # Row 0: X Target Position
-        main_grid.addWidget(QLabel("X Target Position (mm):"), 0, 0)
+        self.lbl_target_x = QLabel("X Target Position (mm):")
+        main_grid.addWidget(self.lbl_target_x, 0, 0)
         self.spin_to_x = QDoubleSpinBox()
         self.spin_to_x.setRange(0.0, 1270.0)
         self.spin_to_x.setDecimals(1)
@@ -131,8 +138,17 @@ class MotionPanelCompact(QWidget):
         main_grid.addWidget(self.spin_to_x, 0, 1)
         main_grid.addWidget(self.btn_go_x, 0, 2)
         
+        # Setpoint unit: mm (needs the µm/increment conversion) or controller increments (does not)
+        main_grid.addWidget(QLabel("Setpoint in:"), 0, 3)
+        self.combo_unit = QComboBox()
+        self.combo_unit.addItems([self.UNIT_MM, self.UNIT_INCREMENTS])
+        self.combo_unit.setToolTip("Unité des consignes X/Y ci-contre : mm, ou incréments du contrôleur")
+        self.combo_unit.setMaximumWidth(90)
+        main_grid.addWidget(self.combo_unit, 0, 4)
+
         # Row 1: Y Target Position
-        main_grid.addWidget(QLabel("Y Target Position (mm):"), 1, 0)
+        self.lbl_target_y = QLabel("Y Target Position (mm):")
+        main_grid.addWidget(self.lbl_target_y, 1, 0)
         self.spin_to_y = QDoubleSpinBox()
         self.spin_to_y.setRange(0.0, 1270.0)
         self.spin_to_y.setDecimals(1)
@@ -275,11 +291,10 @@ class MotionPanelCompact(QWidget):
 
     def _connect_signals(self):
         # Absolute Moves (spinbox values are in the active referential; convert to raw before emitting)
-        self.btn_go_x.clicked.connect(lambda: self.move_to_requested.emit('x', self._display_to_raw_x(self.spin_to_x.value())))
-        self.btn_go_y.clicked.connect(lambda: self.move_to_requested.emit('y', self._display_to_raw_y(self.spin_to_y.value())))
-        self.btn_go_both.clicked.connect(lambda: self.move_both_requested.emit(
-            self._display_to_raw_x(self.spin_to_x.value()), self._display_to_raw_y(self.spin_to_y.value())
-        ))
+        self.btn_go_x.clicked.connect(self._on_go_x)
+        self.btn_go_y.clicked.connect(self._on_go_y)
+        self.btn_go_both.clicked.connect(self._on_go_both)
+        self.combo_unit.currentTextChanged.connect(self._on_unit_changed)
         self.btn_to_center.clicked.connect(self.move_to_center_requested.emit)
         
         # Jogging
@@ -297,6 +312,59 @@ class MotionPanelCompact(QWidget):
         self.btn_estop.clicked.connect(self.estop_requested.emit)
 
         self.combo_speed_mode.currentTextChanged.connect(self._on_speed_mode_changed)
+
+    def _in_increments(self) -> bool:
+        return self._unit == self.UNIT_INCREMENTS
+
+    def _on_go_x(self):
+        if self._in_increments():
+            self.move_to_increments_requested.emit(int(self.spin_to_x.value()), None)
+        else:
+            self.move_to_requested.emit('x', self._display_to_raw_x(self.spin_to_x.value()))
+
+    def _on_go_y(self):
+        if self._in_increments():
+            self.move_to_increments_requested.emit(None, int(self.spin_to_y.value()))
+        else:
+            self.move_to_requested.emit('y', self._display_to_raw_y(self.spin_to_y.value()))
+
+    def _on_go_both(self):
+        if self._in_increments():
+            self.move_to_increments_requested.emit(int(self.spin_to_x.value()), int(self.spin_to_y.value()))
+        else:
+            self.move_both_requested.emit(
+                self._display_to_raw_x(self.spin_to_x.value()), self._display_to_raw_y(self.spin_to_y.value())
+            )
+
+    def _on_unit_changed(self, unit: str):
+        """Switch the target fields between mm and increments; they start at the current position."""
+        self._unit = unit
+        if self._in_increments():
+            self.lbl_target_x.setText("X Target Position (inc):")
+            self.lbl_target_y.setText("Y Target Position (inc):")
+            for spin in (self.spin_to_x, self.spin_to_y):
+                spin.setDecimals(0)
+                spin.setRange(0, self.MAX_INCREMENTS)
+                spin.setSingleStep(100)
+            self.spin_to_x.setValue(self._last_increments[0])
+            self.spin_to_y.setValue(self._last_increments[1])
+        else:
+            self.lbl_target_x.setText("X Target Position (mm):")
+            self.lbl_target_y.setText("Y Target Position (mm):")
+            for spin in (self.spin_to_x, self.spin_to_y):
+                spin.setDecimals(1)
+                spin.setSingleStep(1)
+            self._apply_axis_range()
+            disp_x, disp_y = self._raw_to_display(self._last_x, self._last_y)
+            self.spin_to_x.setValue(disp_x)
+            self.spin_to_y.setValue(disp_y)
+        self._refresh_go_enabled()
+
+    def _refresh_go_enabled(self):
+        """mm moves need the conversion; increment moves do not. To Center stays in mm."""
+        for widget in (self.btn_go_x, self.btn_go_y, self.btn_go_both):
+            widget.setEnabled(self._in_increments() or not self._not_calibrated)
+        self.btn_to_center.setEnabled(not self._not_calibrated)
 
     def _on_jog(self, dx_sign, dy_sign):
         step = self.spin_step.value()
@@ -358,6 +426,8 @@ class MotionPanelCompact(QWidget):
         return y + self._center_offset()[1] if self._referential_mode == "centered" else y
 
     def _apply_axis_range(self):
+        if self._in_increments():
+            return  # the increment range is the controller's, not the bench travel in mm
         if self._referential_mode == "centered":
             half_x, half_y = self._center_offset()
             self.spin_to_x.setRange(-half_x, half_x)
@@ -373,12 +443,8 @@ class MotionPanelCompact(QWidget):
         self._not_calibrated = banner.visible
         self.lbl_calibration_banner.setText(banner.text)
         self.lbl_calibration_banner.setVisible(banner.visible)
-        enabled = not banner.visible
-        for widget in (
-            self.btn_go_x, self.btn_go_y, self.btn_go_both, self.btn_to_center,
-        ):
-            widget.setEnabled(enabled)
-        self.set_jog_enabled(enabled)
+        self._refresh_go_enabled()
+        self.set_jog_enabled(not banner.visible)
 
     def set_jog_enabled(self, enabled: bool):
         """Enable/disable jog buttons based on motion state."""
@@ -397,6 +463,7 @@ class MotionPanelCompact(QWidget):
         self.visualizer.update_position(x, y)  # visualizer always shows raw/physical position
 
     def update_increments(self, x_increments: int, y_increments: int):
+        self._last_increments = (x_increments, y_increments)
         self.lbl_increments.setText(f"Incréments  X: {x_increments}   Y: {y_increments}")
 
     def update_status(self, is_moving: bool):

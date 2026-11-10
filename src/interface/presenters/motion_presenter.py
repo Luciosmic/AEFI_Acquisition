@@ -160,6 +160,14 @@ class MotionPresenter(QObject):
             if result.is_failure:
                 self.operation_failed.emit(result.error.message)
 
+    @Slot(object, object)
+    def on_move_to_increments_requested(self, x_increments, y_increments):
+        """Setpoint in motor increments (one axis: the other is None)."""
+        if self._service:
+            result = self._service.move_to_increments(x_increments, y_increments)
+            if result.is_failure:
+                self.operation_failed.emit(result.error.message)
+
     @Slot(float, float)
     def on_move_both_requested(self, target_x: float, target_y: float):
         """Handle absolute move request for both axes."""

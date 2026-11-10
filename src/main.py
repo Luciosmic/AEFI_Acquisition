@@ -475,7 +475,10 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
     logger.info("Services -> ScanExportService created")
 
     # Motion Control Service
-    motion_control_service = MotionControlService(hw.motion_port, event_bus, conversion_status=motion_conversion_handler)
+    motion_control_service = MotionControlService(
+        hw.motion_port, event_bus, conversion_status=motion_conversion_handler,
+        raw_increment_port=hw.raw_increment_motion_port,
+    )
     logger.info("Services -> MotionControlService created")
 
     # Transformation Service — applies E_sources = P·E_sensor with the active

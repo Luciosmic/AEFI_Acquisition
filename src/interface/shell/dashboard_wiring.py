@@ -85,6 +85,7 @@ def wire_dashboard(
     motion_panel.jog_requested.connect(motion_presenter.on_jog_requested)
     motion_panel.move_to_requested.connect(motion_presenter.on_move_to_requested)
     motion_panel.move_both_requested.connect(motion_presenter.on_move_both_requested)
+    motion_panel.move_to_increments_requested.connect(motion_presenter.on_move_to_increments_requested)
     motion_panel.move_to_center_requested.connect(motion_presenter.on_move_to_center_requested)
     motion_panel.home_requested.connect(motion_presenter.on_home_requested)
     motion_panel.stop_requested.connect(motion_presenter.on_stop_requested)

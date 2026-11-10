@@ -11,6 +11,7 @@ from application.services.motion_control_service.ports.i_motion_conversion_statu
     IMotionConversionStatusPort,
 )
 from application.services.motion_control_service.ports.i_motion_port import IMotionPort
+from application.services.raw_increment_motion.ports.i_raw_increment_motion_port import IRawIncrementMotionPort
 from application.services.motion_control_service.ports.motion_conversion_unavailable_error import (
     MotionConversionUnavailableError,
 )
@@ -37,8 +38,10 @@ class MotionControlService:
         motion_port: IMotionPort,
         event_bus: IDomainEventBus,
         conversion_status: Optional[IMotionConversionStatusPort] = None,
+        raw_increment_port: Optional[IRawIncrementMotionPort] = None,
     ):
         self._motion_port = motion_port
+        self._raw_increment_port = raw_increment_port
         self._event_bus = event_bus
         self._conversion_status = conversion_status
         self._last_target_position: Optional[Position2D] = None
@@ -153,6 +156,48 @@ class MotionControlService:
             return OperationResult.ok(None)
         except Exception as e:
             return self._failure("Move absolute", e)
+
+    def move_to_increments(
+        self, x_increments: Optional[int], y_increments: Optional[int]
+    ) -> OperationResult[None, MotionControlError]:
+        """Move to a setpoint given in motor increments (controller pulses), one axis or both
+        (None leaves the axis where it is). Works without any mm/pulse conversion: the increment
+        is the controller's own unit. Refused below 0 (the homed origin) and, when the conversion
+        is known, beyond the axis travel."""
+        operation = "Move to increments"
+        logger.info("Command: move to increments x=%s y=%s", x_increments, y_increments)
+        if self._raw_increment_port is None:
+            return OperationResult.fail(MotionCommandFailed(operation, "pas de pilote en incréments sur ce banc"))
+        requested = (("X", x_increments), ("Y", y_increments))
+        if all(value is None for _axis, value in requested):
+            logger.info("MotionControlService: %s with no axis requested. Doing nothing.", operation)
+            return OperationResult.ok(None)
+        status = self.get_conversion_status()
+        limits = self.get_axis_limits() if status.is_available and status.microns_per_pulse else None
+        for (axis, value), limit_mm in zip(requested, limits or (None, None)):
+            if value is None:
+                continue
+            if value < 0:
+                return self._out_of_range(operation, f"{axis}={value} incréments est négatif (origine = butée de homing)")
+            if limit_mm is not None and value * status.microns_per_pulse / 1000.0 > limit_mm:
+                return self._out_of_range(
+                    operation,
+                    f"{axis}={value} incréments = {value * status.microns_per_pulse / 1000.0:.1f} mm, "
+                    f"au-delà de la course ({limit_mm:.0f} mm)",
+                )
+        try:
+            for axis, value in requested:
+                if value is not None:
+                    self._raw_increment_port.move_to(axis, int(value))
+            self._reset_target()  # the next mm jog reads the hardware position, not a stale target
+            return OperationResult.ok(None)
+        except Exception as e:
+            return self._failure(operation, e)
+
+    def _out_of_range(self, operation: str, detail: str) -> OperationResult[None, MotionControlError]:
+        failed = MotionCommandFailed(operation=operation, error_detail=detail)
+        logger.warning("MotionControlService: %s refused — %s", operation, detail)
+        return OperationResult.fail(failed)
 
     def move_absolute_x(self, target_x: float) -> OperationResult[None, MotionControlError]:
         """Move X axis to absolute position, keeping Y. Returns Result for explicit error handling."""

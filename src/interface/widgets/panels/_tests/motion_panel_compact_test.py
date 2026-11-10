@@ -56,3 +56,30 @@ def test_increments_are_shown_raw_whatever_the_referential():
     panel.update_increments(12345, -678)
 
     assert panel.lbl_increments.text() == "Incréments  X: 12345   Y: -678"
+
+
+def test_increment_setpoints_are_emitted_in_increments_and_work_when_not_calibrated():
+    from types import SimpleNamespace
+
+    panel = _make_panel()
+    panel.set_calibration_banner(SimpleNamespace(visible=True, text="non calibré"))
+    assert not panel.btn_go_x.isEnabled()  # mm moves are blocked without conversion
+
+    panel.update_increments(6290, 100)
+    panel.combo_unit.setCurrentText("incréments")
+
+    assert panel.btn_go_x.isEnabled() and panel.btn_go_both.isEnabled()
+    assert (panel.spin_to_x.value(), panel.spin_to_y.value()) == (6290, 100)  # starts at the current position
+    sent = []
+    panel.move_to_increments_requested.connect(lambda x, y: sent.append((x, y)))
+    panel.spin_to_x.setValue(2000)
+    panel.spin_to_y.setValue(300)
+
+    panel.btn_go_x.click()
+    panel.btn_go_y.click()
+    panel.btn_go_both.click()
+
+    assert sent == [(2000, None), (None, 300), (2000, 300)]
+
+    panel.combo_unit.setCurrentText("mm")
+    assert not panel.btn_go_x.isEnabled()  # back to mm: blocked again while not calibrated
