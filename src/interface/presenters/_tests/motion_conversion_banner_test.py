@@ -158,3 +158,19 @@ def test_found_missing_event_refreshes_scan_start_availability():
     bus.publish("motionconversionfoundmissing", MotionConversionFoundMissing("IGUS", "µm par impulsion", "onglet"))
 
     assert seen and seen[-1].visible
+
+
+def test_motion_presenter_relays_the_controller_increments_even_when_not_calibrated():
+    from domain.shared_kernel.motion.events.motor_increments_updated.motor_increments_updated import (
+        MotorIncrementsUpdated,
+    )
+
+    _app()
+    bus = InMemoryEventBus()
+    presenter = MotionPresenter(_MotionService(), bus)
+    received = []
+    presenter.increments_updated.connect(lambda x, y: received.append((x, y)))
+
+    bus.publish("motorincrementsupdated", MotorIncrementsUpdated(x_increments=2000, y_increments=-50, is_moving=False))
+
+    assert received == [(2000, -50)]

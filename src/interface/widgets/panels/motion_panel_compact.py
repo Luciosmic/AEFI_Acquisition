@@ -102,7 +102,16 @@ class MotionPanelCompact(QWidget):
         pos_layout.addWidget(self.lbl_status)
         
         v_layout.addLayout(pos_layout)
-        
+
+        # Controller pulse counts: the quantity the µm/increment factor converts to mm,
+        # read raw (never shifted by the display referential).
+        self.lbl_increments = QLabel("Incréments  X: —   Y: —")
+        self.lbl_increments.setToolTip(
+            "Compteur d'incréments du contrôleur (référentiel butées), indépendant du facteur µm/incrément"
+        )
+        self.lbl_increments.setStyleSheet("color: #AAA; font-size: 10px;")
+        v_layout.addWidget(self.lbl_increments)
+
         # --- Main Controls: Grid + Home Buttons Column ---
         main_h_layout = QHBoxLayout()
         main_h_layout.setSpacing(10)
@@ -386,6 +395,9 @@ class MotionPanelCompact(QWidget):
         self.lbl_x.setText(f"X: {disp_x:.2f}")
         self.lbl_y.setText(f"Y: {disp_y:.2f}")
         self.visualizer.update_position(x, y)  # visualizer always shows raw/physical position
+
+    def update_increments(self, x_increments: int, y_increments: int):
+        self.lbl_increments.setText(f"Incréments  X: {x_increments}   Y: {y_increments}")
 
     def update_status(self, is_moving: bool):
         self.lbl_status.setText("MOVING" if is_moving else "IDLE")

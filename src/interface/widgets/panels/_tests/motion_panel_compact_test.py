@@ -46,3 +46,13 @@ def test_centered_referential_shifts_display_and_round_trips_target():
     panel.update_position(0.0, 1270.0)
     assert panel.lbl_x.text() == "X: 0.00"
     assert panel.lbl_y.text() == "Y: 1270.00"
+
+
+def test_increments_are_shown_raw_whatever_the_referential():
+    panel = _make_panel()
+    panel.set_axis_limits(1270.0, 1270.0)
+    panel.set_referential_mode("centered")
+
+    panel.update_increments(12345, -678)
+
+    assert panel.lbl_increments.text() == "Incréments  X: 12345   Y: -678"

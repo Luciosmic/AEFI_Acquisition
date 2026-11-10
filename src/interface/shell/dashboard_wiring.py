@@ -92,6 +92,7 @@ def wire_dashboard(
     motion_panel.speed_mode_changed.connect(motion_presenter.on_speed_mode_requested)
 
     motion_presenter.position_updated.connect(motion_panel.update_position)
+    motion_presenter.increments_updated.connect(motion_panel.update_increments)
     motion_presenter.status_updated.connect(motion_panel.update_status)
     motion_presenter.jog_enabled_changed.connect(motion_panel.set_jog_enabled)
     motion_presenter.limits_updated.connect(motion_panel.set_axis_limits)

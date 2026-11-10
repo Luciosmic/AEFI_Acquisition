@@ -10,6 +10,7 @@ import logging
 from PySide6.QtCore import QObject, Signal, Slot
 from application.services.motion_control_service.motion_control_service import MotionControlService
 from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from domain.shared_kernel.motion.events.motor_increments_updated.motor_increments_updated import MotorIncrementsUpdated
 from domain.shared_kernel.motion.events.position_updated.position_updated import PositionUpdated
 from domain.shared_kernel.motion.events.motion_completed.motion_completed import MotionCompleted
 from domain.shared_kernel.motion.events.motion_failed.motion_failed import MotionFailed
@@ -27,6 +28,7 @@ class MotionPresenter(QObject):
 
     # Signals emitted to the UI
     position_updated = Signal(float, float)  # x, y
+    increments_updated = Signal(int, int)  # x, y — controller pulse counts, shown even without mm conversion
     status_updated = Signal(bool)  # is_moving
     operation_failed = Signal(str)  # error_message
     jog_enabled_changed = Signal(bool)  # enabled state for jog buttons
@@ -73,6 +75,7 @@ class MotionPresenter(QObject):
         """Subscribe to position updates and motion events."""
         if self._event_bus:
             self._event_bus.subscribe("positionupdated", self._on_position_updated)
+            self._event_bus.subscribe("motorincrementsupdated", self._on_motor_increments_updated)
             self._event_bus.subscribe("motioncompleted", self._on_motion_completed)
             self._event_bus.subscribe("motionfailed", self._on_motion_failed)
             self._event_bus.subscribe("motionconversionfoundmissing", self._refresh_conversion_banner)
@@ -82,10 +85,15 @@ class MotionPresenter(QObject):
         """Unsubscribe from position updates and motion events."""
         if self._event_bus:
             self._event_bus.unsubscribe("positionupdated", self._on_position_updated)
+            self._event_bus.unsubscribe("motorincrementsupdated", self._on_motor_increments_updated)
             self._event_bus.unsubscribe("motioncompleted", self._on_motion_completed)
             self._event_bus.unsubscribe("motionfailed", self._on_motion_failed)
             self._event_bus.unsubscribe("motionconversionfoundmissing", self._refresh_conversion_banner)
             self._event_bus.unsubscribe("motionconversionbecameavailable", self._refresh_conversion_banner)
+
+    def _on_motor_increments_updated(self, event: MotorIncrementsUpdated):
+        """Relay the controller's pulse counts: the panel reads them next to the mm position."""
+        self.increments_updated.emit(event.x_increments, event.y_increments)
 
     def _on_position_updated(self, event: PositionUpdated):
         """Handle position update event from domain."""
