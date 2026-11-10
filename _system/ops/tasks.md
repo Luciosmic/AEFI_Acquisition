@@ -235,7 +235,7 @@ l'assemblage sur ce banc dans une calibration banc qui référence les montages 
    avance par tour moteur (69,76 mm). Une seule transmission pour X et Y.
 3. **Règles domaine** :
    - µm/impulsion = avance par tour ÷ (pas/tour du moteur × micro-pas) → 21,8.
-     **Remplacé le 2026-11-10** : l'entrée stocke directement µm/impulsion (21,11 mesuré au lidar à 1/16) ; l'avance par tour et les « pas par tour » du moteur n'existent plus.
+     **Remplacé le 2026-11-10** : l'entrée stocke directement µm/impulsion (20,62 validé le 2026-11-10 à 1/16, après essais à 21,11 et 21,46 mesurés au lidar) ; l'avance par tour et les « pas par tour » du moteur n'existent plus.
    - Courant réglé < courant nominal du moteur → avertissement (non bloquant) affichant les
      deux valeurs du driver : « 3,5 A (4,0 A crête) < nominal moteur 4,2 A ». Permanent sur ce
      banc (le TB6600 plafonne sous 4,2 A) : c'est un fait connu, pas une erreur.

@@ -16,6 +16,6 @@
         "microsteps": 16,
         "driver_current_a": 3.5,
         "driver_peak_current_a": 4.0,
-        "microns_per_pulse": 21.11
+        "microns_per_pulse": 20.62
     }
 }
