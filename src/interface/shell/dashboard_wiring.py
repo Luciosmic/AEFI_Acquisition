@@ -15,6 +15,7 @@ import logging
 from typing import List
 
 from interface.shell.dashboard import Dashboard
+from interface.presenters.mechanical_transmission_presenter import MechanicalTransmissionPresenter
 from interface.presenters.motion_presenter import MotionPresenter
 from interface.presenters.excitation_presenter import ExcitationPresenter
 from interface.presenters.synchronous_detection_presenter import SynchronousDetectionPresenter
@@ -54,6 +55,7 @@ def wire_dashboard(
     acquisition_throughput_presenter: AcquisitionThroughputCharacterizationPresenter,
     adc_output_rate_presenter: AdcOutputRateCharacterizationPresenter,
     operator_presenter: OperatorPresenter,
+    mechanical_transmission_presenter: MechanicalTransmissionPresenter,
 ) -> None:
     """Connect every dashboard panel to its presenter. Called once from
     main.py right after the dashboard and presenters are constructed."""
@@ -250,6 +252,14 @@ def wire_dashboard(
         presenter.mounted_component_updated.connect(component_panel.on_mounted_component_updated)
         presenter.status_message.connect(component_panel.set_status_message)
         presenter.refresh_state()
+
+    # Mechanical transmission (µm per increment, driver setting): current value + recording
+    transmission_panel = calibration_panel.mechanical_transmission_panel
+    transmission_panel.save_requested.connect(mechanical_transmission_presenter.on_save_requested)
+    mechanical_transmission_presenter.transmission_changed.connect(transmission_panel.show_transmission)
+    mechanical_transmission_presenter.status_message.connect(transmission_panel.set_status_message)
+    mechanical_transmission_presenter.scan_running_changed.connect(transmission_panel.set_scan_running)
+    mechanical_transmission_presenter.refresh_state()
 
     # Throughput / noise vs n_avg measurement, in the microcontroller tab
     throughput_widget = calibration_panel.acquisition_throughput_widget

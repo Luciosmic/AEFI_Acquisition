@@ -8,9 +8,8 @@ refusés par erreur typée (le homing, en impulsions sur les fins de course, res
 grandeur (panneau Calibration, onglet « Moteurs ») applique la conversion en direct, sans redémarrage.
 
 À faire (pourquoi : l'opérateur ne doit pas avoir à éditer des fichiers ni relire les logs pour calibrer) :
-- [ ] Parcours de calibration de la transmission mécanique sans UI : `record_calibration` (micro-pas, courant,
-      µm par impulsion) n'a pas d'écran dédié ; aujourd'hui seule la graine `mechanical_transmission_seed.json`
-      l'enregistre au premier démarrage. Un écran (ou un bouton « enregistrer la transmission ») est à décider.
+- [x] Parcours de calibration de la transmission mécanique : onglet « Transmission » du panneau Calibration
+      (2026-11-10) — saisie µm par incrément, micro-pas, courants ; appliquée en direct hors scan, refusée pendant un scan.
 - [ ] Redémarrage requis : une transmission déjà appliquée n'est pas changée en session ; ajouter un état visible
       « transmission modifiée, redémarrer l'application » (voir `_system/ops/ponytail-debt.md`).
 - [ ] Mode mock : démarre non calibré avec la donnée runtime ; décider d'une transmission de test explicite.

@@ -186,6 +186,7 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
     app.processEvents()
     from interface.shell.dashboard import Dashboard
     from interface.shell.dashboard_wiring import wire_dashboard
+    from interface.presenters.mechanical_transmission_presenter import MechanicalTransmissionPresenter
     from interface.presenters.motion_presenter import MotionPresenter
     from interface.presenters.excitation_presenter import ExcitationPresenter
     from interface.presenters.synchronous_detection_presenter import SynchronousDetectionPresenter
@@ -629,6 +630,7 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
     # Operators registry (.aefi_acquisition/operators/) — chosen in the Scan and
     # Continuous Reading panels, exported in acquisition-parameters.json.
     operator_presenter = OperatorPresenter(OperatorService(RealOperatorRepository(), event_bus), event_bus)
+    mechanical_transmission_presenter = MechanicalTransmissionPresenter(transmission_service, event_bus)
 
     wire_dashboard(
         dashboard,
@@ -647,6 +649,7 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
         acquisition_throughput_presenter,
         adc_output_rate_presenter,
         operator_presenter,
+        mechanical_transmission_presenter,
     )
 
     # 11. Observability MCP server (read-only) — lets an LLM client (e.g.

@@ -100,8 +100,8 @@ class MechanicalTransmissionCalibrationService(IApiMechanicalTransmissionCalibra
             return gap(
                 motor_name,
                 "réglage de la transmission mécanique (moteur et driver montés, micro-pas, courant, µm par impulsion)",
-                "panneau Calibration, onglets « Moteurs » et « Driver pas à pas » pour monter le moteur et le driver ; "
-                "l'enregistrement du réglage n'a pas d'écran dédié",
+                "panneau Calibration, onglets « Moteurs » et « Driver pas à pas » pour monter le moteur et le driver, "
+                "puis onglet « Transmission » pour enregistrer le réglage",
                 f"no transmission recorded for mounted motor={motor_name} "
                 f"driver={driver.component_name if driver else None}",
             )
