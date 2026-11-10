@@ -4,7 +4,7 @@ LIDAR Distance Port Interface
 Responsibility:
 - Open the LIDAR distance stream for the calibration, read distances
   timestamped at their reception, close it.
-- Say whether someone else (the inertial sensor panel) streams it already.
+- Say whether someone else (the inertial probe panel) streams it already.
 
 Rationale:
 - The calibration starts and stops the LIDAR stream itself (decision

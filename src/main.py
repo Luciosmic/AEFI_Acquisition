@@ -116,7 +116,7 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
     from application.services.motion_control_service.motion_control_service import MotionControlService
     from application.services.motion_control_service.motion_conversion_handler import MotionConversionHandler
     from application.services.electric_field_probe_service.electric_field_probe_service import ElectricFieldProbeService
-    from application.services.inertial_sensor_service.inertial_sensor_service import InertialSensorService
+    from application.services.inertial_probe_service.inertial_probe_service import InertialProbeService
     from application.services.scan_export_service.scan_export_service import ScanExportService
     from application.services.scan_application_service.scan_closure_handler.scan_closure_handler import ScanClosureHandler
     from application.services.system_lifecycle_service.system_lifecycle_service import (
@@ -174,7 +174,7 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
     from infrastructure.post_processing.aefi_post_processor_port import AefiPostProcessorPort, rotation_origin
     from infrastructure.unit_of_work.in_memory_unit_of_work import InMemoryUnitOfWork
     from infrastructure.execution.electric_field_probe_acquisition_executor import ElectricFieldProbeAcquisitionExecutor
-    from infrastructure.execution.inertial_sensor_acquisition_executor import InertialSensorAcquisitionExecutor
+    from infrastructure.execution.inertial_probe_acquisition_executor import InertialProbeAcquisitionExecutor
     from infrastructure.hardware.lsm9ds1.lsm9ds1_config_loader import load_lsm9ds1_config
     from infrastructure.mcp.observability_mcp_server import run_observability_mcp_server
     from infrastructure.events.event_ring_buffer import EventRingBuffer
@@ -200,7 +200,7 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
     from interface.presenters.adc_output_rate_characterization_presenter import AdcOutputRateCharacterizationPresenter
     from interface.presenters.aefi_continuous_reading_presenter import AefiContinuousReadingPresenter
     from interface.presenters.electric_field_probe_presenter import ElectricFieldProbePresenter
-    from interface.presenters.inertial_sensor_presenter import InertialSensorPresenter
+    from interface.presenters.inertial_probe_presenter import InertialProbePresenter
     from interface.presenters.scan_presenter import ScanPresenter
     from interface.presenters.hardware_advanced_config_presenter import HardwareAdvancedConfigPresenter
 
@@ -219,7 +219,7 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
             "motion": "real",
             "aefi_device": "real",   # whole MCU stack (ADS131A04 acquisition + AD9106 excitation + lifecycle + continuous)
             "electric_field_probe": "real",  # picks the adapter only, connection is manual (cf. panel)
-            "inertial_sensor": "real",  # LSM9DS1 board: picks the adapter only, connection is manual (cf. panel)
+            "inertial_probe": "real",  # LSM9DS1 board: picks the adapter only, connection is manual (cf. panel)
             "oscilloscope": "real",  # DSO-X 2014A on DRDY, opened only during an ODR measurement
         }
     NARDA_COM_PORT = "COM8"  # cf. config_templates/electric_field_probe_config.json
@@ -240,11 +240,11 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
     print("\n--- Initializing Hardware Adapters ---")
     # LSM9DS1 board: port/baudrate/channels come from the runtime copy of
     # config_templates/lsm9ds1_config.json (seeded by the ConfigBootstrapper).
-    inertial_sensor_config = load_lsm9ds1_config(
+    inertial_probe_config = load_lsm9ds1_config(
         repo_root / ".aefi_acquisition" / "configs" / "lsm9ds1_config.json"
     )
     hw = HardwareCompositionRoot(
-        hardware_config, event_bus, NARDA_COM_PORT, inertial_sensor_config=inertial_sensor_config
+        hardware_config, event_bus, NARDA_COM_PORT, inertial_probe_config=inertial_probe_config
     )
 
     # 5. Create Hardware Initialization Port
@@ -283,17 +283,17 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
     )
     logger.info("Services -> ElectricFieldProbeService created")
 
-    # Inertial Sensor Service (LSM9DS1 board). Connection and stream start are
+    # Inertial Probe Service (LSM9DS1 board). Connection and stream start are
     # operator actions; the only automatic action is the safety stream stop at
     # application exit — the board keeps its stream active with the port closed.
-    inertial_sensor_service = InertialSensorService(
-        executor=InertialSensorAcquisitionExecutor(event_bus),
-        stream_port=hw.inertial_sensor_port,
+    inertial_probe_service = InertialProbeService(
+        executor=InertialProbeAcquisitionExecutor(event_bus),
+        stream_port=hw.inertial_probe_port,
         event_bus=event_bus,
-        channels=inertial_sensor_config.channels,
+        channels=inertial_probe_config.channels,
     )
-    app.aboutToQuit.connect(inertial_sensor_service.shutdown)
-    logger.info("Services -> InertialSensorService created")
+    app.aboutToQuit.connect(inertial_probe_service.shutdown)
+    logger.info("Services -> InertialProbeService created")
 
     # Scan Application Service — auxiliary probes (currently: Narda EF probe)
     # are registered as blocking channels; see AuxiliaryProbeChannel for what
@@ -606,8 +606,8 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
     # Electric Field Probe Presenter
     electric_field_probe_presenter = ElectricFieldProbePresenter(electric_field_probe_service, event_bus)
 
-    # Inertial Sensor Presenter
-    inertial_sensor_presenter = InertialSensorPresenter(inertial_sensor_service, event_bus)
+    # Inertial Probe Presenter
+    inertial_probe_presenter = InertialProbePresenter(inertial_probe_service, event_bus)
     
     
     
@@ -634,7 +634,7 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
         synchronous_detection_presenter,
         aefi_continuous_reading_presenter,
         electric_field_probe_presenter,
-        inertial_sensor_presenter,
+        inertial_probe_presenter,
         scan_presenter,
         hardware_config_presenter,
         sensor_calibration_presenter,

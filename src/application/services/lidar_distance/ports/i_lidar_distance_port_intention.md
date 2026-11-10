@@ -2,7 +2,7 @@
 
 ## Rationale
 
-Le LIDAR est un canal du flux de la carte inertielle (`IInertialSensorStreamPort`),
+Le LIDAR est un canal du flux de la carte inertielle (`IInertialProbeStreamPort`),
 piloté par le panneau du capteur. Si la calibration utilisait ce port directement,
 elle hériterait de tout le flux inertiel et de son exécuteur ; et deux lecteurs sur
 le même port série se voleraient les lignes. Il faut un port étroit, du point de vue

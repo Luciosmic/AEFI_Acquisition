@@ -19,17 +19,17 @@ from application.services.lidar_distance.ports.lidar_stream_error import (
     LidarStreamBusyError,
     LidarUnavailableError,
 )
-from application.services.inertial_sensor_service.dtos.inertial_sensor_dtos import LIDAR_CHANNEL
-from application.services.inertial_sensor_service.ports.i_inertial_sensor_acquisition_executor import (
-    IInertialSensorAcquisitionExecutor,
+from application.services.inertial_probe_service.dtos.inertial_probe_dtos import LIDAR_CHANNEL
+from application.services.inertial_probe_service.ports.i_inertial_probe_acquisition_executor import (
+    IInertialProbeAcquisitionExecutor,
 )
-from application.services.inertial_sensor_service.ports.i_inertial_sensor_stream_port import (
-    IInertialSensorStreamPort,
+from application.services.inertial_probe_service.ports.i_inertial_probe_stream_port import (
+    IInertialProbeStreamPort,
 )
 
 logger = logging.getLogger(__name__)
 
-# Same tolerance as InertialSensorAcquisitionExecutor before a stream is declared failed.
+# Same tolerance as InertialProbeAcquisitionExecutor before a stream is declared failed.
 MAX_CONSECUTIVE_READ_ERRORS = 2
 # Bounds the latency of close() (the reader checks its stop flag between reads).
 READ_TIMEOUT_S = 0.25
@@ -40,8 +40,8 @@ class LidarDistanceStreamAdapter(ILidarDistancePort):
 
     def __init__(
         self,
-        stream_port: IInertialSensorStreamPort,
-        panel_executor: Optional[IInertialSensorAcquisitionExecutor] = None,
+        stream_port: IInertialProbeStreamPort,
+        panel_executor: Optional[IInertialProbeAcquisitionExecutor] = None,
     ) -> None:
         """`panel_executor`: the sensor panel's acquisition executor — while it
         runs, the board stream belongs to the panel."""

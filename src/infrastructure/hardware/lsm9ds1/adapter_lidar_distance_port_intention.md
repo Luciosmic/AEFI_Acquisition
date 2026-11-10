@@ -12,7 +12,7 @@ port série en même temps.
 
 ## Responsibility
 
-- Implémenter `ILidarDistancePort` sur `IInertialSensorStreamPort`, canal LIDAR seul.
+- Implémenter `ILidarDistancePort` sur `IInertialProbeStreamPort`, canal LIDAR seul.
 - Refuser l'ouverture (`LidarStreamBusyError`) tant que l'exécuteur d'acquisition du
   panneau tourne.
 - Connecter la carte si elle ne l'est pas (et la déconnecter à la fermeture dans ce
@@ -35,5 +35,5 @@ port série en même temps.
 - L'unité du LIDAR (mm, non vérifiée) vient de `LIDAR_MM_PER_LSB` ; la calibration
   n'en dépend pas (seul le seuil compte).
 - ponytail: le LIDAR reste un canal du flux inertiel (voir
-  `IInertialSensorStreamPort`) ; cet adaptateur est la frontière qui disparaîtra le
+  `IInertialProbeStreamPort`) ; cet adaptateur est la frontière qui disparaîtra le
   jour où le LIDAR aura son propre port.

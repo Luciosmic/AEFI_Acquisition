@@ -3,7 +3,7 @@ Hardware Composition Root
 
 Responsibility:
 - Select real vs. mock hardware per subsystem (motion, MCU, electric field probe,
-  inertial sensor) from a `hardware_config` dict, and assemble the resulting ports.
+  inertial probe) from a `hardware_config` dict, and assemble the resulting ports.
 - Wrap the acquisition port with the excitation-aware simulation wrapper when
   the MCU subsystem runs in mock mode.
 
@@ -22,10 +22,10 @@ from application.services.scan_application_service.ports.i_acquisition_port impo
 from application.services.excitation_configuration_service.ports.i_excitation_port import IExcitationPort
 from application.services.aefi_acquisition_service.ports.i_aefi_acquisition_executor import IAefiAcquisitionExecutor
 from application.services.electric_field_probe_service.ports.i_electric_field_probe_port import IElectricFieldProbePort
-from application.services.inertial_sensor_service.ports.i_inertial_sensor_stream_port import IInertialSensorStreamPort
+from application.services.inertial_probe_service.ports.i_inertial_probe_stream_port import IInertialProbeStreamPort
 from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
 
-from infrastructure.hardware.lsm9ds1.adapter_inertial_sensor_stream_port import Lsm9ds1InertialSensorStreamAdapter
+from infrastructure.hardware.lsm9ds1.adapter_inertial_probe_stream_port import Lsm9ds1InertialProbeStreamAdapter
 from infrastructure.hardware.lsm9ds1.lsm9ds1_config_loader import Lsm9ds1Config
 from infrastructure.hardware.arcus_performax_4EX.composition_root_arcus import ArcusCompositionRoot
 from infrastructure.hardware.micro_controller.mcu_composition_root import MCUCompositionRoot
@@ -46,7 +46,7 @@ class HardwareCompositionRoot:
         hardware_config: dict,
         event_bus: IDomainEventBus,
         narda_com_port: str,
-        inertial_sensor_config: Optional[Lsm9ds1Config] = None,
+        inertial_probe_config: Optional[Lsm9ds1Config] = None,
     ):
         self.lifecycle_adapters: list = []
 
@@ -157,37 +157,37 @@ class HardwareCompositionRoot:
             "(auto-off, frequent timeouts) — connection is manual via the panel."
         )
 
-        # --- Inertial sensor (LSM9DS1 behind a serial board) ---
+        # --- Inertial probe (LSM9DS1 behind a serial board) ---
         # Deliberately NOT added to lifecycle_adapters: an unplugged board must
         # never block or fail app startup. Connection and stream start are manual
         # actions from the panel. A missing key means "mock", so launchers that
         # predate this subsystem keep working.
-        inertial_sensor_mode = hardware_config.get("inertial_sensor", "mock")
-        if inertial_sensor_mode == "real":
-            if inertial_sensor_config is None:
+        inertial_probe_mode = hardware_config.get("inertial_probe", "mock")
+        if inertial_probe_mode == "real":
+            if inertial_probe_config is None:
                 raise ValueError(
-                    "hardware_config['inertial_sensor'] is 'real' but no Lsm9ds1Config was given "
+                    "hardware_config['inertial_probe'] is 'real' but no Lsm9ds1Config was given "
                     "(config_templates/lsm9ds1_config.json)"
                 )
             logger.info(
-                "Inertial sensor -> real (LSM9DS1 board on %s, %d baud)",
-                inertial_sensor_config.com_port,
-                inertial_sensor_config.baudrate,
+                "Inertial probe -> real (LSM9DS1 board on %s, %d baud)",
+                inertial_probe_config.com_port,
+                inertial_probe_config.baudrate,
             )
-            self.inertial_sensor_port: IInertialSensorStreamPort = Lsm9ds1InertialSensorStreamAdapter(
-                port=inertial_sensor_config.com_port,
-                baudrate=inertial_sensor_config.baudrate,
-                rate_hz=inertial_sensor_config.rate_hz,
+            self.inertial_probe_port: IInertialProbeStreamPort = Lsm9ds1InertialProbeStreamAdapter(
+                port=inertial_probe_config.com_port,
+                baudrate=inertial_probe_config.baudrate,
+                rate_hz=inertial_probe_config.rate_hz,
             )
         else:
-            from infrastructure.hardware.lsm9ds1.fake.fake_inertial_sensor_stream_adapter import (
-                FakeInertialSensorStreamAdapter,
+            from infrastructure.hardware.lsm9ds1.fake.fake_inertial_probe_stream_adapter import (
+                FakeInertialProbeStreamAdapter,
             )
-            logger.info("Inertial sensor -> mock (25 Hz, real time)")
-            self.inertial_sensor_port: IInertialSensorStreamPort = FakeInertialSensorStreamAdapter(
+            logger.info("Inertial probe -> mock (25 Hz, real time)")
+            self.inertial_probe_port: IInertialProbeStreamPort = FakeInertialProbeStreamAdapter(
                 realtime=True
             )
         logger.debug(
-            "Inertial sensor deliberately excluded from hardware lifecycle "
+            "Inertial probe deliberately excluded from hardware lifecycle "
             "(unplugged board must not block startup) — connection is manual via the panel."
         )

@@ -8,12 +8,12 @@ from application.services.lidar_distance.ports.lidar_stream_error import (
 )
 from domain.detection_devices.lidar.lidar_distance.lidar_distance import LidarDistance
 from infrastructure.hardware.lsm9ds1.adapter_lidar_distance_port import LidarDistanceStreamAdapter
-from infrastructure.hardware.lsm9ds1.fake.fake_inertial_sensor_stream_adapter import (
-    FakeInertialSensorStreamAdapter,
+from infrastructure.hardware.lsm9ds1.fake.fake_inertial_probe_stream_adapter import (
+    FakeInertialProbeStreamAdapter,
 )
 
 
-class _ZeroEveryOtherStream(FakeInertialSensorStreamAdapter):
+class _ZeroEveryOtherStream(FakeInertialProbeStreamAdapter):
     """The real LIDAR sends raw 0 when it measures nothing."""
 
     def read_sample(self, timeout_s=1.0):
@@ -33,7 +33,7 @@ class _Executor:
 
 class LidarDistanceStreamAdapterTest(unittest.TestCase):
     def test_opens_reads_timestamped_distances_and_closes(self):
-        stream = FakeInertialSensorStreamAdapter(rate_hz=200.0, realtime=True)
+        stream = FakeInertialProbeStreamAdapter(rate_hz=200.0, realtime=True)
         adapter = LidarDistanceStreamAdapter(stream, _Executor())
         adapter.open()
         try:
@@ -48,7 +48,7 @@ class LidarDistanceStreamAdapterTest(unittest.TestCase):
         self.assertFalse(stream.is_connected())  # disconnected again: it was not connected before
 
     def test_readings_keep_their_arrival_time_while_nobody_reads(self):
-        stream = FakeInertialSensorStreamAdapter(rate_hz=25.0, realtime=True)
+        stream = FakeInertialProbeStreamAdapter(rate_hz=25.0, realtime=True)
         adapter = LidarDistanceStreamAdapter(stream, _Executor())
         adapter.open()
         try:
@@ -69,7 +69,7 @@ class LidarDistanceStreamAdapterTest(unittest.TestCase):
         self.assertEqual([r.distance.has_return for r in readings], [True, False] * 3)
 
     def test_leaves_an_already_connected_board_connected(self):
-        stream = FakeInertialSensorStreamAdapter(realtime=False)
+        stream = FakeInertialProbeStreamAdapter(realtime=False)
         stream.connect()
         adapter = LidarDistanceStreamAdapter(stream, _Executor())
         adapter.open()
@@ -77,18 +77,18 @@ class LidarDistanceStreamAdapterTest(unittest.TestCase):
         self.assertTrue(stream.is_connected())
 
     def test_refuses_while_the_panel_streams(self):
-        adapter = LidarDistanceStreamAdapter(FakeInertialSensorStreamAdapter(realtime=False), _Executor(running=True))
+        adapter = LidarDistanceStreamAdapter(FakeInertialProbeStreamAdapter(realtime=False), _Executor(running=True))
         self.assertTrue(adapter.is_streamed_elsewhere())
         with self.assertRaises(LidarStreamBusyError):
             adapter.open()
 
     def test_connection_failure_is_the_port_error(self):
-        adapter = LidarDistanceStreamAdapter(FakeInertialSensorStreamAdapter(simulate_connection_failure=True), None)
+        adapter = LidarDistanceStreamAdapter(FakeInertialProbeStreamAdapter(simulate_connection_failure=True), None)
         with self.assertRaises(LidarUnavailableError):
             adapter.open()
 
     def test_read_failures_become_the_port_error(self):
-        stream = FakeInertialSensorStreamAdapter(realtime=False, fail_after_samples=3)
+        stream = FakeInertialProbeStreamAdapter(realtime=False, fail_after_samples=3)
         adapter = LidarDistanceStreamAdapter(stream, _Executor())
         adapter.open()
         try:
@@ -99,7 +99,7 @@ class LidarDistanceStreamAdapterTest(unittest.TestCase):
             adapter.close()
 
     def test_close_is_idempotent(self):
-        adapter = LidarDistanceStreamAdapter(FakeInertialSensorStreamAdapter(realtime=False), None)
+        adapter = LidarDistanceStreamAdapter(FakeInertialProbeStreamAdapter(realtime=False), None)
         adapter.close()
         adapter.open()
         adapter.close()

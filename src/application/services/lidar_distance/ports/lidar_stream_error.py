@@ -16,4 +16,4 @@ class LidarUnavailableError(RuntimeError):
 
 
 class LidarStreamBusyError(LidarUnavailableError):
-    """Another owner (the inertial sensor panel) already streams the board."""
+    """Another owner (the inertial probe panel) already streams the board."""

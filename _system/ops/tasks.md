@@ -54,7 +54,7 @@ direct (accéléromètre, gyroscope, magnétomètre, lidar) implémenté et test
 éprouvé sur la carte réelle dans ce dépôt** (le driver a été validé sur COM5 dans le dossier de
 travail `Hardware - Drivers/LSM9DS1` de la thèse). Pourquoi : à terme, ces valeurs serviront à
 attendre la stabilisation mécanique du banc avant une mesure de scan — pas dans cet incrément.
-Service `inertial_sensor_service`, adaptateur `lsm9ds1/`, config `config_templates/lsm9ds1_config.json`.
+Service `inertial_probe_service`, adaptateur `lsm9ds1/`, config `config_templates/lsm9ds1_config.json`.
 
 À faire :
 - [ ] **Dette lidar (non silencieuse)** : le lidar mesure une distance, ce n'est pas un capteur

@@ -17,8 +17,8 @@ thèse) se retrouverait dispersé entre le service applicatif et l'interface.
   physiques (g, °/s, µT, mm), sans I/O.
 - `driver_lsm9ds1_stream.py` : liaison série en mode flux continu, lecture
   bloquante, horodatage à la réception.
-- `adapter_inertial_sensor_stream_port.py` : implémente
-  `IInertialSensorStreamPort` (driver + conversion).
+- `adapter_inertial_probe_stream_port.py` : implémente
+  `IInertialProbeStreamPort` (driver + conversion).
 - `lsm9ds1_config_loader.py` : lit `config_templates/lsm9ds1_config.json`
   (port COM, débit, capteurs, cadence), refuse un `schema_version` inconnu.
 - `fake/` : double déterministe sans matériel.
