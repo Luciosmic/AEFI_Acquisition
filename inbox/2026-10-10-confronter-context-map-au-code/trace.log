@@ -1,0 +1,9 @@
+00:23 | depart | tache=confronter-context-map-au-code budget=45min
+00:24 | jalon | contexte=Acquisition code=EXPERIMENTAL/AEFI_Acquisition/src branche=develop@d8bf494 constat=pas_de_cle_dgp_ni_potentials_V schema_scan=0.3-agile schema_throughput=1.0
+00:24 | jalon | contexte=Post_Processor code=EXPERIMENTAL/AEFI_Acquisition/external_modules/aefi_post_processor_module constat=lit_csv+aefi_device_config_template_pas_le_json_export ni_MCI_ni_FEM
+00:28 | jalon | contexte=Forward_MCI code=SIMULATIONS-NUMERIQUES/AEFI_Forward_Problem/AEFI_Mirror_Charges_Primary_Field_Calculator/src constat=recalcule_le_DGP_ne_lit_pas_l_export_Acquisition
+00:28 | jalon | contexte=Forward_FEM code=.../AEFI_4Sphere_firedrake/notebooks/NOTEBOOK_aefi_dwr/scripts constat=from_dgp_json_sans_appelant_hors_tests couplage_reel=BC_exacte_MCI_par_sys.path
+00:28 | jalon | contexte=Inverse_Problem code=SIMULATIONS-NUMERIQUES/AEFI_Inverse_Problem constat=scripts_dipoles_isoles
+00:28 | decision | D1=a_requalifier raison=aucun_producteur_n_emet_potentials_V_cote_Acquisition
+00:28 | non-explore | AEFI_Banc_Test_II AEFI_Data branches_non_extraites_MCI_FEM
+00:28 | fin | critere=atteint contrats=1_implemente/3_partiels/3_non/3_divergents dettes=0_levee/3_a_planifier corrections=17 omissions=8 fichiers_modifies_hors_dossier=0 commit=aucun
