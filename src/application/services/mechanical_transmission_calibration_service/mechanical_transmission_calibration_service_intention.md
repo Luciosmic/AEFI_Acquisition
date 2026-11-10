@@ -12,7 +12,7 @@ current — positions converted with one factor, recorded with another.
 ## Responsibility
 
 - `record_calibration(microsteps, driver_current_a, driver_peak_current_a,
-  travel_per_motor_revolution_mm)`: record the motion chain as set up now,
+  microns_per_pulse)`: record the motion chain as set up now,
   with the currently mounted motor and stepper driver (refused by the
   aggregate when either is missing), persist it, publish
   `MechanicalTransmissionCalibrationEntryAdded`. Used by the composition
@@ -21,7 +21,7 @@ current — positions converted with one factor, recorded with another.
 - `get_current_calibration()`: the transmission set up with the motor and
   driver mounted now, with its derived distance per pulse and the driver
   current warning — `None` (WARNING logged) when there is no such
-  transmission or the motor's steps per revolution is not characterized:
+  transmission:
   then nothing can convert positions, and the motion controller stays
   unconfigured (it refuses to move) rather than guessing.
 
@@ -41,4 +41,4 @@ current — positions converted with one factor, recorded with another.
   `MotionConversionHandler`: at startup, and live on every new entry (a recalibration needs no
   restart). An entry arriving during a scan is logged and not applied.
 
-- `get_current_gap()`: when `get_current_calibration()` is `None`, says what is missing (motor, quantity such as « Pas par tour », where to enter it) so the dashboard can tell the operator instead of closing the application.
+- `get_current_gap()`: when `get_current_calibration()` is `None`, says what is missing (motor, quantity such as « µm par impulsion », where to enter it) so the dashboard can tell the operator instead of closing the application.

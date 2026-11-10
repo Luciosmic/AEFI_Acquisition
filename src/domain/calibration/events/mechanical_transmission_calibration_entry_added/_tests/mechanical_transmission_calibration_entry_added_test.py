@@ -11,7 +11,7 @@ from domain.calibration.events.mechanical_transmission_calibration_entry_added.m
 
 
 def make_entry():
-    return MechanicalTransmissionCalibrationEntry.single(uuid4(), uuid4(), 16, 3.5, 4.0, 69.76)
+    return MechanicalTransmissionCalibrationEntry.single(uuid4(), uuid4(), 16, 3.5, 4.0, 21.11)
 
 
 def test_carries_entry():

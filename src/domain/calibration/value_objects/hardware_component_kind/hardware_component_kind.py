@@ -92,9 +92,9 @@ _QUANTITIES = {
         ),
     ),
     # The motor alone: its distance per pulse depends on the whole chain
-    # (driver microstepping, mechanics) — see MechanicalTransmissionCalibrationEntry.
+    # (driver microstepping, mechanics) and is characterized per pulse — see
+    # MechanicalTransmissionCalibrationEntry.
     HardwareComponentKind.MOTORS: (
-        QuantitySpec("full_steps_per_revolution", "Pas par tour", "pas/tour"),
         QuantitySpec("rated_current_a", "Courant nominal", "A"),
     ),
     # Product limit only; the current actually set is part of the transmission.

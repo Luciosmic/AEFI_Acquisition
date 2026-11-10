@@ -185,7 +185,7 @@ class TestCalibration(unittest.TestCase):
         calibration = Calibration()
         motor, driver = uuid4(), uuid4()
 
-        entry = calibration.record_mechanical_transmission_calibration_entry(motor, driver, 16, 3.5, 4.0, 69.76)
+        entry = calibration.record_mechanical_transmission_calibration_entry(motor, driver, 16, 3.5, 4.0, 21.11)
 
         self.assertEqual((entry.motor_mounting_id, entry.stepper_driver_mounting_id), (motor, driver))
         (event,) = calibration.domain_events
@@ -197,16 +197,16 @@ class TestCalibration(unittest.TestCase):
 
         for motor, driver in ((None, uuid4()), (uuid4(), None)):
             with self.assertRaises(ValueError):
-                calibration.record_mechanical_transmission_calibration_entry(motor, driver, 16, 3.5, 4.0, 69.76)
+                calibration.record_mechanical_transmission_calibration_entry(motor, driver, 16, 3.5, 4.0, 21.11)
         self.assertEqual(calibration.domain_events, [])
 
     def test_current_mechanical_transmission_is_latest_for_the_mounted_motor_and_driver(self):
         calibration = Calibration()
         motor, driver, other_driver = uuid4(), uuid4(), uuid4()
         record = calibration.record_mechanical_transmission_calibration_entry
-        old = record(motor, driver, 8, 3.5, 4.0, 69.76)
-        new = record(motor, driver, 16, 3.5, 4.0, 69.76)
-        swapped = record(motor, other_driver, 16, 3.5, 4.0, 69.76)
+        old = record(motor, driver, 8, 3.5, 4.0, 21.11)
+        new = record(motor, driver, 16, 3.5, 4.0, 21.11)
+        swapped = record(motor, other_driver, 16, 3.5, 4.0, 21.11)
         entries = [old, new, swapped]
 
         self.assertEqual(Calibration.current_mechanical_transmission(entries, motor, driver), new)

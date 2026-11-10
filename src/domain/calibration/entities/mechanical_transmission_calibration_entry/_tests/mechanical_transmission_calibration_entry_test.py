@@ -15,19 +15,18 @@ def make_entry(**overrides):
         microsteps=16,
         driver_current_a=3.5,
         driver_peak_current_a=4.0,
-        travel_per_motor_revolution_mm=69.76,
+        microns_per_pulse=21.11,
     )
     params.update(overrides)
     return MechanicalTransmissionCalibrationEntry.single(**params)
 
 
-def test_bench_setting_gives_21_8_microns_per_pulse():
-    # Igus motor 200 steps/rev, TB6600 at 1/16, 69.76 mm per motor revolution.
-    assert make_entry().microns_per_pulse(full_steps_per_revolution=200) == pytest.approx(21.8)
+def test_the_distance_per_pulse_is_kept_as_characterized():
+    # Lidar measurement on the bench, TB6600 at 1/16.
+    entry = make_entry()
 
-
-def test_halving_the_microstepping_doubles_the_distance_per_pulse():
-    assert make_entry(microsteps=8).microns_per_pulse(200) == pytest.approx(43.6)
+    assert entry.microns_per_pulse == pytest.approx(21.11)
+    assert entry.microsteps == 16
 
 
 def test_current_below_motor_rating_is_reported_with_both_driver_values():
@@ -49,13 +48,9 @@ def test_single_gives_each_entry_its_own_identity():
     {"microsteps": 0},
     {"driver_current_a": 0.0},
     {"driver_peak_current_a": 3.0},  # peak below the set current
-    {"travel_per_motor_revolution_mm": 0.0},
+    {"microns_per_pulse": 0.0},
 ])
 def test_rejects_non_physical_values(overrides):
     with pytest.raises(ValueError):
         make_entry(**overrides)
 
-
-def test_rejects_a_motor_without_steps_per_revolution():
-    with pytest.raises(ValueError):
-        make_entry().microns_per_pulse(0)

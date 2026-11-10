@@ -7,7 +7,7 @@ Sans cet événement, l'absence de conversion mm/impulsion reste une ligne de lo
 ## Responsibility
 
 - `motor_name` : moteur monté concerné (`None` si aucun).
-- `missing_quantity` : grandeur manquante, en toutes lettres (p. ex. « Pas par tour »).
+- `missing_quantity` : grandeur manquante, en toutes lettres (p. ex. « µm par impulsion »).
 - `where_to_enter` : où la saisir (panneau Calibration, onglet « Moteurs »).
 
 ## Design

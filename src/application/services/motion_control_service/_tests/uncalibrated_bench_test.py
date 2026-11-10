@@ -1,7 +1,7 @@
 """
 Bench without mm/pulse conversion: MotionControlService refuses with a typed
 error, MotionConversionHandler says what is missing and applies the
-conversion live once the missing quantity is entered (service chain on
+conversion live once the transmission is recorded (service chain on
 in-memory repositories, motion port reduced to its conversion state).
 """
 from typing import List, Optional
@@ -31,7 +31,7 @@ from infrastructure.persistence.calibration.fake.fake_mechanical_transmission_ca
     FakeMechanicalTransmissionCalibrationRepository,
 )
 
-BENCH_SETTING = dict(microsteps=16, driver_current_a=3.5, driver_peak_current_a=4.0, travel_per_motor_revolution_mm=69.76)
+BENCH_SETTING = dict(microsteps=16, driver_current_a=3.5, driver_peak_current_a=4.0, microns_per_pulse=21.11)
 
 
 class MotionPortConversionState:
@@ -66,16 +66,19 @@ def components(bus):
 
 
 @pytest.fixture
-def stack(bus, components):
-    """Historical motor file: IGUS motor characterized without full_steps_per_revolution."""
+def transmission(bus, components):
+    """Motor and driver mounted, no transmission recorded yet."""
     components.record_characterization("motors", "IGUS-S-AN-060-035-060", {"rated_current_a": 4.2})
     components.mount_component("motors", "IGUS-S-AN-060-035-060")
     components.record_characterization("stepper_driver", "TB6600", {"max_current_a": 3.5})
     components.mount_component("stepper_driver", "TB6600")
-    transmission = MechanicalTransmissionCalibrationService(
+    return MechanicalTransmissionCalibrationService(
         FakeMechanicalTransmissionCalibrationRepository(), components._repository, bus
     )
-    transmission.record_calibration(**BENCH_SETTING)
+
+
+@pytest.fixture
+def stack(bus, transmission):
     state = MotionPortConversionState()
     handler = MotionConversionHandler(state.port, transmission, bus)
     service = MotionControlService(state.port, bus, conversion_status=handler)
@@ -85,14 +88,14 @@ def stack(bus, components):
     return state, handler, service, received
 
 
-def test_startup_without_steps_per_revolution_does_not_raise_and_says_what_is_missing(stack):
+def test_startup_without_transmission_does_not_raise_and_says_what_is_missing(stack):
     state, handler, _service, received = stack
 
     status = handler.apply_current_transmission()
 
     assert not status.is_available
     assert status.motor_name == "IGUS-S-AN-060-035-060"
-    assert status.missing_quantity == "Pas par tour"
+    assert "transmission mécanique" in status.missing_quantity
     assert "Moteurs" in status.where_to_enter
     assert [type(e).__name__ for e in received] == ["MotionConversionFoundMissing"]
     assert state.microns_per_pulse is None  # never a default value
@@ -106,8 +109,8 @@ def test_move_is_refused_with_a_typed_error_before_reaching_the_port(stack):
 
     assert result.is_failure
     assert isinstance(result.error, MotionConversionUnavailable)
-    assert result.error.missing_quantity == "Pas par tour"
-    assert "Pas par tour" in result.error.message
+    assert "transmission mécanique" in result.error.missing_quantity
+    assert "transmission mécanique" in result.error.message
     state.port.move_to.assert_not_called()
 
 
@@ -166,26 +169,22 @@ def test_port_refusal_is_translated_even_without_the_service_guard(bus):
     assert isinstance(result.error, MotionConversionUnavailable)
 
 
-def test_entering_steps_per_revolution_applies_the_conversion_without_restart(stack, components):
+def test_recording_the_transmission_applies_the_conversion_without_restart(stack, transmission):
     state, handler, service, received = stack
     handler.apply_current_transmission()
 
-    components.record_characterization(
-        "motors", "IGUS-S-AN-060-035-060", {"full_steps_per_revolution": 200, "rated_current_a": 4.2}
-    )
+    transmission.record_calibration(**BENCH_SETTING)
 
-    assert state.microns_per_pulse == pytest.approx(21.8)
+    assert state.microns_per_pulse == pytest.approx(21.11)
     assert handler.get_status().is_available
     assert [type(e).__name__ for e in received] == ["MotionConversionFoundMissing", "MotionConversionBecameAvailable"]
     assert service.get_conversion_status().is_available
     assert service.move_absolute(10.0, 10.0).is_success
 
 
-def _calibrated(stack, components, bus):
+def _calibrated(stack, transmission, bus):
     state, handler, _service, received = stack
-    components.record_characterization(
-        "motors", "IGUS-S-AN-060-035-060", {"full_steps_per_revolution": 200, "rated_current_a": 4.2}
-    )
+    transmission.record_calibration(**BENCH_SETTING)
     handler.apply_current_transmission()
     changes: List[object] = []
     bus.subscribe("motionconversionchanged", changes.append)
@@ -193,43 +192,38 @@ def _calibrated(stack, components, bus):
     return state, handler, received, changes
 
 
-def test_new_transmission_entry_is_applied_live_without_restart(stack, components, bus):
+def test_new_transmission_entry_is_applied_live_without_restart(stack, transmission, bus):
     """Recalibration: the new entry replaces the applied conversion at once."""
-    state, handler, received, changes = _calibrated(stack, components, bus)
-    transmission = MechanicalTransmissionCalibrationService(
-        handler._transmission_service._calibration_repository, components._repository, bus
-    )
+    state, handler, received, changes = _calibrated(stack, transmission, bus)
 
-    transmission.record_calibration(**{**BENCH_SETTING, "travel_per_motor_revolution_mm": 70.4})
+    transmission.record_calibration(**{**BENCH_SETTING, "microns_per_pulse": 22.0})
 
     assert state.microns_per_pulse == pytest.approx(22.0)
     assert handler.get_status().microns_per_pulse == pytest.approx(22.0)
     assert [(c.previous_microns_per_pulse, round(c.microns_per_pulse, 4)) for c in changes] == [
-        (pytest.approx(21.8), 22.0)
+        (pytest.approx(21.11), 22.0)
     ]
     assert received == []  # not "became available": it already was
 
 
-def test_same_conversion_is_not_reapplied(stack, components, bus):
-    state, handler, received, changes = _calibrated(stack, components, bus)
+def test_same_conversion_is_not_reapplied(stack, components, transmission, bus):
+    state, handler, received, changes = _calibrated(stack, transmission, bus)
 
-    components.record_characterization("motors", "IGUS-S-AN-060-035-060", {"full_steps_per_revolution": 200})
+    components.record_characterization("motors", "IGUS-S-AN-060-035-060", {"rated_current_a": 4.0})
 
     assert changes == []
-    assert state.microns_per_pulse == pytest.approx(21.8)
+    assert state.microns_per_pulse == pytest.approx(21.11)
 
 
-def test_entry_arriving_during_a_scan_is_not_applied_nor_deferred(stack, components, bus):
+def test_entry_arriving_during_a_scan_is_not_applied_nor_deferred(stack, transmission, bus):
     """Abnormal case (calibration and scan exclude each other): warning, nothing applied, no deferral."""
-    state, handler, received, changes = _calibrated(stack, components, bus)
+    state, handler, received, changes = _calibrated(stack, transmission, bus)
     bus.publish("scanstarted", object())
 
-    components.record_characterization(
-        "motors", "IGUS-S-AN-060-035-060", {"full_steps_per_revolution": 400, "rated_current_a": 4.2}
-    )
+    transmission.record_calibration(**{**BENCH_SETTING, "microns_per_pulse": 10.9})
     bus.publish("scancompleted", object())
 
-    assert state.microns_per_pulse == pytest.approx(21.8)
+    assert state.microns_per_pulse == pytest.approx(21.11)
     assert changes == []
     handler.apply_current_transmission()  # the operator applies it again after the scan
     assert state.microns_per_pulse == pytest.approx(10.9)

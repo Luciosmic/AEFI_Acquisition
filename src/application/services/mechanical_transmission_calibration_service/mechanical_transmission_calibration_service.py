@@ -28,8 +28,8 @@ logger = logging.getLogger(__name__)
 class MechanicalTransmissionCalibrationService(IApiMechanicalTransmissionCalibrationService):
     """
     Application Service de la transmission mécanique du banc : réglage de la
-    chaîne de mouvement (moteur et driver montés, micro-pas, courant, avance
-    par tour) et distance par impulsion moteur qui en découle.
+    chaîne de mouvement (moteur et driver montés, micro-pas, courant) et
+    distance par impulsion moteur caractérisée sur le banc.
     """
 
     def __init__(
@@ -49,12 +49,12 @@ class MechanicalTransmissionCalibrationService(IApiMechanicalTransmissionCalibra
         microsteps: int,
         driver_current_a: float,
         driver_peak_current_a: float,
-        travel_per_motor_revolution_mm: float,
+        microns_per_pulse: float,
     ) -> None:
         logger.info(
             "MechanicalTransmissionCalibrationService: Command record_calibration microsteps=%s "
-            "driver_current_a=%s driver_peak_current_a=%s travel_per_motor_revolution_mm=%s",
-            microsteps, driver_current_a, driver_peak_current_a, travel_per_motor_revolution_mm,
+            "driver_current_a=%s driver_peak_current_a=%s microns_per_pulse=%s",
+            microsteps, driver_current_a, driver_peak_current_a, microns_per_pulse,
         )
         calibration = Calibration()
         entry = calibration.record_mechanical_transmission_calibration_entry(
@@ -63,7 +63,7 @@ class MechanicalTransmissionCalibrationService(IApiMechanicalTransmissionCalibra
             microsteps,
             driver_current_a,
             driver_peak_current_a,
-            travel_per_motor_revolution_mm,
+            microns_per_pulse,
         )
         self._calibration_repository.add(entry)
         # Applied live by MotionConversionHandler (never during a scan).
@@ -99,7 +99,7 @@ class MechanicalTransmissionCalibrationService(IApiMechanicalTransmissionCalibra
         if motor is None or driver is None or entry is None:
             return gap(
                 motor_name,
-                "réglage de la transmission mécanique (moteur et driver montés, micro-pas, courant, avance par tour)",
+                "réglage de la transmission mécanique (moteur et driver montés, micro-pas, courant, µm par impulsion)",
                 "panneau Calibration, onglets « Moteurs » et « Driver pas à pas » pour monter le moteur et le driver ; "
                 "l'enregistrement du réglage n'a pas d'écran dédié",
                 f"no transmission recorded for mounted motor={motor_name} "
@@ -110,18 +110,6 @@ class MechanicalTransmissionCalibrationService(IApiMechanicalTransmissionCalibra
             self._components.find_all(HardwareComponentKind.MOTORS), motor.component_name
         )
         motor_values = motor_entry.characterization.values if motor_entry else {}
-        steps_per_revolution = motor_values.get("full_steps_per_revolution")
-        if steps_per_revolution is None:
-            label = next(
-                q.label for q in HardwareComponentKind.MOTORS.quantities if q.key == "full_steps_per_revolution"
-            )
-            return gap(
-                motor.component_name,
-                label,
-                "panneau Calibration, onglet « Moteurs »",
-                f"motor '{motor.component_name}' steps per revolution NOT CHARACTERIZED — no distance per pulse",
-            )
-
         rated_current = motor_values.get("rated_current_a")
         warning = entry.driver_current_shortfall(rated_current) if rated_current is not None else None
         if log_gap and warning:
@@ -139,8 +127,7 @@ class MechanicalTransmissionCalibrationService(IApiMechanicalTransmissionCalibra
             microsteps=entry.microsteps,
             driver_current_a=entry.driver_current_a,
             driver_peak_current_a=entry.driver_peak_current_a,
-            travel_per_motor_revolution_mm=entry.travel_per_motor_revolution_mm,
-            microns_per_pulse=entry.microns_per_pulse(steps_per_revolution),
+            microns_per_pulse=entry.microns_per_pulse,
             driver_current_warning=warning,
             recorded_at=entry.recorded_at,
         ), None

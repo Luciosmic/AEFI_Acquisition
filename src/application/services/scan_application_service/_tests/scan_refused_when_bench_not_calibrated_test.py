@@ -26,7 +26,7 @@ class UncalibratedMotionPort(MockMotionPort):
 class FixedStatus(IMotionConversionStatusPort):
     def get_status(self) -> MotionConversionStatusDTO:
         return MotionConversionStatusDTO(
-            is_available=False, motor_name="IGUS", missing_quantity="Pas par tour", where_to_enter="onglet Moteurs"
+            is_available=False, motor_name="IGUS", missing_quantity="µm par impulsion", where_to_enter="onglet Moteurs"
         )
 
 
@@ -49,8 +49,8 @@ class TestScanRefusedWhenBenchNotCalibrated(unittest.TestCase):
         refusal = self.service.get_start_refusal()
 
         self.assertIsInstance(refusal, ScanRefusedBenchNotCalibrated)
-        self.assertEqual(refusal.missing_quantity, "Pas par tour")
-        self.assertIn("Pas par tour", refusal.message)
+        self.assertEqual(refusal.missing_quantity, "µm par impulsion")
+        self.assertIn("µm par impulsion", refusal.message)
 
     def test_grid_scan_is_refused_and_nothing_starts(self):
         dto = Scan2DConfigDTO(

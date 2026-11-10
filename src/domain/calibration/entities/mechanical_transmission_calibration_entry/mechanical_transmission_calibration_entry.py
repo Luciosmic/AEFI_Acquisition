@@ -4,9 +4,8 @@ Mechanical Transmission Calibration Entry Entity
 Responsibility:
 - Immutable, append-only record of how the bench's motion chain is set up:
   motor and stepper driver mountings (by identity), driver settings and
-  mechanical travel per motor revolution.
-- Derive the distance per motor pulse, and flag a driver current below the
-  motor's rating.
+  the distance travelled per motor pulse (increment), as characterized.
+- Flag a driver current below the motor's rating.
 """
 
 from dataclasses import dataclass
@@ -30,7 +29,7 @@ class MechanicalTransmissionCalibrationEntry:
     microsteps: int
     driver_current_a: float
     driver_peak_current_a: float
-    travel_per_motor_revolution_mm: float
+    microns_per_pulse: float
     recorded_at: datetime
 
     def __post_init__(self):
@@ -43,10 +42,8 @@ class MechanicalTransmissionCalibrationEntry:
                 f"driver_peak_current_a ({self.driver_peak_current_a}) must be >= "
                 f"driver_current_a ({self.driver_current_a})"
             )
-        if self.travel_per_motor_revolution_mm <= 0:
-            raise ValueError(
-                f"travel_per_motor_revolution_mm must be > 0, got {self.travel_per_motor_revolution_mm}"
-            )
+        if self.microns_per_pulse <= 0:
+            raise ValueError(f"microns_per_pulse must be > 0, got {self.microns_per_pulse}")
 
     @staticmethod
     def single(
@@ -55,7 +52,7 @@ class MechanicalTransmissionCalibrationEntry:
         microsteps: int,
         driver_current_a: float,
         driver_peak_current_a: float,
-        travel_per_motor_revolution_mm: float,
+        microns_per_pulse: float,
     ) -> "MechanicalTransmissionCalibrationEntry":
         """Mint a fresh entry for a newly set up motion chain."""
         return MechanicalTransmissionCalibrationEntry(
@@ -65,16 +62,9 @@ class MechanicalTransmissionCalibrationEntry:
             microsteps=microsteps,
             driver_current_a=driver_current_a,
             driver_peak_current_a=driver_peak_current_a,
-            travel_per_motor_revolution_mm=travel_per_motor_revolution_mm,
+            microns_per_pulse=microns_per_pulse,
             recorded_at=datetime.now(timezone.utc),
         )
-
-    def microns_per_pulse(self, full_steps_per_revolution: float) -> float:
-        """Distance travelled per motor pulse, from the motor's steps per
-        revolution (catalog) and this chain's microstepping and mechanics."""
-        if full_steps_per_revolution <= 0:
-            raise ValueError(f"full_steps_per_revolution must be > 0, got {full_steps_per_revolution}")
-        return 1000.0 * self.travel_per_motor_revolution_mm / (full_steps_per_revolution * self.microsteps)
 
     def driver_current_shortfall(self, rated_current_a: float) -> Optional[str]:
         """Warning when the driver delivers less than the motor's rated

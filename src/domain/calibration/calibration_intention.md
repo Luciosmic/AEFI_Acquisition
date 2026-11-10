@@ -39,7 +39,7 @@ breaking existing callers.
   `record_mechanical_transmission_calibration_entry`, emitting
   `MechanicalTransmissionCalibrationEntryAdded` — the motion chain as set up
   on the bench (motor and stepper driver mountings by identity, microsteps,
-  driver current, travel per motor revolution), source of the distance per
+  driver current, distance per motor pulse), source of the distance per
   motor pulse. Refused when no motor or no driver is mounted.
   `current_mechanical_transmission(entries, motor_mounting_id,
   driver_mounting_id)`: the latest entry set up with the motor and driver

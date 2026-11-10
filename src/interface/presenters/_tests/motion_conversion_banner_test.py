@@ -20,7 +20,7 @@ from interface.widgets.panels.motion_panel_compact import MotionPanelCompact
 from interface.widgets.panels.scan_control_panel import ScanControlPanel
 
 MISSING = MotionConversionStatusDTO(
-    is_available=False, motor_name="IGUS-S-AN-060-035-060", missing_quantity="Pas par tour",
+    is_available=False, motor_name="IGUS-S-AN-060-035-060", missing_quantity="µm par impulsion",
     where_to_enter="panneau Calibration, onglet « Moteurs »",
 )
 
@@ -38,7 +38,7 @@ class _MotionService:
 
 class _ScanService:
     def __init__(self):
-        self.refusal = ScanRefusedBenchNotCalibrated("IGUS", "Pas par tour", "onglet Moteurs")
+        self.refusal = ScanRefusedBenchNotCalibrated("IGUS", "µm par impulsion", "onglet Moteurs")
 
     def set_output_port(self, port):
         pass
@@ -71,7 +71,7 @@ def test_motion_presenter_publishes_the_missing_quantity_at_initialization():
     presenter.initialize()
 
     assert banners[-1].visible
-    assert "Pas par tour" in banners[-1].text
+    assert "µm par impulsion" in banners[-1].text
     assert "IGUS-S-AN-060-035-060" in banners[-1].text
     assert "Moteurs" in banners[-1].text
 
@@ -118,7 +118,7 @@ def test_scan_presenter_blocks_start_and_says_why():
     presenter.refresh_start_availability()
 
     assert not panel.btn_start.isEnabled()
-    assert "Pas par tour" in panel.lbl_start_blocked.text()
+    assert "µm par impulsion" in panel.lbl_start_blocked.text()
 
 
 def test_scan_start_request_refused_shows_the_typed_reason():
@@ -129,7 +129,7 @@ def test_scan_start_request_refused_shows_the_typed_reason():
 
     presenter.on_scan_start_requested({})
 
-    assert "Pas par tour" in messages[-1]
+    assert "µm par impulsion" in messages[-1]
 
 
 def test_scan_start_is_enabled_again_on_became_available():
@@ -155,6 +155,6 @@ def test_found_missing_event_refreshes_scan_start_availability():
     seen = []
     presenter.start_availability_changed.connect(seen.append)
 
-    bus.publish("motionconversionfoundmissing", MotionConversionFoundMissing("IGUS", "Pas par tour", "onglet"))
+    bus.publish("motionconversionfoundmissing", MotionConversionFoundMissing("IGUS", "µm par impulsion", "onglet"))
 
     assert seen and seen[-1].visible

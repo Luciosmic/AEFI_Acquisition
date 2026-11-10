@@ -98,7 +98,7 @@ class TestAcquisitionSnapshotReader(unittest.TestCase):
     def test_current_transmission_is_exported_with_its_factor_and_current_warning(self):
         calibration = Calibration()
         for kind, name, values in (
-            (HardwareComponentKind.MOTORS, "Igus", {"full_steps_per_revolution": 200, "rated_current_a": 4.2}),
+            (HardwareComponentKind.MOTORS, "Igus", {"rated_current_a": 4.2}),
             (HardwareComponentKind.STEPPER_DRIVER, "TB6600", {"max_current_a": 3.5}),
         ):
             self.components.add(calibration.record_hardware_component_characterization(kind, name, values))
@@ -108,12 +108,12 @@ class TestAcquisitionSnapshotReader(unittest.TestCase):
             for kind in (HardwareComponentKind.MOTORS, HardwareComponentKind.STEPPER_DRIVER)
         )
         self.transmissions.add(
-            calibration.record_mechanical_transmission_calibration_entry(motor, driver, 16, 3.5, 4.0, 69.76)
+            calibration.record_mechanical_transmission_calibration_entry(motor, driver, 16, 3.5, 4.0, 21.11)
         )
 
         hardware = self.reader.read()["hardware_configuration"]
 
-        self.assertAlmostEqual(hardware["mechanical_transmission"]["microns_per_pulse"], 21.8)
+        self.assertAlmostEqual(hardware["mechanical_transmission"]["microns_per_pulse"], 21.11)
         self.assertTrue(any("below motor rated current 4.2" in w for w in hardware["warnings"]))
 
     def test_present_config_files_land_under_their_section_key(self):

@@ -14,7 +14,6 @@ class MechanicalTransmissionCalibrationDTO:
     microsteps: int
     driver_current_a: float
     driver_peak_current_a: float
-    travel_per_motor_revolution_mm: float
     microns_per_pulse: float
     driver_current_warning: Optional[str]
     recorded_at: datetime

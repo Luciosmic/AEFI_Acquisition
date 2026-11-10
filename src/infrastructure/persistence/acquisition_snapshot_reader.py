@@ -220,7 +220,6 @@ class AcquisitionSnapshotReader:
         motor_values = Calibration.current_characterization(
             components.find_all(HardwareComponentKind.MOTORS), motor.component_name
         ).characterization.values
-        steps = motor_values.get("full_steps_per_revolution")
         rated_current = motor_values.get("rated_current_a")
         shortfall = entry.driver_current_shortfall(rated_current) if rated_current is not None else None
         if shortfall:
@@ -233,6 +232,5 @@ class AcquisitionSnapshotReader:
             "microsteps": entry.microsteps,
             "driver_current_a": entry.driver_current_a,
             "driver_peak_current_a": entry.driver_peak_current_a,
-            "travel_per_motor_revolution_mm": entry.travel_per_motor_revolution_mm,
-            "microns_per_pulse": entry.microns_per_pulse(steps) if steps else None,
+            "microns_per_pulse": entry.microns_per_pulse,
         }

@@ -28,7 +28,7 @@ class IApiMechanicalTransmissionCalibrationService(ABC):
         microsteps: int,
         driver_current_a: float,
         driver_peak_current_a: float,
-        travel_per_motor_revolution_mm: float,
+        microns_per_pulse: float,
     ) -> None: ...
 
     @abstractmethod

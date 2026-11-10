@@ -40,7 +40,18 @@ class RealMechanicalTransmissionCalibrationRepository(IMechanicalTransmissionCal
         logger.info("Saved mechanical transmission calibration entry %s", entry.entry_id)
 
     def find_all(self) -> List[MechanicalTransmissionCalibrationEntry]:
-        entries = [self._deserialize_entry(raw) for raw in self._load()["entries"]]
+        entries = []
+        for raw in self._load()["entries"]:
+            if "microns_per_pulse" not in raw:
+                # Entry from before 2026-11-10 (travel per motor revolution): kept in the
+                # file, ignored here — its distance per pulse was never measured.
+                logger.warning(
+                    "Ignoring legacy mechanical transmission entry %s (no microns_per_pulse): "
+                    "characterize the distance per pulse again",
+                    raw.get("entry_id"),
+                )
+                continue
+            entries.append(self._deserialize_entry(raw))
         logger.info("Found %d mechanical transmission calibration entries", len(entries))
         return entries
 
@@ -70,7 +81,7 @@ class RealMechanicalTransmissionCalibrationRepository(IMechanicalTransmissionCal
             "microsteps": entry.microsteps,
             "driver_current_a": entry.driver_current_a,
             "driver_peak_current_a": entry.driver_peak_current_a,
-            "travel_per_motor_revolution_mm": entry.travel_per_motor_revolution_mm,
+            "microns_per_pulse": entry.microns_per_pulse,
             "recorded_at": entry.recorded_at.isoformat(),
         }
 
@@ -83,6 +94,6 @@ class RealMechanicalTransmissionCalibrationRepository(IMechanicalTransmissionCal
             microsteps=int(raw["microsteps"]),
             driver_current_a=float(raw["driver_current_a"]),
             driver_peak_current_a=float(raw["driver_peak_current_a"]),
-            travel_per_motor_revolution_mm=float(raw["travel_per_motor_revolution_mm"]),
+            microns_per_pulse=float(raw["microns_per_pulse"]),
             recorded_at=datetime.fromisoformat(raw["recorded_at"]),
         )

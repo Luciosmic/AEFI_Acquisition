@@ -143,7 +143,7 @@ class Calibration:
         microsteps: int,
         driver_current_a: float,
         driver_peak_current_a: float,
-        travel_per_motor_revolution_mm: float,
+        microns_per_pulse: float,
     ) -> MechanicalTransmissionCalibrationEntry:
         """A transmission is set up with a mounted motor and a mounted
         driver: either missing, no transmission."""
@@ -159,7 +159,7 @@ class Calibration:
             microsteps,
             driver_current_a,
             driver_peak_current_a,
-            travel_per_motor_revolution_mm,
+            microns_per_pulse,
         )
         self._domain_events.append(MechanicalTransmissionCalibrationEntryAdded(entry=entry))
         return entry

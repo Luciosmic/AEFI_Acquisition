@@ -2,7 +2,7 @@
 
 ## Rationale
 
-Sans union d'erreurs nommée, `MotionControlService` renvoie des chaînes : l'interface ne peut pas distinguer « le banc n'est pas calibré, saisissez le pas par tour » de « le contrôleur ne répond pas ». Le premier doit mener l'opérateur au panneau Calibration, le second au banc.
+Sans union d'erreurs nommée, `MotionControlService` renvoie des chaînes : l'interface ne peut pas distinguer « le banc n'est pas calibré, saisissez les µm par impulsion » de « le contrôleur ne répond pas ». Le premier doit mener l'opérateur au panneau Calibration, le second au banc.
 
 ## Responsibility
 

@@ -8,7 +8,7 @@ independent of the concrete service.
 ## Responsibility
 
 - `record_calibration(microsteps, driver_current_a, driver_peak_current_a,
-  travel_per_motor_revolution_mm)`: record the motion chain as set up now.
+  microns_per_pulse)`: record the motion chain as set up now.
 - `get_current_calibration()`: the current transmission (or `None`).
 
 ## Design

@@ -9,7 +9,7 @@ grandeur (panneau Calibration, onglet « Moteurs ») applique la conversion en d
 
 À faire (pourquoi : l'opérateur ne doit pas avoir à éditer des fichiers ni relire les logs pour calibrer) :
 - [ ] Parcours de calibration de la transmission mécanique sans UI : `record_calibration` (micro-pas, courant,
-      avance par tour) n'a pas d'écran dédié ; aujourd'hui seule la graine `mechanical_transmission_seed.json`
+      µm par impulsion) n'a pas d'écran dédié ; aujourd'hui seule la graine `mechanical_transmission_seed.json`
       l'enregistre au premier démarrage. Un écran (ou un bouton « enregistrer la transmission ») est à décider.
 - [ ] Redémarrage requis : une transmission déjà appliquée n'est pas changée en session ; ajouter un état visible
       « transmission modifiée, redémarrer l'application » (voir `_system/ops/ponytail-debt.md`).
@@ -235,6 +235,7 @@ l'assemblage sur ce banc dans une calibration banc qui référence les montages 
    avance par tour moteur (69,76 mm). Une seule transmission pour X et Y.
 3. **Règles domaine** :
    - µm/impulsion = avance par tour ÷ (pas/tour du moteur × micro-pas) → 21,8.
+     **Remplacé le 2026-11-10** : l'entrée stocke directement µm/impulsion (21,11 mesuré au lidar à 1/16) ; l'avance par tour et les « pas par tour » du moteur n'existent plus.
    - Courant réglé < courant nominal du moteur → avertissement (non bloquant) affichant les
      deux valeurs du driver : « 3,5 A (4,0 A crête) < nominal moteur 4,2 A ». Permanent sur ce
      banc (le TB6600 plafonne sous 4,2 A) : c'est un fait connu, pas une erreur.
