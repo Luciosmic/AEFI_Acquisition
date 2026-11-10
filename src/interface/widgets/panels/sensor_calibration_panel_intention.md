@@ -35,7 +35,7 @@ so recorded calibrations were never used.
   formula. "Enregistrer calibration" then records the angles as a new
   calibration entry. The procedure text shows the convention; its reference
   definition is
-  `domain/calibration/value_objects/rotation_convention/rotation_convention_intention.md`.
+  `domain/test_bench/calibration/value_objects/rotation_convention/rotation_convention_intention.md`.
 - "Reset to Default": restart the tuning from the ideal angles (as a trial).
 - "Calibration automatique": disabled placeholder for a future automatic
   calibration service that will drive the same live preview with the same

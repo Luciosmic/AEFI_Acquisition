@@ -11,7 +11,7 @@ from application.services.synchronous_detection_service.dtos.sphere_phases_dto i
 from application.services.synchronous_detection_service.synchronous_detection_service import (
     SYNCHRONOUS_DETECTION_COMPENSATION_ENABLED_CHANGED_TOPIC,
 )
-from domain.calibration.events.synchronous_detection_compensation_enabled_changed.synchronous_detection_compensation_enabled_changed import (
+from domain.test_bench.calibration.events.synchronous_detection_compensation_enabled_changed.synchronous_detection_compensation_enabled_changed import (
     SynchronousDetectionCompensationEnabledChanged,
 )
 

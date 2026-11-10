@@ -7,8 +7,8 @@ from application.services.mechanical_transmission_calibration_service.mechanical
     MECHANICAL_TRANSMISSION_CALIBRATION_ENTRY_ADDED_TOPIC,
     MechanicalTransmissionCalibrationService,
 )
-from domain.calibration.calibration import Calibration
-from domain.calibration.value_objects.hardware_component_kind.hardware_component_kind import HardwareComponentKind
+from domain.test_bench.calibration.calibration import Calibration
+from domain.test_bench.calibration.value_objects.hardware_component_kind.hardware_component_kind import HardwareComponentKind
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
 from infrastructure.persistence.calibration.fake.fake_hardware_component_repository import (
     FakeHardwareComponentRepository,

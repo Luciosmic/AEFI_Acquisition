@@ -32,21 +32,21 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from domain.calibration.calibration import Calibration
-from domain.calibration.entities.source_geometry_calibration_entry.source_geometry_calibration_entry import (
+from domain.test_bench.calibration.calibration import Calibration
+from domain.test_bench.calibration.entities.source_geometry_calibration_entry.source_geometry_calibration_entry import (
     SourceGeometryCalibrationEntry,
 )
-from domain.calibration.errors.source_geometry_inconsistent_error import SourceGeometryInconsistentError
-from domain.calibration.services.source_frame_solver.source_frame_solver import SourceFrameSolver
-from domain.calibration.repositories.i_hardware_component_repository import IHardwareComponentRepository
-from domain.calibration.repositories.i_mechanical_transmission_calibration_repository import (
+from domain.test_bench.calibration.errors.source_geometry_inconsistent_error import SourceGeometryInconsistentError
+from domain.test_bench.calibration.services.source_frame_solver.source_frame_solver import SourceFrameSolver
+from domain.test_bench.calibration.repositories.i_hardware_component_repository import IHardwareComponentRepository
+from domain.test_bench.calibration.repositories.i_mechanical_transmission_calibration_repository import (
     IMechanicalTransmissionCalibrationRepository,
 )
-from domain.calibration.repositories.i_sensor_calibration_repository import ISensorCalibrationRepository
-from domain.calibration.repositories.i_source_geometry_calibration_repository import (
+from domain.test_bench.calibration.repositories.i_sensor_calibration_repository import ISensorCalibrationRepository
+from domain.test_bench.calibration.repositories.i_source_geometry_calibration_repository import (
     ISourceGeometryCalibrationRepository,
 )
-from domain.calibration.value_objects.hardware_component_kind.hardware_component_kind import (
+from domain.test_bench.calibration.value_objects.hardware_component_kind.hardware_component_kind import (
     HardwareComponentKind,
 )
 from infrastructure.hardware.micro_controller.hardware_config_resolution import resolve_config

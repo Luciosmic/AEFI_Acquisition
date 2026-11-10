@@ -28,10 +28,10 @@ from application.shared.acquisition_parameters.i_acquisition_conditions_port imp
 )
 from application.services.motion_control_service.ports.i_motion_port import IMotionPort
 from application.services.sensor_calibration_service.dtos.sensor_calibration_dto import ActiveSensorRotationDTO
-from domain.calibration.calibration import Calibration
-from domain.calibration.repositories.i_hardware_component_repository import IHardwareComponentRepository
-from domain.calibration.repositories.i_sensor_calibration_repository import ISensorCalibrationRepository
-from domain.calibration.value_objects.hardware_component_kind.hardware_component_kind import HardwareComponentKind
+from domain.test_bench.calibration.calibration import Calibration
+from domain.test_bench.calibration.repositories.i_hardware_component_repository import IHardwareComponentRepository
+from domain.test_bench.calibration.repositories.i_sensor_calibration_repository import ISensorCalibrationRepository
+from domain.test_bench.calibration.value_objects.hardware_component_kind.hardware_component_kind import HardwareComponentKind
 from domain.shared_kernel.operation_result import OperationResult
 
 logger = logging.getLogger(__name__)

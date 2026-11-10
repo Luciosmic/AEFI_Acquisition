@@ -8,10 +8,10 @@ Responsibility:
 
 from typing import Any, Dict
 
-from domain.calibration.value_objects.hardware_component_name.hardware_component_name import (
+from domain.test_bench.calibration.value_objects.hardware_component_name.hardware_component_name import (
     HardwareComponentName,
 )
-from domain.calibration.value_objects.hardware_signature.hardware_signature import HardwareSignature
+from domain.test_bench.calibration.value_objects.hardware_signature.hardware_signature import HardwareSignature
 
 # Keys written before the board fields became component references (2026-09-25).
 _LEGACY_KEYS = {

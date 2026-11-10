@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from domain.calibration.value_objects.rotation_convention.rotation_convention import RotationConvention
+from domain.test_bench.calibration.value_objects.rotation_convention.rotation_convention import RotationConvention
 from infrastructure.persistence.calibration.ideal_sensor_rotation_reader import IdealSensorRotationReader
 
 

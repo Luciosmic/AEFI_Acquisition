@@ -6,10 +6,10 @@ from application.services.source_geometry_calibration_service.source_geometry_ca
     SourceGeometryCalibrationService,
     SOURCE_GEOMETRY_CALIBRATION_ENTRY_ADDED_TOPIC,
 )
-from domain.calibration.entities.source_geometry_calibration_entry.source_geometry_calibration_entry import (
+from domain.test_bench.calibration.entities.source_geometry_calibration_entry.source_geometry_calibration_entry import (
     SourceGeometryCalibrationEntry,
 )
-from domain.calibration.value_objects.caliper_measurement.caliper_measurement import CaliperMeasurement
+from domain.test_bench.calibration.value_objects.caliper_measurement.caliper_measurement import CaliperMeasurement
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
 from infrastructure.persistence.calibration.fake.fake_source_geometry_calibration_repository import (
     FakeSourceGeometryCalibrationRepository,

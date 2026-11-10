@@ -1,6 +1,6 @@
 from uuid import uuid4
 
-from domain.calibration.entities.mechanical_transmission_calibration_entry.mechanical_transmission_calibration_entry import (
+from domain.test_bench.calibration.entities.mechanical_transmission_calibration_entry.mechanical_transmission_calibration_entry import (
     MechanicalTransmissionCalibrationEntry,
 )
 from infrastructure.persistence.calibration.fake.fake_mechanical_transmission_calibration_repository import (

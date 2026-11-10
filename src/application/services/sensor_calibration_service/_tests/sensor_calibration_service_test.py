@@ -17,16 +17,16 @@ from application.services.hardware_component_service.hardware_component_service 
 from infrastructure.persistence.calibration.fake.fake_source_geometry_calibration_repository import (
     FakeSourceGeometryCalibrationRepository,
 )
-from domain.calibration.entities.sensor_calibration_entry.sensor_calibration_entry import (
+from domain.test_bench.calibration.entities.sensor_calibration_entry.sensor_calibration_entry import (
     SensorCalibrationEntry,
 )
-from domain.calibration.events.hardware_component_events.hardware_component_events import (
+from domain.test_bench.calibration.events.hardware_component_events.hardware_component_events import (
     HardwareComponentMounted,
 )
-from domain.calibration.value_objects.hardware_component_kind.hardware_component_kind import (
+from domain.test_bench.calibration.value_objects.hardware_component_kind.hardware_component_kind import (
     HardwareComponentKind,
 )
-from domain.calibration.value_objects.sensor_rotation_angles.sensor_rotation_angles import (
+from domain.test_bench.calibration.value_objects.sensor_rotation_angles.sensor_rotation_angles import (
     SensorRotationAngles,
 )
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus

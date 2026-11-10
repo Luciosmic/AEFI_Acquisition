@@ -18,7 +18,7 @@ import logging
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-from domain.calibration.value_objects.hardware_signature.hardware_signature import HardwareSignature
+from domain.test_bench.calibration.value_objects.hardware_signature.hardware_signature import HardwareSignature
 
 logger = logging.getLogger(__name__)
 

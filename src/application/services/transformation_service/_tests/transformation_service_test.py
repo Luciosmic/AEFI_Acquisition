@@ -8,10 +8,10 @@ from application.services.transformation_service.dtos.transformation_dtos import
 from application.services.sensor_calibration_service.sensor_calibration_service import (
     ACTIVE_SENSOR_ROTATION_CHANGED_TOPIC,
 )
-from domain.calibration.events.active_sensor_rotation_changed.active_sensor_rotation_changed import (
+from domain.test_bench.calibration.events.active_sensor_rotation_changed.active_sensor_rotation_changed import (
     ActiveSensorRotationChanged,
 )
-from domain.calibration.value_objects.sensor_rotation_angles.sensor_rotation_angles import (
+from domain.test_bench.calibration.value_objects.sensor_rotation_angles.sensor_rotation_angles import (
     SensorRotationAngles,
 )
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
@@ -71,7 +71,7 @@ def _rz(deg):
 
 class TestRotationConventionGuard(unittest.TestCase):
     """Freezes the convention documented in
-    domain/calibration/value_objects/rotation_convention/rotation_convention_intention.md:
+    domain/test_bench/calibration/value_objects/rotation_convention/rotation_convention_intention.md:
     P = Rx(theta_x)·Ry(theta_y)·Rz(theta_z) is the mounting rotation (fixed sources
     axes, applied Z then Y then X); measurement E_sensor = Pᵀ·E_sources;
     coordinate transform E_sources = P·E_sensor."""

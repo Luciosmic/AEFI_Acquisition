@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from typing import Tuple
 
 from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
-from domain.shared_kernel.physical_bench_limits import PHYSICAL_X_MAX_MM, PHYSICAL_Y_MAX_MM
+from domain.test_bench.physical_bench_limits.physical_bench_limits import PHYSICAL_X_MAX_MM, PHYSICAL_Y_MAX_MM
 
 # Absorbs trig rounding (cos(90°) ~ 6e-17) so a line lying on a bench edge is accepted.
 _BOUNDS_TOLERANCE_MM = 1e-9

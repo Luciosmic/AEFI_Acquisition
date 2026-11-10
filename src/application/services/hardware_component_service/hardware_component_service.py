@@ -11,15 +11,15 @@ from application.services.hardware_component_service.dtos.hardware_component_dto
 from application.services.hardware_component_service.i_api_hardware_component_service import (
     IApiHardwareComponentService,
 )
-from domain.calibration.calibration import Calibration
-from domain.calibration.entities.hardware_component_characterization_entry.hardware_component_characterization_entry import (
+from domain.test_bench.calibration.calibration import Calibration
+from domain.test_bench.calibration.entities.hardware_component_characterization_entry.hardware_component_characterization_entry import (
     HardwareComponentCharacterizationEntry,
 )
-from domain.calibration.repositories.i_hardware_component_repository import IHardwareComponentRepository
-from domain.calibration.value_objects.hardware_component_name.hardware_component_name import (
+from domain.test_bench.calibration.repositories.i_hardware_component_repository import IHardwareComponentRepository
+from domain.test_bench.calibration.value_objects.hardware_component_name.hardware_component_name import (
     HardwareComponentName,
 )
-from domain.calibration.value_objects.hardware_component_kind.hardware_component_kind import (
+from domain.test_bench.calibration.value_objects.hardware_component_kind.hardware_component_kind import (
     HardwareComponentKind,
 )
 from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus

@@ -11,7 +11,7 @@ electrodes actually measure, and it captures the field's curvature across
 the sensor's finite extent instead of a point-gradient approximation.
 
 The cube's orientation reuses `SensorRotationAngles.mounting_matrix()`
-(`domain/calibration/value_objects/sensor_rotation_angles/`, the canonical
+(`domain/test_bench/calibration/value_objects/sensor_rotation_angles/`, the canonical
 source of truth for P since 2026-10-01; it replaced
 `external_modules/cube_visualizer/domain/sensor_rotation.py`, the user's
 2026-07-31 pointer, when the cube visualizer moved into `src/`) rather

@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from domain.calibration.value_objects.hardware_signature.hardware_signature import HardwareSignature
+from domain.test_bench.calibration.value_objects.hardware_signature.hardware_signature import HardwareSignature
 from infrastructure.persistence.calibration.hardware_signature_reader import HardwareSignatureReader
 
 

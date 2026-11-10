@@ -10,14 +10,14 @@ from __future__ import annotations
 
 from typing import List
 
-from domain.calibration.entities.hardware_component_characterization_entry.hardware_component_characterization_entry import (
+from domain.test_bench.calibration.entities.hardware_component_characterization_entry.hardware_component_characterization_entry import (
     HardwareComponentCharacterizationEntry,
 )
-from domain.calibration.entities.hardware_component_selection.hardware_component_selection import (
+from domain.test_bench.calibration.entities.hardware_component_selection.hardware_component_selection import (
     HardwareComponentSelection,
 )
-from domain.calibration.repositories.i_hardware_component_repository import IHardwareComponentRepository
-from domain.calibration.value_objects.hardware_component_kind.hardware_component_kind import (
+from domain.test_bench.calibration.repositories.i_hardware_component_repository import IHardwareComponentRepository
+from domain.test_bench.calibration.value_objects.hardware_component_kind.hardware_component_kind import (
     HardwareComponentKind,
 )
 

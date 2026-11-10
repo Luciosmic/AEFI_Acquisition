@@ -15,13 +15,13 @@ from __future__ import annotations
 
 from typing import List
 
-from domain.calibration.entities.synchronous_detection_phase_calibration_entry.synchronous_detection_phase_calibration_entry import (
+from domain.test_bench.calibration.entities.synchronous_detection_phase_calibration_entry.synchronous_detection_phase_calibration_entry import (
     SynchronousDetectionPhaseCalibrationEntry,
 )
-from domain.calibration.repositories.i_synchronous_detection_phase_calibration_repository import (
+from domain.test_bench.calibration.repositories.i_synchronous_detection_phase_calibration_repository import (
     ISynchronousDetectionPhaseCalibrationRepository,
 )
-from domain.calibration.value_objects.hardware_signature.hardware_signature import HardwareSignature
+from domain.test_bench.calibration.value_objects.hardware_signature.hardware_signature import HardwareSignature
 
 
 class FakeSynchronousDetectionPhaseCalibrationRepository(ISynchronousDetectionPhaseCalibrationRepository):

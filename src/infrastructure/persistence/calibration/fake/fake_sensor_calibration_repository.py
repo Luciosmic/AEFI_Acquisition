@@ -14,10 +14,10 @@ from __future__ import annotations
 
 from typing import List
 
-from domain.calibration.entities.sensor_calibration_entry.sensor_calibration_entry import (
+from domain.test_bench.calibration.entities.sensor_calibration_entry.sensor_calibration_entry import (
     SensorCalibrationEntry,
 )
-from domain.calibration.repositories.i_sensor_calibration_repository import (
+from domain.test_bench.calibration.repositories.i_sensor_calibration_repository import (
     ISensorCalibrationRepository,
 )
 

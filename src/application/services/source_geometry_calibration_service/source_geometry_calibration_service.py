@@ -14,17 +14,17 @@ from application.services.source_geometry_calibration_service.errors.source_geom
 from application.services.source_geometry_calibration_service.i_api_source_geometry_calibration_service import (
     IApiSourceGeometryCalibrationService,
 )
-from domain.calibration.calibration import Calibration
-from domain.calibration.entities.source_geometry_calibration_entry.source_geometry_calibration_entry import (
+from domain.test_bench.calibration.calibration import Calibration
+from domain.test_bench.calibration.entities.source_geometry_calibration_entry.source_geometry_calibration_entry import (
     SourceGeometryCalibrationEntry,
 )
-from domain.calibration.errors.source_geometry_inconsistent_error import SourceGeometryInconsistentError
-from domain.calibration.services.source_frame_solver.source_frame_solver import SourceFrameSolver
+from domain.test_bench.calibration.errors.source_geometry_inconsistent_error import SourceGeometryInconsistentError
+from domain.test_bench.calibration.services.source_frame_solver.source_frame_solver import SourceFrameSolver
 from domain.shared_kernel.operation_result import OperationResult
-from domain.calibration.repositories.i_source_geometry_calibration_repository import (
+from domain.test_bench.calibration.repositories.i_source_geometry_calibration_repository import (
     ISourceGeometryCalibrationRepository,
 )
-from domain.calibration.value_objects.caliper_measurement.caliper_measurement import CaliperMeasurement
+from domain.test_bench.calibration.value_objects.caliper_measurement.caliper_measurement import CaliperMeasurement
 from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
 
 SOURCE_GEOMETRY_CALIBRATION_ENTRY_ADDED_TOPIC = "sourcegeometrycalibrationentryadded"

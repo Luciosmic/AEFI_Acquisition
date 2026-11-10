@@ -20,18 +20,18 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
-from domain.calibration.entities.synchronous_detection_phase_calibration_entry.synchronous_detection_phase_calibration_entry import (
+from domain.test_bench.calibration.entities.synchronous_detection_phase_calibration_entry.synchronous_detection_phase_calibration_entry import (
     SynchronousDetectionPhaseCalibrationEntry,
 )
-from domain.calibration.repositories.i_synchronous_detection_phase_calibration_repository import (
+from domain.test_bench.calibration.repositories.i_synchronous_detection_phase_calibration_repository import (
     ISynchronousDetectionPhaseCalibrationRepository,
 )
-from domain.calibration.value_objects.hardware_signature.hardware_signature import HardwareSignature
+from domain.test_bench.calibration.value_objects.hardware_signature.hardware_signature import HardwareSignature
 from infrastructure.persistence.calibration.hardware_signature_json import (
     hardware_signature_from_json,
     hardware_signature_to_json,
 )
-from domain.calibration.value_objects.synchronous_detection_phase_calibration_point.synchronous_detection_phase_calibration_point import (
+from domain.test_bench.calibration.value_objects.synchronous_detection_phase_calibration_point.synchronous_detection_phase_calibration_point import (
     SynchronousDetectionPhaseCalibrationPoint,
 )
 

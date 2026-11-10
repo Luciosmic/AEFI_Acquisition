@@ -77,7 +77,7 @@
         "unit": "[V/m]/V"
       },
       "sources_to_sensor_rotation": {
-        "_note": "Ideal (nominal) mounting angles: default rotation (and 'Reset to Default' target) applied when no sensor calibration exists for the current source geometry (calibrated angles live in .aefi_acquisition/calibrations/sensor_calibration.json). Mounting angles P (bring the sensor from the sources frame to its current mounting). Reference definition of the frames (sensor / sources / bench) and of P: src/domain/calibration/value_objects/rotation_convention/rotation_convention_intention.md",
+        "_note": "Ideal (nominal) mounting angles: default rotation (and 'Reset to Default' target) applied when no sensor calibration exists for the current source geometry (calibrated angles live in .aefi_acquisition/calibrations/sensor_calibration.json). Mounting angles P (bring the sensor from the sources frame to its current mounting). Reference definition of the frames (sensor / sources / bench) and of P: src/domain/test_bench/calibration/value_objects/rotation_convention/rotation_convention_intention.md",
         "theta_x": 35.3,
         "theta_y": 45,
         "theta_z": 0,

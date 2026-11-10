@@ -21,14 +21,14 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
-from domain.calibration.entities.sensor_calibration_entry.sensor_calibration_entry import (
+from domain.test_bench.calibration.entities.sensor_calibration_entry.sensor_calibration_entry import (
     SensorCalibrationEntry,
 )
-from domain.calibration.repositories.i_sensor_calibration_repository import (
+from domain.test_bench.calibration.repositories.i_sensor_calibration_repository import (
     ISensorCalibrationRepository,
 )
-from domain.calibration.value_objects.rotation_convention.rotation_convention import RotationConvention
-from domain.calibration.value_objects.sensor_rotation_angles.sensor_rotation_angles import (
+from domain.test_bench.calibration.value_objects.rotation_convention.rotation_convention import RotationConvention
+from domain.test_bench.calibration.value_objects.sensor_rotation_angles.sensor_rotation_angles import (
     SensorRotationAngles,
 )
 

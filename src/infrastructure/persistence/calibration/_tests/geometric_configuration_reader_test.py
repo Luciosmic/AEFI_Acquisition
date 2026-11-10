@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from domain.calibration.value_objects.geometric_configuration_signature.geometric_configuration_signature import (
+from domain.test_bench.calibration.value_objects.geometric_configuration_signature.geometric_configuration_signature import (
     GeometricConfigurationSignature,
 )
 from infrastructure.persistence.calibration.geometric_configuration_reader import (

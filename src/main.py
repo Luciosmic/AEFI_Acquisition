@@ -111,7 +111,7 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
         MechanicalTransmissionCalibrationService,
     )
     from application.services.event_log_maintenance_service.event_log_maintenance_service import EventLogMaintenanceService
-    from domain.calibration.calibration import Calibration
+    from domain.test_bench.calibration.calibration import Calibration
     from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
     from application.services.motion_control_service.motion_control_service import MotionControlService
     from application.services.motion_control_service.motion_conversion_handler import MotionConversionHandler

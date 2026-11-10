@@ -174,7 +174,7 @@ Subtracts primary field using border reference.
 
 Rotates vectors from the sensor frame to the EF sources frame using quaternions.
 Angles define the mounting rotation P = Rx·Ry·Rz (extrinsic, scipy `'XYZ'`), which brings the sensor from the sources frame to its mounting;
-the rotator applies E_sources = P·E_sensor (see `src/domain/calibration/value_objects/rotation_convention/rotation_convention_intention.md`).
+the rotator applies E_sources = P·E_sensor (see `src/domain/test_bench/calibration/value_objects/rotation_convention/rotation_convention_intention.md`).
 
 **Key Methods**:
 - `rotate(data, angles)` - Complete rotation

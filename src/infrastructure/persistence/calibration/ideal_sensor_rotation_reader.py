@@ -22,8 +22,8 @@ import logging
 from pathlib import Path
 from typing import Optional
 
-from domain.calibration.value_objects.rotation_convention.rotation_convention import RotationConvention
-from domain.calibration.value_objects.sensor_rotation_angles.sensor_rotation_angles import (
+from domain.test_bench.calibration.value_objects.rotation_convention.rotation_convention import RotationConvention
+from domain.test_bench.calibration.value_objects.sensor_rotation_angles.sensor_rotation_angles import (
     SensorRotationAngles,
 )
 

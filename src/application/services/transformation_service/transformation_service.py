@@ -2,9 +2,9 @@ import logging
 from typing import Tuple, Optional
 import numpy as np
 
-from domain.calibration.value_objects.sensor_rotation_angles.sensor_rotation_angles import SensorRotationAngles
+from domain.test_bench.calibration.value_objects.sensor_rotation_angles.sensor_rotation_angles import SensorRotationAngles
 from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
-from domain.shared_kernel.events.sensor_transformation_angles_updated.sensor_transformation_angles_updated import SensorTransformationAnglesUpdated
+from domain.test_bench.calibration.events.sensor_transformation_angles_updated.sensor_transformation_angles_updated import SensorTransformationAnglesUpdated
 from application.services.sensor_calibration_service.sensor_calibration_service import (
     ACTIVE_SENSOR_ROTATION_CHANGED_TOPIC,
 )
@@ -20,7 +20,7 @@ class TransformationService:
     to its current mounting). The sensor measures E_sensor = Pᵀ·E_sources;
     the coordinate transform is its transpose.
     Definition of the frames and of P:
-    domain/calibration/value_objects/rotation_convention/rotation_convention_intention.md.
+    domain/test_bench/calibration/value_objects/rotation_convention/rotation_convention_intention.md.
 
     The angles follow the active sensor calibration
     (ActiveSensorRotationChanged, published by SensorCalibrationService).
