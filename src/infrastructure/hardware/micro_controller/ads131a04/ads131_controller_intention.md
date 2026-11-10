@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Controller bas-niveau de l'ADS131A04 (ADC 24-bit 4 canaux de Texas Instruments) via le MCU."
+code: ["[[src/infrastructure/hardware/micro_controller/ads131a04/adapter_adc_oversampling_ads131a04.py]]", "[[src/infrastructure/hardware/micro_controller/ads131a04/adapter_aefi_acquisition_ads131a04.py]]", "[[src/infrastructure/hardware/micro_controller/ads131a04/adapter_i_acquistion_port_ads131a04.py]]", "[[src/infrastructure/hardware/micro_controller/ads131a04/ads131_controller.py]]", "[[src/infrastructure/hardware/micro_controller/ads131a04/ads131a04_advanced_configurator.py]]", "[[src/infrastructure/hardware/micro_controller/ads131a04/ui_adapter_ads131a04.py]]"]
+cause_de_changement: outil
+---
 # ads131_controller — Intention
 
 ## Rationale

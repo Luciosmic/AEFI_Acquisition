@@ -1,0 +1,38 @@
+type: au.engine.repo::au-engine
+name: aefi-acquisition
+description: "Application DDD uv d'acquisition du banc AEFI, avec ses tests. Dossier de travail de la thèse, hors graphe de connaissance."
+deps:
+  - name: au-base-types
+  - name: au-writing-style
+  - name: au-rules
+  - name: au-agent-guides
+  - name: au-skills
+  - name: sk-weave
+  - name: au-govern
+  - name: au-ingest
+  - name: au-tree-research
+  - name: au-mcp-sdk
+  - name: au-competency
+  - name: agent-sessions
+  - name: au-avatar
+  - name: au-host-sdk
+  - name: au-mcp-adapter-codex
+  - name: aup-reader
+  - name: aup-workspace-sidebar
+  - name: bento
+  - name: column
+  - name: editor
+  - name: file-tree
+  - name: force-graph
+  - name: intent
+  - name: media-viewers
+  - name: placeholder-picker
+  - name: sandwich
+  - name: tabs
+  - name: terminal
+  - name: au-mcp-adapter-cc
+  - name: GRAPHE-THESE
+  - name: sh-agent-os
+  - name: solidai-ddd
+  - name: solidai-hexagonal
+  - name: solidai-atome

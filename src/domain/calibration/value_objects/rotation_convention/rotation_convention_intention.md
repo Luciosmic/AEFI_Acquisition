@@ -1,3 +1,7 @@
+---
+vault_ref: "0_inbox/old-notes-atomiques-ecrites-a-la-main/Opération de rotation du repère de la sonde.md"
+---
+
 # rotation_convention — Intention
 
 **This file is the reference definition of the sensor rotation convention.**

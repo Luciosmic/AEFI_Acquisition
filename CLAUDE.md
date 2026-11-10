@@ -2,7 +2,7 @@
 
 ## Projet
 
-Système d'acquisition pour l'AEFI (Électromagnétisme par Fluorescence d'Impédance). Pilote un banc de scan 2D avec excitation DDS (AD9106), ADC (ADS131A04), capteur électromagnétique, et post-traitement synchrone. Produit des cartographies 2D de mesures pour un problème direct 4 sphères.
+Système d'acquisition pour l'AEFI (Active Electric Field Imaging). Pilote un banc de scan 2D avec excitation DDS (AD9106), ADC (ADS131A04), capteur électromagnétique, et post-traitement synchrone. Produit des cartographies 2D de mesures pour un problème direct 4 sphères.
 
 ## Stack
 
@@ -79,20 +79,6 @@ Avant toute modification, identifier le worktree courant (nom de dossier et/ou b
 ## Documentation locale — notes hors-graphe
 
 Toute note documentant un run, une mesure, une acquisition ou une décision technique
-dans ce dossier suit la convention **hors-graphe** du vault de thèse.
-Définition canonique : [`../../../CLAUDE.md`](../../../CLAUDE.md) § « Hors-graphe notes ».
+dans ce dossier suit la convention **hors-graphe** de la thèse :
 
-### Règles condensées
-
-1. **Nom de fichier = claim en prose**, kebab-case sans accent, sans virgule.
-   `%→pct`, `.` décimal → `-`. Lisible dans « puisque [nom] ».
-2. **Frontmatter obligatoire** :
-   ```yaml
-   ---
-   in_graph: false
-   vault_ref: "0_inbox/EVENT - YYYY-MM-DD_topic.md"
-   generated: YYYY-MM-DD
-   ---
-   ```
-3. **Un EVENT dans `0_inbox/`** par cluster — point d'entrée unique vers le vault.
-4. **README parent** en prose au sommet d'un cluster multi-études.
+@../../_system/manual/convention-des-notes-hors-graphe.md

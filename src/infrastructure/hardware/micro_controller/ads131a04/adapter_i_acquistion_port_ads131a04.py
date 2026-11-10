@@ -15,7 +15,7 @@ Rationale:
 Design:
 - Hexagonal Architecture: Adapter pattern
 - Translates MeasurementUncertainty → ADCHardwareConfig
-- Formula: Uncertainty ≈ Vref / (2^N · Gain · √OSR) + other sources
+- Quantization estimate: Vref / (2^N · Gain · √OSR); input-referred noise is set by OSR, not by the digital gain (datasheet SBAS590E 8.1)
 """
 
 from dataclasses import dataclass
@@ -37,7 +37,7 @@ class ADCHardwareConfig:
     Hardware-specific ADC configuration.
     This is infrastructure, NOT domain.
     """
-    channel_gains: Dict[int, int]  # PGA gains per channel (1,2,4,8,16,32,64,128)
+    channel_gains: Dict[int, int]  # Digital gains per channel (1,2,4,8,16), datasheet SBAS590E 9.6.2
     oversampling_ratio: int  # OSR (averaging done by ADC hardware)
     reference_voltage: float  # Vref (V)
     sampling_rate_hz: float  # Output data rate after decimation
@@ -53,7 +53,7 @@ class ADS131A04Adapter(IAcquisitionPort):
     # ADS131A04 specifications
     ADC_RESOLUTION_BITS = 24
     DEFAULT_VREF = 2.5  # Volts
-    AVAILABLE_GAINS = [1, 2, 4, 8, 16, 32, 64, 128]
+    AVAILABLE_GAINS = [1, 2, 4, 8, 16]
     # OSR values from datasheet Table 30. Data Rate Settings
     AVAILABLE_OSR = [4096, 2048, 1024, 800, 768, 512, 400, 384, 256, 200, 192, 128, 96, 64, 48, 32]
     MAX_DATA_RATE_HZ = 128000  # Maximum output data rate

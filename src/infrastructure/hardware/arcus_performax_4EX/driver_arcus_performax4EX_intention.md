@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Wrapper bas-niveau autour de la DLL Arcus Performax 4EX."
+code: ["[[src/infrastructure/hardware/arcus_performax_4EX/adapter_arcus_speed_config.py]]", "[[src/infrastructure/hardware/arcus_performax_4EX/adapter_lifecycle_arcus_performax4EX.py]]", "[[src/infrastructure/hardware/arcus_performax_4EX/adapter_motion_port_arcus_performax4EX.py]]", "[[src/infrastructure/hardware/arcus_performax_4EX/arcus_advanced_configuration.py]]", "[[src/infrastructure/hardware/arcus_performax_4EX/composition_root_arcus.py]]", "[[src/infrastructure/hardware/arcus_performax_4EX/driver_arcus_performax4EX.py]]"]
+cause_de_changement: outil
+---
 # driver_arcus_performax4EX — Intention
 
 ## Rationale
