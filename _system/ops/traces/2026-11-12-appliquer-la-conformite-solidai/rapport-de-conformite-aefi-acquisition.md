@@ -66,7 +66,7 @@ Correction du rapport du 2026-11-11 : `.packmind/` y figurait comme non suivi.
 | Inject `orient-work::GRAPHE-THESE` | réglage de thèse : registre des travaux lu à l'ouverture |
 | Registre `../../PILOTAGE/_system/ops/registre-des-travaux.md` | réglage de thèse : registre unique de PILOTAGE |
 | `workspace.yaml` : GRAPHE-THESE et PILOTAGE en `edit` | réglage du dossier, hors standards |
-| 31 deps en plus (projections au-host, `sk-weave`, `au-writing-style`, `GRAPHE-THESE`…) | venues du modèle de workspace ou résolvant un inject ; aucune ne casse rien |
+| 27 deps en plus (projections au-host, `sk-weave`, `au-writing-style`, `GRAPHE-THESE`…) | venues du modèle de workspace ou résolvant un inject ; aucune ne casse rien |
 | 7 commandes `.claude/commands/` | procédures, pas standards ; elles ne lisent pas `.packmind/` |
 | `.claude/settings.json`, `.claude/hooks/`, `.mcp.json` | outillage du repo |
 | `.claude/worktrees/` | hors champ |
