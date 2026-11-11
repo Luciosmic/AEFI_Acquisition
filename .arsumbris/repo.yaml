@@ -38,3 +38,4 @@ deps:
   - name: solidai-atome
   - name: sk-writing-style
   - name: solidai-developpement
+  - name: solidai-verify
