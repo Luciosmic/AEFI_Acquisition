@@ -1,0 +1,2 @@
+00:19 | depart | quoi=appliquer la conformite solidai a AEFI_Acquisition | session=f6f1718f-0350-4d84-a878-2faf7a374b52
+00:19 | jalon | gate_acq=demon au-mcp absent au lancement, relance a la main, ecritures par le gate via client stdio | src_avant=git diff src vide
