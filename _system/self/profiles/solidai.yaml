@@ -1,0 +1,34 @@
+# Profil de code SolidAI d'AEFI_Acquisition, aligné le 2026-11-12 sur la référence du paquet
+# solidai-developpement (profiles/solidai.yaml). Un seul profil charge les trois niveaux de standards
+# (décision de l'humain, 2026-10-28). Les standards hors types arrivent par l'index
+# solidai-standards-hors-types, que co-developpeur charge.
+# solidknowledge.yaml reste, pour une session de connaissance.
+#
+# Écarts voulus avec la référence, propres à la thèse :
+#   1. l'inject orient-work::GRAPHE-THESE, qui fait lire le registre des travaux de la thèse à l'ouverture ;
+#   2. le hook registre-obligatoire pointe vers le registre de PILOTAGE, et non vers un registre local,
+#      car toutes les sessions de la thèse s'inscrivent dans ce registre unique.
+type: agent-profile::au-mcp-sdk
+inject:
+  # Socle, voix en français
+  - "[[core-profile::au-rules]]"
+  - "[[voix::sk-writing-style]]"
+  - "[[capture-correction::au-govern]]"
+  - "[[espace-de-travail-agents::sh-agent-os]]"
+  - "[[la-frontiere-du-quoi-valide::sh-agent-os]]"
+  - "[[repondre-a-l-humain::sh-agent-os]]"
+  - "[[ouvrir-dans-obsidian::sh-agent-os]]"
+  # Écart de thèse 1 : registre des travaux de la thèse, tenu dans PILOTAGE
+  - "[[orient-work::GRAPHE-THESE]]"
+  # Développement
+  - "[[co-developpeur::solidai-developpement]]"
+  # Standards SolidAI, un index par niveau
+  - "[[solidai-atome-choisir-le-type::solidai-atome]]"
+  - "[[solidai-hexagonal-choisir-le-type::solidai-hexagonal]]"
+  - "[[solidai-ddd-choisir-le-type::solidai-ddd]]"
+# Refuse la première mutation d'une session non inscrite au registre des travaux
+# (chemin relatif à la racine du workspace servi).
+# Écart de thèse 2 : le registre est celui de PILOTAGE, partagé par tous les repos de la thèse.
+hookConfig:
+  - type: mcp.hook.registre-obligatoire::sh-agent-os
+    registre: ../../PILOTAGE/_system/ops/registre-des-travaux.md
