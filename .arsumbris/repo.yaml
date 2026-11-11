@@ -36,3 +36,4 @@ deps:
   - name: solidai-ddd
   - name: solidai-hexagonal
   - name: solidai-atome
+  - name: sk-writing-style
