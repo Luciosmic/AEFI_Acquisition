@@ -26,8 +26,8 @@ from domain.step_scan.value_objects.scan_status.scan_status import ScanStatus
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
 from infrastructure.execution.event_bus_motion_synchronizer import EventBusMotionSynchronizer
 from infrastructure.execution.thread_pool_task_runner import ThreadPoolTaskRunner
-from infrastructure.hardware.arcus_performax_4EX.adapter_motion_port_arcus_performax4EX import ArcusAdapter
-from infrastructure.hardware.arcus_performax_4EX.fake.fake_arcus_performax4ex_controller import (
+from infrastructure.hardware.arcus_performax_4ex.adapter_motion_port_arcus_performax4ex import ArcusAdapter
+from infrastructure.hardware.arcus_performax_4ex.fake.fake_arcus_performax4ex_controller import (
     FakeArcusPerformax4EXController,
 )
 from infrastructure.mocks.adapter_mock_i_acquisition_port import MockAcquisitionPort

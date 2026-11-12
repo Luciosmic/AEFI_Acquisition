@@ -5,7 +5,7 @@ This test verifies that the ArcusPerformaxLifecycleAdapter can successfully
 initialize the hardware at software startup, following the pattern used in main.py.
 
 Usage:
-    python -m src.infrastructure.hardware.arcus_performax_4EX.tests.test_lifecycle_initialization
+    python -m src.infrastructure.hardware.arcus_performax_4ex.tests.test_lifecycle_initialization
 """
 
 import sys
@@ -13,15 +13,15 @@ import unittest
 from pathlib import Path
 
 # Add src directory to path
-# Path structure: .../src/infrastructure/hardware/arcus_performax_4EX/tests/test_lifecycle_initialization.py
-# parents[0] = tests/, [1] = arcus_performax_4EX/, [2] = hardware/, [3] = infrastructure/, [4] = src/
+# Path structure: .../src/infrastructure/hardware/arcus_performax_4ex/tests/test_lifecycle_initialization.py
+# parents[0] = tests/, [1] = arcus_performax_4ex/, [2] = hardware/, [3] = infrastructure/, [4] = src/
 src_dir = Path(__file__).resolve().parents[4]
 sys.path.insert(0, str(src_dir))
 
 from tool.diagram_friendly_test import DiagramFriendlyTest
 
-from infrastructure.hardware.arcus_performax_4EX.adapter_motion_port_arcus_performax4EX import ArcusAdapter
-from infrastructure.hardware.arcus_performax_4EX.adapter_lifecycle_arcus_performax4EX import ArcusPerformaxLifecycleAdapter
+from infrastructure.hardware.arcus_performax_4ex.adapter_motion_port_arcus_performax4ex import ArcusAdapter
+from infrastructure.hardware.arcus_performax_4ex.adapter_lifecycle_arcus_performax4ex import ArcusPerformaxLifecycleAdapter
 
 
 class TestArcusLifecycleInitialization(DiagramFriendlyTest):

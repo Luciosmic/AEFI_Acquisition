@@ -24,4 +24,4 @@ bouge dans le temps, mais dans un temps qu'on peut accélérer.
   mouvements n'est pas simulé : la calibration ne dépend que de la position pendant
   le mouvement, pas de la durée exacte d'un déplacement court.
 - Homing instantané (contrat bloquant) : sa durée n'a pas d'effet sur la mesure.
-- Co-localisé avec l'adaptateur réel (`infrastructure/hardware/arcus_performax_4EX/fake/`).
+- Co-localisé avec l'adaptateur réel (`infrastructure/hardware/arcus_performax_4ex/fake/`).

@@ -34,7 +34,7 @@ from application.services.motion_control_service.ports.motion_conversion_unavail
     MotionConversionUnavailableError,
 )
 from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
-from infrastructure.hardware.arcus_performax_4EX.driver_arcus_performax4EX import (
+from infrastructure.hardware.arcus_performax_4ex.driver_arcus_performax4ex import (
     ArcusPerformax4EXController,
 )
 

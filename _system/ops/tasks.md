@@ -429,7 +429,7 @@ explicite.
 
 **Mise à jour 2026-10-01 (worktree `dev_scan`, à reporter dans `dev_hardware`)** : la durée des
 *déplacements* est maintenant fidèle. Caractériseur banc
-`infrastructure/hardware/arcus_performax_4EX/characterization/` (360 mouvements, modèle
+`infrastructure/hardware/arcus_performax_4ex/characterization/` (360 mouvements, modèle
 `t = t0 + max(|dx|,|dy|)/v`, synthèse commitée dans `results/`) → constantes nommées dans
 `MockMotionPort` (niveau port, exact) et `FakeArcusPerformax4EXController` (niveau contrôleur,
 exact ; vu depuis le port, t0 sous-estimé d'environ 0,19 s faute de latence USB simulée). Restent

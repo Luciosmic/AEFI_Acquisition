@@ -6,7 +6,7 @@ get_status, from the MST status bits 0x010 / 0x020).
 
 import unittest
 
-from infrastructure.hardware.arcus_performax_4EX.driver_arcus_performax4EX import ArcusPerformax4EXController
+from infrastructure.hardware.arcus_performax_4ex.driver_arcus_performax4ex import ArcusPerformax4EXController
 
 
 class _StubStage:

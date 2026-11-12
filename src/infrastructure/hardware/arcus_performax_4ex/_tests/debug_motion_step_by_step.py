@@ -18,7 +18,7 @@ else:
     print("Error: Could not find 'src' directory")
     sys.exit(1)
 
-from infrastructure.hardware.arcus_performax_4EX.composition_root_arcus import ArcusCompositionRoot
+from infrastructure.hardware.arcus_performax_4ex.composition_root_arcus import ArcusCompositionRoot
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
 from PyQt6.QtCore import QCoreApplication
 

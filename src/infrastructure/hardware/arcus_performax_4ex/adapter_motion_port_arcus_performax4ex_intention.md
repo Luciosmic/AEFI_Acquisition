@@ -1,4 +1,4 @@
-# adapter_motion_port_arcus_performax4EX — Intention
+# adapter_motion_port_arcus_performax4ex — Intention
 
 ## Rationale
 

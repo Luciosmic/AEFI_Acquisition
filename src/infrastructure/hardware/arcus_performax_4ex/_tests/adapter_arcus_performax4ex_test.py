@@ -2,7 +2,7 @@
 Test Arcus Adapter with real hardware.
 
 Usage:
-    python -m src.infrastructure.arcus_performax_4EX.adapter_arcus_performax4EX_test
+    python -m src.infrastructure.arcus_performax_4ex.adapter_arcus_performax4ex_test
 """
 
 import sys
@@ -12,7 +12,7 @@ from pathlib import Path
 src_dir = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(src_dir))
 
-from infrastructure.arcus_performax_4EX.adapter_arcus_performax4EX import ArcusAdapter
+from infrastructure.arcus_performax_4ex.adapter_arcus_performax4ex import ArcusAdapter
 from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
 
 

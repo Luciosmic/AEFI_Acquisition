@@ -8,8 +8,8 @@ src_path = Path(__file__).resolve().parent.parent.parent.parent.parent
 if str(src_path) not in sys.path:
     sys.path.append(str(src_path))
 
-from infrastructure.hardware.arcus_performax_4EX.adapter_arcus_speed_config import ArcusSpeedConfigAdapter
-from infrastructure.hardware.arcus_performax_4EX.driver_arcus_performax4EX import ArcusPerformax4EXController
+from infrastructure.hardware.arcus_performax_4ex.adapter_arcus_speed_config import ArcusSpeedConfigAdapter
+from infrastructure.hardware.arcus_performax_4ex.driver_arcus_performax4ex import ArcusPerformax4EXController
 
 class TestArcusDecelerationConfig(unittest.TestCase):
     def setUp(self):

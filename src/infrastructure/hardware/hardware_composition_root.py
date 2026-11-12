@@ -27,7 +27,7 @@ from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
 
 from infrastructure.hardware.lsm9ds1.adapter_inertial_probe_stream_port import Lsm9ds1InertialProbeStreamAdapter
 from infrastructure.hardware.lsm9ds1.lsm9ds1_config_loader import Lsm9ds1Config
-from infrastructure.hardware.arcus_performax_4EX.composition_root_arcus import ArcusCompositionRoot
+from infrastructure.hardware.arcus_performax_4ex.composition_root_arcus import ArcusCompositionRoot
 from infrastructure.hardware.micro_controller.mcu_composition_root import MCUCompositionRoot
 from infrastructure.hardware.narda_ep600.adapter_electric_field_probe_port import NardaEP601ProbeAdapter
 
@@ -59,7 +59,7 @@ class HardwareCompositionRoot:
             logger.info("Motion -> real (ArcusCompositionRoot)")
             self.arcus_root = ArcusCompositionRoot(event_bus=event_bus)
         else:
-            from infrastructure.hardware.arcus_performax_4EX.fake.fake_arcus_performax4ex_controller import (
+            from infrastructure.hardware.arcus_performax_4ex.fake.fake_arcus_performax4ex_controller import (
                 FakeArcusPerformax4EXController,
             )
             # ponytail: the mock reads the same runtime calibration as the real

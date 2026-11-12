@@ -8,7 +8,7 @@ displacement, per speed mode, and fits  t = t0 + max(|dx|, |dy|) / v
 - port:       ArcusAdapter.move_to -> MotionCompleted event
 
 Usage (from the repo root, app CLOSED, bench clear):
-    uv run python src/infrastructure/hardware/arcus_performax_4EX/characterization/motion_timing_characterizer.py
+    uv run python src/infrastructure/hardware/arcus_performax_4ex/characterization/motion_timing_characterizer.py
     ... --dry-run          # FakeArcusPerformax4EXController, no hardware
     ... --modes medium --reps 1 --distances 5 50
     ... --microns-per-pulse 21.8   # override the recorded mechanical transmission
@@ -39,7 +39,7 @@ if str(_SRC) not in sys.path:
 
 from domain.shared_kernel.value_objects.geometric.position_2d import Position2D  # noqa: E402
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus  # noqa: E402
-from infrastructure.hardware.arcus_performax_4EX.composition_root_arcus import ArcusCompositionRoot  # noqa: E402
+from infrastructure.hardware.arcus_performax_4ex.composition_root_arcus import ArcusCompositionRoot  # noqa: E402
 from application.services.mechanical_transmission_calibration_service.mechanical_transmission_calibration_service import (  # noqa: E402
     MechanicalTransmissionCalibrationService,
 )
@@ -196,7 +196,7 @@ def main(argv: Optional[Sequence[str]] = None) -> Optional[Path]:
 
     controller = None
     if args.dry_run:
-        from infrastructure.hardware.arcus_performax_4EX.fake.fake_arcus_performax4ex_controller import (
+        from infrastructure.hardware.arcus_performax_4ex.fake.fake_arcus_performax4ex_controller import (
             FakeArcusPerformax4EXController,
         )
         controller = FakeArcusPerformax4EXController()

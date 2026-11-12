@@ -12,11 +12,11 @@ from application.services.raw_increment_motion.ports.raw_increment_motion_error 
     RawIncrementMotionError,
 )
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
-from infrastructure.hardware.arcus_performax_4EX.adapter_motion_port_arcus_performax4EX import ArcusAdapter
-from infrastructure.hardware.arcus_performax_4EX.adapter_raw_increment_motion_arcus import (
+from infrastructure.hardware.arcus_performax_4ex.adapter_motion_port_arcus_performax4ex import ArcusAdapter
+from infrastructure.hardware.arcus_performax_4ex.adapter_raw_increment_motion_arcus import (
     ArcusRawIncrementMotionAdapter,
 )
-from infrastructure.hardware.arcus_performax_4EX.fake.fake_arcus_performax4ex_controller import (
+from infrastructure.hardware.arcus_performax_4ex.fake.fake_arcus_performax4ex_controller import (
     FakeArcusPerformax4EXController,
 )
 

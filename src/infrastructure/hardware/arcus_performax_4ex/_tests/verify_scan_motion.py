@@ -21,9 +21,9 @@ else:
 
 # Import directly from packages (assuming src is root)
 try:
-    from infrastructure.hardware.arcus_performax_4EX.composition_root_arcus import ArcusCompositionRoot
+    from infrastructure.hardware.arcus_performax_4ex.composition_root_arcus import ArcusCompositionRoot
 except ImportError:
-    from infrastructure.hardware.arcus_performax_4EX.arcus_composition_root import ArcusCompositionRoot
+    from infrastructure.hardware.arcus_performax_4ex.arcus_composition_root import ArcusCompositionRoot
 
 from infrastructure.hardware.micro_controller.mcu_composition_root import MCUCompositionRoot
 from application.services.scan_application_service.scan_application_service import ScanApplicationService

@@ -1,4 +1,4 @@
-# adapter_lifecycle_arcus_performax4EX — Intention
+# adapter_lifecycle_arcus_performax4ex — Intention
 
 ## Rationale
 

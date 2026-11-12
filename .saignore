@@ -5,4 +5,4 @@
 archives/
 
 # Binaires et en-têtes du fabricant, chargés par chemin relatif, à ne pas renommer.
-src/infrastructure/hardware/arcus_performax_4EX/DLL64/
+src/infrastructure/hardware/arcus_performax_4ex/DLL64/

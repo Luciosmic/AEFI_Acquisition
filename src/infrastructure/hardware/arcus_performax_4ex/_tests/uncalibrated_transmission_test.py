@@ -12,11 +12,11 @@ from application.services.motion_control_service.ports.motion_conversion_unavail
     MotionConversionUnavailableError,
 )
 from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
-from infrastructure.hardware.arcus_performax_4EX.adapter_lifecycle_arcus_performax4EX import (
+from infrastructure.hardware.arcus_performax_4ex.adapter_lifecycle_arcus_performax4ex import (
     ArcusPerformaxLifecycleAdapter,
 )
-from infrastructure.hardware.arcus_performax_4EX.adapter_motion_port_arcus_performax4EX import ArcusAdapter
-from infrastructure.hardware.arcus_performax_4EX.fake.fake_arcus_performax4ex_controller import (
+from infrastructure.hardware.arcus_performax_4ex.adapter_motion_port_arcus_performax4ex import ArcusAdapter
+from infrastructure.hardware.arcus_performax_4ex.fake.fake_arcus_performax4ex_controller import (
     FakeArcusPerformax4EXController,
 )
 
@@ -68,7 +68,7 @@ class UncalibratedAdapterTest(unittest.TestCase):
                 records.append(record)
 
         handler = Collector(level=logging.DEBUG)
-        logger = logging.getLogger("infrastructure.hardware.arcus_performax_4EX.adapter_motion_port_arcus_performax4EX")
+        logger = logging.getLogger("infrastructure.hardware.arcus_performax_4ex.adapter_motion_port_arcus_performax4ex")
         previous_level = logger.level
         logger.setLevel(logging.DEBUG)
         logger.addHandler(handler)

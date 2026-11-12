@@ -1,5 +1,5 @@
 @startuml
-title arcus_performax4EX_config_provider
+title arcus_performax4ex_config_provider
 
 interface IHardwareConfigProvider {
   +hardware_id: str

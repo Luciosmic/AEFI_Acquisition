@@ -4,9 +4,9 @@
 Ce module implémente le contrôle des moteurs pas-à-pas Arcus Performax 4EX qui pilotent les axes X et Y du banc de scan. Il isole la dépendance à la bibliothèque `pylablib` et au protocole série propriétaire Arcus derrière les interfaces DDD.
 
 ## Responsibility
-- `ArcusPerformax4EXController` (`driver_arcus_performax4EX.py`) : encapsuler la communication bas-niveau avec le contrôleur Arcus (connexion, déplacement en steps, homing, lecture position, vitesse). Organisé en QCS (Setup/Command/Query).
-- `ArcusAdapter` (`adapter_motion_port_arcus_performax4EX.py`) : implémenter `IMotionPort`. Convertit les positions mm en steps (calibration : µm/step configurable), gère un worker thread et un monitor thread pour asynchroniser les commandes et publier les événements `MotionCompleted/Failed` et `PositionUpdated` sur le bus domaine.
-- `ArcusPerformaxLifecycleAdapter` (`adapter_lifecycle_arcus_performax4EX.py`) : implémenter `IHardwareInitializationPort`. Orchestre la connexion du contrôleur et l'activation de l'adaptateur lors du démarrage système.
+- `ArcusPerformax4EXController` (`driver_arcus_performax4ex.py`) : encapsuler la communication bas-niveau avec le contrôleur Arcus (connexion, déplacement en steps, homing, lecture position, vitesse). Organisé en QCS (Setup/Command/Query).
+- `ArcusAdapter` (`adapter_motion_port_arcus_performax4ex.py`) : implémenter `IMotionPort`. Convertit les positions mm en steps (calibration : µm/step configurable), gère un worker thread et un monitor thread pour asynchroniser les commandes et publier les événements `MotionCompleted/Failed` et `PositionUpdated` sur le bus domaine.
+- `ArcusPerformaxLifecycleAdapter` (`adapter_lifecycle_arcus_performax4ex.py`) : implémenter `IHardwareInitializationPort`. Orchestre la connexion du contrôleur et l'activation de l'adaptateur lors du démarrage système.
 
 ## Design
 - L'architecture worker/monitor sépare la file de commandes (séquentielle) du monitoring de position (polling 150 ms) pour ne jamais bloquer le thread principal.

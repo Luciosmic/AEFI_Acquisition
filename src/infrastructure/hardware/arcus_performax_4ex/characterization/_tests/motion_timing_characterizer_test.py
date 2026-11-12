@@ -3,7 +3,7 @@ import json
 
 import pytest
 
-from infrastructure.hardware.arcus_performax_4EX.characterization.motion_timing_characterizer import (
+from infrastructure.hardware.arcus_performax_4ex.characterization.motion_timing_characterizer import (
     Move, fit, main, plan_moves,
 )
 

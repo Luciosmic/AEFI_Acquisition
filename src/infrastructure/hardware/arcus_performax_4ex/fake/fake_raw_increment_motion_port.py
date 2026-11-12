@@ -14,7 +14,7 @@ from application.services.raw_increment_motion.ports.i_raw_increment_motion_port
 from application.services.raw_increment_motion.ports.raw_increment_motion_error import (
     RawIncrementMotionError,
 )
-from infrastructure.hardware.arcus_performax_4EX.fake.fake_arcus_performax4ex_controller import (
+from infrastructure.hardware.arcus_performax_4ex.fake.fake_arcus_performax4ex_controller import (
     FAKE_PLUS_LIMIT_INCREMENTS,
 )
 

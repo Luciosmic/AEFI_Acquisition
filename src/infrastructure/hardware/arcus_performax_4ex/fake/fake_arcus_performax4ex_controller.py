@@ -10,7 +10,7 @@ import threading
 import time
 from typing import Dict, List, Optional, Tuple
 
-from infrastructure.hardware.arcus_performax_4EX.driver_arcus_performax4EX import AxisParams
+from infrastructure.hardware.arcus_performax_4ex.driver_arcus_performax4ex import AxisParams
 
 # Homing only — move_to/move_by follow the measured timing below.
 _SIMULATED_MOVE_DELAY_S = 0.2

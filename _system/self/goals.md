@@ -556,7 +556,7 @@ fly_scan/
 **Contraintes hardware à confirmer** :
 - Fréquence d'acquisition ADC en mode continu (ADS131A04 → 8 kSPS max)
 - Latence USB vers Arcus DMX pour les horodatages t_start/t_end
-  - ponytail: `_run_worker_loop` dans `adapter_motion_port_arcus_performax4EX.py:190` capture déjà `start_time = time.time()` juste avant `_internal_move_to()` — c'est le vrai instant de dispatch hardware (queue déjà vidée), pas l'instant d'enqueue de `move_to()`. Un `MotionStarted`-like event existait autrefois publié depuis `move_to()` (donc à l'enqueue, pas au dispatch) ; il a été supprimé (2026-07) car sans abonné. Pour `t_start` de `FlyScanLine`, republier depuis ce point précis du worker plutôt que depuis `move_to()`.
+  - ponytail: `_run_worker_loop` dans `adapter_motion_port_arcus_performax4ex.py:190` capture déjà `start_time = time.time()` juste avant `_internal_move_to()` — c'est le vrai instant de dispatch hardware (queue déjà vidée), pas l'instant d'enqueue de `move_to()`. Un `MotionStarted`-like event existait autrefois publié depuis `move_to()` (donc à l'enqueue, pas au dispatch) ; il a été supprimé (2026-07) car sans abonné. Pour `t_start` de `FlyScanLine`, republier depuis ce point précis du worker plutôt que depuis `move_to()`.
 - Buffer mémoire pour une ligne (à calculer selon vitesse × durée de ligne)
 
 **Mitigation** : implémenter d'abord un "fly-scan simulé" — rejouer un step-scan existant en mode continu pour valider la corrélation avant l'intégration hardware.

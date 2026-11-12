@@ -4,7 +4,7 @@ from application.services.raw_increment_motion.ports.raw_increment_motion_error 
     RawIncrementMotionError,
 )
 from infrastructure.execution.fake.fake_clock import FakeClock
-from infrastructure.hardware.arcus_performax_4EX.fake.fake_raw_increment_motion_port import (
+from infrastructure.hardware.arcus_performax_4ex.fake.fake_raw_increment_motion_port import (
     FakeRawIncrementMotionPort,
 )
 
