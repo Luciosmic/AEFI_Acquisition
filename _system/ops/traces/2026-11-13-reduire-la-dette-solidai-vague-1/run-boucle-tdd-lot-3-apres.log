@@ -1,0 +1,5 @@
+atomes src/infrastructure/acquisition_conditions/fake
+pytest VERT tests=4 verts=4 rouges=0 nouveaux-rouges=0 anciens-rouges=0 verts-sans-code=0
+verify CASSE nouvelles=solidai-fake-sans-test-de-contrat,solidai-infrastructure-importe-hors-des-ports anciennes=solidai-intention-non-typee | src/infrastructure/acquisition_conditions/fake/fake_acquisition_conditions.py:10 solidai-infrastructure-importe-hors-des-ports src/infrastructure/acquisition_conditions/fake/fake_acquisition_conditions.py:23 solidai-infrastructure-importe-hors-des-ports src/infrastructure/acquisition_conditions/fake/fake_acquisition_conditions.py:None solidai-fake-sans-test-de-contrat src/infrastructure/acquisition_conditions/fake/fake_acquisition_conditions_intention.md:None solidai-intention-non-typee
+graphe CASSE nouveaux=R7 anciens=- | R7 fake_acquisition_conditions -> acquisition_conditions_dtos ; R7 fake_acquisition_conditions -> i_acquisition_conditions_port
+verdict CASSE cause=verify:solidai-fake-sans-test-de-contrat,verify:solidai-infrastructure-importe-hors-des-ports,graphe:R7
