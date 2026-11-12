@@ -3,3 +3,6 @@
 00:06 | jalon | registre=inscrit | autre_session_acq=aucune | dernier_commit=il y a 40 min
 00:07 | jalon | tri | erreurs=1311 lots=131 mecaniques=22 (456 erreurs) | log=run-tri-avant.txt
 00:08 | annonce | commande=pytest src reference + solidai verify reference | duree_estimee=3-5 min | arret=timeout 20 min | logs=run-pytest-reference.log, run-verify-reference.json
+00:13 | jalon | reference | pytest=1707 reussis, 3 sautes, 248 sous-tests, 0 echec (176 s) | verify=1311 erreurs, 63 avertissements | comptes=run-verify-reference-comptes.json
+00:14 | decision | lots retenus=3, 7, 8 | sautes=1, 2, 5 (renomment arcus_performax_4EX), 4 et 6 (destination a juger), 9-15 (changent la logique), 16-20 (variante signature du cas d'usage, pas un gel), 21-22 (Enum, Protocol, ABC : faux positifs) | constats a ecrire
+00:15 | jalon | lot=3 | code=solidai-fake-mal-place (reel-en-place) | atome=src/infrastructure/acquisition_conditions/fake | geste=fake_acquisition_conditions_port -> fake_acquisition_conditions, imports suivis
