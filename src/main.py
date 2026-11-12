@@ -473,6 +473,7 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
         task_runner=task_runner,
         software_provenance_port=software_provenance,
         usb_latency_timer_port=usb_latency_timer,
+        position_increments_port=hw.position_increments_port,
     )
     logger.info("Services -> ScanExportService created")
 

@@ -276,6 +276,12 @@ exports :
   référentiel centré se retrouve comme le milieu de ces extrémités. Le champ
   `components.motors.settings.referential` (1.0) est retiré : il recopiait le réglage
   d'affichage, pas un fait de l'acquisition, et pouvait contredire les colonnes de positions.
+- **Incréments par point (1.1, CSV)** : à côté de `x`, `y` (mm), chaque point écrit
+  `x_increments_commanded` / `y_increments_commanded` (ce que la commande de mouvement a envoyé au
+  contrôleur, même conversion qu'elle ; à ±1 incrément en scan Fly dont les positions sont projetées)
+  et `x_increments_read` / `y_increments_read` (ce que le contrôleur rapporte à l'enregistrement du
+  point ; vide en scan Fly, les axes bougeant). Vide aussi sans transmission appliquée : jamais une
+  valeur devinée. Un scan s'y rejoue quel que soit le facteur µm/incrément. Le HDF5 n'a pas ces colonnes.
 - **Pas des moteurs (1.1)** : `components.motors.settings.step_size` est la transmission
   mécanique appliquée au mouvement (µm par incrément), plus la valeur d'un fichier de
   configuration Arcus que plus rien ne tient à jour.

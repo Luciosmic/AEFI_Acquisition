@@ -64,6 +64,20 @@ class TestArcusUnitConversion(unittest.TestCase):
         # Assert
         self.mock_controller.set_speed.assert_called_once_with(expected_hz)
 
+    def test_the_exported_increments_are_the_ones_the_move_command_sends(self):
+        """The export and the move share one conversion: they cannot drift apart."""
+        self.adapter.set_microns_per_pulse(20.62)
+
+        self.adapter._internal_move_to(Position2D(x=135.0, y=12.34))
+
+        sent = {call.args[0]: call.args[1] for call in self.mock_controller.move_to.call_args_list}
+        self.assertEqual((sent["X"], sent["Y"]), self.adapter.mm_to_increments(135.0, 12.34))
+
+    def test_reported_increments_are_read_from_the_controller(self):
+        self.mock_controller.get_position.side_effect = lambda axis: 1234.0 if axis == "X" else 567.0
+
+        self.assertEqual(self.adapter.read_increments(), (1234, 567))
+
     def test_axis_limits_follow_the_measured_travel_in_increments(self):
         from domain.test_bench.physical_bench_limits.physical_bench_limits import (
             X_TRAVEL_INCREMENTS,

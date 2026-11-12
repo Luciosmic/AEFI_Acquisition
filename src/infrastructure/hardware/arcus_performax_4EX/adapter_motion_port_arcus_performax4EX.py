@@ -306,12 +306,25 @@ class ArcusAdapter(IMotionPort):
                 logger.debug("Monitor loop transient error, ignoring", exc_info=True)
                 time.sleep(1.0)
 
+    def mm_to_increments(self, x_mm: float, y_mm: float) -> tuple[int, int]:
+        """The increments a move to this position sends to the controller (the single conversion:
+        the export reads it too, so the exported number is the one that was commanded)."""
+        self._require_conversion("mm_to_increments")
+        return int(x_mm * self.STEPS_PER_MM), int(y_mm * self.STEPS_PER_MM)
+
+    def read_increments(self) -> tuple[int, int]:
+        """The increments the controller reports now, per axis (no mm conversion needed)."""
+        if not self._controller:
+            raise RuntimeError("Arcus controller not connected")
+        return (
+            int(round(self._controller.get_position(self._axis_x))),
+            int(round(self._controller.get_position(self._axis_y))),
+        )
+
     def _internal_move_to(self, position: Position2D):
         """Internal synchronous move execution."""
         try:
-            # Convert mm to steps
-            steps_x = int(position.x * self.STEPS_PER_MM)
-            steps_y = int(position.y * self.STEPS_PER_MM)
+            steps_x, steps_y = self.mm_to_increments(position.x, position.y)
             
             if self._controller:
                 self._controller.move_to(self._axis_x, steps_x)

@@ -22,6 +22,7 @@ from infrastructure.hardware.arcus_performax_4EX.driver_arcus_performax4EX impor
 from infrastructure.hardware.arcus_performax_4EX.adapter_motion_port_arcus_performax4EX import ArcusAdapter
 from infrastructure.hardware.arcus_performax_4EX.adapter_lifecycle_arcus_performax4EX import ArcusPerformaxLifecycleAdapter
 from infrastructure.hardware.arcus_performax_4EX.adapter_raw_increment_motion_arcus import ArcusRawIncrementMotionAdapter
+from infrastructure.hardware.arcus_performax_4EX.adapter_position_increments_arcus import ArcusPositionIncrementsAdapter
 from infrastructure.hardware.arcus_performax_4EX.arcus_advanced_configuration import ArcusPerformax4EXAdvancedConfigurator
 from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
 
@@ -73,6 +74,8 @@ class ArcusCompositionRoot:
         
         # Same driver, motor increments without mm conversion (setpoints in increments)
         self.raw_increment_motion = ArcusRawIncrementMotionAdapter(self._driver)
+        # The export's view of the same conversion: commanded and reported increments of each scan point
+        self.position_increments = ArcusPositionIncrementsAdapter(self.motion)
 
         # 3. Instantiate Lifecycle Adapter
         # Manages connection/disconnection via the Controller and enables/disables the Motion Adapter

@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
+from application.services.scan_export_service.ports.i_position_increments_port import IPositionIncrementsPort
 from application.services.scan_export_service.scan_export_service import ScanExportService
 from application.services.scan_export_service.dtos.scan_export_dtos import ExportConfigDTO
 from application.services.scan_export_service.ports.i_scan_export_port import IScanExportPort
@@ -170,6 +171,22 @@ def _make_scan_point_acquired_event():
     )
 
 
+class FakePositionIncrementsPort(IPositionIncrementsPort):
+    """Commanded increments from a fixed 20 µm/increment; the controller 'reads' what it is told to."""
+
+    def __init__(self, read=(110, 220), conversion_applied=True):
+        self.read = read
+        self.conversion_applied = conversion_applied
+        self.reads = 0
+
+    def increments_of(self, x_mm, y_mm):
+        return (int(x_mm * 50), int(y_mm * 50)) if self.conversion_applied else None
+
+    def read_increments(self):
+        self.reads += 1
+        return self.read
+
+
 class TestScanExportServiceMetadata(unittest.TestCase):
     def setUp(self):
         self.event_bus = InMemoryEventBus()
@@ -184,6 +201,7 @@ class TestScanExportServiceMetadata(unittest.TestCase):
         self.conditions_port = FakeAcquisitionConditionsPort(
             positions=[BenchPositionDTO(x_mm=435.0, y_mm=435.0), BenchPositionDTO(x_mm=835.0, y_mm=835.0)]
         )
+        self.increments_port = FakePositionIncrementsPort()
         self.service = ScanExportService(
             self.event_bus,
             csv_export_port=self.export_port,
@@ -194,10 +212,46 @@ class TestScanExportServiceMetadata(unittest.TestCase):
             task_runner=FakeThreadPoolTaskRunner(),
             software_provenance_port=FakeSoftwareProvenancePort(),
             usb_latency_timer_port=FakeUsbLatencyTimerPort(latency_ms=1.0),
+            position_increments_port=self.increments_port,
         )
         self.service.configure_export(
             ExportConfigDTO(enabled=True, output_directory="", filename_base="scan")
         )
+
+    def test_a_step_scan_point_carries_its_commanded_and_its_read_increments(self):
+        self.event_bus.publish("scanstarted", _make_scan_started_event())
+        self.event_bus.publish("scanpointacquired", _make_scan_point_acquired_event())  # position (1.0, 2.0) mm
+
+        row = self.export_port.points[0]
+        self.assertEqual((row["x"], row["y"]), (1.0, 2.0))  # the mm position stays
+        self.assertEqual((row["x_increments_commanded"], row["y_increments_commanded"]), (50, 100))
+        self.assertEqual((row["x_increments_read"], row["y_increments_read"]), (110, 220))
+
+    def test_a_fly_scan_point_has_no_read_increments_because_the_axes_are_moving(self):
+        self.event_bus.publish("scanstarted", _make_scan_started_event(fly_scan=True))
+        self.event_bus.publish("scanpointacquired", _make_scan_point_acquired_event())
+
+        row = self.export_port.points[0]
+        self.assertEqual(row["x_increments_commanded"], 50)
+        self.assertIsNone(row["x_increments_read"])
+        self.assertEqual(self.increments_port.reads, 0)
+
+    def test_without_an_applied_conversion_the_increments_are_empty_not_guessed(self):
+        self.increments_port.conversion_applied = False
+        self.event_bus.publish("scanstarted", _make_scan_started_event())
+        self.event_bus.publish("scanpointacquired", _make_scan_point_acquired_event())
+
+        self.assertIsNone(self.export_port.points[0]["x_increments_commanded"])
+
+    def test_an_electric_field_point_carries_the_commanded_increments_too(self):
+        self.event_bus.publish("scanstarted", _make_scan_started_event())
+        event = _narda_event(
+            scan_id=uuid4(), point_index=0, position=Position2D(x=1.0, y=2.0),
+            field_measurement=FieldMeasurement(components=(0.9,), timestamp=None),
+        )
+        self.event_bus.publish("nardapointacquired", event)
+
+        self.assertEqual(self.export_port.field_points[0]["y_increments_commanded"], 100)
 
     def test_scan_start_writes_the_acquisition_facts(self):
         started = _make_scan_started_event()

@@ -77,6 +77,13 @@ class TestScanAcquisitionParametersV1Serializer(unittest.TestCase):
         self.assertEqual(state["axes_extent"]["derived_from"], "components.motors.settings.step_size")
         self.assertNotIn("referential", document["components"]["motors"]["settings"])
 
+    def test_increment_columns_are_described_with_their_unit_and_how_they_were_obtained(self):
+        for column in ("x_increments_commanded", "y_increments_commanded", "x_increments_read", "y_increments_read"):
+            self.assertEqual(STEP_SCAN_COLUMNS[column]["unit"], "{step}")
+            self.assertEqual(STEP_SCAN_COLUMNS[column]["frame"], "bench")
+        self.assertIn("commanded", STEP_SCAN_COLUMNS["x_increments_commanded"]["observed_property"])
+        self.assertIn("fly scan", STEP_SCAN_COLUMNS["x_increments_read"]["observed_property"])
+
     def test_exported_voltages_are_declared_in_the_sensor_frame(self):
         deployment = serialize(make_scan_acquisition_parameters())["measurement_chain"]["sensor"]["deployment"]
         self.assertFalse(deployment["rotation_applied"]["applies_to_data"])

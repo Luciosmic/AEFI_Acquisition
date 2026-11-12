@@ -42,6 +42,7 @@ from application.shared.acquisition_parameters.i_acquisition_conditions_port imp
 from application.shared.acquisition_parameters.i_software_provenance_port import ISoftwareProvenancePort
 from application.shared.acquisition_parameters.i_usb_latency_timer_port import IUsbLatencyTimerPort
 from .ports.i_post_processing_port import IPostProcessingPort
+from .ports.i_position_increments_port import IPositionIncrementsPort
 from application.shared.scan_config_summary.scan_config_summary import summarize_scan_config
 from application.shared.ports.i_async_task_runner import IAsyncTaskRunner
 
@@ -88,6 +89,7 @@ class ScanExportService:
         task_runner: Optional[IAsyncTaskRunner] = None,
         software_provenance_port: Optional[ISoftwareProvenancePort] = None,
         usb_latency_timer_port: Optional[IUsbLatencyTimerPort] = None,
+        position_increments_port: Optional[IPositionIncrementsPort] = None,
     ) -> None:
         """`conditions_port`, `software_provenance_port`, `usb_latency_timer_port`:
         the facts of the acquisition-parameters document (schema 1.0). Absent,
@@ -104,6 +106,9 @@ class ScanExportService:
         self._conditions_port = conditions_port
         self._software_provenance_port = software_provenance_port
         self._usb_latency_timer_port = usb_latency_timer_port
+        # Increments of each point (commanded + reported), exported next to the mm position; absent: empty columns.
+        self._position_increments_port = position_increments_port
+        self._fly_scan = False  # the axes are moving while a fly scan's points are published
         # Facts of the open export's acquisition-parameters document; the
         # final write adds the outcome (see _close_export).
         self._parameters: Optional[ScanAcquisitionParametersDTO] = None
@@ -230,6 +235,7 @@ class ScanExportService:
 
     def _handle_scan_started(self, event: ScanStarted) -> None:
         logger.info("Handling ScanStarted. scan_id=%s, config present: %s", event.scan_id, self._config is not None)
+        self._fly_scan = bool(getattr(event.config, "fly_scan", False))
         # The scan owns the ADC worker and the export ports from here on.
         self._time_series_config = None
         if self._time_series_active:
@@ -558,6 +564,20 @@ class ScanExportService:
         result = self._usb_latency_timer_port.read_latency_timer_ms(serial_port)
         return (result.value, None) if result.is_success else (None, result.error)
 
+    def _increment_columns(self, position) -> Dict[str, Any]:
+        """The point in controller increments. Commanded: what the move command sent for this position
+        (within one increment of the truth for a fly scan, whose mm positions are projected). Read: what the
+        controller reports right now: only meaningful with the axes at rest, so never during a fly scan."""
+        port = self._position_increments_port
+        commanded = port.increments_of(position.x, position.y) if port is not None else None
+        read = port.read_increments() if port is not None and not self._fly_scan else None
+        return {
+            "x_increments_commanded": commanded[0] if commanded else None,
+            "y_increments_commanded": commanded[1] if commanded else None,
+            "x_increments_read": read[0] if read else None,
+            "y_increments_read": read[1] if read else None,
+        }
+
     def _flatten_point(self, event: ScanPointAcquired) -> Dict[str, Any]:
         """
         Flatten a `ScanPointAcquired` event into a dict suitable for CSV.
@@ -577,6 +597,7 @@ class ScanExportService:
             "point_index": event.point_index,
             "x": pos.x,
             "y": pos.y,
+            **self._increment_columns(pos),
             # Mean voltages
             "voltage_x_in_phase": m.voltage_x_in_phase,
             "voltage_x_quadrature": m.voltage_x_quadrature,
@@ -619,6 +640,7 @@ class ScanExportService:
             "point_index": event.point_index,
             "x": pos.x,
             "y": pos.y,
+            **self._increment_columns(pos),
             # Field measurement components
             "field_components": fm.components,
             # Standard deviations (may be None if not provided)

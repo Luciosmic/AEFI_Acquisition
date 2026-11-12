@@ -170,6 +170,22 @@ STEP_SCAN_COLUMNS: Dict[str, Dict[str, str]] = {
     "point_index": {"observed_property": "scan point index (acquisition order)", "unit": "1"},
     "x": {"observed_property": "position", "axis": "x", "frame": "bench", "unit": "mm"},
     "y": {"observed_property": "position", "axis": "y", "frame": "bench", "unit": "mm"},
+    **{
+        f"{axis}_increments_commanded": {
+            "observed_property": "position in controller increments, as commanded (same conversion as the move command; "
+                                 "within one increment for a fly scan, whose positions are projected)",
+            "axis": axis, "frame": "bench", "unit": "{step}",
+        }
+        for axis in ("x", "y")
+    },
+    **{
+        f"{axis}_increments_read": {
+            "observed_property": "position in controller increments, as reported by the controller when the point was "
+                                 "recorded (empty during a fly scan: the axes are moving)",
+            "axis": axis, "frame": "bench", "unit": "{step}",
+        }
+        for axis in ("x", "y")
+    },
     **_aefi_voltage_columns("", _VOLTAGE),
     **{
         f"std_dev_{name[len('voltage_'):]}": {
