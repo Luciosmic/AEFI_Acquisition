@@ -100,6 +100,10 @@ def wire_dashboard(
 
     # Frequency sweep — reference / background acquisition vs excitation frequency
     frequency_sweep_panel = dashboard.panels["frequency_sweep"]
+    # Nothing else references the presenter once main's composition returns (its
+    # service only references it back): without a Qt parent, the garbage collector
+    # deletes it and the Start button silently does nothing (seen at the bench on 2026-11-12).
+    frequency_sweep_presenter.setParent(frequency_sweep_panel)
     frequency_sweep_panel.start_requested.connect(frequency_sweep_presenter.on_start_requested)
     frequency_sweep_panel.stop_requested.connect(frequency_sweep_presenter.on_stop_requested)
     frequency_sweep_presenter.request_defaults.connect(frequency_sweep_panel.set_request_defaults)
