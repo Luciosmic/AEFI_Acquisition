@@ -1,3 +1,10 @@
+---
+type: adaptateur::solidai-hexagonal
+tldr: "Le lecteur réel de provenance : nom et version depuis pyproject.toml, commit, branche et arbre modifié depuis git, sans jamais lever d'exception."
+code: ["[[src/infrastructure/provenance/git_software_provenance_reader.py]]"]
+cause_de_changement: outil
+implements: ["[[src/application/shared/acquisition_parameters/i_software_provenance_port_intention]]"]
+---
 # git_software_provenance_reader — Intention
 
 ## Rationale
