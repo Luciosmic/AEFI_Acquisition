@@ -88,7 +88,7 @@ class TestFrequencySweepAcquisitionParameters(unittest.TestCase):
 
     def test_procedure_states_role_grid_and_table_height_given_by_the_operator(self):
         document = serialize()
-        self.assertEqual(document["schema"]["version"], "1.3")
+        self.assertEqual(document["schema"]["version"], "1.4")
         self.assertEqual(document["provenance"]["activity"]["kind"], "frequency_sweep")
         self.assertEqual(document["provenance"]["operator"], {"id": "op-1", "name": "Luis"})
         procedure = document["procedure"]["frequency_sweep"]

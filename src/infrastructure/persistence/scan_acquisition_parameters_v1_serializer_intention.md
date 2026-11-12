@@ -12,12 +12,12 @@ USB. Un scan exporté ne pouvait pas être rejoué à l'identique.
 ## Responsibility
 
 - `serialize_scan_acquisition_parameters_v1(parameters, generated_at)` : le
-  document 1.0 d'un scan pas-à-pas ou d'une série temporelle, prêt pour JSON.
+  document 1.x d'un scan pas-à-pas, d'un scan en vol ou d'une série temporelle, prêt pour JSON.
 - N'écrit que ce que l'acquisition a fait : procédure du scan, `n_avg`
   appliqué et liaison série, excitation telle que réglée, sonde auxiliaire
   (absente = notée, pas inconnue), positions du banc (le scan tient les
   moteurs ; une série temporelle signale un banc qui a bougé), colonnes.
-- `STEP_SCAN_COLUMNS` / `TIME_SERIES_COLUMNS` : sens, axe, repère et unité de
+- `SCAN_COLUMNS` / `TIME_SERIES_COLUMNS` : sens, axe, repère et unité de
   chaque colonne écrite (fichier principal et fichier de la sonde).
 
 ## Design

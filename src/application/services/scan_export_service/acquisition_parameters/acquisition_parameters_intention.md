@@ -1,7 +1,7 @@
 # acquisition_parameters — Intention
 
-> Référence du schéma `acquisition-parameters.json` (version 1.3), écrit à côté de
-> chaque export (scan pas-à-pas, série temporelle). Ce fichier est le contrat :
+> Référence du schéma `acquisition-parameters.json` (version 1.4), écrit à côté de
+> chaque export (scan pas-à-pas, scan en vol, série temporelle). Ce fichier est le contrat :
 > les scripts d'analyse le lisent, les tests garde-fous l'appliquent.
 
 ## Rationale
@@ -148,7 +148,7 @@ exports entre eux (toutes les acquisitions faites avec telle calibration).
   "schema": { "name": "aefi-acquisition-parameters", "version": "1.0" },
 
   "provenance": {                                   // PROV-O : activité, agents
-    "activity": { "id": "…", "kind": "step_scan | time_series | mcu_throughput_characterization | frequency_sweep",
+    "activity": { "id": "…", "kind": "step_scan | fly_scan | time_series | mcu_throughput_characterization | frequency_sweep",
                   "started_at": "…", "ended_at": "… | null",
                   "status": "running | completed | failed | cancelled",
                   "failure_reason": null,
@@ -309,6 +309,13 @@ exports :
   `measurement_chain.excitation.state.frequency` renvoient à la grille (`derived_from`). Un balayage
   non complet est signalé : ni référence ni fond utilisable. Fichiers : `frequency_response.csv`
   (une ligne par fréquence) et `samples.csv`.
+- **Scan en vol (1.4)** : activité `kind: "fly_scan"`, procédure `procedure.fly_scan` = `zone`,
+  `grid`, `pattern`, `fast_axis` (mêmes clés que `procedure.step_scan`) et `stabilization_delay`,
+  attendu une fois par ligne, à son départ (`notes` le dit). Pas de `averaging_per_position`, de
+  `differential`, de `measurement_uncertainty` ni de `estimated_duration` : ils ne s'appliquent pas
+  au balayage en vol. Le scan en vol tient les moteurs (`motors_held_by_activity: true`) et décrit
+  les mêmes colonnes que le scan pas-à-pas. Avant 1.4, un scan en vol était écrit à tort sous
+  `kind: "step_scan"` / `procedure.step_scan` ; seul le nom de ses fichiers (`flyScan`) le distinguait.
 - **Section non pertinente vs inconnue** : non pertinente → présente, vide, avec
   `notes` (ex. `auxiliary_probes.uses: []`) ; inconnue → `null` + avertissement.
 - **Langue** : clés et chemins en anglais, messages d'avertissement et `notes`
@@ -343,7 +350,7 @@ nouveau fichier sans ligne ici fait échouer la suite de tests.
 | `mcu_default_config.json` (+ `_last`) | `components.microcontroller.settings` |
 | `arcus_default_config.json` + `motion_last_config.json` | `components.motors.settings` |
 | `electric_field_probe_config.json` | `components.electric_field_probe.settings` |
-| `scan_default_config.json` | `procedure.step_scan` (la config **utilisée**, venue du domaine `StepScanConfig`) |
+| `scan_default_config.json` | `procedure.step_scan` ou `procedure.fly_scan` (la config **utilisée**, venue du domaine `StepScanConfig`) |
 | `aefi_device_config.json` | exclu : amorce historique. Ses parties vivantes sont migrées (géométrie → registre ; angles idéaux → `rotation_applied` avec `origin: ideal` ; identités → catalogue des composants) |
 | `scan_config.json`, `export_default_config.json` | exclus : préférences d'interface (`UIConfigStore`), pas des paramètres de mesure |
 | `acquisition_config.json`, `additional_sensors_config.json`, `bench_config.json` | exclus : lus par aucun code |
