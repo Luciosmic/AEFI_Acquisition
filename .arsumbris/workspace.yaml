@@ -2,7 +2,7 @@ type: au.engine.workspace::au-engine
 edit:
   - aefi-acquisition
   - GRAPHE-THESE
-  - PILOTAGE
 discover:
   - mcp-bundle
   - host-bundle
+  - PILOTAGE
