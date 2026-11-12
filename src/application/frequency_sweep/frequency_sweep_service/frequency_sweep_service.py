@@ -156,6 +156,8 @@ class FrequencySweepService(IApiFrequencySweepService):
             role = FrequencySweepRole(request.role)
         except ValueError:
             return f"rôle de balayage inconnu : {request.role!r}"
+        if role.measures_an_object and not request.measured_object_id:
+            return "mesure objet : choisir l'objet mesuré dans la liste"
         if request.table_height_mm is None:
             return "hauteur de la table non saisie : elle conditionne la réutilisation du fond"
         if request.samples_per_frequency < MIN_SAMPLES_PER_FREQUENCY:
@@ -174,7 +176,8 @@ class FrequencySweepService(IApiFrequencySweepService):
         except ValueError as error:
             return f"grille ou hauteur invalide : {error}"
         return FrequencySweep(
-            FrequencySweepId(uuid4()), role, grid, table_height, samples_per_frequency=request.samples_per_frequency
+            FrequencySweepId(uuid4()), role, grid, table_height, samples_per_frequency=request.samples_per_frequency,
+            measured_object_id=request.measured_object_id if role.measures_an_object else None,
         )
 
     # -- the sweep (background task) ----------------------------------------------
@@ -348,6 +351,9 @@ class FrequencySweepService(IApiFrequencySweepService):
             stream_started_here=stream_started_here,
             operator_name=request.operator_name,
             operator_id=request.operator_id,
+            measured_object_name=request.measured_object_name if sweep.role.measures_an_object else "",
+            measured_object_id=sweep.measured_object_id or "",
+            lift_off_mm=request.lift_off_mm if sweep.role.measures_an_object else None,
             bench_position_start=position.value if position.is_success else None,
             bench_position_unknown_reason=None if position.is_success else position.error,
             usb_latency_timer_ms=latency_ms,

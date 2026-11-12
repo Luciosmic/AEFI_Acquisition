@@ -14,13 +14,16 @@ VALUE_CHANNELS = ("x_in_phase", "y_in_phase", "z_in_phase", "x_quadrature", "y_q
 ROLE_LABELS = (
     ("instrument_reference", "Référence instrument (table en position basse, sans objet)"),
     ("background", "Fond (table à la hauteur de travail, sans objet)"),
+    ("object_measurement", "Mesure objet (même hauteur de table que le fond, objet posé)"),
 )
 
 
 @dataclass(frozen=True)
 class FrequencySweepRequestDTO:
     """What the operator asks for. `table_height_mm` None = not entered
-    (refused); `operator_*` empty = not chosen (exported as such)."""
+    (refused); `operator_*` empty = not chosen (exported as such).
+    `measured_object_*`, `lift_off_mm`: object measurement only (object
+    required, lift-off None = not entered, warned in the export)."""
 
     role: str = "instrument_reference"
     start_hz: float = 100.0
@@ -30,6 +33,9 @@ class FrequencySweepRequestDTO:
     table_height_mm: Optional[float] = None
     operator_name: str = ""
     operator_id: str = ""
+    measured_object_name: str = ""
+    measured_object_id: str = ""
+    lift_off_mm: Optional[float] = None
 
 
 @dataclass(frozen=True)

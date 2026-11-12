@@ -187,5 +187,39 @@ class TestFrequencySweepService(unittest.TestCase):
         self.assertEqual(self.excitation_service.get_current_parameters().frequency, OPERATOR_FREQUENCY_HZ)
 
 
+    def test_an_object_measurement_records_its_object_and_lift_off(self):
+        from dataclasses import replace
+
+        self._service().start_sweep(replace(
+            REQUEST, role="object_measurement", measured_object_id="obj-1", measured_object_name="bouteille",
+            lift_off_mm=8.0,
+        ))
+
+        self.assertEqual(self.output.failed, [])
+        activity = self.export.last_parameters.activity
+        self.assertEqual(
+            (activity.role, activity.measured_object_id, activity.measured_object_name, activity.lift_off_mm),
+            ("object_measurement", "obj-1", "bouteille", 8.0),
+        )
+        self.assertEqual(self.published[0].measured_object_id, "obj-1")
+
+    def test_an_object_measurement_without_object_is_refused(self):
+        from dataclasses import replace
+
+        self._service().start_sweep(replace(REQUEST, role="object_measurement"))
+
+        self.assertIn("objet mesuré", self.output.failed[0])
+        self.assertEqual(self.export.opened, [])
+
+    def test_a_background_ignores_an_object_left_in_the_panel(self):
+        from dataclasses import replace
+
+        self._service().start_sweep(replace(REQUEST, measured_object_id="obj-1", lift_off_mm=8.0))
+
+        self.assertEqual(self.output.failed, [])
+        activity = self.export.last_parameters.activity
+        self.assertEqual((activity.measured_object_id, activity.lift_off_mm), ("", None))
+
+
 if __name__ == "__main__":
     unittest.main()

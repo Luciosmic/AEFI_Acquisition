@@ -13,7 +13,7 @@ Chaque fréquence acquise est un fait : la réponse I/Q moyenne par axe à cette
 
 ## Responsibility
 
-- Porter, pour une fréquence d'un balayage : l'id du balayage, son rôle, le rang et la valeur de la fréquence, la mesure moyennée (moyenne et écart-type de I et Q par axe), le nombre d'échantillons, la hauteur de la table.
+- Porter, pour une fréquence d'un balayage : l'id du balayage, son rôle, le rang et la valeur de la fréquence, la mesure moyennée (moyenne et écart-type de I et Q par axe), le nombre d'échantillons, la hauteur de la table, et l'objet mesuré (identifiant du registre) pour une mesure objet.
 
 ## Design
 

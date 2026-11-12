@@ -6,6 +6,7 @@ import pytest
 from domain.frequency_sweep.errors.frequency_already_acquired_error import FrequencyAlreadyAcquiredError
 from domain.frequency_sweep.errors.frequency_not_in_grid_error import FrequencyNotInGridError
 from domain.frequency_sweep.errors.frequency_point_incomplete_error import FrequencyPointIncompleteError
+from domain.frequency_sweep.errors.measured_object_role_mismatch_error import MeasuredObjectRoleMismatchError
 from domain.frequency_sweep.events.frequency_point_acquired.frequency_point_acquired import FrequencyPointAcquired
 from domain.frequency_sweep.events.frequency_sweep_completed.frequency_sweep_completed import FrequencySweepCompleted
 from domain.frequency_sweep.frequency_sweep import FrequencySweep
@@ -87,3 +88,23 @@ def test_a_frequency_is_acquired_once() -> None:
 def test_needs_at_least_one_sample_per_frequency() -> None:
     with pytest.raises(ValueError):
         make_sweep(0)
+
+
+def test_an_object_measurement_names_its_object_and_announces_it():
+    sweep = FrequencySweep(
+        FrequencySweepId(uuid4()), FrequencySweepRole.OBJECT_MEASUREMENT, GRID, TableHeight(42.0),
+        samples_per_frequency=1, measured_object_id="obj-1",
+    )
+    sweep.record_frequency_point(100.0, [make_measurement(1.0)])
+    (event,) = sweep.domain_events
+    assert (event.role, event.measured_object_id) == ("object_measurement", "obj-1")
+
+
+@pytest.mark.parametrize(
+    "role, measured_object_id",
+    [(FrequencySweepRole.OBJECT_MEASUREMENT, None), (FrequencySweepRole.OBJECT_MEASUREMENT, ""),
+     (FrequencySweepRole.BACKGROUND, "obj-1"), (FrequencySweepRole.INSTRUMENT_REFERENCE, "obj-1")],
+)
+def test_only_an_object_measurement_has_a_measured_object(role, measured_object_id):
+    with pytest.raises(MeasuredObjectRoleMismatchError):
+        FrequencySweep(FrequencySweepId(uuid4()), role, GRID, TableHeight(42.0), 1, measured_object_id=measured_object_id)

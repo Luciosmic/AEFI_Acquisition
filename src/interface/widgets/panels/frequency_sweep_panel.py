@@ -24,6 +24,8 @@ from PySide6.QtWidgets import (
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 
+from interface.widgets.lift_off_input.lift_off_input import LIFT_OFF_LABEL, LiftOffInput
+from interface.widgets.measured_object_selector.measured_object_selector import MeasuredObjectSelector
 from interface.widgets.operator_selector.operator_selector import OperatorSelector
 
 _FG = "#DDDDDD"
@@ -34,7 +36,8 @@ _AXIS_COLORS = ("#4FC3F7", "#81C784", "#FFB74D")
 _EXPLANATION = (
     "Balaye la fréquence d'excitation, avec le mode et les niveaux du panneau Excitation, et enregistre "
     "la réponse I/Q moyenne par axe à chaque fréquence. Rôle « Référence instrument » : table en position "
-    "basse, sans objet. Rôle « Fond » : table à la hauteur de travail, sans objet. Excitation et flux "
+    "basse, sans objet. Rôle « Fond » : table à la hauteur de travail, sans objet. Rôle « Mesure objet » : "
+    "même hauteur de table que le fond, objet posé. Excitation et flux "
     "d'acquisition sont verrouillés pendant le balayage ; la fréquence de l'opérateur est rétablie à la fin."
 )
 TABLE_HEIGHT_TOOLTIP = (
@@ -58,7 +61,13 @@ class FrequencySweepPanel(QWidget):
 
         form = QFormLayout()
         self.combo_role = QComboBox()
+        self.combo_role.currentIndexChanged.connect(self._on_role_changed)
         form.addRow("Rôle :", self.combo_role)
+        # Object measurement only: the object (registry, wired to MeasuredObjectPresenter) and its lift-off.
+        self.measured_object_selector = MeasuredObjectSelector()
+        form.addRow("Objet mesuré :", self.measured_object_selector)
+        self.input_lift_off = LiftOffInput()
+        form.addRow(LIFT_OFF_LABEL, self.input_lift_off)
         self.input_table_height = QLineEdit()
         self.input_table_height.setPlaceholderText("mm")
         self.input_table_height.setToolTip(TABLE_HEIGHT_TOOLTIP)
@@ -102,6 +111,8 @@ class FrequencySweepPanel(QWidget):
 
         self._points = []
         self._plot_pending = True
+        self._running = False
+        self._on_role_changed()
 
     @staticmethod
     def _frequency_spin() -> QDoubleSpinBox:
@@ -116,8 +127,17 @@ class FrequencySweepPanel(QWidget):
             return None
         return float(text)
 
+    def _measures_an_object(self) -> bool:
+        return self.combo_role.currentData() == "object_measurement"
+
+    def _on_role_changed(self, *_args) -> None:
+        enabled = self._measures_an_object() and not getattr(self, "_running", False)
+        self.measured_object_selector.setEnabled(enabled)
+        self.input_lift_off.setEnabled(enabled)
+
     def _on_start_clicked(self) -> None:
         operator = self.operator_selector.current_operator()
+        measured_object = self.measured_object_selector.current_measured_object() if self._measures_an_object() else None
         self.start_requested.emit({
             "role": self.combo_role.currentData(),
             "start_hz": self.spin_start_hz.value(),
@@ -127,6 +147,9 @@ class FrequencySweepPanel(QWidget):
             "table_height_mm": self._table_height_mm(),
             "operator_name": operator.name if operator else "",
             "operator_id": operator.operator_id if operator else "",
+            "measured_object_name": measured_object.name if measured_object else "",
+            "measured_object_id": measured_object.measured_object_id if measured_object else "",
+            "lift_off_mm": self.input_lift_off.lift_off_mm() if self._measures_an_object() else None,
         })
 
     # -- presenter slots ----------------------------------------------------------
@@ -148,6 +171,8 @@ class FrequencySweepPanel(QWidget):
         ):
             widget.setEnabled(not running)
         self.btn_stop.setEnabled(running)
+        self._running = running
+        self._on_role_changed()
         if running:
             self._points = []
             self._draw()
