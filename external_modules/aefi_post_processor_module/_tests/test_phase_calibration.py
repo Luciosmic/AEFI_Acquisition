@@ -7,7 +7,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 try:
-    from tests.analytic_test_case import AnalyticTestCase
+    from aefi_post_processor_module._tests.analytic_test_case import AnalyticTestCase
 except ImportError:
     from analytic_test_case import AnalyticTestCase
 from processing.primary_field_phase_calibrator import PrimaryFieldPhaseCalibrator

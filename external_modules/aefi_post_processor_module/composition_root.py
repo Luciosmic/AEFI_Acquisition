@@ -11,9 +11,13 @@ Orchestrates the full workflow:
 """
 
 import json
+import logging
 import sys
+import time
 import argparse
+from dataclasses import dataclass, field
 from pathlib import Path
+from typing import List
 
 from PySide6.QtWidgets import QApplication
 
@@ -26,6 +30,9 @@ for p in (_external_modules, project_root):
     if s not in sys.path:
         sys.path.insert(0, s)
 
+logger = logging.getLogger(__name__)
+
+_LOG_FILE = project_root / ".aefi_acquisition" / "logs" / "post_processor.log"
 _EXPORT_CONFIG_PATH = project_root / ".aefi_acquisition" / "configs" / "export_default_config.json"
 _DEFAULT_EXPORT_DIR = Path.home() / "Desktop" / "AEFI_Acquisition_Exports"
 
@@ -51,12 +58,21 @@ def _ideal_rotation_angles() -> tuple:
     rotation = json.loads(_DEVICE_CONFIG_PATH.read_text(encoding="utf-8"))["sensor"]["calibration"]["sources_to_sensor_rotation"]
     return (float(rotation["theta_x"]), float(rotation["theta_y"]), float(rotation["theta_z"]))
 
+from aefi_post_processor_module.logging_setup import configure_logging
 from aefi_post_processor_module.processing.processing_pipeline import ProcessingPipeline
 from aefi_post_processor_module.visualisation.model import VisualisationModel
 from aefi_post_processor_module.visualisation.view import VisualisationView
 from aefi_post_processor_module.visualisation.presenter import VisualisationPresenter
 
-def sync_scans(raw_dir: Path, force: bool = False):
+@dataclass
+class SyncSummary:
+    """Outcome of one batch sync, by acquisition folder name."""
+    processed: List[str] = field(default_factory=list)
+    skipped: List[str] = field(default_factory=list)
+    failed: List[str] = field(default_factory=list)
+
+
+def sync_scans(raw_dir: Path, force: bool = False) -> SyncSummary:
     """
     Run pipeline on missing/outdated scans.
 
@@ -64,49 +80,60 @@ def sync_scans(raw_dir: Path, force: bool = False):
     the device CSV is found via `<subfolder>/*_aefi.csv` and the processed `.h5`
     is written into that same subfolder.
     """
-    print(f"Syncing scans in {raw_dir}...")
+    summary = SyncSummary()
 
     if not raw_dir.exists():
-        print(f"Error: Raw directory not found: {raw_dir}")
-        return
+        logger.error("sync.aborted reason=raw_dir_not_found raw_dir=%s", raw_dir)
+        return summary
 
     # Step scans (measurements) and fly scans (exploration maps): same files, same pipeline.
     csv_files = sorted(
         path for kind in ("stepScan", "flyScan") for path in raw_dir.glob(f"*_{kind}_*/*_aefi.csv")
     )
-
-    files_processed_count = 0
+    logger.info("sync.started raw_dir=%s scans_found=%d force=%s", raw_dir, len(csv_files), force)
 
     for csv_path in csv_files:
         scan_name = csv_path.parent.name
         expected_output = csv_path.parent / f"{scan_name}.h5"
-        
-        # Check if up to date
-        if expected_output.exists() and not force:
-            if csv_path.stat().st_mtime < expected_output.stat().st_mtime:
-                continue
-            else:
-                print(f"Updating {scan_name} (Source newer)...")
-        else:
-             print(f"Processing new scan: {scan_name}...")
 
-        print(f"Running pipeline for {scan_name}...")
+        if not expected_output.exists():
+            reason = "new"
+        elif force:
+            reason = "forced"
+        elif csv_path.stat().st_mtime >= expected_output.stat().st_mtime:
+            reason = "source_newer"
+        else:
+            logger.debug("scan.up_to_date scan=%s action=none", scan_name)
+            summary.skipped.append(scan_name)
+            continue
+
         try:
-            # Instantiate pipeline for this specific file
+            rotation_angles = _ideal_rotation_angles()
+            logger.info(
+                "scan.processing scan=%s reason=%s rotation_angles_deg=%s rotation_origin=ideal_template",
+                scan_name, reason, rotation_angles,
+            )
+            started = time.monotonic()
             with ProcessingPipeline(output_path=expected_output) as pipeline:
                 pipeline.run_full_pipeline(
-                    csv_path, 
-                    rotation_angles=_ideal_rotation_angles(),
+                    csv_path,
+                    rotation_angles=rotation_angles,
                     reference_point=(0, 0)
                 )
-            
-            files_processed_count += 1
-            print(f"Successfully processed {scan_name}")
-            
-        except Exception as e:
-            print(f"Failed to process {scan_name}: {e}")
+            summary.processed.append(scan_name)
+            logger.info("scan.processed scan=%s elapsed_s=%.1f", scan_name, time.monotonic() - started)
 
-    print(f"Sync complete. Processed {files_processed_count} new scans.")
+        except Exception as e:
+            summary.failed.append(scan_name)
+            logger.exception("scan.failed scan=%s error_type=%s error=%s", scan_name, type(e).__name__, e)
+
+    outcome_level = logging.WARNING if summary.failed else logging.INFO
+    logger.log(
+        outcome_level,
+        "sync.finished processed=%d skipped=%d failed=%d failed_scans=%s",
+        len(summary.processed), len(summary.skipped), len(summary.failed), summary.failed,
+    )
+    return summary
 
 def main():
     parser = argparse.ArgumentParser(description="AEFI Post-Processor Composition Root")
@@ -120,8 +147,11 @@ def main():
     )
     args = parser.parse_args()
 
+    feedback = configure_logging(_LOG_FILE)
+
     if args.repo_path is not None:
         raw_dir = args.repo_path
+        logger.info("sync.skipped reason=repo_path_given repo=%s", raw_dir)
     else:
         raw_dir = _export_output_directory()
 
@@ -129,15 +159,16 @@ def main():
         sync_scans(raw_dir, force=args.force)
 
     # 2. Launch Visualization
-    print("Launching Visualization App...")
+    logger.info("visualisation.opening repo=%s", raw_dir)
     app = QApplication(sys.argv)
     app.setApplicationName("AEFI Visualisation")
 
     # Point model to the export directory (recurses into acquisition subfolders)
     model = VisualisationModel(raw_dir)
     view = VisualisationView()
+    feedback.attach(view.append_feedback)
     presenter = VisualisationPresenter(view, model)
-    
+
     view.show()
     sys.exit(app.exec())
 

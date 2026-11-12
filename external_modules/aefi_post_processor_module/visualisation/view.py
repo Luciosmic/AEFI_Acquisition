@@ -3,6 +3,9 @@ Visualization View
 PySide6 GUI implementation.
 """
 
+import html
+import logging
+
 from PySide6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
     QListWidget, QLabel, QGroupBox, QTextEdit, QSplitter
@@ -97,8 +100,14 @@ class VisualisationView(QMainWindow):
         self.list_steps.clear()
         self.list_steps.addItems(steps)
         
-    def log_feedback(self, msg: str):
-        self.txt_log.append(f">> {msg}")
+    def append_feedback(self, levelno: int, message: str):
+        """Sink of the FeedbackLogHandler: one log record per line, warnings and errors coloured."""
+        line = html.escape(f"{logging.getLevelName(levelno)} {message}")
+        if levelno >= logging.ERROR:
+            line = f'<span style="color: #F44336;">{line}</span>'
+        elif levelno >= logging.WARNING:
+            line = f'<span style="color: #FF9800;">{line}</span>'
+        self.txt_log.append(line)
         
     def set_frame_info(self, rotation: str, ref_point: str):
         self.lbl_rotation.setText(f"Rotation: {rotation}")

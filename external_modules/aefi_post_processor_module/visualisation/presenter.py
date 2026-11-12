@@ -4,12 +4,15 @@ Orchestrates the module logic with Loading Cache and Embedded Plotting.
 """
 
 from typing import Optional, Dict, Tuple
+import logging
 import time
 import numpy as np
 
 from .model import VisualisationModel
 from .view import VisualisationView
 from .plot_service import FigureFactory
+
+logger = logging.getLogger(__name__)
 
 class VisualisationPresenter:
     """
@@ -38,8 +41,11 @@ class VisualisationPresenter:
         self.refresh_scan_list()
 
     def refresh_scan_list(self):
-        self.view.log_feedback("SYSTEM: Scanning repository for .h5 files...")
         scans = self.model.list_scans()
+        if scans:
+            logger.info("scans.listed repo=%s count=%d", self.model.repo_path, len(scans))
+        else:
+            logger.warning("scans.none_found repo=%s pattern=**/*.h5", self.model.repo_path)
         
         # Convert paths to relative strings for display
         scan_strs = []
@@ -93,13 +99,16 @@ class VisualisationPresenter:
         # Reconstruct full path
         full_path = self.model.repo_path / scan_name
         
-        self.view.log_feedback(f"ACTION: Selected scan '{scan_name}'. Loading steps...")
+        logger.info("scan.selected scan=%s", scan_name)
         steps = self.model.load_scan_steps(full_path)
         
         # Sort and format steps
         formatted_steps = self._format_and_sort_steps(steps)
         self.view.set_step_list(formatted_steps)
-        self.view.log_feedback(f"SYSTEM: Loaded {len(steps)} steps.")
+        if steps:
+            logger.info("scan.steps_loaded scan=%s steps=%s", scan_name, list(self._step_mapping.values()))
+        else:
+            logger.warning("scan.no_steps scan=%s", scan_name)
 
     def on_step_selected(self, display_name: str):
         if not display_name:
@@ -130,7 +139,10 @@ class VisualisationPresenter:
                 self._data_cache[key] = (grids, extent, metadata)
                 load_source = "Disk"
             except Exception as e:
-                self.view.log_feedback(f"ERROR: Failed to load data. {e}")
+                logger.exception(
+                    "step.load_failed scan=%s step=%s error_type=%s error=%s",
+                    self.current_scan_path, self.current_step_name, type(e).__name__, e,
+                )
                 return
 
         # Update Frame Info
@@ -152,4 +164,7 @@ class VisualisationPresenter:
         self.view.update_plot(fig)
         
         elapsed = (time.time() - start_time) * 1000
-        self.view.log_feedback(f"PLOT: {self.current_step_name} [{load_source}] ({elapsed:.1f}ms)")
+        logger.info(
+            "plot.drawn scan=%s step=%s source=%s rotation_angles_deg=%s elapsed_ms=%.1f",
+            self.current_scan_path, self.current_step_name, load_source, rot_str, elapsed,
+        )
