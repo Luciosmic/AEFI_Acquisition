@@ -1,0 +1,5 @@
+20:50 | depart | quoi=concevoir l'architecture par panneaux du post-traitement, conforme au DDD d'AEFI_Acquisition, et ecrire les recits utilisateurs | session=1d02b818-19d3-4491-9d3e-c19319943da8
+20:50 | lecture | fichiers=shell dashboard, base_panel, panneau carte/profils, tranche balayage en frequence, adaptateur AefiPostProcessorPort, export reel 2026-11-12_194400 (schema 1.2)
+20:50 | constat | elements generiques de la fenetre (dock, barre de taches, panneau carte/profils, BenchReferential) sans import domaine : reutilisables tels quels
+20:50 | constat | convention de rotation du fichier (extrinsic ZYX) = celle du pipeline (P = Rx.Ry.Rz) : pas de defaut, mais a verifier a chaque lecture
+20:50 | decision | relation avec AEFI_Acquisition modelisee en Conformiste (langage publie = dossier d'export), emprunts de code par un seul paquet aefi_acquisition_upstream
