@@ -1,2 +1,3 @@
 00:44 | depart | quoi=reduire la dette solidai vague 2 | session=f6f1718f-0350-4d84-a878-2faf7a374b52
 00:44 | jalon | etape=0 | registre=aucune autre session sur ACQ | dernier_commit=note de tache de la session f6f1718f | inscrit=oui
+00:50 | annonce | commande=references pytest src + solidai verify + mypy (src suivis, sans cache) en parallele | duree_estimee=3-6 min | arret=timeout 20 min | logs=run-pytest-reference.log, run-verify-reference.json, run-mypy-reference.log
