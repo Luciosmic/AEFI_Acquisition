@@ -160,7 +160,7 @@ LIFT_OFF_ALIAS = "lift_off"
 
 def feature_of_interest(
     *, present: bool, description: Optional[str], notes: Optional[str], warn: Warn, absent_because: str = "",
-    lift_off_mm: Optional[float] = None,
+    lift_off_mm: Optional[float] = None, measured_object_id: Optional[str] = None,
 ) -> Dict[str, Any]:
     if present and not description:
         warn("feature_of_interest.description", "objet mesuré non décrit")
@@ -175,7 +175,8 @@ def feature_of_interest(
     lift_off = quantity(lift_off_mm, "mm") if present else None
     if lift_off is not None:
         lift_off["alias"] = LIFT_OFF_ALIAS
-    return {"present": present, "description": description, "notes": notes, LIFT_OFF_KEY: lift_off}
+    return {"present": present, "id": measured_object_id, "description": description, "notes": notes,
+            LIFT_OFF_KEY: lift_off}
 
 
 # -- components (SOSA System) --------------------------------------------------------

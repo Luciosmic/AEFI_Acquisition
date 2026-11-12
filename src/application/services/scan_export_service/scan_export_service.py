@@ -514,6 +514,7 @@ class ScanExportService:
             held_controls=("excitation",) if owner else (),
             procedure=procedure,
             measured_object=config.measured_object.strip() or None,
+            measured_object_id=config.measured_object_id or None,
             lift_off_mm=config.lift_off_mm,
             operator_id=config.operator_id or None,
             operator=config.operator.strip() or None,

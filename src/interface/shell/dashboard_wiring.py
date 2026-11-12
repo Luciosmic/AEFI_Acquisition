@@ -33,6 +33,7 @@ from interface.presenters.acquisition_throughput_characterization_presenter impo
 from interface.presenters.adc_output_rate_characterization_presenter import AdcOutputRateCharacterizationPresenter
 from interface.presenters.event_log_presenter import EventLogPresenter
 from interface.presenters.operator_presenter import OperatorPresenter
+from interface.presenters.measured_object_presenter import MeasuredObjectPresenter
 from interface.shell.fly_line_preview_overlay.fly_line_preview_overlay import wire_fly_line_preview
 
 logger = logging.getLogger(__name__)
@@ -56,6 +57,7 @@ def wire_dashboard(
     adc_output_rate_presenter: AdcOutputRateCharacterizationPresenter,
     operator_presenter: OperatorPresenter,
     mechanical_transmission_presenter: MechanicalTransmissionPresenter,
+    measured_object_presenter: MeasuredObjectPresenter,
 ) -> None:
     """Connect every dashboard panel to its presenter. Called once from
     main.py right after the dashboard and presenters are constructed."""
@@ -81,6 +83,17 @@ def wire_dashboard(
         operator_presenter.operator_registered.connect(selector.on_operator_registered)
         operator_presenter.registration_failed.connect(selector.on_registration_failed)
     operator_presenter.refresh_state()
+
+    # Measured object of an acquisition — same pattern: one registry, one selector per panel.
+    for selector in (
+        dashboard.panels["scan_control"].measured_object_selector,
+        dashboard.panels["aefi_continuous_reading"].measured_object_selector,
+    ):
+        selector.register_requested.connect(measured_object_presenter.on_register_requested)
+        measured_object_presenter.measured_objects_listed.connect(selector.set_measured_objects)
+        measured_object_presenter.measured_object_registered.connect(selector.on_measured_object_registered)
+        measured_object_presenter.registration_failed.connect(selector.on_registration_failed)
+    measured_object_presenter.refresh_state()
 
     # Motion Panel
     motion_panel = dashboard.panels["motion"]

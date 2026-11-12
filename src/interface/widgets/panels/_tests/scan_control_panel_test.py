@@ -5,6 +5,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 from PySide6.QtWidgets import QApplication
 
 from application.services.operator_service.dtos.operator_dto import OperatorDTO
+from application.services.measured_object_service.dtos.measured_object_dto import MeasuredObjectDTO
 
 from interface.widgets.panels.scan_control_panel import ScanControlPanel
 
@@ -17,7 +18,8 @@ def test_start_carries_the_measured_object_and_the_operator():
     _ALIVE.append(panel)
     emitted = []
     panel.scan_start_requested.connect(emitted.append)
-    panel.input_measured_object.setText("plaque de cuivre 20 mm")
+    panel.measured_object_selector.set_measured_objects([MeasuredObjectDTO(measured_object_id="id-plaque", name="plaque de cuivre 20 mm")])
+    panel.measured_object_selector.activated.emit(panel.measured_object_selector.findText("plaque de cuivre 20 mm"))
     panel.operator_selector.set_operators([OperatorDTO(operator_id="id-luis", name="Luis")])
     index = panel.operator_selector.findText("Luis")
     panel.operator_selector.setCurrentIndex(index)
@@ -25,7 +27,7 @@ def test_start_carries_the_measured_object_and_the_operator():
 
     panel._on_start_clicked()
 
-    assert emitted[0]["measured_object"] == "plaque de cuivre 20 mm"
+    assert (emitted[0]["measured_object_id"], emitted[0]["measured_object"]) == ("id-plaque", "plaque de cuivre 20 mm")
     assert (emitted[0]["operator_id"], emitted[0]["operator"]) == ("id-luis", "Luis")
 
 

@@ -183,6 +183,7 @@ class ScanPresenter(QObject, IScanOutputPort, metaclass=QABCMeta):
                 output_directory=params.get("export_output_directory", ""),
                 filename_base=params.get("export_filename_base", "scan"),
                 measured_object=params.get("measured_object", ""),
+                measured_object_id=params.get("measured_object_id", ""),
                 lift_off_mm=params.get("lift_off_mm"),
                 operator_id=params.get("operator_id", ""),
                 operator=params.get("operator", ""),

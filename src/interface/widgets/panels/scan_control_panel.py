@@ -4,6 +4,7 @@ from PySide6.QtWidgets import (
     QCheckBox, QFileDialog, QGridLayout, QTabWidget, QRadioButton, QButtonGroup, QToolButton
 )
 from interface.widgets.operator_selector.operator_selector import OperatorSelector
+from interface.widgets.measured_object_selector.measured_object_selector import MeasuredObjectSelector
 from interface.widgets.lift_off_input.lift_off_input import LIFT_OFF_LABEL, LIFT_OFF_TOOLTIP, LiftOffInput
 from PySide6.QtCore import Qt, Signal
 from pathlib import Path
@@ -302,16 +303,14 @@ class ScanControlPanel(QWidget):
         # Traceability, written in acquisition-parameters.json; empty = flagged
         # as missing in the document. Kept for the session, never saved.
         # The operator is chosen from the registry (wired to OperatorPresenter).
-        self.input_measured_object = QLineEdit("")
-        self.input_measured_object.setPlaceholderText("ex. bouteille d'eau, 8 mm des sphères, 350 kΩ")
-        self.input_measured_object.setToolTip("Objet mesuré — écrit dans acquisition-parameters.json (feature_of_interest)")
+        self.measured_object_selector = MeasuredObjectSelector()  # registry, wired to MeasuredObjectPresenter
         self.input_lift_off = LiftOffInput()
         self.input_lift_off.setFixedWidth(70)
         lbl_lift_off = QLabel(LIFT_OFF_LABEL)
         lbl_lift_off.setToolTip(LIFT_OFF_TOOLTIP)
         self.operator_selector = OperatorSelector()
         export_grid.addWidget(QLabel("Objet mesuré:"), 2, 0)
-        export_grid.addWidget(self.input_measured_object, 2, 1, 1, 3)
+        export_grid.addWidget(self.measured_object_selector, 2, 1, 1, 3)
         export_grid.addWidget(lbl_lift_off, 3, 0)
         export_grid.addWidget(self.input_lift_off, 3, 1)
         export_grid.addWidget(QLabel("Opérateur:"), 4, 0)
@@ -477,6 +476,7 @@ class ScanControlPanel(QWidget):
         """Gather parameters and emit signal."""
         self._read_zone_fields()
         operator = self.operator_selector.current_operator()
+        measured_object = self.measured_object_selector.current_measured_object()
         params = {
             "scan_kind": self._scan_kind(),
             "line_center_x": self._raw_zone_text("line_center_x"),
@@ -501,7 +501,8 @@ class ScanControlPanel(QWidget):
             "export_enabled": self.checkbox_export_enabled.isChecked(),
             "export_output_directory": self.input_export_directory.text(),
             "export_filename_base": self.input_export_filename.text(),
-            "measured_object": self.input_measured_object.text(),
+            "measured_object": measured_object.name if measured_object else "",
+            "measured_object_id": measured_object.measured_object_id if measured_object else "",
             "lift_off_mm": self.input_lift_off.lift_off_mm(),
             "operator_id": operator.operator_id if operator else "",
             "operator": operator.name if operator else "",

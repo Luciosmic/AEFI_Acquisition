@@ -76,7 +76,8 @@ class ScanActivityDTO:
     owner: Optional[str]
     held_controls: Tuple[str, ...]
     procedure: Optional[StepScanProcedureDTO] = None
-    measured_object: Optional[str] = None  # as typed by the operator at start (None = not described)
+    measured_object: Optional[str] = None  # chosen by the operator at start (None = not described)
+    measured_object_id: Optional[str] = None  # from the measured objects registry
     # Lift-off: distance between the lowest point of the spheres and the highest point
     # of the object under test, typed at start (None = not entered).
     lift_off_mm: Optional[float] = None

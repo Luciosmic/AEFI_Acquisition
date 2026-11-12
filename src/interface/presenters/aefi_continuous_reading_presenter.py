@@ -189,6 +189,7 @@ class AefiContinuousReadingPresenter(QObject):
             output_directory="",  # default exports dir, same as the scan panel's empty field
             filename_base=params.get("export_filename_base") or "continuous",
             measured_object=params.get("measured_object", ""),
+            measured_object_id=params.get("measured_object_id", ""),
             lift_off_mm=params.get("lift_off_mm"),
             operator_id=params.get("operator_id", ""),
             operator=params.get("operator", ""),

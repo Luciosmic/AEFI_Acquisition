@@ -125,6 +125,7 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
         StartupConfig
     )
     from application.services.operator_service.operator_service import OperatorService
+    from application.services.measured_object_service.measured_object_service import MeasuredObjectService
     from application.services.adc_output_rate_characterization_service.adc_output_rate_characterization_service import (
         AdcOutputRateCharacterizationService,
     )
@@ -180,6 +181,7 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
     from infrastructure.events.event_ring_buffer import EventRingBuffer
     from infrastructure.hardware.hardware_composition_root import HardwareCompositionRoot
     from infrastructure.persistence.operator_registry.real_operator_repository import RealOperatorRepository
+    from infrastructure.persistence.measured_object_registry.real_measured_object_repository import RealMeasuredObjectRepository
     from infrastructure.persistence.adc_output_rate.csv_adc_output_rate_export_port import CsvAdcOutputRateExportPort
 
     startup_view.set_phase("Interface...")
@@ -198,6 +200,7 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
     from interface.presenters.hardware_component_presenter import HardwareComponentPresenter
     from interface.presenters.event_log_presenter import EventLogPresenter
     from interface.presenters.operator_presenter import OperatorPresenter
+    from interface.presenters.measured_object_presenter import MeasuredObjectPresenter
     from interface.presenters.adc_output_rate_characterization_presenter import AdcOutputRateCharacterizationPresenter
     from interface.presenters.aefi_continuous_reading_presenter import AefiContinuousReadingPresenter
     from interface.presenters.electric_field_probe_presenter import ElectricFieldProbePresenter
@@ -632,6 +635,10 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
     # Operators registry (.aefi_acquisition/operators/) — chosen in the Scan and
     # Continuous Reading panels, exported in acquisition-parameters.json.
     operator_presenter = OperatorPresenter(OperatorService(RealOperatorRepository(), event_bus), event_bus)
+    # Measured objects registry (.aefi_acquisition/measured_objects/) — same pattern.
+    measured_object_presenter = MeasuredObjectPresenter(
+        MeasuredObjectService(RealMeasuredObjectRepository(), event_bus), event_bus
+    )
     mechanical_transmission_presenter = MechanicalTransmissionPresenter(transmission_service, event_bus)
 
     wire_dashboard(
@@ -652,6 +659,7 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
         adc_output_rate_presenter,
         operator_presenter,
         mechanical_transmission_presenter,
+        measured_object_presenter,
     )
 
     # 11. Observability MCP server (read-only) — lets an LLM client (e.g.

@@ -19,6 +19,7 @@ class ExportConfigDTO:
     # provenance.operator {id, name}) — empty = declared missing, never guessed.
     # The operator comes from the operators registry (OperatorService).
     measured_object: str = ""
+    measured_object_id: str = ""  # from the measured objects registry
     # Lift-off in mm (feature_of_interest, under its explicit name) — None = not entered.
     lift_off_mm: Optional[float] = None
     operator_id: str = ""

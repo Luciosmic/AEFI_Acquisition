@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
 )
 from interface.widgets.operator_selector.operator_selector import OperatorSelector
+from interface.widgets.measured_object_selector.measured_object_selector import MeasuredObjectSelector
 from interface.widgets.lift_off_input.lift_off_input import LIFT_OFF_LABEL, LIFT_OFF_TOOLTIP, LiftOffInput
 from PySide6.QtCore import Qt, Signal
 import pyqtgraph as pg  # type: ignore[import]
@@ -120,15 +121,13 @@ class AefiContinuousReadingPanel(QWidget):
 
         # Traceability, written in acquisition-parameters.json; empty = flagged
         # as missing in the document. Kept for the session, never saved.
-        self.input_measured_object = QLineEdit("")
-        self.input_measured_object.setPlaceholderText("objet mesuré")
-        self.input_measured_object.setToolTip("Objet mesuré — écrit dans acquisition-parameters.json (feature_of_interest)")
+        self.measured_object_selector = MeasuredObjectSelector()  # registry, wired to MeasuredObjectPresenter
         self.input_lift_off = LiftOffInput()
         self.input_lift_off.setFixedWidth(90)
         lbl_lift_off = QLabel(LIFT_OFF_LABEL)
         lbl_lift_off.setToolTip(LIFT_OFF_TOOLTIP)
         self.operator_selector = OperatorSelector()  # registry, wired to OperatorPresenter
-        l_ctrl.addWidget(self.input_measured_object, 2, 0, 1, 2)
+        l_ctrl.addWidget(self.measured_object_selector, 2, 0, 1, 2)
         l_ctrl.addWidget(self.operator_selector, 2, 2)
         l_ctrl.addWidget(lbl_lift_off, 3, 1)
         l_ctrl.addWidget(self.input_lift_off, 3, 2)
@@ -311,11 +310,13 @@ class AefiContinuousReadingPanel(QWidget):
     def _on_start_clicked(self):
         """Gather parameters and emit signal."""
         operator = self.operator_selector.current_operator()
+        measured_object = self.measured_object_selector.current_measured_object()
         params = {
             "max_duration_s": None,  # Infinite duration
             "export_enabled": self.chk_export.isChecked(),
             "export_filename_base": self.input_export_filename.text(),
-            "measured_object": self.input_measured_object.text(),
+            "measured_object": measured_object.name if measured_object else "",
+            "measured_object_id": measured_object.measured_object_id if measured_object else "",
             "lift_off_mm": self.input_lift_off.lift_off_mm(),
             "operator_id": operator.operator_id if operator else "",
             "operator": operator.name if operator else "",

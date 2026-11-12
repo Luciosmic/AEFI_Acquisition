@@ -96,9 +96,10 @@ class TestScanAcquisitionParametersV1Serializer(unittest.TestCase):
 
     def test_described_object_and_operator_are_written_without_warning(self):
         document = serialize(make_scan_acquisition_parameters(
-            measured_object="plaque de cuivre 20 mm", operator_id="id-luis", operator="Luis",
+            measured_object="plaque de cuivre 20 mm", measured_object_id="id-plaque", operator_id="id-luis", operator="Luis",
         ))
         self.assertEqual(document["feature_of_interest"]["description"], "plaque de cuivre 20 mm")
+        self.assertEqual(document["feature_of_interest"]["id"], "id-plaque")
         self.assertEqual(document["provenance"]["operator"], {"id": "id-luis", "name": "Luis"})
         self.assertNotIn("feature_of_interest.description", warning_paths(document))
         self.assertNotIn("provenance.operator.name", warning_paths(document))

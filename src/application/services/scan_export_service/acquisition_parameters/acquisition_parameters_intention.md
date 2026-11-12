@@ -160,6 +160,7 @@ exports entre eux (toutes les acquisitions faites avec telle calibration).
   },
 
   "feature_of_interest": {                          // SOSA : ce qui est mesuré
+    "id": "<measured objects registry id> | null",  // 1.2
     "description": "bouteille d'eau, 8 mm du contact avec les sphères, résistance 350 kΩ",
     "notes": null,
     "distance_between_lowest_point_of_sphere_and_highest_point_of_object_under_test":   // 1.2
@@ -287,6 +288,10 @@ exports :
 - **Pas des moteurs (1.1)** : `components.motors.settings.step_size` est la transmission
   mécanique appliquée au mouvement (µm par incrément), plus la valeur d'un fichier de
   configuration Arcus que plus rien ne tient à jour.
+- **Objet mesuré choisi dans un registre (1.2)** : `feature_of_interest.id` est l'identifiant
+  de l'objet dans le registre des objets mesurés (`.aefi_acquisition/measured_objects/`),
+  comme `provenance.operator.id` pour l'opérateur ; `description` en est le nom. Une même
+  orthographe pour un même objet : les acquisitions d'un objet se regroupent par `id`.
 - **Lift-off (1.2)** : `feature_of_interest.distance_between_lowest_point_of_sphere_and_highest_point_of_object_under_test`
   — distance verticale entre le point le plus bas des sphères et le point le plus haut de
   l'objet mesuré, saisie par l'opérateur au démarrage (panneaux Scan et Continuous Reading,

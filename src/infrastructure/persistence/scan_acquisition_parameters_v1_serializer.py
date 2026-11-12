@@ -43,6 +43,7 @@ def serialize_scan_acquisition_parameters_v1(
     # Typed by the operator at start (Scan / Continuous Reading panels); empty = warning.
     feature_of_interest = v1.feature_of_interest(
         present=True, description=activity.measured_object, notes=None, warn=warn,
+        measured_object_id=activity.measured_object_id,
         lift_off_mm=activity.lift_off_mm,
     )
     components = v1.components(conditions, warn)
