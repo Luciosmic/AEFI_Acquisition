@@ -6,3 +6,8 @@
 22:55 | decision | familles typage Fake (intention-non-typee sous-fake, port-sortant-sans-fake fake-non-type) bloquees : doublure-de-test exige implements+double_de, ACQ n'a ni adaptateur ni port type ; brique creer-un-atome refuse | constat=constat-typer-les-fakes-exige-de-typer-reels-et-ports.md
 22:56 | decision | fake-mal-place : 24/26 exigent de deplacer le reel (infra a 2 niveaux, dossiers a plusieurs reels) ; 2 seulement se corrigent par renommage du Fake (acquisition_conditions, provenance)
 22:57 | jalon | perimetre change par l'humain (via coordinateur) : un exemple par famille, 3 au plus, un commit chacun, puis audit-des-trois-exemples.md
+22:58 | jalon | reference pytest src | 1707 passed, 3 skipped, 248 subtests, 0 echec | 175 s | log=run-pytest-avant.log
+23:00 | jalon | exemple=3 fake-mal-place | atome=src/infrastructure/provenance/fake | geste=renommer fake_software_provenance_port -> fake_provenance, intention par le gate, imports suivis (11 fichiers)
+23:04 | jalon | exemple=3 | boucle-tdd=CASSE a tort (erreurs du fichier renomme comptees nouvelles) | verify=1314->1313, fake-mal-place 26->25, aucun autre code | pytest=identique | commits=edb7776,2ff40fd,d3a6575
+23:05 | jalon | exemples 1 et 2 non appliques : typer un Fake ajoute required-field-absent (implements) au graphe | au_diagnostics=2 erreurs, identiques a la reference
+23:07 | fin | resultat=1 exemple sur 3 fait, 2 bloques avec constat | erreurs=1314->1313 | commits=edb7776,2ff40fd,d3a6575,cd4755e | audit=audit-des-trois-exemples.md | bilan=plan-de-lots-acq-apres-phase-1.md | prochain=decision humaine sur un exemple en chaine (port, reel, Fake)
