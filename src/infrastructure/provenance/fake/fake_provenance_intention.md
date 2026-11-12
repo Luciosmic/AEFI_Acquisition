@@ -1,3 +1,11 @@
+---
+type: doublure-de-test::solidai-hexagonal
+tldr: "Le Fake de provenance : rend une provenance donnée, arbre propre ou git absent, pour que les tests ne dépendent pas de l'état du dépôt."
+code: ["[[src/infrastructure/provenance/fake/fake_provenance.py]]"]
+cause_de_changement: outil
+implements: ["[[src/application/shared/acquisition_parameters/i_software_provenance_port_intention]]"]
+double_de: "[[src/infrastructure/provenance/git_software_provenance_reader_intention]]"
+---
 # fake_provenance — Intention
 
 ## Rationale
