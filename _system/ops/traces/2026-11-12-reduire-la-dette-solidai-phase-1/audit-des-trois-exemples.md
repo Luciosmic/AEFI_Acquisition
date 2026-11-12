@@ -1,7 +1,7 @@
 ---
 statut: to_validate
 doc_type: rapport
-tldr: "Audit de la mise en conformité SolidAI d'ACQ sur un exemple par famille : seul le Fake mal placé a pu être corrigé (provenance, 1 erreur en moins, tests identiques). Les deux exemples de typage des Fakes sont bloqués : doublure-de-test exige un réel typé adaptateur et un port typé, qu'ACQ n'a pas."
+tldr: "Audit de la mise en conformité SolidAI d'ACQ sur un exemple par famille : seul le Fake mal placé a pu être corrigé (provenance, 1 erreur en moins, tests identiques). Le typage des Fakes, bloqué seul, est fait en chaîne sur la provenance (port, réel adaptateur, Fake doublure-de-test) : 2 erreurs en moins, tests identiques, le Fake relié à son réel. Le port reste invisible pour solidai verify, à trancher."
 ---
 
 # Audit des trois exemples de mise en conformité d'ACQ
