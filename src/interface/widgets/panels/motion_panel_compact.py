@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QGroupBox, QDoubleSpinBox, QGridLayout, QComboBox
+    QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QGroupBox, QDoubleSpinBox, QGridLayout, QComboBox, QFrame
 )
 from PySide6.QtCore import Qt, Signal
 from interface.widgets.motion.position_visualizer import PositionVisualizer
@@ -99,25 +99,23 @@ class MotionPanelCompact(QWidget):
         v_layout.setSpacing(8)
         v_layout.setContentsMargins(10, 15, 10, 10)
         
-        # --- Position Display ---
+        # --- Readout: the position in the panel's unit, the other unit underneath ---
         pos_layout = QHBoxLayout()
         self.lbl_x = QLabel("X: 0.00")
         self.lbl_y = QLabel("Y: 0.00")
-        self.lbl_x.setStyleSheet("font-weight: bold; font-size: 12px; color: #4CAF50;")
-        self.lbl_y.setStyleSheet("font-weight: bold; font-size: 12px; color: #2196F3;")
+        self.lbl_x.setStyleSheet("font-weight: bold; font-size: 14px; color: #4CAF50;")
+        self.lbl_y.setStyleSheet("font-weight: bold; font-size: 14px; color: #2196F3;")
         pos_layout.addWidget(self.lbl_x)
+        pos_layout.addSpacing(12)
         pos_layout.addWidget(self.lbl_y)
         pos_layout.addStretch()
-        
-        # Status Label
         self.lbl_status = QLabel("IDLE")
         self.lbl_status.setStyleSheet("color: #AAA; font-size: 10px; font-weight: bold;")
         pos_layout.addWidget(self.lbl_status)
-        
         v_layout.addLayout(pos_layout)
 
-        # Controller pulse counts: the quantity the µm/increment factor converts to mm,
-        # read raw (never shifted by the display referential).
+        # The other unit, small: the controller's pulse count is always from the homing switch, the mm
+        # follow the referential chosen below.
         self.lbl_increments = QLabel("Incréments  X: —   Y: —")
         self.lbl_increments.setToolTip(
             "Compteur d'incréments du contrôleur (référentiel butées), indépendant du facteur µm/incrément"
@@ -125,175 +123,129 @@ class MotionPanelCompact(QWidget):
         self.lbl_increments.setStyleSheet("color: #AAA; font-size: 10px;")
         v_layout.addWidget(self.lbl_increments)
 
-        # --- Main Controls: Grid + Home Buttons Column ---
-        main_h_layout = QHBoxLayout()
-        main_h_layout.setSpacing(10)
-        
-        # Left side: Main Controls Grid
-        main_grid = QGridLayout()
-        main_grid.setSpacing(6)
-        
-        # Row 0: X Target Position
-        self.lbl_target_x = QLabel("X Target Position (mm):")
-        main_grid.addWidget(self.lbl_target_x, 0, 0)
-        self.spin_to_x = QDoubleSpinBox()
-        self.spin_to_x.setRange(0.0, 1270.0)
-        self.spin_to_x.setDecimals(1)
-        self.spin_to_x.setMaximumWidth(75)
-        self.btn_go_x = QPushButton("X→")
-        self.btn_go_x.setFixedSize(32, 26)
-        main_grid.addWidget(self.spin_to_x, 0, 1)
-        main_grid.addWidget(self.btn_go_x, 0, 2)
-        
-        # Unit of the whole panel — position, setpoints and jog step: mm (needs the µm/increment
-        # conversion) or controller increments (does not)
-        main_grid.addWidget(QLabel("Unit:"), 0, 3)
+        # --- Modes: the three choices that change how everything below reads or moves ---
         self.combo_unit = QComboBox()
         self.combo_unit.addItems([self.UNIT_MM, self.UNIT_INCREMENTS])
         self.combo_unit.setToolTip(
             "Unité de tout le panneau : position affichée, consignes et pas du jog.\n"
             "mm : demande le facteur µm/incrément ; incréments : l'unité du contrôleur, toujours disponible."
         )
-        self.combo_unit.setMaximumWidth(90)
-        main_grid.addWidget(self.combo_unit, 0, 4)
+        self.combo_referential = QComboBox()
+        for mode in self.REFERENTIAL_MODES:
+            self.combo_referential.addItem(self.REFERENTIAL_LABELS[mode], mode)
+        self.combo_referential.setCurrentIndex(self.REFERENTIAL_MODES.index(self._referential_mode))
+        self.combo_referential.setToolTip(
+            "Butées : 0 = butée de homing. Centré : (0,0) = milieu du banc. Ne joue que pour les mm."
+        )
+        self.combo_speed_mode = QComboBox()
+        self.combo_speed_mode.addItems([m.capitalize() for m in self.SPEED_MODES])
+        modes_layout = QHBoxLayout()
+        modes_layout.setSpacing(6)
+        for caption, combo in (
+            ("Unité", self.combo_unit), ("Référentiel", self.combo_referential), ("Vitesse", self.combo_speed_mode)
+        ):
+            modes_layout.addWidget(QLabel(caption))
+            modes_layout.addWidget(combo)
+            modes_layout.addSpacing(6)
+        modes_layout.addStretch()
+        v_layout.addWidget(self._separator())
+        v_layout.addLayout(modes_layout)
+        v_layout.addWidget(self._separator())
 
-        # Row 1: Y Target Position
-        self.lbl_target_y = QLabel("Y Target Position (mm):")
-        main_grid.addWidget(self.lbl_target_y, 1, 0)
+        # --- Go to: one target per axis, in the panel's unit (shown as the spinbox suffix) ---
+        goto = QGridLayout()
+        goto.setHorizontalSpacing(6)
+        goto.setVerticalSpacing(6)
+        self.lbl_target_x = QLabel("Cible X")
+        self.lbl_target_y = QLabel("Cible Y")
+        self.spin_to_x = QDoubleSpinBox()
         self.spin_to_y = QDoubleSpinBox()
-        self.spin_to_y.setRange(0.0, 1270.0)
-        self.spin_to_y.setDecimals(1)
-        self.spin_to_y.setMaximumWidth(75)
+        for spin in (self.spin_to_x, self.spin_to_y):
+            spin.setRange(0.0, 1270.0)
+            spin.setDecimals(1)
+            spin.setSuffix(" mm")
+            spin.setMinimumWidth(110)
+        self.btn_go_x = QPushButton("X→")
         self.btn_go_y = QPushButton("Y→")
-        self.btn_go_y.setFixedSize(32, 26)
-        main_grid.addWidget(self.spin_to_y, 1, 1)
-        main_grid.addWidget(self.btn_go_y, 1, 2)
-
-        # Both Move (on same row as Y)
         self.btn_go_both = QPushButton("XY→")
-        self.btn_go_both.setFixedSize(36, 26)
         self.btn_go_both.setToolTip("Move both axes to target")
-        main_grid.addWidget(self.btn_go_both, 1, 3)
-        
-        # To Center button (on same row as Y)
         self.btn_to_center = QPushButton("To Center")
-        self.btn_to_center.setFixedSize(70, 26)
         self.btn_to_center.setToolTip("Move to center of bench")
-        main_grid.addWidget(self.btn_to_center, 1, 4)
-        
-        # Row 2: Step Size
-        main_grid.addWidget(QLabel("Jog To Step:"), 2, 0)
+        for button in (self.btn_go_x, self.btn_go_y):
+            button.setFixedSize(36, 26)
+        self.btn_go_both.setFixedSize(60, 26)
+        self.btn_to_center.setFixedSize(76, 26)
+        goto.addWidget(self.lbl_target_x, 0, 0)
+        goto.addWidget(self.spin_to_x, 0, 1)
+        goto.addWidget(self.btn_go_x, 0, 2)
+        goto.addWidget(self.btn_go_both, 0, 3)
+        goto.addWidget(self.lbl_target_y, 1, 0)
+        goto.addWidget(self.spin_to_y, 1, 1)
+        goto.addWidget(self.btn_go_y, 1, 2)
+        goto.addWidget(self.btn_to_center, 1, 3)
+        goto.setColumnStretch(4, 1)
+        v_layout.addLayout(goto)
+        v_layout.addWidget(self._separator())
+
+        # --- Jog (left) and where the bench is (right) ---
+        middle = QHBoxLayout()
+        middle.setSpacing(14)
+
+        jog_grid = QGridLayout()
+        jog_grid.setSpacing(4)
+        self.btn_up = QPushButton("▲")
+        self.btn_left = QPushButton("◀")
+        self.btn_right = QPushButton("▶")
+        self.btn_down = QPushButton("▼")
+        for button, row, col in ((self.btn_up, 0, 1), (self.btn_left, 1, 0), (self.btn_right, 1, 2), (self.btn_down, 2, 1)):
+            button.setFixedSize(38, 38)
+            jog_grid.addWidget(button, row, col)
+        middle.addLayout(jog_grid)
+
+        # The jog step, in the panel's unit
+        step_layout = QVBoxLayout()
+        step_layout.setSpacing(4)
+        step_layout.addStretch()
+        step_layout.addWidget(QLabel("Pas du jog"))
+        step_row = QHBoxLayout()
         self.spin_step = QDoubleSpinBox()
         self.spin_step.setRange(1, 500)
         self.spin_step.setValue(50)
         self.spin_step.setSingleStep(10)
         self.spin_step.setDecimals(0)
-        self.spin_step.setMaximumWidth(60)
-        main_grid.addWidget(self.spin_step, 2, 1)
+        self.spin_step.setMinimumWidth(70)
         self.lbl_step_unit = QLabel("mm")
-        main_grid.addWidget(self.lbl_step_unit, 2, 2)
+        step_row.addWidget(self.spin_step)
+        step_row.addWidget(self.lbl_step_unit)
+        step_layout.addLayout(step_row)
+        step_layout.addStretch()
+        middle.addLayout(step_layout)
+        middle.addStretch()
 
-        # Speed mode (same row as jog step, on the right side)
-        main_grid.addWidget(QLabel("Speed:"), 2, 3)
-        self.combo_speed_mode = QComboBox()
-        self.combo_speed_mode.addItems([m.capitalize() for m in self.SPEED_MODES])
-        self.combo_speed_mode.setMaximumWidth(75)
-        main_grid.addWidget(self.combo_speed_mode, 2, 4)
+        self.visualizer = PositionVisualizer()
+        self.visualizer.setFixedSize(130, 130)
+        middle.addWidget(self.visualizer)
+        v_layout.addLayout(middle)
+        v_layout.addWidget(self._separator())
 
-        # Referential of the positions in mm: limit switches (0 = homing switch) or centred (0,0 = middle of the bench)
-        main_grid.addWidget(QLabel("Referential:"), 3, 3)
-        self.combo_referential = QComboBox()
-        for mode in self.REFERENTIAL_MODES:
-            self.combo_referential.addItem(self.REFERENTIAL_LABELS[mode], mode)
-        self.combo_referential.setCurrentIndex(self.REFERENTIAL_MODES.index(self._referential_mode))
-        self.combo_referential.setMaximumWidth(75)
-        main_grid.addWidget(self.combo_referential, 3, 4)
-
-        # Row 3-4: Stop Buttons (Left side, stacked)
+        # --- Origin (slow) on the left, stops (urgent, coloured) on the right ---
+        actions = QHBoxLayout()
+        actions.setSpacing(6)
+        self.btn_home_x = QPushButton("Home X")
+        self.btn_home_y = QPushButton("Home Y")
+        self.btn_home_xy = QPushButton("Home XY")
+        for button in (self.btn_home_x, self.btn_home_y, self.btn_home_xy):
+            button.setFixedHeight(30)
+            actions.addWidget(button)
+        actions.addStretch()
         self.btn_stop = QPushButton("STOP")
         self.btn_stop.setStyleSheet("background-color: #FBC02D; color: black; font-weight: bold; font-size: 11px;")
-        self.btn_stop.setFixedSize(75, 38)
-        main_grid.addWidget(self.btn_stop, 3, 0, 1, 2)
-        
         self.btn_estop = QPushButton("E-STOP")
         self.btn_estop.setStyleSheet("background-color: #D32F2F; color: white; font-weight: bold; font-size: 11px;")
-        self.btn_estop.setFixedSize(75, 38)
-        main_grid.addWidget(self.btn_estop, 4, 0, 1, 2)
-        
-        main_h_layout.addLayout(main_grid)
-        
-        # Right side: Home Buttons Column
-        home_column = QVBoxLayout()
-        home_column.setSpacing(6)
-        home_column.addStretch()  # Push buttons to top
-        
-        self.btn_home_x = QPushButton("Home X")
-        self.btn_home_x.setFixedWidth(80)
-        self.btn_home_x.setFixedHeight(30)
-        home_column.addWidget(self.btn_home_x)
-        
-        self.btn_home_y = QPushButton("Home Y")
-        self.btn_home_y.setFixedWidth(80)
-        self.btn_home_y.setFixedHeight(30)
-        home_column.addWidget(self.btn_home_y)
-        
-        self.btn_home_xy = QPushButton("Home XY")
-        self.btn_home_xy.setFixedWidth(80)
-        self.btn_home_xy.setFixedHeight(30)
-        home_column.addWidget(self.btn_home_xy)
-        
-        home_column.addStretch()  # Balance spacing
-        
-        home_column.addStretch()  # Balance spacing
-        
-        main_h_layout.addLayout(home_column)
-
-        # Right side: Position Visualizer (REMOVED from here)
-        # self.visualizer = PositionVisualizer()
-        # self.visualizer.setFixedSize(120, 120) 
-        # main_h_layout.addWidget(self.visualizer)
-        
-        v_layout.addLayout(main_h_layout)
-        
-        # Bottom: Jog Buttons + Position Visualizer (side by side)
-        bottom_layout = QHBoxLayout()
-        bottom_layout.setSpacing(15)
-        
-        # Left: Jog Buttons (Diamond Layout in a grid)
-        jog_container = QWidget()
-        jog_grid = QGridLayout(jog_container)
-        jog_grid.setSpacing(6)
-        jog_grid.setContentsMargins(0, 0, 0, 0)
-        
-        # Up (Y+)
-        self.btn_up = QPushButton("▲")
-        self.btn_up.setFixedSize(42, 42)
-        jog_grid.addWidget(self.btn_up, 0, 1)
-        
-        # Left (X-)
-        self.btn_left = QPushButton("◀")
-        self.btn_left.setFixedSize(42, 42)
-        jog_grid.addWidget(self.btn_left, 1, 0)
-        
-        # Right (X+)
-        self.btn_right = QPushButton("▶")
-        self.btn_right.setFixedSize(42, 42)
-        jog_grid.addWidget(self.btn_right, 1, 2)
-        
-        # Down (Y-)
-        self.btn_down = QPushButton("▼")
-        self.btn_down.setFixedSize(42, 42)
-        jog_grid.addWidget(self.btn_down, 2, 1)
-        
-        bottom_layout.addWidget(jog_container)
-        bottom_layout.addStretch()
-        
-        # Right: Position Visualizer
-        self.visualizer = PositionVisualizer()
-        self.visualizer.setFixedSize(150, 150)
-        bottom_layout.addWidget(self.visualizer)
-        
-        v_layout.addLayout(bottom_layout)
+        for button in (self.btn_stop, self.btn_estop):
+            button.setFixedSize(75, 30)
+            actions.addWidget(button)
+        v_layout.addLayout(actions)
         v_layout.addStretch()
 
         # "Bench not calibrated" banner: hidden until the presenter says so.
@@ -310,6 +262,13 @@ class MotionPanelCompact(QWidget):
 
         self._apply_axis_range()
         self._render_position()
+
+    @staticmethod
+    def _separator() -> QFrame:
+        line = QFrame()
+        line.setFrameShape(QFrame.HLine)
+        line.setStyleSheet("color: #333;")
+        return line
 
     def _connect_signals(self):
         # Absolute Moves (spinbox values are in the active referential; convert to raw before emitting)
@@ -372,18 +331,16 @@ class MotionPanelCompact(QWidget):
             if self._in_increments() else ""
         )
         if self._in_increments():
-            self.lbl_target_x.setText("X Target Position (inc):")
-            self.lbl_target_y.setText("Y Target Position (inc):")
             for spin in (self.spin_to_x, self.spin_to_y):
+                spin.setSuffix(" inc")
                 spin.setDecimals(0)
                 spin.setRange(0, self.MAX_INCREMENTS)
                 spin.setSingleStep(100)
             self.spin_to_x.setValue(self._last_increments[0])
             self.spin_to_y.setValue(self._last_increments[1])
         else:
-            self.lbl_target_x.setText("X Target Position (mm):")
-            self.lbl_target_y.setText("Y Target Position (mm):")
             for spin in (self.spin_to_x, self.spin_to_y):
+                spin.setSuffix(" mm")
                 spin.setDecimals(1)
                 spin.setSingleStep(1)
             self._apply_axis_range()
