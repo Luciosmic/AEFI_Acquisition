@@ -19,7 +19,7 @@ from application.services.acquisition_throughput_characterization_service.dtos.a
 from application.services.acquisition_throughput_characterization_service.dtos.acquisition_throughput_dtos import (
     AcquisitionThroughputRequestDTO,
 )
-from infrastructure.acquisition_conditions.fake.fake_acquisition_conditions_port import make_bench_conditions
+from infrastructure.acquisition_conditions.fake.fake_acquisition_conditions import make_bench_conditions
 from infrastructure.provenance.fake.fake_provenance import CLEAN
 
 

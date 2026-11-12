@@ -1,7 +1,7 @@
 """
 Fake Acquisition Conditions Port
 
-See fake_acquisition_conditions_port_intention.md.
+See fake_acquisition_conditions_intention.md.
 """
 
 from datetime import datetime, timezone

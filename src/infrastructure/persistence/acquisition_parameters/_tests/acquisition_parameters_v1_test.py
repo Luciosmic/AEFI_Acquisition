@@ -3,7 +3,7 @@
 import unittest
 
 from application.shared.acquisition_parameters.acquisition_conditions_dtos import BenchPositionDTO
-from infrastructure.acquisition_conditions.fake.fake_acquisition_conditions_port import make_bench_conditions
+from infrastructure.acquisition_conditions.fake.fake_acquisition_conditions import make_bench_conditions
 from infrastructure.persistence.acquisition_parameters import acquisition_parameters_v1 as v1
 
 

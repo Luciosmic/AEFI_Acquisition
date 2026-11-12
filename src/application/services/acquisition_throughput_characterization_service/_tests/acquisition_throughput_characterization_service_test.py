@@ -38,7 +38,7 @@ from application.shared.acquisition_parameters.acquisition_conditions_dtos impor
     BenchPositionDTO,
     HostLinkDTO,
 )
-from infrastructure.acquisition_conditions.fake.fake_acquisition_conditions_port import (
+from infrastructure.acquisition_conditions.fake.fake_acquisition_conditions import (
     FakeAcquisitionConditionsPort,
     make_bench_conditions,
 )

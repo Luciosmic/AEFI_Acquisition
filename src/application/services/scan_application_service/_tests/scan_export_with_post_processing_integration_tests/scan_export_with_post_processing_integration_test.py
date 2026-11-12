@@ -43,7 +43,7 @@ from application.services.excitation_configuration_service.excitation_configurat
 )
 from application.services.scan_export_service.scan_export_service import ScanExportService
 from application.services.scan_export_service.dtos.scan_export_dtos import ExportConfigDTO
-from infrastructure.acquisition_conditions.fake.fake_acquisition_conditions_port import FakeAcquisitionConditionsPort
+from infrastructure.acquisition_conditions.fake.fake_acquisition_conditions import FakeAcquisitionConditionsPort
 from infrastructure.hardware.serial_link.fake.fake_usb_latency_timer_port import FakeUsbLatencyTimerPort
 from infrastructure.provenance.fake.fake_provenance import FakeSoftwareProvenancePort
 
