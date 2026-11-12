@@ -9,7 +9,7 @@ from infrastructure.real.events.in_memory_event_bus import InMemoryEventBus
 from infrastructure.real.execution.step_scan_executor import StepScanExecutor
 from infrastructure.fake.hardware.arcus_performax_4EX.fake_motion_port import FakeMotionPort
 from infrastructure.fake.hardware.micro_controller.ads131a04.fake_acquisition_port import FakeAcquisitionPort
-from tests_e2e.base.test_base_agent import DiagramFriendlyTest
+from tests_e2e.base.base_agent_test import DiagramFriendlyTest
 
 from domain.models.scan.aggregate.scan import Scan as StepScan
 from domain.models.scan.value_objects import ScanTrajectory
