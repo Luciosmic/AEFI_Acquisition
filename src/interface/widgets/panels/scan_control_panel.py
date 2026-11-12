@@ -8,6 +8,18 @@ from PySide6.QtCore import Qt, Signal
 from pathlib import Path
 
 from interface.logic.ui_config_store import UIConfigStore
+from interface.presentation.bench_referential import BenchReferential
+
+# Scan zone fields, per scan shape, with the bench axis each one reads: shown in the
+# referential chosen in Settings, always sent and saved in the limit-switch one.
+_ZONE_FIELD_AXES = {
+    "x_min": "x", "x_max": "x", "y_min": "y", "y_max": "y",
+    "line_center_x": "x", "line_center_y": "y",
+}
+_REFERENTIAL_LABELS = {
+    "limit_switch": "Référentiel : butées (0 = butée de homing)",
+    "centered": "Référentiel : centré (0,0 = centre du banc)",
+}
 
 
 class ScanControlPanel(QWidget):
@@ -25,6 +37,11 @@ class ScanControlPanel(QWidget):
         super().__init__(parent)
         self._config_store = config_store or UIConfigStore()
         self._start_blocked = False
+        saved_mode = self._config_store.load_motion_config().get("referential_mode", "limit_switch")
+        self._referential = BenchReferential().with_mode(saved_mode)
+        # Canonical zone, limit-switch referential: the fields are a view of it.
+        self._raw_zone = {"x_min": 600.0, "x_max": 800.0, "y_min": 600.0, "y_max": 800.0,
+                          "line_center_x": 700.0, "line_center_y": 700.0}
         self._build_ui()
         self._connect_signals()
         self._load_config()
@@ -215,7 +232,19 @@ class ScanControlPanel(QWidget):
         advanced.addWidget(self.btn_save_scan_defaults, 2, 2, 1, 2)
         self.advanced_box.setVisible(False)
 
-        grid.addWidget(self.tabs_scan_kind, 0, 0, 1, 4)
+        self.lbl_referential = QLabel()
+        self.lbl_referential.setStyleSheet("color: #AAA; font-style: italic;")
+        self.lbl_referential.setToolTip(
+            "Les positions de la zone se lisent dans le référentiel choisi dans Settings ; "
+            "le scan part toujours dans le référentiel des butées."
+        )
+        kind_box = QWidget()
+        kind_layout = QVBoxLayout(kind_box)
+        kind_layout.setContentsMargins(0, 0, 0, 0)
+        kind_layout.setSpacing(2)
+        kind_layout.addWidget(self.lbl_referential)
+        kind_layout.addWidget(self.tabs_scan_kind)
+        grid.addWidget(kind_box, 0, 0, 1, 4)
         grid.addLayout(mode_row, 1, 0, 1, 4)
         grid.addWidget(QLabel("Stabilization (ms):"), 2, 0)
         grid.addWidget(self.input_stabilization, 2, 1)
@@ -376,21 +405,69 @@ class ScanControlPanel(QWidget):
         if chosen:
             self.input_export_directory.setText(chosen)
 
+    # -- referential ----------------------------------------------------------
+    def _zone_field(self, key: str) -> QLineEdit:
+        return getattr(self, f"input_{key}")
+
+    def _to_raw(self, key: str, displayed: float) -> float:
+        convert = self._referential.to_raw_x if _ZONE_FIELD_AXES[key] == "x" else self._referential.to_raw_y
+        return convert(displayed)
+
+    def _to_display(self, key: str, raw: float) -> float:
+        convert = self._referential.to_display_x if _ZONE_FIELD_AXES[key] == "x" else self._referential.to_display_y
+        return convert(raw)
+
+    def _read_zone_fields(self) -> None:
+        """Keep the canonical zone up to date with what the operator typed (unreadable text is left alone)."""
+        for key in _ZONE_FIELD_AXES:
+            try:
+                self._raw_zone[key] = self._to_raw(key, float(self._zone_field(key).text()))
+            except ValueError:
+                pass
+
+    def _render_zone_fields(self) -> None:
+        for key in _ZONE_FIELD_AXES:
+            text = f"{self._to_display(key, self._raw_zone[key]):.3f}".rstrip("0").rstrip(".")
+            self._zone_field(key).setText("0" if text in ("", "-0") else text)
+        self.lbl_referential.setText(_REFERENTIAL_LABELS[self._referential.mode])
+
+    def _change_referential(self, referential: BenchReferential) -> None:
+        """The same physical zone, written in the new referential."""
+        self._read_zone_fields()
+        self._referential = referential
+        self._render_zone_fields()
+
+    def set_referential_mode(self, mode: str) -> None:
+        """Settings panel choice: 'limit_switch' or 'centered'."""
+        self._change_referential(self._referential.with_mode(mode))
+
+    def set_axis_limits(self, max_x: float, max_y: float) -> None:
+        """The bench travel in mm (its half is the centre) follows the µm-per-increment factor."""
+        self._change_referential(self._referential.with_limits(max_x, max_y))
+
+    def _raw_zone_text(self, key: str) -> str:
+        """Value sent to the scan: the zone in the limit-switch referential (the text itself if unreadable)."""
+        try:
+            return repr(round(self._to_raw(key, float(self._zone_field(key).text())), 6))
+        except ValueError:
+            return self._zone_field(key).text()
+
     def _on_start_clicked(self):
         """Gather parameters and emit signal."""
+        self._read_zone_fields()
         operator = self.operator_selector.current_operator()
         params = {
             "scan_kind": self._scan_kind(),
-            "line_center_x": self.input_line_center_x.text(),
-            "line_center_y": self.input_line_center_y.text(),
+            "line_center_x": self._raw_zone_text("line_center_x"),
+            "line_center_y": self._raw_zone_text("line_center_y"),
             "line_length_mm": self.input_line_length.text(),
             "line_n_points": self.input_line_nb.text(),
             "line_theta_deg": self.input_line_theta.text(),
-            "x_min": self.input_x_min.text(),
-            "x_max": self.input_x_max.text(),
+            "x_min": self._raw_zone_text("x_min"),
+            "x_max": self._raw_zone_text("x_max"),
             "x_nb_points": self.input_x_nb.text(),
-            "y_min": self.input_y_min.text(),
-            "y_max": self.input_y_max.text(),
+            "y_min": self._raw_zone_text("y_min"),
+            "y_max": self._raw_zone_text("y_max"),
             "y_nb_points": self.input_y_nb.text(),
             "stabilization_delay_ms": self.input_stabilization.text(),
             "averaging_per_position": self.input_averaging.text(),
@@ -472,19 +549,15 @@ class ScanControlPanel(QWidget):
         """Populate the form from stored scan/export defaults, falling back to UI defaults."""
         scan_config = self._config_store.load_scan_config()
         if scan_config:
-            self.input_x_min.setText(str(scan_config.get("x_min", 600.0)))
-            self.input_x_max.setText(str(scan_config.get("x_max", 800.0)))
+            for key in _ZONE_FIELD_AXES:
+                self._raw_zone[key] = float(scan_config.get(key, self._raw_zone[key]))
             self.input_x_nb.setText(str(scan_config.get("x_nb_points", 81)))
-            self.input_y_min.setText(str(scan_config.get("y_min", 600.0)))
-            self.input_y_max.setText(str(scan_config.get("y_max", 800.0)))
             self.input_y_nb.setText(str(scan_config.get("y_nb_points", 81)))
             self.input_stabilization.setText(str(scan_config.get("stabilization_delay_ms", 300)))
             self.input_averaging.setText(str(scan_config.get("averaging_per_position", 10)))
             self.checkbox_differential_mode.setChecked(scan_config.get("differential_mode", False))
             (self.radio_fly if scan_config.get("fly_scan", False) else self.radio_step).setChecked(True)
             self.input_differential_settle_delay.setText(str(scan_config.get("differential_settle_delay_ms", 50)))
-            self.input_line_center_x.setText(str(scan_config.get("line_center_x", 700.0)))
-            self.input_line_center_y.setText(str(scan_config.get("line_center_y", 700.0)))
             self.input_line_length.setText(str(scan_config.get("line_length_mm", 200.0)))
             self.input_line_nb.setText(str(scan_config.get("line_n_points", 81)))
             self.input_line_theta.setText(str(scan_config.get("line_theta_deg", 0.0)))
@@ -508,6 +581,7 @@ class ScanControlPanel(QWidget):
                 button.blockSignals(False)
                 box = self.advanced_box if button is self.btn_toggle_advanced else self.export_directory_box
                 self._set_folded_section(button, box, expanded, key, save=False)
+        self._render_zone_fields()
         self._update_mode_dependent_fields()
 
         export_config = self._config_store.load_export_config()
@@ -518,12 +592,13 @@ class ScanControlPanel(QWidget):
 
     def _save_scan_defaults(self):
         """Persist the current scan settings (including differential mode) as the new defaults."""
+        self._read_zone_fields()
         scan_config = {
-            "x_min": float(self.input_x_min.text()),
-            "x_max": float(self.input_x_max.text()),
+            "x_min": self._raw_zone["x_min"],
+            "x_max": self._raw_zone["x_max"],
             "x_nb_points": int(self.input_x_nb.text()),
-            "y_min": float(self.input_y_min.text()),
-            "y_max": float(self.input_y_max.text()),
+            "y_min": self._raw_zone["y_min"],
+            "y_max": self._raw_zone["y_max"],
             "y_nb_points": int(self.input_y_nb.text()),
             "scan_pattern": self.combo_pattern.currentText(),
             "scan_axis": self.combo_axis.currentText(),
@@ -533,8 +608,8 @@ class ScanControlPanel(QWidget):
             "differential_mode": self.checkbox_differential_mode.isChecked(),
             "differential_settle_delay_ms": float(self.input_differential_settle_delay.text()),
             "scan_kind": self._scan_kind(),
-            "line_center_x": float(self.input_line_center_x.text()),
-            "line_center_y": float(self.input_line_center_y.text()),
+            "line_center_x": self._raw_zone["line_center_x"],
+            "line_center_y": self._raw_zone["line_center_y"],
             "line_length_mm": float(self.input_line_length.text()),
             "line_n_points": int(self.input_line_nb.text()),
             "line_theta_deg": float(self.input_line_theta.text()),
