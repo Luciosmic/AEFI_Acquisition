@@ -1,0 +1,7 @@
+19:48 | depart | quoi=integrer aux scans la stabilisation de la colonne par accelerometre du Banc-test-II, repli sur le delai fixe si le capteur ne repond pas | session=8c3dfc29-fdfa-4702-a37b-df94237e2bdd
+19:48 | jalon | source=campagnes/campaign.py du Banc-test-II (Runner.home niveau de repos 10 s, Runner._settle_on_accel fenetre 1 s, seuil 1,5 x repos, delai max 30 s) | aefi_avant=time.sleep(stabilization_delay_ms) par point et en debut de ligne fly
+19:48 | decision | repli=delai fixe actuel quand l'accelerometre n'est pas en acquisition, muet pendant la fenetre, ou repos non mesure | ecart_au_banc=un accelerometre muet ne fait plus attendre le delai max (journal 2026-11-06 : 30 s par lecture apres la panne)
+19:48 | decision | demarrage=l'operateur demarre l'accelerometre dans son panneau, le scan ne le demarre pas (intention du service inertiel : pas d'automatisme cache) | delai=0 ms garde le sens « pas de stabilisation »
+19:58 | jalon | ecrit=ColumnRestCriterion (domaine scan), ColumnStabilization (application, abonne aux echantillons inertiels), branchement step-scan + debut de ligne fly-scan + main.py
+19:58 | constat | tests=19 unitaires + 4 integration verts | suite_src=1660 verts, 1 echec de chronometrage du faux controleur Arcus sous charge, vert seul
+19:58 | fin | commit=feat(scan) stabilisation sur accelerometre, non pousse | reste=etat visible dans l'interface pendant la mesure du repos (10 s), essai au banc
