@@ -179,7 +179,7 @@ class MotionControlService:
                 continue
             if value < 0:
                 return self._out_of_range(operation, f"{axis}={value} incréments est négatif (origine = butée de homing)")
-            if limit_mm is not None and value * status.microns_per_pulse / 1000.0 > limit_mm:
+            if limit_mm is not None and value * status.microns_per_pulse / 1000.0 > limit_mm + 1e-6:  # the last increment is inside
                 return self._out_of_range(
                     operation,
                     f"{axis}={value} incréments = {value * status.microns_per_pulse / 1000.0:.1f} mm, "
@@ -317,6 +317,8 @@ class MotionControlService:
         """Get the maximum travel limits for X and Y axes."""
         try:
             return self._motion_port.get_axis_limits()
+        except MotionConversionUnavailableError:
+            return (1000.0, 1000.0)  # no mm scale yet: the limits are refreshed when the conversion arrives
         except Exception:
             logger.warning("Failed to read axis limits from hardware, falling back to default (1000.0, 1000.0)")
             return (1000.0, 1000.0) # Default fallback

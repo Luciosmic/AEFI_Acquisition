@@ -138,5 +138,36 @@ def test_the_calibration_panel_hosts_the_transmission_tab():
     panel = CalibrationPanel()
 
     tabs = [panel._tabs.tabText(i) for i in range(panel._tabs.count())]
-    assert "Transmission" in tabs
-    assert panel._tabs.widget(tabs.index("Transmission")) is panel.mechanical_transmission_panel
+    assert "Mouvement" in tabs
+    group = panel._tabs.widget(tabs.index("Mouvement"))
+    assert group.widget(group.count() - 1) is panel.mechanical_transmission_panel
+
+
+def test_components_are_grouped_under_mouvement_and_electronique():
+    from types import SimpleNamespace
+
+    from interface.widgets.panels.calibration_panel import CalibrationPanel
+
+    QApplication.instance() or QApplication([])
+    panel = CalibrationPanel()
+
+    def kind(key, label):
+        return SimpleNamespace(key=key, label=label, quantities=())
+
+    for key, label in (
+        ("conditioning_electronics_board", "Carte de conditionnement"),
+        ("adc", "ADC"),
+        ("motors", "Moteurs"),
+        ("stepper_driver", "Driver pas à pas"),
+    ):
+        panel.add_hardware_component_tab(kind(key, label))
+
+    def labels(tabs):
+        return [tabs.tabText(i) for i in range(tabs.count())]
+
+    top = labels(panel._tabs)
+    assert top == ["Calibration capteur", "Géométrie source", "Mouvement", "Électronique"]
+    motion = panel._tabs.widget(top.index("Mouvement"))
+    electronics = panel._tabs.widget(top.index("Électronique"))
+    assert labels(motion) == ["Moteurs", "Driver pas à pas", "Transmission"]
+    assert labels(electronics) == ["Carte de conditionnement", "ADC"]

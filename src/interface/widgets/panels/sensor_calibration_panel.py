@@ -23,22 +23,52 @@ from PySide6.QtWidgets import (
     QPushButton,
     QLabel,
     QLineEdit,
+    QScrollArea,
+    QFrame,
 )
-from PySide6.QtCore import Signal
+from PySide6.QtCore import Qt, Signal
 
-_PROCEDURE_TEXT = (
-    "Angles de montage : P = Rx(θx)·Ry(θy)·Rz(θz) amène le capteur, aligné sur le repère sources, "
-    "jusqu'à son montage actuel (axes sources fixes, rotations appliquées Z puis Y puis X).\n"
-    "Le capteur mesure E_sensor = Pᵀ·E_sources. « Apply Rotation » (Continuous Reading) et l'export "
-    "appliquent la transformation transposée pour revenir au repère sources : E_sources = P·E_sensor.\n"
-    "Saisir les angles de montage tels quels, sans les inverser : l'inversion est faite par le logiciel.\n"
-    "Réglage par tâtonnement (\"Apply Rotation\" activé, chaque modification s'applique en direct) :\n"
-    "1) Excitation selon X : E_x^sources maximal, E_y^sources et E_z^sources minimaux.\n"
-    "2) Excitation selon Y : E_y^sources maximal, E_x^sources et E_z^sources minimaux.\n"
-    "« Calibration automatique » fait la même chose seule : au niveau d'excitation réglé, elle mesure "
-    "la baseline (excitation coupée), puis les réponses aux excitations X et Y, calcule les angles qui "
-    "les alignent au mieux sur e_x et e_y (moindres carrés), les applique en essai et restaure l'excitation.\n"
-    "« Reset to Default » repart des angles idéaux ; « Enregistrer calibration » fige les angles."
+from interface.widgets.collapsible_section.collapsible_section import CollapsibleSection
+
+_MANUAL_PROCEDURE_TEXT = (
+    "Par tâtonnement, en regardant le signal ramené dans le repère sources :<ol>"
+    "<li>Dans l'onglet <i>Capteur</i>, vérifier que le capteur monté est le bon ; dans <i>Géométrie source</i>, "
+    "que la géométrie des sphères est celle du banc.</li>"
+    "<li>Dans <i>Excitation &amp; Lock-In Detection</i>, régler le niveau d'excitation et choisir le mode "
+    "<i>X Direction</i> pour commencer.</li>"
+    "<li>Dans <i>AEFI Continuous Reading</i>, lancer <i>Start</i> et activer <i>Apply Rotation</i> : les "
+    "signaux affichés sont alors E_sources = P·E_sensor, avec les angles de cet onglet.</li>"
+    "<li>Partir de <i>Reset to Default</i> (angles idéaux : le cube repose sur un sommet).</li>"
+    "<li>Modifier les angles θx, θy, θz (pas de 0,1°) : chaque changement s'applique en direct, sans être "
+    "enregistré. Excitation selon X, chercher E_x maximal avec E_y et E_z minimaux.</li>"
+    "<li>Passer le mode d'excitation à <i>Y Direction</i> : E_y doit être maximal avec E_x et E_z minimaux. "
+    "Revenir à X, puis à Y, en alternant jusqu'à ce que les deux directions soient satisfaites ensemble "
+    "(il n'existe pas de formule : le champ primaire du banc n'est pas uniforme).</li>"
+    "<li><i>Enregistrer calibration</i> : fige les angles dans une nouvelle entrée datée, liée au capteur monté "
+    "et à la géométrie source. Tant qu'on n'enregistre pas, l'essai n'est qu'un essai.</li></ol>"
+)
+
+_CONVENTION_TEXT = (
+    "P = Rx(θx)·Ry(θy)·Rz(θz) amène le capteur, aligné sur le repère sources, "
+    "jusqu'à son montage actuel (axes sources fixes, rotations appliquées Z puis Y puis X). Le capteur mesure "
+    "E_sensor = Pᵀ·E_sources ; « Apply Rotation » et l'export appliquent la transformation transposée : "
+    "E_sources = P·E_sensor. Saisir les angles de montage tels quels, sans les inverser : l'inversion est "
+    "faite par le logiciel."
+)
+
+_AUTOMATIC_TEXT = (
+    "Expérimentale : ses angles se sont montrés peu fiables sur le banc, la calibration manuelle fait foi. "
+    "Au niveau d'excitation réglé, elle mesure la baseline (excitation "
+    "coupée), puis les réponses aux excitations X et Y, calcule les angles qui les alignent au mieux sur "
+    "e_x et e_y (moindres carrés), les applique en essai et restaure l'excitation. Elle ne remplace pas "
+    "le contrôle visuel de la procédure manuelle : ses angles restent un essai tant qu'ils ne sont pas enregistrés."
+)
+
+# Explicit titles, folded by default: the tab stays about the angles, the help is one click away.
+_HELP_SECTIONS = (
+    ("Comment calibrer le capteur à la main, pas à pas", _MANUAL_PROCEDURE_TEXT),
+    ("Convention des angles de montage (θx, θy, θz)", _CONVENTION_TEXT),
+    ("Calibration automatique — expérimentale, à contrôler à la main", _AUTOMATIC_TEXT),
 )
 
 
@@ -63,7 +93,13 @@ class SensorCalibrationPanel(QWidget):
         root = QHBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
         controls = QWidget()
-        root.addWidget(controls)
+        # Scrollable: an unfolded help section must never squeeze the text or push the buttons away.
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.NoFrame)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        scroll.setWidget(controls)
+        root.addWidget(scroll)
         if orientation_view is not None:
             root.addWidget(orientation_view, 1)
 
@@ -71,11 +107,15 @@ class SensorCalibrationPanel(QWidget):
         layout.setContentsMargins(5, 5, 5, 5)
         layout.setSpacing(5)
 
-        grp_procedure = QGroupBox("Procédure")
+        grp_procedure = QGroupBox("Aide")
         l_procedure = QVBoxLayout(grp_procedure)
-        lbl_procedure = QLabel(_PROCEDURE_TEXT)
-        lbl_procedure.setWordWrap(True)
-        l_procedure.addWidget(lbl_procedure)
+        for title, text in _HELP_SECTIONS:
+            lbl_procedure = QLabel(text)
+            lbl_procedure.setTextFormat(Qt.RichText)
+            lbl_procedure.setWordWrap(True)
+            section = CollapsibleSection(title)
+            section.set_content_widget(lbl_procedure)
+            l_procedure.addWidget(section)
         layout.addWidget(grp_procedure)
 
         grp_angles = QGroupBox("Angles de montage du capteur (repère sources → montage actuel)")

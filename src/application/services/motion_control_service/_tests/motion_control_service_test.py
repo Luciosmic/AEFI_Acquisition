@@ -25,6 +25,15 @@ class TestMotionControlService(DiagramFriendlyTest):
         self.assertTrue(result.is_success)
         self.motion_port.move_to.assert_called_once()
 
+    def test_axis_limits_default_quietly_while_the_conversion_is_not_applied(self):
+        from application.services.motion_control_service.ports.motion_conversion_unavailable_error import (
+            MotionConversionUnavailableError,
+        )
+
+        self.motion_port.get_axis_limits.side_effect = MotionConversionUnavailableError("get_axis_limits")
+        with self.assertNoLogs("application.services.motion_control_service.motion_control_service", "WARNING"):
+            self.assertEqual(self.service.get_axis_limits(), (1000.0, 1000.0))
+
     def test_emergency_stop_publishes_event(self):
         events = []
         self.event_bus.subscribe("emergencystoptriggered", events.append)

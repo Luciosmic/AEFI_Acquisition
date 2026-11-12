@@ -81,3 +81,13 @@ def test_no_raw_port_is_a_clear_failure():
     service = MotionControlService(MagicMock(spec=IMotionPort), InMemoryEventBus())
 
     assert "pilote en incréments" in service.move_to_increments(1, 1).error.message
+
+
+def test_the_last_increment_of_the_travel_is_accepted_whatever_the_float_rounding():
+    from domain.test_bench.physical_bench_limits.physical_bench_limits import Y_TRAVEL_INCREMENTS
+
+    service, raw = make_service(microns_per_pulse=20.62)
+    service._motion_port.get_axis_limits.return_value = (1200.0, Y_TRAVEL_INCREMENTS * (20.62 / 1000.0))
+
+    assert service.move_to_increments(None, Y_TRAVEL_INCREMENTS).is_success
+    assert not service.move_to_increments(None, Y_TRAVEL_INCREMENTS + 1).is_success

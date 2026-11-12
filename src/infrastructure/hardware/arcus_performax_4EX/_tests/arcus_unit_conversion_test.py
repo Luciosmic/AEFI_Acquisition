@@ -64,6 +64,30 @@ class TestArcusUnitConversion(unittest.TestCase):
         # Assert
         self.mock_controller.set_speed.assert_called_once_with(expected_hz)
 
+    def test_axis_limits_follow_the_measured_travel_in_increments(self):
+        from domain.test_bench.physical_bench_limits.physical_bench_limits import (
+            X_TRAVEL_INCREMENTS,
+            Y_TRAVEL_INCREMENTS,
+        )
+
+        max_x, max_y = self.adapter.get_axis_limits()
+
+        self.assertAlmostEqual(max_x, X_TRAVEL_INCREMENTS * 21.8 / 1000.0)
+        self.assertAlmostEqual(max_y, Y_TRAVEL_INCREMENTS * 21.8 / 1000.0)
+
+    def test_the_middle_of_the_bench_stays_the_same_increment_when_the_factor_changes(self):
+        """Correcting µm/increment rescales mm, never the physical middle of the rails."""
+        from domain.test_bench.physical_bench_limits.physical_bench_limits import X_TRAVEL_INCREMENTS
+
+        middles_in_increments = []
+        for microns_per_pulse in (20.62, 21.46, 21.8):
+            self.adapter.set_microns_per_pulse(microns_per_pulse)
+            middle_mm = self.adapter.get_axis_limits()[0] / 2.0
+            middles_in_increments.append(middle_mm * self.adapter.STEPS_PER_MM)
+
+        for middle in middles_in_increments:
+            self.assertAlmostEqual(middle, X_TRAVEL_INCREMENTS / 2.0, places=6)
+
 
 if __name__ == '__main__':
     unittest.main()

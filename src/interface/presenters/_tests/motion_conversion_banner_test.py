@@ -29,8 +29,10 @@ class _MotionService:
     def __init__(self):
         self.status = MISSING
 
+    limits = (1270.0, 1270.0)
+
     def get_axis_limits(self):
-        return (1270.0, 1270.0)
+        return self.limits
 
     def get_conversion_status(self):
         return self.status
@@ -89,6 +91,24 @@ def test_motion_presenter_clears_the_banner_when_the_conversion_becomes_availabl
     bus.publish("motionconversionbecameavailable", MotionConversionBecameAvailable(21.8, "IGUS", "TB6600"))
 
     assert banners[-1].visible is False
+
+
+def test_motion_presenter_reads_the_limits_again_when_the_factor_arrives_or_changes():
+    """The travel in mm follows µm/increment: the middle of the bench (limits / 2) must follow too."""
+    _app()
+    bus = InMemoryEventBus()
+    service = _MotionService()
+    presenter = MotionPresenter(service, bus)
+    presenter.initialize()
+    limits = []
+    presenter.limits_updated.connect(lambda x, y: limits.append((x, y)))
+
+    service.limits = (1200.0, 1160.0)
+    bus.publish("motionconversionbecameavailable", MotionConversionBecameAvailable(20.62, "IGUS", "TB6600"))
+    service.limits = (1250.0, 1209.0)
+    bus.publish("motionconversionchanged", object())
+
+    assert limits == [(1200.0, 1160.0), (1250.0, 1209.0)]
 
 
 def test_motion_panel_blocks_moves_but_not_stop_while_not_calibrated():
