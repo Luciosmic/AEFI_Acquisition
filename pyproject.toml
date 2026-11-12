@@ -47,3 +47,10 @@ packages = ["AEFI_Acquisition"]
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.mypy]
+# Garde du typage, posée par solidai-developpement/scripts/installer-garde-repo-dev.sh (oracle-garde-mypy.md).
+disallow_untyped_defs = true
+mypy_path = "src"
+explicit_package_bases = true
+follow_imports = "silent"
