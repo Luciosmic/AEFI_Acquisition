@@ -132,7 +132,7 @@ class TestCsvScanExportPortMetadata(unittest.TestCase):
 
         data = self._document()
         self.port.stop()
-        self.assertEqual(data["schema"]["version"], "1.2")
+        self.assertEqual(data["schema"]["version"], "1.3")
         self.assertEqual(data["provenance"]["activity"]["status"], "running")
         self.assertEqual(data["procedure"]["step_scan"]["pattern"], "SERPENTINE")
         # Files are listed only once the acquisition has ended; the document lists itself by its real name.

@@ -102,7 +102,7 @@ class TestAcquisitionParametersV1(unittest.TestCase):
         self.document = serialize()
 
     def test_schema_and_prov_activity(self):
-        self.assertEqual(self.document["schema"], {"name": "aefi-acquisition-parameters", "version": "1.2"})
+        self.assertEqual(self.document["schema"], {"name": "aefi-acquisition-parameters", "version": "1.3"})
         activity = self.document["provenance"]["activity"]
         self.assertEqual(activity["kind"], "mcu_throughput_characterization")
         self.assertEqual(activity["status"], "completed")

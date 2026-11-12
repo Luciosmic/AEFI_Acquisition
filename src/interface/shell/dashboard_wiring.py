@@ -27,6 +27,7 @@ from interface.presenters.hardware_advanced_config_presenter import HardwareAdva
 from interface.presenters.sensor_calibration_presenter import SensorCalibrationPresenter
 from interface.presenters.source_geometry_calibration_presenter import SourceGeometryCalibrationPresenter
 from interface.presenters.hardware_component_presenter import HardwareComponentPresenter
+from interface.presenters.frequency_sweep_presenter import FrequencySweepPresenter
 from interface.presenters.acquisition_throughput_characterization_presenter import (
     AcquisitionThroughputCharacterizationPresenter,
 )
@@ -58,6 +59,7 @@ def wire_dashboard(
     operator_presenter: OperatorPresenter,
     mechanical_transmission_presenter: MechanicalTransmissionPresenter,
     measured_object_presenter: MeasuredObjectPresenter,
+    frequency_sweep_presenter: FrequencySweepPresenter,
 ) -> None:
     """Connect every dashboard panel to its presenter. Called once from
     main.py right after the dashboard and presenters are constructed."""
@@ -77,6 +79,7 @@ def wire_dashboard(
     for selector in (
         dashboard.panels["scan_control"].operator_selector,
         dashboard.panels["aefi_continuous_reading"].operator_selector,
+        dashboard.panels["frequency_sweep"].operator_selector,
     ):
         selector.register_requested.connect(operator_presenter.on_register_requested)
         operator_presenter.operators_listed.connect(selector.set_operators)
@@ -94,6 +97,16 @@ def wire_dashboard(
         measured_object_presenter.measured_object_registered.connect(selector.on_measured_object_registered)
         measured_object_presenter.registration_failed.connect(selector.on_registration_failed)
     measured_object_presenter.refresh_state()
+
+    # Frequency sweep — reference / background acquisition vs excitation frequency
+    frequency_sweep_panel = dashboard.panels["frequency_sweep"]
+    frequency_sweep_panel.start_requested.connect(frequency_sweep_presenter.on_start_requested)
+    frequency_sweep_panel.stop_requested.connect(frequency_sweep_presenter.on_stop_requested)
+    frequency_sweep_presenter.request_defaults.connect(frequency_sweep_panel.set_request_defaults)
+    frequency_sweep_presenter.running_changed.connect(frequency_sweep_panel.set_running)
+    frequency_sweep_presenter.status_message.connect(frequency_sweep_panel.set_status_message)
+    frequency_sweep_presenter.point_measured.connect(frequency_sweep_panel.add_point)
+    frequency_sweep_presenter.refresh_state()
 
     # Motion Panel
     motion_panel = dashboard.panels["motion"]

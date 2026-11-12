@@ -1,6 +1,6 @@
 # acquisition_parameters — Intention
 
-> Référence du schéma `acquisition-parameters.json` (version 1.2), écrit à côté de
+> Référence du schéma `acquisition-parameters.json` (version 1.3), écrit à côté de
 > chaque export (scan pas-à-pas, série temporelle). Ce fichier est le contrat :
 > les scripts d'analyse le lisent, les tests garde-fous l'appliquent.
 
@@ -148,7 +148,7 @@ exports entre eux (toutes les acquisitions faites avec telle calibration).
   "schema": { "name": "aefi-acquisition-parameters", "version": "1.0" },
 
   "provenance": {                                   // PROV-O : activité, agents
-    "activity": { "id": "…", "kind": "step_scan | time_series | mcu_throughput_characterization",
+    "activity": { "id": "…", "kind": "step_scan | time_series | mcu_throughput_characterization | frequency_sweep",
                   "started_at": "…", "ended_at": "… | null",
                   "status": "running | completed | failed | cancelled",
                   "failure_reason": null,
@@ -299,6 +299,16 @@ exports :
   convention ; `alias: "lift_off"` donne le nom court sous lequel on en parle. `null` +
   avertissement quand un objet est présent et la distance non saisie ; `null` sans
   avertissement quand il n'y a pas d'objet par construction (`present: false`).
+- **Balayage en fréquence (1.3)** : activité `kind: "frequency_sweep"`, procédure
+  `procedure.frequency_sweep` = `role` (`instrument_reference` : table en position basse, sans
+  objet ; `background` : table à la hauteur de travail, sans objet), `frequency_grid` (Hz,
+  `spacing: "logarithmic"`), `samples_per_frequency`, `settle_delay`, `frequency_timeout`,
+  `table_height` (mm, `source: "operator"` : lue par l'opérateur sur le panneau de commande de la
+  table, non mesurée par le logiciel), `acquired_frequency_count`. La fréquence de l'AD9106 étant
+  balayée, `components.signal_generation_chip.settings.frequency` et
+  `measurement_chain.excitation.state.frequency` renvoient à la grille (`derived_from`). Un balayage
+  non complet est signalé : ni référence ni fond utilisable. Fichiers : `frequency_response.csv`
+  (une ligne par fréquence) et `samples.csv`.
 - **Section non pertinente vs inconnue** : non pertinente → présente, vide, avec
   `notes` (ex. `auxiliary_probes.uses: []`) ; inconnue → `null` + avertissement.
 - **Langue** : clés et chemins en anglais, messages d'avertissement et `notes`

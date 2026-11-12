@@ -88,7 +88,7 @@ class TestCsvAcquisitionThroughputExportPort(unittest.TestCase):
         self.assertTrue(self.port.write_acquisition_parameters(str(folder), PARAMETERS).is_success)
 
         document = json.loads((folder / "acquisition-parameters.json").read_text(encoding="utf-8"))
-        self.assertEqual(document["schema"]["version"], "1.2")
+        self.assertEqual(document["schema"]["version"], "1.3")
         self.assertEqual(document["provenance"]["activity"]["id"], "act-1")
         self.assertEqual(len(document["data"]["files"]), 3)
         self.assertEqual([p.name for p in folder.iterdir()], ["acquisition-parameters.json"])  # no temp file left

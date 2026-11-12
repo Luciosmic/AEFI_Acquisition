@@ -25,7 +25,7 @@ from domain.test_bench.calibration.value_objects.rotation_convention.rotation_co
 from domain.shared_kernel.excitation.value_objects.phase_angle import PhaseAngle
 
 ACQUISITION_PARAMETERS_FILE_NAME = "acquisition-parameters.json"
-SCHEMA = {"name": "aefi-acquisition-parameters", "version": "1.2"}
+SCHEMA = {"name": "aefi-acquisition-parameters", "version": "1.3"}
 
 # Every unit the 1.x documents write, as UCUM codes (guard tests: nothing else).
 # ponytail: UCUM has no fractional exponent — V/√Hz is written V/{sqrt_Hz}.
