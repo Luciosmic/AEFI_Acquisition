@@ -36,6 +36,17 @@ so recorded calibrations were never used.
   calibration entry. The procedure text shows the convention; its reference
   definition is
   `domain/test_bench/calibration/value_objects/rotation_convention/rotation_convention_intention.md`.
+- Document the manual procedure inside the tab, as numbered steps in the order
+  the operator does them (check the mounted sensor and the source geometry;
+  excitation level and X mode; Start + "Apply Rotation" in Continuous Reading;
+  start from the ideal angles or from the automatic calibration; tune the
+  angles while watching the signals; alternate X and Y; record), then the
+  convention and the automatic calibration below it, each in its own folded
+  `CollapsibleSection` with an explicit title (the automatic calibration is
+  labelled experimental: the operator found its angles unreliable, manual
+  tuning is the reference). The steps come first: a
+  tab that explains the rotation maths but not what to click leaves the
+  operator guessing, and trial and error without a stopping criterion never ends.
 - "Reset to Default": restart the tuning from the ideal angles (as a trial).
 - "Calibration automatique": disabled placeholder for a future automatic
   calibration service that will drive the same live preview with the same

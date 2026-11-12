@@ -3,7 +3,7 @@ from types import SimpleNamespace
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6.QtWidgets import QApplication, QWidget
+from PySide6.QtWidgets import QApplication, QLabel, QWidget
 
 from interface.widgets.panels.sensor_calibration_panel import SensorCalibrationPanel
 
@@ -42,3 +42,23 @@ def test_panel_works_without_orientation_view():
     panel = SensorCalibrationPanel()
     panel.on_active_rotation_updated(_active(1.0, 2.0, 3.0))
     assert panel.spin_theta_z.value() == 3.0
+
+
+def test_manual_procedure_help_is_folded_under_explicit_titles():
+    from interface.widgets.collapsible_section.collapsible_section import CollapsibleSection
+
+    QApplication.instance() or QApplication([])
+    panel = SensorCalibrationPanel()
+    panel.show()
+
+    sections = panel.findChildren(CollapsibleSection)
+    titles = [section.header.text() for section in sections]
+
+    assert titles[0] == "Comment calibrer le capteur à la main, pas à pas"
+    assert any("Convention" in title for title in titles)
+    assert any("expérimentale" in title for title in titles)
+    assert all(not section.is_expanded() for section in sections)
+
+    sections[0].header.click()
+    assert sections[0].is_expanded()
+    assert "Reset to Default" in sections[0].findChild(QLabel).text()
