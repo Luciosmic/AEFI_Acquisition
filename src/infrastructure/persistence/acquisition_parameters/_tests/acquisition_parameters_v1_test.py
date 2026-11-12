@@ -45,9 +45,10 @@ class TestAcquisitionParametersV1(unittest.TestCase):
 
     def test_bench_moved_is_a_warning_only_when_motors_were_not_held(self):
         start, end = BenchPositionDTO(0.0, 0.0), BenchPositionDTO(5.0, 0.0)
-        v1.positioning_state(start, end, None, motors_held=True, warn=self.warn)
+        motors = self.conditions.motors
+        v1.positioning_state(start, end, None, motors_held=True, warn=self.warn, motors=motors)
         self.assertEqual(self.warnings, [])
-        v1.positioning_state(start, end, None, motors_held=False, warn=self.warn)
+        v1.positioning_state(start, end, None, motors_held=False, warn=self.warn, motors=motors)
         self.assertEqual([w["path"] for w in self.warnings], ["measurement_chain.positioning.state"])
 
     def test_rotation_says_whether_it_applies_to_the_exported_values(self):

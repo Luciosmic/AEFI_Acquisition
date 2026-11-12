@@ -125,7 +125,7 @@ def _measurement_chain(activity: ThroughputActivityDTO, conditions: AcquisitionC
             "uses": [{"component": "motors"}],
             "state": v1.positioning_state(
                 activity.bench_position_start, activity.bench_position_end,
-                activity.bench_position_unknown_reason, motors_held=False, warn=warn,
+                activity.bench_position_unknown_reason, motors_held=False, warn=warn, motors=conditions.motors,
             ),
         },
         "auxiliary_probes": {"uses": [], "notes": "aucune sonde auxiliaire lue par ce balayage"},

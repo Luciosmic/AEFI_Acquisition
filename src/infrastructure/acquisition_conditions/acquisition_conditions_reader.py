@@ -29,6 +29,7 @@ from application.shared.acquisition_parameters.i_acquisition_conditions_port imp
 from application.services.motion_control_service.ports.i_motion_port import IMotionPort
 from application.services.sensor_calibration_service.dtos.sensor_calibration_dto import ActiveSensorRotationDTO
 from domain.test_bench.calibration.calibration import Calibration
+from domain.test_bench.physical_bench_limits.physical_bench_limits import X_TRAVEL_INCREMENTS, Y_TRAVEL_INCREMENTS
 from domain.test_bench.calibration.repositories.i_hardware_component_repository import IHardwareComponentRepository
 from domain.test_bench.calibration.repositories.i_sensor_calibration_repository import ISensorCalibrationRepository
 from domain.test_bench.calibration.value_objects.hardware_component_kind.hardware_component_kind import HardwareComponentKind
@@ -59,6 +60,7 @@ class AcquisitionConditionsReader(IAcquisitionConditionsPort):
         serial_communicator,
         motion_port: IMotionPort,
         hardware_backends: Mapping[str, str],
+        applied_microns_per_pulse: Callable[[], Optional[float]],
     ) -> None:
         self._snapshot_reader = snapshot_reader
         self._hardware_components = hardware_component_repository
@@ -70,6 +72,7 @@ class AcquisitionConditionsReader(IAcquisitionConditionsPort):
         self._communicator = serial_communicator
         self._motion = motion_port
         self._hardware_backends = dict(hardware_backends)
+        self._applied_microns_per_pulse = applied_microns_per_pulse
 
     # -- IAcquisitionConditionsPort ----------------------------------------------------
 
@@ -88,7 +91,7 @@ class AcquisitionConditionsReader(IAcquisitionConditionsPort):
                 lambda: SynchronousDetectionStateDTO(compensation_enabled=bool(self._compensation_enabled())),
             ),
             sensor_deployment=self._read("sensor_deployment", unknown, self._sensor_deployment),
-            motors=self._read("motors", unknown, _motors_settings),
+            motors=self._read("motors", unknown, self._motors_settings),
             microcontroller_n_avg=self._read(
                 "microcontroller_n_avg", unknown, lambda: int((settings.get("mcu") or {})["n_avg"])
             ),
@@ -111,6 +114,16 @@ class AcquisitionConditionsReader(IAcquisitionConditionsPort):
         return OperationResult.ok(BenchPositionDTO(x_mm=float(position.x), y_mm=float(position.y)))
 
     # -- sections ------------------------------------------------------------------------
+
+    def _motors_settings(self) -> MotorsSettingsDTO:
+        """Speeds from the Arcus profile (the file the configurator applies and saves) and the
+        Motion panel's speed mode; the distance per increment is the transmission APPLIED to the
+        motion port (a file would keep a value that is no longer the one in use); the extent of
+        each axis is a fact of the rails."""
+        microns_per_pulse = self._applied_microns_per_pulse()
+        if microns_per_pulse is None:
+            raise ValueError("aucune transmission mécanique appliquée au mouvement")
+        return _motors_settings(microns_per_pulse)
 
     @staticmethod
     def _read(field: str, unknown: Dict[str, str], read: Callable[[], Any]) -> Any:
@@ -201,9 +214,9 @@ class AcquisitionConditionsReader(IAcquisitionConditionsPort):
         return HostLinkDTO(serial_port=port, baud_rate=int(baud_rate) if port and baud_rate else None)
 
 
-def _motors_settings() -> MotorsSettingsDTO:
+def _motors_settings(microns_per_pulse: float) -> MotorsSettingsDTO:
     """Arcus profile (the file the Arcus configurator applies and saves) and the
-    Motion panel's speed mode / referential."""
+    Motion panel's speed mode."""
     with ARCUS_CONFIG.open(encoding="utf-8") as f:
         arcus = json.load(f)
     motion: Dict[str, Any] = {}
@@ -218,8 +231,9 @@ def _motors_settings() -> MotorsSettingsDTO:
         )
 
     return MotorsSettingsDTO(
-        microns_per_step=float(arcus["microns_per_step"]), x=axis("x"), y=axis("y"),
-        speed_mode=motion.get("speed_mode"), referential=motion.get("referential_mode"),
+        microns_per_step=float(microns_per_pulse), x=axis("x"), y=axis("y"),
+        speed_mode=motion.get("speed_mode"),
+        x_travel_increments=X_TRAVEL_INCREMENTS, y_travel_increments=Y_TRAVEL_INCREMENTS,
     )
 
 

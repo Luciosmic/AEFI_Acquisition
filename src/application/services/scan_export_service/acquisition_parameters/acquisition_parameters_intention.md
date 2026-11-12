@@ -1,6 +1,6 @@
 # acquisition_parameters — Intention
 
-> Référence du schéma `acquisition-parameters.json` (version 1.0), écrit à côté de
+> Référence du schéma `acquisition-parameters.json` (version 1.1), écrit à côté de
 > chaque export (scan pas-à-pas, série temporelle). Ce fichier est le contrat :
 > les scripts d'analyse le lisent, les tests garde-fous l'appliquent.
 
@@ -188,7 +188,7 @@ exports entre eux (toutes les acquisitions faites avec telle calibration).
                                                          "negative_charge_pump", "channels": { "1".."8": { "gain", "enabled" } } } },
     "microcontroller":                { …, "settings": { "n_avg": { "value": 127, "unit": "{sample}" } } },
     "motors":                         { …, "settings": { "step_size": { "value": 21.8, "unit": "um/{step}" }, …,
-                                                         "speed_mode": "fast", "referential": "centered" } },
+                                                         "speed_mode": "fast" } },
     "sensor":                         { "component": {…}, "characterization": {…} },
     "conditioning_electronics_board": { … },
     "excitation_electronics_board":   { … },
@@ -268,6 +268,17 @@ exports :
   (`started_by_activity` / `already_running`).
 - **Position du banc** : `measurement_chain.positioning.state.position_at_start` /
   `position_at_end` ; avertissement si le banc a bougé sans être réservé.
+- **Référentiel des positions (1.1)** : les positions exportées sont toujours dans le
+  référentiel des butées (origine = butée de homing de chaque axe, incrément 0), quel que
+  soit le référentiel affiché dans l'interface. `positioning.state.frame_definition` le dit
+  en une phrase ; `positioning.state.axes_extent` donne, par axe, les deux extrémités en
+  incréments (le fait, relevé sur le banc) et en mm (dérivé du `step_size`). Le centre du
+  référentiel centré se retrouve comme le milieu de ces extrémités. Le champ
+  `components.motors.settings.referential` (1.0) est retiré : il recopiait le réglage
+  d'affichage, pas un fait de l'acquisition, et pouvait contredire les colonnes de positions.
+- **Pas des moteurs (1.1)** : `components.motors.settings.step_size` est la transmission
+  mécanique appliquée au mouvement (µm par incrément), plus la valeur d'un fichier de
+  configuration Arcus que plus rien ne tient à jour.
 - **Section non pertinente vs inconnue** : non pertinente → présente, vide, avec
   `notes` (ex. `auxiliary_probes.uses: []`) ; inconnue → `null` + avertissement.
 - **Langue** : clés et chemins en anglais, messages d'avertissement et `notes`

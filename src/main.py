@@ -451,6 +451,7 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
         serial_communicator=hw.mcu_root.lifecycle.get_communicator(),
         motion_port=hw.motion_port,
         hardware_backends=hardware_config,
+        applied_microns_per_pulse=lambda: motion_conversion_handler.get_status().microns_per_pulse,
     )
     software_provenance = GitSoftwareProvenanceReader()
     usb_latency_timer = FtdiUsbLatencyTimerReader()

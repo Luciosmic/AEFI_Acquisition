@@ -80,11 +80,12 @@ class TestAcquisitionConditionsReader(unittest.TestCase):
             serial_communicator=SimpleNamespace(port="COM10", baudrate=1500000),
             motion_port=MockMotionPort(),
             hardware_backends={"aefi_device": "real"},
+            applied_microns_per_pulse=lambda: 20.62,
         )
         kwargs.update(overrides)
         return AcquisitionConditionsReader(**kwargs)
 
-    def test_motors_settings_from_the_arcus_and_motion_configs(self):
+    def test_motors_settings_from_the_arcus_config_and_the_applied_transmission(self):
         import json
         import tempfile
         from pathlib import Path
@@ -95,15 +96,35 @@ class TestAcquisitionConditionsReader(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             arcus, motion = Path(tmp) / "arcus.json", Path(tmp) / "motion.json"
             arcus.write_text(json.dumps({
+                # microns_per_step is stale on purpose: the applied transmission wins
                 "microns_per_step": 21.8, "x_ls": 10, "x_hs": 1500, "x_acc": 300, "x_dec": 300,
                 "y_ls": 20, "y_hs": 1000, "y_acc": 200, "y_dec": 250,
             }), encoding="utf-8")
             motion.write_text(json.dumps({"speed_mode": "fast", "referential_mode": "centered"}), encoding="utf-8")
             with mock.patch.object(module, "ARCUS_CONFIG", arcus), mock.patch.object(module, "MOTION_CONFIG", motion):
                 motors = self.reader().read_conditions().motors
-        self.assertEqual(motors.microns_per_step, 21.8)
+        self.assertEqual(motors.microns_per_step, 20.62)
         self.assertEqual(motors.y.deceleration_ms, 250.0)
-        self.assertEqual((motors.speed_mode, motors.referential), ("fast", "centered"))
+        self.assertEqual(motors.speed_mode, "fast")
+        self.assertEqual((motors.x_travel_increments, motors.y_travel_increments), (58233, 56346))
+
+    def test_no_applied_transmission_makes_the_motors_unknown_with_a_reason(self):
+        import json
+        import tempfile
+        from pathlib import Path
+        from unittest import mock
+
+        from infrastructure.acquisition_conditions import acquisition_conditions_reader as module
+
+        with tempfile.TemporaryDirectory() as tmp:
+            arcus = Path(tmp) / "arcus.json"
+            arcus.write_text(json.dumps({
+                "x_ls": 10, "x_hs": 1500, "x_acc": 300, "x_dec": 300, "y_ls": 20, "y_hs": 1000, "y_acc": 200, "y_dec": 250,
+            }), encoding="utf-8")
+            with mock.patch.object(module, "ARCUS_CONFIG", arcus):
+                conditions = self.reader(applied_microns_per_pulse=lambda: None).read_conditions()
+        self.assertIsNone(conditions.motors)
+        self.assertIn("transmission mécanique", conditions.unknown["motors"])
 
     def test_applied_n_avg_comes_from_the_resolved_mcu_config(self):
         self.assertEqual(self.reader().read_conditions().microcontroller_n_avg, 16)

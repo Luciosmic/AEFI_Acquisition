@@ -16,6 +16,7 @@ from application.shared.acquisition_parameters.acquisition_conditions_dtos impor
     AcquisitionConditionsDTO,
     BenchPositionDTO,
     ExportedFileDTO,
+    MotorsSettingsDTO,
     MountedComponentDTO,
     SignalGenerationSettingsDTO,
     SoftwareProvenanceDTO,
@@ -24,13 +25,13 @@ from domain.test_bench.calibration.value_objects.rotation_convention.rotation_co
 from domain.shared_kernel.excitation.value_objects.phase_angle import PhaseAngle
 
 ACQUISITION_PARAMETERS_FILE_NAME = "acquisition-parameters.json"
-SCHEMA = {"name": "aefi-acquisition-parameters", "version": "1.0"}
+SCHEMA = {"name": "aefi-acquisition-parameters", "version": "1.1"}
 
-# Every unit the 1.0 documents write, as UCUM codes (guard tests: nothing else).
+# Every unit the 1.x documents write, as UCUM codes (guard tests: nothing else).
 # ponytail: UCUM has no fractional exponent — V/√Hz is written V/{sqrt_Hz}.
 UCUM_UNITS = frozenset({
     "1", "%", "s", "ms", "h", "Hz", "V", "V/m", "deg", "mm", "By", "Bd",
-    "{sample}", "{sample}/s", "{conversion}/s",
+    "{sample}", "{sample}/s", "{conversion}/s", "{step}",
     "{DDS_gain_code}", "{DDS_offset_code}", "{DDS_constant_code}",
     "V/(V/m)", "V/V", "V/{sqrt_Hz}", "{DDS_gain_code}/V", "V/{LSB}", "V{RMS}", "um/{step}", "mm/s", "mm/s2",
 })
@@ -207,7 +208,6 @@ def motors_settings(conditions: AcquisitionConditionsDTO, warn: Warn) -> Optiona
         "x": axis(motors.x),
         "y": axis(motors.y),
         "speed_mode": motors.speed_mode,
-        "referential": motors.referential,
     }
 
 
@@ -386,9 +386,39 @@ def synchronous_detection_state(conditions: AcquisitionConditionsDTO, warn: Warn
     return state
 
 
+_FRAME_DEFINITION = (
+    "origin: the homing limit switch of each axis (increment 0), positions growing toward the opposite "
+    "limit switch; every exported position is in this frame. The centred referential of the user "
+    "interface puts its origin at the midpoint of each axis extent (axes_extent) and is never used in files."
+)
+
+
+def axes_extent(motors: Optional[MotorsSettingsDTO], warn: Warn) -> Optional[Dict[str, Any]]:
+    """Both ends of each axis, in increments (the fact, measured on the bench) and in mm (derived with
+    the step size): enough to place the centre of the centred referential."""
+    path = "measurement_chain.positioning.state.axes_extent"
+    if motors is None or motors.x_travel_increments is None or motors.y_travel_increments is None:
+        warn(path, "course des axes inconnue : le centre du référentiel centré ne peut pas être retrouvé")
+        return None
+
+    def axis(max_increments: int) -> Dict[str, Any]:
+        def end(increments: int) -> Dict[str, Any]:
+            return {
+                "increments": quantity(increments, "{step}"),
+                "position": quantity(round(increments * motors.microns_per_step / 1000.0, 6), "mm"),
+            }
+        return {"min": end(0), "max": end(max_increments)}
+
+    return {
+        "x": axis(motors.x_travel_increments),
+        "y": axis(motors.y_travel_increments),
+        "derived_from": "components.motors.settings.step_size",
+    }
+
+
 def positioning_state(
     start: Optional[BenchPositionDTO], end: Optional[BenchPositionDTO], unknown_reason: Optional[str],
-    *, motors_held: bool, warn: Warn,
+    *, motors_held: bool, warn: Warn, motors: Optional[MotorsSettingsDTO] = None,
 ) -> Dict[str, Any]:
     path = "measurement_chain.positioning.state"
     if start is None:
@@ -397,6 +427,8 @@ def positioning_state(
         warn(path, "le banc a bougé pendant l'acquisition (moteurs non réservés par celle-ci)")
     return {
         "frame": "bench",
+        "frame_definition": _FRAME_DEFINITION,
+        "axes_extent": axes_extent(motors, warn),
         "position_at_start": position(start),
         "position_at_end": position(end),
         "motors_held_by_activity": motors_held,

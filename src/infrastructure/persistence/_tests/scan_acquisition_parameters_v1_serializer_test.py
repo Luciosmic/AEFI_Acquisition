@@ -66,6 +66,17 @@ class TestScanAcquisitionParametersV1Serializer(unittest.TestCase):
         self.assertEqual(components["motors"]["settings"]["step_size"], {"value": 21.8, "unit": "um/{step}"})
         self.assertEqual(components["microcontroller"]["settings"]["host_link"]["usb_latency_timer"], {"value": 1.0, "unit": "ms"})
 
+    def test_the_bench_frame_is_the_limit_switches_with_the_extent_of_each_axis(self):
+        document = serialize(make_scan_acquisition_parameters())
+        state = document["measurement_chain"]["positioning"]["state"]
+
+        self.assertIn("homing limit switch", state["frame_definition"])
+        self.assertEqual(state["axes_extent"]["x"]["min"]["increments"], {"value": 0, "unit": "{step}"})
+        self.assertEqual(state["axes_extent"]["x"]["max"]["increments"], {"value": 58233, "unit": "{step}"})
+        self.assertEqual(state["axes_extent"]["y"]["max"]["position"], {"value": 1228.3428, "unit": "mm"})
+        self.assertEqual(state["axes_extent"]["derived_from"], "components.motors.settings.step_size")
+        self.assertNotIn("referential", document["components"]["motors"]["settings"])
+
     def test_exported_voltages_are_declared_in_the_sensor_frame(self):
         deployment = serialize(make_scan_acquisition_parameters())["measurement_chain"]["sensor"]["deployment"]
         self.assertFalse(deployment["rotation_applied"]["applies_to_data"])

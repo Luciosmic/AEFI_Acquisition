@@ -125,14 +125,14 @@ class TestCsvScanExportPortMetadata(unittest.TestCase):
         with json_files[0].open(encoding="utf-8") as f:
             return json.load(f)
 
-    def test_start_document_is_schema_1_0_and_still_running(self):
+    def test_start_document_is_schema_1_1_and_still_running(self):
         self.port.configure(str(self.tmp_dir), "scan", metadata={})
         self.port.start()
         self.port.write_acquisition_parameters(make_scan_acquisition_parameters())
 
         data = self._document()
         self.port.stop()
-        self.assertEqual(data["schema"]["version"], "1.0")
+        self.assertEqual(data["schema"]["version"], "1.1")
         self.assertEqual(data["provenance"]["activity"]["status"], "running")
         self.assertEqual(data["procedure"]["step_scan"]["pattern"], "SERPENTINE")
         # Files are listed only once the acquisition has ended; the document lists itself by its real name.

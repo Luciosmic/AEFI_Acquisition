@@ -142,7 +142,7 @@ def _measurement_chain(activity: ScanActivityDTO, conditions: AcquisitionConditi
             "uses": [{"component": "motors"}],
             "state": v1.positioning_state(
                 activity.bench_position_start, activity.bench_position_end,
-                activity.bench_position_unknown_reason, motors_held=step_scan, warn=warn,
+                activity.bench_position_unknown_reason, motors_held=step_scan, warn=warn, motors=conditions.motors,
             ),
         },
         "auxiliary_probes": (

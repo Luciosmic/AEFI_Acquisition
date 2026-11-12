@@ -107,14 +107,18 @@ class AxisMotionSettingsDTO:
 
 @dataclass(frozen=True)
 class MotorsSettingsDTO:
-    """Motor settings applied — `microns_per_step` turns every commanded
-    position into steps: a scan's positions are only reproducible with it."""
+    """Motor settings applied — `microns_per_step` (the mechanical transmission applied
+    to the motion port, not a file) turns every commanded position into steps: a scan's
+    positions are only reproducible with it. `x/y_travel_increments`: the extent of each
+    axis from its homing limit switch (increment 0) to the opposite one; with the
+    homing origin they define the centre of the centred referential."""
 
     microns_per_step: float
     x: AxisMotionSettingsDTO
     y: AxisMotionSettingsDTO
     speed_mode: Optional[str] = None  # slow | medium | fast (Motion panel)
-    referential: Optional[str] = None  # absolute | centered (Motion panel)
+    x_travel_increments: Optional[int] = None
+    y_travel_increments: Optional[int] = None
 
 
 @dataclass(frozen=True)
