@@ -3,3 +3,6 @@
 # archives/ est l'instantané de la première application d'acquisition (commit 444ab4d), pas du code vivant.
 # Il ne se met pas en conformité : ses erreurs fausseraient les comptes de la dette SolidAI du code vivant.
 archives/
+
+# Binaires et en-têtes du fabricant, chargés par chemin relatif, à ne pas renommer.
+src/infrastructure/hardware/arcus_performax_4EX/DLL64/
