@@ -48,9 +48,9 @@ class HardwareComponentKind(Enum):
 _LABELS = {
     HardwareComponentKind.SENSOR: "Capteur",
     HardwareComponentKind.CONDITIONING_ELECTRONICS_BOARD: "Carte électronique de conditionnement",
-    HardwareComponentKind.EXCITATION_ELECTRONICS_BOARD: "Carte électronique d'excitation",
-    HardwareComponentKind.SIGNAL_GENERATION_CHIP: "Chip de génération des signaux",
-    HardwareComponentKind.ADC: "ADC",
+    HardwareComponentKind.EXCITATION_ELECTRONICS_BOARD: "Amplification de l'excitation",
+    HardwareComponentKind.SIGNAL_GENERATION_CHIP: "Génération des signaux d'excitation",
+    HardwareComponentKind.ADC: "Convertisseur Analogique Numérique",
     HardwareComponentKind.MICROCONTROLLER: "Microcontrôleur",
     HardwareComponentKind.MOTORS: "Moteurs",
     HardwareComponentKind.STEPPER_DRIVER: "Driver pas à pas",
