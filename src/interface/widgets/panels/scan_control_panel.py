@@ -140,9 +140,9 @@ class ScanControlPanel(QWidget):
         self.combo_axis = QComboBox()
         self.combo_axis.addItems(["Y", "X"])  # Y = columns-first (preferred)
 
-        self.radio_step = QRadioButton("Step")
+        self.radio_step = QRadioButton("STEP-SCAN")
         self.radio_step.setToolTip("Arrêt, stabilisation et moyennage à chaque point : la mesure.")
-        self.radio_fly = QRadioButton("Fly (exploration)")
+        self.radio_fly = QRadioButton("FLY-SCAN")
         self.radio_fly.setToolTip(
             "Balaye chaque ligne de l'axe rapide d'une traite, sans arrêt par point.\n"
             "Chaque point est placé d'après les positions rapportées par le contrôleur\n"
@@ -212,11 +212,13 @@ class ScanControlPanel(QWidget):
         line_tab_layout.addWidget(QLabel("0° = X, 90° = Y"), 2, 2, 1, 2)
         self.tabs_scan_kind.addTab(line_tab, "Line")
 
-        mode_row = QHBoxLayout()
-        mode_row.addWidget(QLabel("Mode:"))
+        # Step/Fly mode, top right of the panel, beside the Grid/Line tabs.
+        mode_box = QWidget()
+        mode_row = QHBoxLayout(mode_box)
+        mode_row.setContentsMargins(0, 0, 4, 0)
         mode_row.addWidget(self.radio_step)
         mode_row.addWidget(self.radio_fly)
-        mode_row.addStretch()
+        self.tabs_scan_kind.setCornerWidget(mode_box, Qt.TopRightCorner)
 
         self.combo_axis.setToolTip("Axe parcouru le long de chaque ligne ; l'autre axe avance d'une ligne à la suivante.")
         self.lbl_stabilization = QLabel("Stabilization (ms):")
@@ -245,7 +247,6 @@ class ScanControlPanel(QWidget):
         kind_layout.addWidget(self.lbl_referential)
         kind_layout.addWidget(self.tabs_scan_kind)
         grid.addWidget(kind_box, 0, 0, 1, 4)
-        grid.addLayout(mode_row, 1, 0, 1, 4)
         # Common to step and fly scans.
         grid.addWidget(QLabel("Pattern:"), 2, 0)
         grid.addWidget(self.combo_pattern, 2, 1)
