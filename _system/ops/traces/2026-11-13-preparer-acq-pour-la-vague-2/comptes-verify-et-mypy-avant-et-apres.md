@@ -37,7 +37,7 @@ Il ne plante plus depuis la correction de l'import `from src.interface…`.
 - `return-value` : 16
 - `operator` : 13
 - `var-annotated` : 12
-- les 9 autres codes : 28 en tout
+- les 7 autres codes : 28 en tout
 
 Les 58 `annotation-unchecked` sont des notes, hors de ce compte.
 
