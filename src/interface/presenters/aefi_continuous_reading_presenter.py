@@ -181,7 +181,7 @@ class AefiContinuousReadingPresenter(QObject):
 
         Args:
             params: {max_duration_s (optional), export_enabled, export_filename_base,
-                     measured_object, operator_id, operator}
+                     measured_object, lift_off_mm, operator_id, operator}
         """
         # Always (re)configured, so an unchecked box disarms a previous arming.
         self._export_service.configure_time_series_export(ExportConfigDTO(
@@ -189,6 +189,7 @@ class AefiContinuousReadingPresenter(QObject):
             output_directory="",  # default exports dir, same as the scan panel's empty field
             filename_base=params.get("export_filename_base") or "continuous",
             measured_object=params.get("measured_object", ""),
+            lift_off_mm=params.get("lift_off_mm"),
             operator_id=params.get("operator_id", ""),
             operator=params.get("operator", ""),
         ))

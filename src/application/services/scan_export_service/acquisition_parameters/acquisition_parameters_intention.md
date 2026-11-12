@@ -1,6 +1,6 @@
 # acquisition_parameters — Intention
 
-> Référence du schéma `acquisition-parameters.json` (version 1.1), écrit à côté de
+> Référence du schéma `acquisition-parameters.json` (version 1.2), écrit à côté de
 > chaque export (scan pas-à-pas, série temporelle). Ce fichier est le contrat :
 > les scripts d'analyse le lisent, les tests garde-fous l'appliquent.
 
@@ -161,7 +161,9 @@ exports entre eux (toutes les acquisitions faites avec telle calibration).
 
   "feature_of_interest": {                          // SOSA : ce qui est mesuré
     "description": "bouteille d'eau, 8 mm du contact avec les sphères, résistance 350 kΩ",
-    "notes": null
+    "notes": null,
+    "distance_between_lowest_point_of_sphere_and_highest_point_of_object_under_test":   // 1.2
+      { "value": 8.0, "unit": "mm", "alias": "lift_off" }                              // | null
   },
 
   "procedure": {                                    // SOSA Procedure : ce qui a été demandé
@@ -285,6 +287,13 @@ exports :
 - **Pas des moteurs (1.1)** : `components.motors.settings.step_size` est la transmission
   mécanique appliquée au mouvement (µm par incrément), plus la valeur d'un fichier de
   configuration Arcus que plus rien ne tient à jour.
+- **Lift-off (1.2)** : `feature_of_interest.distance_between_lowest_point_of_sphere_and_highest_point_of_object_under_test`
+  — distance verticale entre le point le plus bas des sphères et le point le plus haut de
+  l'objet mesuré, saisie par l'opérateur au démarrage (panneaux Scan et Continuous Reading,
+  où elle s'appelle « Lift-off »). Le nom long est la clé, parce qu'il se lit sans
+  convention ; `alias: "lift_off"` donne le nom court sous lequel on en parle. `null` +
+  avertissement quand un objet est présent et la distance non saisie ; `null` sans
+  avertissement quand il n'y a pas d'objet par construction (`present: false`).
 - **Section non pertinente vs inconnue** : non pertinente → présente, vide, avec
   `notes` (ex. `auxiliary_probes.uses: []`) ; inconnue → `null` + avertissement.
 - **Langue** : clés et chemins en anglais, messages d'avertissement et `notes`

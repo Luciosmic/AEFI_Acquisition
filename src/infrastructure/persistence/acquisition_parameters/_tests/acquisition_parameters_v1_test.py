@@ -36,12 +36,25 @@ class TestAcquisitionParametersV1(unittest.TestCase):
         self.assertEqual(undeclared, set())
 
     def test_a_present_but_undescribed_object_is_a_warning(self):
-        v1.feature_of_interest(present=True, description=None, notes=None, warn=self.warn)
+        v1.feature_of_interest(present=True, description=None, notes=None, warn=self.warn, lift_off_mm=8.0)
         self.assertEqual([w["path"] for w in self.warnings], ["feature_of_interest.description"])
 
+    def test_lift_off_is_written_under_its_explicit_name_with_its_unit_and_alias(self):
+        section = v1.feature_of_interest(present=True, description="plaque", notes=None, warn=self.warn, lift_off_mm=8.5)
+        self.assertEqual(section[v1.LIFT_OFF_KEY], {"value": 8.5, "unit": "mm", "alias": "lift_off"})
+        self.assertEqual(v1.LIFT_OFF_KEY, "distance_between_lowest_point_of_sphere_and_highest_point_of_object_under_test")
+        self.assertEqual(self.warnings, [])
+
+    def test_a_present_object_without_lift_off_is_written_null_with_a_warning(self):
+        section = v1.feature_of_interest(present=True, description="plaque", notes=None, warn=self.warn)
+        self.assertIsNone(section[v1.LIFT_OFF_KEY])
+        self.assertEqual([w["path"] for w in self.warnings], [f"feature_of_interest.{v1.LIFT_OFF_KEY}"])
+
     def test_no_object_by_construction_says_why(self):
-        v1.feature_of_interest(present=False, description=None, notes=None, warn=self.warn, absent_because="excitation coupée")
+        section = v1.feature_of_interest(present=False, description=None, notes=None, warn=self.warn, absent_because="excitation coupée")
         self.assertIn("(excitation coupée)", self.warnings[0]["message"])
+        self.assertIsNone(section[v1.LIFT_OFF_KEY])  # no object, no distance to it: no second warning
+        self.assertEqual(len(self.warnings), 1)
 
     def test_bench_moved_is_a_warning_only_when_motors_were_not_held(self):
         start, end = BenchPositionDTO(0.0, 0.0), BenchPositionDTO(5.0, 0.0)

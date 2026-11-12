@@ -175,3 +175,12 @@ def test_differential_fold_state_is_saved_with_the_defaults():
     panel._save_scan_defaults()
 
     assert store.saved_scan_config["differential_expanded"] is True
+
+
+def test_start_carries_the_lift_off_in_mm_or_none_when_empty():
+    panel, emitted = _panel()
+    panel._on_start_clicked()
+    panel.input_lift_off.setText("8,5")
+    panel._on_start_clicked()
+
+    assert [e["lift_off_mm"] for e in emitted] == [None, 8.5]

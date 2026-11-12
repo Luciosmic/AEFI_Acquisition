@@ -4,6 +4,7 @@ from PySide6.QtWidgets import (
     QCheckBox, QFileDialog, QGridLayout, QTabWidget, QRadioButton, QButtonGroup, QToolButton
 )
 from interface.widgets.operator_selector.operator_selector import OperatorSelector
+from interface.widgets.lift_off_input.lift_off_input import LIFT_OFF_LABEL, LIFT_OFF_TOOLTIP, LiftOffInput
 from PySide6.QtCore import Qt, Signal
 from pathlib import Path
 
@@ -304,11 +305,17 @@ class ScanControlPanel(QWidget):
         self.input_measured_object = QLineEdit("")
         self.input_measured_object.setPlaceholderText("ex. bouteille d'eau, 8 mm des sphères, 350 kΩ")
         self.input_measured_object.setToolTip("Objet mesuré — écrit dans acquisition-parameters.json (feature_of_interest)")
+        self.input_lift_off = LiftOffInput()
+        self.input_lift_off.setFixedWidth(70)
+        lbl_lift_off = QLabel(LIFT_OFF_LABEL)
+        lbl_lift_off.setToolTip(LIFT_OFF_TOOLTIP)
         self.operator_selector = OperatorSelector()
         export_grid.addWidget(QLabel("Objet mesuré:"), 2, 0)
         export_grid.addWidget(self.input_measured_object, 2, 1, 1, 3)
-        export_grid.addWidget(QLabel("Opérateur:"), 3, 0)
-        export_grid.addWidget(self.operator_selector, 3, 1, 1, 3)
+        export_grid.addWidget(lbl_lift_off, 3, 0)
+        export_grid.addWidget(self.input_lift_off, 3, 1)
+        export_grid.addWidget(QLabel("Opérateur:"), 4, 0)
+        export_grid.addWidget(self.operator_selector, 4, 1, 1, 3)
 
         layout.addWidget(export_group)
 
@@ -495,6 +502,7 @@ class ScanControlPanel(QWidget):
             "export_output_directory": self.input_export_directory.text(),
             "export_filename_base": self.input_export_filename.text(),
             "measured_object": self.input_measured_object.text(),
+            "lift_off_mm": self.input_lift_off.lift_off_mm(),
             "operator_id": operator.operator_id if operator else "",
             "operator": operator.name if operator else "",
         }

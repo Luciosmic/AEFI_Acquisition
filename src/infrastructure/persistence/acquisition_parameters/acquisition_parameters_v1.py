@@ -25,7 +25,7 @@ from domain.test_bench.calibration.value_objects.rotation_convention.rotation_co
 from domain.shared_kernel.excitation.value_objects.phase_angle import PhaseAngle
 
 ACQUISITION_PARAMETERS_FILE_NAME = "acquisition-parameters.json"
-SCHEMA = {"name": "aefi-acquisition-parameters", "version": "1.1"}
+SCHEMA = {"name": "aefi-acquisition-parameters", "version": "1.2"}
 
 # Every unit the 1.x documents write, as UCUM codes (guard tests: nothing else).
 # ponytail: UCUM has no fractional exponent — V/√Hz is written V/{sqrt_Hz}.
@@ -153,8 +153,14 @@ def provenance(
     }
 
 
+# Lift-off (1.2): the explicit name is the key, the short one travels as its alias.
+LIFT_OFF_KEY = "distance_between_lowest_point_of_sphere_and_highest_point_of_object_under_test"
+LIFT_OFF_ALIAS = "lift_off"
+
+
 def feature_of_interest(
     *, present: bool, description: Optional[str], notes: Optional[str], warn: Warn, absent_because: str = "",
+    lift_off_mm: Optional[float] = None,
 ) -> Dict[str, Any]:
     if present and not description:
         warn("feature_of_interest.description", "objet mesuré non décrit")
@@ -164,7 +170,12 @@ def feature_of_interest(
             "feature_of_interest",
             f"aucun objet par construction{because} ; la présence éventuelle d'un objet sur le banc n'est pas saisie",
         )
-    return {"present": present, "description": description, "notes": notes}
+    if present and lift_off_mm is None:
+        warn(f"feature_of_interest.{LIFT_OFF_KEY}", "lift-off non saisi (distance sphères – objet)")
+    lift_off = quantity(lift_off_mm, "mm") if present else None
+    if lift_off is not None:
+        lift_off["alias"] = LIFT_OFF_ALIAS
+    return {"present": present, "description": description, "notes": notes, LIFT_OFF_KEY: lift_off}
 
 
 # -- components (SOSA System) --------------------------------------------------------

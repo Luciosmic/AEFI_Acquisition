@@ -103,6 +103,14 @@ class TestScanAcquisitionParametersV1Serializer(unittest.TestCase):
         self.assertNotIn("feature_of_interest.description", warning_paths(document))
         self.assertNotIn("provenance.operator.name", warning_paths(document))
 
+    def test_lift_off_typed_at_start_is_written_with_the_object(self):
+        document = serialize(make_scan_acquisition_parameters(measured_object="plaque", lift_off_mm=8.0))
+        lift_off = document["feature_of_interest"][
+            "distance_between_lowest_point_of_sphere_and_highest_point_of_object_under_test"
+        ]
+        self.assertEqual(lift_off, {"value": 8.0, "unit": "mm", "alias": "lift_off"})
+        self.assertFalse([p for p in warning_paths(document) if p.startswith("feature_of_interest")])
+
     def test_a_running_document_says_so_and_the_final_one_does_not(self):
         self.assertIn("provenance.activity.ended_at", warning_paths(serialize(make_scan_acquisition_parameters())))
         self.assertNotIn("provenance.activity.ended_at", warning_paths(serialize(make_scan_acquisition_parameters(ended=True))))

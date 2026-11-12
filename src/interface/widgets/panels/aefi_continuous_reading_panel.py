@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
 )
 from interface.widgets.operator_selector.operator_selector import OperatorSelector
+from interface.widgets.lift_off_input.lift_off_input import LIFT_OFF_LABEL, LIFT_OFF_TOOLTIP, LiftOffInput
 from PySide6.QtCore import Qt, Signal
 import pyqtgraph as pg  # type: ignore[import]
 
@@ -122,9 +123,15 @@ class AefiContinuousReadingPanel(QWidget):
         self.input_measured_object = QLineEdit("")
         self.input_measured_object.setPlaceholderText("objet mesuré")
         self.input_measured_object.setToolTip("Objet mesuré — écrit dans acquisition-parameters.json (feature_of_interest)")
+        self.input_lift_off = LiftOffInput()
+        self.input_lift_off.setFixedWidth(90)
+        lbl_lift_off = QLabel(LIFT_OFF_LABEL)
+        lbl_lift_off.setToolTip(LIFT_OFF_TOOLTIP)
         self.operator_selector = OperatorSelector()  # registry, wired to OperatorPresenter
         l_ctrl.addWidget(self.input_measured_object, 2, 0, 1, 2)
         l_ctrl.addWidget(self.operator_selector, 2, 2)
+        l_ctrl.addWidget(lbl_lift_off, 3, 1)
+        l_ctrl.addWidget(self.input_lift_off, 3, 2)
         controls_layout.addWidget(grp_ctrl)
 
         # 2. Display: scale + Y mode, fixed calibre underneath (Oscillo only)
@@ -309,6 +316,7 @@ class AefiContinuousReadingPanel(QWidget):
             "export_enabled": self.chk_export.isChecked(),
             "export_filename_base": self.input_export_filename.text(),
             "measured_object": self.input_measured_object.text(),
+            "lift_off_mm": self.input_lift_off.lift_off_mm(),
             "operator_id": operator.operator_id if operator else "",
             "operator": operator.name if operator else "",
         }

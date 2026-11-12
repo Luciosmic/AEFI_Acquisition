@@ -5,6 +5,7 @@ Data Transfer Objects for the Scan Export Service.
 """
 
 from dataclasses import dataclass
+from typing import Optional
 
 
 @dataclass(frozen=True)
@@ -18,5 +19,7 @@ class ExportConfigDTO:
     # provenance.operator {id, name}) — empty = declared missing, never guessed.
     # The operator comes from the operators registry (OperatorService).
     measured_object: str = ""
+    # Lift-off in mm (feature_of_interest, under its explicit name) — None = not entered.
+    lift_off_mm: Optional[float] = None
     operator_id: str = ""
     operator: str = ""
