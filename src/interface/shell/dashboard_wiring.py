@@ -104,10 +104,9 @@ def wire_dashboard(
     motion_presenter.limits_updated.connect(dashboard.panels["scan_control"].set_axis_limits)
     motion_presenter.conversion_banner_changed.connect(motion_panel.set_calibration_banner)
 
-    # Settings Panel -> Motion Panel (referential mode: limit-switch raw vs. centered/4-quadrants)
-    settings_panel = dashboard.panels["settings"]
-    settings_panel.motion_referential_changed.connect(motion_panel.set_referential_mode)
-    settings_panel.motion_referential_changed.connect(dashboard.panels["scan_control"].set_referential_mode)
+    # Motion Panel -> Scan configuration (referential: limit switches vs. centred, chosen next to the positions)
+    motion_panel.referential_changed.connect(dashboard.panels["scan_control"].set_referential_mode)
+    motion_panel.jog_increments_requested.connect(motion_presenter.on_jog_increments_requested)
 
     # Initialize presenter to fetch limits
     motion_presenter.initialize()

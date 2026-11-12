@@ -17,9 +17,13 @@ class MotionPanelCompact(QWidget):
     UNIT_INCREMENTS = "incréments"
     MAX_INCREMENTS = 1_000_000  # spinbox ceiling only; the service refuses a setpoint beyond the travel
     DEFAULT_REFERENTIAL_MODE = "limit_switch"
+    REFERENTIAL_LABELS = {"limit_switch": "Butées", "centered": "Centré"}
+    DEFAULT_JOG_STEP = {"mm": 50.0, "incréments": 1000.0}
 
     # Signals to be connected to a Presenter
-    jog_requested = Signal(float, float)  # dx, dy
+    jog_requested = Signal(float, float)  # dx, dy (mm)
+    jog_increments_requested = Signal(int, int)  # dx, dy (controller increments)
+    referential_changed = Signal(str)  # 'limit_switch' or 'centered'
     move_to_requested = Signal(str, float)  # axis ('x' or 'y'), target_position
     move_both_requested = Signal(float, float)  # target_x, target_y
     move_to_increments_requested = Signal(object, object)  # x, y in increments; None = axis left alone
@@ -38,6 +42,9 @@ class MotionPanelCompact(QWidget):
         self._last_y = 0.0
         self._last_increments = (0, 0)
         self._unit = self.UNIT_MM
+        self._jog_step = dict(self.DEFAULT_JOG_STEP)  # remembered per unit: 50 mm is not 50 increments
+        self._mm_position_known = False  # the mm position only exists once the bench is calibrated
+        self._jog_idle = True  # no motion in progress
         self._referential_mode = self._load_referential_mode()
         self._not_calibrated = False
         self._build_ui()
@@ -138,11 +145,15 @@ class MotionPanelCompact(QWidget):
         main_grid.addWidget(self.spin_to_x, 0, 1)
         main_grid.addWidget(self.btn_go_x, 0, 2)
         
-        # Setpoint unit: mm (needs the µm/increment conversion) or controller increments (does not)
-        main_grid.addWidget(QLabel("Setpoint in:"), 0, 3)
+        # Unit of the whole panel — position, setpoints and jog step: mm (needs the µm/increment
+        # conversion) or controller increments (does not)
+        main_grid.addWidget(QLabel("Unit:"), 0, 3)
         self.combo_unit = QComboBox()
         self.combo_unit.addItems([self.UNIT_MM, self.UNIT_INCREMENTS])
-        self.combo_unit.setToolTip("Unité des consignes X/Y ci-contre : mm, ou incréments du contrôleur")
+        self.combo_unit.setToolTip(
+            "Unité de tout le panneau : position affichée, consignes et pas du jog.\n"
+            "mm : demande le facteur µm/incrément ; incréments : l'unité du contrôleur, toujours disponible."
+        )
         self.combo_unit.setMaximumWidth(90)
         main_grid.addWidget(self.combo_unit, 0, 4)
 
@@ -177,9 +188,10 @@ class MotionPanelCompact(QWidget):
         self.spin_step.setValue(50)
         self.spin_step.setSingleStep(10)
         self.spin_step.setDecimals(0)
-        self.spin_step.setMaximumWidth(50)
+        self.spin_step.setMaximumWidth(60)
         main_grid.addWidget(self.spin_step, 2, 1)
-        main_grid.addWidget(QLabel("mm"), 2, 2)
+        self.lbl_step_unit = QLabel("mm")
+        main_grid.addWidget(self.lbl_step_unit, 2, 2)
 
         # Speed mode (same row as jog step, on the right side)
         main_grid.addWidget(QLabel("Speed:"), 2, 3)
@@ -187,6 +199,15 @@ class MotionPanelCompact(QWidget):
         self.combo_speed_mode.addItems([m.capitalize() for m in self.SPEED_MODES])
         self.combo_speed_mode.setMaximumWidth(75)
         main_grid.addWidget(self.combo_speed_mode, 2, 4)
+
+        # Referential of the positions in mm: limit switches (0 = homing switch) or centred (0,0 = middle of the bench)
+        main_grid.addWidget(QLabel("Referential:"), 3, 3)
+        self.combo_referential = QComboBox()
+        for mode in self.REFERENTIAL_MODES:
+            self.combo_referential.addItem(self.REFERENTIAL_LABELS[mode], mode)
+        self.combo_referential.setCurrentIndex(self.REFERENTIAL_MODES.index(self._referential_mode))
+        self.combo_referential.setMaximumWidth(75)
+        main_grid.addWidget(self.combo_referential, 3, 4)
 
         # Row 3-4: Stop Buttons (Left side, stacked)
         self.btn_stop = QPushButton("STOP")
@@ -288,6 +309,7 @@ class MotionPanelCompact(QWidget):
         layout.addWidget(group)
 
         self._apply_axis_range()
+        self._render_position()
 
     def _connect_signals(self):
         # Absolute Moves (spinbox values are in the active referential; convert to raw before emitting)
@@ -295,6 +317,7 @@ class MotionPanelCompact(QWidget):
         self.btn_go_y.clicked.connect(self._on_go_y)
         self.btn_go_both.clicked.connect(self._on_go_both)
         self.combo_unit.currentTextChanged.connect(self._on_unit_changed)
+        self.combo_referential.activated.connect(self._on_referential_chosen)
         self.btn_to_center.clicked.connect(self.move_to_center_requested.emit)
         
         # Jogging
@@ -337,8 +360,17 @@ class MotionPanelCompact(QWidget):
             )
 
     def _on_unit_changed(self, unit: str):
-        """Switch the target fields between mm and increments; they start at the current position."""
+        """Switch the whole panel (position, target fields, jog step) between mm and increments; the
+        targets start at the current position."""
+        self._jog_step[self._unit] = self.spin_step.value()
         self._unit = unit
+        self._apply_jog_step_unit()
+        self._render_position()
+        self.combo_referential.setEnabled(not self._in_increments())
+        self.combo_referential.setToolTip(
+            "Les incréments se comptent toujours depuis la butée de homing : le référentiel ne joue que pour les mm."
+            if self._in_increments() else ""
+        )
         if self._in_increments():
             self.lbl_target_x.setText("X Target Position (inc):")
             self.lbl_target_y.setText("Y Target Position (inc):")
@@ -359,6 +391,18 @@ class MotionPanelCompact(QWidget):
             self.spin_to_x.setValue(disp_x)
             self.spin_to_y.setValue(disp_y)
         self._refresh_go_enabled()
+        self._refresh_jog_enabled()
+
+    def _apply_jog_step_unit(self):
+        if self._in_increments():
+            self.spin_step.setRange(1, 200_000)
+            self.spin_step.setSingleStep(100)
+            self.lbl_step_unit.setText("inc")
+        else:
+            self.spin_step.setRange(1, 500)
+            self.spin_step.setSingleStep(10)
+            self.lbl_step_unit.setText("mm")
+        self.spin_step.setValue(self._jog_step[self._unit])
 
     def _refresh_go_enabled(self):
         """mm moves need the conversion; increment moves do not. To Center stays in mm."""
@@ -368,7 +412,10 @@ class MotionPanelCompact(QWidget):
 
     def _on_jog(self, dx_sign, dy_sign):
         step = self.spin_step.value()
-        self.jog_requested.emit(dx_sign * step, dy_sign * step)
+        if self._in_increments():
+            self.jog_increments_requested.emit(int(dx_sign * step), int(dy_sign * step))
+        else:
+            self.jog_requested.emit(dx_sign * step, dy_sign * step)
 
     def _load_speed_mode(self):
         """Restore the last-selected speed mode, defaulting to medium."""
@@ -407,8 +454,17 @@ class MotionPanelCompact(QWidget):
             return
         self._referential_mode = mode
         self._save_motion_config_key("referential_mode", mode)
+        self.combo_referential.blockSignals(True)
+        self.combo_referential.setCurrentIndex(self.REFERENTIAL_MODES.index(mode))
+        self.combo_referential.blockSignals(False)
         self._apply_axis_range()
         self.update_position(self._last_x, self._last_y)
+
+    def _on_referential_chosen(self, index: int):
+        """The operator picked a referential here: it also tells the scan configuration."""
+        mode = self.combo_referential.itemData(index)
+        self.set_referential_mode(mode)
+        self.referential_changed.emit(mode)
 
     def _center_offset(self):
         return self._max_x / 2.0, self._max_y / 2.0
@@ -444,27 +500,48 @@ class MotionPanelCompact(QWidget):
         self.lbl_calibration_banner.setText(banner.text)
         self.lbl_calibration_banner.setVisible(banner.visible)
         self._refresh_go_enabled()
-        self.set_jog_enabled(not banner.visible)
+        self._refresh_jog_enabled()
 
     def set_jog_enabled(self, enabled: bool):
         """Enable/disable jog buttons based on motion state."""
-        enabled = enabled and not self._not_calibrated
-        self.btn_up.setEnabled(enabled)
-        self.btn_down.setEnabled(enabled)
-        self.btn_left.setEnabled(enabled)
-        self.btn_right.setEnabled(enabled)
+        self._jog_idle = enabled
+        self._refresh_jog_enabled()
+
+    def _refresh_jog_enabled(self):
+        """No jog while the axes move; a jog in mm also needs the mm conversion, a jog in increments does not."""
+        enabled = self._jog_idle and (self._in_increments() or not self._not_calibrated)
+        for button in (self.btn_up, self.btn_down, self.btn_left, self.btn_right):
+            button.setEnabled(enabled)
 
     def update_position(self, x: float, y: float):
         """x, y are raw (limit-switch referential), as reported by the presenter."""
         self._last_x, self._last_y = x, y
-        disp_x, disp_y = self._raw_to_display(x, y)
-        self.lbl_x.setText(f"X: {disp_x:.2f}")
-        self.lbl_y.setText(f"Y: {disp_y:.2f}")
+        self._mm_position_known = True
+        self._render_position()
         self.visualizer.update_position(x, y)  # visualizer always shows raw/physical position
 
     def update_increments(self, x_increments: int, y_increments: int):
         self._last_increments = (x_increments, y_increments)
-        self.lbl_increments.setText(f"Incréments  X: {x_increments}   Y: {y_increments}")
+        self._render_position()
+
+    def _render_position(self):
+        """The big readout is in the panel's unit, the small line below gives the other one: the
+        increments are the controller's count (always from the homing switch), the mm follow the
+        referential chosen here."""
+        inc_x, inc_y = self._last_increments
+        if self._mm_position_known:
+            disp_x, disp_y = self._raw_to_display(self._last_x, self._last_y)
+            mm_text = (f"X: {disp_x:.2f}", f"Y: {disp_y:.2f}")
+        else:
+            mm_text = ("X: —", "Y: —")  # no mm position before the bench is calibrated
+        if self._in_increments():
+            self.lbl_x.setText(f"X: {inc_x}")
+            self.lbl_y.setText(f"Y: {inc_y}")
+            self.lbl_increments.setText(f"mm  {mm_text[0]}   {mm_text[1]}")
+        else:
+            self.lbl_x.setText(mm_text[0])
+            self.lbl_y.setText(mm_text[1])
+            self.lbl_increments.setText(f"Incréments  X: {inc_x}   Y: {inc_y}")
 
     def update_status(self, is_moving: bool):
         self.lbl_status.setText("MOVING" if is_moving else "IDLE")

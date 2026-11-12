@@ -39,6 +39,9 @@ class IApiMotionControlService(ABC):
     def home_x(self) -> OperationResult: ...
 
     @abstractmethod
+    def move_relative_increments(self, dx: int, dy: int) -> OperationResult: ...
+
+    @abstractmethod
     def home_y(self) -> OperationResult: ...
 
     @abstractmethod

@@ -101,8 +101,13 @@ class MotionPresenter(QObject):
             self._event_bus.unsubscribe("motionconversionchanged", self._refresh_limits)
 
     def _on_motor_increments_updated(self, event: MotorIncrementsUpdated):
-        """Relay the controller's pulse counts: the panel reads them next to the mm position."""
+        """Relay the controller's pulse counts: the panel reads them next to the mm position. They also say
+        whether the axes move, which is the only source of that state while the bench has no mm conversion."""
         self.increments_updated.emit(event.x_increments, event.y_increments)
+        if event.is_moving != self._is_moving:
+            self._is_moving = event.is_moving
+            self.status_updated.emit(event.is_moving)
+            self.jog_enabled_changed.emit(not event.is_moving)
 
     def _on_position_updated(self, event: PositionUpdated):
         """Handle position update event from domain."""
@@ -151,6 +156,21 @@ class MotionPresenter(QObject):
             result = self._service.move_relative(dx, dy)
             if result.is_failure:
                 # Unlock on failure
+                self._is_moving = False
+                self.jog_enabled_changed.emit(True)
+                self.operation_failed.emit(result.error.message)
+
+    @Slot(int, int)
+    def on_jog_increments_requested(self, dx: int, dy: int):
+        """Jog by a number of controller increments. Blocked if motion in progress."""
+        if self._is_moving:
+            logger.debug("Jog in increments blocked: motion in progress")
+            return
+        if self._service:
+            self._is_moving = True
+            self.jog_enabled_changed.emit(False)
+            result = self._service.move_relative_increments(dx, dy)
+            if result.is_failure:
                 self._is_moving = False
                 self.jog_enabled_changed.emit(True)
                 self.operation_failed.emit(result.error.message)

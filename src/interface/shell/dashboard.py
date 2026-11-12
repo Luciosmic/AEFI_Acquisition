@@ -29,40 +29,14 @@ from interface.widgets.panels.logs_panel import LogsPanel
 class SettingsPanel(BasePanel):
     """Settings panel — global application preferences."""
 
-    # (persisted key, display label)
-    MOTION_REFERENTIAL_MODES = (
-        ("limit_switch", "Limit switch (fins de course)"),
-        ("centered", "Centered (0,0 = center, 4 quadrants)"),
-    )
-
-    motion_referential_changed = Signal(str)  # 'limit_switch' or 'centered'
-
     def __init__(self, parent=None, config_store: UIConfigStore = None):
         super().__init__("System Settings", "#607D8B", parent)
         self._config_store = config_store or UIConfigStore()
 
-        motion_group = QGroupBox("Motion Referential")
-        motion_layout = QVBoxLayout(motion_group)
-        self.combo_referential = QComboBox()
-        for _, label in self.MOTION_REFERENTIAL_MODES:
-            self.combo_referential.addItem(label)
-        saved_mode = self._config_store.load_motion_config().get("referential_mode", "limit_switch")
-        saved_index = next((i for i, (key, _) in enumerate(self.MOTION_REFERENTIAL_MODES) if key == saved_mode), 0)
-        self.combo_referential.setCurrentIndex(saved_index)
-        self.combo_referential.currentIndexChanged.connect(self._on_referential_changed)
-        motion_layout.addWidget(self.combo_referential)
-
-        # Use self.layout from BasePanel instead of creating a new one
-        self.layout.addWidget(motion_group)
+        # The motion referential (limit switches / centred) lives in the Motion Control panel, next to what
+        # it changes; it used to be here, two panels away from the positions it rewrites.
         self.layout.addWidget(QLabel("Global Application Settings"))
         self.layout.addStretch()
-
-    def _on_referential_changed(self, index: int):
-        mode = self.MOTION_REFERENTIAL_MODES[index][0]
-        self.motion_referential_changed.emit(mode)
-
-    def get_current_referential_mode(self) -> str:
-        return self.MOTION_REFERENTIAL_MODES[self.combo_referential.currentIndex()][0]
 
 class Dashboard(QWidget):
     """

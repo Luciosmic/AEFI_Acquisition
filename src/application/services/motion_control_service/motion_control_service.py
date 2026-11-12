@@ -17,6 +17,7 @@ from application.services.motion_control_service.ports.motion_conversion_unavail
 )
 from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
 from domain.shared_kernel.operation_result import OperationResult
+from domain.test_bench.physical_bench_limits.physical_bench_limits import X_TRAVEL_INCREMENTS, Y_TRAVEL_INCREMENTS
 from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
 from domain.shared_kernel.motion.events.position_updated.position_updated import PositionUpdated
 from domain.shared_kernel.motion.events.emergency_stop_triggered.emergency_stop_triggered import EmergencyStopTriggered
@@ -193,6 +194,25 @@ class MotionControlService:
             return OperationResult.ok(None)
         except Exception as e:
             return self._failure(operation, e)
+
+    def move_relative_increments(self, dx: int, dy: int) -> OperationResult[None, MotionControlError]:
+        """Jog by a number of controller increments, from where the controller is now (not from a
+        stale target). Clamped to the axis travel like the mm jog; works without the mm conversion."""
+        logger.info("Command: move relative in increments dx=%s dy=%s", dx, dy)
+        operation = "Jog in increments"
+        if self._raw_increment_port is None:
+            return OperationResult.fail(MotionCommandFailed(operation, "pas de pilote en incréments sur ce banc"))
+        try:
+            targets = []
+            for axis, delta, travel in (("X", dx, X_TRAVEL_INCREMENTS), ("Y", dy, Y_TRAVEL_INCREMENTS)):
+                if not delta:
+                    targets.append(None)
+                    continue
+                current = self._raw_increment_port.get_position(axis)
+                targets.append(max(0, min(int(current) + int(delta), travel)))
+        except Exception as e:
+            return self._failure(operation, e)
+        return self.move_to_increments(targets[0], targets[1])
 
     def _out_of_range(self, operation: str, detail: str) -> OperationResult[None, MotionControlError]:
         failed = MotionCommandFailed(operation=operation, error_detail=detail)
