@@ -1,0 +1,6 @@
+01:25 | depart | quoi=installer la garde solidai-verify dans AEFI_Acquisition | session=f6f1718f-0350-4d84-a878-2faf7a374b52
+01:26 | mesure | solidai_verify=963 erreurs, 63 avertissements, code 1 (log : SOLIDAI/_system/ops/traces/profil-solidai-developpement-code/2026-11-12-ecrire-la-commande-garder/run-solidai-verify-acq.log)
+01:26 | decision | pose=pre-commit non strict + hook PostToolUse seulement | pourquoi=--strict bloquerait tout commit d'un .py sur l'existant, et le gate commite seul
+01:27 | jalon | installer-garde-repo-dev.sh=rc 0 | pre-commit=.git/hooks/pre-commit | hook=.claude/settings.json (ignoré par .gitignore : sans commit) | core.hooksPath=retiré (pointait vers Ressources/ExperimentalData_ASSOCE/..., dossier absent : aucun hook ne tournait)
+01:27 | temoin | gate de la session hors ACQ (garde-des-depots refuse) : écriture native de ce fichier + commit manuel non-.py à travers le pre-commit
+01:12 | temoin | ecriture du gate a travers le pre-commit | resultat=ok

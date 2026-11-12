@@ -24,7 +24,6 @@ aefi_64bit_py311_venv/
 .idea/
 .vscode/
 .claude/
-.packmind/
 
 *.swp
 *.bak

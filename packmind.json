@@ -1,8 +1,0 @@
-{
-  "packages": {
-    "@global/solidai-standards": "*"
-  },
-  "agents": [
-    "claude"
-  ]
-}

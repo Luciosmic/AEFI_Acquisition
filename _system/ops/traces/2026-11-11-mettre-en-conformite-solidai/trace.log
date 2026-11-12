@@ -1,0 +1,6 @@
+18:08 | depart | quoi=standards generaux au paquet, A12 affine, conformite solidai d'AEFI_Acquisition | session=c6b46fe5-c171-4e71-97f8-7f1679dca4ca
+18:08 | jalon | preconditions=ACQ develop propre, dernier commit il y a 20 h, registre sans session sur AEFI_Acquisition | gate_acq=indisponible (au-aefi-acquisition sans outils), ecriture a la main
+18:10 | jalon | etape1=6 standards generalises + index + README, commit solidai-developpement c1fe7be ; A12 affine, commit solidai-atome 8e01198 ; diagnostics paquets 0 erreur
+18:10 | decision | uow=fichier a part (forme du UoW, pas l ordre commit-evenements) ; fake UoW suit H18 par la regle de conflit de l index
+18:10 | arret | cause=Humble Object contredit A1 (_tests/ non vide), choix de fond ; phase 2 ACQ non commencee | constat=constat-humble-object-et-unit-of-work-contredisent-a1-et-h18.md
+18:10 | fin | resultat=bloque sur choix de fond, etape 1 faite a 6/7, etape 2 a faire apres decision
