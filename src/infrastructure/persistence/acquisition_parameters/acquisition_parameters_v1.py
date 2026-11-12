@@ -34,6 +34,7 @@ UCUM_UNITS = frozenset({
     "{sample}", "{sample}/s", "{conversion}/s", "{step}",
     "{DDS_gain_code}", "{DDS_offset_code}", "{DDS_constant_code}",
     "V/(V/m)", "V/V", "V/{sqrt_Hz}", "{DDS_gain_code}/V", "V/{LSB}", "V{RMS}", "um/{step}", "mm/s", "mm/s2",
+    "[g]",  # 1.3: accelerometer (column stabilization)
 })
 # Component catalog display units (HardwareComponentKind) -> UCUM.
 _UCUM_BY_CATALOG_UNIT = {

@@ -22,7 +22,7 @@ import queue
 import threading
 import time
 from uuid import UUID, uuid4
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from .dtos.scan_dtos import (
     Scan2DConfigDTO, LineScanConfigDTO, ScanStatusDTO, ScanConfigSnapshotDTO, ExcitationSnapshotDTO,
@@ -55,6 +55,8 @@ from application.services.scan_application_service.errors.scan_start_error impor
 )
 from application.shared.ports.i_async_task_runner import IAsyncTaskRunner
 from .column_stabilization.column_stabilization import ColumnStabilization
+from domain.scan.events.column_rest_measured.column_rest_measured import ColumnRestMeasured
+from domain.scan.events.column_settled.column_settled import ColumnSettled
 from .ports.i_motion_synchronizer import IMotionSynchronizer
 from .ports.i_scan_output_port import IScanOutputPort
 from .ports.i_unit_of_work import IUnitOfWork
@@ -769,7 +771,7 @@ class ScanApplicationService:
                             return
 
                     # --- Stabilization ---
-                    self._stabilize(scan, config, column_rest_g, stopped_at, f"point {i}")
+                    self._stabilize(scan, config, column_rest_g, stopped_at, f"point {i}", point_index=i)
 
                     if scan.status == ScanStatus.CANCELLED:
                         return
@@ -1124,7 +1126,8 @@ class ScanApplicationService:
             if config.stabilization_delay_ms > 0:
                 logger.debug("ScanApplicationService: scan_id=%s line=%d stabilizing (fixed delay %d ms) at line start",
                              scan.id, line_index, config.stabilization_delay_ms)
-                self._stabilize(scan, config, column_rest_g, stopped_at, f"start of fly line {line_index}")
+                self._stabilize(scan, config, column_rest_g, stopped_at, f"start of fly line {line_index}",
+                                point_index=line_index * n)
                 if _ended():
                     return STOP
                 if _interrupted(epoch):
@@ -1266,23 +1269,39 @@ class ScanApplicationService:
             _release_streams()
 
     def _measure_column_rest(self, scan: StepScan, config) -> Optional[float]:
-        """Rest level of the still column (g) before the first move; None: fixed delay at every point."""
+        """Rest level of the still column (g) before the first move; None: fixed delay at every point.
+        Published as ColumnRestMeasured (the export records the criterion and the level)."""
         if self._column_stabilization is None or config.stabilization_delay_ms <= 0:
             return None
-        return self._column_stabilization.measure_rest(
+        measurement = self._column_stabilization.measure_rest(
             scan.id, lambda: scan.status in (ScanStatus.CANCELLED, ScanStatus.FAILED))
+        criterion = self._column_stabilization.criterion
+        self._event_bus.publish("columnrestmeasured", ColumnRestMeasured(
+            scan_id=scan.id, rest_vibration_g=measurement.vibration_g, sample_count=measurement.sample_count,
+            unavailable_reason=measurement.unavailable_reason, rest_measurement_s=criterion.rest_measurement_s,
+            window_s=criterion.window_s, factor=criterion.factor, timeout_s=criterion.timeout_s,
+            minimum_delay_s=config.stabilization_delay_ms / 1000.0,
+        ))
+        return measurement.vibration_g
 
     def _stabilize(self, scan: StepScan, config, column_rest_g: Optional[float], stopped_at: float,
-                   where: str) -> None:
-        """Wait after a move: until the column is at rest on the accelerometer, else the fixed delay."""
+                   where: str, point_index: int) -> None:
+        """Wait after a move: until the column is at rest on the accelerometer, else the fixed delay.
+        Published as ColumnSettled, before the point `point_index` is measured."""
         if config.stabilization_delay_ms <= 0:
             return
         if self._column_stabilization is None:
             time.sleep(config.stabilization_delay_ms / 1000.0)
             return
-        self._column_stabilization.wait_until_settled(
+        outcome = self._column_stabilization.wait_until_settled(
             scan.id, where, column_rest_g, stopped_at, config.stabilization_delay_ms / 1000.0,
             lambda: scan.status in (ScanStatus.CANCELLED, ScanStatus.FAILED))
+        # stopped_at is on perf_counter: placed on the host clock from the elapsed time.
+        stopped_at_wall = datetime.now().astimezone() - timedelta(seconds=time.perf_counter() - stopped_at)
+        self._event_bus.publish("columnsettled", ColumnSettled(
+            scan_id=scan.id, point_index=point_index, method=outcome.method, stopped_at=stopped_at_wall,
+            waited_s=outcome.waited_s, vibration_g=outcome.vibration_g, threshold_g=outcome.threshold_g,
+        ))
 
     def _collect_samples(
         self, sample_queue: "queue.Queue", count: int, scan: StepScan

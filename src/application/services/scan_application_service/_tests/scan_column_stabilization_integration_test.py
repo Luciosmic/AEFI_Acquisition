@@ -46,8 +46,9 @@ class _RecordingStabilization(ColumnStabilization):
         self.rests, self.outcomes = [], []
 
     def measure_rest(self, *args, **kwargs):
-        self.rests.append(super().measure_rest(*args, **kwargs))
-        return self.rests[-1]
+        measurement = super().measure_rest(*args, **kwargs)
+        self.rests.append(measurement.vibration_g)
+        return measurement
 
     def wait_until_settled(self, *args, **kwargs):
         self.outcomes.append(super().wait_until_settled(*args, **kwargs))
@@ -172,3 +173,74 @@ class TestFlyScanColumnStabilization(_Stack):
         self.assertEqual(scan.status, ScanStatus.COMPLETED)
         self.assertEqual(len(self.stabilization.rests), 1)
         self.assertEqual([o.method for o in self.stabilization.outcomes], [ACCELEROMETER] * 2)
+
+
+class TestStabilizationIsExported(_Stack):
+    """Real CSV + HDF5 export ports: the accelerometer stream and the waits land in the
+    acquisition folder, and acquisition-parameters.json summarizes the stabilization."""
+
+    def setUp(self):
+        import tempfile
+        from pathlib import Path
+        from application.services.excitation_configuration_service.excitation_configuration_service import (
+            ExcitationConfigurationService,
+        )
+        from application.services.scan_export_service.dtos.scan_export_dtos import ExportConfigDTO
+        from application.services.scan_export_service.scan_export_service import ScanExportService
+        from infrastructure.mocks.adapter_mock_i_excitation_port import MockExcitationPort
+        from infrastructure.persistence.csv_scan_export_port import CsvScanExportPort
+        from infrastructure.persistence.hdf5_scan_export_port import Hdf5ScanExportPort
+
+        self.output_dir = Path(tempfile.mkdtemp())
+        self.event_bus = InMemoryEventBus()
+        self._service(MockMotionPort(event_bus=self.event_bus, motion_delay_ms=1), ("aefipointacquired",))
+        self.export_service = ScanExportService(
+            self.event_bus, csv_export_port=CsvScanExportPort(), hdf5_export_port=Hdf5ScanExportPort(),
+            excitation_service=ExcitationConfigurationService(MockExcitationPort(), self.event_bus),
+        )
+        self.export_service.configure_export(ExportConfigDTO(
+            enabled=True, output_directory=str(self.output_dir), measured_object="plaque", lift_off_mm=8.0))
+
+    def tearDown(self):
+        import shutil
+        shutil.rmtree(self.output_dir, ignore_errors=True)
+
+    def _files(self):
+        import csv
+        import json
+        folder = next(self.output_dir.iterdir())
+        tables = {p.name.rsplit("_", 1)[-1]: list(csv.DictReader(p.open(encoding="utf-8")))
+                  for p in folder.glob("*.csv")}
+        document = json.loads(next(folder.glob("*_acquisition-parameters.json")).read_text(encoding="utf-8"))
+        return tables, document
+
+    def test_accelerometer_and_waits_are_exported_with_the_scan(self):
+        self._stream_accelerometer()
+        self.assertEqual(self._run(_step_dto()).status, ScanStatus.COMPLETED)
+        tables, document = self._files()
+
+        self.assertGreater(len(tables["accelerometer.csv"]), 20)  # rest measurement included (0.2 s at 200 Hz)
+        self.assertEqual(float(tables["accelerometer.csv"][0]["acceleration_z"]), 1.0)
+        waits = tables["column-stabilization.csv"]
+        self.assertEqual([w["point_index"] for w in waits], ["0", "1", "2", "3"])
+        self.assertEqual({w["stabilization_method"] for w in waits}, {ACCELEROMETER})
+
+        stabilization = document["procedure"]["step_scan"]["column_stabilization"]
+        self.assertEqual(stabilization["method"], "accelerometer")
+        self.assertEqual(stabilization["waits"], {"accelerometer": 4})
+        self.assertEqual(stabilization["rest_vibration"]["unit"], "[g]")
+        self.assertEqual(stabilization["criterion"]["window"], {"value": 0.1, "unit": "s"})
+        self.assertEqual(stabilization["accelerometer_samples"], len(tables["accelerometer.csv"]))
+        names = [f["name"] for f in document["data"]["files"]]
+        self.assertTrue(any(n.endswith("_plaque_liftoff-8mm_accelerometer.csv") for n in names), names)
+        self.assertEqual(document["data"]["columns"]["acceleration_x"]["unit"], "[g]")
+
+    def test_without_accelerometer_only_the_parameters_say_fixed_delay(self):
+        self.assertEqual(self._run(_step_dto()).status, ScanStatus.COMPLETED)
+        tables, document = self._files()
+
+        self.assertNotIn("accelerometer.csv", tables)
+        self.assertNotIn("column-stabilization.csv", tables)
+        stabilization = document["procedure"]["step_scan"]["column_stabilization"]
+        self.assertEqual((stabilization["method"], stabilization["waits"]), ("fixed_delay", {"fixed_delay": 4}))
+        self.assertIn("procedure.step_scan.column_stabilization", [w["path"] for w in document["warnings"]])

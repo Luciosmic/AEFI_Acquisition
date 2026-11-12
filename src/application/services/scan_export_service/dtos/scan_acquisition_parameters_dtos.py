@@ -63,6 +63,27 @@ class ElectricFieldProbeDTO:
 
 
 @dataclass(frozen=True)
+class ColumnStabilizationDTO:
+    """How the column was settled before each point (ColumnRestMeasured + ColumnSettled).
+
+    Units: durations s, vibrations [g]. Criterion fields None when the rest level was
+    never measured (stabilization delay 0, or no rest measurement wired).
+    """
+
+    rest_measured: bool  # a rest measurement was attempted at scan start
+    rest_vibration_g: Optional[float] = None
+    rest_sample_count: int = 0
+    unavailable_reason: Optional[str] = None
+    minimum_delay_s: Optional[float] = None
+    rest_measurement_s: Optional[float] = None
+    window_s: Optional[float] = None
+    factor: Optional[float] = None
+    timeout_s: Optional[float] = None
+    waits: Tuple[Tuple[str, int], ...] = ()  # (how the wait ended, count), in first-seen order
+    accelerometer_samples_written: int = 0
+
+
+@dataclass(frozen=True)
 class ScanActivityDTO:
     """One scan or time series as a PROV activity. `kind`: STEP_SCAN |
     TIME_SERIES; `status`: "running" | "completed" | "failed" | "cancelled".
@@ -93,6 +114,7 @@ class ScanActivityDTO:
     ended_at: Optional[datetime] = None
     failure_reason: Optional[str] = None
     records_written: Optional[int] = None
+    column_stabilization: Optional[ColumnStabilizationDTO] = None  # known at the end of a scan
 
 
 @dataclass(frozen=True)

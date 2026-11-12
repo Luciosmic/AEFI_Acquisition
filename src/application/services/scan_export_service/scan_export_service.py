@@ -19,12 +19,25 @@ import logging
 import shutil
 from dataclasses import replace
 import threading
+import time
 from datetime import datetime
 from pathlib import Path
 from typing import Optional, Dict, Any, List
 
 from .dtos.scan_export_dtos import ExportConfigDTO
 from .acquisition_name.acquisition_name import acquisition_name
+from .column_stabilization_record.column_stabilization_record import (
+    ACCELEROMETER_COLUMNS,
+    ACCELEROMETER_TABLE,
+    STABILIZATION_COLUMNS,
+    STABILIZATION_TABLE,
+    ColumnStabilizationRecord,
+)
+from domain.detection_devices.inertial_probe.events.inertial_probe_sample_acquired.inertial_probe_sample_acquired import (
+    InertialProbeSampleAcquired,
+)
+from domain.scan.events.column_rest_measured.column_rest_measured import ColumnRestMeasured
+from domain.scan.events.column_settled.column_settled import ColumnSettled
 from .ports.i_scan_export_port import IScanExportPort
 from .dtos.scan_acquisition_parameters_dtos import (
     STEP_SCAN,
@@ -135,6 +148,8 @@ class ScanExportService:
         self._time_series_config: Optional[ExportConfigDTO] = None
         self._time_series_active: bool = False
         self._time_series_t0: Optional[datetime] = None
+        # Column stabilization + accelerometer stream of the scan being exported (None otherwise).
+        self._stabilization_record: Optional[ColumnStabilizationRecord] = None
 
         # Subscribe to scan events
         self._event_bus.subscribe("scanstarted", self._on_event)
@@ -151,6 +166,10 @@ class ScanExportService:
         self._event_bus.subscribe("aefivoltagereadingstarted", self._on_event)
         self._event_bus.subscribe("aefivoltagesampleacquired", self._on_event)
         self._event_bus.subscribe("aefivoltagereadingstopped", self._on_event)
+        # Column stabilization of the scan, and the accelerometer it is judged on.
+        self._event_bus.subscribe("columnrestmeasured", self._on_event)
+        self._event_bus.subscribe("columnsettled", self._on_event)
+        self._event_bus.subscribe("inertialprobesampleacquired", self._on_event)
         # Per-scan event store: every event published while the export is open.
         self._event_bus.subscribe("*", self._record_event)
 
@@ -212,6 +231,12 @@ class ScanExportService:
                 self._handle_voltage_sample_acquired(event)
             elif isinstance(event, AefiVoltageReadingStopped):
                 self._handle_reading_stopped(event)
+            elif isinstance(event, InertialProbeSampleAcquired):
+                self._handle_inertial_probe_sample(event)
+            elif isinstance(event, ColumnRestMeasured):
+                self._handle_column_rest_measured(event)
+            elif isinstance(event, ColumnSettled):
+                self._handle_column_settled(event)
         except Exception as exc:
             logger.exception("Error handling %s: %s", type(event).__name__, exc)
 
@@ -276,6 +301,9 @@ class ScanExportService:
             port.write_acquisition_parameters(parameters)
         with self._events_lock:  # visible to the event recorder only once open
             self._active_ports = ports
+            # Same instant on the inertial samples' monotonic clock and on the host clock.
+            self._stabilization_record = ColumnStabilizationRecord(
+                event.scan_id, time.perf_counter(), datetime.now().astimezone())
         self._export_active = True
         self._points_written = 0
         # Reset per-scan field-export state — must not leak into a new scan
@@ -385,6 +413,48 @@ class ScanExportService:
         )
         self._close_export(event)
 
+    # -- column stabilization and accelerometer (scan exports only) ------------------
+
+    def _write_table_row(self, table: str, columns, row: Dict[str, Any]) -> bool:
+        """Open the table on first use and append the row, on every active port that keeps
+        tables (CSV). Under the events lock: the ports cannot be closed meanwhile.
+        Caller holds the lock."""
+        written = False
+        for port in self._active_ports:
+            if hasattr(port, "open_sidecar"):
+                port.open_sidecar(table, columns)
+                written = port.write_sidecar_row(table, row) or written
+        return written
+
+    def _handle_inertial_probe_sample(self, event: InertialProbeSampleAcquired) -> None:
+        # From the inertial probe worker thread, ~25 Hz.
+        with self._events_lock:
+            record = self._stabilization_record
+            if record is None:
+                return
+            row = record.accelerometer_row(event)
+            if row is not None and self._write_table_row(ACCELEROMETER_TABLE, ACCELEROMETER_COLUMNS, row):
+                record.accelerometer_written()
+
+    def _handle_column_rest_measured(self, event: ColumnRestMeasured) -> None:
+        with self._events_lock:
+            record = self._stabilization_record
+            if record is None:
+                logger.info("Column rest measured with no scan export open. Doing nothing. scan_id=%s", event.scan_id)
+                return
+            judged = record.rest_measured(event)
+        logger.info("Column stabilization recorded. scan_id=%s judged_on_accelerometer=%s reason=%s",
+                    event.scan_id, judged, event.unavailable_reason)
+
+    def _handle_column_settled(self, event: ColumnSettled) -> None:
+        with self._events_lock:
+            record = self._stabilization_record
+            if record is None:
+                return
+            row = record.settled(event)
+            if row is not None:
+                self._write_table_row(STABILIZATION_TABLE, STABILIZATION_COLUMNS, row)
+
     def _close_export(self, event: DomainEvent) -> List[Optional[Path]]:
         """Write the finishing event, close every active port, and drop the
         acquisition folder if nothing was written. Returns each active port's
@@ -393,9 +463,13 @@ class ScanExportService:
         # thread can no longer reach a port being stopped.
         with self._events_lock:
             ports, self._active_ports = self._active_ports, []
+            record, self._stabilization_record = self._stabilization_record, None
         # Read before stop() — ports clear their path once closed.
         paths = [port.get_output_path() for port in ports]
         finished = self._finish_parameters(event)
+        if finished is not None and record is not None:
+            finished = replace(finished, activity=replace(
+                finished.activity, column_stabilization=record.summary()))
         try:
             for port in ports:
                 port.write_event(event)  # last event of the export, before its file closes

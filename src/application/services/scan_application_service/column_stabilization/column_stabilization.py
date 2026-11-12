@@ -15,6 +15,12 @@ from collections import deque
 from dataclasses import dataclass
 from typing import Callable, Optional, Tuple
 
+from domain.scan.events.column_settled.column_settled import (
+    SETTLE_INTERRUPTED,
+    SETTLED_ON_ACCELEROMETER,
+    SETTLED_ON_FIXED_DELAY,
+    SETTLED_ON_TIMEOUT,
+)
 from domain.scan.value_objects.column_rest_criterion.column_rest_criterion import ColumnRestCriterion
 from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
 
@@ -23,11 +29,20 @@ logger = logging.getLogger(__name__)
 # Topic of InertialProbeSampleAcquired, published by the inertial probe acquisition worker.
 INERTIAL_PROBE_SAMPLE_TOPIC = "inertialprobesampleacquired"
 
-# How the wait after a move ended.
-ACCELEROMETER = "accelerometer"  # the column came back to rest
-FIXED_DELAY = "fixed_delay"  # accelerometer unusable: the fixed delay was waited
-TIMEOUT = "timeout"  # still vibrating past the criterion's timeout: measured anyway
-INTERRUPTED = "interrupted"  # the scan was cancelled or failed during the wait
+# How the wait after a move ended (names owned by the ColumnSettled event).
+ACCELEROMETER = SETTLED_ON_ACCELEROMETER
+FIXED_DELAY = SETTLED_ON_FIXED_DELAY
+TIMEOUT = SETTLED_ON_TIMEOUT
+INTERRUPTED = SETTLE_INTERRUPTED
+
+
+@dataclass(frozen=True)
+class RestMeasurement:
+    """Rest level of the still column ([g]); None with the reason when it could not be measured."""
+
+    vibration_g: Optional[float]
+    sample_count: int = 0
+    unavailable_reason: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -105,7 +120,7 @@ class ColumnStabilization:
 
     # --- rest level ----------------------------------------------------------------------
 
-    def measure_rest(self, scan_id, should_stop: Callable[[], bool]) -> Optional[float]:
+    def measure_rest(self, scan_id, should_stop: Callable[[], bool]) -> RestMeasurement:
         """Vibration of the still column over `rest_measurement_s`, before the first move.
 
         None — the scan then waits the fixed delay at every point — when the
@@ -115,22 +130,22 @@ class ColumnStabilization:
         if not self._is_streaming(start):
             logger.info("ColumnStabilization: scan_id=%s accelerometer not streaming: fixed stabilization delay "
                         "for this scan (start the inertial probe acquisition to settle on the accelerometer)", scan_id)
-            return None
+            return RestMeasurement(None, 0, "accéléromètre non en acquisition au démarrage du scan")
         logger.info("ColumnStabilization: scan_id=%s measuring the column rest level for %.0f s — do not touch "
                     "the bench", scan_id, self.criterion.rest_measurement_s)
         end = start + self.criterion.rest_measurement_s
         if not self._wait_until(end, should_stop):
             logger.info("ColumnStabilization: scan_id=%s scan stopped during the rest measurement", scan_id)
-            return None
+            return RestMeasurement(None, 0, "scan arrêté pendant la mesure du repos")
         rest_g, n = self._vibration(start, end)
         # Still streaming at the end: a sensor that died mid-measurement gives no rest level.
         if rest_g is None or not self._is_streaming(self._clock()):
             logger.warning("ColumnStabilization: scan_id=%s accelerometer silent during the rest measurement "
                            "(n=%d): fixed stabilization delay for this scan", scan_id, n)
-            return None
+            return RestMeasurement(None, n, "accéléromètre muet pendant la mesure du repos")
         logger.info("ColumnStabilization: scan_id=%s rest level rest_mg=%.2f threshold_mg=%.2f n=%d",
                     scan_id, rest_g * 1000, self.criterion.threshold_g(rest_g) * 1000, n)
-        return rest_g
+        return RestMeasurement(rest_g, n)
 
     # --- after each move -----------------------------------------------------------------
 

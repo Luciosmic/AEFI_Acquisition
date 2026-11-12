@@ -13,6 +13,7 @@ from typing import Any, Dict
 
 from application.services.scan_export_service.dtos.scan_acquisition_parameters_dtos import (
     STEP_SCAN,
+    ColumnStabilizationDTO,
     ScanAcquisitionParametersDTO,
     ScanActivityDTO,
     StepScanProcedureDTO,
@@ -51,6 +52,8 @@ def serialize_scan_acquisition_parameters_v1(
     components["microcontroller"]["settings"] = _microcontroller_settings(activity, conditions, warn)
     components["electric_field_probe"] = _probe(activity)
     procedure = _step_scan_procedure(activity.procedure) if activity.kind == STEP_SCAN else {}
+    if activity.kind == STEP_SCAN:
+        procedure["column_stabilization"] = _column_stabilization(activity.column_stabilization, warn)
     data = v1.data(
         parameters.files, STEP_SCAN_COLUMNS if activity.kind == STEP_SCAN else TIME_SERIES_COLUMNS, document_name
     )
@@ -87,6 +90,53 @@ def _step_scan_procedure(procedure: StepScanProcedureDTO) -> Dict[str, Any]:
         "measurement_uncertainty": q(procedure.measurement_uncertainty_v, "V"),
         "differential": {"enabled": procedure.differential_mode, "settle_delay": q(procedure.differential_settle_delay_ms, "ms")},
         "estimated_duration": q(procedure.estimated_duration_s, "s"),
+    }
+
+
+# 1.3: the vibration the column is judged on (ColumnRestCriterion.vibration_g).
+VIBRATION = ("RMS de |a − ā| : écart quadratique moyen du vecteur accélération à sa moyenne ā sur la fenêtre "
+             "(= racine(σx² + σy² + σz²), σ de population) ; indépendant de l'orientation de la carte, retire la "
+             "pesanteur et le décalage statique")
+
+
+def _column_stabilization(stabilization, warn: v1.Warn):
+    """How the column was settled before each point; null while the scan runs (known at its end)
+    and when no stabilization was asked for (delay 0)."""
+    if stabilization is None:
+        return None
+    s: ColumnStabilizationDTO = stabilization
+    path = "procedure.step_scan.column_stabilization"
+    q = v1.quantity
+    waits = dict(s.waits)
+    if not s.rest_measured:
+        method = "none"
+    elif s.rest_vibration_g is None:
+        method = "fixed_delay"
+        warn(path, f"stabilisation au délai fixe à chaque point : {s.unavailable_reason or 'raison inconnue'}")
+    else:
+        method = "accelerometer"
+        if waits.get("timeout"):
+            warn(path, f"{waits['timeout']} attente(s) arrêtée(s) au délai maximal de {s.timeout_s:g} s : "
+                       "colonne mesurée avant son retour au repos (voir le fichier column-stabilization)")
+        if waits.get("fixed_delay"):
+            warn(path, f"{waits['fixed_delay']} attente(s) au délai fixe : accéléromètre muet pendant le scan")
+    return {
+        "method": method,
+        "criterion": None if s.window_s is None else {
+            "description": ("au repos quand la vibration sur la dernière fenêtre ne dépasse pas factor × le niveau "
+                            "de repos ; au moins minimum_delay et une fenêtre après l'arrêt, au plus timeout"),
+            "vibration": VIBRATION,
+            "rest_measurement_duration": q(s.rest_measurement_s, "s"),
+            "window": q(s.window_s, "s"),
+            "factor": q(s.factor, "1"),
+            "timeout": q(s.timeout_s, "s"),
+            "minimum_delay": q(s.minimum_delay_s, "s"),
+        },
+        "rest_vibration": q(s.rest_vibration_g, "[g]"),
+        "rest_sample_count": s.rest_sample_count,
+        "unavailable_reason": s.unavailable_reason,
+        "waits": waits,
+        "accelerometer_samples": s.accelerometer_samples_written,
     }
 
 
@@ -201,6 +251,22 @@ STEP_SCAN_COLUMNS: Dict[str, Dict[str, str]] = {
     "field_std_dev_*": {"observed_property": "standard deviation of the electric field, auxiliary probe", "frame": "probe", "unit": "V/m"},
     "baseline_field_*": {"observed_property": "electric field, auxiliary probe, excitation muted", "frame": "probe", "unit": "V/m"},
     "baseline_field_std_dev_*": {"observed_property": "standard deviation of the muted electric field, auxiliary probe", "frame": "probe", "unit": "V/m"},
+    # 1.3 — file `accelerometer`: the inertial probe stream while it ran during the scan.
+    "accelerometer_sample_index": {"file": "accelerometer", "observed_property": "index of the sample in the inertial probe stream", "unit": "1"},
+    "accelerometer_timestamp": {"file": "accelerometer", "observed_property": "result time (host clock, sample received)", "format": "ISO 8601 with offset"},
+    **{
+        f"acceleration_{axis}": {"file": "accelerometer", "observed_property": "acceleration of the column (gravity included)",
+                                 "axis": axis, "frame": "inertial probe board", "unit": "[g]"}
+        for axis in _AXES
+    },
+    # 1.3 — file `column-stabilization`: one row per wait, when the column was judged on the accelerometer.
+    "stabilization_method": {"file": "column-stabilization", "observed_property": "how the wait before point_index ended: "
+                             "accelerometer (back at rest), fixed_delay (accelerometer silent), timeout (still vibrating), "
+                             "interrupted (scan stopped)"},
+    "stabilization_stopped_at": {"file": "column-stabilization", "observed_property": "end of the move before the wait (host clock)", "format": "ISO 8601 with offset"},
+    "stabilization_waited": {"file": "column-stabilization", "observed_property": "time from the end of the move to the measurement", "unit": "s"},
+    "stabilization_vibration": {"file": "column-stabilization", "observed_property": f"vibration over the last window when the wait ended: {VIBRATION}", "unit": "[g]"},
+    "stabilization_threshold": {"file": "column-stabilization", "observed_property": "factor × rest vibration (procedure.step_scan.column_stabilization)", "unit": "[g]"},
 }
 
 # Description of every column the time series CSV writes.

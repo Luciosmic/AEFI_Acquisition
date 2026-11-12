@@ -304,6 +304,21 @@ exports :
   saisi au démarrage (panneaux Scan et Continuous Reading, case « Commentaire »), par exemple
   « scan de fond » ou une condition du banc. `null` sans avertissement quand rien n'est saisi :
   un commentaire est facultatif. Il n'entre jamais dans le nom des fichiers.
+- **Stabilisation de la colonne (1.3)** : `procedure.step_scan.column_stabilization`, écrit à la fin du
+  scan (`null` dans le document du démarrage, et quand le délai de stabilisation est nul).
+  `method` : `accelerometer` (chaque point attend le retour au repos), `fixed_delay` (repos non mesuré,
+  avertissement avec la raison), `none` (pas de mesure du repos). `criterion` : `vibration` (RMS de
+  |a − ā| sur la fenêtre), `rest_measurement_duration`, `window`, `factor`, `timeout`, `minimum_delay`
+  (le délai fixe, durée minimale de chaque attente). `rest_vibration` en `[g]` (UCUM), `rest_sample_count`,
+  `unavailable_reason`, `waits` (nombre d'attentes par façon dont elles se sont terminées :
+  `accelerometer`, `fixed_delay`, `timeout`, `interrupted` ; avertissement s'il y a des `timeout` ou des
+  `fixed_delay` dans un scan jugé sur l'accéléromètre), `accelerometer_samples`.
+  Deux tables à côté, colonnes déclarées dans `data.columns` avec leur `file` :
+  `<…>_accelerometer.csv` (le flux de l'accéléromètre pendant tout le scan dès qu'il émet, mesure du
+  repos comprise : `accelerometer_sample_index`, `accelerometer_timestamp`, `acceleration_x|y|z` en `[g]`,
+  pesanteur comprise, repère de la carte) et `<…>_column-stabilization.csv` (une ligne par attente quand
+  les points sont jugés sur l'accéléromètre : `point_index`, `stabilization_method`,
+  `stabilization_stopped_at`, `stabilization_waited`, `stabilization_vibration`, `stabilization_threshold`).
 - **Nom des fichiers (1.3)** : `<horodatage>_<stepScan|flyScan|timeSeries>_<objet mesuré>_liftoff-<valeur>mm`,
   composé à partir de `feature_of_interest` (`objet-non-saisi`, `liftoff-non-saisi` quand la
   valeur manque). La « base » libre tapée par l'opérateur est supprimée : le nom aide à
