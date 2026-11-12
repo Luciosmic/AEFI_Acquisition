@@ -1,4 +1,4 @@
-# fake_acquisition_conditions_port — Intention
+# fake_acquisition_conditions — Intention
 
 ## Rationale
 
