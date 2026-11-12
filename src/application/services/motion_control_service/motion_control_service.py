@@ -317,6 +317,8 @@ class MotionControlService:
         """Get the maximum travel limits for X and Y axes."""
         try:
             return self._motion_port.get_axis_limits()
+        except MotionConversionUnavailableError:
+            return (1000.0, 1000.0)  # no mm scale yet: the limits are refreshed when the conversion arrives
         except Exception:
             logger.warning("Failed to read axis limits from hardware, falling back to default (1000.0, 1000.0)")
             return (1000.0, 1000.0) # Default fallback

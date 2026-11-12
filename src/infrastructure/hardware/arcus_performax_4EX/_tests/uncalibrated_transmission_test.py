@@ -46,6 +46,10 @@ class UncalibratedAdapterTest(unittest.TestCase):
         with self.assertRaises(MotionConversionUnavailableError):
             self.adapter.get_current_position()
 
+    def test_axis_limits_in_mm_raise_typed_error(self):
+        with self.assertRaises(MotionConversionUnavailableError):
+            self.adapter.get_axis_limits()
+
     def test_typed_error_stays_a_runtime_error(self):
         with self.assertRaises(RuntimeError):
             self.adapter.move_to(Position2D(x=1.0, y=1.0))

@@ -65,6 +65,11 @@ class MotionPresenter(QObject):
             )
         self.conversion_banner_changed.emit(banner)
     
+    def _refresh_limits(self, _event=None):
+        """The travel in mm follows the µm-per-pulse factor: read it again when the factor arrives or changes."""
+        max_x, max_y = self._service.get_axis_limits()
+        self._update_limits(max_x, max_y)
+
     def _update_limits(self, max_x: float, max_y: float):
         """Update stored limits and emit signal."""
         self._max_x = max_x
@@ -80,6 +85,8 @@ class MotionPresenter(QObject):
             self._event_bus.subscribe("motionfailed", self._on_motion_failed)
             self._event_bus.subscribe("motionconversionfoundmissing", self._refresh_conversion_banner)
             self._event_bus.subscribe("motionconversionbecameavailable", self._refresh_conversion_banner)
+            self._event_bus.subscribe("motionconversionbecameavailable", self._refresh_limits)
+            self._event_bus.subscribe("motionconversionchanged", self._refresh_limits)
 
     def stop_monitoring(self):
         """Unsubscribe from position updates and motion events."""
@@ -90,6 +97,8 @@ class MotionPresenter(QObject):
             self._event_bus.unsubscribe("motionfailed", self._on_motion_failed)
             self._event_bus.unsubscribe("motionconversionfoundmissing", self._refresh_conversion_banner)
             self._event_bus.unsubscribe("motionconversionbecameavailable", self._refresh_conversion_banner)
+            self._event_bus.unsubscribe("motionconversionbecameavailable", self._refresh_limits)
+            self._event_bus.unsubscribe("motionconversionchanged", self._refresh_limits)
 
     def _on_motor_increments_updated(self, event: MotorIncrementsUpdated):
         """Relay the controller's pulse counts: the panel reads them next to the mm position."""

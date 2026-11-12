@@ -23,6 +23,7 @@ import queue
 from uuid import uuid4
 from datetime import datetime
 from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from domain.test_bench.physical_bench_limits.physical_bench_limits import X_TRAVEL_INCREMENTS, Y_TRAVEL_INCREMENTS
 from domain.shared_kernel.motion.events.motion_completed.motion_completed import MotionCompleted
 from domain.shared_kernel.motion.events.motion_failed.motion_failed import MotionFailed
 from domain.shared_kernel.motion.events.position_updated.position_updated import PositionUpdated
@@ -562,9 +563,14 @@ class ArcusAdapter(IMotionPort):
     def get_axis_limits(self) -> tuple[float, float]:
         """
         QUERY: Get the maximum travel limits for X and Y axes.
-        
+
+        The travel is fixed in increments (the rails); its length in mm follows the
+        µm-per-pulse factor, so the middle of the bench stays the same physical point
+        when the factor is corrected.
+
         Returns:
             tuple (max_x_mm, max_y_mm)
         """
-        return (1270.0, 1270.0)
+        self._require_conversion("get_axis_limits")
+        return (X_TRAVEL_INCREMENTS * self.MM_PER_STEP, Y_TRAVEL_INCREMENTS * self.MM_PER_STEP)
 
