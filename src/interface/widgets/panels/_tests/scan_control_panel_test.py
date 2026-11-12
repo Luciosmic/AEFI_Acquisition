@@ -139,3 +139,39 @@ def test_it_starts_in_the_referential_saved_by_the_settings_panel():
     panel, _ = _panel(store)
 
     assert _zone(panel) == (50.0, 150.0, 0.0, 100.0)
+
+
+def _shown(widget):
+    return not widget.isHidden()
+
+
+def test_fly_scan_hides_the_step_scan_only_settings_and_keeps_the_common_ones():
+    panel, _ = _panel(_Store(scan_config={"differential_expanded": True}))
+    step_only = (panel.input_averaging, panel.btn_toggle_differential, panel.differential_box)
+    assert all(_shown(w) for w in step_only)
+
+    panel.radio_fly.setChecked(True)
+
+    assert not any(_shown(w) for w in step_only)
+    assert all(_shown(w) for w in (panel.combo_pattern, panel.combo_axis, panel.input_stabilization))
+    assert "début de chaque ligne" in panel.input_stabilization.toolTip()
+
+
+def test_differential_left_checked_is_not_sent_with_a_fly_scan():
+    panel, emitted = _panel()
+    panel.checkbox_differential_mode.setChecked(True)
+    panel.radio_fly.setChecked(True)
+
+    panel._on_start_clicked()
+
+    assert (emitted[0]["fly_scan"], emitted[0]["differential_mode"]) == (True, False)
+
+
+def test_differential_fold_state_is_saved_with_the_defaults():
+    store = _Store()
+    panel, _ = _panel(store)
+    panel.btn_toggle_differential.setChecked(True)
+
+    panel._save_scan_defaults()
+
+    assert store.saved_scan_config["differential_expanded"] is True

@@ -203,6 +203,24 @@ class TestFlyScanOnTheFaithfulMotionStack(_Stack):
         self.assertEqual(completed[0].total_points, 12)
         self.assertEqual(self.service.get_status().current_point_index, 12)
 
+    def test_stabilization_is_waited_at_the_start_of_each_line_before_its_sweep(self):
+        moves, reached = [], []
+        move_to = self.adapter.move_to
+
+        def recording_move_to(position):
+            moves.append(time.monotonic())
+            return move_to(position)
+
+        self.adapter.move_to = recording_move_to
+        self.event_bus.subscribe("motioncompleted", lambda e: reached.append(time.monotonic()))
+
+        self._run(make_dto(stabilization_delay_ms=300))
+
+        # Moves alternate line start / sweep: the sweep of line k (move 2k+1) waits
+        # the stabilization after its start was reached (motion end 2k).
+        for line in range(3):
+            self.assertGreaterEqual(moves[2 * line + 1] - reached[2 * line], 0.29, (moves, reached))
+
     def test_a_provisional_preview_is_published_during_the_sweep_and_counts_for_nothing(self):
         kinds = []
         self.event_bus.subscribe("aefilinepreviewpointacquired", lambda e: kinds.append(("preview", e.line_index, e.index_in_line)))

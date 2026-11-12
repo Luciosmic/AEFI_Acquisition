@@ -70,7 +70,8 @@ class StepScanConfig:
 
     # Fly scan: quick exploration, each line of the fast axis swept in one
     # go while acquiring (see FlyScanLineProjector). Same grid as the step
-    # scan it prepares; stabilization and averaging don't apply.
+    # scan it prepares; averaging doesn't apply, stabilization is waited
+    # once per line, at its start (after each point in a step scan).
     fly_scan: bool = False
 
     def __post_init__(self):

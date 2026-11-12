@@ -114,9 +114,9 @@ class ScanControlPanel(QWidget):
         """)
 
         # --- Scan Configuration Group ---
-        # Always visible: what changes from one scan to the next (geometry,
-        # Step/Fly mode, stabilization, averaging). Folded under "Réglages
-        # avancés": what is set once (pattern, fast axis, differential mode).
+        # Geometry and Step/Fly mode, then the settings common to both modes
+        # (pattern, main axis, stabilization), then the step-scan-only ones
+        # (averaging, differential measurement folded), hidden in a fly scan.
         config_group = QGroupBox("Scan Configuration")
         grid = QGridLayout(config_group)
         grid.setHorizontalSpacing(6)
@@ -147,7 +147,8 @@ class ScanControlPanel(QWidget):
             "Balaye chaque ligne de l'axe rapide d'une traite, sans arrêt par point.\n"
             "Chaque point est placé d'après les positions rapportées par le contrôleur\n"
             "pendant le mouvement : pour repérer une zone avant un step-scan, pas pour mesurer.\n"
-            "Stabilization, Averaging et mesure différentielle ne s'appliquent pas.\n"
+            "La stabilisation s'attend au début de chaque ligne ;\n"
+            "Averaging et mesure différentielle ne s'appliquent pas.\n"
             "Grille uniquement."
         )
         self.radio_step.setChecked(True)
@@ -217,20 +218,19 @@ class ScanControlPanel(QWidget):
         mode_row.addWidget(self.radio_fly)
         mode_row.addStretch()
 
-        # Advanced settings, folded by default (state kept in the UI config).
-        self.btn_toggle_advanced = self._fold_button("Réglages avancés")
-        self.advanced_box = QWidget()
-        advanced = QGridLayout(self.advanced_box)
-        advanced.setContentsMargins(12, 0, 0, 0)
-        advanced.addWidget(QLabel("Pattern:"), 0, 0)
-        advanced.addWidget(self.combo_pattern, 0, 1)
-        advanced.addWidget(QLabel("Axis (fast):"), 0, 2)
-        advanced.addWidget(self.combo_axis, 0, 3)
-        advanced.addWidget(self.checkbox_differential_mode, 1, 0, 1, 4)
-        advanced.addWidget(QLabel("Diff. settle (ms):"), 2, 0)
-        advanced.addWidget(self.input_differential_settle_delay, 2, 1)
-        advanced.addWidget(self.btn_save_scan_defaults, 2, 2, 1, 2)
-        self.advanced_box.setVisible(False)
+        self.combo_axis.setToolTip("Axe parcouru le long de chaque ligne ; l'autre axe avance d'une ligne à la suivante.")
+        self.lbl_stabilization = QLabel("Stabilization (ms):")
+        self.lbl_averaging = QLabel("Averaging:")
+
+        # Differential measurement, step scan only, folded (state kept in the UI config).
+        self.btn_toggle_differential = self._fold_button("Mesure différentielle")
+        self.differential_box = QWidget()
+        differential = QGridLayout(self.differential_box)
+        differential.setContentsMargins(12, 0, 0, 0)
+        differential.addWidget(self.checkbox_differential_mode, 0, 0, 1, 4)
+        differential.addWidget(QLabel("Diff. settle (ms):"), 1, 0)
+        differential.addWidget(self.input_differential_settle_delay, 1, 1)
+        self.differential_box.setVisible(False)
 
         self.lbl_referential = QLabel()
         self.lbl_referential.setStyleSheet("color: #AAA; font-style: italic;")
@@ -246,12 +246,19 @@ class ScanControlPanel(QWidget):
         kind_layout.addWidget(self.tabs_scan_kind)
         grid.addWidget(kind_box, 0, 0, 1, 4)
         grid.addLayout(mode_row, 1, 0, 1, 4)
-        grid.addWidget(QLabel("Stabilization (ms):"), 2, 0)
-        grid.addWidget(self.input_stabilization, 2, 1)
-        grid.addWidget(QLabel("Averaging:"), 2, 2)
-        grid.addWidget(self.input_averaging, 2, 3)
-        grid.addWidget(self.btn_toggle_advanced, 3, 0, 1, 4)
-        grid.addWidget(self.advanced_box, 4, 0, 1, 4)
+        # Common to step and fly scans.
+        grid.addWidget(QLabel("Pattern:"), 2, 0)
+        grid.addWidget(self.combo_pattern, 2, 1)
+        grid.addWidget(QLabel("Main Axis:"), 2, 2)
+        grid.addWidget(self.combo_axis, 2, 3)
+        grid.addWidget(self.lbl_stabilization, 3, 0)
+        grid.addWidget(self.input_stabilization, 3, 1)
+        # Step scan only: hidden in a fly scan.
+        grid.addWidget(self.lbl_averaging, 3, 2)
+        grid.addWidget(self.input_averaging, 3, 3)
+        grid.addWidget(self.btn_toggle_differential, 4, 0, 1, 4)
+        grid.addWidget(self.differential_box, 5, 0, 1, 4)
+        grid.addWidget(self.btn_save_scan_defaults, 6, 2, 1, 2)
 
         layout.addWidget(config_group)
 
@@ -355,9 +362,7 @@ class ScanControlPanel(QWidget):
         self.btn_save_scan_defaults.clicked.connect(self._save_scan_defaults)
         self.radio_fly.toggled.connect(self._update_mode_dependent_fields)
         self.tabs_scan_kind.currentChanged.connect(self._update_mode_dependent_fields)
-        self.btn_toggle_advanced.toggled.connect(
-            lambda expanded: self._set_folded_section(self.btn_toggle_advanced, self.advanced_box, expanded, "advanced_expanded")
-        )
+        self.btn_toggle_differential.toggled.connect(self._on_differential_toggled)
         self.btn_toggle_export_directory.toggled.connect(
             lambda expanded: self._set_folded_section(
                 self.btn_toggle_export_directory, self.export_directory_box, expanded, "export_directory_expanded"
@@ -389,15 +394,23 @@ class ScanControlPanel(QWidget):
         """Fly scan exists for the grid only."""
         return self.radio_fly.isChecked() and self._scan_kind() == "grid"
 
+    def _on_differential_toggled(self, expanded: bool):
+        self._set_folded_section(self.btn_toggle_differential, self.differential_box, expanded, "differential_expanded")
+        self._update_mode_dependent_fields()
+
     def _update_mode_dependent_fields(self, *_):
-        """Settings a fly scan ignores are greyed; Fly is greyed on the Line tab."""
+        """Step-scan-only settings are hidden in a fly scan; Fly is greyed on the Line tab."""
         self.radio_fly.setEnabled(self._scan_kind() == "grid")
-        step_only = not self._is_fly_scan()
-        for widget in (
-            self.input_stabilization, self.input_averaging,
-            self.checkbox_differential_mode, self.input_differential_settle_delay,
-        ):
-            widget.setEnabled(step_only)
+        step = not self._is_fly_scan()
+        for widget in (self.lbl_averaging, self.input_averaging, self.btn_toggle_differential):
+            widget.setVisible(step)
+        self.differential_box.setVisible(step and self.btn_toggle_differential.isChecked())
+        stabilization_tip = (
+            "Délai après chaque déplacement, avant la mesure du point." if step
+            else "Délai à l'arrivée au début de chaque ligne, avant de la balayer."
+        )
+        self.lbl_stabilization.setToolTip(stabilization_tip)
+        self.input_stabilization.setToolTip(stabilization_tip)
 
     def _on_browse_export_directory(self):
         start_dir = self.input_export_directory.text() or str(Path.home() / "Desktop" / "AEFI_Acquisition_Exports")
@@ -474,7 +487,8 @@ class ScanControlPanel(QWidget):
             "scan_pattern": self.combo_pattern.currentText(),
             "scan_axis": self.combo_axis.currentText(),
             "fly_scan": self._is_fly_scan(),
-            "differential_mode": self.checkbox_differential_mode.isChecked(),
+            # Hidden in a fly scan, which refuses it: a box left checked must not be sent.
+            "differential_mode": self.checkbox_differential_mode.isChecked() and not self._is_fly_scan(),
             "differential_settle_delay_ms": self.input_differential_settle_delay.text(),
             "export_enabled": self.checkbox_export_enabled.isChecked(),
             "export_output_directory": self.input_export_directory.text(),
@@ -571,15 +585,14 @@ class ScanControlPanel(QWidget):
             if axis_index >= 0:
                 self.combo_axis.setCurrentIndex(axis_index)
 
-            for button, key in (
-                (self.btn_toggle_advanced, "advanced_expanded"),
-                (self.btn_toggle_export_directory, "export_directory_expanded"),
+            for button, box, key in (
+                (self.btn_toggle_differential, self.differential_box, "differential_expanded"),
+                (self.btn_toggle_export_directory, self.export_directory_box, "export_directory_expanded"),
             ):
                 expanded = bool(scan_config.get(key, False))
                 button.blockSignals(True)
                 button.setChecked(expanded)
                 button.blockSignals(False)
-                box = self.advanced_box if button is self.btn_toggle_advanced else self.export_directory_box
                 self._set_folded_section(button, box, expanded, key, save=False)
         self._render_zone_fields()
         self._update_mode_dependent_fields()
@@ -613,7 +626,7 @@ class ScanControlPanel(QWidget):
             "line_length_mm": float(self.input_line_length.text()),
             "line_n_points": int(self.input_line_nb.text()),
             "line_theta_deg": float(self.input_line_theta.text()),
-            "advanced_expanded": self.btn_toggle_advanced.isChecked(),
+            "differential_expanded": self.btn_toggle_differential.isChecked(),
             "export_directory_expanded": self.btn_toggle_export_directory.isChecked(),
         }
         try:

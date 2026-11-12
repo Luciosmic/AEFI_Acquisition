@@ -961,7 +961,8 @@ class ScanApplicationService:
         committed may reach the export.
 
         Software synchronization (reception timestamps in Python), accepted:
-        an exploration before a step scan, no stabilization, no averaging.
+        an exploration before a step scan, no averaging; the stabilization
+        delay is waited once per line, at its start, before the sweep.
         Same grid, aggregate and events as the step scan.
         """
         adc_queue: "queue.Queue" = queue.Queue()
@@ -1111,6 +1112,16 @@ class ScanApplicationService:
                 return STOP
             if _interrupted(epoch):
                 return ABANDONED
+
+            # Stabilization in a fly scan: once per line, at its start, before the sweep.
+            if config.stabilization_delay_ms > 0:
+                logger.debug("ScanApplicationService: scan_id=%s line=%d stabilizing %d ms at line start",
+                             scan.id, line_index, config.stabilization_delay_ms)
+                time.sleep(config.stabilization_delay_ms / 1000.0)
+                if _ended():
+                    return STOP
+                if _interrupted(epoch):
+                    return ABANDONED
 
             start, end = line[0], line[-1]
             length_mm = math.hypot(end.x - start.x, end.y - start.y)
