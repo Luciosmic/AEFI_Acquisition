@@ -24,6 +24,7 @@ from pathlib import Path
 from typing import Optional, Dict, Any, List
 
 from .dtos.scan_export_dtos import ExportConfigDTO
+from .acquisition_name.acquisition_name import acquisition_name
 from .ports.i_scan_export_port import IScanExportPort
 from .dtos.scan_acquisition_parameters_dtos import (
     STEP_SCAN,
@@ -168,8 +169,8 @@ class ScanExportService:
         """
         self._config = config
         logger.info(
-            "Command: configure export. enabled=%s, dir=%s, file=%s",
-            config.enabled, config.output_directory, config.filename_base,
+            "Command: configure export. enabled=%s, dir=%s, name=%s",
+            config.enabled, config.output_directory, acquisition_name(config.measured_object, config.lift_off_mm),
         )
         logger.debug("ScanExportService configured: %s", config)
 
@@ -183,8 +184,8 @@ class ScanExportService:
         consumed by the next `AefiVoltageReadingStarted`."""
         self._time_series_config = config if config.enabled else None
         logger.info(
-            "Command: configure time-series export. enabled=%s, dir=%s, file=%s",
-            config.enabled, config.output_directory, config.filename_base,
+            "Command: configure time-series export. enabled=%s, dir=%s, name=%s",
+            config.enabled, config.output_directory, acquisition_name(config.measured_object, config.lift_off_mm),
         )
 
     # ------------------------------------------------------------------ #
@@ -251,9 +252,9 @@ class ScanExportService:
         ports = [self._csv_export_port, self._hdf5_export_port]
 
         directory = self._config.output_directory
-        # Scan name only — each export port builds its own acquisition folder
-        # and per-device filenames (timestamp_<stepScan|flyScan>_<device>_<name>) from it.
-        filename_base = self._config.filename_base
+        # Name only (measured object + lift-off) — each export port builds its own acquisition
+        # folder and per-file names (<timestamp>_<stepScan|flyScan>_<name>_<device>) from it.
+        name = acquisition_name(self._config.measured_object, self._config.lift_off_mm)
         # Shared across both ports so CSV and HDF5 land in the same
         # acquisition folder (the post-processing trigger needs both files
         # side by side — see _handle_scan_finished).
@@ -261,13 +262,7 @@ class ScanExportService:
 
         metadata = self._build_metadata(event)
 
-        logger.info("Starting export to dir=%s, base=%s", directory, filename_base)
-        logger.debug(
-            "Starting scan export for scan_id=%s to directory=%s, filename_base=%s",
-            event.scan_id,
-            directory,
-            filename_base,
-        )
+        logger.info("Starting scan export. scan_id=%s, dir=%s, name=%s", event.scan_id, directory, name)
 
         parameters = self._start_parameters(
             str(event.scan_id), STEP_SCAN, self._config, self._step_scan_procedure(event)
@@ -276,7 +271,7 @@ class ScanExportService:
         # its files must not be mistaken for a step scan's.
         acquisition_kind = "flyScan" if getattr(event.config, "fly_scan", False) else "stepScan"
         for port in ports:
-            port.configure(directory, filename_base, metadata, timestamp=timestamp, acquisition_kind=acquisition_kind)
+            port.configure(directory, name, metadata, timestamp=timestamp, acquisition_kind=acquisition_kind)
             port.start()
             port.write_acquisition_parameters(parameters)
         with self._events_lock:  # visible to the event recorder only once open
@@ -344,13 +339,13 @@ class ScanExportService:
             return
 
         logger.info(
-            "Starting time-series export. acquisition_id=%s, dir=%s, base=%s",
-            event.acquisition_id, config.output_directory, config.filename_base,
+            "Starting time-series export. acquisition_id=%s, dir=%s, name=%s",
+            event.acquisition_id, config.output_directory, acquisition_name(config.measured_object, config.lift_off_mm),
         )
         # CSV only: the HDF5 layout is a position grid, meaningless vs time.
         port = self._csv_export_port
         port.configure(
-            config.output_directory, config.filename_base,
+            config.output_directory, acquisition_name(config.measured_object, config.lift_off_mm),
             {"acquisition_id": str(event.acquisition_id)},
             acquisition_kind="timeSeries",
         )
@@ -518,6 +513,7 @@ class ScanExportService:
             lift_off_mm=config.lift_off_mm,
             operator_id=config.operator_id or None,
             operator=config.operator.strip() or None,
+            comment=config.comment.strip() or None,
             probe=ElectricFieldProbeDTO(
                 brand=probe.brand, model=probe.model, serial_number=probe.serial_number,
                 axis_labels=tuple(probe.axis_labels), battery_voltage_v=probe.battery_voltage_v,

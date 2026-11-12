@@ -103,7 +103,7 @@ class ScanExportWithPostProcessingIntegrationTest(unittest.TestCase):
             usb_latency_timer_port=FakeUsbLatencyTimerPort(),
         )
         self.export_service.configure_export(
-            ExportConfigDTO(enabled=True, output_directory=str(self.output_dir), filename_base="e2e")
+            ExportConfigDTO(enabled=True, output_directory=str(self.output_dir))
         )
 
     def tearDown(self):

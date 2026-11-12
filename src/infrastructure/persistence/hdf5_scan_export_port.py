@@ -106,7 +106,8 @@ class Hdf5ScanExportPort(IScanExportPort):
             dir_path = self.base_output_dir
 
         timestamp = timestamp or datetime.now().strftime("%Y-%m-%d_%H%M%S")
-        safe_base = "".join(c for c in filename if c.isalnum() or c in ("-", "_"))
+        # "." kept for a decimal lift-off in the name (liftoff-2.5mm).
+        safe_base = "".join(c for c in filename if c.isalnum() or c in ("-", "_", "."))
 
         acquisition_dir = dir_path / f"{timestamp}_{acquisition_kind}_{safe_base}"
         acquisition_dir.mkdir(parents=True, exist_ok=True)

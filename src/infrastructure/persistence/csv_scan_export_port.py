@@ -87,7 +87,8 @@ class CsvScanExportPort(IScanExportPort):
 
         - `directory`: if absolute, used as-is; if relative or empty, it is
           resolved under `base_output_dir`.
-        - `filename`: scan name (without date/time, device tag, or extension).
+        - `filename`: acquisition name, `<measured object>_liftoff-<value>mm`
+          (without date/time, kind, device tag, or extension; see acquisition_name).
         - `metadata`: currently unused here but kept for API symmetry and
           potential future use (e.g. writing a sidecar JSON file).
         - `timestamp`: reuse a caller-supplied stamp instead of generating
@@ -110,8 +111,9 @@ class CsvScanExportPort(IScanExportPort):
             dir_path = self.base_output_dir
 
         timestamp = timestamp or datetime.now().strftime("%Y-%m-%d_%H%M%S")
+        # "." kept for a decimal lift-off in the name (liftoff-2.5mm).
         safe_base = "".join(
-            c for c in filename if c.isalnum() or c in ("-", "_")
+            c for c in filename if c.isalnum() or c in ("-", "_", ".")
         )
 
         # `_scan_name` carries the kind tag so every per-file name below reads

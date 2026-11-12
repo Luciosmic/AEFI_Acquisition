@@ -633,7 +633,7 @@ class TestFlyScanExportHoldsOnlyCommittedLines(_FaithfulFlyStack):
             software_provenance_port=FakeSoftwareProvenancePort(),
             usb_latency_timer_port=FakeUsbLatencyTimerPort(latency_ms=1.0),
         )
-        export.configure_export(ExportConfigDTO(enabled=True, output_directory="", filename_base="fly"))
+        export.configure_export(ExportConfigDTO(enabled=True, output_directory=""))
 
     def _rows(self, port):
         return sorted((round(r["x"], 6), round(r["y"], 6)) for r in port.points)

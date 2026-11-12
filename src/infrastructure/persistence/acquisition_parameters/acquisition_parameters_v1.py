@@ -25,7 +25,7 @@ from domain.test_bench.calibration.value_objects.rotation_convention.rotation_co
 from domain.shared_kernel.excitation.value_objects.phase_angle import PhaseAngle
 
 ACQUISITION_PARAMETERS_FILE_NAME = "acquisition-parameters.json"
-SCHEMA = {"name": "aefi-acquisition-parameters", "version": "1.2"}
+SCHEMA = {"name": "aefi-acquisition-parameters", "version": "1.3"}
 
 # Every unit the 1.x documents write, as UCUM codes (guard tests: nothing else).
 # ponytail: UCUM has no fractional exponent — V/√Hz is written V/{sqrt_Hz}.
@@ -111,6 +111,7 @@ def provenance(
     warn: Warn,
     operator_name: Optional[str] = None,
     operator_id: Optional[str] = None,
+    operator_comment: Optional[str] = None,
 ) -> Dict[str, Any]:
     if ended_at is None:
         warn(
@@ -139,6 +140,8 @@ def provenance(
             "status": status,
             "failure_reason": failure_reason,
             "exclusive_control": {"owner": owner, "held": list(held_controls)},
+            # 1.3: free text typed by the operator at start; null = no comment (not a warning).
+            "operator_comment": operator_comment or None,
         },
         "software": {
             "name": software.name,

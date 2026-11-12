@@ -104,6 +104,13 @@ class TestScanAcquisitionParametersV1Serializer(unittest.TestCase):
         self.assertNotIn("feature_of_interest.description", warning_paths(document))
         self.assertNotIn("provenance.operator.name", warning_paths(document))
 
+    def test_operator_comment_is_written_in_the_activity_and_is_optional(self):
+        document = serialize(make_scan_acquisition_parameters(comment="scan de fond"))
+        self.assertEqual(document["provenance"]["activity"]["operator_comment"], "scan de fond")
+        document = serialize(make_scan_acquisition_parameters())
+        self.assertIsNone(document["provenance"]["activity"]["operator_comment"])
+        self.assertFalse([p for p in warning_paths(document) if "operator_comment" in p])
+
     def test_lift_off_typed_at_start_is_written_with_the_object(self):
         document = serialize(make_scan_acquisition_parameters(measured_object="plaque", lift_off_mm=8.0))
         lift_off = document["feature_of_interest"][

@@ -1,6 +1,6 @@
 # acquisition_parameters — Intention
 
-> Référence du schéma `acquisition-parameters.json` (version 1.2), écrit à côté de
+> Référence du schéma `acquisition-parameters.json` (version 1.3), écrit à côté de
 > chaque export (scan pas-à-pas, série temporelle). Ce fichier est le contrat :
 > les scripts d'analyse le lisent, les tests garde-fous l'appliquent.
 
@@ -152,7 +152,8 @@ exports entre eux (toutes les acquisitions faites avec telle calibration).
                   "started_at": "…", "ended_at": "… | null",
                   "status": "running | completed | failed | cancelled",
                   "failure_reason": null,
-                  "exclusive_control": { "owner": "…", "held": ["excitation", "acquisition_stream", …] } },
+                  "exclusive_control": { "owner": "…", "held": ["excitation", "acquisition_stream", …] },
+                  "operator_comment": "… | null" },             // 1.3
     "software": { "name": "AEFI Acquisition", "version": "…", "commit": "…", "branch": "…", "dirty": false,
                   "hardware_backends": { "motion": "real", "aefi_device": "mock", … } },
     "operator": { "id": "<operators registry id> | null", "name": "… | null" },
@@ -299,6 +300,14 @@ exports :
   convention ; `alias: "lift_off"` donne le nom court sous lequel on en parle. `null` +
   avertissement quand un objet est présent et la distance non saisie ; `null` sans
   avertissement quand il n'y a pas d'objet par construction (`present: false`).
+- **Commentaire de l'opérateur (1.3)** : `provenance.activity.operator_comment`, texte libre
+  saisi au démarrage (panneaux Scan et Continuous Reading, case « Commentaire »), par exemple
+  « scan de fond » ou une condition du banc. `null` sans avertissement quand rien n'est saisi :
+  un commentaire est facultatif. Il n'entre jamais dans le nom des fichiers.
+- **Nom des fichiers (1.3)** : `<horodatage>_<stepScan|flyScan|timeSeries>_<objet mesuré>_liftoff-<valeur>mm`,
+  composé à partir de `feature_of_interest` (`objet-non-saisi`, `liftoff-non-saisi` quand la
+  valeur manque). La « base » libre tapée par l'opérateur est supprimée : le nom aide à
+  retrouver un dossier, le contenu se lit dans ce document.
 - **Section non pertinente vs inconnue** : non pertinente → présente, vide, avec
   `notes` (ex. `auxiliary_probes.uses: []`) ; inconnue → `null` + avertissement.
 - **Langue** : clés et chemins en anglais, messages d'avertissement et `notes`

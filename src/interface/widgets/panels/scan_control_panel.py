@@ -6,6 +6,7 @@ from PySide6.QtWidgets import (
 from interface.widgets.operator_selector.operator_selector import OperatorSelector
 from interface.widgets.measured_object_selector.measured_object_selector import MeasuredObjectSelector
 from interface.widgets.lift_off_input.lift_off_input import LIFT_OFF_LABEL, LIFT_OFF_TOOLTIP, LiftOffInput
+from interface.widgets.export_comment_input.export_comment_input import COMMENT_LABEL, ExportCommentInput
 from PySide6.QtCore import Qt, Signal
 from pathlib import Path
 
@@ -275,11 +276,9 @@ class ScanControlPanel(QWidget):
         self.checkbox_export_enabled = QCheckBox("Enable export")
         self.checkbox_export_enabled.setChecked(True)
 
-        self.input_export_filename = QLineEdit("scan")
         self.input_export_directory = QLineEdit("")
         self.input_export_directory.setPlaceholderText("~/Desktop/AEFI_Acquisition_Exports")
 
-        self.input_export_filename.setFixedWidth(90)
         self.btn_browse_export_directory = QPushButton("Browse...")
         self.btn_save_export_defaults = QPushButton("Set as default")
 
@@ -295,8 +294,6 @@ class ScanControlPanel(QWidget):
         self.export_directory_box.setVisible(False)
 
         export_grid.addWidget(self.checkbox_export_enabled, 0, 0)
-        export_grid.addWidget(QLabel("Filename base:"), 0, 1)
-        export_grid.addWidget(self.input_export_filename, 0, 2)
         export_grid.addWidget(self.btn_toggle_export_directory, 0, 3)
         export_grid.addWidget(self.export_directory_box, 1, 0, 1, 4)
 
@@ -315,6 +312,11 @@ class ScanControlPanel(QWidget):
         export_grid.addWidget(self.input_lift_off, 3, 1)
         export_grid.addWidget(QLabel("Opérateur:"), 4, 0)
         export_grid.addWidget(self.operator_selector, 4, 1, 1, 3)
+        # Written in acquisition-parameters.json, never in the file names (those come
+        # from the measured object and the lift-off). Kept for the session, never saved.
+        self.input_comment = ExportCommentInput()
+        export_grid.addWidget(QLabel(COMMENT_LABEL), 5, 0)
+        export_grid.addWidget(self.input_comment, 5, 1, 1, 3)
 
         layout.addWidget(export_group)
 
@@ -500,7 +502,7 @@ class ScanControlPanel(QWidget):
             "differential_settle_delay_ms": self.input_differential_settle_delay.text(),
             "export_enabled": self.checkbox_export_enabled.isChecked(),
             "export_output_directory": self.input_export_directory.text(),
-            "export_filename_base": self.input_export_filename.text(),
+            "export_comment": self.input_comment.comment(),
             "measured_object": measured_object.name if measured_object else "",
             "measured_object_id": measured_object.measured_object_id if measured_object else "",
             "lift_off_mm": self.input_lift_off.lift_off_mm(),
@@ -610,7 +612,6 @@ class ScanControlPanel(QWidget):
         export_config = self._config_store.load_export_config()
         if export_config:
             self.checkbox_export_enabled.setChecked(export_config.get("enabled", True))
-            self.input_export_filename.setText(export_config.get("filename_base", "scan"))
             self.input_export_directory.setText(export_config.get("output_directory", ""))
 
     def _save_scan_defaults(self):
@@ -649,7 +650,6 @@ class ScanControlPanel(QWidget):
         """Persist the current export settings as the new defaults."""
         export_config = {
             "enabled": self.checkbox_export_enabled.isChecked(),
-            "filename_base": self.input_export_filename.text(),
             "output_directory": self.input_export_directory.text(),
         }
         try:

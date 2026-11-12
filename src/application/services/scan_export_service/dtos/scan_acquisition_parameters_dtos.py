@@ -83,6 +83,7 @@ class ScanActivityDTO:
     lift_off_mm: Optional[float] = None
     operator_id: Optional[str] = None  # from the operators registry
     operator: Optional[str] = None
+    comment: Optional[str] = None  # typed by the operator at start (None = no comment)
     probe: Optional[ElectricFieldProbeDTO] = None
     bench_position_start: Optional[BenchPositionDTO] = None
     bench_position_end: Optional[BenchPositionDTO] = None

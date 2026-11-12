@@ -96,7 +96,7 @@ class TestScanExportClosesAfterLastPoint(unittest.TestCase):
             software_provenance_port=FakeSoftwareProvenancePort(),
             usb_latency_timer_port=FakeUsbLatencyTimerPort(latency_ms=1.0),
         )
-        self.export_service.configure_export(ExportConfigDTO(enabled=True, output_directory="", filename_base="scan"))
+        self.export_service.configure_export(ExportConfigDTO(enabled=True, output_directory=""))
 
         self.done = threading.Event()
 
