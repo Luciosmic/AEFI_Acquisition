@@ -22,3 +22,38 @@ _ADS_HARDWARE = [
 ]
 
 collect_ignore = _ARCUS_HARDWARE + _ADS_HARDWARE
+
+
+# -- Garde-fou des données du banc (voir src/tool/runtime_data_guard_intention.md) ------------
+# Les tests ne doivent ni tourner dans le dossier de l'exécution réelle (branche main), ni
+# laisser derrière eux une modification de .aefi_acquisition/ (calibrations, derniers réglages).
+import sys
+from pathlib import Path
+
+import pytest
+
+
+def pytest_sessionstart(session):
+    from tool import runtime_data_guard as guard
+
+    reason = guard.refusal_reason(Path(session.config.rootpath), guard.default_environ())
+    if reason:
+        pytest.exit(reason, returncode=4)
+    session.config._aefi_runtime_snapshots = [
+        snapshot
+        for runtime_dir in guard.runtime_dirs(Path(session.config.rootpath), Path.cwd())
+        if (snapshot := guard.RuntimeDataSnapshot.take(runtime_dir)) is not None
+    ]
+
+
+def pytest_sessionfinish(session, exitstatus):
+    from tool import runtime_data_guard as guard
+
+    for snapshot in getattr(session.config, "_aefi_runtime_snapshots", []):
+        changes = snapshot.changes()
+        if not changes.any:
+            snapshot.discard()
+            continue
+        snapshot.restore(changes)
+        for line in guard.report(changes, snapshot.runtime_dir, snapshot.backup_dir):
+            print(line, file=sys.stderr)
