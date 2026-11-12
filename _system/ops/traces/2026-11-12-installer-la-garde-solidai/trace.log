@@ -3,3 +3,4 @@
 01:26 | decision | pose=pre-commit non strict + hook PostToolUse seulement | pourquoi=--strict bloquerait tout commit d'un .py sur l'existant, et le gate commite seul
 01:27 | jalon | installer-garde-repo-dev.sh=rc 0 | pre-commit=.git/hooks/pre-commit | hook=.claude/settings.json (ignoré par .gitignore : sans commit) | core.hooksPath=retiré (pointait vers Ressources/ExperimentalData_ASSOCE/..., dossier absent : aucun hook ne tournait)
 01:27 | temoin | gate de la session hors ACQ (garde-des-depots refuse) : écriture native de ce fichier + commit manuel non-.py à travers le pre-commit
+01:12 | temoin | ecriture du gate a travers le pre-commit | resultat=ok
