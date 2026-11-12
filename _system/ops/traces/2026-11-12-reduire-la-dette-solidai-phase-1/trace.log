@@ -1,3 +1,8 @@
 22:51 | depart | quoi=reduire la dette solidai phase 1 | session=f6f1718f-0350-4d84-a878-2faf7a374b52
 22:51 | jalon | registre=inscrit | autre_session_acq=aucune | dernier_commit=il y a 2 h
 22:55 | annonce | commande=pytest reference avant + solidai verify avant | duree_estimee=2-10 min | arret=timeout 20 min | logs=run-pytest-avant.log, run-verify-avant.json
+22:53 | jalon | pytest racine interrompu (24 erreurs de collecte dans archives/) | reference=pytest src | log=run-pytest-avant-racine-interrompu.log
+22:53 | jalon | verify avant | erreurs=1314 (plan: 1206, la dette a bouge) | fake-mal-place=26 intention-non-typee=417 port-sortant-sans-fake=46 | tri=run-tri-avant.txt (131 lots, 34 mecaniques)
+22:55 | decision | familles typage Fake (intention-non-typee sous-fake, port-sortant-sans-fake fake-non-type) bloquees : doublure-de-test exige implements+double_de, ACQ n'a ni adaptateur ni port type ; brique creer-un-atome refuse | constat=constat-typer-les-fakes-exige-de-typer-reels-et-ports.md
+22:56 | decision | fake-mal-place : 24/26 exigent de deplacer le reel (infra a 2 niveaux, dossiers a plusieurs reels) ; 2 seulement se corrigent par renommage du Fake (acquisition_conditions, provenance)
+22:57 | jalon | perimetre change par l'humain (via coordinateur) : un exemple par famille, 3 au plus, un commit chacun, puis audit-des-trois-exemples.md
