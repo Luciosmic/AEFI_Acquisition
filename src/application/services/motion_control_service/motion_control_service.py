@@ -179,7 +179,7 @@ class MotionControlService:
                 continue
             if value < 0:
                 return self._out_of_range(operation, f"{axis}={value} incréments est négatif (origine = butée de homing)")
-            if limit_mm is not None and value * status.microns_per_pulse / 1000.0 > limit_mm:
+            if limit_mm is not None and value * status.microns_per_pulse / 1000.0 > limit_mm + 1e-6:  # the last increment is inside
                 return self._out_of_range(
                     operation,
                     f"{axis}={value} incréments = {value * status.microns_per_pulse / 1000.0:.1f} mm, "
