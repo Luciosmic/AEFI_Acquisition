@@ -22,7 +22,7 @@ from infrastructure.hardware.serial_link.fake.fake_usb_latency_timer_port import
 from infrastructure.mocks.adapter_mock_i_aefi_acquisition_executor import MockAefiAcquisitionExecutor
 from infrastructure.mocks.adapter_mock_i_excitation_port import MockExcitationPort
 from infrastructure.persistence.frequency_sweep.fake.fake_frequency_sweep_export_port import FakeFrequencySweepExportPort
-from infrastructure.provenance.fake.fake_software_provenance_port import FakeSoftwareProvenancePort
+from infrastructure.provenance.fake.fake_provenance import FakeSoftwareProvenancePort
 
 OPERATOR_FREQUENCY_HZ = 1000.0
 ADC_CONFIG = {

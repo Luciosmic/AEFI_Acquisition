@@ -30,7 +30,7 @@ from infrastructure.mocks.adapter_mock_i_acquisition_port import MockAcquisition
 from infrastructure.mocks.adapter_mock_i_aefi_acquisition_executor import MockAefiAcquisitionExecutor
 from infrastructure.mocks.adapter_mock_i_excitation_port import MockExcitationPort
 from infrastructure.mocks.adapter_mock_i_motion_port import MockMotionPort
-from infrastructure.provenance.fake.fake_software_provenance_port import FakeSoftwareProvenancePort
+from infrastructure.provenance.fake.fake_provenance import FakeSoftwareProvenancePort
 from infrastructure.unit_of_work.in_memory_unit_of_work import InMemoryUnitOfWork
 
 

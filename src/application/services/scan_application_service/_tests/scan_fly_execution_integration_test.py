@@ -33,7 +33,7 @@ from infrastructure.mocks.adapter_mock_i_acquisition_port import RandomNoiseAcqu
 from infrastructure.mocks.adapter_mock_i_excitation_port import MockExcitationPort
 from infrastructure.acquisition_conditions.fake.fake_acquisition_conditions_port import FakeAcquisitionConditionsPort
 from infrastructure.hardware.serial_link.fake.fake_usb_latency_timer_port import FakeUsbLatencyTimerPort
-from infrastructure.provenance.fake.fake_software_provenance_port import FakeSoftwareProvenancePort
+from infrastructure.provenance.fake.fake_provenance import FakeSoftwareProvenancePort
 from application.services.excitation_configuration_service.excitation_configuration_service import (
     ExcitationConfigurationService,
 )

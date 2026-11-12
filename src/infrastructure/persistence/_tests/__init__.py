@@ -14,7 +14,7 @@ from application.services.scan_export_service.dtos.scan_acquisition_parameters_d
 )
 from application.shared.acquisition_parameters.acquisition_conditions_dtos import BenchPositionDTO
 from infrastructure.acquisition_conditions.fake.fake_acquisition_conditions_port import make_bench_conditions
-from infrastructure.provenance.fake.fake_software_provenance_port import CLEAN
+from infrastructure.provenance.fake.fake_provenance import CLEAN
 
 STARTED = datetime(2026, 10, 2, 14, 0, 0, tzinfo=timezone.utc)
 ENDED = datetime(2026, 10, 2, 14, 5, 0, tzinfo=timezone.utc)

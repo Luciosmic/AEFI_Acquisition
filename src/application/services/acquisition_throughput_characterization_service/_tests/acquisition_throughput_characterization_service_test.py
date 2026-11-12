@@ -43,7 +43,7 @@ from infrastructure.acquisition_conditions.fake.fake_acquisition_conditions_port
     make_bench_conditions,
 )
 from infrastructure.hardware.serial_link.fake.fake_usb_latency_timer_port import FakeUsbLatencyTimerPort
-from infrastructure.provenance.fake.fake_software_provenance_port import FakeSoftwareProvenancePort
+from infrastructure.provenance.fake.fake_provenance import FakeSoftwareProvenancePort
 from dataclasses import replace
 
 ADC_OUTPUT_RATE_HZ = 2000.0

@@ -1,7 +1,7 @@
 """
 Fake Software Provenance Port
 
-See fake_software_provenance_port_intention.md.
+See fake_provenance_intention.md.
 """
 
 from application.shared.acquisition_parameters.acquisition_conditions_dtos import (

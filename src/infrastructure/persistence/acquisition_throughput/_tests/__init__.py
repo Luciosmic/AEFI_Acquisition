@@ -20,7 +20,7 @@ from application.services.acquisition_throughput_characterization_service.dtos.a
     AcquisitionThroughputRequestDTO,
 )
 from infrastructure.acquisition_conditions.fake.fake_acquisition_conditions_port import make_bench_conditions
-from infrastructure.provenance.fake.fake_software_provenance_port import CLEAN
+from infrastructure.provenance.fake.fake_provenance import CLEAN
 
 
 def make_throughput_activity_dto(**overrides) -> ThroughputActivityDTO:

@@ -30,7 +30,7 @@ from infrastructure.persistence.frequency_sweep.acquisition_parameters_v1_serial
     serialize_acquisition_parameters_v1,
 )
 from infrastructure.persistence.frequency_sweep.csv_frequency_sweep_export_port import CsvFrequencySweepExportPort
-from infrastructure.provenance.fake.fake_software_provenance_port import CLEAN
+from infrastructure.provenance.fake.fake_provenance import CLEAN
 
 FREQUENCIES = (100.0, 1000.0, 10000.0)
 ACTIVITY = FrequencySweepActivityDTO(
