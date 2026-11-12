@@ -12,6 +12,9 @@ class InMemoryEventBus(IDomainEventBus):
     
     def __init__(self):
         self._subscribers: Dict[str, List[Callable[[Any], None]]] = defaultdict(list)
+        # A topic nobody listens to is announced once, not once per event: a per-sample event
+        # (aefisamplecorrected, ~ the acquisition rate) drowned the logs of every run.
+        self._announced_unlistened: set = set()
     
     def subscribe(self, event_type: str, handler: Callable[[Any], None]) -> None:
         logger.debug(f"[InMemoryEventBus] Subscribing to '{event_type}'")
@@ -25,7 +28,13 @@ class InMemoryEventBus(IDomainEventBus):
 
         handlers = self._subscribers.get(event_type, [])
         if not handlers:
-            logger.warning("[InMemoryEventBus] No subscribers for event '%s'", event_type)
+            if event_type not in self._announced_unlistened:
+                self._announced_unlistened.add(event_type)
+                logger.warning(
+                    "[InMemoryEventBus] No subscribers for event '%s' (said once; later ones at DEBUG)", event_type
+                )
+            else:
+                logger.debug("[InMemoryEventBus] No subscribers for event '%s'", event_type)
 
         self._dispatch(handlers, data, event_type)
         # "*" is the wildcard convention for catch-all subscribers (e.g. the event audit log)

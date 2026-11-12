@@ -149,7 +149,7 @@ class ScanExportWithPostProcessingIntegrationTest(unittest.TestCase):
         self.assertEqual(len(documents), 1)
         with documents[0].open(encoding="utf-8") as f:
             document = json.load(f)
-        self.assertEqual(document["schema"]["version"], "1.0")
+        self.assertEqual(document["schema"]["version"], "1.1")
         self.assertEqual(document["provenance"]["activity"]["status"], "completed")
         listed = {f["format"] for f in document["data"]["files"] if "sha256" in f}
         self.assertTrue({"CSV", "HDF5", "JSON Lines"} <= listed, listed)

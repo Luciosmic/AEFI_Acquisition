@@ -214,3 +214,27 @@ class TestInMemoryEventBus(DiagramFriendlyTest):
         expected_calls = [("A", payload), ("B", payload)]
         self.log_interaction("Test", "ASSERT", "InMemoryEventBus", "Verify orchestration", expect=expected_calls, got=calls)
         self.assertEqual(calls, expected_calls)
+
+
+class TestUnlistenedTopicLogging(DiagramFriendlyTest):
+    """A topic nobody listens to is announced once, whatever the rate it is published at."""
+
+    def test_unlistened_topic_warns_once_then_stays_quiet(self):
+        bus = InMemoryEventBus()
+
+        with self.assertLogs("infrastructure.events.in_memory_event_bus", level="WARNING") as captured:
+            for _ in range(50):
+                bus.publish("aefisamplecorrected", object())
+
+        self.assertEqual(len(captured.records), 1)
+        self.assertIn("aefisamplecorrected", captured.output[0])
+
+    def test_each_unlistened_topic_is_announced_on_its_own(self):
+        bus = InMemoryEventBus()
+
+        with self.assertLogs("infrastructure.events.in_memory_event_bus", level="WARNING") as captured:
+            bus.publish("topic_a", object())
+            bus.publish("topic_b", object())
+            bus.publish("topic_a", object())
+
+        self.assertEqual(len(captured.records), 2)
