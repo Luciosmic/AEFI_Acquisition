@@ -15,3 +15,7 @@
 23:07 | jalon | reference=pytest 1705 reussis, 2 echecs instables (debit ADC chronometre, bruit aleatoire de moyennage ; 3 relances isolees vertes), 3 sautes | verify=1313 erreurs, 63 avertissements | graphe R1 ne liste pas ISoftwareProvenancePort, R3 vide
 23:19 | decision | attente=dernier commit (4503803, .gitignore, 23:09) a moins de 10 min : ecritures differees jusqu'a 23:19
 23:20 | decision | port=type port au niveau du fichier i_software_provenance_port_intention.md, pas en enregistrement inline : le port vit dans application/shared/, consomme par trois services, sans intention de service unique pour l'heberger ; deplacer le .py est interdit
+23:22 | jalon | intentions=port 2c88de9, adaptateur 14b2a9a, doublure-de-test 0250004 | au_validate=valide x3 | au_diagnostics=0 sur chaque fichier, 0 sur src/, 2 erreurs repo identiques a la reference
+23:24 | jalon | verify=1313->1311, intention-non-typee 417->415 (reel, Fake), aucun code nouveau | graphe R3=FakeSoftwareProvenancePort->GitSoftwareProvenanceReader | port non vu par verify : A20 ne compte pas port, le graphe ne lit le sens que d'un enregistrement inline
+23:28 | jalon | pytest=1707 reussis, 3 sautes, 0 echec, identique a la phase 1 | audit=section Exemple 1-2 ajoutee (09710b4, 4f89e0d) | journaux=c5d8342
+23:29 | fin | resultat=chaine typee sans erreur moteur, verify -2, tests identiques, Fake relie a son reel ; port invisible pour verify | prochain=decision humaine A (verify lit un port type au niveau du fichier) ou B (port en enregistrement inline d'un service)
