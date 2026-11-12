@@ -3,7 +3,10 @@ from datetime import datetime, timezone
 from types import SimpleNamespace
 
 from application.services.scan_application_service.dtos.scan_dtos import ScanConfigSnapshotDTO
-from infrastructure.mcp.observability_mcp_server import build_observability_mcp_server
+from infrastructure.mcp.observability_mcp_server import (
+    build_observability_mcp_server,
+    run_observability_mcp_server,
+)
 
 
 def _scan_service():
@@ -78,3 +81,18 @@ def test_get_scan_config_serializes_snapshot_or_none():
     current["value"] = None
     _, structured = _call(mcp, "get_scan_config")
     assert structured == {"result": None}
+
+
+def test_port_already_in_use_returns_with_a_warning_instead_of_dying(caplog):
+    import logging
+    import socket
+
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as holder:  # another instance
+        holder.bind(("127.0.0.1", 0))
+        holder.listen()
+        port = holder.getsockname()[1]
+
+        with caplog.at_level(logging.WARNING):
+            run_observability_mcp_server(_scan_service(), port=port)  # returns, no SystemExit
+
+    assert "already in use" in caplog.text

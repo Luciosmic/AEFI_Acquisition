@@ -35,6 +35,7 @@ bound to localhost only.
 from __future__ import annotations
 
 import logging
+import socket
 from dataclasses import asdict
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
@@ -135,13 +136,34 @@ def build_observability_mcp_server(
     return mcp
 
 
+def _port_is_free(host: str, port: int) -> bool:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
+        try:
+            probe.bind((host, port))
+        except OSError:
+            return False
+    return True
+
+
 def run_observability_mcp_server(
     scan_service: ScanApplicationService,
     host: str = DEFAULT_HOST,
     port: int = DEFAULT_PORT,
     **providers: Any,
 ) -> None:
-    """Run the observability MCP server. Blocking — call from a daemon thread."""
+    """Run the observability MCP server. Blocking — call from a daemon thread.
+
+    Returns without serving when the port is already taken (typically by
+    another running instance of the app, e.g. the real-hardware one while a
+    mock one starts): one instance per port, the first one keeps it.
+    """
+    if not _port_is_free(host, port):
+        logger.warning(
+            "Observability MCP server: not started, %s:%s already in use "
+            "(another AEFI instance likely holds it). This instance is not observable.",
+            host, port,
+        )
+        return
     mcp = build_observability_mcp_server(scan_service, host=host, port=port, **providers)
     logger.info(
         "Observability MCP server: starting (read-only) on http://%s:%s%s",
