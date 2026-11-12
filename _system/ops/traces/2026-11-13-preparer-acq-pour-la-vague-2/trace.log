@@ -9,3 +9,4 @@
 00:43 | jalon | mypy src=3298 erreurs dans 493 fichiers (901 verifies), dont 2864 no-untyped-def | log=run-mypy-src.log | constat=comptes-verify-et-mypy-avant-et-apres.md
 00:44 | jalon | au_diagnostics=2 erreurs yaml-parse-error anterieures (operator_registry.md, fa_operator_traceability.md) | 1 avertissement attendu (genere_par vers la note de tache, a generer par la session)
 00:44 | fin | resultat=critere atteint | commits=6ac08e5 (.saignore, par le gate), 7a50882 (import), bd82a84 (garde) | verify=1300->1274 erreurs | mypy=3298 erreurs
+00:38 | fin | resultat=Critère atteint : archives/ exclu (verify 1300 -> 1274), import corrigé (tests identiques), garde de typage posée (verifier 7 OK), mypy 3298 erreurs., entree=Préparer ACQ pour la vague 2, session=f6f1718f
