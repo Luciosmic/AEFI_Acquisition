@@ -6,7 +6,7 @@ import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
 
-from src.interface.widgets.panels.scan_visualization_panel import ScanVisualizationPanel
+from interface.widgets.panels.scan_visualization_panel import ScanVisualizationPanel
 
 _app = QApplication.instance() or QApplication([])
 
