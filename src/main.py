@@ -119,6 +119,7 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
     from application.services.inertial_probe_service.inertial_probe_service import InertialProbeService
     from application.services.scan_export_service.scan_export_service import ScanExportService
     from application.services.scan_application_service.scan_closure_handler.scan_closure_handler import ScanClosureHandler
+    from application.services.scan_application_service.column_stabilization.column_stabilization import ColumnStabilization
     from application.services.system_lifecycle_service.system_lifecycle_service import (
         SystemStartupApplicationService,
         SystemShutdownApplicationService,
@@ -426,8 +427,11 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
         auxiliary_probes=[narda_channel],
         excitation_service=excitation_service,
         conversion_status=motion_conversion_handler,
+        # Settles on the accelerometer when the operator streams it (inertial probe panel),
+        # fixed stabilization delay otherwise.
+        column_stabilization=ColumnStabilization(event_bus),
     )
-    logger.info("Services -> ScanApplicationService created (auxiliary_probes=1)")
+    logger.info("Services -> ScanApplicationService created (auxiliary_probes=1, column stabilization on the accelerometer)")
 
     # Scan Export Service
     csv_export_port = CsvScanExportPort()

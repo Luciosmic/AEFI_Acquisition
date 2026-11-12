@@ -54,6 +54,7 @@ from application.services.scan_application_service.errors.scan_start_error impor
     ScanStartError,
 )
 from application.shared.ports.i_async_task_runner import IAsyncTaskRunner
+from .column_stabilization.column_stabilization import ColumnStabilization
 from .ports.i_motion_synchronizer import IMotionSynchronizer
 from .ports.i_scan_output_port import IScanOutputPort
 from .ports.i_unit_of_work import IUnitOfWork
@@ -251,7 +252,10 @@ class ScanApplicationService:
         unit_of_work: IUnitOfWork,
         conversion_status: Optional[IMotionConversionStatusPort] = None,
         motion_control: Optional[ExclusiveControl] = None,
+        column_stabilization: Optional[ColumnStabilization] = None,
     ):
+        # Settles each point on the accelerometer when it streams; None: fixed delay only.
+        self._column_stabilization = column_stabilization
         # Single owner of the bench motors (shared with any other motor driver, e.g. a calibration), held like the excitation.
         self._motion_control = motion_control
         self._unit_of_work = unit_of_work
@@ -717,6 +721,8 @@ class ScanApplicationService:
             self._release_controls()
 
         try:
+            column_rest_g = self._measure_column_rest(scan, config)
+
             for i, position in enumerate(trajectory):
                 if scan.status in (ScanStatus.CANCELLED, ScanStatus.FAILED):
                     return
@@ -748,6 +754,7 @@ class ScanApplicationService:
                     # --- Motion ---
                     motion_id = self._motion_port.move_to(position)
                     sync_result = self._motion_sync.wait_for_motion(motion_id, timeout_seconds=30.0)
+                    stopped_at = time.perf_counter()
 
                     if sync_result.is_failure:
                         scan.fail(_motion_failure_reason(sync_result.error, f"point {i}"))
@@ -762,8 +769,7 @@ class ScanApplicationService:
                             return
 
                     # --- Stabilization ---
-                    if config.stabilization_delay_ms > 0:
-                        time.sleep(config.stabilization_delay_ms / 1000.0)
+                    self._stabilize(scan, config, column_rest_g, stopped_at, f"point {i}")
 
                     if scan.status == ScanStatus.CANCELLED:
                         return
@@ -1105,6 +1111,7 @@ class ScanApplicationService:
 
             # Reach the line start and stop there, then sweep to its end.
             sync_result = self._motion_sync.wait_for_motion(self._motion_port.move_to(line[0]), timeout_seconds=30.0)
+            stopped_at = time.perf_counter()
             if sync_result.is_failure:
                 _fail(_motion_failure_reason(sync_result.error, f"start of fly line {line_index}"))
                 return STOP
@@ -1115,9 +1122,9 @@ class ScanApplicationService:
 
             # Stabilization in a fly scan: once per line, at its start, before the sweep.
             if config.stabilization_delay_ms > 0:
-                logger.debug("ScanApplicationService: scan_id=%s line=%d stabilizing %d ms at line start",
+                logger.debug("ScanApplicationService: scan_id=%s line=%d stabilizing (fixed delay %d ms) at line start",
                              scan.id, line_index, config.stabilization_delay_ms)
-                time.sleep(config.stabilization_delay_ms / 1000.0)
+                self._stabilize(scan, config, column_rest_g, stopped_at, f"start of fly line {line_index}")
                 if _ended():
                     return STOP
                 if _interrupted(epoch):
@@ -1230,6 +1237,8 @@ class ScanApplicationService:
             return COMMITTED
 
         try:
+            # Read by _sweep_line (closure), measured before the first move.
+            column_rest_g = self._measure_column_rest(scan, config)
             for line_index, line in enumerate(lines):
                 while True:  # attempts at the same line: an interruption redoes it from its start
                     if not _may_continue():
@@ -1255,6 +1264,25 @@ class ScanApplicationService:
 
         finally:
             _release_streams()
+
+    def _measure_column_rest(self, scan: StepScan, config) -> Optional[float]:
+        """Rest level of the still column (g) before the first move; None: fixed delay at every point."""
+        if self._column_stabilization is None or config.stabilization_delay_ms <= 0:
+            return None
+        return self._column_stabilization.measure_rest(
+            scan.id, lambda: scan.status in (ScanStatus.CANCELLED, ScanStatus.FAILED))
+
+    def _stabilize(self, scan: StepScan, config, column_rest_g: Optional[float], stopped_at: float,
+                   where: str) -> None:
+        """Wait after a move: until the column is at rest on the accelerometer, else the fixed delay."""
+        if config.stabilization_delay_ms <= 0:
+            return
+        if self._column_stabilization is None:
+            time.sleep(config.stabilization_delay_ms / 1000.0)
+            return
+        self._column_stabilization.wait_until_settled(
+            scan.id, where, column_rest_g, stopped_at, config.stabilization_delay_ms / 1000.0,
+            lambda: scan.status in (ScanStatus.CANCELLED, ScanStatus.FAILED))
 
     def _collect_samples(
         self, sample_queue: "queue.Queue", count: int, scan: StepScan
