@@ -10,6 +10,7 @@ Responsibility:
     Only the visualization launch (spawns an external GUI process) is
     stubbed out, to keep this test headless.
 """
+from infrastructure.persistence.acquisition_parameters.acquisition_parameters_v1 import SCHEMA
 import json
 import shutil
 import tempfile
@@ -149,7 +150,7 @@ class ScanExportWithPostProcessingIntegrationTest(unittest.TestCase):
         self.assertEqual(len(documents), 1)
         with documents[0].open(encoding="utf-8") as f:
             document = json.load(f)
-        self.assertEqual(document["schema"]["version"], "1.1")
+        self.assertEqual(document["schema"]["version"], SCHEMA["version"])
         self.assertEqual(document["provenance"]["activity"]["status"], "completed")
         listed = {f["format"] for f in document["data"]["files"] if "sha256" in f}
         self.assertTrue({"CSV", "HDF5", "JSON Lines"} <= listed, listed)
