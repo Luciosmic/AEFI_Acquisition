@@ -1,0 +1,5 @@
+# Fichiers que `solidai verify` ne vérifie pas (README de solidai-verify, « Leaving files out »).
+
+# archives/ est l'instantané de la première application d'acquisition (commit 444ab4d), pas du code vivant.
+# Il ne se met pas en conformité : ses erreurs fausseraient les comptes de la dette SolidAI du code vivant.
+archives/
