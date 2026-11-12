@@ -1,4 +1,4 @@
-# fake_software_provenance_port — Intention
+# fake_provenance — Intention
 
 ## Rationale
 
