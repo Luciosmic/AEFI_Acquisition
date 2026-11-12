@@ -1,3 +1,9 @@
+---
+type: port::solidai-hexagonal
+tldr: "Le port sortant qui lit la provenance du logiciel (nom, version, commit, branche, arbre modifié) pour l'exporter avec les paramètres d'acquisition."
+sens: sortant
+code: "[[src/application/shared/acquisition_parameters/i_software_provenance_port.py]]"
+---
 # i_software_provenance_port — Intention
 
 ## Rationale
