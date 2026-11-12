@@ -11,3 +11,7 @@
 23:04 | jalon | exemple=3 | boucle-tdd=CASSE a tort (erreurs du fichier renomme comptees nouvelles) | verify=1314->1313, fake-mal-place 26->25, aucun autre code | pytest=identique | commits=edb7776,2ff40fd,d3a6575
 23:05 | jalon | exemples 1 et 2 non appliques : typer un Fake ajoute required-field-absent (implements) au graphe | au_diagnostics=2 erreurs, identiques a la reference
 23:07 | fin | resultat=1 exemple sur 3 fait, 2 bloques avec constat | erreurs=1314->1313 | commits=edb7776,2ff40fd,d3a6575,cd4755e | audit=audit-des-trois-exemples.md | bilan=plan-de-lots-acq-apres-phase-1.md | prochain=decision humaine sur un exemple en chaine (port, reel, Fake)
+23:03 | depart | quoi=exemple de typage en chaine | session=f6f1718f-0350-4d84-a878-2faf7a374b52
+23:07 | jalon | reference=pytest 1705 reussis, 2 echecs instables (debit ADC chronometre, bruit aleatoire de moyennage ; 3 relances isolees vertes), 3 sautes | verify=1313 erreurs, 63 avertissements | graphe R1 ne liste pas ISoftwareProvenancePort, R3 vide
+23:19 | decision | attente=dernier commit (4503803, .gitignore, 23:09) a moins de 10 min : ecritures differees jusqu'a 23:19
+23:20 | decision | port=type port au niveau du fichier i_software_provenance_port_intention.md, pas en enregistrement inline : le port vit dans application/shared/, consomme par trois services, sans intention de service unique pour l'heberger ; deplacer le .py est interdit
