@@ -11,7 +11,7 @@ from application.test_bench.sensor_calibration_service.sensor_calibration_servic
 from application.test_bench.source_geometry_calibration_service.source_geometry_calibration_service import (
     SourceGeometryCalibrationService,
 )
-from application.test_bench.hardware_component_service.hardware_component_service import (
+from application.test_bench_configuration.hardware_component_service.hardware_component_service import (
     HARDWARE_COMPONENT_MOUNTED_TOPIC,
 )
 from infrastructure.persistence.calibration.fake.fake_source_geometry_calibration_repository import (

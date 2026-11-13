@@ -1,6 +1,6 @@
 import unittest
 
-from application.test_bench.hardware_component_service.hardware_component_service import (
+from application.test_bench_configuration.hardware_component_service.hardware_component_service import (
     HARDWARE_COMPONENT_CHARACTERIZED_TOPIC,
     HARDWARE_COMPONENT_MOUNTED_TOPIC,
     HardwareComponentService,
@@ -10,7 +10,7 @@ from infrastructure.persistence.calibration.fake.fake_hardware_component_reposit
     FakeHardwareComponentRepository,
 )
 
-SERVICE_LOGGER = "application.test_bench.hardware_component_service.hardware_component_service"
+SERVICE_LOGGER = "application.test_bench_configuration.hardware_component_service.hardware_component_service"
 EXCITATION = "excitation_electronics_board"
 MCU = "microcontroller"
 

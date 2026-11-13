@@ -36,7 +36,7 @@ from domain.shared_kernel.excitation.value_objects.excitation_mode import Excita
 from application.test_bench.source_geometry_calibration_service.source_geometry_calibration_service import (
     SOURCE_GEOMETRY_CALIBRATION_ENTRY_ADDED_TOPIC,
 )
-from application.test_bench.hardware_component_service.hardware_component_service import (
+from application.test_bench_configuration.hardware_component_service.hardware_component_service import (
     HARDWARE_COMPONENT_MOUNTED_TOPIC,
 )
 from domain.test_bench_calibration.calibration import Calibration

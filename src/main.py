@@ -109,7 +109,7 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
         AcquisitionThroughputCharacterizationService,
     )
     from application.test_bench.source_geometry_calibration_service.source_geometry_calibration_service import SourceGeometryCalibrationService
-    from application.test_bench.hardware_component_service.hardware_component_service import HardwareComponentService
+    from application.test_bench_configuration.hardware_component_service.hardware_component_service import HardwareComponentService
     from application.test_bench.mechanical_transmission_calibration_service.mechanical_transmission_calibration_service import (
         MechanicalTransmissionCalibrationService,
     )

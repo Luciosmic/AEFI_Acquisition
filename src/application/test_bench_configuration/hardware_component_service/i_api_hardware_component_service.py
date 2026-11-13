@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, List, Mapping, Optional
 
-from application.test_bench.hardware_component_service.dtos.hardware_component_dto import (
+from application.test_bench_configuration.hardware_component_service.dtos.hardware_component_dto import (
     HardwareComponentDTO,
     HardwareComponentKindDTO,
     RecordCharacterizationResultDTO,

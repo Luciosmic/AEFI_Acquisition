@@ -2,13 +2,13 @@ import logging
 from uuid import UUID
 from typing import Any, Dict, List, Mapping, Optional
 
-from application.test_bench.hardware_component_service.dtos.hardware_component_dto import (
+from application.test_bench_configuration.hardware_component_service.dtos.hardware_component_dto import (
     HardwareComponentDTO,
     HardwareComponentKindDTO,
     QuantitySpecDTO,
     RecordCharacterizationResultDTO,
 )
-from application.test_bench.hardware_component_service.i_api_hardware_component_service import (
+from application.test_bench_configuration.hardware_component_service.i_api_hardware_component_service import (
     IApiHardwareComponentService,
 )
 from domain.test_bench_configuration.bench_configuration import BenchConfiguration
