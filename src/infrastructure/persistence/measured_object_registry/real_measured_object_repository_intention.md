@@ -21,8 +21,11 @@ tous les noms — exactement la perte que le registre doit éviter.
   `.aefi_acquisition/measured_objects/measured_objects.json` :
   `{"measured_objects": [{"measured_object_id", "name", "registered_at"}]}`.
 - Fichier absent = registre vide (premier lancement) ; fichier illisible =
-  **échec**, jamais une liste vide ; `add` refuse d'écrire s'il n'a pas pu
-  relire le registre.
+  **échec**, jamais une liste vide ; `add` et `save_all` refusent d'écrire
+  s'ils n'ont pas pu relire le registre.
+- `save_all` réécrit tout le registre (renommage, suppression) ; l'objet
+  supprimé n'y reste pas, son retrait est gardé par l'événement
+  `MeasuredObjectDeleted` du journal.
 
 ## Design
 

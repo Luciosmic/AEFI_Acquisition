@@ -13,6 +13,10 @@ enregistré depuis l'un n'apparaîtrait pas dans l'autre avant redémarrage.
 - Transmettre une demande « Nouvel objet mesuré… » au service et rapporter son
   issue : `measured_object_registered(measured_object, already_registered)` ou
   `registration_failed(raison)`.
+- Transmettre un renommage ou une suppression du panneau « Objets mesurés » et
+  rapporter son issue en mots : `management_done(texte)` ou
+  `management_failed(raison)`. La liste suit par `MeasuredObjectRenamed` et
+  `MeasuredObjectDeleted`, comme après un enregistrement.
 
 ## Design
 

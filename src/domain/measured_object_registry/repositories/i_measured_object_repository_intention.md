@@ -11,6 +11,9 @@ objet mesuré », puis écrasé au premier ajout — tous les objets mesurés pe
 
 - `find_all()` : tous les objets mesurés enregistrés, ou un échec lisible.
 - `add(measured_object)` : persister un nouvel objet mesuré, ou un échec lisible.
+- `save_all(measured_objects)` : remplacer le registre par ces objets (après un
+  renommage ou une suppression), ou un échec lisible — jamais sur un registre
+  qu'on n'a pas pu lire.
 
 ## Design
 

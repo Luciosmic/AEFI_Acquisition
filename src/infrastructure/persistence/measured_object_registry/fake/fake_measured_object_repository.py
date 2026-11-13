@@ -33,3 +33,11 @@ class FakeMeasuredObjectRepository(IMeasuredObjectRepository):
             return OperationResult.fail(self.write_failure)
         self.measured_objects.append(measured_object)
         return OperationResult.ok(None)
+
+    def save_all(self, measured_objects: Sequence[MeasuredObject]) -> OperationResult[None, str]:
+        if self.read_failure is not None:  # like the real one: never writes over an unread registry
+            return OperationResult.fail(self.read_failure)
+        if self.write_failure is not None:
+            return OperationResult.fail(self.write_failure)
+        self.measured_objects = list(measured_objects)
+        return OperationResult.ok(None)

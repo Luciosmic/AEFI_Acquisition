@@ -25,6 +25,15 @@ class TestFakeMeasuredObjectRepository(unittest.TestCase):
         self.assertEqual(repository.find_all().value, [LUIS])
         self.assertTrue(repository.add(LUIS).is_failure)
 
+    def test_save_all_replaces_and_fails_like_the_real_one(self):
+        repository = FakeMeasuredObjectRepository([LUIS])
+        self.assertTrue(repository.save_all([]).is_success)
+        self.assertEqual(repository.find_all().value, [])
+        self.assertTrue(FakeMeasuredObjectRepository([LUIS], read_failure="illisible").save_all([]).is_failure)
+        not_writable = FakeMeasuredObjectRepository([LUIS], write_failure="disque plein")
+        self.assertTrue(not_writable.save_all([]).is_failure)
+        self.assertEqual(not_writable.measured_objects, [LUIS])
+
 
 if __name__ == "__main__":
     unittest.main()

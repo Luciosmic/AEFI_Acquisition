@@ -22,3 +22,18 @@ class MeasuredObjectRegistryUnavailable(MeasuredObjectServiceError):
     """The registry could not be read or written — nothing was changed."""
 
     reason: str
+
+
+@dataclass(frozen=True)
+class MeasuredObjectNameTaken(MeasuredObjectServiceError):
+    """Another measured_object already has this spelling: the rename was refused."""
+
+    message: str
+
+
+@dataclass(frozen=True)
+class MeasuredObjectNotFound(MeasuredObjectServiceError):
+    """No measured_object of this identity in the registry — nothing was changed."""
+
+    measured_object_id: str
+    message: str = "cet objet mesuré n'est plus dans le registre"

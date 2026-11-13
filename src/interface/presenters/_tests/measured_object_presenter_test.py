@@ -42,5 +42,37 @@ class TestMeasuredObjectPresenter(unittest.TestCase):
         self.assertIn("registre illisible", self.failed[-1])
 
 
+class TestMeasuredObjectPresenterManagement(unittest.TestCase):
+    def setUp(self):
+        self.repository = FakeMeasuredObjectRepository([LUIS])
+        event_bus = InMemoryEventBus()
+        self.presenter = MeasuredObjectPresenter(MeasuredObjectService(self.repository, event_bus), event_bus)
+        self.listed, self.done, self.failed = [], [], []
+        self.presenter.measured_objects_listed.connect(self.listed.append)
+        self.presenter.management_done.connect(self.done.append)
+        self.presenter.management_failed.connect(self.failed.append)
+
+    def test_a_rename_is_reported_and_every_list_refreshed(self):
+        self.presenter.on_rename_requested(str(LUIS.measured_object_id), "Luis S.")
+        self.assertEqual(self.done, ["Nom enregistré : Luis S."])
+        self.assertEqual([o.name for o in self.listed[-1]], ["Luis S."])
+
+    def test_a_deletion_is_reported_and_every_list_refreshed(self):
+        self.presenter.on_delete_requested(str(LUIS.measured_object_id))
+        self.assertEqual(self.done, ["Supprimé du registre : Luis Saluden"])
+        self.assertEqual(self.listed[-1], [])
+
+    def test_refusals_are_reported_in_words(self):
+        self.presenter.on_register_requested("Marie Curie")
+        marie = next(o for o in self.repository.measured_objects if o.name == "Marie Curie")
+        self.presenter.on_rename_requested(str(marie.measured_object_id), "luis saluden")
+        self.assertIn("Luis Saluden", self.failed[-1])
+        self.presenter.on_delete_requested("pas-un-uuid")
+        self.assertIn("plus dans le registre", self.failed[-1])
+        self.repository.write_failure = "disque plein"
+        self.presenter.on_delete_requested(str(LUIS.measured_object_id))
+        self.assertIn("disque plein", self.failed[-1])
+
+
 if __name__ == "__main__":
     unittest.main()

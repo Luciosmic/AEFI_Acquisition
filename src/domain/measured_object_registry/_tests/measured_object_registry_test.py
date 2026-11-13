@@ -4,10 +4,15 @@ from uuid import uuid4
 
 from domain.measured_object_registry.entities.measured_object.measured_object import MeasuredObject
 from domain.measured_object_registry.errors.measured_object_name_blank_error import MeasuredObjectNameBlankError
+from domain.measured_object_registry.errors.measured_object_name_taken_error import MeasuredObjectNameTakenError
+from domain.measured_object_registry.errors.measured_object_not_found_error import MeasuredObjectNotFoundError
+from domain.measured_object_registry.events.measured_object_deleted.measured_object_deleted import MeasuredObjectDeleted
 from domain.measured_object_registry.events.measured_object_registered.measured_object_registered import MeasuredObjectRegistered
+from domain.measured_object_registry.events.measured_object_renamed.measured_object_renamed import MeasuredObjectRenamed
 from domain.measured_object_registry.measured_object_registry import MeasuredObjectRegistry
 
 LUIS = MeasuredObject(measured_object_id=uuid4(), name="Luis Saluden", registered_at=datetime(2026, 10, 1, tzinfo=timezone.utc))
+PLAQUE = MeasuredObject(measured_object_id=uuid4(), name="plaque", registered_at=datetime(2026, 10, 2, tzinfo=timezone.utc))
 
 
 class TestMeasuredObjectRegistry(unittest.TestCase):
@@ -54,6 +59,78 @@ class TestMeasuredObjectRegistry(unittest.TestCase):
         registry.register("Marie Curie")
         self.assertEqual(len(registry.domain_events), 1)
         self.assertEqual(registry.domain_events, [])
+
+
+class TestMeasuredObjectRegistryRename(unittest.TestCase):
+    def test_a_rename_keeps_the_identity_and_records_both_names(self) -> None:
+        registry = MeasuredObjectRegistry.reconstitute([LUIS, PLAQUE])
+
+        renamed, changed = registry.rename(PLAQUE.measured_object_id, "  plaque   de cuivre ")
+
+        self.assertTrue(changed)
+        self.assertEqual((renamed.measured_object_id, renamed.name), (PLAQUE.measured_object_id, "plaque de cuivre"))
+        self.assertEqual(renamed.registered_at, PLAQUE.registered_at)
+        self.assertEqual([o.name for o in registry.measured_objects], ["Luis Saluden", "plaque de cuivre"])
+        [event] = registry.domain_events
+        self.assertIsInstance(event, MeasuredObjectRenamed)
+        self.assertEqual((event.previous_name, event.name), ("plaque", "plaque de cuivre"))
+
+    def test_the_same_spelling_changes_nothing(self) -> None:
+        registry = MeasuredObjectRegistry.reconstitute([PLAQUE])
+        renamed, changed = registry.rename(PLAQUE.measured_object_id, " plaque ")
+        self.assertFalse(changed)
+        self.assertIs(renamed, PLAQUE)
+        self.assertEqual(registry.domain_events, [])
+
+    def test_a_change_of_case_is_a_rename(self) -> None:
+        registry = MeasuredObjectRegistry.reconstitute([PLAQUE])
+        renamed, changed = registry.rename(PLAQUE.measured_object_id, "Plaque")
+        self.assertTrue(changed)
+        self.assertEqual(renamed.name, "Plaque")
+
+    def test_the_spelling_of_another_measured_object_is_refused(self) -> None:
+        """I1 holds on a rename too."""
+        registry = MeasuredObjectRegistry.reconstitute([LUIS, PLAQUE])
+        with self.assertRaises(MeasuredObjectNameTakenError):
+            registry.rename(PLAQUE.measured_object_id, "luis  saluden")
+        self.assertEqual(registry.measured_objects, [LUIS, PLAQUE])
+        self.assertEqual(registry.domain_events, [])
+
+    def test_a_blank_name_is_refused(self) -> None:
+        registry = MeasuredObjectRegistry.reconstitute([PLAQUE])
+        with self.assertRaises(MeasuredObjectNameBlankError):
+            registry.rename(PLAQUE.measured_object_id, "  ")
+
+    def test_an_unknown_identity_is_refused(self) -> None:
+        registry = MeasuredObjectRegistry.reconstitute([PLAQUE])
+        with self.assertRaises(MeasuredObjectNotFoundError):
+            registry.rename(uuid4(), "autre")
+
+
+class TestMeasuredObjectRegistryDelete(unittest.TestCase):
+    def test_a_deleted_measured_object_leaves_the_registry_and_is_recorded(self) -> None:
+        registry = MeasuredObjectRegistry.reconstitute([LUIS, PLAQUE])
+
+        removed = registry.delete(PLAQUE.measured_object_id)
+
+        self.assertIs(removed, PLAQUE)
+        self.assertEqual(registry.measured_objects, [LUIS])
+        [event] = registry.domain_events
+        self.assertIsInstance(event, MeasuredObjectDeleted)
+        self.assertEqual((event.measured_object_id, event.name), (PLAQUE.measured_object_id, "plaque"))
+
+    def test_an_unknown_identity_is_refused(self) -> None:
+        registry = MeasuredObjectRegistry.reconstitute([LUIS])
+        with self.assertRaises(MeasuredObjectNotFoundError):
+            registry.delete(PLAQUE.measured_object_id)
+        self.assertEqual(registry.measured_objects, [LUIS])
+
+    def test_the_name_of_a_deleted_measured_object_can_be_registered_again_under_a_new_identity(self) -> None:
+        registry = MeasuredObjectRegistry.reconstitute([PLAQUE])
+        registry.delete(PLAQUE.measured_object_id)
+        again, created = registry.register("plaque")
+        self.assertTrue(created)
+        self.assertNotEqual(again.measured_object_id, PLAQUE.measured_object_id)
 
 
 if __name__ == "__main__":

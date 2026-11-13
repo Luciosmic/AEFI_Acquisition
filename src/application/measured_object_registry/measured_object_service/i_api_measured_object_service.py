@@ -27,3 +27,13 @@ class IApiMeasuredObjectService(ABC):
     def register_measured_object(self, name: str) -> OperationResult[MeasuredObjectRegistrationDTO, MeasuredObjectServiceError]:
         """The measured_object of this name — the existing one if the spelling is
         already known (case and spacing insensitive), else a new one."""
+
+    @abstractmethod
+    def rename_measured_object(self, measured_object_id: str, name: str) -> OperationResult[MeasuredObjectDTO, MeasuredObjectServiceError]:
+        """The measured_object under its new name — same identity; refused if another
+        measured_object already has this spelling."""
+
+    @abstractmethod
+    def delete_measured_object(self, measured_object_id: str) -> OperationResult[MeasuredObjectDTO, MeasuredObjectServiceError]:
+        """Remove the measured_object from the registry; returns what was removed.
+        Exports already written keep its identity and name."""
