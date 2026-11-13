@@ -1,3 +1,10 @@
+---
+type: evenement-de-domaine::solidai-ddd
+tldr: "Fait passé : la tentative d'acquisition d'une ligne a été abandonnée ; porte le scan, le rang de la ligne, la raison (p.ex."
+code: ["[[src/domain/aefi_line/events/aefi_line_abandoned/aefi_line_abandoned.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/aefi_line/aefi_line_intention]]"
+---
 # aefi_line_abandoned — Intention
 
 ## Rationale

@@ -1,3 +1,10 @@
+---
+type: evenement-de-domaine::solidai-ddd
+tldr: "Fait passé : un opérateur a été **créé** dans le registre (identité, nom, date d'enregistrement)."
+code: ["[[src/domain/operator_registry/events/operator_registered/operator_registered.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/operator_registry/operator_registry_intention]]"
+---
 # operator_registered — Intention
 
 ## Rationale

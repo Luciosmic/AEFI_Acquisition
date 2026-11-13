@@ -1,3 +1,10 @@
+---
+type: evenement-de-domaine::solidai-ddd
+tldr: "scan_id : identifiant du scan démarré."
+code: ["[[src/domain/step_scan/events/scan_started/scan_started.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/step_scan/step_scan_intention]]"
+---
 # scan_started — Intention
 
 ## Rationale

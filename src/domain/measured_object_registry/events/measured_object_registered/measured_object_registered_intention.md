@@ -1,3 +1,10 @@
+---
+type: evenement-de-domaine::solidai-ddd
+tldr: "Fait passé : un objet mesuré a été **créé** dans le registre (identité, nom, date d'enregistrement)."
+code: ["[[src/domain/measured_object_registry/events/measured_object_registered/measured_object_registered.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/measured_object_registry/measured_object_registry_intention]]"
+---
 # measured_object_registered — Intention
 
 ## Rationale

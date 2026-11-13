@@ -1,3 +1,10 @@
+---
+type: evenement-de-domaine::solidai-ddd
+tldr: "scan_id : identifiant du scan."
+code: ["[[src/domain/step_scan/events/scan_paused/scan_paused.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/step_scan/step_scan_intention]]"
+---
 # scan_paused — Intention
 
 ## Rationale

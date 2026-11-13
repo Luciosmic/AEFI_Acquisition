@@ -1,3 +1,10 @@
+---
+type: evenement-de-domaine::solidai-ddd
+tldr: "Dire ce que tout événement « une acquisition d'une sonde est faite » expose au Scan : scan_id, source (nom de la source déclarée au Scan) et acquisition_id."
+code: ["[[src/domain/scan/events/probe_acquisition_event/probe_acquisition_event.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/scan/scan_intention]]"
+---
 # probe_acquisition_event — Intention
 
 ## Rationale
