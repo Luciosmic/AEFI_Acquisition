@@ -20,17 +20,17 @@ from tool.diagram_friendly_test import DiagramFriendlyTest
 
 class TestTransformationService(DiagramFriendlyTest):
 
-    def setUp(self):
+    def setUp(self) -> None:
         super().setUp()
         self.service = TransformationService()
 
-    def test_identity_when_disabled(self):
+    def test_identity_when_disabled(self) -> None:
         self.service.set_enabled(False)
         vector = (1.0, 0.0, 0.0)
         result = self.service.transform_sensor_to_source(vector)
         self.assertEqual(result, vector)
 
-    def test_enabled_applies_rotation(self):
+    def test_enabled_applies_rotation(self) -> None:
         self.service.set_rotation_angles(SetRotationAnglesDTO(theta_x=0.0, theta_y=0.0, theta_z=90.0))
         self.service.set_enabled(True)
         x, y, z = self.service.transform_sensor_to_source((1.0, 0.0, 0.0))
@@ -38,7 +38,7 @@ class TestTransformationService(DiagramFriendlyTest):
         self.assertAlmostEqual(y, 1.0, places=5)
         self.assertAlmostEqual(z, 0.0, places=5)
 
-    def test_follows_active_sensor_rotation_changed(self):
+    def test_follows_active_sensor_rotation_changed(self) -> None:
         event_bus = InMemoryEventBus()
         service = TransformationService(event_bus)
 
@@ -87,13 +87,13 @@ class TestRotationConventionGuard(unittest.TestCase):
         columns = [service.transform_sensor_to_source(tuple(e)) for e in np.eye(3)]
         return np.array(columns).T
 
-    def test_sensor_to_source_matrix_is_rx_ry_rz(self):
+    def test_sensor_to_source_matrix_is_rx_ry_rz(self) -> None:
         tx, ty, tz = 10.0, 20.0, 30.0
         expected = _rx(tx) @ _ry(ty) @ _rz(tz)
 
         np.testing.assert_allclose(self._sensor_to_source_matrix(tx, ty, tz), expected, atol=1e-12)
 
-    def test_ideal_angles_put_sources_vertical_on_a_cube_diagonal(self):
+    def test_ideal_angles_put_sources_vertical_on_a_cube_diagonal(self) -> None:
         """The cube diagonal (-1, 1, 1)/sqrt(3) of the sensor frame is e_z^sources:
         P·(-1, 1, 1)/sqrt(3) = (0, 0, 1)."""
         service = self._service(math.degrees(math.atan(1 / math.sqrt(2))), 45.0, 0.0)
@@ -104,7 +104,7 @@ class TestRotationConventionGuard(unittest.TestCase):
 
         np.testing.assert_allclose(diagonal_in_sources, np.array([0.0, 0.0, 1.0]), atol=1e-9)
 
-    def test_negated_angles_are_not_the_transpose(self):
+    def test_negated_angles_are_not_the_transpose(self) -> None:
         """Transposing P is not negating its angles: Pᵀ = Rz(-tz)·Ry(-ty)·Rx(-tx),
         whereas P(-theta) = Rx(-tx)·Ry(-ty)·Rz(-tz)."""
         tx, ty, tz = 10.0, 20.0, 30.0
@@ -119,7 +119,7 @@ class TestSameResultsAsScipyRotation(unittest.TestCase):
     """Non-regression: the plain P @ v (P.T @ v) product replaced
     scipy's Rotation.from_matrix(P).apply(v[, inverse=True])."""
 
-    def test_both_directions_match_scipy_rotation(self):
+    def test_both_directions_match_scipy_rotation(self) -> None:
         from scipy.spatial.transform import Rotation
 
         rng = np.random.default_rng(0)
@@ -136,7 +136,7 @@ class TestSameResultsAsScipyRotation(unittest.TestCase):
             )
             np.testing.assert_allclose(service.force_transform_sensor_to_source(vector), reference.apply(vector), atol=1e-12)
 
-    def test_identity_before_any_angles_are_set(self):
+    def test_identity_before_any_angles_are_set(self) -> None:
         service = TransformationService()
         service.set_enabled(True)
         self.assertEqual(service.transform_sensor_to_source((1.0, 2.0, 3.0)), (1.0, 2.0, 3.0))

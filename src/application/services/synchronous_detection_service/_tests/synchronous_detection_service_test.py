@@ -44,7 +44,7 @@ def make_hardware_signature(**overrides) -> HardwareSignature:
 
 class TestSynchronousDetectionService(DiagramFriendlyTest):
 
-    def setUp(self):
+    def setUp(self) -> None:
         super().setUp()
         self.hardware_signature = make_hardware_signature()
         self.port = MockSynchronousDetectionHardwarePort()
@@ -69,7 +69,7 @@ class TestSynchronousDetectionService(DiagramFriendlyTest):
 
     # -- sphere-phase derivation ------------------------------------------------
 
-    def test_get_sphere_phases_derives_all_four_spheres_from_ch1_ch2_registers(self):
+    def test_get_sphere_phases_derives_all_four_spheres_from_ch1_ch2_registers(self) -> None:
         # dds1 (ch1) = 0deg, dds2 (ch2) = 180deg
         self.port.registers[1] = 0
         self.port.registers[2] = 32768
@@ -81,7 +81,7 @@ class TestSynchronousDetectionService(DiagramFriendlyTest):
         self.assertAlmostEqual(dto.s3_degrees, 180.0)  # dds1 + 180 (complementary)
         self.assertAlmostEqual(dto.s4_degrees, 0.0)  # dds1 direct
 
-    def test_get_sphere_phases_reports_quadrature_enforcement_from_port(self):
+    def test_get_sphere_phases_reports_quadrature_enforcement_from_port(self) -> None:
         self.port.quadrature_enforced = False
 
         dto = self.service.get_sphere_phases()
@@ -93,7 +93,7 @@ class TestSynchronousDetectionService(DiagramFriendlyTest):
     # ch3 is only the register physically written (ch4 rigidly follows it
     # at -90°, see _enforce_dds3_dds4_quadrature) ------------------------------
 
-    def test_delta_phi_reflects_live_ch4_minus_ch1_even_without_any_calibration_data(self):
+    def test_delta_phi_reflects_live_ch4_minus_ch1_even_without_any_calibration_data(self) -> None:
         # No calibration entries exist at all — delta_phi must still reflect
         # the actual current hardware state (this is what lets a user tune
         # ch3 manually via Hardware Advanced Config — which ch4 follows — and
@@ -105,7 +105,7 @@ class TestSynchronousDetectionService(DiagramFriendlyTest):
 
         self.assertAlmostEqual(dto.delta_phi_corrige_degrees, 90.0)
 
-    def test_delta_phi_updates_immediately_when_ch4_is_manually_changed(self):
+    def test_delta_phi_updates_immediately_when_ch4_is_manually_changed(self) -> None:
         self.port.registers[1] = 0
         self.port.registers[4] = 16384  # 90deg
         self.assertAlmostEqual(self.service.get_sphere_phases().delta_phi_corrige_degrees, 90.0)
@@ -116,11 +116,11 @@ class TestSynchronousDetectionService(DiagramFriendlyTest):
 
     # -- save_calibration_point ---------------------------------------------------
 
-    def test_save_calibration_point_raises_clear_error_when_no_active_frequency(self):
+    def test_save_calibration_point_raises_clear_error_when_no_active_frequency(self) -> None:
         with self.assertRaises(ValueError):
             self.service.save_calibration_point()
 
-    def test_save_calibration_point_persists_entry_with_injected_signature_and_signed_delta(self):
+    def test_save_calibration_point_persists_entry_with_injected_signature_and_signed_delta(self) -> None:
         self.port.registers[1] = 0  # ch1 = 0deg
         self.port.registers[4] = 16384  # ch4 = 90deg
         self._publish_frequency(5000.0)
@@ -149,7 +149,7 @@ class TestSynchronousDetectionService(DiagramFriendlyTest):
 
     # -- compensation toggle --------------------------------------------------------
 
-    def test_set_compensation_enabled_true_immediately_writes_corrected_ch3_when_data_exists(self):
+    def test_set_compensation_enabled_true_immediately_writes_corrected_ch3_when_data_exists(self) -> None:
         self.repository.add(
             SynchronousDetectionPhaseCalibrationEntry.single(
                 self.hardware_signature,
@@ -167,7 +167,7 @@ class TestSynchronousDetectionService(DiagramFriendlyTest):
         spy.assert_called_once_with(PhaseAngle(105.0).to_register())
         self.assertEqual(self.port.registers[3], PhaseAngle(105.0).to_register())
 
-    def test_set_compensation_enabled_false_does_not_write_any_register(self):
+    def test_set_compensation_enabled_false_does_not_write_any_register(self) -> None:
         self.repository.add(
             SynchronousDetectionPhaseCalibrationEntry.single(
                 self.hardware_signature,
@@ -181,12 +181,12 @@ class TestSynchronousDetectionService(DiagramFriendlyTest):
 
         spy.assert_not_called()
 
-    def test_set_compensation_enabled_false_restores_manual_configuration(self):
+    def test_set_compensation_enabled_false_restores_manual_configuration(self) -> None:
         self.service.set_compensation_enabled(False)
 
         self.assertEqual(self.port.restore_manual_configuration_calls, 1)
 
-    def test_set_compensation_enabled_true_does_not_restore_manual_configuration(self):
+    def test_set_compensation_enabled_true_does_not_restore_manual_configuration(self) -> None:
         self.service.set_compensation_enabled(True)
 
         self.assertEqual(self.port.restore_manual_configuration_calls, 0)
@@ -204,7 +204,7 @@ class TestSynchronousDetectionService(DiagramFriendlyTest):
 
     # -- reactive re-application on frequency change --------------------------------
 
-    def test_frequency_changed_event_reapplies_correction_only_when_compensation_enabled(self):
+    def test_frequency_changed_event_reapplies_correction_only_when_compensation_enabled(self) -> None:
         self.repository.add(
             SynchronousDetectionPhaseCalibrationEntry.single(
                 self.hardware_signature,
@@ -235,7 +235,7 @@ class TestSynchronousDetectionService(DiagramFriendlyTest):
 
     # -- nearest-neighbor tie-break ---------------------------------------------------
 
-    def test_lookup_tie_break_prefers_most_recently_recorded_entry(self):
+    def test_lookup_tie_break_prefers_most_recently_recorded_entry(self) -> None:
         # The nearest-neighbor calibration lookup (used internally by
         # _apply_current_correction, not by get_sphere_phases anymore — see
         # the delta_phi tests above) must prefer the most recently recorded
@@ -267,7 +267,7 @@ class TestSynchronousDetectionService(DiagramFriendlyTest):
 
     # -- lock-in gain (Enable Lock-In Detection) ---------------------------------
 
-    def test_get_sphere_phases_reports_lock_in_gain_below_default(self):
+    def test_get_sphere_phases_reports_lock_in_gain_below_default(self) -> None:
         self.port.lock_in_gain = 5000
         self.port.default_lock_in_gain = 10000
 
@@ -275,7 +275,7 @@ class TestSynchronousDetectionService(DiagramFriendlyTest):
 
         self.assertTrue(dto.lock_in_gain_below_default)
 
-    def test_get_sphere_phases_reports_lock_in_gain_at_default_as_not_below(self):
+    def test_get_sphere_phases_reports_lock_in_gain_at_default_as_not_below(self) -> None:
         self.port.lock_in_gain = 10000
         self.port.default_lock_in_gain = 10000
 
@@ -283,7 +283,7 @@ class TestSynchronousDetectionService(DiagramFriendlyTest):
 
         self.assertFalse(dto.lock_in_gain_below_default)
 
-    def test_enable_lock_in_detection_resets_gain_to_default(self):
+    def test_enable_lock_in_detection_resets_gain_to_default(self) -> None:
         self.port.lock_in_gain = 5000
         self.port.default_lock_in_gain = 10000
 
@@ -291,7 +291,7 @@ class TestSynchronousDetectionService(DiagramFriendlyTest):
 
         self.assertEqual(self.port.lock_in_gain, 10000)
 
-    def test_disable_lock_in_detection_zeroes_gain(self):
+    def test_disable_lock_in_detection_zeroes_gain(self) -> None:
         self.port.lock_in_gain = 10000
 
         self.service.disable_lock_in_detection()
@@ -300,7 +300,7 @@ class TestSynchronousDetectionService(DiagramFriendlyTest):
 
     # -- manual phase offset (Excitation panel, editable in degrees) ------------
 
-    def test_set_manual_phase_offset_writes_and_persists(self):
+    def test_set_manual_phase_offset_writes_and_persists(self) -> None:
         self.port.registers[1] = 0  # ch1 = 0deg
         spy = self._spy_on_set_ch3()
 
@@ -309,7 +309,7 @@ class TestSynchronousDetectionService(DiagramFriendlyTest):
         # target ch4 = ch1 + 30.0 -> writes ch3 = ch1 + 30.0 + 90, persisted
         spy.assert_called_once_with(PhaseAngle(120.0).to_register(), persist=True)
 
-    def test_set_manual_phase_offset_uses_current_ch1_phase(self):
+    def test_set_manual_phase_offset_uses_current_ch1_phase(self) -> None:
         self.port.registers[1] = PhaseAngle(45.0).to_register()
         spy = self._spy_on_set_ch3()
 
@@ -319,11 +319,11 @@ class TestSynchronousDetectionService(DiagramFriendlyTest):
 
     # -- reset button (one-shot snap to the calibrated point) -------------------
 
-    def test_reset_phase_offset_raises_when_no_calibration_data(self):
+    def test_reset_phase_offset_raises_when_no_calibration_data(self) -> None:
         with self.assertRaises(ValueError):
             self.service.reset_phase_offset_to_calibrated()
 
-    def test_reset_phase_offset_writes_and_persists_calibrated_value(self):
+    def test_reset_phase_offset_writes_and_persists_calibrated_value(self) -> None:
         self.repository.add(
             SynchronousDetectionPhaseCalibrationEntry.single(
                 self.hardware_signature,

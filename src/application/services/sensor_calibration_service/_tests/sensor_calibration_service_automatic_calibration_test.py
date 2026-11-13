@@ -58,13 +58,13 @@ class RecordingOutputPort(ISensorCalibrationOutputPort):
 class SilentExecutor:
     """Continuous acquisition that never delivers a sample (ADC unplugged)."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.running = False
 
     def start(self, config, acquisition_port):
         self.running = True
 
-    def stop(self):
+    def stop(self) -> None:
         self.running = False
 
     def is_running(self):
@@ -90,7 +90,7 @@ class BufferedExecutor:
         self._thread = threading.Thread(target=self._run, daemon=True)
         self._thread.start()
 
-    def _run(self):
+    def _run(self) -> None:
         acquisition_id, buffer, index = uuid4(), [], 0
         while not self._stop.is_set():
             buffer.append(AefiVoltageSampleAcquired(acquisition_id=acquisition_id, sample_index=index, sample=self._port.acquire_sample()))
@@ -99,7 +99,7 @@ class BufferedExecutor:
                 self._event_bus.publish("aefivoltagesampleacquired", buffer.pop(0))
             time.sleep(0.002)
 
-    def stop(self):
+    def stop(self) -> None:
         self._stop.set()
         self._thread.join(timeout=2.0)
         self._thread = None
@@ -109,7 +109,7 @@ class BufferedExecutor:
 
 
 class TestAutomaticSensorCalibration(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.event_bus = InMemoryEventBus()
         self.excitation_port = MockExcitationPort()
         self.excitation_service = ExcitationConfigurationService(self.excitation_port, self.event_bus)
@@ -146,7 +146,7 @@ class TestAutomaticSensorCalibration(unittest.TestCase):
     def _operator_excitation(self, level=40.0, mode=ExcitationMode.CIRCULAR_PLUS):
         self.excitation_service.set_excitation(mode, level, level, 1000.0)
 
-    def test_fits_the_mounted_angles_and_applies_them_as_trial(self):
+    def test_fits_the_mounted_angles_and_applies_them_as_trial(self) -> None:
         self._operator_excitation()
         service = self._make_service()
 
@@ -162,7 +162,7 @@ class TestAutomaticSensorCalibration(unittest.TestCase):
         self.assertLess(self.output.succeeded[0].misalignment_x_degrees, 0.1)
         self.assertIsNone(service.get_latest_calibration(), "a fit is a trial, never recorded on its own")
 
-    def test_samples_buffered_across_an_excitation_change_are_not_averaged(self):
+    def test_samples_buffered_across_an_excitation_change_are_not_averaged(self) -> None:
         """Several stale samples in transit at each change: only samples that
         started after the excitation settled may enter the mean, otherwise the
         baseline inherits the operator's (circular) excitation and the fit drifts."""
@@ -177,7 +177,7 @@ class TestAutomaticSensorCalibration(unittest.TestCase):
         self.assertAlmostEqual(result.response_separation_degrees, 90.0, places=2)
         self.assertAlmostEqual(result.theta_z_degrees, MOUNTED_ANGLES["theta_z"], places=2)
 
-    def test_restores_the_operator_excitation_and_stops_the_acquisition_it_started(self):
+    def test_restores_the_operator_excitation_and_stops_the_acquisition_it_started(self) -> None:
         self._operator_excitation(level=40.0, mode=ExcitationMode.CIRCULAR_PLUS)
         before = self.excitation_service.get_current_parameters()
 
@@ -187,12 +187,12 @@ class TestAutomaticSensorCalibration(unittest.TestCase):
         self.assertEqual(self.excitation_port.last_parameters, before)
         self.assertFalse(self.acquisition_service.is_acquisition_running())
 
-    def test_reports_the_three_measurement_steps(self):
+    def test_reports_the_three_measurement_steps(self) -> None:
         self._operator_excitation()
         self._make_service().start_automatic_calibration()
         self.assertEqual(len(self.output.steps), 3)
 
-    def test_zero_excitation_level_is_refused_without_touching_the_excitation(self):
+    def test_zero_excitation_level_is_refused_without_touching_the_excitation(self) -> None:
         self._operator_excitation(level=0.0)
         before = self.excitation_port.last_parameters
 
@@ -202,7 +202,7 @@ class TestAutomaticSensorCalibration(unittest.TestCase):
         self.assertIn("niveau d'excitation", self.output.failed[0])
         self.assertIs(self.excitation_port.last_parameters, before)
 
-    def test_refused_while_a_scan_controls_the_excitation(self):
+    def test_refused_while_a_scan_controls_the_excitation(self) -> None:
         self._operator_excitation()
         self.excitation_service.take_control("scan")
         before = self.excitation_port.last_parameters
@@ -236,7 +236,7 @@ class TestAutomaticSensorCalibration(unittest.TestCase):
         self.assertEqual(refused, [True, True, True])
         self.assertIsNone(self.acquisition_service.get_controller())
 
-    def test_missing_samples_fail_and_still_restore_the_excitation(self):
+    def test_missing_samples_fail_and_still_restore_the_excitation(self) -> None:
         self._operator_excitation()
         before = self.excitation_service.get_current_parameters()
         silent = AefiAcquisitionService(SilentExecutor(), self.acquisition_port)

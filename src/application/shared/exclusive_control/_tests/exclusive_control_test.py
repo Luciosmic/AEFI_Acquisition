@@ -4,28 +4,28 @@ from application.shared.exclusive_control.exclusive_control import ExclusiveCont
 
 
 class TestExclusiveControl(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.changes = []
         self.control = ExclusiveControl("flux d'acquisition", self.changes.append)
 
-    def test_free_resource_refuses_nobody(self):
+    def test_free_resource_refuses_nobody(self) -> None:
         self.assertIsNone(self.control.controller)
         self.assertIsNone(self.control.refusal(None, "stop"))
 
-    def test_owner_is_the_only_one_allowed(self):
+    def test_owner_is_the_only_one_allowed(self) -> None:
         self.assertTrue(self.control.take("scan").is_success)
         self.assertIsNone(self.control.refusal("scan", "stop"))
         self.assertIn("scan", self.control.refusal(None, "stop"))
         self.assertIn("scan", self.control.refusal("calibration", "stop"))
 
-    def test_second_controller_is_refused(self):
+    def test_second_controller_is_refused(self) -> None:
         self.control.take("scan")
         result = self.control.take("calibration")
         self.assertTrue(result.is_failure)
         self.assertIn("flux d'acquisition", result.error)
         self.assertEqual(self.control.controller, "scan")
 
-    def test_changes_are_reported_once(self):
+    def test_changes_are_reported_once(self) -> None:
         self.control.take("scan")
         self.control.take("scan")
         self.control.release("calibration")  # not the owner: ignored
@@ -35,7 +35,7 @@ class TestExclusiveControl(unittest.TestCase):
 
 
 class TestTakeAll(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.a = ExclusiveControl("a", lambda c: None)
         self.b = ExclusiveControl("b", lambda c: None)
 
@@ -45,7 +45,7 @@ class TestTakeAll(unittest.TestCase):
             (lambda: self.b.take(who), lambda: self.b.release(who)),
         ]
 
-    def test_takes_everything_then_releases_everything(self):
+    def test_takes_everything_then_releases_everything(self) -> None:
         result = take_all(self._takes("calibration"))
         self.assertTrue(result.is_success)
         self.assertEqual((self.a.controller, self.b.controller), ("calibration", "calibration"))
@@ -53,7 +53,7 @@ class TestTakeAll(unittest.TestCase):
             release()
         self.assertEqual((self.a.controller, self.b.controller), (None, None))
 
-    def test_one_refusal_gives_back_what_was_taken(self):
+    def test_one_refusal_gives_back_what_was_taken(self) -> None:
         self.b.take("scan")
 
         result = take_all(self._takes("calibration"))

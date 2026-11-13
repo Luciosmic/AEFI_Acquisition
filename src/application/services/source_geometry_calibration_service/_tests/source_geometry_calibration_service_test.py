@@ -36,7 +36,7 @@ def make_entry(diameters_m=_DIAMETERS_M, distances_m=_DISTANCES_M, recorded_at=N
 
 
 class TestSourceGeometryCalibrationService(DiagramFriendlyTest):
-    def setUp(self):
+    def setUp(self) -> None:
         super().setUp()
         self.repository = FakeSourceGeometryCalibrationRepository()
         self.event_bus = InMemoryEventBus()
@@ -46,7 +46,7 @@ class TestSourceGeometryCalibrationService(DiagramFriendlyTest):
 
     # -- record_calibration -----------------------------------------------------
 
-    def test_record_calibration_persists_entry_with_gum_uncertainty(self):
+    def test_record_calibration_persists_entry_with_gum_uncertainty(self) -> None:
         self.service.record_calibration(
             sphere_diameters_m=_DIAMETERS_M, pairwise_distances_ext_m=_DISTANCES_M
         )
@@ -69,7 +69,7 @@ class TestSourceGeometryCalibrationService(DiagramFriendlyTest):
 
         self.assertEqual(len(received), 1)
 
-    def test_record_calibration_honors_custom_resolution_and_k(self):
+    def test_record_calibration_honors_custom_resolution_and_k(self) -> None:
         self.service.record_calibration(
             sphere_diameters_m=_DIAMETERS_M,
             pairwise_distances_ext_m=_DISTANCES_M,
@@ -84,10 +84,10 @@ class TestSourceGeometryCalibrationService(DiagramFriendlyTest):
 
     # -- get_latest_calibration ---------------------------------------------------
 
-    def test_get_latest_calibration_returns_none_when_nothing_recorded(self):
+    def test_get_latest_calibration_returns_none_when_nothing_recorded(self) -> None:
         self.assertIsNone(self.service.get_latest_calibration())
 
-    def test_get_latest_calibration_returns_dto_after_record(self):
+    def test_get_latest_calibration_returns_dto_after_record(self) -> None:
         self.service.record_calibration(
             sphere_diameters_m=_DIAMETERS_M, pairwise_distances_ext_m=_DISTANCES_M
         )
@@ -100,7 +100,7 @@ class TestSourceGeometryCalibrationService(DiagramFriendlyTest):
         self.assertAlmostEqual(dto.sphere_diameters_uncertainty_m[0], 1.15e-5, delta=1e-7)
         self.assertEqual(dto.k, 2.0)
 
-    def test_get_latest_calibration_picks_most_recent_entry(self):
+    def test_get_latest_calibration_picks_most_recent_entry(self) -> None:
         older_entry = make_entry(diameters_m=[0.01, 0.01, 0.01, 0.01], recorded_at=datetime(2024, 1, 1, tzinfo=timezone.utc))
         newer_entry = make_entry(diameters_m=[0.02, 0.02, 0.02, 0.02], recorded_at=datetime(2024, 6, 1, tzinfo=timezone.utc))
         self.repository.add(older_entry)
@@ -113,11 +113,11 @@ class TestSourceGeometryCalibrationService(DiagramFriendlyTest):
 
     # -- get_current_entry_id -----------------------------------------------------
 
-    def test_get_current_entry_id_raises_when_registry_empty(self):
+    def test_get_current_entry_id_raises_when_registry_empty(self) -> None:
         with self.assertRaises(ValueError):
             self.service.get_current_entry_id()
 
-    def test_get_current_entry_id_is_the_latest_entry_identity(self):
+    def test_get_current_entry_id_is_the_latest_entry_identity(self) -> None:
         self.service.record_calibration(
             sphere_diameters_m=_DIAMETERS_M, pairwise_distances_ext_m=_DISTANCES_M
         )
@@ -127,7 +127,7 @@ class TestSourceGeometryCalibrationService(DiagramFriendlyTest):
 
     # -- preview_source_frame -----------------------------------------------------
 
-    def test_preview_source_frame_places_each_sphere_in_its_quadrant(self):
+    def test_preview_source_frame_places_each_sphere_in_its_quadrant(self) -> None:
         result = self.service.preview_source_frame(_DIAMETERS_M, _DISTANCES_M)
 
         self.assertTrue(result.is_success)
@@ -139,7 +139,7 @@ class TestSourceGeometryCalibrationService(DiagramFriendlyTest):
         self.assertAlmostEqual(dto.best_fit_square_side_m, 0.0641, delta=1e-4)
         self.assertEqual(len(dto.distance_residuals_m), 6)
 
-    def test_preview_source_frame_rejects_overlapping_spheres_with_visible_reason(self):
+    def test_preview_source_frame_rejects_overlapping_spheres_with_visible_reason(self) -> None:
         overlapping = [0.005] + _DISTANCES_M[1:]
 
         result = self.service.preview_source_frame(_DIAMETERS_M, overlapping)
@@ -147,7 +147,7 @@ class TestSourceGeometryCalibrationService(DiagramFriendlyTest):
         self.assertTrue(result.is_failure)
         self.assertIn("D_S1_S2", result.error.reason)
 
-    def test_preview_source_frame_records_and_publishes_nothing(self):
+    def test_preview_source_frame_records_and_publishes_nothing(self) -> None:
         received = []
         self.event_bus.subscribe(SOURCE_GEOMETRY_CALIBRATION_ENTRY_ADDED_TOPIC, received.append)
 
