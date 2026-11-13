@@ -3,9 +3,6 @@ type: service-applicatif::solidai-hexagonal
 tldr: "Service applicatif `scan_export_service` : S'abonner aux événements domain du scan (`ScanStarted`, `ScanPointAcquired`, `NardaPointAcquired`, `ScanCompleted`, `ScanFailed`, `ScanCancelled`) et streamer chaque point vers les ports d'export au fil de l'acquisition — pas un transfert."
 code: ["[[src/application/scan/scan_export_service/scan_export_service.py]]"]
 cause_de_changement: orchestration
-ports:
-  - "[[src/application/scan/scan_export_service/ports/i_acquisition_snapshot_port_intention]]"
-  - "[[src/application/scan/scan_export_service/ports/i_scan_export_port_intention]]"
 ---
 # scan_export_service — Intention
 

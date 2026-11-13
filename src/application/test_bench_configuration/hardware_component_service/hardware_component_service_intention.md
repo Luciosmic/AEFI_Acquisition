@@ -3,8 +3,6 @@ type: service-applicatif::solidai-hexagonal
 tldr: "Service applicatif `hardware_component_service` : `list_kinds()`: the component kinds and their quantities (for the UI)."
 code: ["[[src/application/test_bench_configuration/hardware_component_service/hardware_component_service.py]]"]
 cause_de_changement: orchestration
-ports:
-  - "[[src/application/test_bench_configuration/hardware_component_service/i_api_hardware_component_service_intention]]"
 ---
 # hardware_component_service — Intention
 

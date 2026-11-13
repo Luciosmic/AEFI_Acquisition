@@ -3,9 +3,6 @@ type: service-applicatif::solidai-hexagonal
 tldr: "Service applicatif `frequency_sweep_service` : `start_sweep(request)` : construire le balayage (rôle, grille logarithmique, hauteur de table, N), refuser sans rien démarrer si la demande ne permet pas un balayage comparable (rôle inconnu, hauteur non saisie, N < 3, grille invalide)."
 code: ["[[src/application/frequency_sweep/frequency_sweep_service/frequency_sweep_service.py]]"]
 cause_de_changement: orchestration
-ports:
-  - "[[src/application/frequency_sweep/frequency_sweep_service/ports/i_frequency_sweep_export_port_intention]]"
-  - "[[src/application/frequency_sweep/frequency_sweep_service/ports/i_frequency_sweep_output_port_intention]]"
 ---
 # frequency_sweep_service — Intention
 

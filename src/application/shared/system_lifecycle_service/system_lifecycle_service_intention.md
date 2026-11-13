@@ -3,9 +3,6 @@ type: service-applicatif::solidai-hexagonal
 tldr: "Service applicatif `system_lifecycle_service` : Initialiser le hardware via `IHardwareInitializationPort`."
 code: ["[[src/application/shared/system_lifecycle_service/system_lifecycle_service.py]]"]
 cause_de_changement: orchestration
-ports:
-  - "[[src/application/shared/system_lifecycle_service/ports/i_hardware_initialization_port_intention]]"
-  - "[[src/application/shared/system_lifecycle_service/ports/i_system_lifecycle_output_port_intention]]"
 ---
 # system_lifecycle_service — Intention
 

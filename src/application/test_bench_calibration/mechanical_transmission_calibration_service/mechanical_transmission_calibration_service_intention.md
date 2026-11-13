@@ -3,8 +3,6 @@ type: service-applicatif::solidai-hexagonal
 tldr: "Service applicatif `mechanical_transmission_calibration_service` : `record_calibration(microsteps, driver_current_a, driver_peak_current_a, microns_per_pulse)`: record the motion chain as set up now, with the currently mounted motor and stepper driver (refused by the aggregate when either is missing)."
 code: ["[[src/application/test_bench_calibration/mechanical_transmission_calibration_service/mechanical_transmission_calibration_service.py]]"]
 cause_de_changement: orchestration
-ports:
-  - "[[src/application/test_bench_calibration/mechanical_transmission_calibration_service/i_api_mechanical_transmission_calibration_service_intention]]"
 ---
 # mechanical_transmission_calibration_service — Intention
 

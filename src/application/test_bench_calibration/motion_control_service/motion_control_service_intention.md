@@ -3,10 +3,6 @@ type: service-applicatif::solidai-hexagonal
 tldr: "Service applicatif `motion_control_service` : Calculer la position cible pour les mouvements relatifs en prenant comme référence soit la dernière cible connue soit la position courante hardware."
 code: ["[[src/application/test_bench_calibration/motion_control_service/motion_control_service.py]]"]
 cause_de_changement: orchestration
-ports:
-  - "[[src/application/test_bench_calibration/motion_control_service/ports/i_motion_control_output_port_intention]]"
-  - "[[src/application/test_bench_calibration/motion_control_service/ports/i_motion_conversion_status_port_intention]]"
-  - "[[src/application/test_bench_calibration/motion_control_service/ports/i_motion_port_intention]]"
 ---
 # motion_control_service — Intention
 

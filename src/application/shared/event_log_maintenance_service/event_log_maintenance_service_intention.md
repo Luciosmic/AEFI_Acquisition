@@ -3,8 +3,6 @@ type: service-applicatif::solidai-hexagonal
 tldr: "Service applicatif `event_log_maintenance_service` : `get_summary()` (query) : taille totale, nombre de sessions, date de la plus ancienne, dépassement du seuil d'alerte (20 Go), et l'aperçu de ce qu'une suppression enlèverait (sessions de plus de 90 jours : nombre, taille, période)."
 code: ["[[src/application/shared/event_log_maintenance_service/event_log_maintenance_service.py]]"]
 cause_de_changement: orchestration
-ports:
-  - "[[src/application/shared/event_log_maintenance_service/ports/i_event_log_storage_port_intention]]"
 ---
 # event_log_maintenance_service — Intention
 

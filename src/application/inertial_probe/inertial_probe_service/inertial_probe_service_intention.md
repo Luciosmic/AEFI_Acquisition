@@ -3,9 +3,6 @@ type: service-applicatif::solidai-hexagonal
 tldr: "Service applicatif `inertial_probe_service` : Piloter la connexion/déconnexion de la carte via `IInertialProbeStreamPort`, en absorbant toute exception matérielle : `connect_sensor()` ne lève jamais, elle publie `InertialProbeConnectionChanged`."
 code: ["[[src/application/inertial_probe/inertial_probe_service/inertial_probe_service.py]]"]
 cause_de_changement: orchestration
-ports:
-  - "[[src/application/inertial_probe/inertial_probe_service/ports/i_inertial_probe_acquisition_executor_intention]]"
-  - "[[src/application/inertial_probe/inertial_probe_service/ports/i_inertial_probe_stream_port_intention]]"
 ---
 # inertial_probe_service — Intention
 

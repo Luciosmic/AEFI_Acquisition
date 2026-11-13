@@ -3,10 +3,6 @@ type: service-applicatif::solidai-hexagonal
 tldr: "Service applicatif `acquisition_throughput_characterization_service` : `start_characterization(request)` : valider la grille (au moins 2 `n_avg` distincts dans les bornes du MCU, au moins 3 échantillons par point), réserver l'excitation, puis lancer le balayage en tâche de fond."
 code: ["[[src/application/test_bench_calibration/acquisition_throughput_characterization_service/acquisition_throughput_characterization_service.py]]"]
 cause_de_changement: orchestration
-ports:
-  - "[[src/application/test_bench_calibration/acquisition_throughput_characterization_service/ports/i_acquisition_averaging_port_intention]]"
-  - "[[src/application/test_bench_calibration/acquisition_throughput_characterization_service/ports/i_acquisition_throughput_export_port_intention]]"
-  - "[[src/application/test_bench_calibration/acquisition_throughput_characterization_service/ports/i_acquisition_throughput_output_port_intention]]"
 ---
 # acquisition_throughput_characterization_service — Intention
 

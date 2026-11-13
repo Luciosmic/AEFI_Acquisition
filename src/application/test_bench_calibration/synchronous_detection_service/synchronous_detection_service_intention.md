@@ -3,9 +3,6 @@ type: service-applicatif::solidai-hexagonal
 tldr: "Service applicatif `synchronous_detection_service` : `get_sphere_phases()` : dérive les 4 phases de sphères S1-S4 depuis les registres ch1/ch2 via `SphereId.derive_phase`, calcule le Delta_Phi corrigé courant (lookup nearest-neighbor par fréquence) et rapporte l'état de l'enforcement."
 code: ["[[src/application/test_bench_calibration/synchronous_detection_service/synchronous_detection_service.py]]"]
 cause_de_changement: orchestration
-ports:
-  - "[[src/application/test_bench_calibration/synchronous_detection_service/i_api_synchronous_detection_service_intention]]"
-  - "[[src/application/test_bench_calibration/synchronous_detection_service/ports/i_synchronous_detection_hardware_port_intention]]"
 ---
 # synchronous_detection_service — Intention
 
