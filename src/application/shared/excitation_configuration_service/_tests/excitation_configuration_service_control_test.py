@@ -3,7 +3,7 @@ calibration) holds it, nobody else may change it."""
 
 import unittest
 
-from application.services.excitation_configuration_service.excitation_configuration_service import (
+from application.shared.excitation_configuration_service.excitation_configuration_service import (
     EXCITATION_CONTROL_CHANGED_TOPIC,
     ExcitationConfigurationService,
 )

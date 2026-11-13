@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
-from application.services.excitation_configuration_service.excitation_configuration_service import (
+from application.shared.excitation_configuration_service.excitation_configuration_service import (
     ExcitationConfigurationService,
 )
 from application.scan.scan_application_service.dtos.scan_dtos import Scan2DConfigDTO

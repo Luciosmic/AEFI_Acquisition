@@ -9,7 +9,7 @@ import logging
 
 from PySide6.QtCore import QObject, Signal, Slot
 
-from application.services.event_log_maintenance_service.i_api_event_log_maintenance_service import (
+from application.shared.event_log_maintenance_service.i_api_event_log_maintenance_service import (
     IApiEventLogMaintenanceService,
 )
 

@@ -7,10 +7,10 @@ import unittest
 
 from interface.presenters.hardware_advanced_config_presenter import HardwareAdvancedConfigPresenter
 from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
-from application.services.hardware_configuration_service.hardware_configuration_service import (
+from application.shared.hardware_configuration_service.hardware_configuration_service import (
     HardwareConfigurationService,
 )
-from application.services.excitation_configuration_service.excitation_configuration_service import (
+from application.shared.excitation_configuration_service.excitation_configuration_service import (
     EXCITATION_FREQUENCY_CHANGED_TOPIC,
 )
 from domain.shared_kernel.excitation.events.excitation_frequency_changed.excitation_frequency_changed import (

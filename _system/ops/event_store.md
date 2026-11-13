@@ -16,7 +16,7 @@ Tous les événements sont enregistrés, échantillons compris (ce sont des fait
 - Dans cette vue, le bouton **« Supprimer les sessions de plus de 90 jours… »** supprime, après confirmation, les fichiers de ce dossier démarrés il y a plus de 90 jours (date lue dans le nom du fichier). La session en cours et les `_events.jsonl` des dossiers d'export ne sont jamais touchés. La suppression est tracée dans les logs applicatifs.
 - Ce journal est un filet de sécurité, pas une archive : il n'y a pas de raison de remonter loin.
 
-Code : `application/services/event_log_maintenance_service/` (seuils `RETENTION`, `SIZE_WARNING_BYTES`), `infrastructure/events/file_event_log_storage.py`, `interface/presenters/event_log_presenter.py`.
+Code : `application/shared/event_log_maintenance_service/` (seuils `RETENTION`, `SIZE_WARNING_BYTES`), `infrastructure/events/file_event_log_storage.py`, `interface/presenters/event_log_presenter.py`.
 
 ## Schéma
 

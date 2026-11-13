@@ -30,7 +30,7 @@ from application.test_bench.adc_output_rate_characterization_service.ports.i_adc
 )
 from application.test_bench.adc_output_rate_characterization_service.ports.i_drdy_capture_port import IDrdyCapturePort
 from application.services.aefi_acquisition_service.i_api_aefi_acquisition_service import IApiAefiAcquisitionService
-from application.services.hardware_configuration_service.i_api_hardware_configuration_service import (
+from application.shared.hardware_configuration_service.i_api_hardware_configuration_service import (
     IApiHardwareConfigurationService,
 )
 from application.shared.exclusive_control.exclusive_control import take_all

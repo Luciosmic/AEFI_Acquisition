@@ -34,7 +34,7 @@ from infrastructure.mocks.adapter_mock_i_excitation_port import MockExcitationPo
 from infrastructure.acquisition_conditions_reader.fake.fake_acquisition_conditions_reader import FakeAcquisitionConditionsPort
 from infrastructure.hardware.serial_link.fake.fake_usb_latency_timer_port import FakeUsbLatencyTimerPort
 from infrastructure.git_software_provenance_reader.fake.fake_git_software_provenance_reader import FakeSoftwareProvenancePort
-from application.services.excitation_configuration_service.excitation_configuration_service import (
+from application.shared.excitation_configuration_service.excitation_configuration_service import (
     ExcitationConfigurationService,
 )
 from application.scan.scan_export_service.dtos.scan_export_dtos import ExportConfigDTO

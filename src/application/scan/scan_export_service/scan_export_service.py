@@ -62,7 +62,7 @@ from domain.shared_kernel.events.aefi_voltage_sample_acquired.aefi_voltage_sampl
 from domain.shared_kernel.events.aefi_voltage_reading_stopped.aefi_voltage_reading_stopped import AefiVoltageReadingStopped
 from domain.shared_kernel.events.domain_event.domain_event import DomainEvent
 from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
-from application.services.excitation_configuration_service.excitation_configuration_service import ExcitationConfigurationService
+from application.shared.excitation_configuration_service.excitation_configuration_service import ExcitationConfigurationService
 
 
 logger = logging.getLogger(__name__)

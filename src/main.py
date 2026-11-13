@@ -99,7 +99,7 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
         ScanApplicationService,
         make_electric_field_probe_channel,
     )
-    from application.services.excitation_configuration_service.excitation_configuration_service import ExcitationConfigurationService
+    from application.shared.excitation_configuration_service.excitation_configuration_service import ExcitationConfigurationService
     from application.test_bench.synchronous_detection_service.synchronous_detection_service import SynchronousDetectionService
     from application.test_bench.sensor_calibration_service.sensor_calibration_service import SensorCalibrationService
     from application.frequency_sweep.frequency_sweep_service.frequency_sweep_service import FrequencySweepService
@@ -113,7 +113,7 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
     from application.test_bench.mechanical_transmission_calibration_service.mechanical_transmission_calibration_service import (
         MechanicalTransmissionCalibrationService,
     )
-    from application.services.event_log_maintenance_service.event_log_maintenance_service import EventLogMaintenanceService
+    from application.shared.event_log_maintenance_service.event_log_maintenance_service import EventLogMaintenanceService
     from domain.test_bench.calibration.calibration import Calibration
     from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
     from application.test_bench.motion_control_service.motion_control_service import MotionControlService
@@ -123,7 +123,7 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
     from application.scan.scan_export_service.scan_export_service import ScanExportService
     from application.scan.scan_application_service.scan_closure_handler.scan_closure_handler import ScanClosureHandler
     from application.scan.scan_application_service.column_stabilization.column_stabilization import ColumnStabilization
-    from application.services.system_lifecycle_service.system_lifecycle_service import (
+    from application.shared.system_lifecycle_service.system_lifecycle_service import (
         SystemStartupApplicationService,
         SystemShutdownApplicationService,
         StartupConfig
@@ -138,8 +138,8 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
     from application.detection_devices.aefi_signal_processing_service.aefi_signal_processing_service import (
         AefiSignalProcessingService,
     )
-    from application.services.hardware_configuration_service.hardware_configuration_service import HardwareConfigurationService
-    from application.services.hardware_configuration_service.ports.i_hardware_advanced_configurator import IHardwareAdvancedConfigurator
+    from application.shared.hardware_configuration_service.hardware_configuration_service import HardwareConfigurationService
+    from application.shared.hardware_configuration_service.ports.i_hardware_advanced_configurator import IHardwareAdvancedConfigurator
 
     startup_view.set_phase("Pilotes...")
     app.processEvents()

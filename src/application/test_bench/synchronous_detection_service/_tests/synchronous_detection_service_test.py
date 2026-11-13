@@ -8,7 +8,7 @@ from application.test_bench.synchronous_detection_service.synchronous_detection_
     SYNCHRONOUS_DETECTION_PHASE_CALIBRATION_ENTRY_ADDED_TOPIC,
     SYNCHRONOUS_DETECTION_COMPENSATION_ENABLED_CHANGED_TOPIC,
 )
-from application.services.excitation_configuration_service.excitation_configuration_service import (
+from application.shared.excitation_configuration_service.excitation_configuration_service import (
     EXCITATION_FREQUENCY_CHANGED_TOPIC,
 )
 from domain.shared_kernel.excitation.events.excitation_frequency_changed.excitation_frequency_changed import (

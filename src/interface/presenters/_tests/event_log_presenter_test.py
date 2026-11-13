@@ -3,10 +3,10 @@
 import unittest
 from datetime import datetime, timedelta, timezone
 
-from application.services.event_log_maintenance_service.event_log_maintenance_service import (
+from application.shared.event_log_maintenance_service.event_log_maintenance_service import (
     EventLogMaintenanceService,
 )
-from application.services.event_log_maintenance_service.ports.i_event_log_storage_port import StoredEventLogSession
+from application.shared.event_log_maintenance_service.ports.i_event_log_storage_port import StoredEventLogSession
 from infrastructure.file_event_log_storage.fake.fake_file_event_log_storage import FakeEventLogStorage
 from interface.presenters.event_log_presenter import EventLogPresenter
 

@@ -10,7 +10,7 @@ from infrastructure.hardware.hardware_composition_root import HardwareCompositio
 from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from application.test_bench.motion_control_service.ports.i_motion_port import IMotionPort
 from application.scan.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
-from application.services.excitation_configuration_service.ports.i_excitation_port import IExcitationPort
+from application.shared.excitation_configuration_service.ports.i_excitation_port import IExcitationPort
 from application.detection_devices.electric_field_probe_service.ports.i_electric_field_probe_port import IElectricFieldProbePort
 
 

@@ -2,14 +2,14 @@ import logging
 from datetime import datetime, timedelta, timezone
 from typing import Callable, List
 
-from application.services.event_log_maintenance_service.dtos.event_log_dto import (
+from application.shared.event_log_maintenance_service.dtos.event_log_dto import (
     EventLogPurgeResultDTO,
     EventLogSummaryDTO,
 )
-from application.services.event_log_maintenance_service.i_api_event_log_maintenance_service import (
+from application.shared.event_log_maintenance_service.i_api_event_log_maintenance_service import (
     IApiEventLogMaintenanceService,
 )
-from application.services.event_log_maintenance_service.ports.i_event_log_storage_port import (
+from application.shared.event_log_maintenance_service.ports.i_event_log_storage_port import (
     IEventLogStoragePort,
     StoredEventLogSession,
 )

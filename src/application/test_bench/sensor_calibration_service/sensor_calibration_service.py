@@ -13,7 +13,7 @@ from application.services.aefi_acquisition_service.i_api_aefi_acquisition_servic
 # ponytail: direct Application-Service-to-Application-Service dependency,
 # same precedent as ScanApplicationService (mute/unmute) — no event exists
 # for "excitation control requested".
-from application.services.excitation_configuration_service.excitation_configuration_service import (
+from application.shared.excitation_configuration_service.excitation_configuration_service import (
     ExcitationConfigurationService,
 )
 from application.test_bench.sensor_calibration_service.dtos.sensor_calibration_dto import (

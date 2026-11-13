@@ -2,11 +2,11 @@
 
 from datetime import datetime, timedelta, timezone
 
-from application.services.event_log_maintenance_service.event_log_maintenance_service import (
+from application.shared.event_log_maintenance_service.event_log_maintenance_service import (
     EventLogMaintenanceService,
     SIZE_WARNING_BYTES,
 )
-from application.services.event_log_maintenance_service.ports.i_event_log_storage_port import StoredEventLogSession
+from application.shared.event_log_maintenance_service.ports.i_event_log_storage_port import StoredEventLogSession
 from infrastructure.file_event_log_storage.fake.fake_file_event_log_storage import FakeEventLogStorage
 
 NOW = datetime(2026, 10, 1, 12, 0, tzinfo=timezone.utc)

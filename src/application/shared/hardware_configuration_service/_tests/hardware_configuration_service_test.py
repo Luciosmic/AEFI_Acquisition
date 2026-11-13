@@ -9,7 +9,7 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from application.services.hardware_configuration_service.hardware_configuration_service import (
+from application.shared.hardware_configuration_service.hardware_configuration_service import (
     HardwareConfigurationService,
 )
 from domain.shared_kernel.value_objects.hardware_configuration.hardware_advanced_parameter_schema import (

@@ -64,7 +64,7 @@ from application.detection_devices.electric_field_probe_service.ports.i_electric
 # that file's __init__ comment) — no domain event exists yet for
 # "excitation control requested", so the scan loop calls mute()/unmute()
 # directly. Replace with an event-driven handoff if that ever exists.
-from application.services.excitation_configuration_service.excitation_configuration_service import ExcitationConfigurationService
+from application.shared.excitation_configuration_service.excitation_configuration_service import ExcitationConfigurationService
 
 # Continuous acquisition streams (scan is a subscriber, not a puller — the
 # continuous worker owns the driver exclusively).

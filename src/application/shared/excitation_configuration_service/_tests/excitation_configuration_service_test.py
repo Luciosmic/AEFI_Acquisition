@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import MagicMock
-from application.services.excitation_configuration_service.excitation_configuration_service import ExcitationConfigurationService
-from application.services.excitation_configuration_service.ports.i_excitation_port import IExcitationPort
+from application.shared.excitation_configuration_service.excitation_configuration_service import ExcitationConfigurationService
+from application.shared.excitation_configuration_service.ports.i_excitation_port import IExcitationPort
 from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
 from domain.shared_kernel.excitation.events.excitation_frequency_changed.excitation_frequency_changed import (
     ExcitationFrequencyChanged,

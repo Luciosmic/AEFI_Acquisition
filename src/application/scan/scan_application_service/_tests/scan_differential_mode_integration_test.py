@@ -21,7 +21,7 @@ from infrastructure.in_memory_unit_of_work.in_memory_unit_of_work import InMemor
 from application.shared.exclusive_control.exclusive_control import ExclusiveControl
 from application.scan.scan_application_service.dtos.scan_dtos import Scan2DConfigDTO
 from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
-from application.services.excitation_configuration_service.excitation_configuration_service import (
+from application.shared.excitation_configuration_service.excitation_configuration_service import (
     ExcitationConfigurationService,
 )
 from domain.shared_kernel.excitation.value_objects.excitation_mode import ExcitationMode

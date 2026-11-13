@@ -38,7 +38,7 @@ from infrastructure.aefi_post_processor_port.aefi_post_processor_port import Aef
 from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
 from application.scan.scan_application_service.scan_application_service import ScanApplicationService
 from application.scan.scan_application_service.dtos.scan_dtos import Scan2DConfigDTO
-from application.services.excitation_configuration_service.excitation_configuration_service import (
+from application.shared.excitation_configuration_service.excitation_configuration_service import (
     ExcitationConfigurationService,
 )
 from application.scan.scan_export_service.scan_export_service import ScanExportService

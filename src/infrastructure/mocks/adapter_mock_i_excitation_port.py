@@ -1,7 +1,7 @@
 import logging
 from dataclasses import replace
 
-from application.services.excitation_configuration_service.ports.i_excitation_port import IExcitationPort
+from application.shared.excitation_configuration_service.ports.i_excitation_port import IExcitationPort
 from domain.shared_kernel.excitation.value_objects.excitation_parameters import ExcitationParameters
 from domain.shared_kernel.excitation.value_objects.excitation_level import ExcitationLevel
 

@@ -11,11 +11,11 @@ from dataclasses import replace
 from PySide6.QtCore import QObject, Signal, Slot
 from typing import List, Dict, Any, Optional
 
-from application.services.hardware_configuration_service.hardware_configuration_service import (
+from application.shared.hardware_configuration_service.hardware_configuration_service import (
     HARDWARE_CONFIGURATION_CONTROL_CHANGED_TOPIC,
     HardwareConfigurationService,
 )
-from application.services.excitation_configuration_service.excitation_configuration_service import (
+from application.shared.excitation_configuration_service.excitation_configuration_service import (
     EXCITATION_FREQUENCY_CHANGED_TOPIC,
 )
 from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus

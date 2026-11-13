@@ -6,11 +6,11 @@ from unittest.mock import MagicMock
 
 from interface.presenters.excitation_presenter import ExcitationPresenter
 from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
-from application.services.excitation_configuration_service.excitation_configuration_service import (
+from application.shared.excitation_configuration_service.excitation_configuration_service import (
     ExcitationConfigurationService,
     EXCITATION_DDS_LINK_CHANGED_TOPIC,
 )
-from application.services.excitation_configuration_service.ports.i_excitation_port import IExcitationPort
+from application.shared.excitation_configuration_service.ports.i_excitation_port import IExcitationPort
 from domain.shared_kernel.excitation.events.excitation_dds_link_changed.excitation_dds_link_changed import (
     ExcitationDdsLinkChanged,
 )

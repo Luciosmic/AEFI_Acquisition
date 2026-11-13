@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import List
 
-from application.services.event_log_maintenance_service.ports.i_event_log_storage_port import (
+from application.shared.event_log_maintenance_service.ports.i_event_log_storage_port import (
     EventLogSessionNotDeleted,
     IEventLogStoragePort,
     StoredEventLogSession,

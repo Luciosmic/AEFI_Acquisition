@@ -17,10 +17,10 @@ from application.test_bench.acquisition_throughput_characterization_service.port
 )
 from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
 from application.services.aefi_acquisition_service.dtos.aefi_acquisition_dtos import AefiAcquisitionConfig
-from application.services.excitation_configuration_service.excitation_configuration_service import (
+from application.shared.excitation_configuration_service.excitation_configuration_service import (
     ExcitationConfigurationService,
 )
-from application.services.hardware_configuration_service.hardware_configuration_service import (
+from application.shared.hardware_configuration_service.hardware_configuration_service import (
     HardwareConfigurationService,
 )
 from domain.shared_kernel.excitation.value_objects.excitation_mode import ExcitationMode

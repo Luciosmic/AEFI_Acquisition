@@ -1,6 +1,6 @@
 import logging
 from typing import List, Dict, Any
-from application.services.system_lifecycle_service.ports.i_hardware_initialization_port import IHardwareInitializationPort
+from application.shared.system_lifecycle_service.ports.i_hardware_initialization_port import IHardwareInitializationPort
 
 logger = logging.getLogger(__name__)
 

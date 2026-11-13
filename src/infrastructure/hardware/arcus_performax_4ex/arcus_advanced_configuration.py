@@ -24,7 +24,7 @@ from domain.shared_kernel.value_objects.hardware_configuration.hardware_advanced
     NumberParameterSchema,
     BooleanParameterSchema,
 )
-from application.services.hardware_configuration_service.ports.i_hardware_advanced_configurator import (
+from application.shared.hardware_configuration_service.ports.i_hardware_advanced_configurator import (
     IHardwareAdvancedConfigurator,
 )
 from infrastructure.hardware.arcus_performax_4ex.driver_arcus_performax4ex import (

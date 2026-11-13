@@ -1,7 +1,7 @@
 import logging
 from typing import Dict, Any
 import time
-from application.services.system_lifecycle_service.ports.i_hardware_initialization_port import IHardwareInitializationPort
+from application.shared.system_lifecycle_service.ports.i_hardware_initialization_port import IHardwareInitializationPort
 from infrastructure.mocks.adapter_mock_i_motion_port import MockMotionPort
 from infrastructure.mocks.adapter_mock_i_acquisition_port import MockAcquisitionPort
 

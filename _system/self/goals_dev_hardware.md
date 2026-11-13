@@ -46,7 +46,7 @@ Nuance à afficher dans l'UI : le protocole ne renvoie **aucun facteur de gain n
   - helper privé `_publish_frequency_correction(result)`.
   - `connect_probe()` : après connexion réussie, `result = self._probe_port.apply_frequency_correction(self._last_known_excitation_frequency_hz)` + publish (satisfait l'exigence 3), avant de publier `CONNECTION_CHANGED_TOPIC`.
   - nouveau `_on_excitation_frequency_changed(event)` : stocke la fréquence ; si non connecté, return ; si `executor.is_running()`, `executor.request_frequency_correction(event.frequency_hz)` (le worker publiera lui-même) ; sinon appel direct + publish.
-- `application/services/excitation_configuration_service/excitation_configuration_service.py` :
+- `application/shared/excitation_configuration_service/excitation_configuration_service.py` :
   - `__init__(self, excitation_port, event_bus: IDomainEventBus)`.
   - `set_excitation()` : compare l'ancienne/nouvelle fréquence, publie `ExcitationFrequencyChanged` sur `EXCITATION_FREQUENCY_CHANGED_TOPIC` seulement si elle diffère.
 
@@ -81,5 +81,5 @@ Tous les nouveaux tests suivent les conventions déjà en place (`MagicMock(spec
 
 ### Vérification
 
-- `uv run pytest src/application/detection_devices/electric_field_probe_service src/application/services/excitation_configuration_service src/infrastructure/execution src/infrastructure/hardware/narda_ep600 -v`
+- `uv run pytest src/application/detection_devices/electric_field_probe_service src/application/shared/excitation_configuration_service src/infrastructure/execution src/infrastructure/hardware/narda_ep600 -v`
 - Lancement manuel de l'app en mode mock (`HARDWARE_CONFIG["electric_field_probe"] = "mock"`, `"excitation" = "mock"` ou `"real"` selon dispo) : régler une fréquence >10kHz dans le panneau Excitation → voyant vert avec la fréquence affichée ; régler <10kHz → voyant ambre "hors plage" ; connecter la sonde après avoir déjà réglé une fréquence → voyant appliqué dès la connexion ; démarrer une acquisition puis changer la fréquence en cours de stream → voyant se met à jour sans coupure du tracé live.

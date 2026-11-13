@@ -15,7 +15,7 @@ from application.test_bench.adc_output_rate_characterization_service.ports.i_adc
 )
 from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
 from application.services.aefi_acquisition_service.dtos.aefi_acquisition_dtos import AefiAcquisitionConfig
-from application.services.hardware_configuration_service.hardware_configuration_service import (
+from application.shared.hardware_configuration_service.hardware_configuration_service import (
     HardwareConfigurationService,
 )
 from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus

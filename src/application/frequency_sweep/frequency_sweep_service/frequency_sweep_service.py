@@ -16,7 +16,7 @@ from application.services.aefi_acquisition_service.dtos.aefi_acquisition_dtos im
 from application.services.aefi_acquisition_service.i_api_aefi_acquisition_service import IApiAefiAcquisitionService
 # ponytail: direct Application-Service-to-Application-Service dependency,
 # same precedent as ScanApplicationService and the throughput characterization.
-from application.services.excitation_configuration_service.excitation_configuration_service import (
+from application.shared.excitation_configuration_service.excitation_configuration_service import (
     ExcitationConfigurationService,
 )
 from application.frequency_sweep.frequency_sweep_service.dtos.acquisition_parameters_dtos import (

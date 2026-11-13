@@ -550,7 +550,7 @@ EF probe) — ne pas re-toggler l'excitation par canal.
   `baseline_measurement`
 - ancien événement de champ (supprimé au profit de `NardaPointAcquired`) :
   + champ optionnel `baseline_field_measurement: FieldMeasurement | None`
-- `application/services/excitation_configuration_service/excitation_configuration_service.py` :
+- `application/shared/excitation_configuration_service/excitation_configuration_service.py` :
   + `mute()` / `unmute()` (gardent mode/fréquence, togglent juste le niveau à 0 puis
   restaurent le niveau précédent)
 - `application/scan/scan_application_service/scan_application_service.py` :

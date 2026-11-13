@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from application.services.event_log_maintenance_service.dtos.event_log_dto import (
+from application.shared.event_log_maintenance_service.dtos.event_log_dto import (
     EventLogPurgeResultDTO,
     EventLogSummaryDTO,
 )

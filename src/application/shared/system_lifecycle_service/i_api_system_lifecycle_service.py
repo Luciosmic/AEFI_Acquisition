@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from application.services.system_lifecycle_service.system_lifecycle_service import (
+from application.shared.system_lifecycle_service.system_lifecycle_service import (
     StartupConfig,
     StartupResult,
     ShutdownConfig,

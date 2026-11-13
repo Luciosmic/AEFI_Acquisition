@@ -10,7 +10,7 @@ import unittest
 from uuid import uuid4
 
 from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
-from application.services.excitation_configuration_service.excitation_configuration_service import (
+from application.shared.excitation_configuration_service.excitation_configuration_service import (
     ExcitationConfigurationService,
 )
 from application.test_bench.sensor_calibration_service.ports.i_sensor_calibration_output_port import (

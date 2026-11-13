@@ -38,7 +38,7 @@ from domain.shared_kernel.excitation.events.excitation_dds_link_changed.excitati
 )
 
 # APPLICATION
-from application.services.excitation_configuration_service.ports.i_excitation_port import IExcitationPort
+from application.shared.excitation_configuration_service.ports.i_excitation_port import IExcitationPort
 
 # INFRASTRUCTURE
 from infrastructure.hardware.micro_controller.ad9106.ad9106_controller import AD9106Controller

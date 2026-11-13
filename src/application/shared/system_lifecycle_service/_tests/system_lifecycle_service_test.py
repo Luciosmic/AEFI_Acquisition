@@ -4,7 +4,7 @@ from typing import Any, Dict, List
 from tool.diagram_friendly_test import DiagramFriendlyTest
 from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 
-from application.services.system_lifecycle_service.system_lifecycle_service import (
+from application.shared.system_lifecycle_service.system_lifecycle_service import (
     SystemStartupApplicationService,
     SystemShutdownApplicationService,
     StartupConfig,

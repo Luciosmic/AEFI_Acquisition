@@ -8,7 +8,7 @@ from application.test_bench.synchronous_detection_service.dtos.sphere_phases_dto
 from application.test_bench.synchronous_detection_service.i_api_synchronous_detection_service import (
     IApiSynchronousDetectionService,
 )
-from application.services.excitation_configuration_service.excitation_configuration_service import (
+from application.shared.excitation_configuration_service.excitation_configuration_service import (
     EXCITATION_FREQUENCY_CHANGED_TOPIC,
 )
 from domain.test_bench.calibration.calibration import Calibration
