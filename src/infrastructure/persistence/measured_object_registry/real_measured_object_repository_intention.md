@@ -1,3 +1,10 @@
+---
+type: adaptateur::solidai-hexagonal
+tldr: "Implémenter IMeasuredObjectRepository sur .aefi_acquisition/measured_objects/measured_objects.json : {\"measured_objects\": [{\"measured_object_id\", \"name\",…"
+code: ["[[src/infrastructure/persistence/measured_object_registry/real_measured_object_repository.py]]"]
+cause_de_changement: outil
+implements: ["[[src/domain/measured_object_registry/measured_object_registry_intention^^i-measured-object-repository]]"]
+---
 # real_measured_object_repository — Intention
 
 ## Rationale

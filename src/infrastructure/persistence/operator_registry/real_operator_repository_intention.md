@@ -1,3 +1,10 @@
+---
+type: adaptateur::solidai-hexagonal
+tldr: "Implémenter IOperatorRepository sur .aefi_acquisition/operators/operators.json : {\"operators\": [{\"operator_id\", \"name\", \"registered_at\"}]}."
+code: ["[[src/infrastructure/persistence/operator_registry/real_operator_repository.py]]"]
+cause_de_changement: outil
+implements: ["[[src/domain/operator_registry/operator_registry_intention^^i-operator-repository]]"]
+---
 # real_operator_repository — Intention
 
 ## Rationale
