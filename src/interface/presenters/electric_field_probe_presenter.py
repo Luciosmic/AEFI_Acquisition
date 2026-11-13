@@ -10,29 +10,29 @@ from typing import Any, Dict, Optional
 
 from PySide6.QtCore import QObject, Signal, Slot
 
-from application.detection_devices.electric_field_probe_service.electric_field_probe_service import (
+from application.electric_field_probes.electric_field_probe_service.electric_field_probe_service import (
     ElectricFieldProbeService,
 )
-from application.detection_devices.electric_field_probe_service.dtos.electric_field_probe_dtos import (
+from application.electric_field_probes.electric_field_probe_service.dtos.electric_field_probe_dtos import (
     ElectricFieldProbeAcquisitionConfig,
 )
 from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
-from domain.detection_devices.electric_field_probes.events.field_sample_acquired.field_sample_acquired import (
+from domain.electric_field_probes.events.field_sample_acquired.field_sample_acquired import (
     FieldSampleAcquired,
 )
-from domain.detection_devices.electric_field_probes.events.electric_field_probe_connection_changed.electric_field_probe_connection_changed import (
+from domain.electric_field_probes.events.electric_field_probe_connection_changed.electric_field_probe_connection_changed import (
     ElectricFieldProbeConnectionChanged,
 )
-from domain.detection_devices.electric_field_probes.events.electric_field_probe_battery_refreshed.electric_field_probe_battery_refreshed import (
+from domain.electric_field_probes.events.electric_field_probe_battery_refreshed.electric_field_probe_battery_refreshed import (
     ElectricFieldProbeBatteryRefreshed,
 )
-from domain.detection_devices.electric_field_probes.events.electric_field_probe_frequency_correction_changed.electric_field_probe_frequency_correction_changed import (
+from domain.electric_field_probes.events.electric_field_probe_frequency_correction_changed.electric_field_probe_frequency_correction_changed import (
     ElectricFieldProbeFrequencyCorrectionChanged,
 )
-from domain.detection_devices.electric_field_probes.events.electric_field_probe_reading_failed.electric_field_probe_reading_failed import (
+from domain.electric_field_probes.events.electric_field_probe_reading_failed.electric_field_probe_reading_failed import (
     ElectricFieldProbeReadingFailed,
 )
-from domain.detection_devices.electric_field_probes.events.electric_field_probe_reading_stopped.electric_field_probe_reading_stopped import (
+from domain.electric_field_probes.events.electric_field_probe_reading_stopped.electric_field_probe_reading_stopped import (
     ElectricFieldProbeReadingStopped,
 )
 

@@ -13,7 +13,7 @@ from application.shared.aefi_acquisition_service.aefi_acquisition_service import
     AefiAcquisitionService,
 )
 from application.shared.aefi_acquisition_service.ports.i_aefi_acquisition_executor import AefiAcquisitionConfig
-from application.detection_devices.aefi_signal_processing_service.aefi_signal_processing_service import (
+from application.aefi_signal_processing.aefi_signal_processing_service.aefi_signal_processing_service import (
     AefiSignalProcessingService,
 )
 from application.scan.scan_export_service.scan_export_service import ScanExportService
@@ -28,10 +28,10 @@ from domain.test_bench_calibration.events.sensor_transformation_angles_updated.s
     SensorTransformationAnglesUpdated,
 )
 from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
-from domain.detection_devices.aefi_device.signal_processing.events.aefi_corrected_field_sample_acquired.aefi_corrected_field_sample_acquired import (
+from domain.aefi_signal_processing.events.aefi_corrected_field_sample_acquired.aefi_corrected_field_sample_acquired import (
     AefiCorrectedFieldSampleAcquired,
 )
-from domain.detection_devices.aefi_device.signal_processing.events.aefi_signal_correction_calibration_updated.aefi_signal_correction_calibration_updated import (
+from domain.aefi_signal_processing.events.aefi_signal_correction_calibration_updated.aefi_signal_correction_calibration_updated import (
     AefiSignalCorrectionCalibrationUpdated,
 )
 from application.test_bench_calibration.transformation_service.transformation_service import TransformationService

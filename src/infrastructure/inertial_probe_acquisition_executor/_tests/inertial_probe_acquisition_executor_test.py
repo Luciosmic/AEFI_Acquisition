@@ -3,7 +3,7 @@ from typing import List
 
 import pytest
 
-from application.detection_devices.inertial_probe_service.dtos.inertial_probe_dtos import (
+from application.inertial_probe.inertial_probe_service.dtos.inertial_probe_dtos import (
     InertialProbeAcquisitionConfig,
 )
 from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus

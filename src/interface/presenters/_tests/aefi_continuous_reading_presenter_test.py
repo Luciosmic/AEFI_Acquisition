@@ -14,20 +14,20 @@ from uuid import uuid4
 from application.shared.aefi_acquisition_service.i_api_aefi_acquisition_service import (
     IApiAefiAcquisitionService,
 )
-from application.detection_devices.aefi_signal_processing_service.i_api_aefi_signal_processing_service import (
+from application.aefi_signal_processing.aefi_signal_processing_service.i_api_aefi_signal_processing_service import (
     IApiAefiSignalProcessingService,
 )
 from domain.shared_kernel.operation_result import OperationResult
-from domain.detection_devices.aefi_device.signal_processing.events.aefi_corrected_field_sample_acquired.aefi_corrected_field_sample_acquired import (
+from domain.aefi_signal_processing.events.aefi_corrected_field_sample_acquired.aefi_corrected_field_sample_acquired import (
     AefiCorrectedFieldSampleAcquired,
 )
-from domain.detection_devices.aefi_device.signal_processing.events.aefi_signal_correction_calibration_updated.aefi_signal_correction_calibration_updated import (
+from domain.aefi_signal_processing.events.aefi_signal_correction_calibration_updated.aefi_signal_correction_calibration_updated import (
     AefiSignalCorrectionCalibrationUpdated,
 )
-from domain.detection_devices.aefi_device.signal_processing.value_objects.aefi_corrected_field_measurement.aefi_corrected_field_measurement import (
+from domain.aefi_signal_processing.value_objects.aefi_corrected_field_measurement.aefi_corrected_field_measurement import (
     AefiCorrectedFieldMeasurement,
 )
-from domain.detection_devices.aefi_device.signal_processing.value_objects.aefi_signal_correction_calibration.aefi_signal_correction_calibration import (
+from domain.aefi_signal_processing.value_objects.aefi_signal_correction_calibration.aefi_signal_correction_calibration import (
     AefiSignalCorrectionCalibration,
 )
 from application.test_bench_calibration.transformation_service.transformation_service import TransformationService

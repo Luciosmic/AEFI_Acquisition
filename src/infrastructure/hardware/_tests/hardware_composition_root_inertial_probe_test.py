@@ -1,6 +1,6 @@
 import pytest
 
-from application.detection_devices.inertial_probe_service.ports.i_inertial_probe_stream_port import (
+from application.inertial_probe.inertial_probe_service.ports.i_inertial_probe_stream_port import (
     IInertialProbeStreamPort,
 )
 from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus

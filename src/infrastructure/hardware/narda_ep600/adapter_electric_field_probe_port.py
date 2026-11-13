@@ -11,13 +11,13 @@ import logging
 from datetime import datetime
 from typing import Optional
 
-from application.detection_devices.electric_field_probe_service.ports.i_electric_field_probe_port import (
+from application.electric_field_probes.electric_field_probe_service.ports.i_electric_field_probe_port import (
     IElectricFieldProbePort,
 )
-from application.detection_devices.electric_field_probe_service.dtos.electric_field_probe_dtos import (
+from application.electric_field_probes.electric_field_probe_service.dtos.electric_field_probe_dtos import (
     FrequencyCorrectionResult,
 )
-from domain.detection_devices.electric_field_probes.electric_field_probe import ElectricFieldProbe
+from domain.electric_field_probes.electric_field_probe import ElectricFieldProbe
 from infrastructure.hardware.narda_ep600.driver_narda_ep601 import (
     NardaEP601,
     RF_SENSING_RANGE_HZ,

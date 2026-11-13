@@ -7,17 +7,17 @@ See fake_lidar_distance_port_intention.md.
 import random
 from typing import Callable, Optional
 
-from application.detection_devices.lidar_distance.dtos.lidar_distance_dtos import (
+from application.inertial_probe.lidar_distance.dtos.lidar_distance_dtos import (
     LidarDistanceReading,
 )
-from application.detection_devices.lidar_distance.ports.i_lidar_distance_port import (
+from application.inertial_probe.lidar_distance.ports.i_lidar_distance_port import (
     ILidarDistancePort,
 )
-from application.detection_devices.lidar_distance.ports.lidar_stream_error import (
+from application.inertial_probe.lidar_distance.ports.lidar_stream_error import (
     LidarStreamBusyError,
     LidarUnavailableError,
 )
-from domain.detection_devices.lidar.lidar_distance.lidar_distance import LidarDistance
+from domain.lidar.lidar_distance.lidar_distance import LidarDistance
 from infrastructure.hardware.lsm9ds1.fake.fake_inertial_probe_stream_adapter import LIDAR_CAP_HZ
 
 # Measured on the real board (journal 2026-10-12): 25 Hz as soon as the LIDAR is active.

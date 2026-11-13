@@ -9,21 +9,21 @@ import queue
 import threading
 from typing import Optional
 
-from application.detection_devices.lidar_distance.dtos.lidar_distance_dtos import (
+from application.inertial_probe.lidar_distance.dtos.lidar_distance_dtos import (
     LidarDistanceReading,
 )
-from application.detection_devices.lidar_distance.ports.i_lidar_distance_port import (
+from application.inertial_probe.lidar_distance.ports.i_lidar_distance_port import (
     ILidarDistancePort,
 )
-from application.detection_devices.lidar_distance.ports.lidar_stream_error import (
+from application.inertial_probe.lidar_distance.ports.lidar_stream_error import (
     LidarStreamBusyError,
     LidarUnavailableError,
 )
-from application.detection_devices.inertial_probe_service.dtos.inertial_probe_dtos import LIDAR_CHANNEL
-from application.detection_devices.inertial_probe_service.ports.i_inertial_probe_acquisition_executor import (
+from application.inertial_probe.inertial_probe_service.dtos.inertial_probe_dtos import LIDAR_CHANNEL
+from application.inertial_probe.inertial_probe_service.ports.i_inertial_probe_acquisition_executor import (
     IInertialProbeAcquisitionExecutor,
 )
-from application.detection_devices.inertial_probe_service.ports.i_inertial_probe_stream_port import (
+from application.inertial_probe.inertial_probe_service.ports.i_inertial_probe_stream_port import (
     IInertialProbeStreamPort,
 )
 

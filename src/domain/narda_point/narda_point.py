@@ -4,10 +4,10 @@ from dataclasses import dataclass, field
 from typing import List, Optional, Sequence, Tuple
 from uuid import UUID
 
-from domain.detection_devices.electric_field_probes.services.field_measurement_statistics_service.field_measurement_statistics_service import (
+from domain.electric_field_probes.services.field_measurement_statistics_service.field_measurement_statistics_service import (
     FieldMeasurementStatisticsService,
 )
-from domain.detection_devices.electric_field_probes.value_objects.field_measurement.field_measurement import FieldMeasurement
+from domain.electric_field_probes.value_objects.field_measurement.field_measurement import FieldMeasurement
 from domain.narda_point.errors.narda_point_already_acquired_error import NardaPointAlreadyAcquiredError
 from domain.narda_point.errors.narda_point_incomplete_error import NardaPointIncompleteError
 from domain.narda_point.events.narda_point_acquired.narda_point_acquired import NardaPointAcquired

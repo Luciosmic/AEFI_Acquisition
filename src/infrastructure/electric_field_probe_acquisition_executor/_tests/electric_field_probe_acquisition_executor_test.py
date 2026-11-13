@@ -9,10 +9,10 @@ from infrastructure.electric_field_probe_acquisition_executor.electric_field_pro
 from infrastructure.hardware.narda_ep600.fake.fake_electric_field_probe_adapter import (
     FakeElectricFieldProbeAdapter,
 )
-from application.detection_devices.electric_field_probe_service.dtos.electric_field_probe_dtos import (
+from application.electric_field_probes.electric_field_probe_service.dtos.electric_field_probe_dtos import (
     ElectricFieldProbeAcquisitionConfig,
 )
-from domain.detection_devices.electric_field_probes.events.electric_field_probe_frequency_correction_changed.electric_field_probe_frequency_correction_changed import (
+from domain.electric_field_probes.events.electric_field_probe_frequency_correction_changed.electric_field_probe_frequency_correction_changed import (
     ElectricFieldProbeFrequencyCorrectionChanged,
 )
 

@@ -6,17 +6,17 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 import pytest
 from PySide6.QtWidgets import QApplication
 
-from application.detection_devices.inertial_probe_service.inertial_probe_service import InertialProbeService
-from domain.detection_devices.inertial_probe.events.inertial_probe_connection_changed.inertial_probe_connection_changed import (
+from application.inertial_probe.inertial_probe_service.inertial_probe_service import InertialProbeService
+from domain.inertial_probe.events.inertial_probe_connection_changed.inertial_probe_connection_changed import (
     InertialProbeConnectionChanged,
 )
-from domain.detection_devices.inertial_probe.events.inertial_probe_sample_acquired.inertial_probe_sample_acquired import (
+from domain.inertial_probe.events.inertial_probe_sample_acquired.inertial_probe_sample_acquired import (
     InertialProbeSampleAcquired,
 )
-from domain.detection_devices.inertial_probe.events.inertial_probe_stream_failed.inertial_probe_stream_failed import (
+from domain.inertial_probe.events.inertial_probe_stream_failed.inertial_probe_stream_failed import (
     InertialProbeStreamFailed,
 )
-from domain.detection_devices.lidar.lidar_distance.lidar_distance import LidarDistance
+from domain.lidar.lidar_distance.lidar_distance import LidarDistance
 from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from infrastructure.hardware.lsm9ds1.fake.fake_inertial_probe_stream_adapter import (
     FakeInertialProbeStreamAdapter,

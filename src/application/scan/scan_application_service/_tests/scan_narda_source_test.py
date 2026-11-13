@@ -6,14 +6,14 @@ from datetime import datetime
 from typing import List
 
 from application.shared.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
-from application.detection_devices.electric_field_probe_service.electric_field_probe_service import ElectricFieldProbeService
+from application.electric_field_probes.electric_field_probe_service.electric_field_probe_service import ElectricFieldProbeService
 from application.scan.scan_application_service.dtos.scan_dtos import Scan2DConfigDTO
 from application.scan.scan_application_service.scan_application_service import (
     ScanApplicationService,
     make_electric_field_probe_channel,
 )
 from application.scan.scan_application_service.scan_closure_handler.scan_closure_handler import ScanClosureHandler
-from domain.detection_devices.electric_field_probes.value_objects.field_measurement.field_measurement import FieldMeasurement
+from domain.electric_field_probes.value_objects.field_measurement.field_measurement import FieldMeasurement
 from domain.narda_point.events.narda_point_acquired.narda_point_acquired import NardaPointAcquired
 from domain.scan.value_objects.expected_source.expected_source import ExpectedSource
 from domain.scan.value_objects.scan_id.scan_id import ScanId

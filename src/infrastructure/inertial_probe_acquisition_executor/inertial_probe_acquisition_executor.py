@@ -25,19 +25,19 @@ import time
 from typing import Optional
 from uuid import UUID, uuid4
 
-from application.detection_devices.inertial_probe_service.dtos.inertial_probe_dtos import (
+from application.inertial_probe.inertial_probe_service.dtos.inertial_probe_dtos import (
     InertialProbeAcquisitionConfig,
 )
-from application.detection_devices.inertial_probe_service.ports.i_inertial_probe_acquisition_executor import (
+from application.inertial_probe.inertial_probe_service.ports.i_inertial_probe_acquisition_executor import (
     IInertialProbeAcquisitionExecutor,
 )
-from application.detection_devices.inertial_probe_service.ports.i_inertial_probe_stream_port import (
+from application.inertial_probe.inertial_probe_service.ports.i_inertial_probe_stream_port import (
     IInertialProbeStreamPort,
 )
-from domain.detection_devices.inertial_probe.events.inertial_probe_sample_acquired.inertial_probe_sample_acquired import (
+from domain.inertial_probe.events.inertial_probe_sample_acquired.inertial_probe_sample_acquired import (
     InertialProbeSampleAcquired,
 )
-from domain.detection_devices.inertial_probe.events.inertial_probe_stream_failed.inertial_probe_stream_failed import (
+from domain.inertial_probe.events.inertial_probe_stream_failed.inertial_probe_stream_failed import (
     InertialProbeStreamFailed,
 )
 from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus

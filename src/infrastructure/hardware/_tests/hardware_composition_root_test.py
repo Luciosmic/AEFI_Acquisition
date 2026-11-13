@@ -11,7 +11,7 @@ from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEvent
 from application.test_bench_calibration.motion_control_service.ports.i_motion_port import IMotionPort
 from application.shared.ports.i_acquisition_port import IAcquisitionPort
 from application.shared.excitation_configuration_service.ports.i_excitation_port import IExcitationPort
-from application.detection_devices.electric_field_probe_service.ports.i_electric_field_probe_port import IElectricFieldProbePort
+from application.electric_field_probes.electric_field_probe_service.ports.i_electric_field_probe_port import IElectricFieldProbePort
 
 
 class TestHardwareCompositionRoot(unittest.TestCase):

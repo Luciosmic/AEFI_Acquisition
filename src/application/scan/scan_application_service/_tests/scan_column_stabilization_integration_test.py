@@ -18,7 +18,7 @@ from application.scan.scan_application_service.column_stabilization.column_stabi
 from application.scan.scan_application_service.dtos.scan_dtos import Scan2DConfigDTO
 from application.scan.scan_application_service.scan_application_service import ScanApplicationService
 from application.scan.scan_application_service.scan_closure_handler.scan_closure_handler import ScanClosureHandler
-from domain.detection_devices.inertial_probe.events.inertial_probe_sample_acquired.inertial_probe_sample_acquired import (
+from domain.inertial_probe.events.inertial_probe_sample_acquired.inertial_probe_sample_acquired import (
     InertialProbeSampleAcquired,
 )
 from domain.scan.value_objects.column_rest_criterion.column_rest_criterion import ColumnRestCriterion

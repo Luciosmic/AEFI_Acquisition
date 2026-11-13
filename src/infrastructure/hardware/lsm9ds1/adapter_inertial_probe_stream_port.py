@@ -14,13 +14,13 @@ Design:
 import logging
 from typing import Optional, Sequence
 
-from application.detection_devices.inertial_probe_service.dtos.inertial_probe_dtos import (
+from application.inertial_probe.inertial_probe_service.dtos.inertial_probe_dtos import (
     InertialProbeStreamSample,
 )
-from application.detection_devices.inertial_probe_service.ports.i_inertial_probe_stream_port import (
+from application.inertial_probe.inertial_probe_service.ports.i_inertial_probe_stream_port import (
     IInertialProbeStreamPort,
 )
-from domain.detection_devices.lidar.lidar_distance.lidar_distance import LidarDistance
+from domain.lidar.lidar_distance.lidar_distance import LidarDistance
 from infrastructure.hardware.lsm9ds1.driver_lsm9ds1_stream import LSM9DS1StreamDriver
 from infrastructure.hardware.lsm9ds1.lsm9ds1_conversion import (
     ACCELEROMETER_FULL_SCALE_G,

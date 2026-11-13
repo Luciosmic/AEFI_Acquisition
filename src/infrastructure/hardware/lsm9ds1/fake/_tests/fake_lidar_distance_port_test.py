@@ -1,6 +1,6 @@
 import unittest
 
-from application.detection_devices.lidar_distance.ports.lidar_stream_error import (
+from application.inertial_probe.lidar_distance.ports.lidar_stream_error import (
     LidarStreamBusyError,
     LidarUnavailableError,
 )

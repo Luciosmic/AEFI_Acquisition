@@ -9,13 +9,13 @@ import math
 import time
 from typing import Optional, Sequence, Tuple
 
-from application.detection_devices.inertial_probe_service.dtos.inertial_probe_dtos import (
+from application.inertial_probe.inertial_probe_service.dtos.inertial_probe_dtos import (
     InertialProbeStreamSample,
 )
-from application.detection_devices.inertial_probe_service.ports.i_inertial_probe_stream_port import (
+from application.inertial_probe.inertial_probe_service.ports.i_inertial_probe_stream_port import (
     IInertialProbeStreamPort,
 )
-from domain.detection_devices.lidar.lidar_distance.lidar_distance import LidarDistance
+from domain.lidar.lidar_distance.lidar_distance import LidarDistance
 from infrastructure.hardware.lsm9ds1.lsm9ds1_conversion import LIDAR_MM_PER_LSB
 from infrastructure.hardware.lsm9ds1.lsm9ds1_stream_protocol import (
     ACCELEROMETER,

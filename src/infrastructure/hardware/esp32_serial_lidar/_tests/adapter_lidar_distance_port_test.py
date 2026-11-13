@@ -2,7 +2,7 @@ import threading
 import time
 import unittest
 
-from application.detection_devices.lidar_distance.ports.lidar_stream_error import (
+from application.inertial_probe.lidar_distance.ports.lidar_stream_error import (
     LidarUnavailableError,
 )
 from infrastructure.hardware.esp32_serial_lidar.adapter_lidar_distance_port import (
