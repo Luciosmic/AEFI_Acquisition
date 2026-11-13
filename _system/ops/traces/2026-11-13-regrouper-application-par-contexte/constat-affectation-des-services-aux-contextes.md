@@ -45,7 +45,7 @@ Le domaine nomme déjà `test_bench`, `scan` et `detection_devices` des « conte
 ## Ambigus (restent dans `application/services/`)
 
 1. `aefi_acquisition_service` : n'importe que le noyau du domaine, donc sans contexte propre, mais il importe `scan_application_service.ports.i_acquisition_port` (contexte `scan`) et il est appelé par `scan`, `test_bench` (3 services) et `frequency_sweep`. Le ranger dans `shared/` ferait dépendre le noyau partagé d'un contexte ; le ranger dans `scan` ferait importer `scan` par `test_bench` et `frequency_sweep`. Une sortie possible : remonter le port `i_acquisition_port` dans `shared/` (action de l'humain, hors de cette vague).
-2. `continuous_acquisition_service` : dossier sans module ; il tient deux fichiers de résultat de test (`.json`, `.puml`) écrits par les tests de `aefi_acquisition_service` et de `electric_field_probe_service` (deux contextes), et deux sous-dossiers vides. Il suit `aefi_acquisition_service`.
+2. `continuous_acquisition_service` : dossier sans module ; il ne tient aucun fichier suivi par git : seulement deux fichiers de résultat de test (`.json`, `.puml`) écrits par les tests de `aefi_acquisition_service` et de `electric_field_probe_service` (deux contextes), et deux sous-dossiers vides. Il suit `aefi_acquisition_service`.
 
 ## Dossiers vides, non suivis par git
 
@@ -56,3 +56,7 @@ Le domaine nomme déjà `test_bench`, `scan` et `detection_devices` des « conte
 - `scan_export_service` est placé dans `scan`, mais il importe deux modules de `detection_devices/electric_field_probes`. Si l'export de la sonde Narda devient un contexte propre, il se scinde.
 - `motion_control_service` et `raw_increment_motion` vont dans `test_bench` parce que leur seul import de contexte est `physical_bench_limits`. Le mouvement des axes pourrait être un contexte propre (le noyau du domaine tient déjà `shared_kernel/motion`) ; la mesure de la fin de tâche donnera son couplage.
 - `measured_object_registry` et `operator_registry` forment deux contextes d'un service chacun, comme dans le domaine ; un contexte « registres » les réunirait.
+
+## Résultat du déplacement
+
+Fait : `operator_registry` 279aef4, `measured_object_registry` 1002a41, `frequency_sweep` b2c75c0, `detection_devices` fb117b0, `scan` fc724f5, `test_bench` cbea4f4, `shared` b301814. `application/services/` ne garde que `aefi_acquisition_service` et le dossier résiduel `continuous_acquisition_service`.
