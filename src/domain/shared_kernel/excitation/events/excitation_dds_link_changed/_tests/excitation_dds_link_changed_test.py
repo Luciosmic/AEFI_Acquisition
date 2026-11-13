@@ -1,9 +1,4 @@
-import sys
 import unittest
-from pathlib import Path
-
-src_dir = Path(__file__).resolve().parents[6]
-sys.path.insert(0, str(src_dir))
 
 from domain.shared_kernel.excitation.events.excitation_dds_link_changed.excitation_dds_link_changed import (
     ExcitationDdsLinkChanged,
