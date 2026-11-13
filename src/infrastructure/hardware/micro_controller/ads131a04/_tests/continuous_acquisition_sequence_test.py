@@ -13,7 +13,7 @@ from tool.diagram_friendly_test import DiagramFriendlyTest
 from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
 from application.services.aefi_acquisition_service.ports.i_aefi_acquisition_executor import AefiAcquisitionConfig
-from application.services.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
+from application.scan.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
 from domain.shared_kernel.value_objects.acquisition.aefi_voltage_measurement import AefiVoltageMeasurement
 from datetime import datetime
 import random

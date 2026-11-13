@@ -16,7 +16,7 @@ from typing import Optional
 from .ports.i_aefi_acquisition_executor import IAefiAcquisitionExecutor
 from .dtos.aefi_acquisition_dtos import AefiAcquisitionConfig
 from .i_api_aefi_acquisition_service import IApiAefiAcquisitionService
-from application.services.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
+from application.scan.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
 from application.shared.exclusive_control.exclusive_control import ExclusiveControl
 from domain.shared_kernel.events.aefi_acquisition_control_changed.aefi_acquisition_control_changed import (
     AefiAcquisitionControlChanged,

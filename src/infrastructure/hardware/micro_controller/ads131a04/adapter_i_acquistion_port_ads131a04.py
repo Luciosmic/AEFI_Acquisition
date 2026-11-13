@@ -23,7 +23,7 @@ from typing import Callable, Dict, Optional, Any, List
 import logging
 import math
 
-from application.services.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
+from application.scan.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
 from domain.shared_kernel.value_objects.acquisition.aefi_voltage_measurement import AefiVoltageMeasurement
 import json
 import os

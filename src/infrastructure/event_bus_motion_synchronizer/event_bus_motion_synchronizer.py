@@ -35,14 +35,14 @@ import threading
 from collections import OrderedDict
 from typing import Dict, Optional, Tuple
 
-from application.services.scan_application_service.errors.motion_sync_error import (
+from application.scan.scan_application_service.errors.motion_sync_error import (
     EmergencyStop,
     MotionHardwareFailed,
     MotionSyncError,
     MotionStoppedExternally,
     MotionTimeout,
 )
-from application.services.scan_application_service.ports.i_motion_synchronizer import (
+from application.scan.scan_application_service.ports.i_motion_synchronizer import (
     IMotionSynchronizer,
 )
 from domain.shared_kernel.motion.events.emergency_stop_triggered.emergency_stop_triggered import (

@@ -18,7 +18,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 from PySide6.QtWidgets import QApplication
 
 from application.services.motion_control_service.dtos.motion_conversion_status_dto import MotionConversionStatusDTO
-from application.services.scan_application_service.errors.scan_start_error import ScanRefusedBenchNotCalibrated
+from application.scan.scan_application_service.errors.scan_start_error import ScanRefusedBenchNotCalibrated
 from domain.shared_kernel.motion.events.motion_conversion_became_available.motion_conversion_became_available import (
     MotionConversionBecameAvailable,
 )

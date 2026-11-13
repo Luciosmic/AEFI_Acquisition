@@ -18,7 +18,7 @@ import logging
 from typing import Optional
 
 from application.services.motion_control_service.ports.i_motion_port import IMotionPort
-from application.services.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
+from application.scan.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
 from application.services.excitation_configuration_service.ports.i_excitation_port import IExcitationPort
 from application.services.aefi_acquisition_service.ports.i_aefi_acquisition_executor import IAefiAcquisitionExecutor
 from application.detection_devices.electric_field_probe_service.ports.i_electric_field_probe_port import IElectricFieldProbePort

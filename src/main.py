@@ -95,7 +95,7 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
     # Inside the caller's try/except: an ImportError lands in the splash panel.
     startup_view.set_phase("Domaine et services...")
     app.processEvents()
-    from application.services.scan_application_service.scan_application_service import (
+    from application.scan.scan_application_service.scan_application_service import (
         ScanApplicationService,
         make_electric_field_probe_channel,
     )
@@ -120,9 +120,9 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
     from application.services.motion_control_service.motion_conversion_handler import MotionConversionHandler
     from application.detection_devices.electric_field_probe_service.electric_field_probe_service import ElectricFieldProbeService
     from application.detection_devices.inertial_probe_service.inertial_probe_service import InertialProbeService
-    from application.services.scan_export_service.scan_export_service import ScanExportService
-    from application.services.scan_application_service.scan_closure_handler.scan_closure_handler import ScanClosureHandler
-    from application.services.scan_application_service.column_stabilization.column_stabilization import ColumnStabilization
+    from application.scan.scan_export_service.scan_export_service import ScanExportService
+    from application.scan.scan_application_service.scan_closure_handler.scan_closure_handler import ScanClosureHandler
+    from application.scan.scan_application_service.column_stabilization.column_stabilization import ColumnStabilization
     from application.services.system_lifecycle_service.system_lifecycle_service import (
         SystemStartupApplicationService,
         SystemShutdownApplicationService,

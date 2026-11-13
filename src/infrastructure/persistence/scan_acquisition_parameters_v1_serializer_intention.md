@@ -25,7 +25,7 @@ USB. Un scan exporté ne pouvait pas être rejoué à l'identique.
 - Les sections communes (provenance, composants, montage du capteur,
   détection synchrone, liaison série, fichiers) viennent de
   `acquisition_parameters/acquisition_parameters_v1.py`, partagé avec le
-  balayage de débit. Contrat : `application/services/scan_export_service/acquisition_parameters/acquisition_parameters_intention.md`.
+  balayage de débit. Contrat : `application/scan/scan_export_service/acquisition_parameters/acquisition_parameters_intention.md`.
 - Fonction pure, sans I/O. `CsvScanExportPort` l'appelle au démarrage puis
   après la fermeture de tous les fichiers (qu'il liste et hache).
 - Tensions exportées dans le repère du capteur : `applies_to_data: false`.

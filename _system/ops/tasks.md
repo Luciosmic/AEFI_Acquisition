@@ -553,7 +553,7 @@ EF probe) — ne pas re-toggler l'excitation par canal.
 - `application/services/excitation_configuration_service/excitation_configuration_service.py` :
   + `mute()` / `unmute()` (gardent mode/fréquence, togglent juste le niveau à 0 puis
   restaurent le niveau précédent)
-- `application/services/scan_application_service/scan_application_service.py` :
+- `application/scan/scan_application_service/scan_application_service.py` :
   - `AuxiliaryProbeChannel.record_point_result` : signature étendue pour accepter des
     échantillons baseline optionnels (aujourd'hui `Callable[[Any, int, Any, List], None]`,
     l.114)
@@ -568,9 +568,9 @@ EF probe) — ne pas re-toggler l'excitation par canal.
     4. bloc excité existant (l.398-442), inchangé
     5. attacher les baselines aux résultats avant `ScanPointResult(...)` et
        `channel.record_point_result(...)`
-- `application/services/scan_application_service/dtos/scan_dtos.py` : `Scan2DConfigDTO` +
+- `application/scan/scan_application_service/dtos/scan_dtos.py` : `Scan2DConfigDTO` +
   `differential_mode: bool = False`, + `differential_settle_delay_ms: float`
-- `application/services/scan_export_service/scan_export_service.py` (`_flatten_point`) et
+- `application/scan/scan_export_service/scan_export_service.py` (`_flatten_point`) et
   `infrastructure/persistence/csv_scan_export_port.py` (`write_point` + `write_field_point`) :
   + colonnes `baseline_*` (vides si non différentiel)
 - UI : case à cocher "Mesure différentielle" dans le panneau de config scan →

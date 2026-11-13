@@ -1,6 +1,6 @@
 import logging
 from typing import List, Dict, Any
-from application.services.scan_application_service.i_export_port import IExportPort
+from application.scan.scan_application_service.i_export_port import IExportPort
 
 logger = logging.getLogger(__name__)
 

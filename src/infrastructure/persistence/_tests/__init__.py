@@ -3,7 +3,7 @@
 from dataclasses import replace
 from datetime import datetime, timezone
 
-from application.services.scan_export_service.dtos.scan_acquisition_parameters_dtos import (
+from application.scan.scan_export_service.dtos.scan_acquisition_parameters_dtos import (
     FLY_SCAN,
     STEP_SCAN,
     ExcitationStateDTO,

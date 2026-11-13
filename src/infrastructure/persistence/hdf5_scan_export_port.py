@@ -22,7 +22,7 @@ import numpy as np
 if TYPE_CHECKING:
     import h5py  # imported in start(): only an export needs it, not app startup
 
-from application.services.scan_export_service.ports.i_scan_export_port import (
+from application.scan.scan_export_service.ports.i_scan_export_port import (
     IScanExportPort,
 )
 

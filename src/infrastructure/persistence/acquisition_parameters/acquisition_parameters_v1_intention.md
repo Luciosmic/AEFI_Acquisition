@@ -24,7 +24,7 @@ fait, deux formes, et des scripts d'analyse qui doivent connaître les deux.
 ## Design
 
 - Fonctions pures, sans I/O ; entrée = DTO sans format, sortie = `dict` prêt
-  pour JSON. Contrat : `application/services/scan_export_service/acquisition_parameters/acquisition_parameters_intention.md`.
+  pour JSON. Contrat : `application/scan/scan_export_service/acquisition_parameters/acquisition_parameters_intention.md`.
 - Chaque export garde son propre sérialiseur, qui n'ajoute que ce que son
   acquisition a fait (procédure, état de l'excitation, flux, colonnes) — ex.
   `acquisition_throughput/acquisition_parameters_v1_serializer.py`.

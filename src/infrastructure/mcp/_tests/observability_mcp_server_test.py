@@ -2,7 +2,7 @@ import asyncio
 from datetime import datetime, timezone
 from types import SimpleNamespace
 
-from application.services.scan_application_service.dtos.scan_dtos import ScanConfigSnapshotDTO
+from application.scan.scan_application_service.dtos.scan_dtos import ScanConfigSnapshotDTO
 from infrastructure.mcp.observability_mcp_server import (
     build_observability_mcp_server,
     run_observability_mcp_server,

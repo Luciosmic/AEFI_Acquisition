@@ -8,7 +8,7 @@ Abréviations : `ACQ/`, `MCI/`, `FEM/` comme dans `etat-des-contrats.md`.
 **Ce que dit la carte** : le champ vit dans le JSON d'Acquisition (`dgp.potentials_V`), il faut le renommer côté Acquisition.
 
 **Ce que montre le code** :
-- Acquisition n'écrit pas ce champ et ne l'a jamais écrit : `rg potentials_V ACQ/src` → 0, `git log --all -S'potentials_V'` → vide. L'export ne porte aucun potentiel par sphère, seulement `excitation.mode` et deux niveaux en pourcentage (`ACQ/src/application/services/scan_export_service/scan_export_service.py:475-480`).
+- Acquisition n'écrit pas ce champ et ne l'a jamais écrit : `rg potentials_V ACQ/src` → 0, `git log --all -S'potentials_V'` → vide. L'export ne porte aucun potentiel par sphère, seulement `excitation.mode` et deux niveaux en pourcentage (`ACQ/src/application/scan/scan_export_service/scan_export_service.py:475-480`).
 - Le consommateur FEM a déjà fait sa moitié : son modèle interne est `potential_sign: int` (`FEM/scripts/config/aefi_config.py:34`), et il lit encore `dgp["potentials_V"]` à l'entrée (`:67`, conversion `:84`).
 - Dans MCI, `potentials_V` désigne selon l'endroit un signe ou une vraie tension : `±1` par défaut (`MCI/domain/aefi_device/value_objects/excitation_mode/excitation_mode.py:48`, `amplitude=1.0`), mais des volts dans `MCI/execute_pipeline_narda_primary_field_comparison.py:866` (`v * rms`) et `MCI/infrastructure/geometry_plotter/geometry_plotter.py:25,36` (« in volts »). Un renommage global en `potential_sign` y serait faux.
 - Le seul producteur réel du triplet `positions_m / radii_m / potentials_V` est un export de métadonnées de MCI (`MCI/execute_pipeline_narda_primary_field_comparison.py:483-485`), pas Acquisition.
@@ -34,8 +34,8 @@ Abréviations : `ACQ/`, `MCI/`, `FEM/` comme dans `etat-des-contrats.md`.
 ## D3 — `schema_version: "0.1-agile"` : non levée, à moitié préparée
 
 **Ce que montre le code** :
-- Le champ s'appelle `metadata_schema_version` et vaut `"0.3-agile"` pour les scans et séries temporelles (`ACQ/src/application/services/scan_export_service/scan_export_service.py:467`). `0.1-agile` est la version de l'export du 2026-07-29 conservé dans le repo FEM.
-- Un schéma 1.0 est spécifié (`ACQ/src/application/services/scan_export_service/acquisition_parameters/acquisition_parameters_intention.md`) et sérialisé (`ACQ/src/infrastructure/persistence/acquisition_throughput/acquisition_parameters_v1_serializer.py:33-34,81`), mais il n'est branché que sur l'export de caractérisation de débit (`csv_acquisition_throughput_export_port.py:84`). Les scans restent en `0.3-agile`.
+- Le champ s'appelle `metadata_schema_version` et vaut `"0.3-agile"` pour les scans et séries temporelles (`ACQ/src/application/scan/scan_export_service/scan_export_service.py:467`). `0.1-agile` est la version de l'export du 2026-07-29 conservé dans le repo FEM.
+- Un schéma 1.0 est spécifié (`ACQ/src/application/scan/scan_export_service/acquisition_parameters/acquisition_parameters_intention.md`) et sérialisé (`ACQ/src/infrastructure/persistence/acquisition_throughput/acquisition_parameters_v1_serializer.py:33-34,81`), mais il n'est branché que sur l'export de caractérisation de débit (`csv_acquisition_throughput_export_port.py:84`). Les scans restent en `0.3-agile`.
 - Aucune validation nulle part : `rg 'jsonschema|pydantic'` → 0 dans Acquisition, MCI et FEM. Le lecteur FEM ne lit pas la version (`FEM/scripts/config/aefi_config.py:54-72`), il échoue sur `KeyError`.
 - Le changement silencieux redouté a eu lieu deux fois depuis la carte : retrait de `aefi_device_hardware_identity` (2026-09-25), ajout de `source_frame_reconstruction` (2026-10-01). Aucun consommateur n'a cassé, parce qu'aucun ne lit l'export en production.
 

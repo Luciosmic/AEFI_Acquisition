@@ -2,7 +2,7 @@
 
 ## Rationale
 
-Un fond ou une référence instrument ne se réutilise que si un lecteur, sans le logiciel, retrouve son rôle, sa grille, la hauteur de la table et tout ce qui influençait la mesure. Le contrat du schéma est `application/services/scan_export_service/acquisition_parameters/acquisition_parameters_intention.md`.
+Un fond ou une référence instrument ne se réutilise que si un lecteur, sans le logiciel, retrouve son rôle, sa grille, la hauteur de la table et tout ce qui influençait la mesure. Le contrat du schéma est `application/scan/scan_export_service/acquisition_parameters/acquisition_parameters_intention.md`.
 
 ## Responsibility
 

@@ -43,7 +43,7 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 if TYPE_CHECKING:  # imported at call time: ~1 s of import cost kept out of the startup critical path
     from mcp.server.fastmcp import FastMCP
 
-from application.services.scan_application_service.scan_application_service import (
+from application.scan.scan_application_service.scan_application_service import (
     ScanApplicationService,
 )
 

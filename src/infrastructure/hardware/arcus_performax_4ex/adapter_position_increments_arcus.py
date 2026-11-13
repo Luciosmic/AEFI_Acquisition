@@ -1,13 +1,13 @@
 """
 Arcus Position Increments Adapter
 
-See i_position_increments_port.py (application/services/scan_export_service/ports).
+See i_position_increments_port.py (application/scan/scan_export_service/ports).
 """
 
 import logging
 from typing import Optional, Tuple
 
-from application.services.scan_export_service.ports.i_position_increments_port import IPositionIncrementsPort
+from application.scan.scan_export_service.ports.i_position_increments_port import IPositionIncrementsPort
 from infrastructure.hardware.arcus_performax_4ex.adapter_motion_port_arcus_performax4ex import ArcusAdapter
 
 logger = logging.getLogger(__name__)

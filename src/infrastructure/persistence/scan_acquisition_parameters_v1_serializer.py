@@ -11,7 +11,7 @@ a scan / time series did: procedure, excitation as set, probe, positions, column
 from datetime import datetime
 from typing import Any, Dict, Union
 
-from application.services.scan_export_service.dtos.scan_acquisition_parameters_dtos import (
+from application.scan.scan_export_service.dtos.scan_acquisition_parameters_dtos import (
     FLY_SCAN,
     STEP_SCAN,
     FlyScanProcedureDTO,

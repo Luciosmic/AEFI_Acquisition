@@ -26,7 +26,7 @@ from typing import Optional, Tuple
 
 from PySide6.QtCore import QProcess
 
-from application.services.scan_export_service.ports.i_post_processing_port import (
+from application.scan.scan_export_service.ports.i_post_processing_port import (
     IPostProcessingPort,
 )
 from application.services.sensor_calibration_service.sensor_calibration_service import (

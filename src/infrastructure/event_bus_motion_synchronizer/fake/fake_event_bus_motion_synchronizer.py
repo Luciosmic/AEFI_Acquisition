@@ -26,10 +26,10 @@ from __future__ import annotations
 
 from typing import List
 
-from application.services.scan_application_service.errors.motion_sync_error import (
+from application.scan.scan_application_service.errors.motion_sync_error import (
     MotionSyncError,
 )
-from application.services.scan_application_service.ports.i_motion_synchronizer import (
+from application.scan.scan_application_service.ports.i_motion_synchronizer import (
     IMotionSynchronizer,
 )
 from domain.shared_kernel.operation_result import OperationResult

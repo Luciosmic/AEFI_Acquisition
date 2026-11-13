@@ -4,7 +4,7 @@ Acquisition Parameters v1 — the sections of `acquisition-parameters.json`
 deployment, synchronous detection, serial link, positions, produced files.
 
 See acquisition_parameters_v1_intention.md. The schema contract is
-application/services/scan_export_service/acquisition_parameters/acquisition_parameters_intention.md.
+application/scan/scan_export_service/acquisition_parameters/acquisition_parameters_intention.md.
 Each export's serializer (scan, time series, throughput sweep) adds only what
 its acquisition did: procedure, its measurement chain specifics, its columns.
 """

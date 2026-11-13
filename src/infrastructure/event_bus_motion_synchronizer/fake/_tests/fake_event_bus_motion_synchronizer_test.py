@@ -11,7 +11,7 @@ One test per MotionSyncError variant (gate D of pre-pr-quality-check):
 
 import unittest
 
-from application.services.scan_application_service.errors.motion_sync_error import (
+from application.scan.scan_application_service.errors.motion_sync_error import (
     EmergencyStop,
     MotionHardwareFailed,
     MotionStoppedExternally,

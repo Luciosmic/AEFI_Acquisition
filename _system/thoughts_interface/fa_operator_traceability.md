@@ -17,7 +17,7 @@ status: implémentée (2026-10-02)
 - **S_retroing** : `acquisition-parameters.json` 1.0 a un champ
   `provenance.operator.name`, alimenté depuis commit `a38db85` par un champ
   texte libre (deux saisies = deux orthographes possibles) ; schéma de
-  référence : `src/application/services/scan_export_service/acquisition_parameters/acquisition_parameters_intention.md`.
+  référence : `src/application/scan/scan_export_service/acquisition_parameters/acquisition_parameters_intention.md`.
 - **S_doc** : W3C PROV-O — l'opérateur est un `prov:Agent` (`prov:Person`)
   associé à l'activité d'acquisition (`prov:wasAssociatedWith`) ; un agent est
   identifié, pas seulement nommé.

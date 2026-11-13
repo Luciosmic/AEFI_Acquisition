@@ -2,7 +2,7 @@ import logging
 from typing import Dict, List, Optional
 from uuid import UUID
 
-from application.services.scan_application_service.ports.i_unit_of_work import IUnitOfWork
+from application.scan.scan_application_service.ports.i_unit_of_work import IUnitOfWork
 from domain.narda_point.narda_point import NardaPoint
 from domain.narda_point.repositories.i_narda_point_repository import INardaPointRepository
 from domain.narda_point.value_objects.narda_point_id.narda_point_id import NardaPointId

@@ -22,10 +22,10 @@ from typing import Dict, Any, Optional, List, TextIO
 
 from dataclasses import replace
 
-from application.services.scan_export_service.dtos.scan_acquisition_parameters_dtos import (
+from application.scan.scan_export_service.dtos.scan_acquisition_parameters_dtos import (
     ScanAcquisitionParametersDTO,
 )
-from application.services.scan_export_service.ports.i_scan_export_port import (
+from application.scan.scan_export_service.ports.i_scan_export_port import (
     IScanExportPort,
 )
 from infrastructure.events.event_audit_log import serialize_event

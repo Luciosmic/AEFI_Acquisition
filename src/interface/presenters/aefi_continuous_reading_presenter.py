@@ -16,8 +16,8 @@ from application.services.aefi_acquisition_service.ports.i_aefi_acquisition_exec
 from application.detection_devices.aefi_signal_processing_service.aefi_signal_processing_service import (
     AefiSignalProcessingService,
 )
-from application.services.scan_export_service.scan_export_service import ScanExportService
-from application.services.scan_export_service.dtos.scan_export_dtos import ExportConfigDTO
+from application.scan.scan_export_service.scan_export_service import ScanExportService
+from application.scan.scan_export_service.dtos.scan_export_dtos import ExportConfigDTO
 from domain.shared_kernel.events.aefi_voltage_reading_failed.aefi_voltage_reading_failed import (
     AefiVoltageReadingFailed,
 )
