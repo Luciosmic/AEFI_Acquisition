@@ -1,3 +1,10 @@
+---
+type: entite::solidai-ddd
+tldr: "Bind a `ComponentCharacterization` (which carries the kind) to a unique `component_name` and the UTC time it was recorded."
+code: ["[[src/domain/test_bench_configuration/entities/hardware_component_characterization_entry/hardware_component_characterization_entry.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/test_bench_configuration/bench_configuration_intention]]"
+---
 # hardware_component_characterization_entry — Intention
 
 ## Rationale

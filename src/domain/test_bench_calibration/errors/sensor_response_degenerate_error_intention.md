@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Nommer une seule condition métier : les réponses du capteur aux excitations X et Y ne déterminent pas les angles de montage."
+code: ["[[src/domain/test_bench_calibration/errors/sensor_response_degenerate_error.py]]"]
+cause_de_changement: regle-metier
+---
 # sensor_response_degenerate_error — Intention
 
 ## Rationale

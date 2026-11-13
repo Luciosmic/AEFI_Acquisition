@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Nommer une seule condition métier : les mesures au pied à coulisse ne décrivent aucune géométrie physiquement possible des 4 sphères."
+code: ["[[src/domain/test_bench_calibration/errors/source_geometry_inconsistent_error.py]]"]
+cause_de_changement: regle-metier
+---
 # source_geometry_inconsistent_error — Intention
 
 ## Rationale

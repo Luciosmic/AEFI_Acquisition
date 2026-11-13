@@ -1,3 +1,9 @@
+---
+type: service-de-domaine::solidai-ddd
+tldr: "`solve(entry) -> SourceFrameGeometry` : à partir d'une `SourceGeometryCalibrationEntry`, placer les 4 centres dans le repère source (centroïde, x/y le long des côtés du…"
+code: ["[[src/domain/test_bench_calibration/services/source_frame_solver/source_frame_solver.py]]"]
+cause_de_changement: regle-metier
+---
 # source_frame_solver — Intention
 
 ## Rationale

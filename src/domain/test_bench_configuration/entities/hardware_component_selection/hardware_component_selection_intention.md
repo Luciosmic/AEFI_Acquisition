@@ -1,3 +1,10 @@
+---
+type: entite::solidai-ddd
+tldr: "Record one component (kind + name) declared mounted, with the UTC time."
+code: ["[[src/domain/test_bench_configuration/entities/hardware_component_selection/hardware_component_selection.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/test_bench_configuration/bench_configuration_intention]]"
+---
 # hardware_component_selection — Intention
 
 ## Rationale

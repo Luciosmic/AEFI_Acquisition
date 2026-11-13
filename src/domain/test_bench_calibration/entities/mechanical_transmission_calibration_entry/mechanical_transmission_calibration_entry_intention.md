@@ -1,3 +1,10 @@
+---
+type: entite::solidai-ddd
+tldr: "Bundle, with identity and timestamp: the motor mounting and the stepper driver mounting it was set up with (by identity), the driver settings (microsteps, set current an…"
+code: ["[[src/domain/test_bench_calibration/entities/mechanical_transmission_calibration_entry/mechanical_transmission_calibration_entry.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/test_bench_calibration/calibration_intention]]"
+---
 # mechanical_transmission_calibration_entry — Intention
 
 ## Rationale

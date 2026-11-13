@@ -1,3 +1,9 @@
+---
+type: service-de-domaine::solidai-ddd
+tldr: "À partir des réponses du capteur (repère capteur) à l'excitation selon X et selon Y, trouver P tel que `P·r_X` soit au plus près de `+e_x^sources` et `P·r_Y` au plus prè…"
+code: ["[[src/domain/test_bench_calibration/services/sensor_mounting_solver/sensor_mounting_solver.py]]"]
+cause_de_changement: regle-metier
+---
 # sensor_mounting_solver — Intention
 
 ## Rationale

@@ -1,3 +1,10 @@
+---
+type: entite::solidai-ddd
+tldr: "Bundle one calibrated `SensorRotationAngles` with the identities of the sensor mounting (`sensor_mounting_id` = the `HardwareComponentSelection` of the sensor) and of th…"
+code: ["[[src/domain/test_bench_calibration/entities/sensor_calibration_entry/sensor_calibration_entry.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/test_bench_calibration/calibration_intention]]"
+---
 # sensor_calibration_entry — Intention
 
 ## Rationale

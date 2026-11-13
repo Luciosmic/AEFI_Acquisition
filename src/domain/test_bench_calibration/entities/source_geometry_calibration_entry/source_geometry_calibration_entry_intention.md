@@ -1,3 +1,10 @@
+---
+type: entite::solidai-ddd
+tldr: "Bundle 4 sphere-diameter `CaliperMeasurement`s (S1..S4) and 6 extremity-to-extremity distance `CaliperMeasurement`s (same field order as `GeometricConfigurationSignature…"
+code: ["[[src/domain/test_bench_calibration/entities/source_geometry_calibration_entry/source_geometry_calibration_entry.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/test_bench_calibration/calibration_intention]]"
+---
 # source_geometry_calibration_entry — Intention
 
 ## Rationale

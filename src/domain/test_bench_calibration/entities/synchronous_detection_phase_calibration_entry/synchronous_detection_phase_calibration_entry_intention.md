@@ -1,3 +1,10 @@
+---
+type: entite::solidai-ddd
+tldr: "Bundle the hardware setup (`HardwareSignature`) with the calibration point(s) (`SynchronousDetectionPhaseCalibrationPoint`) measured on it, and the timestamp the entry w…"
+code: ["[[src/domain/test_bench_calibration/entities/synchronous_detection_phase_calibration_entry/synchronous_detection_phase_calibration_entry.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/test_bench_calibration/calibration_intention]]"
+---
 # synchronous_detection_phase_calibration_entry — Intention
 
 ## Rationale

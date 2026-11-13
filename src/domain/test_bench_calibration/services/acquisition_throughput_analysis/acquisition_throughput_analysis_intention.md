@@ -1,3 +1,9 @@
+---
+type: service-de-domaine::solidai-ddd
+tldr: "`characterize_point(n_avg, sample_periods_s, channel_samples_v)` : période moyenne, débits, σ par voie (écart-type échantillon, ddof=1), bruit atteignable en 1 s `σ_rms…"
+code: ["[[src/domain/test_bench_calibration/services/acquisition_throughput_analysis/acquisition_throughput_analysis.py]]"]
+cause_de_changement: regle-metier
+---
 # acquisition_throughput_analysis — Intention
 
 ## Rationale

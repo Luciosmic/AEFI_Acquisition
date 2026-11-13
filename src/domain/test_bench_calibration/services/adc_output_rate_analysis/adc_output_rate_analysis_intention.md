@@ -1,3 +1,9 @@
+---
+type: service-de-domaine::solidai-ddd
+tldr: "`measure_output_rate(oversampling_ratio, falling_edge_times_s)` : à partir des instants des fronts descendants de DRDY, les intervalles consécutifs, l'intervalle médian,…"
+code: ["[[src/domain/test_bench_calibration/services/adc_output_rate_analysis/adc_output_rate_analysis.py]]"]
+cause_de_changement: regle-metier
+---
 # adc_output_rate_analysis — Intention
 
 ## Rationale
