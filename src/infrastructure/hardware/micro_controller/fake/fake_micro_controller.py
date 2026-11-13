@@ -12,7 +12,7 @@ import time
 from typing import Optional
 
 
-class _FakeSerialHandle:
+class _SerialHandleStub:
     """Minimal stand-in for the pyserial `Serial` object MCULifecycleAdapter.
     verify_all() reaches into directly (`communicator.ser.is_open`)."""
 
@@ -57,7 +57,7 @@ class FakeMCUSerialCommunicator:
 
     def connect(self, port=None, baudrate=9600) -> bool:
         self._connected = True
-        self.ser = _FakeSerialHandle(is_open=True)
+        self.ser = _SerialHandleStub(is_open=True)
         return True
 
     def disconnect(self) -> None:
