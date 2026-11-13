@@ -19,7 +19,22 @@ __all__ = ["IAefiAcquisitionExecutor", "AefiAcquisitionConfig"]
 
 
 class IAefiAcquisitionExecutor(ABC):
-    """Port for starting / stopping continuous acquisition."""
+    """
+    Port for starting / stopping continuous acquisition.
+
+    Responsibility:
+        - Déclarer `start(config: AefiAcquisitionConfig, acquisition_port: IAcquisitionPort)`.
+        - Déclarer `stop()`.
+        - Déclarer `AefiAcquisitionConfig` comme dataclass co-localisée dans ce fichier.
+
+    Rationale:
+        Abstraire la mécanique d'exécution de l'acquisition continue (threads, timers, callbacks) derrière un port pour que `AefiAcquisitionService` reste stateless et testable.
+
+    Design:
+        - **Port outbound** dans `aefi_acquisition_service/`.
+        - `AefiAcquisitionConfig` est défini dans ce même fichier pour éviter une prolifération de modules DTOs pour un type simple.
+        - Implémenté par `AefiAcquisitionExecutor` dans `infrastructure/execution/`.
+    """
 
     @abstractmethod
     def start(self, config: AefiAcquisitionConfig, acquisition_port: IAcquisitionPort) -> None:

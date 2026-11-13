@@ -18,6 +18,20 @@ from typing import Any, Dict, Optional
 class IHardwareInitializationPort(ABC):
     """
     Port interface for hardware initialization and teardown.
+
+    Responsibility:
+        - Déclarer `initialize_all() → Dict[str, Any]` : initialise tous les périphériques, retourne les ressources créées.
+        - Déclarer `verify_all() → bool` : vérifie optionnellement la connectivité de tous les périphériques.
+        - Déclarer `close_all()` : ferme toutes les connexions de façon gracieuse.
+
+    Rationale:
+        Abstraire la séquence d'initialisation et de fermeture de tous les périphériques hardware (MCU, Arcus, AD9106, ADS131A04) derrière un port unique. Permet à `SystemStartupApplicationService` d'orchestrer le démarrage sans connaître les drivers concrets.
+
+    Design:
+        - **Port outbound** dans `system_lifecycle_service/`.
+        - Implémenté typiquement par un `CompositeHardwareInitializationPort` qui agrège les initialiseurs individuels (MCU, Arcus).
+
+        - `verify_all()` ne doit pas dépendre d'une calibration : l'adaptateur Arcus vérifie le contrôleur en impulsions brutes pour que l'absence de conversion mm/impulsion ne ferme pas l'application.
     """
 
     @abstractmethod

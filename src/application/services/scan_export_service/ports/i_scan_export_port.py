@@ -15,7 +15,20 @@ from application.services.scan_export_service.dtos.scan_acquisition_parameters_d
 from domain.shared_kernel.events.domain_event.domain_event import DomainEvent
 
 class IScanExportPort(ABC):
-    """Interface for data export."""
+    """
+    Interface for data export.
+
+    Responsibility:
+        - Déclarer l'interface d'export des résultats de scan (méthode `export` ou équivalent).
+        - Servir de contrat entre `ScanExportService` et les adaptateurs de persistence.
+
+    Rationale:
+        Abstraire le format de persistence des résultats de scan (HDF5, CSV, JSON…) derrière un port. Le service d'export peut ainsi changer de format sans modifier la logique applicative.
+
+    Design:
+        - **Port outbound** placé dans `scan_application_service/` aux côtés du service consommateur.
+        - Implémenté par `HDF5ScanExportPort` et `CsvScanExportPort` dans `infrastructure/persistence/`.
+    """
 
     @abstractmethod
     def configure(
