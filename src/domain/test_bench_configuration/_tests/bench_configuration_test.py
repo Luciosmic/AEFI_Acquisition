@@ -12,8 +12,8 @@ from domain.test_bench_configuration.value_objects.hardware_component_kind.hardw
 from domain.test_bench_configuration.value_objects.hardware_signature.hardware_signature import HardwareSignature
 
 
-def make_hardware_signature(**overrides: str) -> HardwareSignature:
-    defaults = dict(
+def make_hardware_signature(**overrides: Any) -> HardwareSignature:
+    defaults: dict[str, Any] = dict(
         excitation_electronics_board_name="v1.2",
         conditioning_electronics_board_name="v2.0",
         sensor_name="v3.1_SN-001",
