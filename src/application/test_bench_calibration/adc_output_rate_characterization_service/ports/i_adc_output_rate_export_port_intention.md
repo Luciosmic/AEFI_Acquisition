@@ -1,3 +1,9 @@
+---
+type: port::solidai-hexagonal
+tldr: "Port sortant `i_adc_output_rate_export_port` : `export(result, captures)` : écrire un résumé par OSR, tous les intervalles entre fronts, et les formes d'onde brutes."
+sens: sortant
+code: "[[src/application/test_bench_calibration/adc_output_rate_characterization_service/ports/i_adc_output_rate_export_port.py]]"
+---
 # i_adc_output_rate_export_port — Intention
 
 ## Rationale

@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "DTO `acquisition_throughput_dtos` : `AcquisitionThroughputRequestDTO` : grille de `n_avg` et échantillons par point (défauts : 1, 2, 4, 8, 16, 32, 64, 96, 127."
+code: ["[[src/application/test_bench_calibration/acquisition_throughput_characterization_service/dtos/acquisition_throughput_dtos.py]]"]
+cause_de_changement: orchestration
+---
 # acquisition_throughput_dtos — Intention
 
 ## Rationale

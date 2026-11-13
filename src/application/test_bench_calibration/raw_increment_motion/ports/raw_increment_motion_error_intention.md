@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Erreur `raw_increment_motion_error` : Seule erreur levée par `IRawIncrementMotionPort` : contrôleur ou liaison en échec, ou attente d'arrêt dépassée."
+code: ["[[src/application/test_bench_calibration/raw_increment_motion/ports/raw_increment_motion_error.py]]"]
+cause_de_changement: orchestration
+---
 # raw_increment_motion_error — Intention
 
 ## Rationale

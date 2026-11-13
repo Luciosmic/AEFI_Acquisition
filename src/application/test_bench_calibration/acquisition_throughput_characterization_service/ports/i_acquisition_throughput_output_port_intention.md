@@ -1,3 +1,9 @@
+---
+type: port::solidai-hexagonal
+tldr: "Port sortant `i_acquisition_throughput_output_port` : `present_throughput_characterization_step(message)` : étape en cours."
+sens: sortant
+code: "[[src/application/test_bench_calibration/acquisition_throughput_characterization_service/ports/i_acquisition_throughput_output_port.py]]"
+---
 # i_acquisition_throughput_output_port — Intention
 
 ## Rationale

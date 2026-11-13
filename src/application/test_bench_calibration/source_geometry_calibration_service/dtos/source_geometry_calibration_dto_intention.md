@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "DTO `source_geometry_calibration_dto` : Carry the 10 calibrated values (4 sphere diameters + 6 extremity-to-extremity."
+code: ["[[src/application/test_bench_calibration/source_geometry_calibration_service/dtos/source_geometry_calibration_dto.py]]"]
+cause_de_changement: orchestration
+---
 # source_geometry_calibration_dto — Intention
 
 ## Rationale

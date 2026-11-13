@@ -1,3 +1,9 @@
+---
+type: port::solidai-hexagonal
+tldr: "Port sortant `i_adc_output_rate_output_port` : `present_output_rate_step(message)`, `present_output_rate_point_measured(point)`, `present_output_rate_characterization_succeeded(result)`, `present_output_rate_characterization_failed(reason)`."
+sens: sortant
+code: "[[src/application/test_bench_calibration/adc_output_rate_characterization_service/ports/i_adc_output_rate_output_port.py]]"
+---
 # i_adc_output_rate_output_port — Intention
 
 ## Rationale

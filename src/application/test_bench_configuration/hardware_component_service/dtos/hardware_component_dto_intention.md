@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "DTO `hardware_component_dto` : `QuantitySpecDTO` / `HardwareComponentKindDTO`: what to draw for a kind."
+code: ["[[src/application/test_bench_configuration/hardware_component_service/dtos/hardware_component_dto.py]]"]
+cause_de_changement: orchestration
+---
 # hardware_component_dto — Intention
 
 ## Rationale

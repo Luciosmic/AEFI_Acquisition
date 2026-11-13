@@ -1,3 +1,9 @@
+---
+type: port::solidai-hexagonal
+tldr: "Port sortant `i_adc_oversampling_port` : `get_oversampling_ratio()` / `set_oversampling_ratio(osr)` : lire / écrire l'OSR dans le registre, sans persistance."
+sens: sortant
+code: "[[src/application/test_bench_calibration/adc_output_rate_characterization_service/ports/i_adc_oversampling_port.py]]"
+---
 # i_adc_oversampling_port — Intention
 
 ## Rationale

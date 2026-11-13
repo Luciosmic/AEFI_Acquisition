@@ -1,3 +1,12 @@
+---
+type: service-applicatif::solidai-hexagonal
+tldr: "Service applicatif `sensor_calibration_service` : At construction, adopt the sensor identity of the most recent registry entry (all signatures/geometries) on top of the injected board versions."
+code: ["[[src/application/test_bench_calibration/sensor_calibration_service/sensor_calibration_service.py]]"]
+cause_de_changement: orchestration
+ports:
+  - "[[src/application/test_bench_calibration/sensor_calibration_service/i_api_sensor_calibration_service_intention]]"
+  - "[[src/application/test_bench_calibration/sensor_calibration_service/ports/i_sensor_calibration_output_port_intention]]"
+---
 # sensor_calibration_service — Intention
 
 > 2026-09-25: the sensor became a hardware component (identity + transduction

@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Module `motion_conversion_handler` : `apply_current_transmission()` : appliquer la distance par impulsion de la transmission courante au port de mouvement (première fois ou changement), ou enregistrer ce qui manque."
+code: ["[[src/application/test_bench_calibration/motion_control_service/motion_conversion_handler.py]]"]
+cause_de_changement: orchestration
+---
 # motion_conversion_handler — Intention
 
 ## Rationale

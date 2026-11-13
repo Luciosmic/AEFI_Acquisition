@@ -1,3 +1,9 @@
+---
+type: port::solidai-hexagonal
+tldr: "Port entrant `i_api_source_geometry_calibration_service` : `record_calibration(sphere_diameters_m, pairwise_distances_ext_m, resolution_m, k)`: the command exposed by the \"Enregistrer calibration\" button — also the same entry point the composition root uses once to seed the registry from the."
+sens: entrant
+code: "[[src/application/test_bench_calibration/source_geometry_calibration_service/i_api_source_geometry_calibration_service.py]]"
+---
 # i_api_source_geometry_calibration_service — Intention
 
 ## Rationale

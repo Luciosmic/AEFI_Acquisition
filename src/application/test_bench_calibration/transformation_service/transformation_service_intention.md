@@ -1,3 +1,9 @@
+---
+type: service-applicatif::solidai-hexagonal
+tldr: "Service applicatif `transformation_service` : Suivre la rotation active : s'abonner à `activesensorrotationchanged` (publié par `SensorCalibrationService`) et mettre à jour les angles appliqués."
+code: ["[[src/application/test_bench_calibration/transformation_service/transformation_service.py]]"]
+cause_de_changement: orchestration
+---
 # transformation_service — Intention
 
 ## Rationale

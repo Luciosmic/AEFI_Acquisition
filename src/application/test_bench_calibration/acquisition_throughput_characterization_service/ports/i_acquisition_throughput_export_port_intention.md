@@ -1,3 +1,9 @@
+---
+type: port::solidai-hexagonal
+tldr: "Port sortant `i_acquisition_throughput_export_port` : `open_export(oversampling_ratio, excitation_label)` : créer l'emplacement de l'export au démarrage du balayage."
+sens: sortant
+code: "[[src/application/test_bench_calibration/acquisition_throughput_characterization_service/ports/i_acquisition_throughput_export_port.py]]"
+---
 # i_acquisition_throughput_export_port — Intention
 
 ## Rationale

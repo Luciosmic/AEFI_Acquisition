@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "DTO `adc_output_rate_dtos` : `AdcOutputRateRequestDTO` : voie de l'oscilloscope branchée sur DRDY, rapport de sonde, OSR à mesurer (vide : l'OSR courant seulement, rien n'est modifié), nombre de périodes par capture (50)."
+code: ["[[src/application/test_bench_calibration/adc_output_rate_characterization_service/dtos/adc_output_rate_dtos.py]]"]
+cause_de_changement: orchestration
+---
 # adc_output_rate_dtos — Intention
 
 ## Rationale

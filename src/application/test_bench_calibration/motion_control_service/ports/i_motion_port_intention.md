@@ -1,3 +1,9 @@
+---
+type: port::solidai-hexagonal
+tldr: "Port sortant `i_motion_port` : Déclarer `move_to(position: Position2D) → str` (retourne un motion_id pour la synchronisation event-based)."
+sens: sortant
+code: "[[src/application/test_bench_calibration/motion_control_service/ports/i_motion_port.py]]"
+---
 # i_motion_port — Intention
 
 ## Rationale

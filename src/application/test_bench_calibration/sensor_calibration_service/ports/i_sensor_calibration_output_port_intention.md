@@ -1,3 +1,9 @@
+---
+type: port::solidai-hexagonal
+tldr: "Port sortant `i_sensor_calibration_output_port` : `present_automatic_calibration_step(message)` : étape en cours (mesure baseline, excitation X, excitation Y)."
+sens: sortant
+code: "[[src/application/test_bench_calibration/sensor_calibration_service/ports/i_sensor_calibration_output_port.py]]"
+---
 # i_sensor_calibration_output_port — Intention
 
 ## Rationale

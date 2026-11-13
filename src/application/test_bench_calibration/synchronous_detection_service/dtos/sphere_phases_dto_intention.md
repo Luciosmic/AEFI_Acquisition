@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "DTO `sphere_phases_dto` : Porter les 4 phases dérivées des sphères S1-S4 (en degrés), le Delta_Phi corrigé courant (`None` si aucune donnée de calibration disponible pour la fréquence/signature matérielle courante), et l'état lecture-seule de l'enforcement."
+code: ["[[src/application/test_bench_calibration/synchronous_detection_service/dtos/sphere_phases_dto.py]]"]
+cause_de_changement: orchestration
+---
 # sphere_phases_dto — Intention
 
 ## Rationale

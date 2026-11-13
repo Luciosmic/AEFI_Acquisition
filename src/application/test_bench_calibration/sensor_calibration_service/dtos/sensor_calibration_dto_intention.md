@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "DTO `sensor_calibration_dto` : `SensorCalibrationDTO`: sensor identity (version, serial number), the 3 calibrated angles (degrees) and the timestamp of the latest recorded entry that matches the current hardware signature and geometric configuration."
+code: ["[[src/application/test_bench_calibration/sensor_calibration_service/dtos/sensor_calibration_dto.py]]"]
+cause_de_changement: orchestration
+---
 # sensor_calibration_dto — Intention
 
 ## Rationale

@@ -1,3 +1,9 @@
+---
+type: port::solidai-hexagonal
+tldr: "Port sortant `i_raw_increment_motion_port` : Piloter un axe en incréments moteur bruts : homing, aller à un incrément, courir jusqu'à la butée + (fin de course physique), vitesse en incréments/s, lire la position, arrêter, attendre l'arrêt."
+sens: sortant
+code: "[[src/application/test_bench_calibration/raw_increment_motion/ports/i_raw_increment_motion_port.py]]"
+---
 # i_raw_increment_motion_port — Intention
 
 ## Rationale

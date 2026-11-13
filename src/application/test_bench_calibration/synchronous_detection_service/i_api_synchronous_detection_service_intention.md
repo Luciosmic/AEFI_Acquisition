@@ -1,3 +1,9 @@
+---
+type: port::solidai-hexagonal
+tldr: "Port entrant `i_api_synchronous_detection_service` : `get_sphere_phases()` : query — phases dérivées S1-S4 + Delta_Phi corrigé + état quadrature, pour affichage lecture seule."
+sens: entrant
+code: "[[src/application/test_bench_calibration/synchronous_detection_service/i_api_synchronous_detection_service.py]]"
+---
 # i_api_synchronous_detection_service — Intention
 
 ## Rationale

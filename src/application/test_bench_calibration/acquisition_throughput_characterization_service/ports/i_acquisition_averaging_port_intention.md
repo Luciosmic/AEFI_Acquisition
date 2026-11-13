@@ -1,3 +1,9 @@
+---
+type: port::solidai-hexagonal
+tldr: "Port sortant `i_acquisition_averaging_port` : `get_n_avg()` / `set_n_avg(n)` : lire / appliquer le moyennage MCU."
+sens: sortant
+code: "[[src/application/test_bench_calibration/acquisition_throughput_characterization_service/ports/i_acquisition_averaging_port.py]]"
+---
 # i_acquisition_averaging_port — Intention
 
 ## Rationale

@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "DTO `mechanical_transmission_gap_dto` : Porter, en primitives, le moteur concerné, la grandeur manquante et l'endroit où la saisir."
+code: ["[[src/application/test_bench_calibration/mechanical_transmission_calibration_service/dtos/mechanical_transmission_gap_dto.py]]"]
+cause_de_changement: orchestration
+---
 # mechanical_transmission_gap_dto — Intention
 
 ## Rationale

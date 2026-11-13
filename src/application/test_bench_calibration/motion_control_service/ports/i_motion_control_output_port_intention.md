@@ -1,3 +1,9 @@
+---
+type: port::solidai-hexagonal
+tldr: "Port sortant `i_motion_control_output_port` : Déclarer les méthodes de présentation liées à la motion : mise à jour de position, retour d'erreur de commande motion."
+sens: sortant
+code: "[[src/application/test_bench_calibration/motion_control_service/ports/i_motion_control_output_port.py]]"
+---
 # i_motion_control_output_port — Intention
 
 ## Rationale

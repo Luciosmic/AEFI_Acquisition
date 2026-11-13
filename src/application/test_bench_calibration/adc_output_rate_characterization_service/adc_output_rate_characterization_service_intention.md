@@ -1,3 +1,14 @@
+---
+type: service-applicatif::solidai-hexagonal
+tldr: "Service applicatif `adc_output_rate_characterization_service` : `start_characterization(request)`."
+code: ["[[src/application/test_bench_calibration/adc_output_rate_characterization_service/adc_output_rate_characterization_service.py]]"]
+cause_de_changement: orchestration
+ports:
+  - "[[src/application/test_bench_calibration/adc_output_rate_characterization_service/ports/i_adc_output_rate_export_port_intention]]"
+  - "[[src/application/test_bench_calibration/adc_output_rate_characterization_service/ports/i_adc_output_rate_output_port_intention]]"
+  - "[[src/application/test_bench_calibration/adc_output_rate_characterization_service/ports/i_adc_oversampling_port_intention]]"
+  - "[[src/application/test_bench_calibration/adc_output_rate_characterization_service/ports/i_drdy_capture_port_intention]]"
+---
 # adc_output_rate_characterization_service — Intention
 
 ## Rationale

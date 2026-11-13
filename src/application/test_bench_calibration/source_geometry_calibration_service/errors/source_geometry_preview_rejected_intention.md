@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Erreur `source_geometry_preview_rejected` : Résultat d'échec unique de `preview_source_frame`, porteur de la raison lisible fournie par le domain."
+code: ["[[src/application/test_bench_calibration/source_geometry_calibration_service/errors/source_geometry_preview_rejected.py]]"]
+cause_de_changement: orchestration
+---
 # source_geometry_preview_rejected — Intention
 
 ## Rationale

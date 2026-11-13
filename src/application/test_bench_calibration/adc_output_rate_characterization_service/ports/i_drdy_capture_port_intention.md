@@ -1,3 +1,9 @@
+---
+type: port::solidai-hexagonal
+tldr: "Port sortant `i_drdy_capture_port` : `capture_falling_edges(request)` : capturer la voie demandée sur au moins `window_s`, rendre les instants des fronts descendants, le pas d'échantillonnage, l'identité de l'instrument et la forme d'onde brute."
+sens: sortant
+code: "[[src/application/test_bench_calibration/adc_output_rate_characterization_service/ports/i_drdy_capture_port.py]]"
+---
 # i_drdy_capture_port — Intention
 
 ## Rationale

@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Erreur `motion_control_error` : `MotionConversionUnavailable` : commande refusée côté service parce que la conversion mm/impulsion manque (moteur, grandeur manquante, où la saisir)."
+code: ["[[src/application/test_bench_calibration/motion_control_service/errors/motion_control_error.py]]"]
+cause_de_changement: orchestration
+---
 # motion_control_error — Intention
 
 ## Rationale

@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "DTO `acquisition_parameters_dtos` : Les conditions communes à toute acquisition (composants, réglages ADC et AD9106, détection synchrone, montage du capteur, liaison série, backends, position du banc, provenance du code, fichiers produits) sont dans `application/shared/acquisition_parameters/acquisition_conditions_dtos.py`."
+code: ["[[src/application/test_bench_calibration/acquisition_throughput_characterization_service/dtos/acquisition_parameters_dtos.py]]"]
+cause_de_changement: orchestration
+---
 # acquisition_parameters_dtos — Intention
 
 ## Rationale

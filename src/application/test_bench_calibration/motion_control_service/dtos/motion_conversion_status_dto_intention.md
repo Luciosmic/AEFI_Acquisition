@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "DTO `motion_conversion_status_dto` : Dire si la conversion mm/impulsion est appliquée et, sinon, quel moteur, quelle grandeur manque et où la saisir."
+code: ["[[src/application/test_bench_calibration/motion_control_service/dtos/motion_conversion_status_dto.py]]"]
+cause_de_changement: orchestration
+---
 # motion_conversion_status_dto — Intention
 
 ## Rationale

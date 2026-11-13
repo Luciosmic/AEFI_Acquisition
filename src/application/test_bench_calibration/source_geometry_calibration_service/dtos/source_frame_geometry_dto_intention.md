@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "DTO `source_frame_geometry_dto` : Transporter vers l'interface les positions S1..S4 dans le repère source, les rayons, le carré ajusté, les écarts au carré (par sphère + RMS) et les résidus par distance."
+code: ["[[src/application/test_bench_calibration/source_geometry_calibration_service/dtos/source_frame_geometry_dto.py]]"]
+cause_de_changement: orchestration
+---
 # source_frame_geometry_dto — Intention
 
 ## Rationale

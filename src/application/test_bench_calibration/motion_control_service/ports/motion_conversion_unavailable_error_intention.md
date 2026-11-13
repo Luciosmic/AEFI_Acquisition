@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Erreur `motion_conversion_unavailable_error` : Nommer le refus d'un port de mouvement dont la distance par impulsion n'a pas été appliquée (`set_microns_per_pulse` jamais appelé)."
+code: ["[[src/application/test_bench_calibration/motion_control_service/ports/motion_conversion_unavailable_error.py]]"]
+cause_de_changement: orchestration
+---
 # motion_conversion_unavailable_error — Intention
 
 ## Rationale

@@ -1,3 +1,11 @@
+---
+type: service-applicatif::solidai-hexagonal
+tldr: "Service applicatif `source_geometry_calibration_service` : `record_calibration(sphere_diameters_m, pairwise_distances_ext_m, resolution_m, k)`: build 10 `CaliperMeasurement.from_resolution(...)` (GUM uncertainty computed automatically), call `Calibration.record_source_geometry_calibration_entry(...)`."
+code: ["[[src/application/test_bench_calibration/source_geometry_calibration_service/source_geometry_calibration_service.py]]"]
+cause_de_changement: orchestration
+ports:
+  - "[[src/application/test_bench_calibration/source_geometry_calibration_service/i_api_source_geometry_calibration_service_intention]]"
+---
 # source_geometry_calibration_service — Intention
 
 ## Rationale

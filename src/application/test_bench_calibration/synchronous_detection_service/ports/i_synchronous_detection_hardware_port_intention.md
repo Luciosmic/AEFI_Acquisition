@@ -1,3 +1,9 @@
+---
+type: port::solidai-hexagonal
+tldr: "Port sortant `i_synchronous_detection_hardware_port` : `get_all_channel_phase_registers()` : snapshot mémoire logicielle des 4 registres de phase (ch1-4) — pas de lecture matérielle réelle, limitation assumée et documentée."
+sens: sortant
+code: "[[src/application/test_bench_calibration/synchronous_detection_service/ports/i_synchronous_detection_hardware_port.py]]"
+---
 # i_synchronous_detection_hardware_port — Intention
 
 ## Rationale
