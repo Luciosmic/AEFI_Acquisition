@@ -1,0 +1,5 @@
+atomes src/domain/frequency_sweep/value_objects/table_height,src/domain/measured_object_registry,src/domain/measured_object_registry/entities/measured_object,src/domain/measured_object_registry/events/measured_object_registered,src/domain/narda_point
+pytest VERT tests=24 verts=24 rouges=0 nouveaux-rouges=0 anciens-rouges=0 verts-sans-code=0
+verify DETTE nouvelles=- anciennes=solidai-intention-non-typee | src/domain/frequency_sweep/value_objects/table_height/table_height_intention.md:None solidai-intention-non-typee src/domain/measured_object_registry/entities/measured_object/measured_object_intention.md:None solidai-intention-non-typee src/domain/measured_object_registry/events/measured_object_registered/measured_object_registered_intention.md:None solidai-intention-non-typee src/domain/measured_object_registry/measured_object_registry_intention.md:None solidai-intention-non-typee src/domain/narda_point/narda_point_intention.md:None solidai-intention-non-typee
+graphe OK nouveaux=- anciens=-
+verdict VERT-AVEC-DETTE cause=verify:solidai-intention-non-typee

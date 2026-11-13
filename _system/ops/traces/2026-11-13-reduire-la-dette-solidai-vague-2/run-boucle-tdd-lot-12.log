@@ -1,0 +1,5 @@
+atomes src/domain/narda_point/events/narda_point_acquired,src/domain/operator_registry,src/domain/operator_registry/entities/operator,src/domain/operator_registry/events/operator_registered,src/domain/scan
+pytest VERT tests=23 verts=23 rouges=0 nouveaux-rouges=0 anciens-rouges=0 verts-sans-code=0
+verify DETTE nouvelles=- anciennes=solidai-intention-non-typee | src/domain/narda_point/events/narda_point_acquired/narda_point_acquired_intention.md:None solidai-intention-non-typee src/domain/operator_registry/entities/operator/operator_intention.md:None solidai-intention-non-typee src/domain/operator_registry/events/operator_registered/operator_registered_intention.md:None solidai-intention-non-typee src/domain/operator_registry/operator_registry_intention.md:None solidai-intention-non-typee src/domain/scan/scan_intention.md:None solidai-intention-non-typee
+graphe OK nouveaux=- anciens=-
+verdict VERT-AVEC-DETTE cause=verify:solidai-intention-non-typee

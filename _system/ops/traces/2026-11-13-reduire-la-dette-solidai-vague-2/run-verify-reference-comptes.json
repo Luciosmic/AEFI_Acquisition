@@ -1,0 +1,29 @@
+{
+ "errors": 1266,
+ "warnings": 63,
+ "counts_by_code": {
+  "solidai-adaptateur-construit-hors-composition": 51,
+  "solidai-adaptateur-mal-place": 66,
+  "solidai-chemin-hors-snake-case": 60,
+  "solidai-co-changement-entre-couches": 63,
+  "solidai-domaine-appelle-une-entree-sortie": 1,
+  "solidai-domaine-importe-hors-stdlib": 15,
+  "solidai-dto-non-gele": 107,
+  "solidai-evenement-mal-place": 2,
+  "solidai-fake-mal-place": 24,
+  "solidai-fake-sans-test-de-contrat": 6,
+  "solidai-infrastructure-importe-hors-des-ports": 54,
+  "solidai-intention-mal-nommee": 9,
+  "solidai-intention-non-typee": 415,
+  "solidai-mock-dans-un-test-applicatif": 7,
+  "solidai-port-mal-nomme": 3,
+  "solidai-port-sans-docstring": 42,
+  "solidai-port-sortant-mal-place": 37,
+  "solidai-port-sortant-sans-fake": 46,
+  "solidai-service-appelle-un-service": 36,
+  "solidai-service-incomplet": 4,
+  "solidai-test-applicatif-importe-un-reel": 178,
+  "solidai-test-hors-de-tests": 6,
+  "solidai-trio-incomplet": 97
+ }
+}
