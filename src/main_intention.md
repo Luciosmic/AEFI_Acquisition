@@ -1,7 +1,7 @@
 ---
 type: point-de-composition::solidai-hexagonal
 tldr: "Construit les adaptateurs réels, services et presenters de l'application et les relie, pour le poste d'acquisition réel (main.py) ; le mode simulation vit dans main_mock.py."
-code: ["[[src/main.py]]"]
+code: ["[[src/interface/main.py]]"]
 cause_de_changement: outil
 cable:
   - "[[src/infrastructure/git_software_provenance_reader/git_software_provenance_reader_intention]]"
