@@ -1,3 +1,10 @@
+---
+type: value-object::solidai-ddd
+tldr: "Y : balayage colonnes Y d'abord (outer=X, inner=Y) — comportement par défaut préféré."
+code: ["[[src/domain/step_scan/value_objects/scan_axis/scan_axis.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/step_scan/step_scan_intention]]"
+---
 # scan_axis — Intention
 
 ## Rationale

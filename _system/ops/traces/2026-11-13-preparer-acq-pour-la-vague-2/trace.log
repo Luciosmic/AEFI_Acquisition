@@ -1,0 +1,12 @@
+00:30 | depart | quoi=preparer ACQ pour la vague 2 | session=f6f1718f-0350-4d84-a878-2faf7a374b52
+00:30 | decision | regle_10_min=levee par le coordinateur pour 141822e et 7feb258 (cloture vague 1, sa session) | registre=aucune entree en cours sur ACQ
+00:31 | jalon | verify_reference=1300 erreurs 63 avertissements | log=run-verify-avant-saignore.json
+00:32 | jalon | saignore=archives/ pose par le gate (commit 6ac08e5) | verify=1274 erreurs 63 avertissements | seul_code_change=test-hors-de-tests 32->6 | disparus=26 tous sous archives/ | nouveaux=0 | fichiers_ignores=112
+00:33 | jalon | import_src=1 seule ligne (src/_tests/scan_visualization_profiles_test.py:9, renomme en vague 1) | garde_dry_run=pre-commit non strict + [tool.mypy] a poser, hook PostToolUse deja la, mypy present
+00:37 | jalon | pytest_reference=1707 passes 3 sautes | log=run-pytest-reference.log
+00:41 | jalon | import corrige et commite (7a50882) | pytest=1707 passes 3 sautes, identique | log=run-pytest-apres-import.log
+00:42 | jalon | garde posee par installer-garde-repo-dev.sh --typage non-strict | commit=bd82a84 ([tool.mypy]) | pre-commit=.git/hooks/pre-commit non versionne | verifier=7 OK sur 7, typage compris
+00:43 | jalon | mypy src=3298 erreurs dans 493 fichiers (901 verifies), dont 2864 no-untyped-def | log=run-mypy-src.log | constat=comptes-verify-et-mypy-avant-et-apres.md
+00:44 | jalon | au_diagnostics=2 erreurs yaml-parse-error anterieures (operator_registry.md, fa_operator_traceability.md) | 1 avertissement attendu (genere_par vers la note de tache, a generer par la session)
+00:44 | fin | resultat=critere atteint | commits=6ac08e5 (.saignore, par le gate), 7a50882 (import), bd82a84 (garde) | verify=1300->1274 erreurs | mypy=3298 erreurs
+00:38 | fin | resultat=Critère atteint : archives/ exclu (verify 1300 -> 1274), import corrigé (tests identiques), garde de typage posée (verifier 7 OK), mypy 3298 erreurs., entree=Préparer ACQ pour la vague 2, session=f6f1718f

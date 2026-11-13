@@ -1,3 +1,10 @@
+---
+type: adaptateur::solidai-hexagonal
+tldr: "Adaptateur `hdf5_scan_export_port` : Exporter les points de résultat scan (position + mesure) dans un fichier HDF5 avec les métadonnées de configuration (zone, pattern, datetime)."
+code: ["[[src/infrastructure/persistence/hdf5_scan_export_port.py]]"]
+cause_de_changement: outil
+implements: ["[[src/application/scan/scan_export_service/ports/i_scan_export_port_intention]]"]
+---
 # hdf5_scan_export_port — Intention
 
 ## Rationale

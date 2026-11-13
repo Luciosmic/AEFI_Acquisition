@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Nommer la promesse refusée : un scan n'accepte que les sources qu'il a déclarées à sa création."
+code: ["[[src/domain/scan/errors/scan_source_not_declared_error.py]]"]
+cause_de_changement: regle-metier
+---
 # scan_source_not_declared_error — Intention
 
 ## Rationale

@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Module `lsm9ds1_conversion` : Constantes de pleine échelle : accéléromètre ±2 g (déduit : le VI annonce 4 g mais |a| au repos donnait 2,07 g), gyroscope 490 °/s (repris d'un VI, **non vérifié**), magnétomètre 400 µT (diviseur 2^15 ou 2^16 **non tranché** : avec."
+code: ["[[src/infrastructure/hardware/lsm9ds1/lsm9ds1_conversion.py]]"]
+cause_de_changement: outil
+---
 # lsm9ds1_conversion — Intention
 
 ## Rationale

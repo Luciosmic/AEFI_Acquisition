@@ -60,4 +60,4 @@ Paires torsadées blindées (A, B, Z). Datasheet : relier le GND encodeur au ch�
 - Le montage/démontage du capot est limité à ~3 cycles (fatigue de la base).
 - Polarité de sens réglable côté PMX : commande `PO[axe]`, bit 4 « Encoder Direction » (§6.21).
 - Lecture côté logiciel : commandes ASCII `PE` (4 axes) / `E[axe]` via `self._stage.query(...)`
-  déjà utilisé dans `driver_arcus_performax4EX.py` ; pylablib expose aussi `get_encoder()`.
+  déjà utilisé dans `driver_arcus_performax4ex.py` ; pylablib expose aussi `get_encoder()`.

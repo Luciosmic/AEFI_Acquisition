@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Module `hardware_signature_json` : `hardware_signature_to_json`: write the board references under `excitation_electronics_board_name` / `conditioning_electronics_board_name`."
+code: ["[[src/infrastructure/persistence/calibration/hardware_signature_json.py]]"]
+cause_de_changement: outil
+---
 # hardware_signature_json — Intention
 
 ## Rationale

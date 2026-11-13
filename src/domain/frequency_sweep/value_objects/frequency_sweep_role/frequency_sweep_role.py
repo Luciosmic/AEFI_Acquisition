@@ -11,3 +11,9 @@ class FrequencySweepRole(Enum):
     INSTRUMENT_REFERENCE = "instrument_reference"
     # Table at the working height, no object: what the bench adds at that height.
     BACKGROUND = "background"
+    # Same table height as the background, object on the table.
+    OBJECT_MEASUREMENT = "object_measurement"
+
+    @property
+    def measures_an_object(self) -> bool:
+        return self is FrequencySweepRole.OBJECT_MEASUREMENT

@@ -1,0 +1,6 @@
+1. poser le pre-commit non strict (typage non-strict) : /Users/luis/Library/CloudStorage/Dropbox/Luis/1 PROJETS/1 - THESE/EXPERIMENTAL/AEFI_Acquisition/.git/hooks/pre-commit
+2. hook PostToolUse de la garde déjà présent
+3. poser [tool.mypy] dans pyproject.toml (ajouté à la fin, commité)
+4. mypy présent : /Users/luis/.venvs/AEFI_Acquisition/bin/mypy
+   commit bd82a84 : [tool.mypy] de la garde
+garde posée : le hook PostToolUse prend effet à la session suivante

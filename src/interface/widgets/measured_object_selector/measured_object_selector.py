@@ -8,7 +8,7 @@ from typing import Callable, List, Optional
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QComboBox, QInputDialog, QToolTip
 
-from application.services.measured_object_service.dtos.measured_object_dto import MeasuredObjectDTO
+from application.measured_object_registry.measured_object_service.dtos.measured_object_dto import MeasuredObjectDTO
 
 NO_MEASURED_OBJECT_LABEL = "— objet mesuré —"
 NEW_MEASURED_OBJECT_LABEL = "Nouvel objet mesuré…"

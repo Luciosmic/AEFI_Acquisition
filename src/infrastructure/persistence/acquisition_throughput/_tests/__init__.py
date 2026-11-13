@@ -3,7 +3,7 @@
 from dataclasses import replace
 from datetime import datetime, timezone
 
-from application.services.acquisition_throughput_characterization_service.acquisition_throughput_characterization_service import (
+from application.test_bench_calibration.acquisition_throughput_characterization_service.acquisition_throughput_characterization_service import (
     CONTROLLER,
     EXCITATION_CUT,
 )
@@ -11,16 +11,16 @@ from application.shared.acquisition_parameters.acquisition_conditions_dtos impor
     BenchPositionDTO,
     ExportedFileDTO,
 )
-from application.services.acquisition_throughput_characterization_service.dtos.acquisition_parameters_dtos import (
+from application.test_bench_calibration.acquisition_throughput_characterization_service.dtos.acquisition_parameters_dtos import (
     AcquisitionParametersDTO,
     OperatorExcitationDTO,
     ThroughputActivityDTO,
 )
-from application.services.acquisition_throughput_characterization_service.dtos.acquisition_throughput_dtos import (
+from application.test_bench_calibration.acquisition_throughput_characterization_service.dtos.acquisition_throughput_dtos import (
     AcquisitionThroughputRequestDTO,
 )
-from infrastructure.acquisition_conditions.fake.fake_acquisition_conditions_port import make_bench_conditions
-from infrastructure.provenance.fake.fake_software_provenance_port import CLEAN
+from infrastructure.acquisition_conditions_reader.fake.fake_acquisition_conditions_reader import make_bench_conditions
+from infrastructure.git_software_provenance_reader.fake.fake_git_software_provenance_reader import CLEAN
 
 
 def make_throughput_activity_dto(**overrides) -> ThroughputActivityDTO:

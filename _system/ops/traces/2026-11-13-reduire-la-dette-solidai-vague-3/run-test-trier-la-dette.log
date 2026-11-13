@@ -1,0 +1,26 @@
+oracle : 7 cas
+démon du moteur du clone prêt (essai 1)
+ok   cas 1 : lecture seule (git status inchangé, aucun cache)
+ok   cas 1 : code 0
+ok   cas 1 : diff vide contre l'oracle (89 lignes)
+ok   cas 2 : lecture seule (git status inchangé, aucun cache)
+ok   cas 2 : code 0
+ok   cas 2 : diff vide contre l'oracle (64 lignes)
+ok   cas 3 : lecture seule (git status inchangé, aucun cache)
+ok   cas 3 : code 64
+ok   cas 3 : diff vide contre l'oracle (1 lignes)
+ok   cas 4 : erreurs de solidai verify identiques à l'oracle (5)
+ok   cas 4 : lecture seule (git status inchangé, aucun cache)
+ok   cas 4 : code 0
+ok   cas 4 : diff vide contre l'oracle (31 lignes)
+ok   cas 5 : lecture seule (git status inchangé, aucun cache)
+ok   cas 5 : code 0
+ok   cas 5 : diff vide contre l'oracle (54 lignes)
+ok   cas 6 : lecture seule (git status inchangé, aucun cache)
+ok   cas 6 : code 0
+ok   cas 6 : diff vide contre l'oracle (16 lignes)
+ok   cas 7 : lecture seule (git status inchangé, aucun cache)
+ok   cas 7 : code 0
+ok   cas 7 : diff vide contre l'oracle (44 lignes)
+22/22 vérifications passées
+démons du clone arrêtés

@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Nommer la promesse refusée : « un balayage ne contient que des fréquences de sa grille »."
+code: ["[[src/domain/frequency_sweep/errors/frequency_not_in_grid_error.py]]"]
+cause_de_changement: regle-metier
+---
 # frequency_not_in_grid_error — Intention
 
 ## Rationale

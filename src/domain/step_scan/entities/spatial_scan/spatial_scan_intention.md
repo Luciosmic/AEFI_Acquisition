@@ -1,3 +1,10 @@
+---
+type: entite::solidai-ddd
+tldr: "Générer un id UUID unique à la création."
+code: ["[[src/domain/step_scan/entities/spatial_scan/spatial_scan.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/step_scan/step_scan_intention]]"
+---
 # spatial_scan — Intention
 
 ## Rationale

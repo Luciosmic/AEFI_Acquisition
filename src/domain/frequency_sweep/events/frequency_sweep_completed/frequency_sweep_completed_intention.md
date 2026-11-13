@@ -1,3 +1,10 @@
+---
+type: evenement-de-domaine::solidai-ddd
+tldr: "Porter l'id du balayage, son rôle et le nombre de fréquences acquises."
+code: ["[[src/domain/frequency_sweep/events/frequency_sweep_completed/frequency_sweep_completed.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/frequency_sweep/frequency_sweep_intention]]"
+---
 # frequency_sweep_completed — Intention
 
 ## Rationale

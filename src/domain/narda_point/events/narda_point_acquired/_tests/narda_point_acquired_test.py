@@ -4,10 +4,10 @@ from uuid import uuid4
 
 import pytest
 
-from domain.detection_devices.electric_field_probes.value_objects.field_measurement.field_measurement import FieldMeasurement
+from domain.electric_field_probes.value_objects.field_measurement.field_measurement import FieldMeasurement
 from domain.narda_point.events.narda_point_acquired.narda_point_acquired import NardaPointAcquired
 from domain.narda_point.value_objects.narda_point_id.narda_point_id import NardaPointId
-from domain.shared_kernel.events.domain_event import DomainEvent
+from domain.shared_kernel.events.domain_event.domain_event import DomainEvent
 from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
 
 
@@ -18,7 +18,7 @@ def make_event(point_id=None):
     )
 
 
-def test_event_is_a_frozen_domain_event_with_timestamp():
+def test_event_is_a_frozen_domain_event_with_timestamp() -> None:
     event = make_event()
     assert isinstance(event, DomainEvent)
     assert event.occurred_on is not None
@@ -27,7 +27,7 @@ def test_event_is_a_frozen_domain_event_with_timestamp():
         event.samples_count = 1
 
 
-def test_event_respects_the_probe_acquisition_contract():
+def test_event_respects_the_probe_acquisition_contract() -> None:
     from domain.scan.events.probe_acquisition_event.probe_acquisition_event import ProbeAcquisitionEvent
 
     point_id = uuid4()

@@ -2,9 +2,9 @@ import unittest
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from application.services.measured_object_service.measured_object_service import MeasuredObjectService
+from application.measured_object_registry.measured_object_service.measured_object_service import MeasuredObjectService
 from domain.measured_object_registry.entities.measured_object.measured_object import MeasuredObject
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from infrastructure.persistence.measured_object_registry.fake.fake_measured_object_repository import FakeMeasuredObjectRepository
 from interface.presenters.measured_object_presenter import MeasuredObjectPresenter
 

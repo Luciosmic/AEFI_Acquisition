@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Module `hardware_config_resolution` : Fournir une fonction de fusion pure et testée : `resolve_config(default, override)` — l'override gagne clé par clé, récursivement sur les dicts imbriqués, sans muter ses arguments."
+code: ["[[src/infrastructure/hardware/micro_controller/hardware_config_resolution.py]]"]
+cause_de_changement: outil
+---
 # hardware_config_resolution — Intention
 
 ## Rationale

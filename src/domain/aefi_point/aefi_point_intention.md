@@ -1,3 +1,9 @@
+---
+type: racine-d-agregat::solidai-ddd
+tldr: "Aggregate root d'un point de step-scan : identité AefiPointId, référence au scan par scan_id (identité seule), position, index global point_index dans la…"
+code: ["[[src/domain/aefi_point/aefi_point.py]]"]
+cause_de_changement: regle-metier
+---
 # aefi_point — Intention
 
 ## Rationale

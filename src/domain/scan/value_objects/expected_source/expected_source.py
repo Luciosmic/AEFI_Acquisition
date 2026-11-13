@@ -8,6 +8,6 @@ class ExpectedSource:
     count: int
     required: bool = True
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.count < 1:
             raise ValueError("count must be >= 1")

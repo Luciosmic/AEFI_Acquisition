@@ -1,3 +1,10 @@
+---
+type: evenement-de-domaine::solidai-ddd
+tldr: "Signaler que le pilote de la configuration avancée d'un matériel (`hardware_id`) a changé : pris (`controller`) ou libéré (`None`)."
+code: ["[[src/domain/shared_kernel/events/hardware_configuration_control_changed/hardware_configuration_control_changed.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/shared_kernel/operation_result_intention]]"
+---
 # hardware_configuration_control_changed — Intention
 
 ## Rationale

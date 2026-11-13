@@ -10,10 +10,10 @@ import logging
 
 from PySide6.QtCore import QObject, Signal, Slot
 
-from application.services.operator_service.i_api_operator_service import IApiOperatorService
-from application.services.operator_service.operator_service import OPERATOR_REGISTERED_TOPIC
-from application.services.operator_service.operator_service_errors import OperatorNameBlank
-from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from application.operator_registry.operator_service.i_api_operator_service import IApiOperatorService
+from application.operator_registry.operator_service.operator_service import OPERATOR_REGISTERED_TOPIC
+from application.operator_registry.operator_service.operator_service_errors import OperatorNameBlank
+from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
 
 logger = logging.getLogger(__name__)
 

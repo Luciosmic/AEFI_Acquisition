@@ -9,7 +9,7 @@ from domain.aefi_line.errors.aefi_line_incomplete_error import AefiLineIncomplet
 from domain.aefi_line.events.aefi_line_acquired.aefi_line_acquired import AefiLineAcquired
 from domain.aefi_line.value_objects.aefi_line_id.aefi_line_id import AefiLineId
 from domain.aefi_line.value_objects.line_grid_point.line_grid_point import LineGridPoint
-from domain.shared_kernel.events.domain_event import DomainEvent
+from domain.shared_kernel.events.domain_event.domain_event import DomainEvent
 
 
 @dataclass
@@ -21,7 +21,7 @@ class AefiLine:
     _points: Tuple[LineGridPoint, ...] = ()
     _domain_events: List[DomainEvent] = field(default_factory=list)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.expected_points < 1:
             raise ValueError("expected_points must be >= 1")
 

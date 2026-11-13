@@ -1,3 +1,9 @@
+---
+type: port::solidai-hexagonal
+tldr: "Port sortant `i_async_task_runner` : `IAsyncTaskRunner.submit(callable) -> TaskHandle` : soumet une callable pour exécution en tâche de fond, retour immédiat."
+sens: sortant
+code: "[[src/application/shared/ports/i_async_task_runner.py]]"
+---
 # i_async_task_runner — Intention
 
 ## Rationale

@@ -1,3 +1,9 @@
+---
+type: service-de-domaine::solidai-ddd
+tldr: "create_trajectory(config: StepScanConfig) → ScanTrajectory : calculer la liste ordonnée de Position2D selon le pattern et la zone de scan."
+code: ["[[src/domain/step_scan/services/scan_trajectory_factory/scan_trajectory_factory.py]]"]
+cause_de_changement: regle-metier
+---
 # scan_trajectory_factory — Intention
 
 ## Rationale

@@ -1,3 +1,10 @@
+---
+type: adaptateur::solidai-hexagonal
+tldr: "Adaptateur `real_synchronous_detection_phase_calibration_repository` : Implement `ISynchronousDetectionPhaseCalibrationRepository` against a single JSON file: `{\"entries\": [...], \"compensation_enabled\": bool}`."
+code: ["[[src/infrastructure/persistence/calibration/real_synchronous_detection_phase_calibration_repository.py]]"]
+cause_de_changement: outil
+implements: ["[[src/domain/test_bench_calibration/calibration_intention^^i-synchronous-detection-phase-calibration-repository]]"]
+---
 # real_synchronous_detection_phase_calibration_repository — Intention
 
 ## Rationale

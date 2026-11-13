@@ -14,29 +14,29 @@ import logging
 import os
 from typing import Optional
 
-from application.services.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
-from application.services.system_lifecycle_service.ports.i_hardware_initialization_port import IHardwareInitializationPort
-from application.services.aefi_acquisition_service.ports.i_aefi_acquisition_executor import IAefiAcquisitionExecutor
-from application.services.excitation_configuration_service.ports.i_excitation_port import IExcitationPort
-from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from application.shared.ports.i_acquisition_port import IAcquisitionPort
+from application.shared.system_lifecycle_service.ports.i_hardware_initialization_port import IHardwareInitializationPort
+from application.shared.aefi_acquisition_service.ports.i_aefi_acquisition_executor import IAefiAcquisitionExecutor
+from application.shared.excitation_configuration_service.ports.i_excitation_port import IExcitationPort
+from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
 
-from infrastructure.hardware.micro_controller.MCU_serial_communicator import MCU_SerialCommunicator
-from infrastructure.hardware.micro_controller.ads131a04.adapter_i_acquistion_port_ads131a04 import ADS131A04Adapter
-from infrastructure.hardware.micro_controller.adapter_lifecycle_MCU import MCULifecycleAdapter
-from infrastructure.hardware.micro_controller.ads131a04.adapter_aefi_acquisition_ads131a04 import AdapterAefiAcquisitionAds131a04
-from infrastructure.hardware.micro_controller.ad9106.ad9106_controller import AD9106Controller
-from infrastructure.hardware.micro_controller.ad9106.adapter_excitation_configuration_ad9106 import AdapterExcitationConfigurationAD9106
-from infrastructure.hardware.micro_controller.ad9106.ad9106_advanced_configurator import AD9106AdvancedConfigurator
-from application.services.hardware_configuration_service.ports.i_hardware_advanced_configurator import IHardwareAdvancedConfigurator
+from infrastructure.hardware.micro_controller.mcu_serial_communicator import MCU_SerialCommunicator
+from infrastructure.hardware.ads131a04.adapter_i_acquistion_port_ads131a04.adapter_i_acquistion_port_ads131a04 import ADS131A04Adapter
+from infrastructure.hardware.micro_controller.adapter_lifecycle_mcu.adapter_lifecycle_mcu import MCULifecycleAdapter
+from infrastructure.hardware.ads131a04.adapter_aefi_acquisition_ads131a04.adapter_aefi_acquisition_ads131a04 import AdapterAefiAcquisitionAds131a04
+from infrastructure.hardware.ad9106.ad9106_controller import AD9106Controller
+from infrastructure.hardware.ad9106.adapter_excitation_configuration_ad9106.adapter_excitation_configuration_ad9106 import AdapterExcitationConfigurationAD9106
+from infrastructure.hardware.ad9106.ad9106_advanced_configurator.ad9106_advanced_configurator import AD9106AdvancedConfigurator
+from application.shared.hardware_configuration_service.ports.i_hardware_advanced_configurator import IHardwareAdvancedConfigurator
 
 
-from infrastructure.hardware.micro_controller.ads131a04.ads131a04_advanced_configurator import ADS131A04AdvancedConfigurator
-from infrastructure.hardware.micro_controller.mcu_advanced_configurator import MCUAdvancedConfigurator
-from infrastructure.hardware.micro_controller.adapter_acquisition_averaging_mcu import AdapterAcquisitionAveragingMcu
-from infrastructure.hardware.micro_controller.ads131a04.adapter_adc_oversampling_ads131a04 import (
+from infrastructure.hardware.ads131a04.ads131a04_advanced_configurator.ads131a04_advanced_configurator import ADS131A04AdvancedConfigurator
+from infrastructure.hardware.micro_controller.mcu_advanced_configurator.mcu_advanced_configurator import MCUAdvancedConfigurator
+from infrastructure.hardware.micro_controller.adapter_acquisition_averaging_mcu.adapter_acquisition_averaging_mcu import AdapterAcquisitionAveragingMcu
+from infrastructure.hardware.ads131a04.adapter_adc_oversampling_ads131a04.adapter_adc_oversampling_ads131a04 import (
     AdapterAdcOversamplingAds131a04,
 )
-from application.services.acquisition_throughput_characterization_service.ports.i_acquisition_averaging_port import (
+from application.test_bench_calibration.acquisition_throughput_characterization_service.ports.i_acquisition_averaging_port import (
     IAcquisitionAveragingPort,
 )
 from infrastructure.hardware.micro_controller.hardware_config_resolution import (
@@ -81,7 +81,7 @@ class MCUCompositionRoot:
         self.acquisition: IAcquisitionPort = ADS131A04Adapter(self._driver)
         
         # 2b. Instantiate Acquisition Controller (for low-level config)
-        from infrastructure.hardware.micro_controller.ads131a04.ads131_controller import ADS131Controller
+        from infrastructure.hardware.ads131a04.ads131_controller import ADS131Controller
         self._ads131_controller = ADS131Controller(self._driver)
         
         # 2c. Instantiate Acquisition Configurator (Decoupled)

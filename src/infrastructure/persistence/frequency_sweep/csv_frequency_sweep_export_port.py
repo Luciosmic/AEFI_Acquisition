@@ -10,15 +10,15 @@ from datetime import datetime
 from pathlib import Path
 from typing import Callable, Optional, Sequence, Tuple
 
-from application.services.frequency_sweep_service.dtos.acquisition_parameters_dtos import (
+from application.frequency_sweep.frequency_sweep_service.dtos.acquisition_parameters_dtos import (
     FrequencySweepAcquisitionParametersDTO,
 )
-from application.services.frequency_sweep_service.dtos.frequency_sweep_dtos import (
+from application.frequency_sweep.frequency_sweep_service.dtos.frequency_sweep_dtos import (
     VALUE_CHANNELS,
     FrequencySweepResultDTO,
     FrequencySweepSampleDTO,
 )
-from application.services.frequency_sweep_service.ports.i_frequency_sweep_export_port import IFrequencySweepExportPort
+from application.frequency_sweep.frequency_sweep_service.ports.i_frequency_sweep_export_port import IFrequencySweepExportPort
 from application.shared.acquisition_parameters.acquisition_conditions_dtos import ExportedFileDTO
 from domain.shared_kernel.operation_result import OperationResult
 from infrastructure.persistence.acquisition_parameters.acquisition_parameters_file import describe_file, write_document

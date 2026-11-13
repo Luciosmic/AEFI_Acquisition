@@ -6,7 +6,7 @@ from pathlib import Path
 
 import numpy as np
 
-from application.services.adc_output_rate_characterization_service.dtos.adc_output_rate_dtos import (
+from application.test_bench_calibration.adc_output_rate_characterization_service.dtos.adc_output_rate_dtos import (
     AdcOutputRateCharacterizationDTO,
     AdcOutputRatePointDTO,
     DrdyCaptureDTO,

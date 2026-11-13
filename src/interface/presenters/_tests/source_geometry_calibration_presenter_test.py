@@ -5,17 +5,17 @@ from datetime import datetime, timezone
 from typing import List, Optional
 
 from interface.presenters.source_geometry_calibration_presenter import SourceGeometryCalibrationPresenter
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
-from application.services.source_geometry_calibration_service.i_api_source_geometry_calibration_service import (
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
+from application.test_bench_calibration.source_geometry_calibration_service.i_api_source_geometry_calibration_service import (
     IApiSourceGeometryCalibrationService,
 )
-from application.services.source_geometry_calibration_service.dtos.source_geometry_calibration_dto import (
+from application.test_bench_calibration.source_geometry_calibration_service.dtos.source_geometry_calibration_dto import (
     SourceGeometryCalibrationDTO,
 )
-from application.services.source_geometry_calibration_service.source_geometry_calibration_service import (
+from application.test_bench_calibration.source_geometry_calibration_service.source_geometry_calibration_service import (
     SOURCE_GEOMETRY_CALIBRATION_ENTRY_ADDED_TOPIC,
 )
-from application.services.source_geometry_calibration_service.errors.source_geometry_preview_rejected import (
+from application.test_bench_calibration.source_geometry_calibration_service.errors.source_geometry_preview_rejected import (
     SourceGeometryPreviewRejected,
 )
 from domain.shared_kernel.operation_result import OperationResult

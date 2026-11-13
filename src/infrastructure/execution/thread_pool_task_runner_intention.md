@@ -1,3 +1,10 @@
+---
+type: adaptateur::solidai-hexagonal
+tldr: "Adaptateur `thread_pool_task_runner` : Implement `IAsyncTaskRunner` using `threading.Thread(daemon=True)`."
+code: ["[[src/infrastructure/execution/thread_pool_task_runner.py]]"]
+cause_de_changement: outil
+implements: ["[[src/application/shared/ports/i_async_task_runner_intention]]"]
+---
 # thread_pool_task_runner — Intention
 
 ## Rationale

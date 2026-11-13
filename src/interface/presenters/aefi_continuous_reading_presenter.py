@@ -8,33 +8,33 @@ Adapted from interface v1 for PySide6.
 from PySide6.QtCore import QObject, Signal, Slot
 from typing import Dict, Any
 
-from application.services.aefi_acquisition_service.aefi_acquisition_service import (
+from application.shared.aefi_acquisition_service.aefi_acquisition_service import (
     AEFI_ACQUISITION_CONTROL_CHANGED_TOPIC,
     AefiAcquisitionService,
 )
-from application.services.aefi_acquisition_service.ports.i_aefi_acquisition_executor import AefiAcquisitionConfig
-from application.services.aefi_signal_processing_service.aefi_signal_processing_service import (
+from application.shared.aefi_acquisition_service.ports.i_aefi_acquisition_executor import AefiAcquisitionConfig
+from application.aefi_signal_processing.aefi_signal_processing_service.aefi_signal_processing_service import (
     AefiSignalProcessingService,
 )
-from application.services.scan_export_service.scan_export_service import ScanExportService
-from application.services.scan_export_service.dtos.scan_export_dtos import ExportConfigDTO
+from application.scan.scan_export_service.scan_export_service import ScanExportService
+from application.scan.scan_export_service.dtos.scan_export_dtos import ExportConfigDTO
 from domain.shared_kernel.events.aefi_voltage_reading_failed.aefi_voltage_reading_failed import (
     AefiVoltageReadingFailed,
 )
 from domain.shared_kernel.events.aefi_voltage_reading_stopped.aefi_voltage_reading_stopped import (
     AefiVoltageReadingStopped,
 )
-from domain.test_bench.calibration.events.sensor_transformation_angles_updated.sensor_transformation_angles_updated import (
+from domain.test_bench_calibration.events.sensor_transformation_angles_updated.sensor_transformation_angles_updated import (
     SensorTransformationAnglesUpdated,
 )
-from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
-from domain.detection_devices.aefi_device.signal_processing.events.aefi_corrected_field_sample_acquired.aefi_corrected_field_sample_acquired import (
+from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
+from domain.aefi_signal_processing.events.aefi_corrected_field_sample_acquired.aefi_corrected_field_sample_acquired import (
     AefiCorrectedFieldSampleAcquired,
 )
-from domain.detection_devices.aefi_device.signal_processing.events.aefi_signal_correction_calibration_updated.aefi_signal_correction_calibration_updated import (
+from domain.aefi_signal_processing.events.aefi_signal_correction_calibration_updated.aefi_signal_correction_calibration_updated import (
     AefiSignalCorrectionCalibrationUpdated,
 )
-from application.services.transformation_service.transformation_service import TransformationService
+from application.test_bench_calibration.transformation_service.transformation_service import TransformationService
 from interface.view_models.aefi_continuous_reading_sample_view_model import (
     AefiContinuousReadingSampleViewModel,
 )

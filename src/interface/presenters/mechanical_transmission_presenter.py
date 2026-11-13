@@ -8,13 +8,13 @@ import logging
 
 from PySide6.QtCore import QObject, Signal, Slot
 
-from application.services.mechanical_transmission_calibration_service.i_api_mechanical_transmission_calibration_service import (
+from application.test_bench_calibration.mechanical_transmission_calibration_service.i_api_mechanical_transmission_calibration_service import (
     IApiMechanicalTransmissionCalibrationService,
 )
-from application.services.mechanical_transmission_calibration_service.mechanical_transmission_calibration_service import (
+from application.test_bench_calibration.mechanical_transmission_calibration_service.mechanical_transmission_calibration_service import (
     MECHANICAL_TRANSMISSION_CALIBRATION_ENTRY_ADDED_TOPIC,
 )
-from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
 from interface.presentation.mechanical_transmission_view_model import MechanicalTransmissionViewModel
 
 logger = logging.getLogger(__name__)

@@ -1,3 +1,10 @@
+---
+type: value-object::solidai-ddd
+tldr: "Un point de grille d'une ligne : rang dans la ligne (index_in_line >= 0), position, mesure projetée."
+code: ["[[src/domain/aefi_line/value_objects/line_grid_point/line_grid_point.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/aefi_line/aefi_line_intention]]"
+---
 # line_grid_point — Intention
 
 ## Rationale

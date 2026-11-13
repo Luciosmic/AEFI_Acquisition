@@ -1,3 +1,10 @@
+---
+type: value-object::solidai-ddd
+tldr: "Dire combien d'acquisitions une source doit fournir (count >= 1) et si elle conditionne la complétion (required, vrai par défaut)."
+code: ["[[src/domain/scan/value_objects/expected_source/expected_source.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/scan/scan_intention]]"
+---
 # expected_source — Intention
 
 ## Rationale

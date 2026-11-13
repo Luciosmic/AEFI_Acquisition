@@ -23,7 +23,7 @@ def make_line(n=3) -> AefiLine:
     return AefiLine(AefiLineId(uuid4()), uuid4(), 1, n)
 
 
-def test_all_grid_points_acquire_the_line_and_emit_the_event():
+def test_all_grid_points_acquire_the_line_and_emit_the_event() -> None:
     line = make_line(3)
     line.record_points([gp(2), gp(0), gp(1)])
 
@@ -35,7 +35,7 @@ def test_all_grid_points_acquire_the_line_and_emit_the_event():
     assert line.domain_events == []
 
 
-def test_missing_point_is_refused_and_leaves_no_state():
+def test_missing_point_is_refused_and_leaves_no_state() -> None:
     line = make_line(3)
     with pytest.raises(AefiLineIncompleteError) as e:
         line.record_points([gp(0), gp(2)])
@@ -43,20 +43,20 @@ def test_missing_point_is_refused_and_leaves_no_state():
     assert not line.is_acquired and line.domain_events == []
 
 
-def test_duplicate_or_out_of_range_index_is_refused():
+def test_duplicate_or_out_of_range_index_is_refused() -> None:
     with pytest.raises(AefiLineIncompleteError):
         make_line(3).record_points([gp(0), gp(1), gp(1)])
     with pytest.raises(AefiLineIncompleteError):
         make_line(2).record_points([gp(0), gp(1), gp(2)])
 
 
-def test_second_attempt_is_refused():
+def test_second_attempt_is_refused() -> None:
     line = make_line(1)
     line.record_points([gp(0)])
     with pytest.raises(AefiLineAlreadyAcquiredError):
         line.record_points([gp(0)])
 
 
-def test_expected_points_must_be_positive():
+def test_expected_points_must_be_positive() -> None:
     with pytest.raises(ValueError):
         make_line(0)

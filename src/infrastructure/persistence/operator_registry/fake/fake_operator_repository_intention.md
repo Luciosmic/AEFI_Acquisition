@@ -1,3 +1,11 @@
+---
+type: doublure-de-test::solidai-hexagonal
+tldr: "Implémenter IOperatorRepository en mémoire."
+code: ["[[src/infrastructure/persistence/operator_registry/fake/fake_operator_repository.py]]"]
+cause_de_changement: outil
+implements: ["[[src/domain/operator_registry/operator_registry_intention^^i-operator-repository]]"]
+double_de: "[[src/infrastructure/persistence/operator_registry/real_operator_repository_intention]]"
+---
 # fake_operator_repository — Intention
 
 ## Rationale

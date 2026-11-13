@@ -2,7 +2,7 @@ import logging
 from typing import Dict, List, Optional
 from uuid import UUID
 
-from application.services.scan_application_service.ports.i_unit_of_work import IUnitOfWork
+from application.scan.scan_application_service.ports.i_unit_of_work import IUnitOfWork
 from domain.aefi_point.aefi_point import AefiPoint
 from domain.aefi_point.repositories.i_aefi_point_repository import IAefiPointRepository
 from domain.aefi_point.value_objects.aefi_point_id.aefi_point_id import AefiPointId

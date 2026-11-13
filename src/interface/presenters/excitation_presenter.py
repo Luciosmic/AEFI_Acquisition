@@ -8,7 +8,7 @@ Adapted from interface v1 for PySide6.
 import logging
 
 from PySide6.QtCore import QObject, Signal, Slot
-from application.services.excitation_configuration_service.excitation_configuration_service import (
+from application.shared.excitation_configuration_service.excitation_configuration_service import (
     ExcitationConfigurationService,
     EXCITATION_FREQUENCY_CHANGED_TOPIC,
     DDS_CHANNEL_CONFIG_CHANGED_TOPIC,
@@ -17,7 +17,7 @@ from application.services.excitation_configuration_service.excitation_configurat
 )
 from domain.shared_kernel.excitation.value_objects.excitation_mode import ExcitationMode
 from domain.shared_kernel.excitation.value_objects.excitation_parameters import ExcitationParameters
-from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
 
 
 logger = logging.getLogger(__name__)

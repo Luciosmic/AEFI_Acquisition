@@ -1,3 +1,10 @@
+---
+type: value-object::solidai-ddd
+tldr: "Nommer l'identité d'un Scan."
+code: ["[[src/domain/scan/value_objects/scan_id/scan_id.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/scan/scan_intention]]"
+---
 # scan_id — Intention
 
 ## Rationale

@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Nommer un seul refus métier : « un opérateur a un nom » (invariant I2 de la FA _system/thoughts_interface/fa_operator_traceability.md)."
+code: ["[[src/domain/operator_registry/errors/operator_name_blank_error.py]]"]
+cause_de_changement: regle-metier
+---
 # operator_name_blank_error — Intention
 
 ## Rationale

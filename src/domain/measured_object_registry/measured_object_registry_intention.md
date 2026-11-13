@@ -1,3 +1,15 @@
+---
+type: racine-d-agregat::solidai-ddd
+tldr: "register(name) : rendre l'objet mesuré de ce nom — l'existant si l'orthographe est déjà connue à la casse et aux espaces près (aucun événement), sinon un nouvel…"
+code: ["[[src/domain/measured_object_registry/measured_object_registry.py]]"]
+cause_de_changement: regle-metier
+repositories:
+  - ^: i-measured-object-repository
+    type: interface-de-repository::solidai-ddd
+    tldr: "find_all() : tous les objets mesurés enregistrés, ou un échec lisible."
+    sens: sortant
+    code: "[[src/domain/measured_object_registry/repositories/i_measured_object_repository.py]]"
+---
 # measured_object_registry — Intention
 
 ## Rationale

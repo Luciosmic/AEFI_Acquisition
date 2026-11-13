@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Module `driver_narda_ep601` : Ouvrir/fermer la liaison série (`connect`/`disconnect`, utilisable en context manager)."
+code: ["[[src/infrastructure/hardware/narda_ep600/driver_narda_ep601.py]]"]
+cause_de_changement: outil
+---
 # driver_narda_ep601 — Intention
 
 ## Rationale

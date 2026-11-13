@@ -1,0 +1,5 @@
+atomes src/infrastructure/provenance/fake
+pytest VERT tests=2 verts=2 rouges=0 nouveaux-rouges=0 anciens-rouges=0 verts-sans-code=0
+verify CASSE nouvelles=solidai-fake-sans-test-de-contrat,solidai-infrastructure-importe-hors-des-ports anciennes=solidai-intention-non-typee | src/infrastructure/provenance/fake/fake_provenance.py:10 solidai-infrastructure-importe-hors-des-ports src/infrastructure/provenance/fake/fake_provenance.py:7 solidai-infrastructure-importe-hors-des-ports src/infrastructure/provenance/fake/fake_provenance.py:None solidai-fake-sans-test-de-contrat src/infrastructure/provenance/fake/fake_provenance_intention.md:None solidai-intention-non-typee
+graphe CASSE nouveaux=R7 anciens=- | R7 fake_provenance -> acquisition_conditions_dtos ; R7 fake_provenance -> i_software_provenance_port
+verdict CASSE cause=verify:solidai-fake-sans-test-de-contrat,verify:solidai-infrastructure-importe-hors-des-ports,graphe:R7

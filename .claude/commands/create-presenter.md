@@ -30,8 +30,8 @@ Create `src/interface/presenters/<name>_presenter.py`.
 
 ```python
 from PySide6.QtCore import QObject, Signal, Slot
-from application.services.<name>_service.<name>_service import <Name>Service
-from application.services.<name>_service.i_<name>_output_port import I<Name>OutputPort
+from application.<contexte>.<name>_service.<name>_service import <Name>Service
+from application.<contexte>.<name>_service.i_<name>_output_port import I<Name>OutputPort
 
 class <Name>Presenter(QObject, I<Name>OutputPort):
     # Signals to update Views (success + one refusal signal per error variant)

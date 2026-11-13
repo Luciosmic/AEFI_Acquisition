@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
-from domain.shared_kernel.events.domain_event import DomainEvent
+from domain.shared_kernel.events.domain_event.domain_event import DomainEvent
 
 # How the wait ended.
 SETTLED_ON_ACCELEROMETER = "accelerometer"  # the column came back to rest

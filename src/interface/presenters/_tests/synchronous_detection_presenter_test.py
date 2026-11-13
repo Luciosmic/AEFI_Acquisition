@@ -3,15 +3,15 @@
 import unittest
 
 from interface.presenters.synchronous_detection_presenter import SynchronousDetectionPresenter
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
-from application.services.synchronous_detection_service.i_api_synchronous_detection_service import (
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
+from application.test_bench_calibration.synchronous_detection_service.i_api_synchronous_detection_service import (
     IApiSynchronousDetectionService,
 )
-from application.services.synchronous_detection_service.dtos.sphere_phases_dto import SpherePhasesDTO
-from application.services.synchronous_detection_service.synchronous_detection_service import (
+from application.test_bench_calibration.synchronous_detection_service.dtos.sphere_phases_dto import SpherePhasesDTO
+from application.test_bench_calibration.synchronous_detection_service.synchronous_detection_service import (
     SYNCHRONOUS_DETECTION_COMPENSATION_ENABLED_CHANGED_TOPIC,
 )
-from domain.test_bench.calibration.events.synchronous_detection_compensation_enabled_changed.synchronous_detection_compensation_enabled_changed import (
+from domain.test_bench_calibration.events.synchronous_detection_compensation_enabled_changed.synchronous_detection_compensation_enabled_changed import (
     SynchronousDetectionCompensationEnabledChanged,
 )
 

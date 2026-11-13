@@ -1,3 +1,10 @@
+---
+type: value-object::solidai-ddd
+tldr: "Typer l'identité d'un NardaPoint."
+code: ["[[src/domain/narda_point/value_objects/narda_point_id/narda_point_id.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/narda_point/narda_point_intention]]"
+---
 # narda_point_id — Intention
 
 ## Rationale

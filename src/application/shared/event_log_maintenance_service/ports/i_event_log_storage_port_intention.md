@@ -1,0 +1,31 @@
+---
+type: port::solidai-hexagonal
+tldr: "Port sortant `i_event_log_storage_port` : `location()` : où sont stockées les sessions (le dossier, pour que l'utilisateur puisse l'ouvrir depuis le panneau Logs)."
+sens: sortant
+code: "[[src/application/shared/event_log_maintenance_service/ports/i_event_log_storage_port.py]]"
+---
+# i_event_log_storage_port — Intention
+
+## Rationale
+
+Sans ce port, le service de maintenance lirait le dossier `logs/events/`
+lui-même : la règle des 90 jours deviendrait intestable sans fichiers réels
+et datés, et le format de nommage des sessions (propriété d'`EventAuditLog`)
+fuirait dans la couche application.
+
+## Responsibility
+
+- `location()` : où sont stockées les sessions (le dossier, pour que
+  l'utilisateur puisse l'ouvrir depuis le panneau Logs).
+- `list_sessions()` : chaque session du journal, avec sa date de démarrage,
+  sa taille, et si c'est la session en cours d'écriture.
+- `delete_session(name)` : supprime une session ; échec attendu (fichier
+  ouvert ailleurs, déjà absent, session en cours) renvoyé en
+  `OperationResult`, jamais levé.
+
+## Design
+
+- Port outbound, consommé par `EventLogMaintenanceService`.
+- Real : `infrastructure/file_event_log_storage/file_event_log_storage.py` ; Fake :
+  `infrastructure/file_event_log_storage/fake/fake_file_event_log_storage.py`.
+- `started_at` vient du nom de fichier (UTC), pas du `mtime`.

@@ -8,7 +8,7 @@ from typing import Callable, List, Optional
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QComboBox, QInputDialog, QToolTip
 
-from application.services.operator_service.dtos.operator_dto import OperatorDTO
+from application.operator_registry.operator_service.dtos.operator_dto import OperatorDTO
 
 NO_OPERATOR_LABEL = "— opérateur —"
 NEW_OPERATOR_LABEL = "Nouvel opérateur…"

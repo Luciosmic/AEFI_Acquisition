@@ -31,8 +31,8 @@ import logging
 import math
 from typing import Optional
 
-from application.services.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
-from application.services.excitation_configuration_service.ports.i_excitation_port import IExcitationPort
+from application.shared.ports.i_acquisition_port import IAcquisitionPort
+from application.shared.excitation_configuration_service.ports.i_excitation_port import IExcitationPort
 from domain.shared_kernel.value_objects.acquisition.aefi_voltage_measurement import AefiVoltageMeasurement
 from domain.shared_kernel.excitation.value_objects.excitation_parameters import ExcitationParameters
 from domain.shared_kernel.excitation.value_objects.excitation_mode import ExcitationMode

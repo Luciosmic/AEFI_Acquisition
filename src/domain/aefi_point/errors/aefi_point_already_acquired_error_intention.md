@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Nommer la promesse refusée : un point acquis n'est plus modifiable."
+code: ["[[src/domain/aefi_point/errors/aefi_point_already_acquired_error.py]]"]
+cause_de_changement: regle-metier
+---
 # aefi_point_already_acquired_error — Intention
 
 ## Rationale

@@ -25,7 +25,7 @@ def projector():
     return FlyScanLineProjector(n_points=5, line_length_mm=40.0)
 
 
-def test_a_point_waits_for_the_motor_to_pass_it_and_for_a_later_sample():
+def test_a_point_waits_for_the_motor_to_pass_it_and_for_a_later_sample() -> None:
     p = projector()
     p.add_sample(0.0, m(0.0))
     assert x(p.add_position(0.0, 0.0)) == [(0, 0.0)]  # point 0: at the start, sample at t=0
@@ -34,7 +34,7 @@ def test_a_point_waits_for_the_motor_to_pass_it_and_for_a_later_sample():
     assert x(p.add_sample(1.0, m(3.0))) == [(1, 2.0)]  # sample value at t=2/3
 
 
-def test_crossing_time_follows_the_reported_positions_not_a_speed_model():
+def test_crossing_time_follows_the_reported_positions_not_a_speed_model() -> None:
     p = projector()
     p.add_sample(0.0, m(0.0))
     p.add_sample(10.0, m(10.0))  # value = time
@@ -47,7 +47,7 @@ def test_crossing_time_follows_the_reported_positions_not_a_speed_model():
     assert x(points) == [(1, 2.5), (2, 3.0), (3, 3.5), (4, 4.0)]
 
 
-def test_every_component_is_interpolated():
+def test_every_component_is_interpolated() -> None:
     p = projector()
     p.add_position(0.0, 0.0)
     p.add_position(2.0, 20.0)  # 10 mm crossed at t=1
@@ -60,7 +60,7 @@ def test_every_component_is_interpolated():
     ) == pytest.approx((1.0, 2.0, 3.0, 4.0, 5.0, 6.0))
 
 
-def test_finish_places_the_rest_on_the_trace_or_its_end():
+def test_finish_places_the_rest_on_the_trace_or_its_end() -> None:
     p = projector()
     p.add_position(0.0, 0.0)
     p.add_position(1.0, 20.0)
@@ -74,14 +74,14 @@ def test_finish_places_the_rest_on_the_trace_or_its_end():
     assert p.finish() == []
 
 
-def test_finish_without_any_sample_has_nothing_to_give():
+def test_finish_without_any_sample_has_nothing_to_give() -> None:
     p = projector()
     p.add_position(0.0, 0.0)
     with pytest.raises(ValueError):
         p.finish()
 
 
-def test_a_position_going_backwards_is_ignored():
+def test_a_position_going_backwards_is_ignored() -> None:
     p = projector()
     p.add_sample(0.0, m(0.0))
     p.add_sample(10.0, m(10.0))

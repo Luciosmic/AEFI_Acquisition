@@ -1,3 +1,9 @@
+---
+type: service-de-domaine::solidai-ddd
+tldr: "create_trajectory(config: LineScanConfig) -> ScanTrajectory : n_points positions équidistantes de s=-length/2 à s=+length/2."
+code: ["[[src/domain/step_scan/services/line_scan_trajectory_factory/line_scan_trajectory_factory.py]]"]
+cause_de_changement: regle-metier
+---
 # line_scan_trajectory_factory — Intention
 
 ## Rationale

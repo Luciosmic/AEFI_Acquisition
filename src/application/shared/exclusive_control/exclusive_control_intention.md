@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Module `exclusive_control` : `take(controller)` : devenir l'unique pilote."
+code: ["[[src/application/shared/exclusive_control/exclusive_control.py]]"]
+cause_de_changement: orchestration
+---
 # exclusive_control — Intention
 
 ## Rationale

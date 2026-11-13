@@ -7,7 +7,7 @@ sources frame to its current mounting; measurement E_sensor = Pᵀ·E_sources;
 correction E_sources = P·E_sensor), tuned live by trial and error (applied
 without being recorded). Also shows the mounting currently applied to sensor
 readings, in text and in 3D (injected orientation view). Definition of the
-frames and of P: domain/test_bench/calibration/value_objects/rotation_convention/
+frames and of P: domain/test_bench_calibration/value_objects/rotation_convention/
 rotation_convention_intention.md.
 """
 

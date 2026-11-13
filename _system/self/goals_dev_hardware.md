@@ -37,16 +37,16 @@ Nuance à afficher dans l'UI : le protocole ne renvoie **aucun facteur de gain n
 - `domain/detection_devices/electric_field_probes/events/electric_field_probe_frequency_correction_changed/electric_field_probe_frequency_correction_changed.py` — `ElectricFieldProbeFrequencyCorrectionChanged(DomainEvent)`, champs `requested_hz: float`, `applied_hz: Optional[float]`, `in_range: bool`, `error: Optional[str] = None`. + `_intention.md`. (Nommé "Changed" et non "Applied" : couvre aussi les cas hors-plage/erreur.)
 
 #### Application (modifiés)
-- `application/services/electric_field_probe_service/dtos/electric_field_probe_dtos.py` — ajoute `FrequencyCorrectionResult(requested_hz, applied_hz: Optional[float], in_range: bool, error: Optional[str] = None)`.
-- `application/services/electric_field_probe_service/ports/i_electric_field_probe_port.py` — ajoute `apply_frequency_correction(self, frequency_hz: float) -> FrequencyCorrectionResult`, docstring précisant : pas d'appel concurrent pendant le streaming (passer par l'exécuteur), jamais d'exception levée pour une panne matérielle (capturée dans `error`).
-- `application/services/electric_field_probe_service/ports/i_electric_field_probe_acquisition_executor.py` — ajoute `request_frequency_correction(self, frequency_hz: float) -> None`.
-- `application/services/electric_field_probe_service/electric_field_probe_service.py` :
+- `application/detection_devices/electric_field_probe_service/dtos/electric_field_probe_dtos.py` — ajoute `FrequencyCorrectionResult(requested_hz, applied_hz: Optional[float], in_range: bool, error: Optional[str] = None)`.
+- `application/detection_devices/electric_field_probe_service/ports/i_electric_field_probe_port.py` — ajoute `apply_frequency_correction(self, frequency_hz: float) -> FrequencyCorrectionResult`, docstring précisant : pas d'appel concurrent pendant le streaming (passer par l'exécuteur), jamais d'exception levée pour une panne matérielle (capturée dans `error`).
+- `application/detection_devices/electric_field_probe_service/ports/i_electric_field_probe_acquisition_executor.py` — ajoute `request_frequency_correction(self, frequency_hz: float) -> None`.
+- `application/detection_devices/electric_field_probe_service/electric_field_probe_service.py` :
   - constantes `EXCITATION_FREQUENCY_CHANGED_TOPIC`, `FREQUENCY_CORRECTION_CHANGED_TOPIC`.
   - `__init__` : `self._last_known_excitation_frequency_hz: float = 0.0` (miroir de `ExcitationParameters.off().frequency`) ; abonnement à `EXCITATION_FREQUENCY_CHANGED_TOPIC`.
   - helper privé `_publish_frequency_correction(result)`.
   - `connect_probe()` : après connexion réussie, `result = self._probe_port.apply_frequency_correction(self._last_known_excitation_frequency_hz)` + publish (satisfait l'exigence 3), avant de publier `CONNECTION_CHANGED_TOPIC`.
   - nouveau `_on_excitation_frequency_changed(event)` : stocke la fréquence ; si non connecté, return ; si `executor.is_running()`, `executor.request_frequency_correction(event.frequency_hz)` (le worker publiera lui-même) ; sinon appel direct + publish.
-- `application/services/excitation_configuration_service/excitation_configuration_service.py` :
+- `application/shared/excitation_configuration_service/excitation_configuration_service.py` :
   - `__init__(self, excitation_port, event_bus: IDomainEventBus)`.
   - `set_excitation()` : compare l'ancienne/nouvelle fréquence, publie `ExcitationFrequencyChanged` sur `EXCITATION_FREQUENCY_CHANGED_TOPIC` seulement si elle diffère.
 
@@ -81,5 +81,5 @@ Tous les nouveaux tests suivent les conventions déjà en place (`MagicMock(spec
 
 ### Vérification
 
-- `uv run pytest src/application/services/electric_field_probe_service src/application/services/excitation_configuration_service src/infrastructure/execution src/infrastructure/hardware/narda_ep600 -v`
+- `uv run pytest src/application/detection_devices/electric_field_probe_service src/application/shared/excitation_configuration_service src/infrastructure/execution src/infrastructure/hardware/narda_ep600 -v`
 - Lancement manuel de l'app en mode mock (`HARDWARE_CONFIG["electric_field_probe"] = "mock"`, `"excitation" = "mock"` ou `"real"` selon dispo) : régler une fréquence >10kHz dans le panneau Excitation → voyant vert avec la fréquence affichée ; régler <10kHz → voyant ambre "hors plage" ; connecter la sonde après avoir déjà réglé une fréquence → voyant appliqué dès la connexion ; démarrer une acquisition puis changer la fréquence en cours de stream → voyant se met à jour sans coupure du tracé live.

@@ -30,7 +30,7 @@ def queue_of(events):
 
 
 class TestCollectSettledSamples(unittest.TestCase):
-    def test_keeps_only_samples_started_after_settling(self):
+    def test_keeps_only_samples_started_after_settling(self) -> None:
         """Samples end every 10 ms; settled at 25 ms: sample ending at 30 ms
         started at 20 ms (before) — the first clean one ends at 40 ms."""
         acquisition = uuid4()
@@ -43,7 +43,7 @@ class TestCollectSettledSamples(unittest.TestCase):
         self.assertEqual([e.sample_index for e in kept], [4, 5, 6])
         self.assertEqual(rejected, 4)
 
-    def test_first_event_is_rejected_without_a_known_predecessor(self):
+    def test_first_event_is_rejected_without_a_known_predecessor(self) -> None:
         acquisition = uuid4()
         events = [sample_event(acquisition, i, 10 * i) for i in range(5, 8)]
 
@@ -52,7 +52,7 @@ class TestCollectSettledSamples(unittest.TestCase):
         self.assertEqual([e.sample_index for e in kept], [6, 7])
         self.assertEqual(rejected, 1)
 
-    def test_a_restarted_stream_needs_a_new_predecessor(self):
+    def test_a_restarted_stream_needs_a_new_predecessor(self) -> None:
         first, second = uuid4(), uuid4()
         events = [sample_event(first, 0, 10), sample_event(second, 0, 20), sample_event(second, 1, 30)]
 
@@ -60,7 +60,7 @@ class TestCollectSettledSamples(unittest.TestCase):
 
         self.assertEqual([(e.acquisition_id, e.sample_index) for e in kept], [(second, 1)])
 
-    def test_returns_a_short_collection_on_timeout(self):
+    def test_returns_a_short_collection_on_timeout(self) -> None:
         kept, rejected = collect_settled_samples(queue.Queue(), count=3, settled_at=T0, timeout_s=0.05)
         self.assertEqual((kept, rejected), ([], 0))
 

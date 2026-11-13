@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Nommer la promesse refusée : un point de champ acquis n'est plus modifiable."
+code: ["[[src/domain/narda_point/errors/narda_point_already_acquired_error.py]]"]
+cause_de_changement: regle-metier
+---
 # narda_point_already_acquired_error — Intention
 
 ## Rationale

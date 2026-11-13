@@ -1,7 +1,7 @@
 """Tests for LineScanConfig value object."""
 import pytest
 from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
-from domain.test_bench.physical_bench_limits.physical_bench_limits import PHYSICAL_X_MAX_MM
+from domain.test_bench_configuration.physical_bench_limits.physical_bench_limits import PHYSICAL_X_MAX_MM
 from domain.step_scan.value_objects.line_scan_config.line_scan_config import LineScanConfig
 
 

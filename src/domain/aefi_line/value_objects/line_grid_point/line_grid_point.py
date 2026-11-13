@@ -12,6 +12,6 @@ class LineGridPoint:
     position: Position2D
     measurement: AefiVoltageMeasurement
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.index_in_line < 0:
             raise ValueError("index_in_line must be >= 0")

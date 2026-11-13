@@ -1,0 +1,23 @@
+
+==================================== ERRORS ====================================
+_ ERROR collecting src/domain/electric_field_probe/_tests/electric_field_probe_test.py _
+ImportError while importing test module '/Users/luis/Library/CloudStorage/Dropbox/Luis/1 PROJETS/1 - THESE/EXPERIMENTAL/AEFI_Acquisition/src/domain/electric_field_probe/_tests/electric_field_probe_test.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+src/domain/electric_field_probe/_tests/electric_field_probe_test.py:5: in <module>
+    from domain.electric_field_probe.electric_field_probe import ElectricFieldProbe
+E   ModuleNotFoundError: No module named 'domain.electric_field_probe.electric_field_probe'
+_ ERROR collecting src/domain/step_scan/events/electric_field_scan_point_acquired/_tests/electric_field_scan_point_acquired_test.py _
+ImportError while importing test module '/Users/luis/Library/CloudStorage/Dropbox/Luis/1 PROJETS/1 - THESE/EXPERIMENTAL/AEFI_Acquisition/src/domain/step_scan/events/electric_field_scan_point_acquired/_tests/electric_field_scan_point_acquired_test.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+src/domain/step_scan/events/electric_field_scan_point_acquired/__init__.py:2: in <module>
+    from .electric_field_scan_point_acquired import ElectricFieldScanPointAcquired
+src/domain/step_scan/events/electric_field_scan_point_acquired/electric_field_scan_point_acquired.py:5: in <module>
+    from domain.shared_kernel.events.domain_event import DomainEvent
+E   ImportError: cannot import name 'DomainEvent' from 'domain.shared_kernel.events.domain_event' (unknown location)
+=========================== short test summary info ============================
+ERROR src/domain/electric_field_probe/_tests/electric_field_probe_test.py
+ERROR src/domain/step_scan/events/electric_field_scan_point_acquired/_tests/electric_field_scan_point_acquired_test.py
+!!!!!!!!!!!!!!!!!!! Interrupted: 2 errors during collection !!!!!!!!!!!!!!!!!!!!
+2 errors in 5.60s

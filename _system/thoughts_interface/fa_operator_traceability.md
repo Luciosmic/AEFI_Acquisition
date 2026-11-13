@@ -17,7 +17,7 @@ status: implémentée (2026-10-02)
 - **S_retroing** : `acquisition-parameters.json` 1.0 a un champ
   `provenance.operator.name`, alimenté depuis commit `a38db85` par un champ
   texte libre (deux saisies = deux orthographes possibles) ; schéma de
-  référence : `src/application/services/scan_export_service/acquisition_parameters/acquisition_parameters_intention.md`.
+  référence : `src/application/scan/scan_export_service/acquisition_parameters/acquisition_parameters_intention.md`.
 - **S_doc** : W3C PROV-O — l'opérateur est un `prov:Agent` (`prov:Person`)
   associé à l'activité d'acquisition (`prov:wasAssociatedWith`) ; un agent est
   identifié, pas seulement nommé.
@@ -110,12 +110,12 @@ du service.
 
 ## Projection
 
-- Promise Model : `_system/promise_model/operator_registry.md`.
+- Promise Model : `_system/documentation/promise_model/operator_registry.md`.
 - code_interface (DDD) :
   - `src/domain/operator_registry/` — `operator_registry.py` (aggregate root),
     `entities/operator/`, `events/operator_registered/`,
     `errors/operator_name_blank_error.py`, `repositories/i_operator_repository.py`
-  - `src/application/services/operator_service/` — `i_api_operator_service.py`,
+  - `src/application/operator_registry/operator_service/` — `i_api_operator_service.py`,
     `operator_service.py`, `operator_service_errors.py`, `dtos/operator_dto.py`
   - `src/infrastructure/persistence/operator_registry/` — `real_operator_repository.py`
     (`.aefi_acquisition/operators/operators.json`), `fake/fake_operator_repository.py`

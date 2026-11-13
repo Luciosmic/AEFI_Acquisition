@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Nommer la promesse refusée : « un point de fréquence contient exactement N échantillons »."
+code: ["[[src/domain/frequency_sweep/errors/frequency_point_incomplete_error.py]]"]
+cause_de_changement: regle-metier
+---
 # frequency_point_incomplete_error — Intention
 
 ## Rationale

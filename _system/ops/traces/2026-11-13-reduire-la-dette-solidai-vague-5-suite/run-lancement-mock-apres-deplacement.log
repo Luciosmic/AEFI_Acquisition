@@ -1,0 +1,4 @@
+qt.qpa.fonts: Populating font family aliases took 76 ms. Replace uses of missing font family "Sans Serif" with one that exists to avoid this cost. 
+QOpenGLWidget is not supported on this platform.
+This plugin does not support propagateSizeHints()
+This plugin does not support propagateSizeHints()

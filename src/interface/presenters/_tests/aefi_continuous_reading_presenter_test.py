@@ -11,27 +11,27 @@ from datetime import datetime, timezone
 from typing import Optional
 from uuid import uuid4
 
-from application.services.aefi_acquisition_service.i_api_aefi_acquisition_service import (
+from application.shared.aefi_acquisition_service.i_api_aefi_acquisition_service import (
     IApiAefiAcquisitionService,
 )
-from application.services.aefi_signal_processing_service.i_api_aefi_signal_processing_service import (
+from application.aefi_signal_processing.aefi_signal_processing_service.i_api_aefi_signal_processing_service import (
     IApiAefiSignalProcessingService,
 )
 from domain.shared_kernel.operation_result import OperationResult
-from domain.detection_devices.aefi_device.signal_processing.events.aefi_corrected_field_sample_acquired.aefi_corrected_field_sample_acquired import (
+from domain.aefi_signal_processing.events.aefi_corrected_field_sample_acquired.aefi_corrected_field_sample_acquired import (
     AefiCorrectedFieldSampleAcquired,
 )
-from domain.detection_devices.aefi_device.signal_processing.events.aefi_signal_correction_calibration_updated.aefi_signal_correction_calibration_updated import (
+from domain.aefi_signal_processing.events.aefi_signal_correction_calibration_updated.aefi_signal_correction_calibration_updated import (
     AefiSignalCorrectionCalibrationUpdated,
 )
-from domain.detection_devices.aefi_device.signal_processing.value_objects.aefi_corrected_field_measurement.aefi_corrected_field_measurement import (
+from domain.aefi_signal_processing.value_objects.aefi_corrected_field_measurement.aefi_corrected_field_measurement import (
     AefiCorrectedFieldMeasurement,
 )
-from domain.detection_devices.aefi_device.signal_processing.value_objects.aefi_signal_correction_calibration.aefi_signal_correction_calibration import (
+from domain.aefi_signal_processing.value_objects.aefi_signal_correction_calibration.aefi_signal_correction_calibration import (
     AefiSignalCorrectionCalibration,
 )
-from application.services.transformation_service.transformation_service import TransformationService
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from application.test_bench_calibration.transformation_service.transformation_service import TransformationService
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from interface.presenters.aefi_continuous_reading_presenter import AefiContinuousReadingPresenter
 from interface.view_models.aefi_continuous_reading_sample_view_model import (
     AefiContinuousReadingSampleViewModel,

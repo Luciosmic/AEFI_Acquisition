@@ -11,14 +11,14 @@ import logging
 
 from PySide6.QtCore import QObject, Signal, Slot
 
-from application.services.synchronous_detection_service.i_api_synchronous_detection_service import (
+from application.test_bench_calibration.synchronous_detection_service.i_api_synchronous_detection_service import (
     IApiSynchronousDetectionService,
 )
-from application.services.synchronous_detection_service.synchronous_detection_service import (
+from application.test_bench_calibration.synchronous_detection_service.synchronous_detection_service import (
     SYNCHRONOUS_DETECTION_PHASE_CALIBRATION_ENTRY_ADDED_TOPIC,
     SYNCHRONOUS_DETECTION_COMPENSATION_ENABLED_CHANGED_TOPIC,
 )
-from application.services.excitation_configuration_service.excitation_configuration_service import (
+from application.shared.excitation_configuration_service.excitation_configuration_service import (
     EXCITATION_FREQUENCY_CHANGED_TOPIC,
     DDS_CHANNEL_CONFIG_CHANGED_TOPIC,
 )
@@ -28,7 +28,7 @@ from application.services.excitation_configuration_service.excitation_configurat
 # above) rather than importing from infrastructure/ — interface must not
 # depend on infrastructure. Source of truth: ad9106_advanced_configurator.py.
 DDS_SYNCHRONOUS_DETECTION_CHANNEL_CHANGED_TOPIC = "ddssynchronousdetectionchannelchanged"
-from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
 
 
 logger = logging.getLogger(__name__)

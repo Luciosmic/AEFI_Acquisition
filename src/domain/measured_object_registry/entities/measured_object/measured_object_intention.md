@@ -1,3 +1,10 @@
+---
+type: entite::solidai-ddd
+tldr: "Porter l'identité stable d'un objet mesuré (measured_object_id), son nom tel qu'enregistré (espaces normalisés) et sa date d'enregistrement."
+code: ["[[src/domain/measured_object_registry/entities/measured_object/measured_object.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/measured_object_registry/measured_object_registry_intention]]"
+---
 # measured_object — Intention
 
 ## Rationale

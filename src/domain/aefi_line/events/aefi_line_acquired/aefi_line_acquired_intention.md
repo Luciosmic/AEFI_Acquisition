@@ -1,3 +1,10 @@
+---
+type: evenement-de-domaine::solidai-ddd
+tldr: "Fait passé : une ligne a reçu tous ses points de grille ; porte identité, scan, rang de la ligne, points (position + mesure) et leur nombre."
+code: ["[[src/domain/aefi_line/events/aefi_line_acquired/aefi_line_acquired.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/aefi_line/aefi_line_intention]]"
+---
 # aefi_line_acquired — Intention
 
 ## Rationale

@@ -6,19 +6,19 @@ from dataclasses import replace
 from datetime import datetime, timezone
 from pathlib import Path
 
-from application.services.frequency_sweep_service.dtos.acquisition_parameters_dtos import (
+from application.frequency_sweep.frequency_sweep_service.dtos.acquisition_parameters_dtos import (
     FrequencySweepAcquisitionParametersDTO,
     FrequencySweepActivityDTO,
     SweptExcitationDTO,
 )
-from application.services.frequency_sweep_service.dtos.frequency_sweep_dtos import (
+from application.frequency_sweep.frequency_sweep_service.dtos.frequency_sweep_dtos import (
     FrequencyPointDTO,
     FrequencySweepResultDTO,
     FrequencySweepSampleDTO,
 )
-from application.services.frequency_sweep_service.frequency_sweep_service import CONTROLLER
+from application.frequency_sweep.frequency_sweep_service.frequency_sweep_service import CONTROLLER
 from application.shared.acquisition_parameters.acquisition_conditions_dtos import BenchPositionDTO, ExportedFileDTO
-from infrastructure.acquisition_conditions.fake.fake_acquisition_conditions_port import make_bench_conditions
+from infrastructure.acquisition_conditions_reader.fake.fake_acquisition_conditions_reader import make_bench_conditions
 from infrastructure.persistence.acquisition_parameters.acquisition_parameters_v1 import UCUM_UNITS
 from infrastructure.persistence.acquisition_throughput._tests.acquisition_parameters_v1_serializer_test import (
     UCUM_SYNTAX,
@@ -30,7 +30,7 @@ from infrastructure.persistence.frequency_sweep.acquisition_parameters_v1_serial
     serialize_acquisition_parameters_v1,
 )
 from infrastructure.persistence.frequency_sweep.csv_frequency_sweep_export_port import CsvFrequencySweepExportPort
-from infrastructure.provenance.fake.fake_software_provenance_port import CLEAN
+from infrastructure.git_software_provenance_reader.fake.fake_git_software_provenance_reader import CLEAN
 
 FREQUENCIES = (100.0, 1000.0, 10000.0)
 ACTIVITY = FrequencySweepActivityDTO(
@@ -112,6 +112,20 @@ class TestFrequencySweepAcquisitionParameters(unittest.TestCase):
         paths = [w["path"] for w in serialize(cancelled)["warnings"]]
         self.assertIn("procedure.frequency_sweep.acquired_frequency_count", paths)
         self.assertNotIn("procedure.frequency_sweep.acquired_frequency_count", [w["path"] for w in serialize()["warnings"]])
+
+
+    def test_an_object_measurement_states_its_object_and_lift_off(self):
+        activity = replace(
+            ACTIVITY, role="object_measurement", measured_object_id="obj-1", measured_object_name="bouteille",
+            lift_off_mm=8.0,
+        )
+        feature = serialize(replace(PARAMETERS, activity=activity))["feature_of_interest"]
+        self.assertTrue(feature["present"])
+        self.assertEqual((feature["id"], feature["description"]), ("obj-1", "bouteille"))
+        self.assertEqual(
+            feature["distance_between_lowest_point_of_sphere_and_highest_point_of_object_under_test"],
+            {"value": 8.0, "unit": "mm", "alias": "lift_off"},
+        )
 
 
 class TestCsvFrequencySweepExportPort(unittest.TestCase):

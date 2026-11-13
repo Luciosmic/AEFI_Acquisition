@@ -1,0 +1,5 @@
+atomes src/domain/step_scan/value_objects/line_scan_config,src/domain/step_scan/value_objects/scan_point_result,src/domain/step_scan/value_objects/scan_zone,src/domain/step_scan/value_objects/step_scan_config,src/domain/test_bench/calibration
+pytest ERREUR tests=0 verts=0 rouges=0 nouveaux-rouges=0 anciens-rouges=0 verts-sans-code=0 | collecte : src/domain/test_bench/calibration/_tests/calibration_test.py
+verify DETTE nouvelles=- anciennes=solidai-intention-non-typee | src/domain/step_scan/value_objects/line_scan_config/line_scan_config_intention.md:None solidai-intention-non-typee src/domain/step_scan/value_objects/scan_point_result/scan_point_result_intention.md:None solidai-intention-non-typee src/domain/step_scan/value_objects/scan_zone/scan_zone_intention.md:None solidai-intention-non-typee src/domain/step_scan/value_objects/step_scan_config/step_scan_config_intention.md:None solidai-intention-non-typee src/domain/test_bench/calibration/calibration_intention.md:None solidai-intention-non-typee
+graphe OK nouveaux=- anciens=-
+verdict CASSE cause=collecte,aucun-test

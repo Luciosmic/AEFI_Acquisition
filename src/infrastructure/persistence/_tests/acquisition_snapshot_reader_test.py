@@ -4,12 +4,13 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from domain.test_bench.calibration.calibration import Calibration
-from domain.test_bench.calibration.value_objects.caliper_measurement.caliper_measurement import CaliperMeasurement
-from domain.test_bench.calibration.entities.hardware_component_selection.hardware_component_selection import (
+from domain.test_bench_calibration.calibration import Calibration
+from domain.test_bench_configuration.bench_configuration import BenchConfiguration
+from domain.test_bench_calibration.value_objects.caliper_measurement.caliper_measurement import CaliperMeasurement
+from domain.test_bench_configuration.entities.hardware_component_selection.hardware_component_selection import (
     HardwareComponentSelection,
 )
-from domain.test_bench.calibration.value_objects.hardware_component_kind.hardware_component_kind import (
+from domain.test_bench_configuration.value_objects.hardware_component_kind.hardware_component_kind import (
     HardwareComponentKind,
 )
 from infrastructure.persistence.acquisition_snapshot_reader import AcquisitionSnapshotReader
@@ -75,7 +76,7 @@ class TestAcquisitionSnapshotReader(unittest.TestCase):
 
     def test_mounted_component_is_exported_from_domain_with_its_debt(self):
         self.components.add(
-            Calibration().record_hardware_component_characterization(
+            BenchConfiguration().record_hardware_component_characterization(
                 CONDITIONING, "Final_v4", {"gain": 9.8, "bandwidth_hz": 8e5}
             )
         )
@@ -97,14 +98,15 @@ class TestAcquisitionSnapshotReader(unittest.TestCase):
 
     def test_current_transmission_is_exported_with_its_factor_and_current_warning(self):
         calibration = Calibration()
+        configuration = BenchConfiguration()
         for kind, name, values in (
             (HardwareComponentKind.MOTORS, "Igus", {"rated_current_a": 4.2}),
             (HardwareComponentKind.STEPPER_DRIVER, "TB6600", {"max_current_a": 3.5}),
         ):
-            self.components.add(calibration.record_hardware_component_characterization(kind, name, values))
-            self.components.add_selection(calibration.mount_hardware_component(kind, name, {name}, None))
+            self.components.add(configuration.record_hardware_component_characterization(kind, name, values))
+            self.components.add_selection(configuration.mount_hardware_component(kind, name, {name}, None))
         motor, driver = (
-            Calibration.current_mounting(self.components.find_selections(kind)).mounting_id
+            BenchConfiguration.current_mounting(self.components.find_selections(kind)).mounting_id
             for kind in (HardwareComponentKind.MOTORS, HardwareComponentKind.STEPPER_DRIVER)
         )
         self.transmissions.add(

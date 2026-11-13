@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Union
 from uuid import UUID
 
-from domain.shared_kernel.events.domain_event import DomainEvent
+from domain.shared_kernel.events.domain_event.domain_event import DomainEvent
 from domain.step_scan.value_objects.step_scan_config.step_scan_config import StepScanConfig
 from domain.step_scan.value_objects.line_scan_config.line_scan_config import LineScanConfig
 

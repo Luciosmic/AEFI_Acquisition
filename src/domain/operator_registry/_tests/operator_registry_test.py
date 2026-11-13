@@ -11,7 +11,7 @@ LUIS = Operator(operator_id=uuid4(), name="Luis Saluden", registered_at=datetime
 
 
 class TestOperatorRegistry(unittest.TestCase):
-    def test_a_new_name_creates_an_operator_and_records_it(self):
+    def test_a_new_name_creates_an_operator_and_records_it(self) -> None:
         registry = OperatorRegistry.reconstitute([])
 
         operator, created = registry.register("  Luis   Saluden ")
@@ -24,7 +24,7 @@ class TestOperatorRegistry(unittest.TestCase):
         self.assertIsInstance(events[0], OperatorRegistered)
         self.assertEqual((events[0].operator_id, events[0].name), (operator.operator_id, "Luis Saluden"))
 
-    def test_a_known_spelling_returns_the_existing_operator_without_event(self):
+    def test_a_known_spelling_returns_the_existing_operator_without_event(self) -> None:
         """I1: one operator, one spelling — up to case and spacing."""
         registry = OperatorRegistry.reconstitute([LUIS])
 
@@ -35,7 +35,7 @@ class TestOperatorRegistry(unittest.TestCase):
         self.assertEqual(registry.operators, [LUIS])
         self.assertEqual(registry.domain_events, [])
 
-    def test_a_blank_name_is_refused(self):
+    def test_a_blank_name_is_refused(self) -> None:
         """I2: an operator has a name."""
         registry = OperatorRegistry.reconstitute([])
         for blank in ("", "   ", "\t\n"):
@@ -43,13 +43,13 @@ class TestOperatorRegistry(unittest.TestCase):
                 registry.register(blank)
         self.assertEqual(registry.operators, [])
 
-    def test_identities_are_never_reused(self):
+    def test_identities_are_never_reused(self) -> None:
         """I3: each new operator gets its own stable identity."""
         registry = OperatorRegistry.reconstitute([LUIS])
         other, _ = registry.register("Marie Curie")
         self.assertNotEqual(other.operator_id, LUIS.operator_id)
 
-    def test_domain_events_are_handed_out_once(self):
+    def test_domain_events_are_handed_out_once(self) -> None:
         registry = OperatorRegistry.reconstitute([])
         registry.register("Marie Curie")
         self.assertEqual(len(registry.domain_events), 1)

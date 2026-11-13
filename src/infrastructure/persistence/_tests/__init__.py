@@ -3,7 +3,7 @@
 from dataclasses import replace
 from datetime import datetime, timezone
 
-from application.services.scan_export_service.dtos.scan_acquisition_parameters_dtos import (
+from application.scan.scan_export_service.dtos.scan_acquisition_parameters_dtos import (
     FLY_SCAN,
     STEP_SCAN,
     ExcitationStateDTO,
@@ -13,8 +13,8 @@ from application.services.scan_export_service.dtos.scan_acquisition_parameters_d
     StepScanProcedureDTO,
 )
 from application.shared.acquisition_parameters.acquisition_conditions_dtos import BenchPositionDTO
-from infrastructure.acquisition_conditions.fake.fake_acquisition_conditions_port import make_bench_conditions
-from infrastructure.provenance.fake.fake_software_provenance_port import CLEAN
+from infrastructure.acquisition_conditions_reader.fake.fake_acquisition_conditions_reader import make_bench_conditions
+from infrastructure.git_software_provenance_reader.fake.fake_git_software_provenance_reader import CLEAN
 
 STARTED = datetime(2026, 10, 2, 14, 0, 0, tzinfo=timezone.utc)
 ENDED = datetime(2026, 10, 2, 14, 5, 0, tzinfo=timezone.utc)

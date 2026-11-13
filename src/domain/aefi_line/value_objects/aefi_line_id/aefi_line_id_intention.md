@@ -1,3 +1,10 @@
+---
+type: value-object::solidai-ddd
+tldr: "Typer l'identité d'une AefiLine."
+code: ["[[src/domain/aefi_line/value_objects/aefi_line_id/aefi_line_id.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/aefi_line/aefi_line_intention]]"
+---
 # aefi_line_id — Intention
 
 ## Rationale

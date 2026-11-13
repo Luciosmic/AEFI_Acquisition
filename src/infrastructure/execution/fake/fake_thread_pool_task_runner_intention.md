@@ -1,3 +1,11 @@
+---
+type: doublure-de-test::solidai-hexagonal
+tldr: "Doublure `fake_thread_pool_task_runner` : Implement `IAsyncTaskRunner` for tests: `submit(task)` calls `task()` synchronously and returns a completed `TaskHandle`."
+code: ["[[src/infrastructure/execution/fake/fake_thread_pool_task_runner.py]]"]
+cause_de_changement: outil
+implements: ["[[src/application/shared/ports/i_async_task_runner_intention]]"]
+double_de: "[[src/infrastructure/execution/thread_pool_task_runner_intention]]"
+---
 # fake_thread_pool_task_runner — Intention
 
 ## Rationale

@@ -1,3 +1,10 @@
+---
+type: value-object::solidai-ddd
+tldr: "Stocker `max_uncertainty_volts: float` : seuil maximal d'incertitude acceptable par position."
+code: ["[[src/domain/shared_kernel/value_objects/measurement_uncertainty/measurement_uncertainty.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/shared_kernel/operation_result_intention]]"
+---
 # measurement_uncertainty — Intention
 
 ## Rationale

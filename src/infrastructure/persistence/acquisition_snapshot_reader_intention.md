@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Module `acquisition_snapshot_reader` : `hardware_configuration` — depuis les registres domaine : pour chaque type de composant, le composant monté et sa caractérisation courante."
+code: ["[[src/infrastructure/persistence/acquisition_snapshot_reader.py]]"]
+cause_de_changement: outil
+---
 # acquisition_snapshot_reader — Intention
 
 ## Rationale
@@ -38,7 +44,7 @@ Implémenter `IAcquisitionSnapshotPort` :
 - Depuis le 2026-10-02, ce dict n'est plus écrit tel quel dans les exports :
   `AcquisitionConditionsReader` le traduit en `AcquisitionConditionsDTO`, que
   les sérialiseurs 1.0 (scan, série temporelle, balayage de débit) mettent en
-  page selon `application/services/scan_export_service/acquisition_parameters/acquisition_parameters_intention.md`.
+  page selon `application/scan/scan_export_service/acquisition_parameters/acquisition_parameters_intention.md`.
   Sa forme (`hardware_configuration`, `hardware_settings`) est donc un contrat
   interne entre ces deux adaptateurs.
 - Tests : `_tests/acquisition_snapshot_reader_test.py`.

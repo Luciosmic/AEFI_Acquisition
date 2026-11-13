@@ -12,17 +12,17 @@ from typing import Optional
 
 from PySide6.QtCore import QObject, Signal, Slot
 
-from application.services.sensor_calibration_service.i_api_sensor_calibration_service import (
+from application.test_bench_calibration.sensor_calibration_service.i_api_sensor_calibration_service import (
     IApiSensorCalibrationService,
 )
-from application.services.sensor_calibration_service.ports.i_sensor_calibration_output_port import (
+from application.test_bench_calibration.sensor_calibration_service.ports.i_sensor_calibration_output_port import (
     ISensorCalibrationOutputPort,
 )
-from application.services.sensor_calibration_service.sensor_calibration_service import (
+from application.test_bench_calibration.sensor_calibration_service.sensor_calibration_service import (
     ACTIVE_SENSOR_ROTATION_CHANGED_TOPIC,
     SENSOR_CALIBRATION_ENTRY_ADDED_TOPIC,
 )
-from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
 from interface.qt_abc import QABCMeta
 
 logger = logging.getLogger(__name__)

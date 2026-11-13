@@ -1,3 +1,10 @@
+---
+type: evenement-de-domaine::solidai-ddd
+tldr: "Fait passé : un point a reçu exactement N échantillons valides ; porte identité, scan, index global du point, position, mesure moyennée (avec écarts-types) et nombre…"
+code: ["[[src/domain/aefi_point/events/aefi_point_acquired/aefi_point_acquired.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/aefi_point/aefi_point_intention]]"
+---
 # aefi_point_acquired — Intention
 
 ## Rationale

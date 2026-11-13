@@ -1,0 +1,5 @@
+verify errors 1174 hors untracked 1169 warnings 55
+mypy: 2943
+1 failed, 1706 passed, 3 skipped, 4 warnings, 248 subtests passed in 408.09s (0:06:48)
+FAILED src/application/services/scan_application_service/_tests/scan_export_with_post_processing_integration_tests/scan_export_with_post_processing_integration_test.py::ScanExportWithPostProcessingIntegrationTest::test_scan_exports_both_formats_and_real_pipeline_fills_the_hdf5
+/private/tmp/claude-501/v3/controle.sh lots-depart  29.68s user 9.71s system 9% cpu 7:02.64 total

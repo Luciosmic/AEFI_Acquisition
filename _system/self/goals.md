@@ -73,9 +73,9 @@ Implémentée et validée dans `shared_kernel` (2026-07-24 → 2026-07-29), puis
 
 **Réintégrée dans le domain `calibration` (2026-10-01)** — le besoin s'est confirmé : reconstruire les positions depuis les mesures au pied à coulisse, les exporter dans le JSON d'acquisition, et les visualiser en direct dans l'onglet de calibration de la géométrie. Un seul langage : l'entrée est `SourceGeometryCalibrationEntry` (ordre `D_S1_S2, D_S3_S4, D_S1_S3, D_S1_S4, D_S2_S3, D_S2_S4`), le résultat `SourceFrameGeometry` est exprimé dans **le** repère source (centroïde, chaque sphère dans son quadrant `x_neg_y_pos`…) ; le repère de travail du solveur (S1 à l'origine) n'est plus exposé. `external_modules/source_geometry/` est supprimé.
 
-- `domain/test_bench/calibration/services/source_frame_solver/` — reconstruction DGP coplanaire + carré ajusté (historique des corrections dans son intention).
-- `domain/test_bench/calibration/value_objects/source_frame_geometry/` — résultat.
-- `domain/test_bench/calibration/errors/source_geometry_inconsistent_error.py` — chevauchement / triangle qui ne ferme pas ; l'agrégat refuse d'enregistrer une géométrie non reconstructible.
+- `domain/test_bench_calibration/services/source_frame_solver/` — reconstruction DGP coplanaire + carré ajusté (historique des corrections dans son intention).
+- `domain/test_bench_calibration/value_objects/source_frame_geometry/` — résultat.
+- `domain/test_bench_calibration/errors/source_geometry_inconsistent_error.py` — chevauchement / triangle qui ne ferme pas ; l'agrégat refuse d'enregistrer une géométrie non reconstructible.
 - `SourceGeometryCalibrationService.preview_source_frame` → `OperationResult` (aperçu live, rien d'enregistré).
 - Export : `hardware_configuration.source_frame_reconstruction` dans le JSON d'acquisition.
 - Non fait : `PointChargeFieldSimulator` suppose toujours un carré parfait.
@@ -213,7 +213,7 @@ Cette passe est **strictement domain-only** : aucune modification de
   `step_scan` mais héberge aussi ligne/Z — à trancher si un 3e type de scan
   arrive.
 - **Constantes physiques extraites** de `scan_zone.py` vers un module partagé
-  `src/domain/test_bench/physical_bench_limits/physical_bench_limits.py` (`PHYSICAL_X_MAX_MM`,
+  `src/domain/test_bench_configuration/physical_bench_limits/physical_bench_limits.py` (`PHYSICAL_X_MAX_MM`,
   `PHYSICAL_Y_MAX_MM`, `PHYSICAL_Z_MAX_MM`) — 3 consommateurs (ScanZone,
   LineScanConfig, ZAxisScanConfig) = règle des trois atteinte.
 - **Ligne à theta=90° ne doit PAS passer par `ScanZone`** : son invariant
@@ -556,7 +556,7 @@ fly_scan/
 **Contraintes hardware à confirmer** :
 - Fréquence d'acquisition ADC en mode continu (ADS131A04 → 8 kSPS max)
 - Latence USB vers Arcus DMX pour les horodatages t_start/t_end
-  - ponytail: `_run_worker_loop` dans `adapter_motion_port_arcus_performax4EX.py:190` capture déjà `start_time = time.time()` juste avant `_internal_move_to()` — c'est le vrai instant de dispatch hardware (queue déjà vidée), pas l'instant d'enqueue de `move_to()`. Un `MotionStarted`-like event existait autrefois publié depuis `move_to()` (donc à l'enqueue, pas au dispatch) ; il a été supprimé (2026-07) car sans abonné. Pour `t_start` de `FlyScanLine`, republier depuis ce point précis du worker plutôt que depuis `move_to()`.
+  - ponytail: `_run_worker_loop` dans `adapter_motion_port_arcus_performax4ex.py:190` capture déjà `start_time = time.time()` juste avant `_internal_move_to()` — c'est le vrai instant de dispatch hardware (queue déjà vidée), pas l'instant d'enqueue de `move_to()`. Un `MotionStarted`-like event existait autrefois publié depuis `move_to()` (donc à l'enqueue, pas au dispatch) ; il a été supprimé (2026-07) car sans abonné. Pour `t_start` de `FlyScanLine`, republier depuis ce point précis du worker plutôt que depuis `move_to()`.
 - Buffer mémoire pour une ligne (à calculer selon vitesse × durée de ligne)
 
 **Mitigation** : implémenter d'abord un "fly-scan simulé" — rejouer un step-scan existant en mode continu pour valider la corrélation avant l'intégration hardware.

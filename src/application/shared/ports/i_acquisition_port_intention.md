@@ -1,0 +1,22 @@
+---
+type: port::solidai-hexagonal
+tldr: "Port sortant `i_acquisition_port` : Déclarer `acquire_sample() → AefiVoltageMeasurement` (ou équivalent) comme méthode abstraite."
+sens: sortant
+code: "[[src/application/shared/ports/i_acquisition_port.py]]"
+---
+# i_acquisition_port — Intention
+
+## Rationale
+
+Définir le contrat outbound que `ScanApplicationService` utilise pour acquérir un échantillon de mesure. Ce port découple le service applicatif du chip ADC concret (ADS131A04) et rend les tests de scan possibles sans hardware.
+
+## Responsibility
+
+- Déclarer `acquire_sample() → AefiVoltageMeasurement` (ou équivalent) comme méthode abstraite.
+- Servir de frontière entre la couche Application et l'infrastructure d'acquisition.
+
+## Design
+
+- **Port outbound** (Application → Infrastructure) : placé dans `application/shared/ports/`, car deux contextes le consomment (`scan` et `shared`) : un port utilisé par deux contextes va dans le noyau partagé (Evans, DDD ch. 14).
+- **ABC avec `@abstractmethod`** : contrat pur, zéro logique d'implémentation.
+- Implémenté par `AdapterIAcquisitionPortADS131A04` (Real) et `AdapterMockIAcquisitionPort` (Fake/Mock).

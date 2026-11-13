@@ -11,11 +11,11 @@ procedure (role, grid, table height), swept frequency, excitation, columns.
 from datetime import datetime
 from typing import Any, Dict
 
-from application.services.frequency_sweep_service.dtos.acquisition_parameters_dtos import (
+from application.frequency_sweep.frequency_sweep_service.dtos.acquisition_parameters_dtos import (
     FrequencySweepAcquisitionParametersDTO,
     FrequencySweepActivityDTO,
 )
-from application.services.frequency_sweep_service.dtos.frequency_sweep_dtos import VALUE_CHANNELS
+from application.frequency_sweep.frequency_sweep_service.dtos.frequency_sweep_dtos import VALUE_CHANNELS
 from application.shared.acquisition_parameters.acquisition_conditions_dtos import AcquisitionConditionsDTO
 from infrastructure.persistence.acquisition_parameters import acquisition_parameters_v1 as v1
 from infrastructure.persistence.acquisition_parameters.acquisition_parameters_v1 import (  # noqa: F401 — re-used names
@@ -30,6 +30,7 @@ _ROLE_NOTES = {
     "instrument_reference": "Référence instrument : table en position basse, aucun objet sur le banc.",
     "background": "Fond : table à la hauteur de travail, aucun objet sur le banc.",
 }
+OBJECT_MEASUREMENT = "object_measurement"
 
 
 def serialize_acquisition_parameters_v1(
@@ -52,10 +53,17 @@ def serialize_acquisition_parameters_v1(
             f"balayage incomplet ({activity.acquired_frequency_count}/{len(activity.frequencies_hz)} fréquences) : "
             "ni référence ni fond utilisable",
         )
-    feature_of_interest = v1.feature_of_interest(
-        present=False, description=None, notes=_ROLE_NOTES.get(activity.role), warn=warn,
-        absent_because=f"rôle {activity.role}",
-    )
+    if activity.role == OBJECT_MEASUREMENT:
+        feature_of_interest = v1.feature_of_interest(
+            present=True, description=activity.measured_object_name or None,
+            notes="Mesure objet : même hauteur de table que le fond, objet posé.", warn=warn,
+            measured_object_id=activity.measured_object_id or None, lift_off_mm=activity.lift_off_mm,
+        )
+    else:
+        feature_of_interest = v1.feature_of_interest(
+            present=False, description=None, notes=_ROLE_NOTES.get(activity.role), warn=warn,
+            absent_because=f"rôle {activity.role}",
+        )
     components = v1.components(conditions, warn, state_read=(
         "au démarrage du balayage, mémoire du contrôleur — fréquence de l'opérateur, pas celle des points"
     ))

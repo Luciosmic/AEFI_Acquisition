@@ -1,0 +1,25 @@
+---
+type: adaptateur::solidai-hexagonal
+tldr: "Adaptateur `adapter_lifecycle_arcus_performax4ex` : Ouvrir et configurer la connexion au contrôleur Arcus via la DLL."
+code: ["[[src/infrastructure/hardware/arcus_performax_4ex/adapter_lifecycle_arcus_performax4ex/adapter_lifecycle_arcus_performax4ex.py]]"]
+cause_de_changement: outil
+implements: ["[[src/application/shared/system_lifecycle_service/ports/i_hardware_initialization_port_intention]]"]
+---
+# adapter_lifecycle_arcus_performax4ex — Intention
+
+## Rationale
+
+Adaptateur gérant le cycle de vie de la connexion au contrôleur Arcus (ouverture USB/DLL, vérification de connectivité, fermeture). Séparé de l'adaptateur motion pour respecter le Single Responsibility Principle.
+
+## Responsibility
+
+- Ouvrir et configurer la connexion au contrôleur Arcus via la DLL.
+- Vérifier la connectivité (ping ou status register).
+- Fermer proprement la connexion lors du shutdown.
+- Contribuer à `IHardwareInitializationPort` (via `CompositeHardwareInitializationPort`).
+
+## Design
+
+- **Séparation lifecycle / motion** : l'adaptateur lifecycle est utilisé au démarrage/arrêt, l'adaptateur motion l'est en permanence pendant les scans.
+
+- `verify_all()` lit la position brute en impulsions via le contrôleur : l'absence de conversion mm/impulsion (transmission non calibrée) ne fait pas échouer le démarrage ; un contrôleur qui ne répond pas échoue toujours.

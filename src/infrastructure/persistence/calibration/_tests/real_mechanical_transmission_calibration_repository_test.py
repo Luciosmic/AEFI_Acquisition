@@ -1,7 +1,7 @@
 import json
 from uuid import uuid4
 
-from domain.test_bench.calibration.entities.mechanical_transmission_calibration_entry.mechanical_transmission_calibration_entry import (
+from domain.test_bench_calibration.entities.mechanical_transmission_calibration_entry.mechanical_transmission_calibration_entry import (
     MechanicalTransmissionCalibrationEntry,
 )
 from infrastructure.persistence.calibration.real_mechanical_transmission_calibration_repository import (

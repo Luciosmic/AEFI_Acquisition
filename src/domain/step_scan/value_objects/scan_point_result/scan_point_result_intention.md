@@ -1,3 +1,10 @@
+---
+type: value-object::solidai-ddd
+tldr: "Stocker position: Position2D, measurement: AefiVoltageMeasurement, point_index: int."
+code: ["[[src/domain/step_scan/value_objects/scan_point_result/scan_point_result.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/step_scan/step_scan_intention]]"
+---
 # scan_point_result — Intention
 
 ## Rationale

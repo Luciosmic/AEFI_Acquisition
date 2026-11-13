@@ -1,3 +1,9 @@
+---
+type: racine-d-agregat::solidai-ddd
+tldr: "Gérer le cycle de vie du scan : start → (pause/resume)* → mark_completed | fail | cancel."
+code: ["[[src/domain/step_scan/step_scan.py]]"]
+cause_de_changement: regle-metier
+---
 # step_scan — Intention
 
 ## Rationale

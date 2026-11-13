@@ -1,13 +1,13 @@
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from domain.detection_devices.electric_field_probes.value_objects.field_measurement.field_measurement import FieldMeasurement
+from domain.electric_field_probes.value_objects.field_measurement.field_measurement import FieldMeasurement
 from domain.narda_point.events.narda_point_acquired.narda_point_acquired import NardaPointAcquired
 from domain.narda_point.narda_point import NardaPoint
 from domain.narda_point.value_objects.narda_point_id.narda_point_id import NardaPointId
 from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
-from infrastructure.unit_of_work.in_memory_unit_of_work import InMemoryUnitOfWork
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
+from infrastructure.in_memory_unit_of_work.in_memory_unit_of_work import InMemoryUnitOfWork
 
 
 def _point(scan_id, n=2) -> NardaPoint:

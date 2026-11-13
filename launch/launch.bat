@@ -17,7 +17,7 @@ if not exist .venv (
 )
 
 echo Starting AEFI Acquisition Interface...
-uv run python src/main.py
+uv run python src/interface/main.py
 
 if %ERRORLEVEL% neq 0 (
     echo Application exited with error code %ERRORLEVEL%

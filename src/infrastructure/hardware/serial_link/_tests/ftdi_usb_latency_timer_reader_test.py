@@ -1,6 +1,6 @@
 import unittest
 
-from infrastructure.hardware.serial_link.ftdi_usb_latency_timer_reader import FtdiUsbLatencyTimerReader
+from infrastructure.hardware.serial_link.serial_link import FtdiUsbLatencyTimerReader
 
 DEVICES = [
     ("VID_0403+PID_6001+AL03IC37A", "COM10", 16),

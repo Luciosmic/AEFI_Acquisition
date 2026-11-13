@@ -7,9 +7,9 @@ from types import SimpleNamespace
 
 from PySide6.QtWidgets import QApplication
 
-from domain.shared_kernel.motion.events.motor_increments_updated.motor_increments_updated import MotorIncrementsUpdated
+from domain.shared_kernel.events.motor_increments_updated.motor_increments_updated import MotorIncrementsUpdated
 from domain.shared_kernel.operation_result import OperationResult
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from interface.presenters.motion_presenter import MotionPresenter
 
 

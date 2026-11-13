@@ -19,17 +19,17 @@ from typing import Optional
 
 from PySide6.QtCore import QObject, QTimer, Signal, Slot
 
-from application.services.inertial_probe_service.inertial_probe_service import InertialProbeService
-from domain.detection_devices.inertial_probe.events.inertial_probe_connection_changed.inertial_probe_connection_changed import (
+from application.inertial_probe.inertial_probe_service.inertial_probe_service import InertialProbeService
+from domain.inertial_probe.events.inertial_probe_connection_changed.inertial_probe_connection_changed import (
     InertialProbeConnectionChanged,
 )
-from domain.detection_devices.inertial_probe.events.inertial_probe_sample_acquired.inertial_probe_sample_acquired import (
+from domain.inertial_probe.events.inertial_probe_sample_acquired.inertial_probe_sample_acquired import (
     InertialProbeSampleAcquired,
 )
-from domain.detection_devices.inertial_probe.events.inertial_probe_stream_failed.inertial_probe_stream_failed import (
+from domain.inertial_probe.events.inertial_probe_stream_failed.inertial_probe_stream_failed import (
     InertialProbeStreamFailed,
 )
-from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
 from interface.presentation.inertial_probe_view_model import build_reading_view_model
 from interface.presentation.sample_rate_meter import SampleRateMeter
 

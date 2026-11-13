@@ -1,0 +1,7 @@
+OK profil : solidai actif, conforme à la référence ; écarts voulus : +[[orient-work::GRAPHE-THESE]] registre=../../PILOTAGE/_system/ops/registre-des-travaux.md
+OK deps : 10 deps de la référence présentes
+OK packmind : aucune trace
+OK demons : moteur prêt, au-mcp vivant
+OK sous-agent : au-aefi-acquisition généré sur _system/self/profiles/solidai.yaml
+OK garde : pre-commit non strict et hook PostToolUse en place
+OK typage : mypy 1.19.1 sur pyproject.toml, pre-commit typage non-strict

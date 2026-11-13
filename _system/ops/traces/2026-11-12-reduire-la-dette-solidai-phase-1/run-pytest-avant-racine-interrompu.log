@@ -1,0 +1,220 @@
+warning: `VIRTUAL_ENV=/Users/luis/.pyenv/versions/3.13.2` does not match the project environment path `/Users/luis/.venvs/AEFI_Acquisition` and will be ignored; use `--active` to target the active environment instead
+
+==================================== ERRORS ====================================
+_ ERROR collecting archives/AEFI_Acquisition_1st_App_Snapshot_20250730/src/core/test_metamanager.py _
+archives/AEFI_Acquisition_1st_App_Snapshot_20250730/src/core/test_metamanager.py:48: in <module>
+    meta = MetaManager()
+           ^^^^^^^^^^^^^
+archives/AEFI_Acquisition_1st_App_Snapshot_20250730/src/core/EFImagingBench_metaManager.py:71: in __init__
+    self.managers['stage'] = StageManager()
+                             ^^^^^^^^^^^^^^
+archives/AEFI_Acquisition_1st_App_Snapshot_20250730/src/core/ArcusPerfomax4EXStage/components/EFImagingBench_StageManager_ArcusPerformax4EXStage.py:53: in __init__
+    self.controller = EFImagingStageController(dll_path, params)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+archives/AEFI_Acquisition_1st_App_Snapshot_20250730/src/core/ArcusPerfomax4EXStage/controller/EFImagingBench_Controller_ArcusPerformax4EXStage.py:47: in __init__
+    self.stage = Arcus.Performax4EXStage()
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/luis/.venvs/AEFI_Acquisition/lib/python3.13/site-packages/pylablib/devices/Arcus/performax.py:182: in __init__
+    super().__init__(idx=idx,conn=conn)
+/Users/luis/.venvs/AEFI_Acquisition/lib/python3.13/site-packages/pylablib/devices/Arcus/performax.py:53: in __init__
+    lib.initlib()
+/Users/luis/.venvs/AEFI_Acquisition/lib/python3.13/site-packages/pylablib/devices/Arcus/ArcusPerformaxDriver_lib.py:34: in initlib
+    self.lib=load_lib.load_lib("PerformaxCom.dll",locations=("parameter/arcus_performax","global"),error_message=error_message,depends=["SiUSBXp.dll"],call_conv="cdecl")
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/luis/.venvs/AEFI_Acquisition/lib/python3.13/site-packages/pylablib/devices/utils/load_lib.py:125: in load_lib
+    raise OSError("DLLs are untested and not available on non-Windows platform by default; pylablib.par['devices/only_windows_dlls']=True to override")
+E   OSError: DLLs are untested and not available on non-Windows platform by default; pylablib.par['devices/only_windows_dlls']=True to override
+------------------------------- Captured stdout --------------------------------
+[StageManager] Initialisation du StageManager et démarrage du worker...
+------------------------------- Captured stderr --------------------------------
+objc[2300]: Class QT_ROOT_LEVEL_POOL__THESE_OBJECTS_WILL_BE_RELEASED_WHEN_QAPP_GOES_OUT_OF_SCOPE is implemented in both /Users/luis/.venvs/AEFI_Acquisition/lib/python3.13/site-packages/PySide6/Qt/lib/QtCore.framework/Versions/A/QtCore (0x103130618) and /Users/luis/.venvs/AEFI_Acquisition/lib/python3.13/site-packages/PyQt5/Qt5/lib/QtCore.framework/Versions/5/QtCore (0x119219288). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+objc[2300]: Class KeyValueObserver is implemented in both /Users/luis/.venvs/AEFI_Acquisition/lib/python3.13/site-packages/PySide6/Qt/lib/QtCore.framework/Versions/A/QtCore (0x103130640) and /Users/luis/.venvs/AEFI_Acquisition/lib/python3.13/site-packages/PyQt5/Qt5/lib/QtCore.framework/Versions/5/QtCore (0x1192192b0). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+objc[2300]: Class RunLoopModeTracker is implemented in both /Users/luis/.venvs/AEFI_Acquisition/lib/python3.13/site-packages/PySide6/Qt/lib/QtCore.framework/Versions/A/QtCore (0x103130690) and /Users/luis/.venvs/AEFI_Acquisition/lib/python3.13/site-packages/PyQt5/Qt5/lib/QtCore.framework/Versions/5/QtCore (0x119219300). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+__________ ERROR collecting archives/tests_e2e/base/test_fixtures.py ___________
+ImportError while importing test module '/Users/luis/Library/CloudStorage/Dropbox/Luis/1 PROJETS/1 - THESE/EXPERIMENTAL/AEFI_Acquisition/archives/tests_e2e/base/test_fixtures.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+archives/tests_e2e/base/test_fixtures.py:11: in <module>
+    from domain.models.scan.value_objects import ScanConfig, StepAcquisitionPlan
+E   ModuleNotFoundError: No module named 'domain.models'
+_ ERROR collecting archives/tests_e2e/continuous_acquisition_service/test_continuous_acquisition_error_handling.py _
+ImportError while importing test module '/Users/luis/Library/CloudStorage/Dropbox/Luis/1 PROJETS/1 - THESE/EXPERIMENTAL/AEFI_Acquisition/archives/tests_e2e/continuous_acquisition_service/test_continuous_acquisition_error_handling.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+archives/tests_e2e/continuous_acquisition_service/test_continuous_acquisition_error_handling.py:9: in <module>
+    from archives.AEFI_Acquisition.src.tests_e2e.base import (
+E   ModuleNotFoundError: No module named 'archives.AEFI_Acquisition'
+_ ERROR collecting archives/tests_e2e/continuous_acquisition_service/test_continuous_acquisition_parameter_update.py _
+ImportError while importing test module '/Users/luis/Library/CloudStorage/Dropbox/Luis/1 PROJETS/1 - THESE/EXPERIMENTAL/AEFI_Acquisition/archives/tests_e2e/continuous_acquisition_service/test_continuous_acquisition_parameter_update.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+archives/tests_e2e/continuous_acquisition_service/test_continuous_acquisition_parameter_update.py:10: in <module>
+    from tests_e2e.base import (
+E   ModuleNotFoundError: No module named 'tests_e2e'
+_ ERROR collecting archives/tests_e2e/continuous_acquisition_service/test_continuous_acquisition_start_stop.py _
+ImportError while importing test module '/Users/luis/Library/CloudStorage/Dropbox/Luis/1 PROJETS/1 - THESE/EXPERIMENTAL/AEFI_Acquisition/archives/tests_e2e/continuous_acquisition_service/test_continuous_acquisition_start_stop.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+archives/tests_e2e/continuous_acquisition_service/test_continuous_acquisition_start_stop.py:10: in <module>
+    from tests_e2e.base import (
+E   ModuleNotFoundError: No module named 'tests_e2e'
+_ ERROR collecting archives/tests_e2e/hardware_configuration_service/test_hardware_config_application.py _
+ImportError while importing test module '/Users/luis/Library/CloudStorage/Dropbox/Luis/1 PROJETS/1 - THESE/EXPERIMENTAL/AEFI_Acquisition/archives/tests_e2e/hardware_configuration_service/test_hardware_config_application.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+archives/tests_e2e/hardware_configuration_service/test_hardware_config_application.py:9: in <module>
+    from tests_e2e.base import DiagramFriendlyTest
+E   ModuleNotFoundError: No module named 'tests_e2e'
+_ ERROR collecting archives/tests_e2e/hardware_configuration_service/test_hardware_config_discovery.py _
+ImportError while importing test module '/Users/luis/Library/CloudStorage/Dropbox/Luis/1 PROJETS/1 - THESE/EXPERIMENTAL/AEFI_Acquisition/archives/tests_e2e/hardware_configuration_service/test_hardware_config_discovery.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+archives/tests_e2e/hardware_configuration_service/test_hardware_config_discovery.py:9: in <module>
+    from tests_e2e.base import DiagramFriendlyTest
+E   ModuleNotFoundError: No module named 'tests_e2e'
+_ ERROR collecting archives/tests_e2e/integration/test_full_system_startup.py __
+ImportError while importing test module '/Users/luis/Library/CloudStorage/Dropbox/Luis/1 PROJETS/1 - THESE/EXPERIMENTAL/AEFI_Acquisition/archives/tests_e2e/integration/test_full_system_startup.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+archives/tests_e2e/integration/test_full_system_startup.py:9: in <module>
+    from tests_e2e.base import DiagramFriendlyTest, create_event_bus
+E   ModuleNotFoundError: No module named 'tests_e2e'
+__ ERROR collecting archives/tests_e2e/integration/test_motion_during_scan.py __
+ImportError while importing test module '/Users/luis/Library/CloudStorage/Dropbox/Luis/1 PROJETS/1 - THESE/EXPERIMENTAL/AEFI_Acquisition/archives/tests_e2e/integration/test_motion_during_scan.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+archives/tests_e2e/integration/test_motion_during_scan.py:10: in <module>
+    from tests_e2e.base import (
+E   ModuleNotFoundError: No module named 'tests_e2e'
+_ ERROR collecting archives/tests_e2e/integration/test_scan_with_continuous_acquisition.py _
+ImportError while importing test module '/Users/luis/Library/CloudStorage/Dropbox/Luis/1 PROJETS/1 - THESE/EXPERIMENTAL/AEFI_Acquisition/archives/tests_e2e/integration/test_scan_with_continuous_acquisition.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+archives/tests_e2e/integration/test_scan_with_continuous_acquisition.py:10: in <module>
+    from tests_e2e.base import (
+E   ModuleNotFoundError: No module named 'tests_e2e'
+_ ERROR collecting archives/tests_e2e/scan/motion_control_service/test_motion_absolute_move.py _
+ImportError while importing test module '/Users/luis/Library/CloudStorage/Dropbox/Luis/1 PROJETS/1 - THESE/EXPERIMENTAL/AEFI_Acquisition/archives/tests_e2e/scan/motion_control_service/test_motion_absolute_move.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+archives/tests_e2e/scan/motion_control_service/test_motion_absolute_move.py:10: in <module>
+    from tests_e2e.base import (
+E   ModuleNotFoundError: No module named 'tests_e2e'
+_ ERROR collecting archives/tests_e2e/scan/motion_control_service/test_motion_homing.py _
+ImportError while importing test module '/Users/luis/Library/CloudStorage/Dropbox/Luis/1 PROJETS/1 - THESE/EXPERIMENTAL/AEFI_Acquisition/archives/tests_e2e/scan/motion_control_service/test_motion_homing.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+archives/tests_e2e/scan/motion_control_service/test_motion_homing.py:10: in <module>
+    from tests_e2e.base import (
+E   ModuleNotFoundError: No module named 'tests_e2e'
+_ ERROR collecting archives/tests_e2e/scan/motion_control_service/test_motion_reference_setting.py _
+ImportError while importing test module '/Users/luis/Library/CloudStorage/Dropbox/Luis/1 PROJETS/1 - THESE/EXPERIMENTAL/AEFI_Acquisition/archives/tests_e2e/scan/motion_control_service/test_motion_reference_setting.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+archives/tests_e2e/scan/motion_control_service/test_motion_reference_setting.py:10: in <module>
+    from tests_e2e.base import (
+E   ModuleNotFoundError: No module named 'tests_e2e'
+_ ERROR collecting archives/tests_e2e/scan/motion_control_service/test_motion_relative_move.py _
+ImportError while importing test module '/Users/luis/Library/CloudStorage/Dropbox/Luis/1 PROJETS/1 - THESE/EXPERIMENTAL/AEFI_Acquisition/archives/tests_e2e/scan/motion_control_service/test_motion_relative_move.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+archives/tests_e2e/scan/motion_control_service/test_motion_relative_move.py:10: in <module>
+    from tests_e2e.base import (
+E   ModuleNotFoundError: No module named 'tests_e2e'
+_ ERROR collecting archives/tests_e2e/scan/motion_control_service/test_motion_speed_configuration.py _
+ImportError while importing test module '/Users/luis/Library/CloudStorage/Dropbox/Luis/1 PROJETS/1 - THESE/EXPERIMENTAL/AEFI_Acquisition/archives/tests_e2e/scan/motion_control_service/test_motion_speed_configuration.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+archives/tests_e2e/scan/motion_control_service/test_motion_speed_configuration.py:9: in <module>
+    from tests_e2e.base import (
+E   ModuleNotFoundError: No module named 'tests_e2e'
+_ ERROR collecting archives/tests_e2e/scan/motion_control_service/test_motion_stop.py _
+ImportError while importing test module '/Users/luis/Library/CloudStorage/Dropbox/Luis/1 PROJETS/1 - THESE/EXPERIMENTAL/AEFI_Acquisition/archives/tests_e2e/scan/motion_control_service/test_motion_stop.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+archives/tests_e2e/scan/motion_control_service/test_motion_stop.py:10: in <module>
+    from tests_e2e.base import (
+E   ModuleNotFoundError: No module named 'tests_e2e'
+_ ERROR collecting archives/tests_e2e/scan/scan_application_service/test_scan_cancellation.py _
+ImportError while importing test module '/Users/luis/Library/CloudStorage/Dropbox/Luis/1 PROJETS/1 - THESE/EXPERIMENTAL/AEFI_Acquisition/archives/tests_e2e/scan/scan_application_service/test_scan_cancellation.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+archives/tests_e2e/scan/scan_application_service/test_scan_cancellation.py:11: in <module>
+    from tests_e2e.base import (
+E   ModuleNotFoundError: No module named 'tests_e2e'
+_ ERROR collecting archives/tests_e2e/scan/scan_application_service/test_scan_executor_backend_mock_refinement.py _
+ImportError while importing test module '/Users/luis/Library/CloudStorage/Dropbox/Luis/1 PROJETS/1 - THESE/EXPERIMENTAL/AEFI_Acquisition/archives/tests_e2e/scan/scan_application_service/test_scan_executor_backend_mock_refinement.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+archives/tests_e2e/scan/scan_application_service/test_scan_executor_backend_mock_refinement.py:8: in <module>
+    from infrastructure.real.events.in_memory_event_bus import InMemoryEventBus
+E   ModuleNotFoundError: No module named 'infrastructure.real'
+_ ERROR collecting archives/tests_e2e/scan/scan_application_service/test_scan_executor_with_atomic_motion.py _
+ImportError while importing test module '/Users/luis/Library/CloudStorage/Dropbox/Luis/1 PROJETS/1 - THESE/EXPERIMENTAL/AEFI_Acquisition/archives/tests_e2e/scan/scan_application_service/test_scan_executor_with_atomic_motion.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+archives/tests_e2e/scan/scan_application_service/test_scan_executor_with_atomic_motion.py:10: in <module>
+    from tests_e2e.base import (
+E   ModuleNotFoundError: No module named 'tests_e2e'
+_ ERROR collecting archives/tests_e2e/scan/scan_application_service/test_scan_failure_handling.py _
+ImportError while importing test module '/Users/luis/Library/CloudStorage/Dropbox/Luis/1 PROJETS/1 - THESE/EXPERIMENTAL/AEFI_Acquisition/archives/tests_e2e/scan/scan_application_service/test_scan_failure_handling.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+archives/tests_e2e/scan/scan_application_service/test_scan_failure_handling.py:10: in <module>
+    from tests_e2e.base import (
+E   ModuleNotFoundError: No module named 'tests_e2e'
+_ ERROR collecting archives/tests_e2e/scan/scan_application_service/test_scan_nominal_flow.py _
+ImportError while importing test module '/Users/luis/Library/CloudStorage/Dropbox/Luis/1 PROJETS/1 - THESE/EXPERIMENTAL/AEFI_Acquisition/archives/tests_e2e/scan/scan_application_service/test_scan_nominal_flow.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+archives/tests_e2e/scan/scan_application_service/test_scan_nominal_flow.py:10: in <module>
+    from tests_e2e.base import (
+E   ModuleNotFoundError: No module named 'tests_e2e'
+_ ERROR collecting archives/tests_e2e/scan/scan_application_service/test_scan_pause_resume.py _
+ImportError while importing test module '/Users/luis/Library/CloudStorage/Dropbox/Luis/1 PROJETS/1 - THESE/EXPERIMENTAL/AEFI_Acquisition/archives/tests_e2e/scan/scan_application_service/test_scan_pause_resume.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+archives/tests_e2e/scan/scan_application_service/test_scan_pause_resume.py:11: in <module>
+    from tests_e2e.base import (
+E   ModuleNotFoundError: No module named 'tests_e2e'
+_ ERROR collecting archives/tests_e2e/scan/scan_application_service/test_scan_trajectory_patterns.py _
+ImportError while importing test module '/Users/luis/Library/CloudStorage/Dropbox/Luis/1 PROJETS/1 - THESE/EXPERIMENTAL/AEFI_Acquisition/archives/tests_e2e/scan/scan_application_service/test_scan_trajectory_patterns.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+archives/tests_e2e/scan/scan_application_service/test_scan_trajectory_patterns.py:10: in <module>
+    from tests_e2e.base import (
+E   ModuleNotFoundError: No module named 'tests_e2e'
+_ ERROR collecting archives/tests_e2e/scan/scan_application_service/test_scan_with_atomic_motions.py _
+ImportError while importing test module '/Users/luis/Library/CloudStorage/Dropbox/Luis/1 PROJETS/1 - THESE/EXPERIMENTAL/AEFI_Acquisition/archives/tests_e2e/scan/scan_application_service/test_scan_with_atomic_motions.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+archives/tests_e2e/scan/scan_application_service/test_scan_with_atomic_motions.py:10: in <module>
+    from tests_e2e.base import (
+E   ModuleNotFoundError: No module named 'tests_e2e'
+=========================== short test summary info ============================
+ERROR archives/AEFI_Acquisition_1st_App_Snapshot_20250730/src/core/test_metamanager.py
+ERROR archives/tests_e2e/base/test_fixtures.py
+ERROR archives/tests_e2e/continuous_acquisition_service/test_continuous_acquisition_error_handling.py
+ERROR archives/tests_e2e/continuous_acquisition_service/test_continuous_acquisition_parameter_update.py
+ERROR archives/tests_e2e/continuous_acquisition_service/test_continuous_acquisition_start_stop.py
+ERROR archives/tests_e2e/hardware_configuration_service/test_hardware_config_application.py
+ERROR archives/tests_e2e/hardware_configuration_service/test_hardware_config_discovery.py
+ERROR archives/tests_e2e/integration/test_full_system_startup.py
+ERROR archives/tests_e2e/integration/test_motion_during_scan.py
+ERROR archives/tests_e2e/integration/test_scan_with_continuous_acquisition.py
+ERROR archives/tests_e2e/scan/motion_control_service/test_motion_absolute_move.py
+ERROR archives/tests_e2e/scan/motion_control_service/test_motion_homing.py
+ERROR archives/tests_e2e/scan/motion_control_service/test_motion_reference_setting.py
+ERROR archives/tests_e2e/scan/motion_control_service/test_motion_relative_move.py
+ERROR archives/tests_e2e/scan/motion_control_service/test_motion_speed_configuration.py
+ERROR archives/tests_e2e/scan/motion_control_service/test_motion_stop.py
+ERROR archives/tests_e2e/scan/scan_application_service/test_scan_cancellation.py
+ERROR archives/tests_e2e/scan/scan_application_service/test_scan_executor_backend_mock_refinement.py
+ERROR archives/tests_e2e/scan/scan_application_service/test_scan_executor_with_atomic_motion.py
+ERROR archives/tests_e2e/scan/scan_application_service/test_scan_failure_handling.py
+ERROR archives/tests_e2e/scan/scan_application_service/test_scan_nominal_flow.py
+ERROR archives/tests_e2e/scan/scan_application_service/test_scan_pause_resume.py
+ERROR archives/tests_e2e/scan/scan_application_service/test_scan_trajectory_patterns.py
+ERROR archives/tests_e2e/scan/scan_application_service/test_scan_with_atomic_motions.py
+!!!!!!!!!!!!!!!!!!! Interrupted: 24 errors during collection !!!!!!!!!!!!!!!!!!!
+24 errors in 6.33s

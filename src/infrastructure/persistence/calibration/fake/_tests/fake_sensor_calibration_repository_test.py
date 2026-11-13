@@ -1,9 +1,9 @@
 from uuid import uuid4
 
-from domain.test_bench.calibration.entities.sensor_calibration_entry.sensor_calibration_entry import (
+from domain.test_bench_calibration.entities.sensor_calibration_entry.sensor_calibration_entry import (
     SensorCalibrationEntry,
 )
-from domain.test_bench.calibration.value_objects.sensor_rotation_angles.sensor_rotation_angles import (
+from domain.test_bench_calibration.value_objects.sensor_rotation_angles.sensor_rotation_angles import (
     SensorRotationAngles,
 )
 from infrastructure.persistence.calibration.fake.fake_sensor_calibration_repository import (

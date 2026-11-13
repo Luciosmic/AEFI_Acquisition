@@ -1,0 +1,32 @@
+import logging
+from typing import Dict, Any
+import time
+from application.shared.system_lifecycle_service.ports.i_hardware_initialization_port import IHardwareInitializationPort
+from infrastructure.hardware.arcus_performax_4ex.adapter_motion_port_arcus_performax4ex.fake.fake_adapter_motion_port_arcus_performax4ex import MockMotionPort
+from infrastructure.hardware.ads131a04.adapter_i_acquistion_port_ads131a04.fake.fake_adapter_i_acquistion_port_ads131a04 import MockAcquisitionPort
+
+logger = logging.getLogger(__name__)
+
+class MockHardwareInitializationPort(IHardwareInitializationPort):
+    """
+    Mock implementation of hardware initialization port.
+    """
+    
+    def __init__(self):
+        self.initialized = False
+        self.closed = False
+        
+    def initialize_all(self) -> Dict[str, Any]:
+        logger.info("initialize_all: Initializing all hardware")
+        self.initialized = True
+        self.closed = False
+        return {"mock_motion": MockMotionPort(), "mock_acquisition": MockAcquisitionPort()}
+
+    def verify_all(self) -> bool:
+        logger.info("verify_all: Verifying hardware")
+        return True
+
+    def close_all(self) -> None:
+        logger.info("close_all: Closing all hardware")
+        self.initialized = False
+        self.closed = True

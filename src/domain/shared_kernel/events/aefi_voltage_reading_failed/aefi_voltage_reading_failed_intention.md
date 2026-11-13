@@ -1,3 +1,10 @@
+---
+type: evenement-de-domaine::solidai-ddd
+tldr: "Signale qu'une lecture continue de tension AEFI a échoué suite à une exception."
+code: ["[[src/domain/shared_kernel/events/aefi_voltage_reading_failed/aefi_voltage_reading_failed.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/shared_kernel/operation_result_intention]]"
+---
 # aefi_voltage_reading_failed — Intention
 
 ## Rationale

@@ -17,7 +17,7 @@ import time
 from collections import deque
 from pathlib import Path
 
-# Rendre `src/` importable, comme src/main.py (racine du dépôt = deux niveaux au-dessus).
+# Rendre `src/` importable, comme src/interface/main.py (racine du dépôt = deux niveaux au-dessus).
 SRC_DIR = Path(__file__).resolve().parents[2] / "src"
 sys.path.insert(0, str(SRC_DIR))
 
@@ -28,10 +28,10 @@ from PySide6.QtWidgets import (  # noqa: E402
 )
 import pyqtgraph as pg  # noqa: E402
 
-from application.services.lidar_distance.ports.lidar_stream_error import (  # noqa: E402
+from application.inertial_probe.lidar_distance.ports.lidar_stream_error import (  # noqa: E402
     LidarUnavailableError,
 )
-from infrastructure.hardware.esp32_serial_lidar.adapter_lidar_distance_port import (  # noqa: E402
+from infrastructure.hardware.esp32_serial_lidar.esp32_serial_lidar import (  # noqa: E402
     Esp32SerialLidarAdapter,
 )
 

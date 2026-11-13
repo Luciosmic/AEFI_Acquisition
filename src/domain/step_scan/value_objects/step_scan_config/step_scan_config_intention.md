@@ -1,3 +1,10 @@
+---
+type: value-object::solidai-ddd
+tldr: "Encapsuler : zone de scan, nb de points X/Y, pattern, délai de stabilisation, averaging par position, incertitude de mesure."
+code: ["[[src/domain/step_scan/value_objects/step_scan_config/step_scan_config.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/step_scan/step_scan_intention]]"
+---
 # step_scan_config — Intention
 
 ## Rationale

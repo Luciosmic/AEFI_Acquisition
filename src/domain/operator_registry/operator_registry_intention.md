@@ -1,3 +1,15 @@
+---
+type: racine-d-agregat::solidai-ddd
+tldr: "register(name) : rendre l'opérateur de ce nom — l'existant si l'orthographe est déjà connue à la casse et aux espaces près (aucun événement), sinon un nouvel…"
+code: ["[[src/domain/operator_registry/operator_registry.py]]"]
+cause_de_changement: regle-metier
+repositories:
+  - ^: i-operator-repository
+    type: interface-de-repository::solidai-ddd
+    tldr: "find_all() : tous les opérateurs enregistrés, ou un échec lisible."
+    sens: sortant
+    code: "[[src/domain/operator_registry/repositories/i_operator_repository.py]]"
+---
 # operator_registry — Intention
 
 ## Rationale
@@ -11,7 +23,7 @@ ni dans un widget (contournable, pas testable seul), ni dans une entité
 isolée (qui ne voit pas les autres).
 
 FA : `_system/thoughts_interface/fa_operator_traceability.md` (mono-atomique,
-N = 1) ; Promise Model : `_system/promise_model/operator_registry.md`.
+N = 1) ; Promise Model : `_system/documentation/promise_model/operator_registry.md`.
 
 ## Responsibility
 

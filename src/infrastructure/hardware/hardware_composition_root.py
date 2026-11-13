@@ -17,19 +17,19 @@ Rationale:
 import logging
 from typing import Optional
 
-from application.services.motion_control_service.ports.i_motion_port import IMotionPort
-from application.services.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
-from application.services.excitation_configuration_service.ports.i_excitation_port import IExcitationPort
-from application.services.aefi_acquisition_service.ports.i_aefi_acquisition_executor import IAefiAcquisitionExecutor
-from application.services.electric_field_probe_service.ports.i_electric_field_probe_port import IElectricFieldProbePort
-from application.services.inertial_probe_service.ports.i_inertial_probe_stream_port import IInertialProbeStreamPort
-from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from application.test_bench_calibration.motion_control_service.ports.i_motion_port import IMotionPort
+from application.shared.ports.i_acquisition_port import IAcquisitionPort
+from application.shared.excitation_configuration_service.ports.i_excitation_port import IExcitationPort
+from application.shared.aefi_acquisition_service.ports.i_aefi_acquisition_executor import IAefiAcquisitionExecutor
+from application.electric_field_probes.electric_field_probe_service.ports.i_electric_field_probe_port import IElectricFieldProbePort
+from application.inertial_probe.inertial_probe_service.ports.i_inertial_probe_stream_port import IInertialProbeStreamPort
+from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
 
-from infrastructure.hardware.lsm9ds1.adapter_inertial_probe_stream_port import Lsm9ds1InertialProbeStreamAdapter
+from infrastructure.hardware.lsm9ds1.adapter_inertial_probe_stream_port.adapter_inertial_probe_stream_port import Lsm9ds1InertialProbeStreamAdapter
 from infrastructure.hardware.lsm9ds1.lsm9ds1_config_loader import Lsm9ds1Config
-from infrastructure.hardware.arcus_performax_4EX.composition_root_arcus import ArcusCompositionRoot
+from infrastructure.hardware.arcus_performax_4ex.composition_root_arcus import ArcusCompositionRoot
 from infrastructure.hardware.micro_controller.mcu_composition_root import MCUCompositionRoot
-from infrastructure.hardware.narda_ep600.adapter_electric_field_probe_port import NardaEP601ProbeAdapter
+from infrastructure.hardware.narda_ep600.narda_ep600 import NardaEP601ProbeAdapter
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +59,7 @@ class HardwareCompositionRoot:
             logger.info("Motion -> real (ArcusCompositionRoot)")
             self.arcus_root = ArcusCompositionRoot(event_bus=event_bus)
         else:
-            from infrastructure.hardware.arcus_performax_4EX.fake.fake_arcus_performax4ex_controller import (
+            from infrastructure.hardware.arcus_performax_4ex.fake.fake_arcus_performax_4ex import (
                 FakeArcusPerformax4EXController,
             )
             # ponytail: the mock reads the same runtime calibration as the real
@@ -81,7 +81,7 @@ class HardwareCompositionRoot:
             logger.info("Acquisition -> real (MCUCompositionRoot)")
             self.mcu_root = MCUCompositionRoot(event_bus=event_bus)
         else:
-            from infrastructure.hardware.micro_controller.fake.fake_mcu_serial_communicator import (
+            from infrastructure.hardware.micro_controller.fake.fake_micro_controller import (
                 FakeMCUSerialCommunicator,
             )
             logger.info("Acquisition -> mock (MCUCompositionRoot, simulated communicator)")
@@ -101,12 +101,12 @@ class HardwareCompositionRoot:
         # "real" (default): first VISA instrument naming the DSO-X 2014A, opened
         # only when a measurement runs; "mock": DRDY edges at f_MOD / OSR.
         if hardware_config.get("oscilloscope", "real") == "real":
-            from infrastructure.hardware.oscilloscope_dsox2014.adapter_drdy_capture_dsox2014 import (
+            from infrastructure.hardware.oscilloscope_dsox2014.oscilloscope_dsox2014 import (
                 AdapterDrdyCaptureDsox2014,
             )
             self.drdy_capture = AdapterDrdyCaptureDsox2014()
         else:
-            from infrastructure.hardware.oscilloscope_dsox2014.fake.fake_drdy_capture_port import FakeDrdyCapturePort
+            from infrastructure.hardware.oscilloscope_dsox2014.fake.fake_oscilloscope_dsox2014 import FakeDrdyCapturePort
             self.drdy_capture = FakeDrdyCapturePort(self.adc_oversampling.get_oversampling_ratio)
         logger.info("Oscilloscope -> %s (DRDY capture)", hardware_config.get("oscilloscope", "real"))
 
@@ -146,7 +146,7 @@ class HardwareCompositionRoot:
             logger.info(f"Electric field probe -> real (Narda EP-601 on {narda_com_port})")
             self.probe_port: IElectricFieldProbePort = NardaEP601ProbeAdapter(port=narda_com_port)
         else:
-            from infrastructure.hardware.narda_ep600.fake.fake_electric_field_probe_adapter import FakeElectricFieldProbeAdapter
+            from infrastructure.hardware.narda_ep600.fake.fake_narda_ep600 import FakeElectricFieldProbeAdapter
             logger.info("Electric field probe -> mock")
             self.probe_port: IElectricFieldProbePort = FakeElectricFieldProbeAdapter()
 
@@ -182,7 +182,7 @@ class HardwareCompositionRoot:
                 rate_hz=inertial_probe_config.rate_hz,
             )
         else:
-            from infrastructure.hardware.lsm9ds1.fake.fake_inertial_probe_stream_adapter import (
+            from infrastructure.hardware.lsm9ds1.adapter_inertial_probe_stream_port.fake.fake_adapter_inertial_probe_stream_port import (
                 FakeInertialProbeStreamAdapter,
             )
             logger.info("Inertial probe -> mock (25 Hz, real time)")

@@ -5,15 +5,15 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from interface.presenters.sensor_calibration_presenter import SensorCalibrationPresenter
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
-from application.services.sensor_calibration_service.i_api_sensor_calibration_service import (
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
+from application.test_bench_calibration.sensor_calibration_service.i_api_sensor_calibration_service import (
     IApiSensorCalibrationService,
 )
-from application.services.sensor_calibration_service.dtos.sensor_calibration_dto import (
+from application.test_bench_calibration.sensor_calibration_service.dtos.sensor_calibration_dto import (
     ActiveSensorRotationDTO,
     SensorCalibrationDTO,
 )
-from application.services.sensor_calibration_service.sensor_calibration_service import (
+from application.test_bench_calibration.sensor_calibration_service.sensor_calibration_service import (
     ACTIVE_SENSOR_ROTATION_CHANGED_TOPIC,
     SENSOR_CALIBRATION_ENTRY_ADDED_TOPIC,
 )

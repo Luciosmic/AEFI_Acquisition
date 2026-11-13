@@ -1,0 +1,72 @@
+oracle : 15 cas
+démon du moteur du clone prêt (essai 1)
+ok   cas 1 (cas-d-usage reservation --contexte allocation) : code 0
+ok   cas 1 : 7 fichiers, ceux de l'oracle
+ok   cas 1 : diff vide contre l'oracle
+ok   cas 1 : 1 intention(s) au type vérifié par le moteur
+ok   cas 1 : solidai verify --paths : aucune erreur de trio ni de couche
+ok   cas 2 (port fournisseur --pour reservation_service --contexte allocation) : code 0
+ok   cas 2 : 4 fichiers, ceux de l'oracle
+ok   cas 2 : diff vide contre l'oracle
+ok   cas 2 : 1 intention(s) au type vérifié par le moteur
+ok   cas 2 : solidai verify --paths : aucune erreur de trio ni de couche
+ok   cas 3 (adaptateur fournisseur_csv --pour reservation_service/fournisseur --contexte allocation) : code 0
+ok   cas 3 : 5 fichiers, ceux de l'oracle
+ok   cas 3 : diff vide contre l'oracle
+ok   cas 3 : 1 intention(s) au type vérifié par le moteur
+ok   cas 3 : solidai verify --paths : aucune erreur de trio ni de couche
+ok   cas 4 (fake fournisseur_csv --contexte allocation) : code 0
+ok   cas 4 : 5 fichiers, ceux de l'oracle
+ok   cas 4 : diff vide contre l'oracle
+ok   cas 4 : 1 intention(s) au type vérifié par le moteur
+ok   cas 4 : solidai verify --paths : aucune erreur de trio ni de couche
+ok   cas 5 (agregat entrepot --contexte allocation) : code 0
+ok   cas 5 : 5 fichiers, ceux de l'oracle
+ok   cas 5 : diff vide contre l'oracle
+ok   cas 5 : 1 intention(s) au type vérifié par le moteur
+ok   cas 5 : solidai verify --paths : aucune erreur de trio ni de couche
+ok   cas 6 (objet-valeur adresse --pour entrepot --contexte allocation) : code 0
+ok   cas 6 : 6 fichiers, ceux de l'oracle
+ok   cas 6 : diff vide contre l'oracle
+ok   cas 6 : 1 intention(s) au type vérifié par le moteur
+ok   cas 6 : solidai verify --paths : aucune erreur de trio ni de couche
+ok   cas 7 (presenter reservation --pour reservation_service --contexte allocation) : code 0
+ok   cas 7 : 5 fichiers, ceux de l'oracle
+ok   cas 7 : diff vide contre l'oracle
+ok   cas 7 : 1 intention(s) au type vérifié par le moteur
+ok   cas 7 : solidai verify --paths : aucune erreur de trio ni de couche
+ok   cas 8 (vue-humble reservation --contexte allocation) : code 0
+ok   cas 8 : 4 fichiers, ceux de l'oracle
+ok   cas 8 : diff vide contre l'oracle
+ok   cas 8 : 1 intention(s) au type vérifié par le moteur
+ok   cas 8 : solidai verify --paths : aucune erreur de trio ni de couche
+ok   cas 9 (agregat stock --contexte allocation --dry-run) : code 0
+ok   cas 9 : message « créerait src/allocation/domain/stock/stock_intention.md »
+ok   cas 9 : 0 fichiers, ceux de l'oracle
+ok   cas 10 (point-de-composition shell --pour transporteur_csv --contexte defauts) : code 0
+ok   cas 10 : 5 fichiers, ceux de l'oracle
+ok   cas 10 : diff vide contre l'oracle
+ok   cas 10 : 1 intention(s) au type vérifié par le moteur
+ok   cas 10 : solidai verify --paths : aucune erreur de trio ni de couche
+ok   cas 11 (adaptateur-entrant reservation_cli --pour reservation_service --contexte allocation) : code 0
+ok   cas 11 : 5 fichiers, ceux de l'oracle
+ok   cas 11 : diff vide contre l'oracle
+ok   cas 11 : 1 intention(s) au type vérifié par le moteur
+ok   cas 11 : solidai verify --paths : aucune erreur de trio ni de couche
+ok   cas 12 (agregat Entrepot --contexte allocation) : code 1
+ok   cas 12 : message « nom invalide »
+ok   cas 12 : 0 fichiers, ceux de l'oracle
+ok   cas 13 (agregat product --contexte allocation) : code 2
+ok   cas 13 : message « existe déjà »
+ok   cas 13 : 0 fichiers, ceux de l'oracle
+ok   cas 14 (widget stock --contexte allocation) : code 1
+ok   cas 14 : message « rôle inconnu »
+ok   cas 14 : 0 fichiers, ceux de l'oracle
+ok   cas 15 (vue-humble stock --contexte allocation) : code 2
+ok   cas 15 : message « presenter absent »
+ok   cas 15 : 0 fichiers, ceux de l'oracle
+ok   solidai verify complet sur les atomes créés : aucune erreur de trio ni de couche
+ok   pytest : les 11 tests créés sont rouges, aucun vert ni en erreur
+ok   clone propre après pytest
+68/68 vérifications passées
+démons du clone arrêtés

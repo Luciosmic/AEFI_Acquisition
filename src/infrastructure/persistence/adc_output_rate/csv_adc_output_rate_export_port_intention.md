@@ -1,3 +1,10 @@
+---
+type: adaptateur::solidai-hexagonal
+tldr: "Adaptateur `csv_adc_output_rate_export_port` : Écrire, dans `<YYYY-MM-DD_HHMMSS>_odr-adc-ads131a04-drdy-oscilloscope/` sous `~/Desktop/AEFI_Acquisition_Exports`."
+code: ["[[src/infrastructure/persistence/adc_output_rate/csv_adc_output_rate_export_port.py]]"]
+cause_de_changement: outil
+implements: ["[[src/application/test_bench_calibration/adc_output_rate_characterization_service/ports/i_adc_output_rate_export_port_intention]]"]
+---
 # csv_adc_output_rate_export_port — Intention
 
 ## Rationale

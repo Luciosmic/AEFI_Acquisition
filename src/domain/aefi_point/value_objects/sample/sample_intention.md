@@ -1,3 +1,10 @@
+---
+type: value-object::solidai-ddd
+tldr: "Représenter un échantillon ADC unique, immuable, dont la validité est garantie à la construction."
+code: ["[[src/domain/aefi_point/value_objects/sample/sample.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/aefi_point/aefi_point_intention]]"
+---
 # sample — Intention
 
 ## Rationale

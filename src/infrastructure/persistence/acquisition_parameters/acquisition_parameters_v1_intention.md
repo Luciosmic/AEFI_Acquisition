@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Module `acquisition_parameters_v1` : Écrire, à partir des DTO partagés (`application/shared/acquisition_parameters/`), les sections communes du schéma 1.0 : `provenance`, `feature_of_interest`, `components` (catalogue, réglages ADC et AD9106), `host_link`, `deployment`."
+code: ["[[src/infrastructure/persistence/acquisition_parameters/acquisition_parameters_v1.py]]"]
+cause_de_changement: outil
+---
 # acquisition_parameters_v1 — Intention
 
 ## Rationale
@@ -24,7 +30,7 @@ fait, deux formes, et des scripts d'analyse qui doivent connaître les deux.
 ## Design
 
 - Fonctions pures, sans I/O ; entrée = DTO sans format, sortie = `dict` prêt
-  pour JSON. Contrat : `application/services/scan_export_service/acquisition_parameters/acquisition_parameters_intention.md`.
+  pour JSON. Contrat : `application/scan/scan_export_service/acquisition_parameters/acquisition_parameters_intention.md`.
 - Chaque export garde son propre sérialiseur, qui n'ajoute que ce que son
   acquisition a fait (procédure, état de l'excitation, flux, colonnes) — ex.
   `acquisition_throughput/acquisition_parameters_v1_serializer.py`.

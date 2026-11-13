@@ -32,21 +32,22 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from domain.test_bench.calibration.calibration import Calibration
-from domain.test_bench.calibration.entities.source_geometry_calibration_entry.source_geometry_calibration_entry import (
+from domain.test_bench_configuration.bench_configuration import BenchConfiguration
+from domain.test_bench_calibration.calibration import Calibration
+from domain.test_bench_calibration.entities.source_geometry_calibration_entry.source_geometry_calibration_entry import (
     SourceGeometryCalibrationEntry,
 )
-from domain.test_bench.calibration.errors.source_geometry_inconsistent_error import SourceGeometryInconsistentError
-from domain.test_bench.calibration.services.source_frame_solver.source_frame_solver import SourceFrameSolver
-from domain.test_bench.calibration.repositories.i_hardware_component_repository import IHardwareComponentRepository
-from domain.test_bench.calibration.repositories.i_mechanical_transmission_calibration_repository import (
+from domain.test_bench_calibration.errors.source_geometry_inconsistent_error import SourceGeometryInconsistentError
+from domain.test_bench_calibration.services.source_frame_solver.source_frame_solver import SourceFrameSolver
+from domain.test_bench_configuration.repositories.i_hardware_component_repository import IHardwareComponentRepository
+from domain.test_bench_calibration.repositories.i_mechanical_transmission_calibration_repository import (
     IMechanicalTransmissionCalibrationRepository,
 )
-from domain.test_bench.calibration.repositories.i_sensor_calibration_repository import ISensorCalibrationRepository
-from domain.test_bench.calibration.repositories.i_source_geometry_calibration_repository import (
+from domain.test_bench_calibration.repositories.i_sensor_calibration_repository import ISensorCalibrationRepository
+from domain.test_bench_calibration.repositories.i_source_geometry_calibration_repository import (
     ISourceGeometryCalibrationRepository,
 )
-from domain.test_bench.calibration.value_objects.hardware_component_kind.hardware_component_kind import (
+from domain.test_bench_configuration.value_objects.hardware_component_kind.hardware_component_kind import (
     HardwareComponentKind,
 )
 from infrastructure.hardware.micro_controller.hardware_config_resolution import resolve_config
@@ -164,8 +165,8 @@ class AcquisitionSnapshotReader:
         configuration: Dict[str, Any] = {}
 
         for kind in HardwareComponentKind:
-            name = Calibration.mounted_component_name(self._hardware_component_repository.find_selections(kind))
-            entry = Calibration.current_characterization(self._hardware_component_repository.find_all(kind), name)
+            name = BenchConfiguration.mounted_component_name(self._hardware_component_repository.find_selections(kind))
+            entry = BenchConfiguration.current_characterization(self._hardware_component_repository.find_all(kind), name)
             if entry is None:
                 configuration[kind.value] = None
                 warnings.append(f"{kind.value}: nothing mounted — configuration incomplete")
@@ -207,8 +208,8 @@ class AcquisitionSnapshotReader:
         """The transmission set up with the mounted motor and driver — what
         converted every position of this acquisition."""
         components = self._hardware_component_repository
-        motor = Calibration.current_mounting(components.find_selections(HardwareComponentKind.MOTORS))
-        driver = Calibration.current_mounting(components.find_selections(HardwareComponentKind.STEPPER_DRIVER))
+        motor = BenchConfiguration.current_mounting(components.find_selections(HardwareComponentKind.MOTORS))
+        driver = BenchConfiguration.current_mounting(components.find_selections(HardwareComponentKind.STEPPER_DRIVER))
         entry = Calibration.current_mechanical_transmission(
             self._mechanical_transmission_calibration_repository.find_all(),
             motor.mounting_id if motor else None,
@@ -217,7 +218,7 @@ class AcquisitionSnapshotReader:
         if entry is None:
             warnings.append("mechanical_transmission: none recorded for the mounted motor and stepper driver")
             return None
-        motor_values = Calibration.current_characterization(
+        motor_values = BenchConfiguration.current_characterization(
             components.find_all(HardwareComponentKind.MOTORS), motor.component_name
         ).characterization.values
         rated_current = motor_values.get("rated_current_a")

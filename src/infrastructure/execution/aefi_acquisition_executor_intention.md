@@ -1,3 +1,10 @@
+---
+type: adaptateur::solidai-hexagonal
+tldr: "Adaptateur `aefi_acquisition_executor` : Démarrer une boucle d'acquisition best-effort dans un thread séparé."
+code: ["[[src/infrastructure/execution/aefi_acquisition_executor.py]]"]
+cause_de_changement: outil
+implements: ["[[src/application/shared/aefi_acquisition_service/ports/i_aefi_acquisition_executor_intention]]"]
+---
 # aefi_acquisition_executor — Intention
 
 ## Rationale

@@ -1,0 +1,71 @@
+warning: `VIRTUAL_ENV=/Users/luis/.pyenv/versions/3.13.2` does not match the project environment path `/Users/luis/.venvs/AEFI_Acquisition` and will be ignored; use `--active` to target the active environment instead
+......................F................................................. [  4%]
+........................................................................ [  8%]
+.............................................................ss......... [ 12%]
+........................................................................ [ 16%]
+........................................................................ [ 21%]
+........................................................................ [ 25%]
+........................................................................ [ 29%]
+........................................................................ [ 33%]
+........................................................................ [ 37%]
+........................................................................ [ 42%]
+........................................................................ [ 46%]
+........................................................................ [ 50%]
+............s........................................................... [ 54%]
+........................................................................ [ 58%]
+........................................................................ [ 63%]
+........................................................................ [ 67%]
+........................................................................ [ 71%]
+........................................................................ [ 75%]
+............................................................................................. [ 81%]
+........................................................................................... [ 86%]
+........................................................................ [ 90%]
+........................................................................ [ 94%]
+........................................................................ [ 99%]
+..............                                                           [100%]
+=================================== FAILURES ===================================
+_ TestAcquisitionThroughputCharacterization.test_measures_every_n_avg_and_recovers_the_adc_output_rate _
+
+self = <src.application.services.acquisition_throughput_characterization_service._tests.acquisition_throughput_characterizati...e_test.TestAcquisitionThroughputCharacterization testMethod=test_measures_every_n_avg_and_recovers_the_adc_output_rate>
+
+    def test_measures_every_n_avg_and_recovers_the_adc_output_rate(self):
+        self._run()
+    
+        self.assertEqual(self.output.failed, [])
+        self.assertEqual([p.n_avg for p in self.output.points], list(GRID))
+        result = self.output.succeeded[0]
+>       self.assertAlmostEqual(result.adc_output_rate_hz, ADC_OUTPUT_RATE_HZ, delta=0.25 * ADC_OUTPUT_RATE_HZ)
+E       AssertionError: 1454.6793505989865 != 2000.0 within 500.0 delta (545.3206494010135 difference)
+
+src/application/services/acquisition_throughput_characterization_service/_tests/acquisition_throughput_characterization_service_test.py:137: AssertionError
+------------------------------ Captured log call -------------------------------
+WARNING  infrastructure.events.in_memory_event_bus:in_memory_event_bus.py:33 [InMemoryEventBus] No subscribers for event 'excitationcontrolchanged' (said once; later ones at DEBUG)
+WARNING  infrastructure.events.in_memory_event_bus:in_memory_event_bus.py:33 [InMemoryEventBus] No subscribers for event 'aefiacquisitioncontrolchanged' (said once; later ones at DEBUG)
+WARNING  infrastructure.events.in_memory_event_bus:in_memory_event_bus.py:33 [InMemoryEventBus] No subscribers for event 'hardwareconfigurationcontrolchanged' (said once; later ones at DEBUG)
+WARNING  infrastructure.events.in_memory_event_bus:in_memory_event_bus.py:33 [InMemoryEventBus] No subscribers for event 'aefivoltagereadingstarted' (said once; later ones at DEBUG)
+WARNING  infrastructure.events.in_memory_event_bus:in_memory_event_bus.py:33 [InMemoryEventBus] No subscribers for event 'aefivoltagereadingstopped' (said once; later ones at DEBUG)
+=============================== warnings summary ===============================
+src/interface/widgets/panels/_tests/scan_visualization_panel_test.py::test_first_show_draws_and_lays_out_once
+src/interface/widgets/panels/_tests/scan_visualization_panel_test.py::test_data_received_while_hidden_is_drawn_at_show
+  /Users/luis/Library/CloudStorage/Dropbox/Luis/1 PROJETS/1 - THESE/EXPERIMENTAL/AEFI_Acquisition/src/interface/widgets/panels/scan_visualization_panel.py:540: RuntimeWarning: All-NaN slice encountered
+    vmin = np.nanmin(data)
+
+src/interface/widgets/panels/_tests/scan_visualization_panel_test.py::test_first_show_draws_and_lays_out_once
+src/interface/widgets/panels/_tests/scan_visualization_panel_test.py::test_data_received_while_hidden_is_drawn_at_show
+  /Users/luis/Library/CloudStorage/Dropbox/Luis/1 PROJETS/1 - THESE/EXPERIMENTAL/AEFI_Acquisition/src/interface/widgets/panels/scan_visualization_panel.py:541: RuntimeWarning: All-NaN slice encountered
+    vmax = np.nanmax(data)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED src/application/services/acquisition_throughput_characterization_service/_tests/acquisition_throughput_characterization_service_test.py::TestAcquisitionThroughputCharacterization::test_measures_every_n_avg_and_recovers_the_adc_output_rate
+1 failed, 1706 passed, 3 skipped, 4 warnings, 248 subtests passed in 185.08s (0:03:05)
+This plugin does not support createPlatformOpenGLContext!
+This plugin does not support createPlatformOpenGLContext!
+This plugin does not support createPlatformOpenGLContext!
+This plugin does not support createPlatformOpenGLContext!
+This plugin does not support createPlatformOpenGLContext!
+This plugin does not support createPlatformOpenGLContext!
+This plugin does not support createPlatformOpenGLContext!
+This plugin does not support createPlatformOpenGLContext!
+This plugin does not support createPlatformOpenGLContext!
+This plugin does not support createPlatformOpenGLContext!

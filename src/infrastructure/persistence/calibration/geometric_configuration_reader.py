@@ -26,7 +26,7 @@ import logging
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-from domain.test_bench.calibration.value_objects.geometric_configuration_signature.geometric_configuration_signature import (
+from domain.test_bench_calibration.value_objects.geometric_configuration_signature.geometric_configuration_signature import (
     GeometricConfigurationSignature,
 )
 

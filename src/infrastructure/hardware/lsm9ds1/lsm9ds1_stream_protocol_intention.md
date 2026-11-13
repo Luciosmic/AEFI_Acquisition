@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Module `lsm9ds1_stream_protocol` : `start_commands(sensors)` : `A9*`, `G9*`, `M9*`, `L9*` (ajout cumulatif au flux)."
+code: ["[[src/infrastructure/hardware/lsm9ds1/lsm9ds1_stream_protocol.py]]"]
+cause_de_changement: outil
+---
 # lsm9ds1_stream_protocol — Intention
 
 ## Rationale

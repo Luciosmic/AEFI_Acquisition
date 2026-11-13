@@ -1,3 +1,11 @@
+---
+type: doublure-de-test::solidai-hexagonal
+tldr: "Implémenter IMeasuredObjectRepository en mémoire."
+code: ["[[src/infrastructure/persistence/measured_object_registry/fake/fake_measured_object_repository.py]]"]
+cause_de_changement: outil
+implements: ["[[src/domain/measured_object_registry/measured_object_registry_intention^^i-measured-object-repository]]"]
+double_de: "[[src/infrastructure/persistence/measured_object_registry/real_measured_object_repository_intention]]"
+---
 # fake_measured_object_repository — Intention
 
 ## Rationale

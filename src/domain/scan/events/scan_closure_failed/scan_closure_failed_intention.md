@@ -1,3 +1,10 @@
+---
+type: evenement-de-domaine::solidai-ddd
+tldr: "Rendre visible l'échec de rattachement d'une acquisition à un scan : scan_id, source, acquisition_id (génériques : n'importe quelle sonde), reason."
+code: ["[[src/domain/scan/events/scan_closure_failed/scan_closure_failed.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/scan/scan_intention]]"
+---
 # scan_closure_failed — Intention
 
 ## Rationale

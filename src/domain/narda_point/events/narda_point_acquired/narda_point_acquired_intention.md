@@ -1,3 +1,10 @@
+---
+type: evenement-de-domaine::solidai-ddd
+tldr: "Fait passé : un point de champ a reçu exactement N échantillons (et leur baseline en mode différentiel) ; porte identité, scan, point_index (clé de corrélation avec…"
+code: ["[[src/domain/narda_point/events/narda_point_acquired/narda_point_acquired.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/narda_point/narda_point_intention]]"
+---
 # narda_point_acquired — Intention
 
 ## Rationale

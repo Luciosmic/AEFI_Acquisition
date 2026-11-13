@@ -14,10 +14,10 @@ from __future__ import annotations
 
 from typing import List
 
-from domain.test_bench.calibration.entities.source_geometry_calibration_entry.source_geometry_calibration_entry import (
+from domain.test_bench_calibration.entities.source_geometry_calibration_entry.source_geometry_calibration_entry import (
     SourceGeometryCalibrationEntry,
 )
-from domain.test_bench.calibration.repositories.i_source_geometry_calibration_repository import (
+from domain.test_bench_calibration.repositories.i_source_geometry_calibration_repository import (
     ISourceGeometryCalibrationRepository,
 )
 

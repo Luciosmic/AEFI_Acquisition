@@ -1,5 +1,5 @@
 """ScanPresenter routes a 'line' start request to execute_line_scan."""
-from application.services.scan_application_service.dtos.scan_dtos import LineScanConfigDTO, Scan2DConfigDTO
+from application.scan.scan_application_service.dtos.scan_dtos import LineScanConfigDTO, Scan2DConfigDTO
 from interface.presenters.scan_presenter import ScanPresenter
 
 

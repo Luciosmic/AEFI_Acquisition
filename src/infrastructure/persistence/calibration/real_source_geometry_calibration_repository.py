@@ -21,13 +21,13 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
-from domain.test_bench.calibration.entities.source_geometry_calibration_entry.source_geometry_calibration_entry import (
+from domain.test_bench_calibration.entities.source_geometry_calibration_entry.source_geometry_calibration_entry import (
     SourceGeometryCalibrationEntry,
 )
-from domain.test_bench.calibration.repositories.i_source_geometry_calibration_repository import (
+from domain.test_bench_calibration.repositories.i_source_geometry_calibration_repository import (
     ISourceGeometryCalibrationRepository,
 )
-from domain.test_bench.calibration.value_objects.caliper_measurement.caliper_measurement import CaliperMeasurement
+from domain.test_bench_calibration.value_objects.caliper_measurement.caliper_measurement import CaliperMeasurement
 
 logger = logging.getLogger(__name__)
 

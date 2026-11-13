@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-from infrastructure.hardware.narda_ep600.adapter_electric_field_probe_port import (
+from infrastructure.hardware.narda_ep600.narda_ep600 import (
     NardaEP601ProbeAdapter,
 )
 
@@ -9,7 +9,7 @@ from infrastructure.hardware.narda_ep600.adapter_electric_field_probe_port impor
 class TestNardaEP601ProbeAdapterFrequencyCorrection(unittest.TestCase):
     def setUp(self):
         patcher = patch(
-            "infrastructure.hardware.narda_ep600.adapter_electric_field_probe_port.NardaEP601"
+            "infrastructure.hardware.narda_ep600.narda_ep600.NardaEP601"
         )
         self.mock_driver_cls = patcher.start()
         self.addCleanup(patcher.stop)

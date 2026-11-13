@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Nommer la promesse refusée : « un point de champ contient exactement N échantillons (et N de baseline si le mode différentiel l'exige, aucun sinon) »."
+code: ["[[src/domain/narda_point/errors/narda_point_incomplete_error.py]]"]
+cause_de_changement: regle-metier
+---
 # narda_point_incomplete_error — Intention
 
 ## Rationale

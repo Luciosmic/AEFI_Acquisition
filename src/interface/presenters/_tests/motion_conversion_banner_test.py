@@ -1,19 +1,31 @@
-"""Calibration state -> banner view model: MotionPresenter and ScanPresenter relay what is missing, panels block."""
+"""Calibration state -> banner view model: MotionPresenter and ScanPresenter relay what is missing, panels block.
+
+Rationale:
+    Without this test, the "bench not calibrated" state can become invisible
+    again: moves refused with no reason shown, or a banner never removed after
+    "Pas par tour" is entered.
+
+Responsibility:
+    - Presenters translate the calibration state and events into a banner
+      view model.
+    - Panels disable the move commands and START, but not stop nor emergency
+      stop, and are enabled again on the availability event.
+"""
 import os
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtWidgets import QApplication
 
-from application.services.motion_control_service.dtos.motion_conversion_status_dto import MotionConversionStatusDTO
-from application.services.scan_application_service.errors.scan_start_error import ScanRefusedBenchNotCalibrated
-from domain.shared_kernel.motion.events.motion_conversion_became_available.motion_conversion_became_available import (
+from application.test_bench_calibration.motion_control_service.dtos.motion_conversion_status_dto import MotionConversionStatusDTO
+from application.scan.scan_application_service.errors.scan_start_error import ScanRefusedBenchNotCalibrated
+from domain.shared_kernel.events.motion_conversion_became_available.motion_conversion_became_available import (
     MotionConversionBecameAvailable,
 )
-from domain.shared_kernel.motion.events.motion_conversion_found_missing.motion_conversion_found_missing import (
+from domain.shared_kernel.events.motion_conversion_found_missing.motion_conversion_found_missing import (
     MotionConversionFoundMissing,
 )
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from interface.presenters.motion_presenter import MotionPresenter
 from interface.presenters.scan_presenter import ScanPresenter
 from interface.widgets.panels.motion_panel_compact import MotionPanelCompact
@@ -181,7 +193,7 @@ def test_found_missing_event_refreshes_scan_start_availability():
 
 
 def test_motion_presenter_relays_the_controller_increments_even_when_not_calibrated():
-    from domain.shared_kernel.motion.events.motor_increments_updated.motor_increments_updated import (
+    from domain.shared_kernel.events.motor_increments_updated.motor_increments_updated import (
         MotorIncrementsUpdated,
     )
 

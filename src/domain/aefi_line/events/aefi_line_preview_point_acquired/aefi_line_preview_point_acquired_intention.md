@@ -1,3 +1,10 @@
+---
+type: evenement-de-domaine::solidai-ddd
+tldr: "Fait **provisoire** : un point de grille vient d'être placé sur la ligne en cours de balayage (scan, rang de la ligne, rang dans la ligne, position, mesure)."
+code: ["[[src/domain/aefi_line/events/aefi_line_preview_point_acquired/aefi_line_preview_point_acquired.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/aefi_line/aefi_line_intention]]"
+---
 # aefi_line_preview_point_acquired — Intention
 
 ## Rationale

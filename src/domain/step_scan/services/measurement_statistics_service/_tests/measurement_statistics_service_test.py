@@ -18,13 +18,13 @@ class TestMeasurementStatisticsService(unittest.TestCase):
             timestamp=datetime.now()
         )
 
-    def test_empty_list_raises_error(self):
+    def test_empty_list_raises_error(self) -> None:
         self.log("test_empty_list_raises_error start | expect ValueError")
         with self.assertRaises(ValueError):
             MeasurementStatisticsService.calculate_statistics([])
         self.log("test_empty_list_raises_error passed | ValueError raised as expected")
 
-    def test_single_measurement(self):
+    def test_single_measurement(self) -> None:
         expected_mean = 1.0
         expected_std = 0.0
         self.log(f"test_single_measurement start | expect mean={expected_mean} std={expected_std}")
@@ -35,7 +35,7 @@ class TestMeasurementStatisticsService(unittest.TestCase):
         self.assertEqual(result.std_dev_x_in_phase, 0.0)
         self.log(f"test_single_measurement expect mean={expected_mean} std={expected_std} | got mean={result.voltage_x_in_phase} std={result.std_dev_x_in_phase}")
 
-    def test_statistics_calculation(self):
+    def test_statistics_calculation(self) -> None:
         expected_mean = 2.0
         expected_std = 1.0
         self.log(f"test_statistics_calculation start | expect mean={expected_mean} std={expected_std}")
@@ -61,7 +61,7 @@ class TestMeasurementStatisticsService(unittest.TestCase):
         self.assertAlmostEqual(result.std_dev_x_quadrature, 1.0)
         self.log(f"test_statistics_calculation expect mean={expected_mean} std={expected_std} | got mean={result.voltage_x_in_phase} std={result.std_dev_x_in_phase}")
 
-    def test_statistics_calculation_more_complex(self):
+    def test_statistics_calculation_more_complex(self) -> None:
         expected_mean = 5.0
         expected_std = math.sqrt(32/7)
         self.log(f"test_statistics_calculation_more_complex start | expect mean={expected_mean} std={expected_std}")

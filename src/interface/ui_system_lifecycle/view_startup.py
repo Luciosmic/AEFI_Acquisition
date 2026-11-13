@@ -16,7 +16,7 @@ from PySide6.QtWidgets import QApplication, QDialog, QVBoxLayout, QLabel, QPlain
 from PySide6.QtCore import Qt
 
 from interface.ui_system_lifecycle.presenter_system_lifecycle import SystemLifecyclePresenter
-from application.services.system_lifecycle_service.system_lifecycle_service import StartupConfig
+from application.shared.system_lifecycle_service.system_lifecycle_service import StartupConfig
 from interface.widgets.panels.logs_panel import LogsPanel
 
 class StartupView(QDialog):

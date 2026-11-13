@@ -43,7 +43,7 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 if TYPE_CHECKING:  # imported at call time: ~1 s of import cost kept out of the startup critical path
     from mcp.server.fastmcp import FastMCP
 
-from application.services.scan_application_service.scan_application_service import (
+from application.scan.scan_application_service.scan_application_service import (
     ScanApplicationService,
 )
 
@@ -116,7 +116,7 @@ def build_observability_mcp_server(
         ) -> List[Dict[str, Any]]:
             """Recent application log lines at or above `level`, oldest first.
 
-            logger_prefix: keep loggers whose name starts with it (e.g. "application.services.scan").
+            logger_prefix: keep loggers whose name starts with it (e.g. "application.scan").
             limit: 1..1000. Messages are truncated and may contain local file paths.
             """
             return recent_logs_provider(level, logger_prefix, _clamp_limit(limit))

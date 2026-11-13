@@ -1,3 +1,10 @@
+---
+type: evenement-de-domaine::solidai-ddd
+tldr: "Signaler que le pilote du flux a changé : pris (`controller` = nom lisible) ou libéré (`None`)."
+code: ["[[src/domain/shared_kernel/events/aefi_acquisition_control_changed/aefi_acquisition_control_changed.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/shared_kernel/operation_result_intention]]"
+---
 # aefi_acquisition_control_changed — Intention
 
 ## Rationale

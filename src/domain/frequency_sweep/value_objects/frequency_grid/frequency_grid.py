@@ -16,7 +16,7 @@ class FrequencyGrid:
 
     frequencies_hz: Tuple[float, ...]
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if len(self.frequencies_hz) < MIN_FREQUENCIES:
             raise ValueError(f"a frequency grid needs at least {MIN_FREQUENCIES} frequencies")
         if any(not math.isfinite(f) or f <= 0 for f in self.frequencies_hz):

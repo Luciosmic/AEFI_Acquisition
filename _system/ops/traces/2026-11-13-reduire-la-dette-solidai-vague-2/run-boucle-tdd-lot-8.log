@@ -1,0 +1,5 @@
+atomes src/domain/aefi_line/value_objects/line_grid_point,src/domain/aefi_point,src/domain/aefi_point/events/aefi_point_acquired,src/domain/aefi_point/value_objects/sample,src/domain/detection_devices/aefi_device/signal_processing
+pytest VERT tests=21 verts=21 rouges=0 nouveaux-rouges=0 anciens-rouges=0 verts-sans-code=0
+verify DETTE nouvelles=- anciennes=solidai-intention-non-typee | src/domain/aefi_line/value_objects/line_grid_point/line_grid_point_intention.md:None solidai-intention-non-typee src/domain/aefi_point/aefi_point_intention.md:None solidai-intention-non-typee src/domain/aefi_point/events/aefi_point_acquired/aefi_point_acquired_intention.md:None solidai-intention-non-typee src/domain/aefi_point/value_objects/sample/sample_intention.md:None solidai-intention-non-typee src/domain/detection_devices/aefi_device/signal_processing/aefi_corrected_sample_intention.md:None solidai-intention-non-typee
+graphe OK nouveaux=- anciens=-
+verdict VERT-AVEC-DETTE cause=verify:solidai-intention-non-typee

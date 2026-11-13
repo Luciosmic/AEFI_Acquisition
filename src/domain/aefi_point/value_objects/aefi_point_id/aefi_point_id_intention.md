@@ -1,3 +1,10 @@
+---
+type: value-object::solidai-ddd
+tldr: "Typer l'identité d'un AefiPoint."
+code: ["[[src/domain/aefi_point/value_objects/aefi_point_id/aefi_point_id.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/aefi_point/aefi_point_intention]]"
+---
 # aefi_point_id — Intention
 
 ## Rationale

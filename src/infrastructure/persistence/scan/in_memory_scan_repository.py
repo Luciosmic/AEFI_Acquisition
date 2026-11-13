@@ -1,7 +1,7 @@
 import logging
 from typing import Dict, Optional
 
-from application.services.scan_application_service.ports.i_unit_of_work import IUnitOfWork
+from application.scan.scan_application_service.ports.i_unit_of_work import IUnitOfWork
 from domain.scan.repositories.i_scan_repository import IScanRepository
 from domain.scan.scan import Scan
 from domain.scan.value_objects.scan_id.scan_id import ScanId

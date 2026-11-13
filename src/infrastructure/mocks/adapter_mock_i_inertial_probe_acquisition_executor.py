@@ -8,13 +8,13 @@ Responsibility:
 
 from typing import List, Optional
 
-from application.services.inertial_probe_service.dtos.inertial_probe_dtos import (
+from application.inertial_probe.inertial_probe_service.dtos.inertial_probe_dtos import (
     InertialProbeAcquisitionConfig,
 )
-from application.services.inertial_probe_service.ports.i_inertial_probe_acquisition_executor import (
+from application.inertial_probe.inertial_probe_service.ports.i_inertial_probe_acquisition_executor import (
     IInertialProbeAcquisitionExecutor,
 )
-from application.services.inertial_probe_service.ports.i_inertial_probe_stream_port import (
+from application.inertial_probe.inertial_probe_service.ports.i_inertial_probe_stream_port import (
     IInertialProbeStreamPort,
 )
 

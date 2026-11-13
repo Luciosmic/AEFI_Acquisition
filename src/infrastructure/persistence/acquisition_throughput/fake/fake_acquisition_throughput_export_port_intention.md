@@ -1,3 +1,11 @@
+---
+type: doublure-de-test::solidai-hexagonal
+tldr: "Doublure `fake_acquisition_throughput_export_port` : Garder chaque ouverture, chaque export (résultat + échantillons) et chaque écriture des paramètres (`AcquisitionParametersDTO`) en mémoire."
+code: ["[[src/infrastructure/persistence/acquisition_throughput/fake/fake_acquisition_throughput_export_port.py]]"]
+cause_de_changement: outil
+implements: ["[[src/application/test_bench_calibration/acquisition_throughput_characterization_service/ports/i_acquisition_throughput_export_port_intention]]"]
+double_de: "[[src/infrastructure/persistence/acquisition_throughput/csv_acquisition_throughput_export_port_intention]]"
+---
 # fake_acquisition_throughput_export_port — Intention
 
 ## Rationale

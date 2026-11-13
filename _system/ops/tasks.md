@@ -429,7 +429,7 @@ explicite.
 
 **Mise à jour 2026-10-01 (worktree `dev_scan`, à reporter dans `dev_hardware`)** : la durée des
 *déplacements* est maintenant fidèle. Caractériseur banc
-`infrastructure/hardware/arcus_performax_4EX/characterization/` (360 mouvements, modèle
+`infrastructure/hardware/arcus_performax_4ex/characterization/` (360 mouvements, modèle
 `t = t0 + max(|dx|,|dy|)/v`, synthèse commitée dans `results/`) → constantes nommées dans
 `MockMotionPort` (niveau port, exact) et `FakeArcusPerformax4EXController` (niveau contrôleur,
 exact ; vu depuis le port, t0 sous-estimé d'environ 0,19 s faute de latence USB simulée). Restent
@@ -550,10 +550,10 @@ EF probe) — ne pas re-toggler l'excitation par canal.
   `baseline_measurement`
 - ancien événement de champ (supprimé au profit de `NardaPointAcquired`) :
   + champ optionnel `baseline_field_measurement: FieldMeasurement | None`
-- `application/services/excitation_configuration_service/excitation_configuration_service.py` :
+- `application/shared/excitation_configuration_service/excitation_configuration_service.py` :
   + `mute()` / `unmute()` (gardent mode/fréquence, togglent juste le niveau à 0 puis
   restaurent le niveau précédent)
-- `application/services/scan_application_service/scan_application_service.py` :
+- `application/scan/scan_application_service/scan_application_service.py` :
   - `AuxiliaryProbeChannel.record_point_result` : signature étendue pour accepter des
     échantillons baseline optionnels (aujourd'hui `Callable[[Any, int, Any, List], None]`,
     l.114)
@@ -568,9 +568,9 @@ EF probe) — ne pas re-toggler l'excitation par canal.
     4. bloc excité existant (l.398-442), inchangé
     5. attacher les baselines aux résultats avant `ScanPointResult(...)` et
        `channel.record_point_result(...)`
-- `application/services/scan_application_service/dtos/scan_dtos.py` : `Scan2DConfigDTO` +
+- `application/scan/scan_application_service/dtos/scan_dtos.py` : `Scan2DConfigDTO` +
   `differential_mode: bool = False`, + `differential_settle_delay_ms: float`
-- `application/services/scan_export_service/scan_export_service.py` (`_flatten_point`) et
+- `application/scan/scan_export_service/scan_export_service.py` (`_flatten_point`) et
   `infrastructure/persistence/csv_scan_export_port.py` (`write_point` + `write_field_point`) :
   + colonnes `baseline_*` (vides si non différentiel)
 - UI : case à cocher "Mesure différentielle" dans le panneau de config scan →

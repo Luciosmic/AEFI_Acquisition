@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Nommer la promesse refusée : un scan complété est figé."
+code: ["[[src/domain/scan/errors/scan_already_completed_error.py]]"]
+cause_de_changement: regle-metier
+---
 # scan_already_completed_error — Intention
 
 ## Rationale

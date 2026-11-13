@@ -1,0 +1,43 @@
+oracle : 9 cas
+démon du moteur du clone prêt (essai 1)
+ok   cas 1 (--port allocation_service/fournisseur --adaptateur fournisseur_csv --contexte allocation) : code 0
+ok   cas 1 : 15 fichiers, ceux de l'oracle
+ok   cas 1 : diff vide contre l'oracle
+ok   cas 1 : 4 intention(s) au type vérifié par le moteur
+ok   cas 1 : solidai verify --paths : aucune erreur de trio ni de couche
+ok   cas 2 (--port allocation_service/notifications --adaptateur sms_notifications --contexte allocation) : code 0
+ok   cas 2 : 12 fichiers, ceux de l'oracle
+ok   cas 2 : diff vide contre l'oracle
+ok   cas 2 : 3 intention(s) au type vérifié par le moteur
+ok   cas 2 : solidai verify --paths : aucune erreur de trio ni de couche
+ok   cas 3 (--port allocation_service/fournisseur --adaptateur fournisseur_http --contexte allocation) : code 0
+ok   cas 3 : 12 fichiers, ceux de l'oracle
+ok   cas 3 : diff vide contre l'oracle
+ok   cas 3 : 3 intention(s) au type vérifié par le moteur
+ok   cas 3 : solidai verify --paths : aucune erreur de trio ni de couche
+ok   cas 4 (--port allocation_service --adaptateur allocation_cli --entrant --contexte allocation) : code 0
+ok   cas 4 : 6 fichiers, ceux de l'oracle
+ok   cas 4 : diff vide contre l'oracle
+ok   cas 4 : 1 intention(s) au type vérifié par le moteur
+ok   cas 4 : solidai verify --paths : aucune erreur de trio ni de couche
+ok   cas 5 (--port allocation_service/stock --adaptateur stock_csv --contexte allocation --dry-run) : code 0
+ok   cas 5 : message « modifierait src/allocation/interface/shell/shell.py »
+ok   cas 5 : 0 fichiers, ceux de l'oracle
+ok   cas 6 (--port allocation_service/notifications --adaptateur file_notifications --contexte allocation) : code 2
+ok   cas 6 : message « existe déjà »
+ok   cas 6 : 0 fichiers, ceux de l'oracle
+ok   cas 7 (--port expedition_service/transporteur --adaptateur transporteur_http --contexte defauts) : code 2
+ok   cas 7 : message « suite de contrat absente »
+ok   cas 7 : 0 fichiers, ceux de l'oracle
+ok   cas 8 (--port expedition_service --adaptateur expedition_cli --entrant --contexte defauts) : code 2
+ok   cas 8 : message « point de composition absent »
+ok   cas 8 : 0 fichiers, ceux de l'oracle
+ok   cas 9 (--port allocation_service/notifications --adaptateur SmsNotifications --contexte allocation) : code 1
+ok   cas 9 : message « nom invalide »
+ok   cas 9 : 0 fichiers, ceux de l'oracle
+ok   solidai verify --entry <clone> --target <clone> : aucune erreur nouvelle sur les fichiers touchés
+ok   solidai graphe : chaque nouveau réel a son Fake (R2, R3) et n'est construit qu'au point de composition (R17)
+ok   pytest : « 11 failed, 4 errors », aucun test créé n'est vert
+ok   clone propre après pytest
+39/39 vérifications passées
+démons du clone arrêtés

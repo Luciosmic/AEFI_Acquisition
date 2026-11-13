@@ -21,7 +21,7 @@ def make_point(n: int = 3, point_index: int = 7) -> AefiPoint:
     return AefiPoint(AefiPointId(uuid4()), uuid4(), Position2D(1.0, 2.0), point_index=point_index, expected_samples=n)
 
 
-def test_exactly_n_valid_samples_acquires_point_and_emits_event():
+def test_exactly_n_valid_samples_acquires_point_and_emits_event() -> None:
     point = make_point(3)
     point.record_samples([make_sample(1.0), make_sample(2.0), make_sample(3.0)])
 
@@ -37,7 +37,7 @@ def test_exactly_n_valid_samples_acquires_point_and_emits_event():
     assert event.measurement_unit == "http://qudt.org/vocab/unit/V"
 
 
-def test_domain_events_property_clears_the_list():
+def test_domain_events_property_clears_the_list() -> None:
     point = make_point(1)
     point.record_samples([make_sample()])
     assert len(point.domain_events) == 1
@@ -53,7 +53,7 @@ def test_wrong_sample_count_is_refused_and_leaves_no_trace(count):
     assert point.domain_events == []
 
 
-def test_acquired_point_refuses_a_second_recording():
+def test_acquired_point_refuses_a_second_recording() -> None:
     point = make_point(1)
     point.record_samples([make_sample()])
     point.domain_events
@@ -62,11 +62,11 @@ def test_acquired_point_refuses_a_second_recording():
     assert point.domain_events == []
 
 
-def test_expected_samples_must_be_positive():
+def test_expected_samples_must_be_positive() -> None:
     with pytest.raises(ValueError):
         make_point(0)
 
 
-def test_point_index_must_not_be_negative():
+def test_point_index_must_not_be_negative() -> None:
     with pytest.raises(ValueError):
         make_point(point_index=-1)

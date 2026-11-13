@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Nommer la promesse refusée : une ligne acquise est figée."
+code: ["[[src/domain/aefi_line/errors/aefi_line_already_acquired_error.py]]"]
+cause_de_changement: regle-metier
+---
 # aefi_line_already_acquired_error — Intention
 
 ## Rationale

@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Nommer la promesse refusée : seul un scan PENDING démarre."
+code: ["[[src/domain/scan/errors/scan_already_started_error.py]]"]
+cause_de_changement: regle-metier
+---
 # scan_already_started_error — Intention
 
 ## Rationale

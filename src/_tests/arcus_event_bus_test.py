@@ -11,10 +11,10 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../s
 
 from tool.diagram_friendly_test import DiagramFriendlyTest
 
-from infrastructure.hardware.arcus_performax_4EX.adapter_motion_port_arcus_performax4EX import ArcusAdapter
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.hardware.arcus_performax_4ex.adapter_motion_port_arcus_performax4ex.adapter_motion_port_arcus_performax4ex import ArcusAdapter
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
-from domain.shared_kernel.motion.events.motion_completed.motion_completed import MotionCompleted
+from domain.shared_kernel.events.motion_completed.motion_completed import MotionCompleted
 
 class TestArcusEventBus(DiagramFriendlyTest):
     def setUp(self):
