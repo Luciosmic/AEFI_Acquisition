@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Déclarer `subscribe(event_type: str, handler: Callable)` : enregistrement d'un handler."
+code: ["[[src/domain/shared_kernel/events/i_domain_event_bus/i_domain_event_bus.py]]"]
+cause_de_changement: regle-metier
+---
 # i_domain_event_bus — Intention
 
 ## Rationale

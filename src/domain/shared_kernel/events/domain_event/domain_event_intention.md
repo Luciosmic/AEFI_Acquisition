@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Définir les champs communs : `event_id` (UUID4) et `occurred_on` (datetime UTC)."
+code: ["[[src/domain/shared_kernel/events/domain_event/domain_event.py]]"]
+cause_de_changement: regle-metier
+---
 # domain_event — Intention
 
 ## Rationale
