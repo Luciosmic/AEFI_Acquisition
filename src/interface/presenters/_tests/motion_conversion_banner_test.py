@@ -1,4 +1,16 @@
-"""Calibration state -> banner view model: MotionPresenter and ScanPresenter relay what is missing, panels block."""
+"""Calibration state -> banner view model: MotionPresenter and ScanPresenter relay what is missing, panels block.
+
+Rationale:
+    Without this test, the "bench not calibrated" state can become invisible
+    again: moves refused with no reason shown, or a banner never removed after
+    "Pas par tour" is entered.
+
+Responsibility:
+    - Presenters translate the calibration state and events into a banner
+      view model.
+    - Panels disable the move commands and START, but not stop nor emergency
+      stop, and are enabled again on the availability event.
+"""
 import os
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")

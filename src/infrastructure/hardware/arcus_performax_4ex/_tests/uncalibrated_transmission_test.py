@@ -2,6 +2,18 @@
 Arcus adapter and lifecycle with no mm/pulse conversion (mechanical
 transmission not calibrated): the stack starts, the controller is verified in
 pulses, motion is refused with a typed error and the monitor stays quiet.
+
+Rationale:
+    Without this test, a missing mm/pulse conversion (uncalibrated mechanical
+    transmission) can again close the application at startup or flood the logs
+    with tracebacks, leaving the operator no screen to enter the missing value.
+
+Responsibility:
+    - Adapter without conversion: typed error for mm commands; stop and speed
+      presets (pulses) stay available; the monitoring loop stays quiet (a
+      single warning).
+    - Lifecycle: verify_all() is true if the controller answers (raw position
+      in pulses), and the failure is kept if it does not.
 """
 
 import logging

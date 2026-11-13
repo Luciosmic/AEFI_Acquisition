@@ -3,6 +3,19 @@ Bench without mm/pulse conversion: MotionControlService refuses with a typed
 error, MotionConversionHandler says what is missing and applies the
 conversion live once the transmission is recorded (service chain on
 in-memory repositories, motion port reduced to its conversion state).
+
+Rationale:
+    Without this test, the "not calibrated" state can become again an
+    exception at startup, or a silent default that moves the bench the wrong
+    way, or a banner that never disappears after the value is entered.
+
+Responsibility:
+    - Starting without "Pas par tour" does not raise and names the missing
+      quantity.
+    - Moves in mm are refused with MotionConversionUnavailable before reaching
+      the port; homing (pulses, limit switches) and stops stay possible.
+    - Entering the quantity applies the conversion live; a conversion already
+      applied is never changed during the session.
 """
 from typing import List, Optional
 from unittest.mock import MagicMock
