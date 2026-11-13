@@ -13,13 +13,13 @@ from application.shared.hardware_configuration_service.hardware_configuration_se
 from application.shared.excitation_configuration_service.excitation_configuration_service import (
     EXCITATION_FREQUENCY_CHANGED_TOPIC,
 )
-from domain.shared_kernel.excitation.events.excitation_frequency_changed.excitation_frequency_changed import (
+from domain.shared_kernel.events.excitation_frequency_changed.excitation_frequency_changed import (
     ExcitationFrequencyChanged,
 )
-from domain.shared_kernel.excitation.events.dds_channel_config_changed.dds_channel_config_changed import (
+from domain.shared_kernel.events.dds_channel_config_changed.dds_channel_config_changed import (
     DdsChannelConfigChanged,
 )
-from domain.shared_kernel.excitation.events.excitation_dds_link_changed.excitation_dds_link_changed import (
+from domain.shared_kernel.events.excitation_dds_link_changed.excitation_dds_link_changed import (
     ExcitationDdsLinkChanged,
 )
 from interface.presenters.hardware_advanced_config_presenter import (

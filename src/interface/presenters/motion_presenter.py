@@ -10,10 +10,10 @@ import logging
 from PySide6.QtCore import QObject, Signal, Slot
 from application.test_bench_calibration.motion_control_service.motion_control_service import MotionControlService
 from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
-from domain.shared_kernel.motion.events.motor_increments_updated.motor_increments_updated import MotorIncrementsUpdated
-from domain.shared_kernel.motion.events.position_updated.position_updated import PositionUpdated
-from domain.shared_kernel.motion.events.motion_completed.motion_completed import MotionCompleted
-from domain.shared_kernel.motion.events.motion_failed.motion_failed import MotionFailed
+from domain.shared_kernel.events.motor_increments_updated.motor_increments_updated import MotorIncrementsUpdated
+from domain.shared_kernel.events.position_updated.position_updated import PositionUpdated
+from domain.shared_kernel.events.motion_completed.motion_completed import MotionCompleted
+from domain.shared_kernel.events.motion_failed.motion_failed import MotionFailed
 from interface.presentation.motion_conversion_banner_model import MotionConversionBannerViewModel
 
 logger = logging.getLogger(__name__)

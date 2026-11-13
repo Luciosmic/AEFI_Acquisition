@@ -5,7 +5,7 @@ import threading
 import unittest
 from unittest import mock
 
-from domain.shared_kernel.motion.events.motion_completed.motion_completed import MotionCompleted
+from domain.shared_kernel.events.motion_completed.motion_completed import MotionCompleted
 from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
 from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from infrastructure.event_bus_motion_synchronizer.event_bus_motion_synchronizer import EventBusMotionSynchronizer

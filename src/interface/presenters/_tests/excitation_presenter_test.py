@@ -11,7 +11,7 @@ from application.shared.excitation_configuration_service.excitation_configuratio
     EXCITATION_DDS_LINK_CHANGED_TOPIC,
 )
 from application.shared.excitation_configuration_service.ports.i_excitation_port import IExcitationPort
-from domain.shared_kernel.excitation.events.excitation_dds_link_changed.excitation_dds_link_changed import (
+from domain.shared_kernel.events.excitation_dds_link_changed.excitation_dds_link_changed import (
     ExcitationDdsLinkChanged,
 )
 

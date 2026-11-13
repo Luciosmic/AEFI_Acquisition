@@ -19,10 +19,10 @@ from PySide6.QtWidgets import QApplication
 
 from application.test_bench_calibration.motion_control_service.dtos.motion_conversion_status_dto import MotionConversionStatusDTO
 from application.scan.scan_application_service.errors.scan_start_error import ScanRefusedBenchNotCalibrated
-from domain.shared_kernel.motion.events.motion_conversion_became_available.motion_conversion_became_available import (
+from domain.shared_kernel.events.motion_conversion_became_available.motion_conversion_became_available import (
     MotionConversionBecameAvailable,
 )
-from domain.shared_kernel.motion.events.motion_conversion_found_missing.motion_conversion_found_missing import (
+from domain.shared_kernel.events.motion_conversion_found_missing.motion_conversion_found_missing import (
     MotionConversionFoundMissing,
 )
 from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
@@ -193,7 +193,7 @@ def test_found_missing_event_refreshes_scan_start_availability():
 
 
 def test_motion_presenter_relays_the_controller_increments_even_when_not_calibrated():
-    from domain.shared_kernel.motion.events.motor_increments_updated.motor_increments_updated import (
+    from domain.shared_kernel.events.motor_increments_updated.motor_increments_updated import (
         MotorIncrementsUpdated,
     )
 

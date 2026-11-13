@@ -7,16 +7,16 @@ from domain.shared_kernel.excitation.value_objects.excitation_parameters import 
 from domain.shared_kernel.excitation.value_objects.excitation_level import ExcitationLevel
 from domain.shared_kernel.excitation.value_objects.excitation_mode import ExcitationMode
 from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
-from domain.shared_kernel.excitation.events.excitation_frequency_changed.excitation_frequency_changed import (
+from domain.shared_kernel.events.excitation_frequency_changed.excitation_frequency_changed import (
     ExcitationFrequencyChanged,
 )
-from domain.shared_kernel.excitation.events.dds_channel_config_changed.dds_channel_config_changed import (
+from domain.shared_kernel.events.dds_channel_config_changed.dds_channel_config_changed import (
     DdsChannelConfigChanged,
 )
-from domain.shared_kernel.excitation.events.excitation_dds_link_changed.excitation_dds_link_changed import (
+from domain.shared_kernel.events.excitation_dds_link_changed.excitation_dds_link_changed import (
     ExcitationDdsLinkChanged,
 )
-from domain.shared_kernel.excitation.events.excitation_control_changed.excitation_control_changed import (
+from domain.shared_kernel.events.excitation_control_changed.excitation_control_changed import (
     ExcitationControlChanged,
 )
 from domain.shared_kernel.operation_result import OperationResult

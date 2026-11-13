@@ -11,7 +11,7 @@ from application.test_bench_calibration.synchronous_detection_service.synchronou
 from application.shared.excitation_configuration_service.excitation_configuration_service import (
     EXCITATION_FREQUENCY_CHANGED_TOPIC,
 )
-from domain.shared_kernel.excitation.events.excitation_frequency_changed.excitation_frequency_changed import (
+from domain.shared_kernel.events.excitation_frequency_changed.excitation_frequency_changed import (
     ExcitationFrequencyChanged,
 )
 from domain.test_bench_calibration.entities.synchronous_detection_phase_calibration_entry.synchronous_detection_phase_calibration_entry import (

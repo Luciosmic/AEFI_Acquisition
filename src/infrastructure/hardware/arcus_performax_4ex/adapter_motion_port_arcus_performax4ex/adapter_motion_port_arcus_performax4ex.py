@@ -24,10 +24,10 @@ from uuid import uuid4
 from datetime import datetime
 from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
 from domain.test_bench_configuration.physical_bench_limits.physical_bench_limits import X_TRAVEL_INCREMENTS, Y_TRAVEL_INCREMENTS
-from domain.shared_kernel.motion.events.motion_completed.motion_completed import MotionCompleted
-from domain.shared_kernel.motion.events.motion_failed.motion_failed import MotionFailed
-from domain.shared_kernel.motion.events.position_updated.position_updated import PositionUpdated
-from domain.shared_kernel.motion.events.motor_increments_updated.motor_increments_updated import MotorIncrementsUpdated
+from domain.shared_kernel.events.motion_completed.motion_completed import MotionCompleted
+from domain.shared_kernel.events.motion_failed.motion_failed import MotionFailed
+from domain.shared_kernel.events.position_updated.position_updated import PositionUpdated
+from domain.shared_kernel.events.motor_increments_updated.motor_increments_updated import MotorIncrementsUpdated
 
 from application.test_bench_calibration.motion_control_service.ports.i_motion_port import IMotionPort
 from application.test_bench_calibration.motion_control_service.ports.motion_conversion_unavailable_error import (

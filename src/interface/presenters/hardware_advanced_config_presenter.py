@@ -19,13 +19,13 @@ from application.shared.excitation_configuration_service.excitation_configuratio
     EXCITATION_FREQUENCY_CHANGED_TOPIC,
 )
 from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
-from domain.shared_kernel.excitation.events.excitation_frequency_changed.excitation_frequency_changed import (
+from domain.shared_kernel.events.excitation_frequency_changed.excitation_frequency_changed import (
     ExcitationFrequencyChanged,
 )
-from domain.shared_kernel.excitation.events.dds_channel_config_changed.dds_channel_config_changed import (
+from domain.shared_kernel.events.dds_channel_config_changed.dds_channel_config_changed import (
     DdsChannelConfigChanged,
 )
-from domain.shared_kernel.excitation.events.excitation_dds_link_changed.excitation_dds_link_changed import (
+from domain.shared_kernel.events.excitation_dds_link_changed.excitation_dds_link_changed import (
     ExcitationDdsLinkChanged,
 )
 from domain.shared_kernel.value_objects.hardware_configuration.hardware_advanced_parameter_schema import (

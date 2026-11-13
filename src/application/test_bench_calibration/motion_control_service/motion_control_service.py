@@ -19,8 +19,8 @@ from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
 from domain.shared_kernel.operation_result import OperationResult
 from domain.test_bench_configuration.physical_bench_limits.physical_bench_limits import X_TRAVEL_INCREMENTS, Y_TRAVEL_INCREMENTS
 from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
-from domain.shared_kernel.motion.events.position_updated.position_updated import PositionUpdated
-from domain.shared_kernel.motion.events.emergency_stop_triggered.emergency_stop_triggered import EmergencyStopTriggered
+from domain.shared_kernel.events.position_updated.position_updated import PositionUpdated
+from domain.shared_kernel.events.emergency_stop_triggered.emergency_stop_triggered import EmergencyStopTriggered
 
 logger = logging.getLogger(__name__)
 

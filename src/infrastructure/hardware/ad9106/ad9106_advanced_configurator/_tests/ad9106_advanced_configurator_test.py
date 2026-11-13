@@ -18,10 +18,10 @@ from infrastructure.hardware.ad9106.ad9106_advanced_configurator.ad9106_advanced
 )
 from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from domain.shared_kernel.excitation.value_objects.phase_angle import PhaseAngle
-from domain.shared_kernel.excitation.events.excitation_frequency_changed.excitation_frequency_changed import (
+from domain.shared_kernel.events.excitation_frequency_changed.excitation_frequency_changed import (
     ExcitationFrequencyChanged,
 )
-from domain.shared_kernel.excitation.events.dds_channel_config_changed.dds_channel_config_changed import (
+from domain.shared_kernel.events.dds_channel_config_changed.dds_channel_config_changed import (
     DdsChannelConfigChanged,
 )
 
