@@ -199,7 +199,7 @@ Aucun `.py` n'a changé.
 - **`solidai graphe` R1, R2, R3** :
   - R3 avant : `{"paires": {}}`. R3 après : `{"paires": {"FakeSoftwareProvenancePort": "GitSoftwareProvenanceReader"}, "orphelins": [], "hors_de_fake": []}`.
   - R1 et R2 ne listent `ISoftwareProvenancePort` ni avant ni après (voir la section sur le port).
-- **Diagnostics du moteur** : 0 sur `src/`. Sur le repo, les 2 erreurs restent celles de la référence (`yaml-parse-error` dans `_system/promise_model/` et `_system/thoughts_interface/`).
+- **Diagnostics du moteur** : 0 sur `src/`. Sur le repo, les 2 erreurs restent celles de la référence (`yaml-parse-error` dans `_system/documentation/promise_model/` et `_system/thoughts_interface/`).
 - **Journaux** : `run-pytest-exemple-1-2-avant.log`, `run-pytest-exemple-1-2-apres.log`, `run-verify-exemple-1-2-avant.json`, `run-verify-exemple-1-2-apres.json`, `run-graphe-exemple-1-2-avant.txt`, `run-graphe-exemple-1-2-apres.txt`.
 
 ## Références
