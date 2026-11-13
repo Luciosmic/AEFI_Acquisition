@@ -27,7 +27,7 @@ def make_measurement(x_i, x_q, y_i, y_q, z_i, z_q) -> AefiVoltageMeasurement:
 # apply()
 # --------------------------------------------------------------------------- #
 
-def test_apply_with_all_corrections_disabled_returns_unchanged_values():
+def test_apply_with_all_corrections_disabled_returns_unchanged_values() -> None:
     raw = make_measurement(1.0, 2.0, 3.0, 4.0, 5.0, 6.0)
     calibration = AefiSignalCorrectionCalibration()
 
@@ -42,7 +42,7 @@ def test_apply_with_all_corrections_disabled_returns_unchanged_values():
     assert result.timestamp == TIMESTAMP
 
 
-def test_apply_noise_correction_subtracts_offset_per_axis():
+def test_apply_noise_correction_subtracts_offset_per_axis() -> None:
     raw = make_measurement(1.0, 2.0, 3.0, 4.0, 5.0, 6.0)
     calibration = AefiSignalCorrectionCalibration(
         noise_offset={"x": (0.1, 0.2), "y": (0.3, 0.4), "z": (0.5, 0.6)},
@@ -59,7 +59,7 @@ def test_apply_noise_correction_subtracts_offset_per_axis():
     assert result.voltage_z_quadrature == pytest.approx(5.4)
 
 
-def test_apply_primary_correction_subtracts_offset_per_axis():
+def test_apply_primary_correction_subtracts_offset_per_axis() -> None:
     raw = make_measurement(1.0, 2.0, 3.0, 4.0, 5.0, 6.0)
     calibration = AefiSignalCorrectionCalibration(
         primary_offset={"x": (0.1, 0.2), "y": (0.3, 0.4), "z": (0.5, 0.6)},
@@ -74,7 +74,7 @@ def test_apply_primary_correction_subtracts_offset_per_axis():
     assert result.voltage_z_quadrature == pytest.approx(5.4)
 
 
-def test_apply_phase_correction_preserves_sign_by_original_quadrant():
+def test_apply_phase_correction_preserves_sign_by_original_quadrant() -> None:
     """Vecteur x d'origine en quadrant II (I<0, Q>0) : theta = atan2(4, -3) (triangle 3-4-5,
     cos=-0.6, sin=0.8). La rotation algebrique donnerait un I positif ; la correction de signe
     (signal_processor.py:79-85) doit le ramener negatif pour preserver le quadrant d'origine."""
@@ -91,7 +91,7 @@ def test_apply_phase_correction_preserves_sign_by_original_quadrant():
     assert result.voltage_x_quadrature == pytest.approx(0.0, abs=1e-9)
 
 
-def test_apply_phase_correction_aligns_onto_positive_i_axis_when_sign_matches():
+def test_apply_phase_correction_aligns_onto_positive_i_axis_when_sign_matches() -> None:
     """Vecteur (0, 5) aligne a theta=pi/2 : la rotation algebrique donne directement un I positif,
     pas de correction de signe necessaire."""
     raw = make_measurement(0.0, 5.0, 0.0, 0.0, 0.0, 0.0)
@@ -106,7 +106,7 @@ def test_apply_phase_correction_aligns_onto_positive_i_axis_when_sign_matches():
     assert result.voltage_x_quadrature == pytest.approx(0.0, abs=1e-9)
 
 
-def test_apply_runs_noise_then_phase_then_primary_in_order():
+def test_apply_runs_noise_then_phase_then_primary_in_order() -> None:
     """theta=0 (rotation no-op) isole l'ordre bruit -> primaire : 10 - 1 (bruit) = 9,
     puis 9 - 2 (primaire) = 7. Si l'ordre etait inverse, le resultat serait 10 - 2 - 1 = 7
     aussi pour une soustraction simple -- la distinction reelle est que la phase s'applique
@@ -130,7 +130,7 @@ def test_apply_runs_noise_then_phase_then_primary_in_order():
 # calibrate_noise / calibrate_phase / calibrate_primary
 # --------------------------------------------------------------------------- #
 
-def test_calibrate_noise_freezes_current_sample_as_offset_and_enables_stage():
+def test_calibrate_noise_freezes_current_sample_as_offset_and_enables_stage() -> None:
     current = make_measurement(0.01, 0.02, 0.03, 0.04, 0.05, 0.06)
     calibration = AefiSignalCorrectionCalibration()
 
@@ -141,7 +141,7 @@ def test_calibrate_noise_freezes_current_sample_as_offset_and_enables_stage():
     assert calibration.noise_correction_enabled is False  # original untouched
 
 
-def test_calibrate_phase_computes_angle_per_axis_and_enables_stage():
+def test_calibrate_phase_computes_angle_per_axis_and_enables_stage() -> None:
     current_pre_phase = make_measurement(0.0, 5.0, 1.0, 0.0, -1.0, 0.0)
     calibration = AefiSignalCorrectionCalibration()
 
@@ -154,7 +154,7 @@ def test_calibrate_phase_computes_angle_per_axis_and_enables_stage():
     assert calibration.phase_correction_enabled is False
 
 
-def test_calibrate_primary_freezes_current_sample_as_offset_and_enables_stage():
+def test_calibrate_primary_freezes_current_sample_as_offset_and_enables_stage() -> None:
     current_fully_processed = make_measurement(0.5, 0.6, 0.7, 0.8, 0.9, 1.0)
     calibration = AefiSignalCorrectionCalibration()
 

@@ -7,7 +7,7 @@ from domain.detection_devices.aefi_device.signal_processing.value_objects.aefi_c
 )
 
 
-def test_creation():
+def test_creation() -> None:
     now = datetime.now()
     measurement = AefiCorrectedFieldMeasurement(
         field_x_in_phase=1.5,
@@ -24,7 +24,7 @@ def test_creation():
     assert measurement.timestamp == now
 
 
-def test_immutable():
+def test_immutable() -> None:
     measurement = AefiCorrectedFieldMeasurement(
         field_x_in_phase=1.0, field_x_quadrature=0.0,
         field_y_in_phase=0.0, field_y_quadrature=0.0,
@@ -36,7 +36,7 @@ def test_immutable():
         measurement.field_x_in_phase = 2.0
 
 
-def test_rejects_nan():
+def test_rejects_nan() -> None:
     with pytest.raises(ValueError, match="must be finite"):
         AefiCorrectedFieldMeasurement(
             field_x_in_phase=float('nan'), field_x_quadrature=0.0,
@@ -46,7 +46,7 @@ def test_rejects_nan():
         )
 
 
-def test_rejects_inf():
+def test_rejects_inf() -> None:
     with pytest.raises(ValueError, match="must be finite"):
         AefiCorrectedFieldMeasurement(
             field_x_in_phase=float('inf'), field_x_quadrature=0.0,
@@ -56,7 +56,7 @@ def test_rejects_inf():
         )
 
 
-def test_accepts_zero():
+def test_accepts_zero() -> None:
     measurement = AefiCorrectedFieldMeasurement(
         field_x_in_phase=0.0, field_x_quadrature=0.0,
         field_y_in_phase=0.0, field_y_quadrature=0.0,
@@ -67,7 +67,7 @@ def test_accepts_zero():
     assert measurement.field_x_in_phase == 0.0
 
 
-def test_accepts_negative():
+def test_accepts_negative() -> None:
     measurement = AefiCorrectedFieldMeasurement(
         field_x_in_phase=-1.5, field_x_quadrature=-0.3,
         field_y_in_phase=-2.1, field_y_quadrature=-0.5,

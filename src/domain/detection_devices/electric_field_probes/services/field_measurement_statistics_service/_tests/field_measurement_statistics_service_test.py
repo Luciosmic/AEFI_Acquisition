@@ -10,7 +10,7 @@ from domain.detection_devices.electric_field_probes.services.field_measurement_s
 class TestFieldMeasurementStatisticsService:
     """Tests for FieldMeasurementStatisticsService."""
     
-    def test_empty_list_raises_error(self):
+    def test_empty_list_raises_error(self) -> None:
         """Test that empty list raises ValueError."""
         try:
             FieldMeasurementStatisticsService.calculate_statistics([])
@@ -18,7 +18,7 @@ class TestFieldMeasurementStatisticsService:
         except ValueError as e:
             assert "empty" in str(e).lower()
     
-    def test_single_measurement(self):
+    def test_single_measurement(self) -> None:
         """Test statistics with a single measurement."""
         timestamp = datetime(2024, 1, 1, 12, 0, 0)
         measurement = FieldMeasurement(
@@ -34,7 +34,7 @@ class TestFieldMeasurementStatisticsService:
         assert result.uncertainty_estimate == 0.1
         assert result.std_dev_components == (0.0, 0.0, 0.0)
     
-    def test_two_measurements(self):
+    def test_two_measurements(self) -> None:
         """Test statistics with two measurements."""
         timestamp1 = datetime(2024, 1, 1, 12, 0, 0)
         timestamp2 = datetime(2024, 1, 1, 12, 0, 1)
@@ -63,7 +63,7 @@ class TestFieldMeasurementStatisticsService:
         assert math.isclose(result.std_dev_components[1], math.sqrt(2), rel_tol=1e-9)
         assert math.isclose(result.std_dev_components[2], math.sqrt(2), rel_tol=1e-9)
     
-    def test_inconsistent_dimensions_raises_error(self):
+    def test_inconsistent_dimensions_raises_error(self) -> None:
         """Test that measurements with different dimensions raise ValueError."""
         timestamp = datetime(2024, 1, 1, 12, 0, 0)
         m1 = FieldMeasurement(components=(1.0, 2.0), timestamp=timestamp)
@@ -75,7 +75,7 @@ class TestFieldMeasurementStatisticsService:
         except ValueError as e:
             assert "dimension" in str(e).lower() or "component" in str(e).lower()
     
-    def test_three_measurements_mono_axial(self):
+    def test_three_measurements_mono_axial(self) -> None:
         """Test with three mono-axial measurements."""
         timestamp = datetime(2024, 1, 1, 12, 0, 0)
         m1 = FieldMeasurement(components=(1.0,), timestamp=timestamp)
@@ -91,7 +91,7 @@ class TestFieldMeasurementStatisticsService:
         # Std dev = sqrt(1) = 1.0
         assert result.std_dev_components == (1.0,)
     
-    def test_norm_property(self):
+    def test_norm_property(self) -> None:
         """Test that norm is calculated correctly."""
         timestamp = datetime(2024, 1, 1, 12, 0, 0)
         measurement = FieldMeasurement(

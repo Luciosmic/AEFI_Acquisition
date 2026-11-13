@@ -11,25 +11,25 @@ def _probe(axis_labels=("X", "Y", "Z")):
     )
 
 
-def test_record_measurement_matches_axis_count():
+def test_record_measurement_matches_axis_count() -> None:
     probe = _probe()
     m = probe.record_measurement((1.0, 2.0, 3.0), timestamp=datetime.now())
     assert m.components == (1.0, 2.0, 3.0)
 
 
-def test_record_measurement_rejects_wrong_dimensionality():
+def test_record_measurement_rejects_wrong_dimensionality() -> None:
     probe = _probe(axis_labels=("X", "Y", "Z"))
     with pytest.raises(ValueError):
         probe.record_measurement((1.0, 2.0), timestamp=datetime.now())
 
 
-def test_supports_mono_axial_probe():
+def test_supports_mono_axial_probe() -> None:
     probe = _probe(axis_labels=("X",))
     m = probe.record_measurement((1.0,), timestamp=datetime.now())
     assert m.components == (1.0,)
 
 
-def test_carries_probe_identity():
+def test_carries_probe_identity() -> None:
     probe = _probe()
     assert probe.brand == "Narda"
     assert probe.model == "EP-601"

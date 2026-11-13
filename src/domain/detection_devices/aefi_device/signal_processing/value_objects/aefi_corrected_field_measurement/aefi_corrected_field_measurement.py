@@ -33,7 +33,7 @@ class AefiCorrectedFieldMeasurement:
     # Metadata
     timestamp: datetime
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Validate field values are finite."""
         for field_name in _FIELD_NAMES:
             value = getattr(self, field_name)

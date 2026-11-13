@@ -5,7 +5,7 @@ from domain.detection_devices.aefi_device.signal_processing.value_objects.aefi_s
 )
 
 
-def test_default_construction_has_no_calibration_and_all_corrections_disabled():
+def test_default_construction_has_no_calibration_and_all_corrections_disabled() -> None:
     calibration = AefiSignalCorrectionCalibration()
 
     assert calibration.noise_offset == {}
@@ -16,7 +16,7 @@ def test_default_construction_has_no_calibration_and_all_corrections_disabled():
     assert calibration.primary_correction_enabled is False
 
 
-def test_construction_with_explicit_values():
+def test_construction_with_explicit_values() -> None:
     calibration = AefiSignalCorrectionCalibration(
         noise_offset={"x": (0.01, 0.02), "y": (0.0, 0.0), "z": (0.0, 0.0)},
         noise_correction_enabled=True,
@@ -34,14 +34,14 @@ def test_construction_with_explicit_values():
     assert calibration.primary_correction_enabled is True
 
 
-def test_is_immutable():
+def test_is_immutable() -> None:
     calibration = AefiSignalCorrectionCalibration()
 
     with pytest.raises(AttributeError):
         calibration.noise_correction_enabled = True
 
 
-def test_two_instances_with_same_values_are_equal():
+def test_two_instances_with_same_values_are_equal() -> None:
     a = AefiSignalCorrectionCalibration(noise_offset={"x": (1.0, 2.0)})
     b = AefiSignalCorrectionCalibration(noise_offset={"x": (1.0, 2.0)})
 
