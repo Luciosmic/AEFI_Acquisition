@@ -1,3 +1,9 @@
+---
+type: port::solidai-hexagonal
+tldr: "Port sortant `i_scan_export_port` : Déclarer l'interface d'export des résultats de scan (méthode `export` ou équivalent)."
+sens: sortant
+code: "[[src/application/scan/scan_export_service/ports/i_scan_export_port.py]]"
+---
 # i_scan_export_port — Intention
 
 ## Rationale

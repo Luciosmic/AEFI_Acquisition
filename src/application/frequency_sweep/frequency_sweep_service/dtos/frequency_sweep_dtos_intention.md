@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "DTO `frequency_sweep_dtos` : `FrequencySweepRequestDTO` : la demande de l'opérateur (rôle, bornes et nombre de fréquences, N par fréquence, hauteur de la table, opérateur)."
+code: ["[[src/application/frequency_sweep/frequency_sweep_service/dtos/frequency_sweep_dtos.py]]"]
+cause_de_changement: orchestration
+---
 # frequency_sweep_dtos — Intention
 
 ## Rationale

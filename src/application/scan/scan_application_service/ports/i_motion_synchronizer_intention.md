@@ -1,3 +1,9 @@
+---
+type: port::solidai-hexagonal
+tldr: "Port sortant `i_motion_synchronizer` : `wait_for_motion(motion_id, timeout_seconds) -> OperationResult[None, MotionSyncError]`."
+sens: sortant
+code: "[[src/application/scan/scan_application_service/ports/i_motion_synchronizer.py]]"
+---
 # i_motion_synchronizer — Intention
 
 ## Rationale

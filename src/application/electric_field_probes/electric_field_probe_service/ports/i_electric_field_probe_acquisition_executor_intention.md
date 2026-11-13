@@ -1,3 +1,9 @@
+---
+type: port::solidai-hexagonal
+tldr: "Port sortant `i_electric_field_probe_acquisition_executor` : Déclarer `start(config: ElectricFieldProbeAcquisitionConfig, probe_port: IElectricFieldProbePort)`."
+sens: sortant
+code: "[[src/application/electric_field_probes/electric_field_probe_service/ports/i_electric_field_probe_acquisition_executor.py]]"
+---
 # i_electric_field_probe_acquisition_executor — Intention
 
 ## Rationale

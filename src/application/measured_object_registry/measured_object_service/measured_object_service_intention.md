@@ -1,3 +1,9 @@
+---
+type: service-applicatif::solidai-hexagonal
+tldr: "Service applicatif `measured_object_service` : `list_measured_objects()` : les objets mesurés connus, triés par nom."
+code: ["[[src/application/measured_object_registry/measured_object_service/measured_object_service.py]]"]
+cause_de_changement: orchestration
+---
 # measured_object_service — Intention
 
 ## Rationale

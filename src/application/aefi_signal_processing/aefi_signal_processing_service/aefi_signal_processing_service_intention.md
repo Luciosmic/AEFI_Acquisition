@@ -1,3 +1,9 @@
+---
+type: service-applicatif::solidai-hexagonal
+tldr: "Service applicatif `aefi_signal_processing_service` : S'abonner à `aefivoltagesampleacquired` et, pour chaque échantillon : appeler `AefiCorrectedSample.correct(...)` avec la calibration courante."
+code: ["[[src/application/aefi_signal_processing/aefi_signal_processing_service/aefi_signal_processing_service.py]]"]
+cause_de_changement: orchestration
+---
 # aefi_signal_processing_service — Intention
 
 ## Rationale

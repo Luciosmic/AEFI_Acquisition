@@ -1,3 +1,9 @@
+---
+type: service-applicatif::solidai-hexagonal
+tldr: "Service applicatif `operator_service` : `list_operators()` : les opérateurs connus, triés par nom."
+code: ["[[src/application/operator_registry/operator_service/operator_service.py]]"]
+cause_de_changement: orchestration
+---
 # operator_service — Intention
 
 ## Rationale

@@ -1,3 +1,9 @@
+---
+type: port::solidai-hexagonal
+tldr: "Port sortant `i_scan_output_port` : Déclarer les méthodes `present_scan_started`, `present_scan_progress`, `present_scan_completed`, `present_scan_failed`, `present_scan_cancelled`, `present_scan_paused`, `present_scan_resumed`."
+sens: sortant
+code: "[[src/application/scan/scan_application_service/ports/i_scan_output_port.py]]"
+---
 # i_scan_output_port — Intention
 
 ## Rationale

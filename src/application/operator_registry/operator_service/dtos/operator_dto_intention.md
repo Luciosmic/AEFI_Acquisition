@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "DTO `operator_dto` : `OperatorDTO` : identifiant (texte) et nom d'un opérateur."
+code: ["[[src/application/operator_registry/operator_service/dtos/operator_dto.py]]"]
+cause_de_changement: orchestration
+---
 # operator_dto — Intention
 
 ## Rationale

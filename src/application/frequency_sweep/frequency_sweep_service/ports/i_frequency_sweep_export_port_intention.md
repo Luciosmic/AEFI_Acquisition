@@ -1,3 +1,9 @@
+---
+type: port::solidai-hexagonal
+tldr: "Port sortant `i_frequency_sweep_export_port` : `open_export(role, table_height_mm)` : créer le dossier du balayage au démarrage (les paramètres y sont écrits pendant qu'il tourne)."
+sens: sortant
+code: "[[src/application/frequency_sweep/frequency_sweep_service/ports/i_frequency_sweep_export_port.py]]"
+---
 # i_frequency_sweep_export_port — Intention
 
 ## Rationale

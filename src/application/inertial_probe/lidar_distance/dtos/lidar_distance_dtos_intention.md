@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "DTO `lidar_distance_dtos` : `LidarDistanceReading` : une distance horodatée à sa réception (sortie du port LIDAR)."
+code: ["[[src/application/inertial_probe/lidar_distance/dtos/lidar_distance_dtos.py]]"]
+cause_de_changement: orchestration
+---
 # lidar_distance_dtos — Intention
 
 > Extrait des DTO de la calibration par barre (abandonnée le 2026-10-30) : seul

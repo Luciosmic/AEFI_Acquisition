@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "DTO `scan_dtos` : `Scan2DConfigDTO` : transporte les paramètres de scan saisis par l'utilisateur (zone, nb points, pattern, délais, averaging)."
+code: ["[[src/application/scan/scan_application_service/dtos/scan_dtos.py]]"]
+cause_de_changement: orchestration
+---
 # scan_dtos — Intention
 
 ## Rationale

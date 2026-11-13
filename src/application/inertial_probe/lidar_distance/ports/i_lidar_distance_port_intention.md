@@ -1,3 +1,9 @@
+---
+type: port::solidai-hexagonal
+tldr: "Port sortant `i_lidar_distance_port` : Ouvrir le flux LIDAR (refus `LidarStreamBusyError` si le panneau le diffuse déjà), lire les distances horodatées à leur réception, fermer le flux dans tous les cas."
+sens: sortant
+code: "[[src/application/inertial_probe/lidar_distance/ports/i_lidar_distance_port.py]]"
+---
 # i_lidar_distance_port — Intention
 
 ## Rationale

@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "DTO `acquisition_parameters_dtos` : `FrequencySweepActivityDTO` : ce que le balayage a fait (activité PROV) — rôle, grille, N, hauteur de table, délais, contrôles tenus, excitation appliquée, opérateur, origine du flux, positions du banc, latence USB, issue."
+code: ["[[src/application/frequency_sweep/frequency_sweep_service/dtos/acquisition_parameters_dtos.py]]"]
+cause_de_changement: orchestration
+---
 # acquisition_parameters_dtos (balayage en fréquence) — Intention
 
 ## Rationale

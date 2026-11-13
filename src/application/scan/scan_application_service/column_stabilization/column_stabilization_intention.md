@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Module `column_stabilization` : Garder en mémoire les accélérations publiées par l'acquisition du capteur inertiel (`InertialProbeSampleAcquired`)."
+code: ["[[src/application/scan/scan_application_service/column_stabilization/column_stabilization.py]]"]
+cause_de_changement: orchestration
+---
 # column_stabilization — Intention
 
 ## Rationale

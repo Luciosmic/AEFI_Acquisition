@@ -1,3 +1,9 @@
+---
+type: port::solidai-hexagonal
+tldr: "Port sortant `i_unit_of_work` : Délimiter une transaction (`with uow:`), avec `commit()` explicite."
+sens: sortant
+code: "[[src/application/scan/scan_application_service/ports/i_unit_of_work.py]]"
+---
 # i_unit_of_work — Intention
 
 ## Rationale

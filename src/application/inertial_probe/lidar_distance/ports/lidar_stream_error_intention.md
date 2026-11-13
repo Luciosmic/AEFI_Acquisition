@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Erreur `lidar_stream_error` : `LidarStreamBusyError` : le flux a déjà un propriétaire (panneau du capteur)."
+code: ["[[src/application/inertial_probe/lidar_distance/ports/lidar_stream_error.py]]"]
+cause_de_changement: orchestration
+---
 # lidar_stream_error — Intention
 
 ## Rationale

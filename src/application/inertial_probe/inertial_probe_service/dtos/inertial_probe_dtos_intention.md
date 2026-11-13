@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "DTO `inertial_probe_dtos` : `InertialProbeStreamSample` : une ligne du flux, horodatée à la réception sur le PC (secondes, `perf_counter`)."
+code: ["[[src/application/inertial_probe/inertial_probe_service/dtos/inertial_probe_dtos.py]]"]
+cause_de_changement: orchestration
+---
 # inertial_probe_dtos — Intention
 
 ## Rationale

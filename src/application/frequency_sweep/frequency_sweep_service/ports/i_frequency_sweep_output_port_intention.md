@@ -1,3 +1,9 @@
+---
+type: port::solidai-hexagonal
+tldr: "Port sortant `i_frequency_sweep_output_port` : `present_frequency_sweep_step` : l'étape en cours, en clair."
+sens: sortant
+code: "[[src/application/frequency_sweep/frequency_sweep_service/ports/i_frequency_sweep_output_port.py]]"
+---
 # i_frequency_sweep_output_port — Intention
 
 ## Rationale

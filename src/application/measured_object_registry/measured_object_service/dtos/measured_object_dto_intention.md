@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "DTO `measured_object_dto` : `MeasuredObjectDTO` : identifiant (texte) et nom d'un objet mesuré."
+code: ["[[src/application/measured_object_registry/measured_object_service/dtos/measured_object_dto.py]]"]
+cause_de_changement: orchestration
+---
 # measured_object_dto — Intention
 
 ## Rationale

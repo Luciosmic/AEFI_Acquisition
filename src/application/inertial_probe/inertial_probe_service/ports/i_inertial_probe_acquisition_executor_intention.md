@@ -1,3 +1,9 @@
+---
+type: port::solidai-hexagonal
+tldr: "Port sortant `i_inertial_probe_acquisition_executor` : Déclarer `start(config, stream_port)` (non bloquant pour l'appelant), `stop()` et `is_running()`."
+sens: sortant
+code: "[[src/application/inertial_probe/inertial_probe_service/ports/i_inertial_probe_acquisition_executor.py]]"
+---
 # i_inertial_probe_acquisition_executor — Intention
 
 ## Rationale

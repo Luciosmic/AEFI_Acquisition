@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "DTO `scan_acquisition_parameters_dtos` : Ce que **l'acquisition** a fait : `ScanActivityDTO` (identifiant, type `step_scan` / `time_series`, début / fin, issue, contrôle exclusif tenu, excitation réglée, procédure du scan `StepScanProcedureDTO`, sonde auxiliaire, positions."
+code: ["[[src/application/scan/scan_export_service/dtos/scan_acquisition_parameters_dtos.py]]"]
+cause_de_changement: orchestration
+---
 # scan_acquisition_parameters_dtos — Intention
 
 ## Rationale

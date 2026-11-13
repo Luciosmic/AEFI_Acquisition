@@ -1,3 +1,9 @@
+---
+type: port::solidai-hexagonal
+tldr: "Port sortant `i_inertial_probe_stream_port` : `connect()` / `disconnect()` (idempotent, envoie l'arrêt du flux) / `is_connected()`."
+sens: sortant
+code: "[[src/application/inertial_probe/inertial_probe_service/ports/i_inertial_probe_stream_port.py]]"
+---
 # i_inertial_probe_stream_port — Intention
 
 ## Rationale

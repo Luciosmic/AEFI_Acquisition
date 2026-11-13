@@ -1,3 +1,11 @@
+---
+type: service-applicatif::solidai-hexagonal
+tldr: "Service applicatif `electric_field_probe_service` : Démarrer/arrêter/mettre à jour une acquisition continue en déléguant à `IElectricFieldProbeAcquisitionExecutor` (même pattern que `AefiAcquisitionService`)."
+code: ["[[src/application/electric_field_probes/electric_field_probe_service/electric_field_probe_service.py]]"]
+cause_de_changement: orchestration
+ports:
+  - "[[src/application/electric_field_probes/electric_field_probe_service/ports/i_electric_field_probe_acquisition_executor_intention]]"
+---
 # electric_field_probe_service — Intention
 
 ## Rationale

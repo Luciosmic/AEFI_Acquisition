@@ -1,3 +1,13 @@
+---
+type: service-applicatif::solidai-hexagonal
+tldr: "Service applicatif `scan_application_service` : Accepter un `Scan2DConfigDTO` (`execute_scan`, grille) ou un `LineScanConfigDTO` (`execute_line_scan`, ligne theta) et déclencher la séquence complète : validation → création de l'agrégat `StepScan` (le même en fly-scan) → génération."
+code: ["[[src/application/scan/scan_application_service/scan_application_service.py]]"]
+cause_de_changement: orchestration
+ports:
+  - "[[src/application/scan/scan_application_service/ports/i_motion_synchronizer_intention]]"
+  - "[[src/application/scan/scan_application_service/ports/i_scan_output_port_intention]]"
+  - "[[src/application/scan/scan_application_service/ports/i_unit_of_work_intention]]"
+---
 # scan_application_service — Intention
 
 ## Rationale

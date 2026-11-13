@@ -1,3 +1,9 @@
+---
+type: port::solidai-hexagonal
+tldr: "Port sortant `i_acquisition_snapshot_port` : Une requête en lecture seule, `read()`, qui rend ces faits sous forme de dict (`hardware_configuration`, `hardware_settings`, …)."
+sens: sortant
+code: "[[src/application/scan/scan_export_service/ports/i_acquisition_snapshot_port.py]]"
+---
 # i_acquisition_snapshot_port — Intention
 
 ## Rationale

@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Module `scan_closure_handler` : S'abonner (dans `__init__`) aux topics d'acquisition qu'on lui donne et, par événement `ProbeAcquisitionEvent`, ouvrir une UoW sur le `Scan`, appeler `mark_acquired(event.source, event.acquisition_id)`, `commit()`."
+code: ["[[src/application/scan/scan_application_service/scan_closure_handler/scan_closure_handler.py]]"]
+cause_de_changement: orchestration
+---
 # scan_closure_handler — Intention
 
 ## Rationale
