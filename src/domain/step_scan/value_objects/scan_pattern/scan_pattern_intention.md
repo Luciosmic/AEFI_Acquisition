@@ -1,3 +1,10 @@
+---
+type: value-object::solidai-ddd
+tldr: "Définir SERPENTINE (boustrophedon), RASTER (gauche→droite), COMB (colonne par colonne)."
+code: ["[[src/domain/step_scan/value_objects/scan_pattern/scan_pattern.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/step_scan/step_scan_intention]]"
+---
 # scan_pattern — Intention
 
 ## Rationale

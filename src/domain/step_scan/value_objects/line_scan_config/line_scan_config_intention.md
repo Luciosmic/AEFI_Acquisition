@@ -1,3 +1,10 @@
+---
+type: value-object::solidai-ddd
+tldr: "Décrire une ligne de scan dans le plan XY : centre, longueur, nombre de points, angle theta."
+code: ["[[src/domain/step_scan/value_objects/line_scan_config/line_scan_config.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/step_scan/step_scan_intention]]"
+---
 # line_scan_config — Intention
 
 ## Rationale

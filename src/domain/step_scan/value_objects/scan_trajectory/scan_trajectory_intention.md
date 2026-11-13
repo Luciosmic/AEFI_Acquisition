@@ -1,3 +1,10 @@
+---
+type: value-object::solidai-ddd
+tldr: "Stocker la liste ordonnée de Position2D."
+code: ["[[src/domain/step_scan/value_objects/scan_trajectory/scan_trajectory.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/step_scan/step_scan_intention]]"
+---
 # scan_trajectory — Intention
 
 ## Rationale

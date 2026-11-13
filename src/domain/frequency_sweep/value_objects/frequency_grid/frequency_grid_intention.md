@@ -1,3 +1,10 @@
+---
+type: value-object::solidai-ddd
+tldr: "Porter les fréquences d'excitation d'un balayage, en Hz : au moins 2, finies, strictement positives, strictement croissantes."
+code: ["[[src/domain/frequency_sweep/value_objects/frequency_grid/frequency_grid.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/frequency_sweep/frequency_sweep_intention]]"
+---
 # frequency_grid — Intention
 
 ## Rationale

@@ -1,3 +1,10 @@
+---
+type: value-object::solidai-ddd
+tldr: "Typer l'identité d'un FrequencySweep."
+code: ["[[src/domain/frequency_sweep/value_objects/frequency_sweep_id/frequency_sweep_id.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/frequency_sweep/frequency_sweep_intention]]"
+---
 # frequency_sweep_id — Intention
 
 ## Rationale

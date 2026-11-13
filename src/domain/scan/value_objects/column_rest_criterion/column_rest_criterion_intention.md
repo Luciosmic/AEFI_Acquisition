@@ -1,3 +1,10 @@
+---
+type: value-object::solidai-ddd
+tldr: "Dire quand la colonne est revenue au repos : la vibration sur la dernière fenêtre (window_s) ne dépasse pas factor fois le niveau de repos."
+code: ["[[src/domain/scan/value_objects/column_rest_criterion/column_rest_criterion.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/scan/scan_intention]]"
+---
 # column_rest_criterion — Intention
 
 ## Rationale

@@ -1,3 +1,10 @@
+---
+type: value-object::solidai-ddd
+tldr: "Stocker les bornes de la zone de scan."
+code: ["[[src/domain/step_scan/value_objects/scan_zone/scan_zone.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/step_scan/step_scan_intention]]"
+---
 # scan_zone — Intention
 
 ## Rationale

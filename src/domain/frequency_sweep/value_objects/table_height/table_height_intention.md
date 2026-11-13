@@ -1,3 +1,10 @@
+---
+type: value-object::solidai-ddd
+tldr: "Porter la hauteur de la table, en mm, telle que l'opérateur la donne (il la lit sur le panneau de commande de la table)."
+code: ["[[src/domain/frequency_sweep/value_objects/table_height/table_height.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/frequency_sweep/frequency_sweep_intention]]"
+---
 # table_height — Intention
 
 ## Rationale

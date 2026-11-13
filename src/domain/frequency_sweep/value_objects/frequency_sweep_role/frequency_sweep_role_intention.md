@@ -1,3 +1,10 @@
+---
+type: value-object::solidai-ddd
+tldr: "Nommer ce qu'un balayage caractérise : INSTRUMENT_REFERENCE (table en position basse, sans objet), BACKGROUND (table à la hauteur de travail, sans objet)."
+code: ["[[src/domain/frequency_sweep/value_objects/frequency_sweep_role/frequency_sweep_role.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/frequency_sweep/frequency_sweep_intention]]"
+---
 # frequency_sweep_role — Intention
 
 ## Rationale
