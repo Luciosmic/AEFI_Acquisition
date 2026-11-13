@@ -3,7 +3,7 @@ from typing import List
 
 from tool.diagram_friendly_test import DiagramFriendlyTest
 from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
-from infrastructure.execution.electric_field_probe_acquisition_executor import (
+from infrastructure.electric_field_probe_acquisition_executor.electric_field_probe_acquisition_executor import (
     ElectricFieldProbeAcquisitionExecutor,
 )
 

@@ -8,8 +8,8 @@ from unittest import mock
 from domain.shared_kernel.motion.events.motion_completed.motion_completed import MotionCompleted
 from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
 from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
-from infrastructure.execution.event_bus_motion_synchronizer import EventBusMotionSynchronizer
-import infrastructure.execution.event_bus_motion_synchronizer as synchronizer_module
+from infrastructure.event_bus_motion_synchronizer.event_bus_motion_synchronizer import EventBusMotionSynchronizer
+import infrastructure.event_bus_motion_synchronizer.event_bus_motion_synchronizer as synchronizer_module
 
 
 def _completed(motion_id: str) -> MotionCompleted:

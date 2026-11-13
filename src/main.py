@@ -153,7 +153,7 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
     from infrastructure.events.event_audit_log import EventAuditLog
     from infrastructure.file_event_log_storage.file_event_log_storage import FileEventLogStorage
     from infrastructure.execution.thread_pool_task_runner import ThreadPoolTaskRunner
-    from infrastructure.execution.event_bus_motion_synchronizer import EventBusMotionSynchronizer
+    from infrastructure.event_bus_motion_synchronizer.event_bus_motion_synchronizer import EventBusMotionSynchronizer
     from infrastructure.persistence.csv_scan_export_port import CsvScanExportPort
     from infrastructure.persistence.hdf5_scan_export_port import Hdf5ScanExportPort
     from infrastructure.persistence.acquisition_snapshot_reader import AcquisitionSnapshotReader
@@ -178,8 +178,8 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
     )
     from infrastructure.post_processing.aefi_post_processor_port import AefiPostProcessorPort, rotation_origin
     from infrastructure.unit_of_work.in_memory_unit_of_work import InMemoryUnitOfWork
-    from infrastructure.execution.electric_field_probe_acquisition_executor import ElectricFieldProbeAcquisitionExecutor
-    from infrastructure.execution.inertial_probe_acquisition_executor import InertialProbeAcquisitionExecutor
+    from infrastructure.electric_field_probe_acquisition_executor.electric_field_probe_acquisition_executor import ElectricFieldProbeAcquisitionExecutor
+    from infrastructure.inertial_probe_acquisition_executor.inertial_probe_acquisition_executor import InertialProbeAcquisitionExecutor
     from infrastructure.hardware.lsm9ds1.lsm9ds1_config_loader import load_lsm9ds1_config
     from infrastructure.mcp.observability_mcp_server import run_observability_mcp_server
     from infrastructure.events.event_ring_buffer import EventRingBuffer

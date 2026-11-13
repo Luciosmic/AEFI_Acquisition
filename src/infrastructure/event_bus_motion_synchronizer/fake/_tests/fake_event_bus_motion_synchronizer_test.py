@@ -18,7 +18,7 @@ from application.services.scan_application_service.errors.motion_sync_error impo
     MotionTimeout,
 )
 from domain.shared_kernel.operation_result import OperationResult
-from infrastructure.execution.fake.fake_event_bus_motion_synchronizer import (
+from infrastructure.event_bus_motion_synchronizer.fake.fake_event_bus_motion_synchronizer import (
     FakeEventBusMotionSynchronizer,
 )
 

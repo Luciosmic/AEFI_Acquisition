@@ -3,7 +3,7 @@ import unittest
 from typing import List
 
 from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
-from infrastructure.execution.electric_field_probe_acquisition_executor import (
+from infrastructure.electric_field_probe_acquisition_executor.electric_field_probe_acquisition_executor import (
     ElectricFieldProbeAcquisitionExecutor,
 )
 from infrastructure.hardware.narda_ep600.fake.fake_electric_field_probe_adapter import (

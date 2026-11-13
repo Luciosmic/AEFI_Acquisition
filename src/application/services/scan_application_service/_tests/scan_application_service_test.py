@@ -11,7 +11,7 @@ from application.services.scan_application_service.dtos.scan_dtos import Scan2DC
 from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
 from application.services.aefi_acquisition_service.dtos.aefi_acquisition_dtos import AefiAcquisitionConfig
 from application.services.electric_field_probe_service.electric_field_probe_service import ElectricFieldProbeService
-from infrastructure.execution.electric_field_probe_acquisition_executor import (
+from infrastructure.electric_field_probe_acquisition_executor.electric_field_probe_acquisition_executor import (
     ElectricFieldProbeAcquisitionExecutor,
 )
 from infrastructure.mocks.adapter_mock_i_motion_port import MockMotionPort
@@ -30,7 +30,7 @@ from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEvent
 from application.services.scan_application_service.scan_closure_handler.scan_closure_handler import ScanClosureHandler
 from infrastructure.unit_of_work.in_memory_unit_of_work import InMemoryUnitOfWork
 from infrastructure.execution.thread_pool_task_runner import ThreadPoolTaskRunner
-from infrastructure.execution.event_bus_motion_synchronizer import EventBusMotionSynchronizer
+from infrastructure.event_bus_motion_synchronizer.event_bus_motion_synchronizer import EventBusMotionSynchronizer
 from tool.diagram_friendly_test import DiagramFriendlyTest
 
 
