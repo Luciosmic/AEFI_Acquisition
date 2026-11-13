@@ -3,3 +3,6 @@
 20:50 | constat | elements generiques de la fenetre (dock, barre de taches, panneau carte/profils, BenchReferential) sans import domaine : reutilisables tels quels
 20:50 | constat | convention de rotation du fichier (extrinsic ZYX) = celle du pipeline (P = Rx.Ry.Rz) : pas de defaut, mais a verifier a chaque lecture
 20:50 | decision | relation avec AEFI_Acquisition modelisee en Conformiste (langage publie = dossier d'export), emprunts de code par un seul paquet aefi_acquisition_upstream
+21:30 | consigne | humain=faire relire la conception par un agent du profil solidai, accepter ses recommandations, coder ensemble dans un worktree dedie, fusion dans develop a la fin
+21:30 | blocage | lecture du profil solidai sous Dropbox en echec (EUNKNOWN) | action=rendre le fichier disponible hors ligne
+21:30 | pause | humain reprendra plus tard
