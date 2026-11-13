@@ -73,7 +73,7 @@ Expected: 0 matches. Any hit means a `Result` boundary is typed with a non-layer
 **Check B — no `raise` for expected failure inside application services:**
 
 ```bash
-rg -n '^\s*raise\b' src/application/services/
+rg -n '^\s*raise\b' src/application/
 ```
 Every hit must be inspected and commented as a programmer error (bug, precondition violated by caller code). Expected business refusals must be returned as `Result`, not raised.
 

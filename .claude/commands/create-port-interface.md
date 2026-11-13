@@ -25,7 +25,7 @@ Scaffold a new port interface (ABC) to abstract an infrastructure dependency. Po
 ### 1. Create the port file
 
 Place the file alongside the consuming service:
-`src/application/services/<service_name>/i_<role>_port.py`
+`src/application/<contexte>/<service_name>/i_<role>_port.py`
 
 ### 2. Implement the ABC
 

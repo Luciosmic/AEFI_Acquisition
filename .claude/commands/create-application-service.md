@@ -4,7 +4,7 @@ description: 'Create application service'
 
 # Create Application Service
 
-Scaffold a new application service following the AEFI DDD structure: a dedicated folder under `src/application/services/`, a service class, one or more port interfaces, and a test subfolder.
+Scaffold a new application service following the AEFI DDD structure: a dedicated folder under `src/application/<contexte>/` (`<contexte>` is the domain context the service serves, for example `scan`, `test_bench` or `detection_devices`; `shared` when several contexts use it), a service class, one or more port interfaces, and a test subfolder.
 
 ## When to Use
 
@@ -24,7 +24,7 @@ Scaffold a new application service following the AEFI DDD structure: a dedicated
 
 ### 1. Create the service folder
 
-Create `src/application/services/<name>_service/` with the following structure:
+Create `src/application/<contexte>/<name>_service/` with the following structure:
 - `__init__.py` (empty)
 - `<name>_service.py`
 - `i_<dependency>_port.py` for each infrastructure dependency
@@ -62,7 +62,7 @@ class I<Dependency>Port(ABC):
 
 ### 3.5. Declare the Use Case error union
 
-Create `src/application/services/<name>_service/<name>_errors.py` declaring the closed union of business-refusal outcomes visible to callers:
+Create `src/application/<contexte>/<name>_service/<name>_errors.py` declaring the closed union of business-refusal outcomes visible to callers:
 
 ```python
 type <Name>UseCaseError = <DomainErrorA> | <DomainErrorB> | <ApplicationRefusalC>
