@@ -14,9 +14,9 @@ import logging
 import os
 from typing import Optional
 
-from application.scan.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
+from application.shared.ports.i_acquisition_port import IAcquisitionPort
 from application.shared.system_lifecycle_service.ports.i_hardware_initialization_port import IHardwareInitializationPort
-from application.services.aefi_acquisition_service.ports.i_aefi_acquisition_executor import IAefiAcquisitionExecutor
+from application.shared.aefi_acquisition_service.ports.i_aefi_acquisition_executor import IAefiAcquisitionExecutor
 from application.shared.excitation_configuration_service.ports.i_excitation_port import IExcitationPort
 from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
 

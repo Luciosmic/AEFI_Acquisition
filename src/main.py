@@ -115,7 +115,7 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
     )
     from application.shared.event_log_maintenance_service.event_log_maintenance_service import EventLogMaintenanceService
     from domain.test_bench.calibration.calibration import Calibration
-    from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
+    from application.shared.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
     from application.test_bench.motion_control_service.motion_control_service import MotionControlService
     from application.test_bench.motion_control_service.motion_conversion_handler import MotionConversionHandler
     from application.detection_devices.electric_field_probe_service.electric_field_probe_service import ElectricFieldProbeService

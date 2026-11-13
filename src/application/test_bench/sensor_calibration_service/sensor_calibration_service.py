@@ -6,8 +6,8 @@ from typing import Optional, Tuple
 
 import numpy as np
 
-from application.services.aefi_acquisition_service.dtos.aefi_acquisition_dtos import AefiAcquisitionConfig
-from application.services.aefi_acquisition_service.i_api_aefi_acquisition_service import (
+from application.shared.aefi_acquisition_service.dtos.aefi_acquisition_dtos import AefiAcquisitionConfig
+from application.shared.aefi_acquisition_service.i_api_aefi_acquisition_service import (
     IApiAefiAcquisitionService,
 )
 # ponytail: direct Application-Service-to-Application-Service dependency,

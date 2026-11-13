@@ -1,7 +1,7 @@
 """A bench without mm/pulse conversion refuses to start a scan, with a typed reason, before taking any control."""
 import unittest
 
-from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
+from application.shared.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
 from application.test_bench.motion_control_service.dtos.motion_conversion_status_dto import MotionConversionStatusDTO
 from application.test_bench.motion_control_service.ports.i_motion_conversion_status_port import (
     IMotionConversionStatusPort,

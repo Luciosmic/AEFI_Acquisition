@@ -19,11 +19,11 @@ import time
 from uuid import uuid4, UUID
 from typing import Optional
 
-from application.services.aefi_acquisition_service.ports.i_aefi_acquisition_executor import (
+from application.shared.aefi_acquisition_service.ports.i_aefi_acquisition_executor import (
     IAefiAcquisitionExecutor,
     AefiAcquisitionConfig,
 )
-from application.scan.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
+from application.shared.ports.i_acquisition_port import IAcquisitionPort
 from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
 from domain.shared_kernel.events.aefi_voltage_sample_acquired.aefi_voltage_sample_acquired import (
     AefiVoltageSampleAcquired,

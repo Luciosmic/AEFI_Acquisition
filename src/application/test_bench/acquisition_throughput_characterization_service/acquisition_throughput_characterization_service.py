@@ -49,8 +49,8 @@ from application.test_bench.acquisition_throughput_characterization_service.port
 from application.test_bench.acquisition_throughput_characterization_service.ports.i_acquisition_throughput_output_port import (
     IAcquisitionThroughputOutputPort,
 )
-from application.services.aefi_acquisition_service.dtos.aefi_acquisition_dtos import AefiAcquisitionConfig
-from application.services.aefi_acquisition_service.i_api_aefi_acquisition_service import (
+from application.shared.aefi_acquisition_service.dtos.aefi_acquisition_dtos import AefiAcquisitionConfig
+from application.shared.aefi_acquisition_service.i_api_aefi_acquisition_service import (
     IApiAefiAcquisitionService,
 )
 # ponytail: direct Application-Service-to-Application-Service dependency,

@@ -11,6 +11,6 @@ Définir le contrat outbound que `ScanApplicationService` utilise pour acquérir
 
 ## Design
 
-- **Port outbound** (Application → Infrastructure) : placé dans le dossier du service consommateur (`scan_application_service/`).
+- **Port outbound** (Application → Infrastructure) : placé dans `application/shared/ports/`, car deux contextes le consomment (`scan` et `shared`) : un port utilisé par deux contextes va dans le noyau partagé (Evans, DDD ch. 14).
 - **ABC avec `@abstractmethod`** : contrat pur, zéro logique d'implémentation.
 - Implémenté par `AdapterIAcquisitionPortADS131A04` (Real) et `AdapterMockIAcquisitionPort` (Fake/Mock).

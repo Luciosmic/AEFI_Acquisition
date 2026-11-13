@@ -3,11 +3,11 @@ holds it, nobody else may start or stop it."""
 
 import unittest
 
-from application.services.aefi_acquisition_service.aefi_acquisition_service import (
+from application.shared.aefi_acquisition_service.aefi_acquisition_service import (
     AEFI_ACQUISITION_CONTROL_CHANGED_TOPIC,
     AefiAcquisitionService,
 )
-from application.services.aefi_acquisition_service.dtos.aefi_acquisition_dtos import AefiAcquisitionConfig
+from application.shared.aefi_acquisition_service.dtos.aefi_acquisition_dtos import AefiAcquisitionConfig
 from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from infrastructure.mocks.adapter_mock_i_acquisition_port import RandomNoiseAcquisitionPort
 from infrastructure.mocks.adapter_mock_i_aefi_acquisition_executor import MockAefiAcquisitionExecutor

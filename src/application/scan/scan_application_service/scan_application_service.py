@@ -68,8 +68,8 @@ from application.shared.excitation_configuration_service.excitation_configuratio
 
 # Continuous acquisition streams (scan is a subscriber, not a puller — the
 # continuous worker owns the driver exclusively).
-from application.services.aefi_acquisition_service.i_api_aefi_acquisition_service import IApiAefiAcquisitionService
-from application.services.aefi_acquisition_service.dtos.aefi_acquisition_dtos import AefiAcquisitionConfig
+from application.shared.aefi_acquisition_service.i_api_aefi_acquisition_service import IApiAefiAcquisitionService
+from application.shared.aefi_acquisition_service.dtos.aefi_acquisition_dtos import AefiAcquisitionConfig
 from application.shared.exclusive_control.exclusive_control import ExclusiveControl, take_all
 from application.detection_devices.electric_field_probe_service.i_api_electric_field_probe_service import IApiElectricFieldProbeService
 from application.detection_devices.electric_field_probe_service.dtos.electric_field_probe_dtos import ElectricFieldProbeAcquisitionConfig

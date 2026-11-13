@@ -2,7 +2,7 @@ import threading
 import unittest
 from typing import List
 
-from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
+from application.shared.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
 from application.scan.scan_application_service.dtos.scan_dtos import Scan2DConfigDTO
 from application.scan.scan_application_service.scan_application_service import ScanApplicationService
 from application.scan.scan_application_service.scan_closure_handler.scan_closure_handler import ScanClosureHandler

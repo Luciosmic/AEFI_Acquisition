@@ -4,13 +4,13 @@ from typing import List
 from tool.diagram_friendly_test import DiagramFriendlyTest
 from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 
-from application.services.aefi_acquisition_service.aefi_acquisition_service import (
+from application.shared.aefi_acquisition_service.aefi_acquisition_service import (
     AefiAcquisitionService,
 )
-from application.services.aefi_acquisition_service.dtos.aefi_acquisition_dtos import (
+from application.shared.aefi_acquisition_service.dtos.aefi_acquisition_dtos import (
     AefiAcquisitionConfig,
 )
-from application.services.aefi_acquisition_service.ports.i_aefi_acquisition_executor import (
+from application.shared.aefi_acquisition_service.ports.i_aefi_acquisition_executor import (
     IAefiAcquisitionExecutor,
 )
 

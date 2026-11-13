@@ -10,7 +10,7 @@ import unittest
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
+from application.shared.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
 from application.shared.excitation_configuration_service.excitation_configuration_service import (
     ExcitationConfigurationService,
 )

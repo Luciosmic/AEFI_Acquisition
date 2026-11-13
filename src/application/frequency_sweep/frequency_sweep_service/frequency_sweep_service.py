@@ -12,8 +12,8 @@ from datetime import datetime, timedelta
 from typing import List, Optional, Sequence, Tuple
 from uuid import uuid4
 
-from application.services.aefi_acquisition_service.dtos.aefi_acquisition_dtos import AefiAcquisitionConfig
-from application.services.aefi_acquisition_service.i_api_aefi_acquisition_service import IApiAefiAcquisitionService
+from application.shared.aefi_acquisition_service.dtos.aefi_acquisition_dtos import AefiAcquisitionConfig
+from application.shared.aefi_acquisition_service.i_api_aefi_acquisition_service import IApiAefiAcquisitionService
 # ponytail: direct Application-Service-to-Application-Service dependency,
 # same precedent as ScanApplicationService and the throughput characterization.
 from application.shared.excitation_configuration_service.excitation_configuration_service import (

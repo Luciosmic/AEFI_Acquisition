@@ -17,7 +17,7 @@ from application.scan.scan_application_service.dtos.scan_dtos import Scan2DConfi
 from application.scan.scan_application_service.scan_closure_handler.scan_closure_handler import ScanClosureHandler
 from domain.scan.value_objects.scan_id.scan_id import ScanId
 from domain.scan.value_objects.scan_state.scan_state import ScanState
-from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
+from application.shared.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
 from domain.step_scan.value_objects.scan_status.scan_status import ScanStatus
 from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from infrastructure.execution.thread_pool_task_runner import ThreadPoolTaskRunner

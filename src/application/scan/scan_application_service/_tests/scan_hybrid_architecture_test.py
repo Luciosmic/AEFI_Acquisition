@@ -10,7 +10,7 @@ from application.scan.scan_application_service.scan_closure_handler.scan_closure
 from infrastructure.in_memory_unit_of_work.in_memory_unit_of_work import InMemoryUnitOfWork
 from application.scan.scan_application_service.ports.i_scan_output_port import IScanOutputPort
 from application.scan.scan_application_service.dtos.scan_dtos import Scan2DConfigDTO
-from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
+from application.shared.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
 from domain.step_scan.events.scan_started.scan_started import ScanStarted
 from domain.step_scan.events.scan_completed.scan_completed import ScanCompleted
 from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus

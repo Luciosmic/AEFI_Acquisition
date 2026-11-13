@@ -5,7 +5,7 @@ import unittest
 from datetime import datetime
 from typing import List
 
-from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
+from application.shared.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
 from application.detection_devices.electric_field_probe_service.electric_field_probe_service import ElectricFieldProbeService
 from application.scan.scan_application_service.dtos.scan_dtos import Scan2DConfigDTO
 from application.scan.scan_application_service.scan_application_service import (

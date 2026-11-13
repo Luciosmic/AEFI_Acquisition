@@ -11,8 +11,8 @@ Rationale:
 
 from abc import ABC, abstractmethod
 
-from application.services.aefi_acquisition_service.dtos.aefi_acquisition_dtos import AefiAcquisitionConfig
-from application.scan.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
+from application.shared.aefi_acquisition_service.dtos.aefi_acquisition_dtos import AefiAcquisitionConfig
+from application.shared.ports.i_acquisition_port import IAcquisitionPort
 
 # Re-export so existing callers that imported from here continue to work
 __all__ = ["IAefiAcquisitionExecutor", "AefiAcquisitionConfig"]

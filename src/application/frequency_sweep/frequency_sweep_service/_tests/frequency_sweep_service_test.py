@@ -4,7 +4,7 @@ characterization tests)."""
 
 import unittest
 
-from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
+from application.shared.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
 from application.shared.excitation_configuration_service.excitation_configuration_service import (
     ExcitationConfigurationService,
 )

@@ -1,7 +1,7 @@
 from datetime import datetime
 import logging
 import random
-from application.scan.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
+from application.shared.ports.i_acquisition_port import IAcquisitionPort
 from domain.shared_kernel.value_objects.acquisition.aefi_voltage_measurement import AefiVoltageMeasurement
 
 logger = logging.getLogger(__name__)

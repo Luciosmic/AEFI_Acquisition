@@ -8,8 +8,8 @@ from application.scan.scan_application_service.scan_application_service import (
     make_electric_field_probe_channel,
 )
 from application.scan.scan_application_service.dtos.scan_dtos import Scan2DConfigDTO
-from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
-from application.services.aefi_acquisition_service.dtos.aefi_acquisition_dtos import AefiAcquisitionConfig
+from application.shared.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
+from application.shared.aefi_acquisition_service.dtos.aefi_acquisition_dtos import AefiAcquisitionConfig
 from application.detection_devices.electric_field_probe_service.electric_field_probe_service import ElectricFieldProbeService
 from infrastructure.electric_field_probe_acquisition_executor.electric_field_probe_acquisition_executor import (
     ElectricFieldProbeAcquisitionExecutor,

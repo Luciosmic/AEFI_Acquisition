@@ -15,8 +15,8 @@ from application.test_bench.acquisition_throughput_characterization_service.dtos
 from application.test_bench.acquisition_throughput_characterization_service.ports.i_acquisition_throughput_output_port import (
     IAcquisitionThroughputOutputPort,
 )
-from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
-from application.services.aefi_acquisition_service.dtos.aefi_acquisition_dtos import AefiAcquisitionConfig
+from application.shared.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
+from application.shared.aefi_acquisition_service.dtos.aefi_acquisition_dtos import AefiAcquisitionConfig
 from application.shared.excitation_configuration_service.excitation_configuration_service import (
     ExcitationConfigurationService,
 )

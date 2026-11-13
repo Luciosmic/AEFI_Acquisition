@@ -13,8 +13,8 @@ from application.test_bench.adc_output_rate_characterization_service.dtos.adc_ou
 from application.test_bench.adc_output_rate_characterization_service.ports.i_adc_output_rate_output_port import (
     IAdcOutputRateOutputPort,
 )
-from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
-from application.services.aefi_acquisition_service.dtos.aefi_acquisition_dtos import AefiAcquisitionConfig
+from application.shared.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
+from application.shared.aefi_acquisition_service.dtos.aefi_acquisition_dtos import AefiAcquisitionConfig
 from application.shared.hardware_configuration_service.hardware_configuration_service import (
     HardwareConfigurationService,
 )

@@ -8,7 +8,7 @@ import threading
 import time
 import unittest
 
-from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
+from application.shared.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
 from application.scan.scan_application_service.column_stabilization.column_stabilization import (
     ACCELEROMETER,
     FIXED_DELAY,
