@@ -15,7 +15,7 @@ from application.shared.hardware_configuration_service.hardware_configuration_se
 from domain.shared_kernel.value_objects.hardware_configuration.hardware_advanced_parameter_schema import (
     HardwareAdvancedParameterSchema,
 )
-from infrastructure.hardware.arcus_performax_4ex.arcus_advanced_configuration import (
+from infrastructure.hardware.arcus_performax_4ex.arcus_advanced_configuration.arcus_advanced_configuration import (
     ArcusPerformax4EXAdvancedConfigurator,
 )
 from tool.diagram_friendly_test import DiagramFriendlyTest

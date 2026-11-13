@@ -1,7 +1,7 @@
 import logging
 from typing import Optional, Any
 from application.shared.system_lifecycle_service.ports.i_hardware_initialization_port import IHardwareInitializationPort
-from infrastructure.hardware.arcus_performax_4ex.adapter_motion_port_arcus_performax4ex import ArcusAdapter
+from infrastructure.hardware.arcus_performax_4ex.adapter_motion_port_arcus_performax4ex.adapter_motion_port_arcus_performax4ex import ArcusAdapter
 from infrastructure.hardware.arcus_performax_4ex.driver_arcus_performax4ex import ArcusPerformax4EXController
 
 logger = logging.getLogger(__name__)

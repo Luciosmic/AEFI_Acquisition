@@ -1,7 +1,7 @@
 ---
 type: atome::solidai-atome
 tldr: "Decouples configuration representation (flat dict from UI or file) from the low-level driver API."
-code: ["[[src/infrastructure/hardware/arcus_performax_4ex/adapter_arcus_speed_config.py]]", "[[src/infrastructure/hardware/arcus_performax_4ex/adapter_lifecycle_arcus_performax4ex.py]]", "[[src/infrastructure/hardware/arcus_performax_4ex/adapter_motion_port_arcus_performax4ex.py]]", "[[src/infrastructure/hardware/arcus_performax_4ex/arcus_advanced_configuration.py]]", "[[src/infrastructure/hardware/arcus_performax_4ex/composition_root_arcus.py]]", "[[src/infrastructure/hardware/arcus_performax_4ex/driver_arcus_performax4ex.py]]"]
+code: ["[[src/infrastructure/hardware/arcus_performax_4ex/adapter_arcus_speed_config.py]]", "[[src/infrastructure/hardware/arcus_performax_4ex/adapter_lifecycle_arcus_performax4ex/adapter_lifecycle_arcus_performax4ex.py]]", "[[src/infrastructure/hardware/arcus_performax_4ex/adapter_motion_port_arcus_performax4ex/adapter_motion_port_arcus_performax4ex.py]]", "[[src/infrastructure/hardware/arcus_performax_4ex/arcus_advanced_configuration/arcus_advanced_configuration.py]]", "[[src/infrastructure/hardware/arcus_performax_4ex/composition_root_arcus.py]]", "[[src/infrastructure/hardware/arcus_performax_4ex/driver_arcus_performax4ex.py]]"]
 cause_de_changement: outil
 ---
 # Responsibility

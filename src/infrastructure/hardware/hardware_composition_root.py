@@ -59,7 +59,7 @@ class HardwareCompositionRoot:
             logger.info("Motion -> real (ArcusCompositionRoot)")
             self.arcus_root = ArcusCompositionRoot(event_bus=event_bus)
         else:
-            from infrastructure.hardware.arcus_performax_4ex.fake.fake_arcus_performax4ex_controller import (
+            from infrastructure.hardware.arcus_performax_4ex.fake.fake_arcus_performax_4ex import (
                 FakeArcusPerformax4EXController,
             )
             # ponytail: the mock reads the same runtime calibration as the real

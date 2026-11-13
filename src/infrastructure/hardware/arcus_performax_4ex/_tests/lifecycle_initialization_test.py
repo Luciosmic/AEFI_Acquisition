@@ -20,8 +20,8 @@ sys.path.insert(0, str(src_dir))
 
 from tool.diagram_friendly_test import DiagramFriendlyTest
 
-from infrastructure.hardware.arcus_performax_4ex.adapter_motion_port_arcus_performax4ex import ArcusAdapter
-from infrastructure.hardware.arcus_performax_4ex.adapter_lifecycle_arcus_performax4ex import ArcusPerformaxLifecycleAdapter
+from infrastructure.hardware.arcus_performax_4ex.adapter_motion_port_arcus_performax4ex.adapter_motion_port_arcus_performax4ex import ArcusAdapter
+from infrastructure.hardware.arcus_performax_4ex.adapter_lifecycle_arcus_performax4ex.adapter_lifecycle_arcus_performax4ex import ArcusPerformaxLifecycleAdapter
 
 
 class TestArcusLifecycleInitialization(DiagramFriendlyTest):

@@ -1,4 +1,4 @@
-# fake_arcus_performax4ex_controller — Intention
+# fake_arcus_performax_4ex — Intention
 
 ## Rationale
 

@@ -4,11 +4,11 @@ import unittest
 
 from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
 from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
-from infrastructure.hardware.arcus_performax_4ex.fake.fake_arcus_performax4ex_controller import (
+from infrastructure.hardware.arcus_performax_4ex.fake.fake_arcus_performax_4ex import (
     FakeArcusPerformax4EXController,
     _MEASURED_TIMING_BY_HS,
 )
-from infrastructure.hardware.arcus_performax_4ex.adapter_motion_port_arcus_performax4ex import ArcusAdapter
+from infrastructure.hardware.arcus_performax_4ex.adapter_motion_port_arcus_performax4ex.adapter_motion_port_arcus_performax4ex import ArcusAdapter
 from infrastructure.mocks.adapter_mock_i_motion_port import measured_move_duration_s
 
 

@@ -196,7 +196,7 @@ def main(argv: Optional[Sequence[str]] = None) -> Optional[Path]:
 
     controller = None
     if args.dry_run:
-        from infrastructure.hardware.arcus_performax_4ex.fake.fake_arcus_performax4ex_controller import (
+        from infrastructure.hardware.arcus_performax_4ex.fake.fake_arcus_performax_4ex import (
             FakeArcusPerformax4EXController,
         )
         controller = FakeArcusPerformax4EXController()

@@ -1,7 +1,7 @@
 """
 Fake Raw Increment Motion Port
 
-See fake_raw_increment_motion_port_intention.md.
+See fake_adapter_raw_increment_motion_arcus_intention.md.
 """
 
 import time
@@ -14,7 +14,7 @@ from application.test_bench_calibration.raw_increment_motion.ports.i_raw_increme
 from application.test_bench_calibration.raw_increment_motion.ports.raw_increment_motion_error import (
     RawIncrementMotionError,
 )
-from infrastructure.hardware.arcus_performax_4ex.fake.fake_arcus_performax4ex_controller import (
+from infrastructure.hardware.arcus_performax_4ex.fake.fake_arcus_performax_4ex import (
     FAKE_PLUS_LIMIT_INCREMENTS,
 )
 

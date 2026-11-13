@@ -1,4 +1,4 @@
-# fake_raw_increment_motion_port — Intention
+# fake_adapter_raw_increment_motion_arcus — Intention
 
 ## Rationale
 
