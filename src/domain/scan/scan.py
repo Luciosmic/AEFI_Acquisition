@@ -24,7 +24,7 @@ class Scan:
     _received: Dict[str, Set[UUID]] = field(default_factory=dict)
     _domain_events: List[DomainEvent] = field(default_factory=list)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.total_points < 1:
             raise ValueError("total_points must be >= 1")
         if not any(source.required for source in self.expected_sources.values()):

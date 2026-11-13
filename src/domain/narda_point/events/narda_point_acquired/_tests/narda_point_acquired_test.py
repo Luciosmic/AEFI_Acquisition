@@ -18,7 +18,7 @@ def make_event(point_id=None):
     )
 
 
-def test_event_is_a_frozen_domain_event_with_timestamp():
+def test_event_is_a_frozen_domain_event_with_timestamp() -> None:
     event = make_event()
     assert isinstance(event, DomainEvent)
     assert event.occurred_on is not None
@@ -27,7 +27,7 @@ def test_event_is_a_frozen_domain_event_with_timestamp():
         event.samples_count = 1
 
 
-def test_event_respects_the_probe_acquisition_contract():
+def test_event_respects_the_probe_acquisition_contract() -> None:
     from domain.scan.events.probe_acquisition_event.probe_acquisition_event import ProbeAcquisitionEvent
 
     point_id = uuid4()
