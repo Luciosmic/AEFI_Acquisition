@@ -1,7 +1,7 @@
 """
 Fake LIDAR Distance Port
 
-See fake_lidar_distance_port_intention.md.
+See fake_adapter_lidar_distance_port_intention.md.
 """
 
 import random
@@ -18,7 +18,7 @@ from application.inertial_probe.lidar_distance.ports.lidar_stream_error import (
     LidarUnavailableError,
 )
 from domain.lidar.lidar_distance.lidar_distance import LidarDistance
-from infrastructure.hardware.lsm9ds1.fake.fake_inertial_probe_stream_adapter import LIDAR_CAP_HZ
+from infrastructure.hardware.lsm9ds1.adapter_inertial_probe_stream_port.fake.fake_adapter_inertial_probe_stream_port import LIDAR_CAP_HZ
 
 # Measured on the real board (journal 2026-10-12): 25 Hz as soon as the LIDAR is active.
 SAMPLE_PERIOD_S = 1.0 / LIDAR_CAP_HZ

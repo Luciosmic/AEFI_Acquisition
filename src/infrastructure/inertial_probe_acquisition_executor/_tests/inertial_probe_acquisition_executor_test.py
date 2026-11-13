@@ -12,7 +12,7 @@ from infrastructure.inertial_probe_acquisition_executor.inertial_probe_acquisiti
     STREAM_FAILED_TOPIC,
     InertialProbeAcquisitionExecutor,
 )
-from infrastructure.hardware.lsm9ds1.fake.fake_inertial_probe_stream_adapter import (
+from infrastructure.hardware.lsm9ds1.adapter_inertial_probe_stream_port.fake.fake_adapter_inertial_probe_stream_port import (
     FakeInertialProbeStreamAdapter,
 )
 

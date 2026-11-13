@@ -7,7 +7,7 @@ from application.inertial_probe.inertial_probe_service.inertial_probe_service im
     InertialProbeService,
 )
 from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
-from infrastructure.hardware.lsm9ds1.fake.fake_inertial_probe_stream_adapter import (
+from infrastructure.hardware.lsm9ds1.adapter_inertial_probe_stream_port.fake.fake_adapter_inertial_probe_stream_port import (
     FakeInertialProbeStreamAdapter,
 )
 from infrastructure.mocks.adapter_mock_i_inertial_probe_acquisition_executor import (

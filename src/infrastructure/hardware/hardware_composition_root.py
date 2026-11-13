@@ -25,7 +25,7 @@ from application.electric_field_probes.electric_field_probe_service.ports.i_elec
 from application.inertial_probe.inertial_probe_service.ports.i_inertial_probe_stream_port import IInertialProbeStreamPort
 from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
 
-from infrastructure.hardware.lsm9ds1.adapter_inertial_probe_stream_port import Lsm9ds1InertialProbeStreamAdapter
+from infrastructure.hardware.lsm9ds1.adapter_inertial_probe_stream_port.adapter_inertial_probe_stream_port import Lsm9ds1InertialProbeStreamAdapter
 from infrastructure.hardware.lsm9ds1.lsm9ds1_config_loader import Lsm9ds1Config
 from infrastructure.hardware.arcus_performax_4ex.composition_root_arcus import ArcusCompositionRoot
 from infrastructure.hardware.micro_controller.mcu_composition_root import MCUCompositionRoot
@@ -182,7 +182,7 @@ class HardwareCompositionRoot:
                 rate_hz=inertial_probe_config.rate_hz,
             )
         else:
-            from infrastructure.hardware.lsm9ds1.fake.fake_inertial_probe_stream_adapter import (
+            from infrastructure.hardware.lsm9ds1.adapter_inertial_probe_stream_port.fake.fake_adapter_inertial_probe_stream_port import (
                 FakeInertialProbeStreamAdapter,
             )
             logger.info("Inertial probe -> mock (25 Hz, real time)")

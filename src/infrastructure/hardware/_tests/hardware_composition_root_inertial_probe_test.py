@@ -5,10 +5,10 @@ from application.inertial_probe.inertial_probe_service.ports.i_inertial_probe_st
 )
 from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from infrastructure.hardware.hardware_composition_root import HardwareCompositionRoot
-from infrastructure.hardware.lsm9ds1.adapter_inertial_probe_stream_port import (
+from infrastructure.hardware.lsm9ds1.adapter_inertial_probe_stream_port.adapter_inertial_probe_stream_port import (
     Lsm9ds1InertialProbeStreamAdapter,
 )
-from infrastructure.hardware.lsm9ds1.fake.fake_inertial_probe_stream_adapter import (
+from infrastructure.hardware.lsm9ds1.adapter_inertial_probe_stream_port.fake.fake_adapter_inertial_probe_stream_port import (
     FakeInertialProbeStreamAdapter,
 )
 from infrastructure.hardware.lsm9ds1.lsm9ds1_config_loader import Lsm9ds1Config

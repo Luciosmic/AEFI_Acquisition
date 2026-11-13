@@ -5,7 +5,7 @@ from application.inertial_probe.lidar_distance.ports.lidar_stream_error import (
     LidarUnavailableError,
 )
 from infrastructure.execution.fake.fake_clock import FakeClock
-from infrastructure.hardware.lsm9ds1.fake.fake_lidar_distance_port import SAMPLE_PERIOD_S, FakeLidarDistancePort
+from infrastructure.hardware.lsm9ds1.adapter_lidar_distance_port.fake.fake_adapter_lidar_distance_port import SAMPLE_PERIOD_S, FakeLidarDistancePort
 
 
 class FakeLidarDistancePortTest(unittest.TestCase):

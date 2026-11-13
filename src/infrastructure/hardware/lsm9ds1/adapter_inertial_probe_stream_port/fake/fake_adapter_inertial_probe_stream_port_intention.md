@@ -1,4 +1,4 @@
-# fake_inertial_probe_stream_adapter — Intention
+# fake_adapter_inertial_probe_stream_port — Intention
 
 ## Rationale
 

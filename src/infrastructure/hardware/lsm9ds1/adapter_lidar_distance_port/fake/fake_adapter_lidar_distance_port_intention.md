@@ -1,4 +1,4 @@
-# fake_lidar_distance_port — Intention
+# fake_adapter_lidar_distance_port — Intention
 
 ## Rationale
 

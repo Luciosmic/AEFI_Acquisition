@@ -2,11 +2,11 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from infrastructure.hardware.lsm9ds1.adapter_inertial_probe_stream_port import (
+from infrastructure.hardware.lsm9ds1.adapter_inertial_probe_stream_port.adapter_inertial_probe_stream_port import (
     Lsm9ds1InertialProbeStreamAdapter,
 )
 
-DRIVER = "infrastructure.hardware.lsm9ds1.adapter_inertial_probe_stream_port.LSM9DS1StreamDriver"
+DRIVER = "infrastructure.hardware.lsm9ds1.adapter_inertial_probe_stream_port.adapter_inertial_probe_stream_port.LSM9DS1StreamDriver"
 ALL = ["accelerometer", "gyroscope", "magnetometer", "lidar"]
 
 

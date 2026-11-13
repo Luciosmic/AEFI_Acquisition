@@ -7,8 +7,8 @@ from application.inertial_probe.lidar_distance.ports.lidar_stream_error import (
     LidarUnavailableError,
 )
 from domain.lidar.lidar_distance.lidar_distance import LidarDistance
-from infrastructure.hardware.lsm9ds1.adapter_lidar_distance_port import LidarDistanceStreamAdapter
-from infrastructure.hardware.lsm9ds1.fake.fake_inertial_probe_stream_adapter import (
+from infrastructure.hardware.lsm9ds1.adapter_lidar_distance_port.adapter_lidar_distance_port import LidarDistanceStreamAdapter
+from infrastructure.hardware.lsm9ds1.adapter_inertial_probe_stream_port.fake.fake_adapter_inertial_probe_stream_port import (
     FakeInertialProbeStreamAdapter,
 )
 
