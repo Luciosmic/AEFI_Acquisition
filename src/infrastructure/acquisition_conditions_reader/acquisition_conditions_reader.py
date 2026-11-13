@@ -26,8 +26,8 @@ from application.shared.acquisition_parameters.acquisition_conditions_dtos impor
 from application.shared.acquisition_parameters.i_acquisition_conditions_port import (
     IAcquisitionConditionsPort,
 )
-from application.services.motion_control_service.ports.i_motion_port import IMotionPort
-from application.services.sensor_calibration_service.dtos.sensor_calibration_dto import ActiveSensorRotationDTO
+from application.test_bench.motion_control_service.ports.i_motion_port import IMotionPort
+from application.test_bench.sensor_calibration_service.dtos.sensor_calibration_dto import ActiveSensorRotationDTO
 from domain.test_bench.calibration.calibration import Calibration
 from domain.test_bench.physical_bench_limits.physical_bench_limits import X_TRAVEL_INCREMENTS, Y_TRAVEL_INCREMENTS
 from domain.test_bench.calibration.repositories.i_hardware_component_repository import IHardwareComponentRepository

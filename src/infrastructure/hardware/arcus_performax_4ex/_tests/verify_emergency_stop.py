@@ -35,7 +35,7 @@ from infrastructure.execution.step_scan_executor import StepScanExecutor
 from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from application.scan.scan_application_service.dtos.scan_dtos import Scan2DConfigDTO
 from interface.ui_motion_control.presenter_motion_control import MotionControlPresenter
-from application.services.motion_control_service.motion_control_service import MotionControlService
+from application.test_bench.motion_control_service.motion_control_service import MotionControlService
 from PyQt6.QtCore import QCoreApplication
 
 # Configure logging

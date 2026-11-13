@@ -2,7 +2,7 @@
 
 import unittest
 
-from application.services.hardware_component_service.hardware_component_service import HardwareComponentService
+from application.test_bench.hardware_component_service.hardware_component_service import HardwareComponentService
 from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from infrastructure.persistence.calibration.fake.fake_hardware_component_repository import (
     FakeHardwareComponentRepository,

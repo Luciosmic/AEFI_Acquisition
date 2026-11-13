@@ -4,7 +4,7 @@ import unittest
 from dataclasses import replace
 from datetime import datetime, timezone
 
-from application.services.acquisition_throughput_characterization_service.acquisition_throughput_characterization_service import (
+from application.test_bench.acquisition_throughput_characterization_service.acquisition_throughput_characterization_service import (
     EXCITATION_CUT,
 )
 from application.shared.acquisition_parameters.acquisition_conditions_dtos import (
@@ -12,7 +12,7 @@ from application.shared.acquisition_parameters.acquisition_conditions_dtos impor
     BenchPositionDTO,
     SynchronousDetectionStateDTO,
 )
-from application.services.acquisition_throughput_characterization_service.dtos.acquisition_parameters_dtos import (
+from application.test_bench.acquisition_throughput_characterization_service.dtos.acquisition_parameters_dtos import (
     AcquisitionParametersDTO,
 )
 from infrastructure.acquisition_conditions_reader.fake.fake_acquisition_conditions_reader import make_bench_conditions

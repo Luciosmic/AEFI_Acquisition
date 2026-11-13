@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from application.services.adc_output_rate_characterization_service.dtos.adc_output_rate_dtos import (
+from application.test_bench.adc_output_rate_characterization_service.dtos.adc_output_rate_dtos import (
     DrdyCaptureRequestDTO,
 )
 from infrastructure.hardware.oscilloscope_dsox2014.adapter_drdy_capture_dsox2014 import (

@@ -6,7 +6,7 @@ import unittest
 from datetime import datetime
 from pathlib import Path
 
-from application.services.acquisition_throughput_characterization_service.dtos.acquisition_throughput_dtos import (
+from application.test_bench.acquisition_throughput_characterization_service.dtos.acquisition_throughput_dtos import (
     AcquisitionThroughputCharacterizationDTO,
     AcquisitionThroughputPointDTO,
     AcquisitionThroughputSampleDTO,

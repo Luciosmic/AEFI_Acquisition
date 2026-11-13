@@ -11,13 +11,13 @@ import logging
 
 from PySide6.QtCore import QObject, Signal, Slot
 
-from application.services.acquisition_throughput_characterization_service.dtos.acquisition_throughput_dtos import (
+from application.test_bench.acquisition_throughput_characterization_service.dtos.acquisition_throughput_dtos import (
     AcquisitionThroughputRequestDTO,
 )
-from application.services.acquisition_throughput_characterization_service.i_api_acquisition_throughput_characterization_service import (
+from application.test_bench.acquisition_throughput_characterization_service.i_api_acquisition_throughput_characterization_service import (
     IApiAcquisitionThroughputCharacterizationService,
 )
-from application.services.acquisition_throughput_characterization_service.ports.i_acquisition_throughput_output_port import (
+from application.test_bench.acquisition_throughput_characterization_service.ports.i_acquisition_throughput_output_port import (
     IAcquisitionThroughputOutputPort,
 )
 from interface.qt_abc import QABCMeta

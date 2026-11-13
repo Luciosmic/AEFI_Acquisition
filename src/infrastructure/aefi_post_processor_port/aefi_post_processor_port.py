@@ -29,7 +29,7 @@ from PySide6.QtCore import QProcess
 from application.scan.scan_export_service.ports.i_post_processing_port import (
     IPostProcessingPort,
 )
-from application.services.sensor_calibration_service.sensor_calibration_service import (
+from application.test_bench.sensor_calibration_service.sensor_calibration_service import (
     ACTIVE_SENSOR_ROTATION_CHANGED_TOPIC,
 )
 from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus

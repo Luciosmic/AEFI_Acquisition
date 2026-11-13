@@ -3,7 +3,7 @@
 from dataclasses import replace
 from datetime import datetime, timezone
 
-from application.services.acquisition_throughput_characterization_service.acquisition_throughput_characterization_service import (
+from application.test_bench.acquisition_throughput_characterization_service.acquisition_throughput_characterization_service import (
     CONTROLLER,
     EXCITATION_CUT,
 )
@@ -11,12 +11,12 @@ from application.shared.acquisition_parameters.acquisition_conditions_dtos impor
     BenchPositionDTO,
     ExportedFileDTO,
 )
-from application.services.acquisition_throughput_characterization_service.dtos.acquisition_parameters_dtos import (
+from application.test_bench.acquisition_throughput_characterization_service.dtos.acquisition_parameters_dtos import (
     AcquisitionParametersDTO,
     OperatorExcitationDTO,
     ThroughputActivityDTO,
 )
-from application.services.acquisition_throughput_characterization_service.dtos.acquisition_throughput_dtos import (
+from application.test_bench.acquisition_throughput_characterization_service.dtos.acquisition_throughput_dtos import (
     AcquisitionThroughputRequestDTO,
 )
 from infrastructure.acquisition_conditions_reader.fake.fake_acquisition_conditions_reader import make_bench_conditions

@@ -12,13 +12,13 @@ from typing import Optional
 
 from PySide6.QtCore import QObject, Signal, Slot
 
-from application.services.sensor_calibration_service.i_api_sensor_calibration_service import (
+from application.test_bench.sensor_calibration_service.i_api_sensor_calibration_service import (
     IApiSensorCalibrationService,
 )
-from application.services.sensor_calibration_service.ports.i_sensor_calibration_output_port import (
+from application.test_bench.sensor_calibration_service.ports.i_sensor_calibration_output_port import (
     ISensorCalibrationOutputPort,
 )
-from application.services.sensor_calibration_service.sensor_calibration_service import (
+from application.test_bench.sensor_calibration_service.sensor_calibration_service import (
     ACTIVE_SENSOR_ROTATION_CHANGED_TOPIC,
     SENSOR_CALIBRATION_ENTRY_ADDED_TOPIC,
 )

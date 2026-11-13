@@ -8,10 +8,10 @@ import time
 from dataclasses import dataclass
 from typing import Dict, Iterable, Optional, Tuple
 
-from application.services.raw_increment_motion.ports.i_raw_increment_motion_port import (
+from application.test_bench.raw_increment_motion.ports.i_raw_increment_motion_port import (
     IRawIncrementMotionPort,
 )
-from application.services.raw_increment_motion.ports.raw_increment_motion_error import (
+from application.test_bench.raw_increment_motion.ports.raw_increment_motion_error import (
     RawIncrementMotionError,
 )
 from infrastructure.hardware.arcus_performax_4ex.fake.fake_arcus_performax4ex_controller import (

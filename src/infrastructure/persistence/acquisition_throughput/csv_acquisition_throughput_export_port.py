@@ -13,15 +13,15 @@ from typing import Callable, Optional, Sequence, Tuple
 from application.shared.acquisition_parameters.acquisition_conditions_dtos import (
     ExportedFileDTO,
 )
-from application.services.acquisition_throughput_characterization_service.dtos.acquisition_parameters_dtos import (
+from application.test_bench.acquisition_throughput_characterization_service.dtos.acquisition_parameters_dtos import (
     AcquisitionParametersDTO,
 )
-from application.services.acquisition_throughput_characterization_service.dtos.acquisition_throughput_dtos import (
+from application.test_bench.acquisition_throughput_characterization_service.dtos.acquisition_throughput_dtos import (
     VALUE_CHANNELS,
     AcquisitionThroughputCharacterizationDTO,
     AcquisitionThroughputSampleDTO,
 )
-from application.services.acquisition_throughput_characterization_service.ports.i_acquisition_throughput_export_port import (
+from application.test_bench.acquisition_throughput_characterization_service.ports.i_acquisition_throughput_export_port import (
     IAcquisitionThroughputExportPort,
 )
 from domain.shared_kernel.operation_result import OperationResult

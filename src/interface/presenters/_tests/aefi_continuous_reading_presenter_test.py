@@ -30,7 +30,7 @@ from domain.detection_devices.aefi_device.signal_processing.value_objects.aefi_c
 from domain.detection_devices.aefi_device.signal_processing.value_objects.aefi_signal_correction_calibration.aefi_signal_correction_calibration import (
     AefiSignalCorrectionCalibration,
 )
-from application.services.transformation_service.transformation_service import TransformationService
+from application.test_bench.transformation_service.transformation_service import TransformationService
 from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from interface.presenters.aefi_continuous_reading_presenter import AefiContinuousReadingPresenter
 from interface.view_models.aefi_continuous_reading_sample_view_model import (

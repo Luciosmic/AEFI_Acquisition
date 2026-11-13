@@ -2,7 +2,7 @@ import unittest
 from types import SimpleNamespace
 from uuid import uuid4
 
-from application.services.sensor_calibration_service.dtos.sensor_calibration_dto import ActiveSensorRotationDTO
+from application.test_bench.sensor_calibration_service.dtos.sensor_calibration_dto import ActiveSensorRotationDTO
 from domain.test_bench.calibration.entities.hardware_component_selection.hardware_component_selection import (
     HardwareComponentSelection,
 )

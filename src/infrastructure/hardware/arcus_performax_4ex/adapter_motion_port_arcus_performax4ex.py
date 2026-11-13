@@ -29,8 +29,8 @@ from domain.shared_kernel.motion.events.motion_failed.motion_failed import Motio
 from domain.shared_kernel.motion.events.position_updated.position_updated import PositionUpdated
 from domain.shared_kernel.motion.events.motor_increments_updated.motor_increments_updated import MotorIncrementsUpdated
 
-from application.services.motion_control_service.ports.i_motion_port import IMotionPort
-from application.services.motion_control_service.ports.motion_conversion_unavailable_error import (
+from application.test_bench.motion_control_service.ports.i_motion_port import IMotionPort
+from application.test_bench.motion_control_service.ports.motion_conversion_unavailable_error import (
     MotionConversionUnavailableError,
 )
 from domain.shared_kernel.value_objects.geometric.position_2d import Position2D

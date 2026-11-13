@@ -6,7 +6,7 @@ See fake_adc_oversampling_port_intention.md.
 
 from typing import List, Tuple
 
-from application.services.adc_output_rate_characterization_service.ports.i_adc_oversampling_port import (
+from application.test_bench.adc_output_rate_characterization_service.ports.i_adc_oversampling_port import (
     IAdcOversamplingPort,
 )
 from domain.shared_kernel.operation_result import OperationResult

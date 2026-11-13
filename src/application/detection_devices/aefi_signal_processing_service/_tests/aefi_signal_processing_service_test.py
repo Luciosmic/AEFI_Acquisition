@@ -8,7 +8,7 @@ from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEvent
 from application.detection_devices.aefi_signal_processing_service.aefi_signal_processing_service import (
     AefiSignalProcessingService,
 )
-from application.services.transformation_service.transformation_service import TransformationService
+from application.test_bench.transformation_service.transformation_service import TransformationService
 
 from domain.shared_kernel.events.aefi_voltage_sample_acquired.aefi_voltage_sample_acquired import (
     AefiVoltageSampleAcquired,

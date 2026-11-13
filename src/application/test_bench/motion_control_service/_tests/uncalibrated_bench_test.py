@@ -1,0 +1,251 @@
+"""
+Bench without mm/pulse conversion: MotionControlService refuses with a typed
+error, MotionConversionHandler says what is missing and applies the
+conversion live once the transmission is recorded (service chain on
+in-memory repositories, motion port reduced to its conversion state).
+
+Rationale:
+    Without this test, the "not calibrated" state can become again an
+    exception at startup, or a silent default that moves the bench the wrong
+    way, or a banner that never disappears after the value is entered.
+
+Responsibility:
+    - Starting without "Pas par tour" does not raise and names the missing
+      quantity.
+    - Moves in mm are refused with MotionConversionUnavailable before reaching
+      the port; homing (pulses, limit switches) and stops stay possible.
+    - Entering the quantity applies the conversion live; a conversion already
+      applied is never changed during the session.
+"""
+from typing import List, Optional
+from unittest.mock import MagicMock
+
+import pytest
+
+from application.test_bench.hardware_component_service.hardware_component_service import HardwareComponentService
+from application.test_bench.mechanical_transmission_calibration_service.mechanical_transmission_calibration_service import (
+    MechanicalTransmissionCalibrationService,
+)
+from application.test_bench.motion_control_service.errors.motion_control_error import (
+    MotionConversionUnavailable,
+)
+from application.test_bench.motion_control_service.motion_control_service import MotionControlService
+from application.test_bench.motion_control_service.motion_conversion_handler import MotionConversionHandler
+from application.test_bench.motion_control_service.ports.i_motion_port import IMotionPort
+from application.test_bench.motion_control_service.ports.motion_conversion_unavailable_error import (
+    MotionConversionUnavailableError,
+)
+from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
+from infrastructure.persistence.calibration.fake.fake_hardware_component_repository import (
+    FakeHardwareComponentRepository,
+)
+from infrastructure.persistence.calibration.fake.fake_mechanical_transmission_calibration_repository import (
+    FakeMechanicalTransmissionCalibrationRepository,
+)
+
+BENCH_SETTING = dict(microsteps=16, driver_current_a=3.5, driver_peak_current_a=4.0, microns_per_pulse=21.11)
+
+
+class MotionPortConversionState:
+    """MagicMock port whose conversion state follows set_microns_per_pulse()."""
+
+    def __init__(self) -> None:
+        self.port = MagicMock(spec=IMotionPort)
+        self.microns_per_pulse: Optional[float] = None
+        self.port.is_conversion_available.side_effect = lambda: self.microns_per_pulse is not None
+        self.port.set_microns_per_pulse.side_effect = self._set
+        self.port.get_current_position.return_value = Position2D(0.0, 0.0)
+        self.port.get_axis_limits.return_value = (200.0, 200.0)
+
+        def refuse(*_args, **_kwargs):
+            if self.microns_per_pulse is None:
+                raise MotionConversionUnavailableError("move_to")
+
+        self.port.move_to.side_effect = refuse
+
+    def _set(self, value: float) -> None:
+        self.microns_per_pulse = value
+
+
+@pytest.fixture
+def bus():
+    return InMemoryEventBus()
+
+
+@pytest.fixture
+def components(bus):
+    return HardwareComponentService(FakeHardwareComponentRepository(), bus)
+
+
+@pytest.fixture
+def transmission(bus, components):
+    """Motor and driver mounted, no transmission recorded yet."""
+    components.record_characterization("motors", "IGUS-S-AN-060-035-060", {"rated_current_a": 4.2})
+    components.mount_component("motors", "IGUS-S-AN-060-035-060")
+    components.record_characterization("stepper_driver", "TB6600", {"max_current_a": 3.5})
+    components.mount_component("stepper_driver", "TB6600")
+    return MechanicalTransmissionCalibrationService(
+        FakeMechanicalTransmissionCalibrationRepository(), components._repository, bus
+    )
+
+
+@pytest.fixture
+def stack(bus, transmission):
+    state = MotionPortConversionState()
+    handler = MotionConversionHandler(state.port, transmission, bus)
+    service = MotionControlService(state.port, bus, conversion_status=handler)
+    received: List[object] = []
+    bus.subscribe("motionconversionfoundmissing", received.append)
+    bus.subscribe("motionconversionbecameavailable", received.append)
+    return state, handler, service, received
+
+
+def test_startup_without_transmission_does_not_raise_and_says_what_is_missing(stack):
+    state, handler, _service, received = stack
+
+    status = handler.apply_current_transmission()
+
+    assert not status.is_available
+    assert status.motor_name == "IGUS-S-AN-060-035-060"
+    assert "transmission mécanique" in status.missing_quantity
+    assert "Moteurs" in status.where_to_enter
+    assert [type(e).__name__ for e in received] == ["MotionConversionFoundMissing"]
+    assert state.microns_per_pulse is None  # never a default value
+
+
+def test_move_is_refused_with_a_typed_error_before_reaching_the_port(stack):
+    state, handler, service, _received = stack
+    handler.apply_current_transmission()
+
+    result = service.move_absolute(10.0, 10.0)
+
+    assert result.is_failure
+    assert isinstance(result.error, MotionConversionUnavailable)
+    assert "transmission mécanique" in result.error.missing_quantity
+    assert "transmission mécanique" in result.error.message
+    state.port.move_to.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        lambda s: s.move_relative(1.0, 1.0),
+        lambda s: s.move_absolute_x(1.0),
+        lambda s: s.move_absolute_y(1.0),
+    ],
+)
+def test_every_mm_move_is_refused_when_not_calibrated(stack, command):
+    _state, handler, service, _received = stack
+    handler.apply_current_transmission()
+
+    result = command(service)
+
+    assert isinstance(result.error, MotionConversionUnavailable)
+
+
+@pytest.mark.parametrize(
+    "command, axis",
+    [
+        (lambda s: s.home_x(), "x"),
+        (lambda s: s.home_y(), "y"),
+        (lambda s: s.home_xy(), None),
+    ],
+)
+def test_homing_reaches_the_port_when_not_calibrated(stack, command, axis):
+    """Homing works in pulses on the limit switches: the bar calibration needs it before any conversion."""
+    state, handler, service, _received = stack
+    handler.apply_current_transmission()
+
+    result = command(service)
+
+    assert result.is_success
+    state.port.home.assert_called_once_with(axis=axis)
+
+
+def test_stop_and_emergency_stop_stay_available(stack):
+    _state, handler, service, _received = stack
+    handler.apply_current_transmission()
+
+    assert service.stop().is_success
+    assert service.emergency_stop().is_success
+
+
+def test_port_refusal_is_translated_even_without_the_service_guard(bus):
+    state = MotionPortConversionState()
+    service = MotionControlService(state.port, bus)
+    state.port.is_conversion_available.side_effect = None
+    state.port.is_conversion_available.return_value = True  # guard passes, port still refuses
+
+    result = service.move_absolute(1.0, 1.0)
+
+    assert isinstance(result.error, MotionConversionUnavailable)
+
+
+def test_recording_the_transmission_applies_the_conversion_without_restart(stack, transmission):
+    state, handler, service, received = stack
+    handler.apply_current_transmission()
+
+    transmission.record_calibration(**BENCH_SETTING)
+
+    assert state.microns_per_pulse == pytest.approx(21.11)
+    assert handler.get_status().is_available
+    assert [type(e).__name__ for e in received] == ["MotionConversionFoundMissing", "MotionConversionBecameAvailable"]
+    assert service.get_conversion_status().is_available
+    assert service.move_absolute(10.0, 10.0).is_success
+
+
+def _calibrated(stack, transmission, bus):
+    state, handler, _service, received = stack
+    transmission.record_calibration(**BENCH_SETTING)
+    handler.apply_current_transmission()
+    changes: List[object] = []
+    bus.subscribe("motionconversionchanged", changes.append)
+    received.clear()
+    return state, handler, received, changes
+
+
+def test_new_transmission_entry_is_applied_live_without_restart(stack, transmission, bus):
+    """Recalibration: the new entry replaces the applied conversion at once."""
+    state, handler, received, changes = _calibrated(stack, transmission, bus)
+
+    transmission.record_calibration(**{**BENCH_SETTING, "microns_per_pulse": 22.0})
+
+    assert state.microns_per_pulse == pytest.approx(22.0)
+    assert handler.get_status().microns_per_pulse == pytest.approx(22.0)
+    assert [(c.previous_microns_per_pulse, round(c.microns_per_pulse, 4)) for c in changes] == [
+        (pytest.approx(21.11), 22.0)
+    ]
+    assert received == []  # not "became available": it already was
+
+
+def test_same_conversion_is_not_reapplied(stack, components, transmission, bus):
+    state, handler, received, changes = _calibrated(stack, transmission, bus)
+
+    components.record_characterization("motors", "IGUS-S-AN-060-035-060", {"rated_current_a": 4.0})
+
+    assert changes == []
+    assert state.microns_per_pulse == pytest.approx(21.11)
+
+
+def test_entry_arriving_during_a_scan_is_not_applied_nor_deferred(stack, transmission, bus):
+    """Abnormal case (calibration and scan exclude each other): warning, nothing applied, no deferral."""
+    state, handler, received, changes = _calibrated(stack, transmission, bus)
+    bus.publish("scanstarted", object())
+
+    transmission.record_calibration(**{**BENCH_SETTING, "microns_per_pulse": 10.9})
+    bus.publish("scancompleted", object())
+
+    assert state.microns_per_pulse == pytest.approx(21.11)
+    assert changes == []
+    handler.apply_current_transmission()  # the operator applies it again after the scan
+    assert state.microns_per_pulse == pytest.approx(10.9)
+
+
+def test_unchanged_gap_is_not_republished(stack, components):
+    _state, handler, _service, received = stack
+    handler.apply_current_transmission()
+
+    components.record_characterization("motors", "IGUS-S-AN-060-035-060", {"rated_current_a": 4.0})
+
+    assert [type(e).__name__ for e in received] == ["MotionConversionFoundMissing"]

@@ -10,13 +10,13 @@ import logging
 
 from PySide6.QtCore import QObject, Signal, Slot
 
-from application.services.adc_output_rate_characterization_service.dtos.adc_output_rate_dtos import (
+from application.test_bench.adc_output_rate_characterization_service.dtos.adc_output_rate_dtos import (
     AdcOutputRateRequestDTO,
 )
-from application.services.adc_output_rate_characterization_service.i_api_adc_output_rate_characterization_service import (
+from application.test_bench.adc_output_rate_characterization_service.i_api_adc_output_rate_characterization_service import (
     IApiAdcOutputRateCharacterizationService,
 )
-from application.services.adc_output_rate_characterization_service.ports.i_adc_output_rate_output_port import (
+from application.test_bench.adc_output_rate_characterization_service.ports.i_adc_output_rate_output_port import (
     IAdcOutputRateOutputPort,
 )
 from interface.qt_abc import QABCMeta

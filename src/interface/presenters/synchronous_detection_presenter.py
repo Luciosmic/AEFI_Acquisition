@@ -11,10 +11,10 @@ import logging
 
 from PySide6.QtCore import QObject, Signal, Slot
 
-from application.services.synchronous_detection_service.i_api_synchronous_detection_service import (
+from application.test_bench.synchronous_detection_service.i_api_synchronous_detection_service import (
     IApiSynchronousDetectionService,
 )
-from application.services.synchronous_detection_service.synchronous_detection_service import (
+from application.test_bench.synchronous_detection_service.synchronous_detection_service import (
     SYNCHRONOUS_DETECTION_PHASE_CALIBRATION_ENTRY_ADDED_TOPIC,
     SYNCHRONOUS_DETECTION_COMPENSATION_ENABLED_CHANGED_TOPIC,
 )

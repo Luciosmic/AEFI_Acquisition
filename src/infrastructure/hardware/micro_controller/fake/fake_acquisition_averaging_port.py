@@ -6,7 +6,7 @@ See fake_acquisition_averaging_port_intention.md.
 
 from typing import List, Tuple
 
-from application.services.acquisition_throughput_characterization_service.ports.i_acquisition_averaging_port import (
+from application.test_bench.acquisition_throughput_characterization_service.ports.i_acquisition_averaging_port import (
     IAcquisitionAveragingPort,
 )
 from domain.shared_kernel.operation_result import OperationResult

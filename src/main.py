@@ -100,24 +100,24 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
         make_electric_field_probe_channel,
     )
     from application.services.excitation_configuration_service.excitation_configuration_service import ExcitationConfigurationService
-    from application.services.synchronous_detection_service.synchronous_detection_service import SynchronousDetectionService
-    from application.services.sensor_calibration_service.sensor_calibration_service import SensorCalibrationService
+    from application.test_bench.synchronous_detection_service.synchronous_detection_service import SynchronousDetectionService
+    from application.test_bench.sensor_calibration_service.sensor_calibration_service import SensorCalibrationService
     from application.frequency_sweep.frequency_sweep_service.frequency_sweep_service import FrequencySweepService
     from infrastructure.persistence.frequency_sweep.csv_frequency_sweep_export_port import CsvFrequencySweepExportPort
     from interface.presenters.frequency_sweep_presenter import FrequencySweepPresenter
-    from application.services.acquisition_throughput_characterization_service.acquisition_throughput_characterization_service import (
+    from application.test_bench.acquisition_throughput_characterization_service.acquisition_throughput_characterization_service import (
         AcquisitionThroughputCharacterizationService,
     )
-    from application.services.source_geometry_calibration_service.source_geometry_calibration_service import SourceGeometryCalibrationService
-    from application.services.hardware_component_service.hardware_component_service import HardwareComponentService
-    from application.services.mechanical_transmission_calibration_service.mechanical_transmission_calibration_service import (
+    from application.test_bench.source_geometry_calibration_service.source_geometry_calibration_service import SourceGeometryCalibrationService
+    from application.test_bench.hardware_component_service.hardware_component_service import HardwareComponentService
+    from application.test_bench.mechanical_transmission_calibration_service.mechanical_transmission_calibration_service import (
         MechanicalTransmissionCalibrationService,
     )
     from application.services.event_log_maintenance_service.event_log_maintenance_service import EventLogMaintenanceService
     from domain.test_bench.calibration.calibration import Calibration
     from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
-    from application.services.motion_control_service.motion_control_service import MotionControlService
-    from application.services.motion_control_service.motion_conversion_handler import MotionConversionHandler
+    from application.test_bench.motion_control_service.motion_control_service import MotionControlService
+    from application.test_bench.motion_control_service.motion_conversion_handler import MotionConversionHandler
     from application.detection_devices.electric_field_probe_service.electric_field_probe_service import ElectricFieldProbeService
     from application.detection_devices.inertial_probe_service.inertial_probe_service import InertialProbeService
     from application.scan.scan_export_service.scan_export_service import ScanExportService
@@ -130,11 +130,11 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
     )
     from application.operator_registry.operator_service.operator_service import OperatorService
     from application.measured_object_registry.measured_object_service.measured_object_service import MeasuredObjectService
-    from application.services.adc_output_rate_characterization_service.adc_output_rate_characterization_service import (
+    from application.test_bench.adc_output_rate_characterization_service.adc_output_rate_characterization_service import (
         AdcOutputRateCharacterizationService,
     )
-    from application.services.transformation_service.transformation_service import TransformationService
-    from application.services.transformation_service.dtos.transformation_dtos import SetRotationAnglesDTO
+    from application.test_bench.transformation_service.transformation_service import TransformationService
+    from application.test_bench.transformation_service.dtos.transformation_dtos import SetRotationAnglesDTO
     from application.detection_devices.aefi_signal_processing_service.aefi_signal_processing_service import (
         AefiSignalProcessingService,
     )

@@ -7,10 +7,10 @@ from datetime import datetime, timezone
 
 from PySide6.QtWidgets import QApplication
 
-from application.services.mechanical_transmission_calibration_service.dtos.mechanical_transmission_calibration_dto import (
+from application.test_bench.mechanical_transmission_calibration_service.dtos.mechanical_transmission_calibration_dto import (
     MechanicalTransmissionCalibrationDTO,
 )
-from application.services.mechanical_transmission_calibration_service.dtos.mechanical_transmission_gap_dto import (
+from application.test_bench.mechanical_transmission_calibration_service.dtos.mechanical_transmission_gap_dto import (
     MechanicalTransmissionGapDTO,
 )
 from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus

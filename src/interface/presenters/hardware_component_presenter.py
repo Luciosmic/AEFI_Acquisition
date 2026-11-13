@@ -10,14 +10,14 @@ from typing import Any, Dict
 
 from PySide6.QtCore import QObject, Signal, Slot
 
-from application.services.hardware_component_service.dtos.hardware_component_dto import (
+from application.test_bench.hardware_component_service.dtos.hardware_component_dto import (
     HardwareComponentKindDTO,
 )
-from application.services.hardware_component_service.hardware_component_service import (
+from application.test_bench.hardware_component_service.hardware_component_service import (
     HARDWARE_COMPONENT_CHARACTERIZED_TOPIC,
     HARDWARE_COMPONENT_MOUNTED_TOPIC,
 )
-from application.services.hardware_component_service.i_api_hardware_component_service import (
+from application.test_bench.hardware_component_service.i_api_hardware_component_service import (
     IApiHardwareComponentService,
 )
 from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus

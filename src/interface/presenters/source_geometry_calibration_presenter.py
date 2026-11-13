@@ -13,10 +13,10 @@ from typing import List
 
 from PySide6.QtCore import QObject, Signal, Slot
 
-from application.services.source_geometry_calibration_service.i_api_source_geometry_calibration_service import (
+from application.test_bench.source_geometry_calibration_service.i_api_source_geometry_calibration_service import (
     IApiSourceGeometryCalibrationService,
 )
-from application.services.source_geometry_calibration_service.source_geometry_calibration_service import (
+from application.test_bench.source_geometry_calibration_service.source_geometry_calibration_service import (
     SOURCE_GEOMETRY_CALIBRATION_ENTRY_ADDED_TOPIC,
 )
 from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
