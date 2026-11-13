@@ -6,13 +6,13 @@ from domain.shared_kernel.excitation.events.excitation_control_changed.excitatio
 
 
 class TestExcitationControlChanged(unittest.TestCase):
-    def test_carries_the_controller(self):
+    def test_carries_the_controller(self) -> None:
         self.assertEqual(ExcitationControlChanged(controller="scan").controller, "scan")
 
-    def test_none_means_released(self):
+    def test_none_means_released(self) -> None:
         self.assertIsNone(ExcitationControlChanged(controller=None).controller)
 
-    def test_is_frozen(self):
+    def test_is_frozen(self) -> None:
         event = ExcitationControlChanged(controller="scan")
         with self.assertRaises(Exception):
             event.controller = None

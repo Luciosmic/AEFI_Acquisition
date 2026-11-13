@@ -25,7 +25,7 @@ class ColumnRestCriterion:
     # Past this delay after the stop, the measurement starts anyway.
     timeout_s: float = 30.0
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         for name in ("rest_measurement_s", "window_s", "timeout_s"):
             if getattr(self, name) <= 0:
                 raise ValueError(f"{name} must be > 0, got {getattr(self, name)}")

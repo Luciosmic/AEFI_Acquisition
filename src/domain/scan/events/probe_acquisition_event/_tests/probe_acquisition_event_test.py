@@ -9,6 +9,6 @@ class _Event:
     acquisition_id = uuid4()
 
 
-def test_structural_conformance():
+def test_structural_conformance() -> None:
     assert isinstance(_Event(), ProbeAcquisitionEvent)
     assert not isinstance(object(), ProbeAcquisitionEvent)
