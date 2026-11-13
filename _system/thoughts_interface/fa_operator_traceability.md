@@ -115,7 +115,7 @@ du service.
   - `src/domain/operator_registry/` — `operator_registry.py` (aggregate root),
     `entities/operator/`, `events/operator_registered/`,
     `errors/operator_name_blank_error.py`, `repositories/i_operator_repository.py`
-  - `src/application/services/operator_service/` — `i_api_operator_service.py`,
+  - `src/application/operator_registry/operator_service/` — `i_api_operator_service.py`,
     `operator_service.py`, `operator_service_errors.py`, `dtos/operator_dto.py`
   - `src/infrastructure/persistence/operator_registry/` — `real_operator_repository.py`
     (`.aefi_acquisition/operators/operators.json`), `fake/fake_operator_repository.py`

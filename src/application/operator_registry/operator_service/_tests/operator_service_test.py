@@ -2,8 +2,8 @@ import unittest
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from application.services.operator_service.operator_service import OPERATOR_REGISTERED_TOPIC, OperatorService
-from application.services.operator_service.operator_service_errors import (
+from application.operator_registry.operator_service.operator_service import OPERATOR_REGISTERED_TOPIC, OperatorService
+from application.operator_registry.operator_service.operator_service_errors import (
     OperatorNameBlank,
     OperatorRegistryUnavailable,
 )

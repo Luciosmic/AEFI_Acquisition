@@ -2,7 +2,7 @@ import unittest
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from application.services.operator_service.operator_service import OperatorService
+from application.operator_registry.operator_service.operator_service import OperatorService
 from domain.operator_registry.entities.operator.operator import Operator
 from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from infrastructure.persistence.operator_registry.fake.fake_operator_repository import FakeOperatorRepository

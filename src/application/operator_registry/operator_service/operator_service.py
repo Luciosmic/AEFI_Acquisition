@@ -5,9 +5,9 @@ Operator Service — the operator use cases (see operator_service_intention.md).
 import logging
 from typing import List
 
-from application.services.operator_service.dtos.operator_dto import OperatorDTO, OperatorRegistrationDTO
-from application.services.operator_service.i_api_operator_service import IApiOperatorService
-from application.services.operator_service.operator_service_errors import (
+from application.operator_registry.operator_service.dtos.operator_dto import OperatorDTO, OperatorRegistrationDTO
+from application.operator_registry.operator_service.i_api_operator_service import IApiOperatorService
+from application.operator_registry.operator_service.operator_service_errors import (
     OperatorNameBlank,
     OperatorRegistryUnavailable,
     OperatorServiceError,

@@ -4,7 +4,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtWidgets import QApplication
 
-from application.services.operator_service.dtos.operator_dto import OperatorDTO
+from application.operator_registry.operator_service.dtos.operator_dto import OperatorDTO
 from interface.widgets.operator_selector.operator_selector import NEW_OPERATOR_LABEL, OperatorSelector
 
 LUIS = OperatorDTO(operator_id="id-luis", name="Luis Saluden")

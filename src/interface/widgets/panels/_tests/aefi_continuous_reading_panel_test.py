@@ -4,7 +4,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtWidgets import QApplication
 
-from application.services.operator_service.dtos.operator_dto import OperatorDTO
+from application.operator_registry.operator_service.dtos.operator_dto import OperatorDTO
 from application.services.measured_object_service.dtos.measured_object_dto import MeasuredObjectDTO
 
 from interface.view_models.aefi_continuous_reading_sample_view_model import (

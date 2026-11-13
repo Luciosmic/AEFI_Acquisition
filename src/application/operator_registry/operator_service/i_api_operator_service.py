@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import List
 
-from application.services.operator_service.dtos.operator_dto import OperatorDTO, OperatorRegistrationDTO
-from application.services.operator_service.operator_service_errors import OperatorServiceError
+from application.operator_registry.operator_service.dtos.operator_dto import OperatorDTO, OperatorRegistrationDTO
+from application.operator_registry.operator_service.operator_service_errors import OperatorServiceError
 from domain.shared_kernel.operation_result import OperationResult
 
 
