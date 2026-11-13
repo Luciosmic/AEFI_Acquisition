@@ -5,9 +5,9 @@ doc_type: constat
 date: 2026-11-13
 ---
 
-# Affectation de `test_bench` : 11 éléments au domaine configuration, 40 à la calibration, 7 corrections d'hypothèse
+# Affectation de `test_bench` : la configuration reçoit 9 éléments et une racine neuve, la calibration le reste
 
-**Verdict : la séparation est faisable sans `shared_kernel` nouveau.** La dépendance va dans un seul sens, calibration vers configuration. Sept éléments sur 51 étaient ambigus (14 %), loin du tiers qui arrête la tâche. Un seul demande du code neuf : la racine `Calibration` mêle les deux, elle se scinde en deux racines.
+**Verdict : la séparation est faisable sans `shared_kernel` nouveau.** La dépendance va dans un seul sens, calibration vers configuration. Sept éléments ambigus sur une cinquantaine, loin du tiers qui arrête la tâche. Un seul demande du code neuf : la racine `Calibration` mêle les deux, elle se scinde en deux racines.
 
 ## Règle d'affectation
 
