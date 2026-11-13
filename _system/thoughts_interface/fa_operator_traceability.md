@@ -110,7 +110,7 @@ du service.
 
 ## Projection
 
-- Promise Model : `_system/promise_model/operator_registry.md`.
+- Promise Model : `_system/documentation/promise_model/operator_registry.md`.
 - code_interface (DDD) :
   - `src/domain/operator_registry/` — `operator_registry.py` (aggregate root),
     `entities/operator/`, `events/operator_registered/`,

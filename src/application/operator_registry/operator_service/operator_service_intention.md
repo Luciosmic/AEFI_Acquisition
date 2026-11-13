@@ -15,7 +15,7 @@ Continuous Reading) relirait le fichier, appliquerait la règle d'orthographe
 remonterait en exception brute jusqu'à l'interface.
 
 FA : `_system/thoughts_interface/fa_operator_traceability.md` (N = 1) ;
-Promise Model : `_system/promise_model/operator_registry.md`.
+Promise Model : `_system/documentation/promise_model/operator_registry.md`.
 
 ## Responsibility
 

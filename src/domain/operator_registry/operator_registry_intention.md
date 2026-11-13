@@ -23,7 +23,7 @@ ni dans un widget (contournable, pas testable seul), ni dans une entité
 isolée (qui ne voit pas les autres).
 
 FA : `_system/thoughts_interface/fa_operator_traceability.md` (mono-atomique,
-N = 1) ; Promise Model : `_system/promise_model/operator_registry.md`.
+N = 1) ; Promise Model : `_system/documentation/promise_model/operator_registry.md`.
 
 ## Responsibility
 
