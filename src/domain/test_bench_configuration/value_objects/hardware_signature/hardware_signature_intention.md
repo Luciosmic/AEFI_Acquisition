@@ -1,3 +1,10 @@
+---
+type: value-object::solidai-ddd
+tldr: "Identify the excitation board, conditioning board and sensor revisions (plus an optional sensor serial number) a calibration entry applies to."
+code: ["[[src/domain/test_bench_configuration/value_objects/hardware_signature/hardware_signature.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/test_bench_configuration/bench_configuration_intention]]"
+---
 # hardware_signature — Intention
 
 ## Rationale

@@ -1,3 +1,10 @@
+---
+type: value-object::solidai-ddd
+tldr: "Enumerate the component kinds (`HardwareComponentKind`), each with a display label and its tuple of `QuantitySpec`."
+code: ["[[src/domain/test_bench_configuration/value_objects/hardware_component_kind/hardware_component_kind.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/test_bench_configuration/bench_configuration_intention]]"
+---
 # hardware_component_kind — Intention
 
 ## Rationale

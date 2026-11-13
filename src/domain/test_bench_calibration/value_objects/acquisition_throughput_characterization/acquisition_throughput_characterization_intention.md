@@ -1,3 +1,10 @@
+---
+type: value-object::solidai-ddd
+tldr: "`AcquisitionThroughputPoint` : pour un `n_avg`, la période moyenne par échantillon renvoyé, le débit d'échantillons, le débit de conversions ADC utilisées (`n_avg / péri…"
+code: ["[[src/domain/test_bench_calibration/value_objects/acquisition_throughput_characterization/acquisition_throughput_characterization.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/test_bench_calibration/calibration_intention]]"
+---
 # acquisition_throughput_characterization — Intention
 
 ## Rationale

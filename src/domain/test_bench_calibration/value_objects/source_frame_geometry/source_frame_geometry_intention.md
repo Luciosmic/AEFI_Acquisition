@@ -1,3 +1,10 @@
+---
+type: value-object::solidai-ddd
+tldr: "Porter les positions des centres S1..S4 dans **le** repère source (centroïde à l'origine, x/y le long des côtés du carré ajusté — idéalement la source est un carré align…"
+code: ["[[src/domain/test_bench_calibration/value_objects/source_frame_geometry/source_frame_geometry.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/test_bench_calibration/calibration_intention]]"
+---
 # source_frame_geometry — Intention
 
 ## Rationale

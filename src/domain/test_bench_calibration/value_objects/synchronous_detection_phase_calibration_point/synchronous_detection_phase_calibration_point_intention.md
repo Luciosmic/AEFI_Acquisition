@@ -1,3 +1,10 @@
+---
+type: value-object::solidai-ddd
+tldr: "Associate a frequency (Hz) with the signed phase delta (degrees) measured at that frequency."
+code: ["[[src/domain/test_bench_calibration/value_objects/synchronous_detection_phase_calibration_point/synchronous_detection_phase_calibration_point.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/test_bench_calibration/calibration_intention]]"
+---
 # synchronous_detection_phase_calibration_point — Intention
 
 ## Rationale

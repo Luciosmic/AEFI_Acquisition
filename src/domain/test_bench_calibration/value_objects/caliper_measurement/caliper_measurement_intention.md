@@ -1,3 +1,10 @@
+---
+type: value-object::solidai-ddd
+tldr: "Hold one measured value with its GUM expanded uncertainty (`U = k*u_c`) and the coverage factor `k` used to compute it."
+code: ["[[src/domain/test_bench_calibration/value_objects/caliper_measurement/caliper_measurement.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/test_bench_calibration/calibration_intention]]"
+---
 # caliper_measurement — Intention
 
 ## Rationale

@@ -1,3 +1,10 @@
+---
+type: value-object::solidai-ddd
+tldr: "Snapshot the raw caliper values (`sphere_diameters_m`, S1..S4; `pairwise_distances_ext_m`, the 6 D_ij) at the moment a calibration entry is recorded — not the derived ce…"
+code: ["[[src/domain/test_bench_calibration/value_objects/geometric_configuration_signature/geometric_configuration_signature.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/test_bench_calibration/calibration_intention]]"
+---
 # geometric_configuration_signature — Intention
 
 ## Rationale

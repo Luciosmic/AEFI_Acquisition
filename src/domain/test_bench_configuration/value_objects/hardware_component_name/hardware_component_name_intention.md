@@ -1,3 +1,10 @@
+---
+type: value-object::solidai-ddd
+tldr: "Name the identity type of a hardware component: its unique name."
+code: ["[[src/domain/test_bench_configuration/value_objects/hardware_component_name/hardware_component_name.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/test_bench_configuration/bench_configuration_intention]]"
+---
 # hardware_component_name — Intention
 
 ## Rationale

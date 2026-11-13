@@ -1,3 +1,10 @@
+---
+type: value-object::solidai-ddd
+tldr: "Hold the 3 angles (degrees) and the `RotationConvention` they are expressed in, as a single immutable value."
+code: ["[[src/domain/test_bench_calibration/value_objects/sensor_rotation_angles/sensor_rotation_angles.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/test_bench_calibration/calibration_intention]]"
+---
 # sensor_rotation_angles — Intention
 
 ## Rationale

@@ -1,3 +1,10 @@
+---
+type: value-object::solidai-ddd
+tldr: "`AdcOutputRateMeasurement` : un OSR, le nombre d'intervalles réguliers et irréguliers, l'intervalle médian, la moyenne et l'écart-type des intervalles réguliers, l'ODR,…"
+code: ["[[src/domain/test_bench_calibration/value_objects/adc_output_rate_characterization/adc_output_rate_characterization.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/test_bench_calibration/calibration_intention]]"
+---
 # adc_output_rate_characterization — Intention
 
 ## Rationale

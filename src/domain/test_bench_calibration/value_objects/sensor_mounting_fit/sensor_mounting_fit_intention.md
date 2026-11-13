@@ -1,3 +1,10 @@
+---
+type: value-object::solidai-ddd
+tldr: "Porter le résultat d'un ajustement des angles de montage : les angles (`SensorRotationAngles`) et les indicateurs de qualité — désalignement résiduel des réponses X et Y…"
+code: ["[[src/domain/test_bench_calibration/value_objects/sensor_mounting_fit/sensor_mounting_fit.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/test_bench_calibration/calibration_intention]]"
+---
 # sensor_mounting_fit — Intention
 
 ## Rationale

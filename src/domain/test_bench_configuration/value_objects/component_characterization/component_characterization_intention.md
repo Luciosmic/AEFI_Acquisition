@@ -1,3 +1,10 @@
+---
+type: value-object::solidai-ddd
+tldr: "Hold one value per quantity of the kind: scalar > 0, curve of (x, y) points with x, y > 0, or `None` = not characterized."
+code: ["[[src/domain/test_bench_configuration/value_objects/component_characterization/component_characterization.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/test_bench_configuration/bench_configuration_intention]]"
+---
 # component_characterization — Intention
 
 ## Rationale
