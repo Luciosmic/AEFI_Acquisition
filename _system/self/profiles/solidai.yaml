@@ -14,11 +14,7 @@ inject:
   - "[[core-profile::au-rules]]"
   - "[[voix::sk-writing-style]]"
   - "[[capture-correction::au-govern]]"
-  - "[[espace-de-travail-agents::sh-agent-os]]"
-  - "[[la-frontiere-du-quoi-valide::sh-agent-os]]"
-  - "[[repondre-a-l-humain::sh-agent-os]]"
-  - "[[s-identifier-comme-un-llm::sh-agent-os]]"
-  - "[[ouvrir-dans-obsidian::sh-agent-os]]"
+  - "[[core-profile::sh-agent-os]]"
   # Écart de thèse 1 : registre des travaux de la thèse, tenu dans PILOTAGE
   - "[[orient-work::GRAPHE-THESE]]"
   # Développement

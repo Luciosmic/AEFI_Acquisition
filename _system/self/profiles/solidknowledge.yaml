@@ -10,7 +10,7 @@ inject:
   - "[[capture-correction::au-govern]]"
   # Contributions de l'humain
   - "[[orient-work::GRAPHE-THESE]]"
-  - "[[espace-de-travail-agents::sh-agent-os]]"
+  - "[[core-profile::sh-agent-os]]"
 # Refuse la première mutation d'une session non inscrite au registre des travaux (chemin relatif à
 # la racine du workspace servi).
 hookConfig:
