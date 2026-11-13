@@ -25,7 +25,7 @@ from application.test_bench_calibration.synchronous_detection_service.ports.i_sy
     ISynchronousDetectionHardwarePort,
 )
 from infrastructure.hardware.ad9106.ad9106_controller import AD9106Controller
-from infrastructure.hardware.ad9106.ad9106_advanced_configurator import AD9106AdvancedConfigurator
+from infrastructure.hardware.ad9106.ad9106_advanced_configurator.ad9106_advanced_configurator import AD9106AdvancedConfigurator
 
 logger = logging.getLogger(__name__)
 

@@ -17,7 +17,7 @@ sys.path.insert(0, str(root_dir / "src"))
 from tool.diagram_friendly_test import DiagramFriendlyTest
 from infrastructure.hardware.micro_controller.mcu_serial_communicator import MCU_SerialCommunicator
 from infrastructure.hardware.ad9106.ad9106_controller import AD9106Controller
-from infrastructure.hardware.ad9106.adapter_excitation_configuration_ad9106 import AdapterExcitationConfigurationAD9106
+from infrastructure.hardware.ad9106.adapter_excitation_configuration_ad9106.adapter_excitation_configuration_ad9106 import AdapterExcitationConfigurationAD9106
 from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from domain.shared_kernel.excitation.value_objects.excitation_parameters import ExcitationParameters
 from domain.shared_kernel.excitation.value_objects.excitation_mode import ExcitationMode

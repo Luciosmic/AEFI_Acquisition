@@ -20,7 +20,7 @@ from infrastructure.hardware.micro_controller.fake.fake_mcu_serial_communicator 
 )
 from infrastructure.hardware.micro_controller.adapter_lifecycle_mcu import MCULifecycleAdapter
 from infrastructure.hardware.ad9106.ad9106_controller import AD9106Controller
-from infrastructure.hardware.ad9106.ad9106_advanced_configurator import AD9106AdvancedConfigurator
+from infrastructure.hardware.ad9106.ad9106_advanced_configurator.ad9106_advanced_configurator import AD9106AdvancedConfigurator
 from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from domain.shared_kernel.excitation.events.excitation_frequency_changed.excitation_frequency_changed import (
     ExcitationFrequencyChanged,
