@@ -7,8 +7,8 @@ from application.test_bench.mechanical_transmission_calibration_service.mechanic
     MECHANICAL_TRANSMISSION_CALIBRATION_ENTRY_ADDED_TOPIC,
     MechanicalTransmissionCalibrationService,
 )
-from domain.test_bench.calibration.calibration import Calibration
-from domain.test_bench.calibration.value_objects.hardware_component_kind.hardware_component_kind import HardwareComponentKind
+from domain.test_bench_configuration.bench_configuration import BenchConfiguration
+from domain.test_bench_configuration.value_objects.hardware_component_kind.hardware_component_kind import HardwareComponentKind
 from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from infrastructure.persistence.calibration.fake.fake_hardware_component_repository import (
     FakeHardwareComponentRepository,
@@ -24,10 +24,10 @@ BENCH_SETTING = dict(microsteps=16, driver_current_a=3.5, driver_peak_current_a=
 
 
 def mount(components, kind, name, values):
-    calibration = Calibration()
-    components.add(calibration.record_hardware_component_characterization(kind, name, values))
-    mounted = Calibration.mounted_component_name(components.find_selections(kind))
-    components.add_selection(calibration.mount_hardware_component(kind, name, {name}, mounted))
+    configuration = BenchConfiguration()
+    components.add(configuration.record_hardware_component_characterization(kind, name, values))
+    mounted = BenchConfiguration.mounted_component_name(components.find_selections(kind))
+    components.add_selection(configuration.mount_hardware_component(kind, name, {name}, mounted))
 
 
 @pytest.fixture

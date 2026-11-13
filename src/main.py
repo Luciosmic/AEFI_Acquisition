@@ -114,7 +114,7 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
         MechanicalTransmissionCalibrationService,
     )
     from application.shared.event_log_maintenance_service.event_log_maintenance_service import EventLogMaintenanceService
-    from domain.test_bench.calibration.calibration import Calibration
+    from domain.test_bench_configuration.bench_configuration import BenchConfiguration
     from application.shared.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
     from application.test_bench.motion_control_service.motion_control_service import MotionControlService
     from application.test_bench.motion_control_service.motion_conversion_handler import MotionConversionHandler
@@ -346,7 +346,7 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
     # fills a kind nothing is mounted for yet — WARNING, incomplete config.
     hardware_component_repository = RealHardwareComponentRepository()
     hardware_component_service = HardwareComponentService(repository=hardware_component_repository, event_bus=event_bus)
-    hardware_signature = Calibration.resolve_current_hardware_signature(
+    hardware_signature = BenchConfiguration.resolve_current_hardware_signature(
         HardwareSignatureReader().read(),
         hardware_component_service.get_mounted_component_name("conditioning_electronics_board"),
         hardware_component_service.get_mounted_component_name("excitation_electronics_board"),

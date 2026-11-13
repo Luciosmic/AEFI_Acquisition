@@ -28,11 +28,11 @@ from application.shared.acquisition_parameters.i_acquisition_conditions_port imp
 )
 from application.test_bench.motion_control_service.ports.i_motion_port import IMotionPort
 from application.test_bench.sensor_calibration_service.dtos.sensor_calibration_dto import ActiveSensorRotationDTO
-from domain.test_bench.calibration.calibration import Calibration
-from domain.test_bench.physical_bench_limits.physical_bench_limits import X_TRAVEL_INCREMENTS, Y_TRAVEL_INCREMENTS
-from domain.test_bench.calibration.repositories.i_hardware_component_repository import IHardwareComponentRepository
+from domain.test_bench_configuration.bench_configuration import BenchConfiguration
+from domain.test_bench_configuration.physical_bench_limits.physical_bench_limits import X_TRAVEL_INCREMENTS, Y_TRAVEL_INCREMENTS
+from domain.test_bench_configuration.repositories.i_hardware_component_repository import IHardwareComponentRepository
 from domain.test_bench.calibration.repositories.i_sensor_calibration_repository import ISensorCalibrationRepository
-from domain.test_bench.calibration.value_objects.hardware_component_kind.hardware_component_kind import HardwareComponentKind
+from domain.test_bench_configuration.value_objects.hardware_component_kind.hardware_component_kind import HardwareComponentKind
 from domain.shared_kernel.operation_result import OperationResult
 
 logger = logging.getLogger(__name__)
@@ -185,7 +185,7 @@ class AcquisitionConditionsReader(IAcquisitionConditionsPort):
         )
 
     def _sensor_deployment(self) -> SensorDeploymentDTO:
-        mounting = Calibration.current_mounting(self._hardware_components.find_selections(HardwareComponentKind.SENSOR))
+        mounting = BenchConfiguration.current_mounting(self._hardware_components.find_selections(HardwareComponentKind.SENSOR))
         rotation = self._active_rotation()
         origin = "trial" if rotation.is_trial else "calibrated" if rotation.is_calibrated else "ideal"
         calibration_id = None

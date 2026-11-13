@@ -11,11 +11,12 @@ from application.test_bench.mechanical_transmission_calibration_service.i_api_me
     IApiMechanicalTransmissionCalibrationService,
 )
 from domain.test_bench.calibration.calibration import Calibration
-from domain.test_bench.calibration.repositories.i_hardware_component_repository import IHardwareComponentRepository
+from domain.test_bench_configuration.bench_configuration import BenchConfiguration
+from domain.test_bench_configuration.repositories.i_hardware_component_repository import IHardwareComponentRepository
 from domain.test_bench.calibration.repositories.i_mechanical_transmission_calibration_repository import (
     IMechanicalTransmissionCalibrationRepository,
 )
-from domain.test_bench.calibration.value_objects.hardware_component_kind.hardware_component_kind import (
+from domain.test_bench_configuration.value_objects.hardware_component_kind.hardware_component_kind import (
     HardwareComponentKind,
 )
 from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
@@ -88,8 +89,8 @@ class MechanicalTransmissionCalibrationService(IApiMechanicalTransmissionCalibra
                 logger.warning("MechanicalTransmissionCalibrationService: %s", log_message)
             return None, MechanicalTransmissionGapDTO(motor_name, missing_quantity, where_to_enter)
 
-        motor = Calibration.current_mounting(self._components.find_selections(HardwareComponentKind.MOTORS))
-        driver = Calibration.current_mounting(self._components.find_selections(HardwareComponentKind.STEPPER_DRIVER))
+        motor = BenchConfiguration.current_mounting(self._components.find_selections(HardwareComponentKind.MOTORS))
+        driver = BenchConfiguration.current_mounting(self._components.find_selections(HardwareComponentKind.STEPPER_DRIVER))
         motor_name = motor.component_name if motor else None
         entry = Calibration.current_mechanical_transmission(
             self._calibration_repository.find_all(),
@@ -106,7 +107,7 @@ class MechanicalTransmissionCalibrationService(IApiMechanicalTransmissionCalibra
                 f"driver={driver.component_name if driver else None}",
             )
 
-        motor_entry = Calibration.current_characterization(
+        motor_entry = BenchConfiguration.current_characterization(
             self._components.find_all(HardwareComponentKind.MOTORS), motor.component_name
         )
         motor_values = motor_entry.characterization.values if motor_entry else {}
@@ -133,5 +134,5 @@ class MechanicalTransmissionCalibrationService(IApiMechanicalTransmissionCalibra
         ), None
 
     def _mounting_id(self, kind: HardwareComponentKind):
-        mounting = Calibration.current_mounting(self._components.find_selections(kind))
+        mounting = BenchConfiguration.current_mounting(self._components.find_selections(kind))
         return mounting.mounting_id if mounting else None

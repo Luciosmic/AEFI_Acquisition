@@ -90,7 +90,7 @@ class TestHardwareComponentService(unittest.TestCase):
 
     @staticmethod
     def repository_kind(key):
-        from domain.test_bench.calibration.value_objects.hardware_component_kind.hardware_component_kind import (
+        from domain.test_bench_configuration.value_objects.hardware_component_kind.hardware_component_kind import (
             HardwareComponentKind,
         )
         return HardwareComponentKind(key)

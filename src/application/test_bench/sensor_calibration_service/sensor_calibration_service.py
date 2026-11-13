@@ -49,7 +49,7 @@ from domain.test_bench.calibration.events.active_sensor_rotation_changed.active_
 from domain.test_bench.calibration.repositories.i_sensor_calibration_repository import (
     ISensorCalibrationRepository,
 )
-from domain.test_bench.calibration.value_objects.hardware_component_kind.hardware_component_kind import (
+from domain.test_bench_configuration.value_objects.hardware_component_kind.hardware_component_kind import (
     HardwareComponentKind,
 )
 from domain.test_bench.calibration.value_objects.sensor_rotation_angles.sensor_rotation_angles import (

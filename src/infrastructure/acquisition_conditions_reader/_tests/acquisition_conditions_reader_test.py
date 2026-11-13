@@ -3,11 +3,11 @@ from types import SimpleNamespace
 from uuid import uuid4
 
 from application.test_bench.sensor_calibration_service.dtos.sensor_calibration_dto import ActiveSensorRotationDTO
-from domain.test_bench.calibration.entities.hardware_component_selection.hardware_component_selection import (
+from domain.test_bench_configuration.entities.hardware_component_selection.hardware_component_selection import (
     HardwareComponentSelection,
 )
 from domain.test_bench.calibration.entities.sensor_calibration_entry.sensor_calibration_entry import SensorCalibrationEntry
-from domain.test_bench.calibration.value_objects.hardware_component_kind.hardware_component_kind import HardwareComponentKind
+from domain.test_bench_configuration.value_objects.hardware_component_kind.hardware_component_kind import HardwareComponentKind
 from domain.test_bench.calibration.value_objects.sensor_rotation_angles.sensor_rotation_angles import SensorRotationAngles
 from infrastructure.acquisition_conditions_reader.acquisition_conditions_reader import AcquisitionConditionsReader
 from infrastructure.mocks.adapter_mock_i_motion_port import MockMotionPort

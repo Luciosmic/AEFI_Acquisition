@@ -21,7 +21,7 @@ from domain.test_bench.calibration.entities.synchronous_detection_phase_calibrat
 from domain.test_bench.calibration.repositories.i_synchronous_detection_phase_calibration_repository import (
     ISynchronousDetectionPhaseCalibrationRepository,
 )
-from domain.test_bench.calibration.value_objects.hardware_signature.hardware_signature import HardwareSignature
+from domain.test_bench_configuration.value_objects.hardware_signature.hardware_signature import HardwareSignature
 
 
 class FakeSynchronousDetectionPhaseCalibrationRepository(ISynchronousDetectionPhaseCalibrationRepository):

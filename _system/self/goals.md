@@ -213,7 +213,7 @@ Cette passe est **strictement domain-only** : aucune modification de
   `step_scan` mais héberge aussi ligne/Z — à trancher si un 3e type de scan
   arrive.
 - **Constantes physiques extraites** de `scan_zone.py` vers un module partagé
-  `src/domain/test_bench/physical_bench_limits/physical_bench_limits.py` (`PHYSICAL_X_MAX_MM`,
+  `src/domain/test_bench_configuration/physical_bench_limits/physical_bench_limits.py` (`PHYSICAL_X_MAX_MM`,
   `PHYSICAL_Y_MAX_MM`, `PHYSICAL_Z_MAX_MM`) — 3 consommateurs (ScanZone,
   LineScanConfig, ZAxisScanConfig) = règle des trois atteinte.
 - **Ligne à theta=90° ne doit PAS passer par `ScanZone`** : son invariant

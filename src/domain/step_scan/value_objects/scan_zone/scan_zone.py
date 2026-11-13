@@ -11,11 +11,11 @@ Rationale:
 Design:
     - Frozen dataclass (immutable)
     - Validates physical limits in __post_init__
-    - Limits come from test_bench.physical_bench_limits (re-exported here)
+    - Limits come from test_bench_configuration.physical_bench_limits (re-exported here)
 """
 from dataclasses import dataclass
 from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
-from domain.test_bench.physical_bench_limits.physical_bench_limits import PHYSICAL_X_MAX_MM, PHYSICAL_Y_MAX_MM
+from domain.test_bench_configuration.physical_bench_limits.physical_bench_limits import PHYSICAL_X_MAX_MM, PHYSICAL_Y_MAX_MM
 
 @dataclass(frozen=True)
 class ScanZone:

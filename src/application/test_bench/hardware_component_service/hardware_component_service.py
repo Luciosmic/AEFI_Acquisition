@@ -11,15 +11,15 @@ from application.test_bench.hardware_component_service.dtos.hardware_component_d
 from application.test_bench.hardware_component_service.i_api_hardware_component_service import (
     IApiHardwareComponentService,
 )
-from domain.test_bench.calibration.calibration import Calibration
-from domain.test_bench.calibration.entities.hardware_component_characterization_entry.hardware_component_characterization_entry import (
+from domain.test_bench_configuration.bench_configuration import BenchConfiguration
+from domain.test_bench_configuration.entities.hardware_component_characterization_entry.hardware_component_characterization_entry import (
     HardwareComponentCharacterizationEntry,
 )
-from domain.test_bench.calibration.repositories.i_hardware_component_repository import IHardwareComponentRepository
-from domain.test_bench.calibration.value_objects.hardware_component_name.hardware_component_name import (
+from domain.test_bench_configuration.repositories.i_hardware_component_repository import IHardwareComponentRepository
+from domain.test_bench_configuration.value_objects.hardware_component_name.hardware_component_name import (
     HardwareComponentName,
 )
-from domain.test_bench.calibration.value_objects.hardware_component_kind.hardware_component_kind import (
+from domain.test_bench_configuration.value_objects.hardware_component_kind.hardware_component_kind import (
     HardwareComponentKind,
 )
 from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
@@ -56,9 +56,9 @@ class HardwareComponentService(IApiHardwareComponentService):
             component_name,
             dict(values),
         )
-        already_recorded = Calibration.is_component_already_recorded(self._repository.find_all(kind), component_name)
-        calibration = Calibration()
-        entry = calibration.record_hardware_component_characterization(kind, component_name, values)
+        already_recorded = BenchConfiguration.is_component_already_recorded(self._repository.find_all(kind), component_name)
+        configuration = BenchConfiguration()
+        entry = configuration.record_hardware_component_characterization(kind, component_name, values)
         if already_recorded:
             logger.info("HardwareComponentService: completing history of %s '%s'", kind.value, component_name)
         else:
@@ -72,7 +72,7 @@ class HardwareComponentService(IApiHardwareComponentService):
                 ", ".join(uncharacterized),
             )
         self._repository.add(entry)
-        self._publish(calibration)
+        self._publish(configuration)
         return RecordCharacterizationResultDTO(name_already_recorded=already_recorded)
 
     def mount_component(self, kind_key: str, component_name: str) -> None:
@@ -80,8 +80,8 @@ class HardwareComponentService(IApiHardwareComponentService):
         component_name = HardwareComponentName(component_name)
         logger.info("HardwareComponentService: Command mount_component kind=%s component_name=%s", kind.value, component_name)
         mounted = self.get_mounted_component_name(kind_key)
-        calibration = Calibration()
-        selection = calibration.mount_hardware_component(
+        configuration = BenchConfiguration()
+        selection = configuration.mount_hardware_component(
             kind, component_name, self._latest_entry_per_component(kind).keys(), mounted
         )
         if selection is None:
@@ -101,10 +101,10 @@ class HardwareComponentService(IApiHardwareComponentService):
                 mounted,
                 component_name,
             )
-        self._publish(calibration)
+        self._publish(configuration)
 
-    def _publish(self, calibration: Calibration) -> None:
-        for event in calibration.domain_events:
+    def _publish(self, configuration: BenchConfiguration) -> None:
+        for event in configuration.domain_events:
             self._event_bus.publish(type(event).__name__.lower(), event)
 
     # -- queries ------------------------------------------------------------------
@@ -122,12 +122,12 @@ class HardwareComponentService(IApiHardwareComponentService):
     def get_current_mounting_id(self, kind_key: str) -> Optional[UUID]:
         """Identity of the current mounting of that kind (composition root:
         the sensor's mounting is what its angle calibrations reference)."""
-        mounting = Calibration.current_mounting(self._repository.find_selections(HardwareComponentKind(kind_key)))
+        mounting = BenchConfiguration.current_mounting(self._repository.find_selections(HardwareComponentKind(kind_key)))
         return mounting.mounting_id if mounting else None
 
     def get_mounted_component_name(self, kind_key: str) -> Optional[str]:
         """Composition root uses it to build the hardware signature."""
-        return Calibration.mounted_component_name(self._repository.find_selections(HardwareComponentKind(kind_key)))
+        return BenchConfiguration.mounted_component_name(self._repository.find_selections(HardwareComponentKind(kind_key)))
 
     def list_components(self, kind_key: str) -> List[HardwareComponentDTO]:
         latest = self._latest_entry_per_component(HardwareComponentKind(kind_key))
@@ -139,7 +139,7 @@ class HardwareComponentService(IApiHardwareComponentService):
         if name is None:
             logger.warning("HardwareComponentService: no %s declared mounted — configuration incomplete", kind.value)
             return None
-        entry = Calibration.current_characterization(self._repository.find_all(kind), name)
+        entry = BenchConfiguration.current_characterization(self._repository.find_all(kind), name)
         uncharacterized = entry.characterization.uncharacterized()
         if uncharacterized:
             logger.warning(
@@ -153,7 +153,7 @@ class HardwareComponentService(IApiHardwareComponentService):
     def _latest_entry_per_component(self, kind: HardwareComponentKind) -> Dict[str, HardwareComponentCharacterizationEntry]:
         entries = self._repository.find_all(kind)
         return {
-            name: Calibration.current_characterization(entries, name)
+            name: BenchConfiguration.current_characterization(entries, name)
             for name in {entry.component_name for entry in entries}
         }
 

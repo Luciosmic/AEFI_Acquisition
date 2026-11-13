@@ -20,10 +20,10 @@ from infrastructure.persistence.calibration.fake.fake_source_geometry_calibratio
 from domain.test_bench.calibration.entities.sensor_calibration_entry.sensor_calibration_entry import (
     SensorCalibrationEntry,
 )
-from domain.test_bench.calibration.events.hardware_component_events.hardware_component_events import (
+from domain.test_bench_configuration.events.hardware_component_events.hardware_component_events import (
     HardwareComponentMounted,
 )
-from domain.test_bench.calibration.value_objects.hardware_component_kind.hardware_component_kind import (
+from domain.test_bench_configuration.value_objects.hardware_component_kind.hardware_component_kind import (
     HardwareComponentKind,
 )
 from domain.test_bench.calibration.value_objects.sensor_rotation_angles.sensor_rotation_angles import (

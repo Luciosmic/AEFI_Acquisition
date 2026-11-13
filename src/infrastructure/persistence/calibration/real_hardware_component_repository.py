@@ -16,17 +16,17 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 from uuid import NAMESPACE_URL, UUID, uuid5
 
-from domain.test_bench.calibration.entities.hardware_component_characterization_entry.hardware_component_characterization_entry import (
+from domain.test_bench_configuration.entities.hardware_component_characterization_entry.hardware_component_characterization_entry import (
     HardwareComponentCharacterizationEntry,
 )
-from domain.test_bench.calibration.entities.hardware_component_selection.hardware_component_selection import (
+from domain.test_bench_configuration.entities.hardware_component_selection.hardware_component_selection import (
     HardwareComponentSelection,
 )
-from domain.test_bench.calibration.repositories.i_hardware_component_repository import IHardwareComponentRepository
-from domain.test_bench.calibration.value_objects.component_characterization.component_characterization import (
+from domain.test_bench_configuration.repositories.i_hardware_component_repository import IHardwareComponentRepository
+from domain.test_bench_configuration.value_objects.component_characterization.component_characterization import (
     ComponentCharacterization,
 )
-from domain.test_bench.calibration.value_objects.hardware_component_kind.hardware_component_kind import (
+from domain.test_bench_configuration.value_objects.hardware_component_kind.hardware_component_kind import (
     HardwareComponentKind,
 )
 

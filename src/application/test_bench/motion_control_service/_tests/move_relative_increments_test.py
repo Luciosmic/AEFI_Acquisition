@@ -5,7 +5,7 @@ from application.test_bench.motion_control_service.dtos.motion_conversion_status
 from application.test_bench.motion_control_service.motion_control_service import MotionControlService
 from application.test_bench.motion_control_service.ports.i_motion_port import IMotionPort
 from application.test_bench.raw_increment_motion.ports.i_raw_increment_motion_port import IRawIncrementMotionPort
-from domain.test_bench.physical_bench_limits.physical_bench_limits import X_TRAVEL_INCREMENTS
+from domain.test_bench_configuration.physical_bench_limits.physical_bench_limits import X_TRAVEL_INCREMENTS
 from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 
 

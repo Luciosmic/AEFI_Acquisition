@@ -1,7 +1,7 @@
 from domain.test_bench.calibration.entities.synchronous_detection_phase_calibration_entry.synchronous_detection_phase_calibration_entry import (
     SynchronousDetectionPhaseCalibrationEntry,
 )
-from domain.test_bench.calibration.value_objects.hardware_signature.hardware_signature import HardwareSignature
+from domain.test_bench_configuration.value_objects.hardware_signature.hardware_signature import HardwareSignature
 from domain.test_bench.calibration.value_objects.synchronous_detection_phase_calibration_point.synchronous_detection_phase_calibration_point import (
     SynchronousDetectionPhaseCalibrationPoint,
 )

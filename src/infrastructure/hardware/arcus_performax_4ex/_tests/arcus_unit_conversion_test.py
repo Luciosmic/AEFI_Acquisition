@@ -79,7 +79,7 @@ class TestArcusUnitConversion(unittest.TestCase):
         self.assertEqual(self.adapter.read_increments(), (1234, 567))
 
     def test_axis_limits_follow_the_measured_travel_in_increments(self):
-        from domain.test_bench.physical_bench_limits.physical_bench_limits import (
+        from domain.test_bench_configuration.physical_bench_limits.physical_bench_limits import (
             X_TRAVEL_INCREMENTS,
             Y_TRAVEL_INCREMENTS,
         )
@@ -91,7 +91,7 @@ class TestArcusUnitConversion(unittest.TestCase):
 
     def test_the_middle_of_the_bench_stays_the_same_increment_when_the_factor_changes(self):
         """Correcting µm/increment rescales mm, never the physical middle of the rails."""
-        from domain.test_bench.physical_bench_limits.physical_bench_limits import X_TRAVEL_INCREMENTS
+        from domain.test_bench_configuration.physical_bench_limits.physical_bench_limits import X_TRAVEL_INCREMENTS
 
         middles_in_increments = []
         for microns_per_pulse in (20.62, 21.46, 21.8):
