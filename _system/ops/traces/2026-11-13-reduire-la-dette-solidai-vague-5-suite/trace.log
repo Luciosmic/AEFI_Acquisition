@@ -1,1 +1,2 @@
 16:30 | depart | quoi=vague 5 suite : controles complets, application, adaptateurs, composition | session=16aa76a0-8c3f-49ba-a745-816691cd9858
+16:34 | annonce | etape 0 : pytest src complet puis mypy complet puis verify ; duree_estimee=5 min + 8 min + 1 min ; arret=timeout 20 min par commande ; logs=run-pytest-complet-depart.log, run-mypy-complet-depart.log, run-verify-depart.json
