@@ -1,4 +1,9 @@
 ---
+type: value-object::solidai-ddd
+tldr: "Définition de référence de la convention de rotation du capteur : l'ordre et le sens des angles de montage, immuable."
+code: ["[[src/domain/test_bench_calibration/value_objects/rotation_convention/rotation_convention.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/test_bench_calibration/calibration_intention]]"
 vault_ref: "0_inbox/old-notes-atomiques-ecrites-a-la-main/Opération de rotation du repère de la sonde.md"
 ---
 
