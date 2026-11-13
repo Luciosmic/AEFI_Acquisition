@@ -3,7 +3,7 @@ type: noyau-partage::solidai-ddd
 tldr: "Noyau partagé du domaine : le résultat d'opération, les événements transverses et les valeurs de mesure que plusieurs agrégats et couches utilisent."
 code: ["[[src/domain/shared_kernel/operation_result.py]]"]
 cause_de_changement: regle-metier
-utilise_par: ["[[src/domain/test_bench_calibration/calibration_intention]]"]
+utilise_par: ["[[src/domain/test_bench_calibration/calibration_intention]]", "[[src/application/scan/scan_application_service/scan_application_service_intention]]"]
 ---
 # operation_result — Intention
 
