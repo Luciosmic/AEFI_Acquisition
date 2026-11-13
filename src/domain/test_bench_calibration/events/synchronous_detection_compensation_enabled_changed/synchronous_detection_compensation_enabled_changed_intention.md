@@ -1,3 +1,10 @@
+---
+type: evenement-de-domaine::solidai-ddd
+tldr: "Signal that `Calibration.synchronous_detection_compensation_enabled` actually changed value."
+code: ["[[src/domain/test_bench_calibration/events/synchronous_detection_compensation_enabled_changed/synchronous_detection_compensation_enabled_changed.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/test_bench_calibration/calibration_intention]]"
+---
 # synchronous_detection_compensation_enabled_changed — Intention
 
 ## Rationale

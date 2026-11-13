@@ -1,3 +1,10 @@
+---
+type: evenement-de-domaine::solidai-ddd
+tldr: "Signal that a new `SourceGeometryCalibrationEntry` was recorded in the calibration registry."
+code: ["[[src/domain/test_bench_calibration/events/source_geometry_calibration_entry_added/source_geometry_calibration_entry_added.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/test_bench_calibration/calibration_intention]]"
+---
 # source_geometry_calibration_entry_added — Intention
 
 ## Rationale

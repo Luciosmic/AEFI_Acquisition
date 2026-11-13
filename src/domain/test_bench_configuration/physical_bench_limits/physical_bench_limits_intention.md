@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Porter les courses maximales des axes X et Y du banc, en mm, origine à 0 (bornes de validation des scans)."
+code: ["[[src/domain/test_bench_configuration/physical_bench_limits/physical_bench_limits.py]]"]
+cause_de_changement: regle-metier
+---
 # physical_bench_limits — Intention
 
 ## Rationale

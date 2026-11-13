@@ -1,3 +1,10 @@
+---
+type: evenement-de-domaine::solidai-ddd
+tldr: "Signal that a new `MechanicalTransmissionCalibrationEntry` was recorded."
+code: ["[[src/domain/test_bench_calibration/events/mechanical_transmission_calibration_entry_added/mechanical_transmission_calibration_entry_added.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/test_bench_calibration/calibration_intention]]"
+---
 # mechanical_transmission_calibration_entry_added — Intention
 
 ## Rationale

@@ -1,3 +1,10 @@
+---
+type: evenement-de-domaine::solidai-ddd
+tldr: "Faits passés du banc : un composant a été caractérisé (`HardwareComponentCharacterized`) ou monté (`HardwareComponentMounted`)."
+code: ["[[src/domain/test_bench_configuration/events/hardware_component_events/hardware_component_events.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/test_bench_configuration/bench_configuration_intention]]"
+---
 # hardware_component_events — Intention
 
 ## Rationale

@@ -1,3 +1,10 @@
+---
+type: evenement-de-domaine::solidai-ddd
+tldr: "Carry the mounting rotation P now active (brings the sensor from the sources frame to its current mounting; readings corrected by `E_sources = P·E_sensor`; see `domain/t…"
+code: ["[[src/domain/test_bench_calibration/events/active_sensor_rotation_changed/active_sensor_rotation_changed.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/test_bench_calibration/calibration_intention]]"
+---
 # active_sensor_rotation_changed — Intention
 
 ## Rationale
