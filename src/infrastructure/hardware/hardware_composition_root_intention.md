@@ -1,3 +1,12 @@
+---
+type: point-de-composition::solidai-hexagonal
+tldr: "Point de composition `hardware_composition_root` : Choisir, par sous-système, entre l'adaptateur réel et son équivalent simulé (`ArcusCompositionRoot`/`MCUCompositionRoot` avec transport faké, `NardaEP601ProbeAdapter`/`FakeElectricFieldProbeAdapter`)."
+code: ["[[src/infrastructure/hardware/hardware_composition_root.py]]"]
+cause_de_changement: outil
+cable:
+  - "[[src/infrastructure/hardware/lsm9ds1/adapter_inertial_probe_stream_port/adapter_inertial_probe_stream_port_intention]]"
+  - "[[src/infrastructure/hardware/oscilloscope_dsox2014/oscilloscope_dsox2014_intention]]"
+---
 # hardware_composition_root — Intention
 
 ## Rationale
