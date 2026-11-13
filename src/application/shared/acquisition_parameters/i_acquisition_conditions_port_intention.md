@@ -1,3 +1,9 @@
+---
+type: port::solidai-hexagonal
+tldr: "Port sortant `i_acquisition_conditions_port` : `read_conditions()` : toutes les conditions matérielles connues du système, en un `AcquisitionConditionsDTO`."
+sens: sortant
+code: "[[src/application/shared/acquisition_parameters/i_acquisition_conditions_port.py]]"
+---
 # i_acquisition_conditions_port — Intention
 
 ## Rationale

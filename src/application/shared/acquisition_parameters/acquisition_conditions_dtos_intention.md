@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "DTO `acquisition_conditions_dtos` : Porter, en primitives et sans aucun format, les faits communs à toute acquisition : `MountedComponentDTO`, `AdcSettingsDTO`, `SignalGenerationSettingsDTO` (+ `DdsChannelSettingsDTO`), `SynchronousDetectionStateDTO`, `SensorDeploymentDTO`."
+code: ["[[src/application/shared/acquisition_parameters/acquisition_conditions_dtos.py]]"]
+cause_de_changement: orchestration
+---
 # acquisition_conditions_dtos — Intention
 
 ## Rationale

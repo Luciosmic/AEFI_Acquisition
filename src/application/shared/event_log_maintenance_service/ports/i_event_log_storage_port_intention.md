@@ -1,3 +1,9 @@
+---
+type: port::solidai-hexagonal
+tldr: "Port sortant `i_event_log_storage_port` : `location()` : où sont stockées les sessions (le dossier, pour que l'utilisateur puisse l'ouvrir depuis le panneau Logs)."
+sens: sortant
+code: "[[src/application/shared/event_log_maintenance_service/ports/i_event_log_storage_port.py]]"
+---
 # i_event_log_storage_port — Intention
 
 ## Rationale

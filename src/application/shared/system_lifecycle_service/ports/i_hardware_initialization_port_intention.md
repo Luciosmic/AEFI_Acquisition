@@ -1,3 +1,9 @@
+---
+type: port::solidai-hexagonal
+tldr: "Port sortant `i_hardware_initialization_port` : Déclarer `initialize_all() → Dict[str, Any]` : initialise tous les périphériques, retourne les ressources créées."
+sens: sortant
+code: "[[src/application/shared/system_lifecycle_service/ports/i_hardware_initialization_port.py]]"
+---
 # i_hardware_initialization_port — Intention
 
 ## Rationale

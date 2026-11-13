@@ -1,3 +1,9 @@
+---
+type: port::solidai-hexagonal
+tldr: "Port sortant `i_hardware_advanced_configurator` : Déclarer les propriétés `hardware_id: str` et `display_name: str` pour l'identification."
+sens: sortant
+code: "[[src/application/shared/hardware_configuration_service/ports/i_hardware_advanced_configurator.py]]"
+---
 # i_hardware_advanced_configurator — Intention
 
 ## Rationale

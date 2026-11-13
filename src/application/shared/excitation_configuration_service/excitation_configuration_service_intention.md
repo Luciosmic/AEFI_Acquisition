@@ -1,3 +1,11 @@
+---
+type: service-applicatif::solidai-hexagonal
+tldr: "Service applicatif `excitation_configuration_service` : `set_excitation(mode, level_s1_s2, level_s3_s4, frequency)` : appliquer via `IExcitationPort` et publier `ExcitationFrequencyChanged` si la fréquence a changé."
+code: ["[[src/application/shared/excitation_configuration_service/excitation_configuration_service.py]]"]
+cause_de_changement: orchestration
+ports:
+  - "[[src/application/shared/excitation_configuration_service/ports/i_excitation_port_intention]]"
+---
 # excitation_configuration_service — Intention
 
 ## Rationale

@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Module `settled_sample_collection` : `collect_settled_samples(events, count, settled_at, timeout_s)` : lire la file d'événements `AefiVoltageSampleAcquired` et ne garder que ceux dont l'acquisition a commencé après `settled_at`."
+code: ["[[src/application/shared/settled_sample_collection/settled_sample_collection.py]]"]
+cause_de_changement: orchestration
+---
 # settled_sample_collection — Intention
 
 ## Rationale

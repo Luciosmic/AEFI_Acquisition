@@ -1,3 +1,9 @@
+---
+type: port::solidai-hexagonal
+tldr: "Port sortant `i_system_lifecycle_output_port` : Déclarer `present_startup_started(message)`, `present_initialization_step(subsystem, status)`, `present_error(message)`, `present_startup_completed(success, errors)`."
+sens: sortant
+code: "[[src/application/shared/system_lifecycle_service/ports/i_system_lifecycle_output_port.py]]"
+---
 # i_system_lifecycle_output_port — Intention
 
 ## Rationale

@@ -1,3 +1,11 @@
+---
+type: service-applicatif::solidai-hexagonal
+tldr: "Service applicatif `hardware_configuration_service` : Lister les identifiants de tous les périphériques configurables (`list_hardware_ids`)."
+code: ["[[src/application/shared/hardware_configuration_service/hardware_configuration_service.py]]"]
+cause_de_changement: orchestration
+ports:
+  - "[[src/application/shared/hardware_configuration_service/ports/i_hardware_advanced_configurator_intention]]"
+---
 # hardware_configuration_service — Intention
 
 ## Rationale

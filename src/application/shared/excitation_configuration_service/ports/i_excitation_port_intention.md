@@ -1,3 +1,9 @@
+---
+type: port::solidai-hexagonal
+tldr: "Port sortant `i_excitation_port` : `apply_excitation(params)` : appliquer mode/niveaux/fréquence."
+sens: sortant
+code: "[[src/application/shared/excitation_configuration_service/ports/i_excitation_port.py]]"
+---
 # i_excitation_port — Intention
 
 ## Rationale

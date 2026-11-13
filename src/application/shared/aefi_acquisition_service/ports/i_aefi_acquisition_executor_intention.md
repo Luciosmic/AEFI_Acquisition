@@ -1,3 +1,9 @@
+---
+type: port::solidai-hexagonal
+tldr: "Port sortant `i_aefi_acquisition_executor` : Déclarer `start(config: AefiAcquisitionConfig, acquisition_port: IAcquisitionPort)`."
+sens: sortant
+code: "[[src/application/shared/aefi_acquisition_service/ports/i_aefi_acquisition_executor.py]]"
+---
 # i_aefi_acquisition_executor — Intention
 
 ## Rationale

@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "DTO `event_log_dto` : `EventLogSummaryDTO` : l'état affiché (taille, sessions, plus ancienne, alerte) + l'aperçu exact de ce que la suppression enlèverait, pour la boîte de confirmation."
+code: ["[[src/application/shared/event_log_maintenance_service/dtos/event_log_dto.py]]"]
+cause_de_changement: orchestration
+---
 # event_log_dto — Intention
 
 ## Rationale

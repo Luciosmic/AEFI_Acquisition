@@ -1,3 +1,9 @@
+---
+type: port::solidai-hexagonal
+tldr: "Port sortant `i_usb_latency_timer_port` : `read_latency_timer_ms(serial_port)` : la latence configurée pour le port série donné, en ms, ou un échec lisible."
+sens: sortant
+code: "[[src/application/shared/acquisition_parameters/i_usb_latency_timer_port.py]]"
+---
 # i_usb_latency_timer_port — Intention
 
 ## Rationale

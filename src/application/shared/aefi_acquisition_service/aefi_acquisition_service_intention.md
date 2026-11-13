@@ -1,3 +1,11 @@
+---
+type: service-applicatif::solidai-hexagonal
+tldr: "Service applicatif `aefi_acquisition_service` : Démarrer l'acquisition continue en transmettant la config et le port d'acquisition à `IAefiAcquisitionExecutor`."
+code: ["[[src/application/shared/aefi_acquisition_service/aefi_acquisition_service.py]]"]
+cause_de_changement: orchestration
+ports:
+  - "[[src/application/shared/aefi_acquisition_service/ports/i_aefi_acquisition_executor_intention]]"
+---
 # aefi_acquisition_service — Intention
 
 ## Rationale

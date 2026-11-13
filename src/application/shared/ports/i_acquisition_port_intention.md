@@ -1,3 +1,9 @@
+---
+type: port::solidai-hexagonal
+tldr: "Port sortant `i_acquisition_port` : Déclarer `acquire_sample() → AefiVoltageMeasurement` (ou équivalent) comme méthode abstraite."
+sens: sortant
+code: "[[src/application/shared/ports/i_acquisition_port.py]]"
+---
 # i_acquisition_port — Intention
 
 ## Rationale
