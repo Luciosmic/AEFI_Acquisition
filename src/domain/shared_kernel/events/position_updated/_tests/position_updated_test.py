@@ -21,4 +21,4 @@ def test_positionupdated_est_immuable() -> None:
     is_moving = True
     instance = PositionUpdated(position=position, is_moving=is_moving)
     with pytest.raises(dataclasses.FrozenInstanceError):
-        instance.position = position
+        instance.position = position  # type: ignore[misc]

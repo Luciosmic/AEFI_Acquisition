@@ -18,4 +18,4 @@ def test_electricfieldprobereadingstopped_est_immuable() -> None:
     acquisition_id = UUID(int=1)
     instance = ElectricFieldProbeReadingStopped(acquisition_id=acquisition_id)
     with pytest.raises(dataclasses.FrozenInstanceError):
-        instance.acquisition_id = acquisition_id
+        instance.acquisition_id = acquisition_id  # type: ignore[misc]

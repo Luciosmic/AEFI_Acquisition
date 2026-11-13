@@ -21,4 +21,4 @@ def test_aefivoltagereadingfailed_est_immuable() -> None:
     reason = "x"
     instance = AefiVoltageReadingFailed(acquisition_id=acquisition_id, reason=reason)
     with pytest.raises(dataclasses.FrozenInstanceError):
-        instance.acquisition_id = acquisition_id
+        instance.acquisition_id = acquisition_id  # type: ignore[misc]

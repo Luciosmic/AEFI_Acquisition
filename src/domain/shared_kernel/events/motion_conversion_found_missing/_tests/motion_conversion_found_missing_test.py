@@ -23,4 +23,4 @@ def test_motionconversionfoundmissing_est_immuable() -> None:
     where_to_enter = "x"
     instance = MotionConversionFoundMissing(motor_name=motor_name, missing_quantity=missing_quantity, where_to_enter=where_to_enter)
     with pytest.raises(dataclasses.FrozenInstanceError):
-        instance.motor_name = motor_name
+        instance.motor_name = motor_name  # type: ignore[misc]

@@ -26,4 +26,4 @@ def test_aefivoltagesampleacquired_est_immuable() -> None:
     sample = AefiVoltageMeasurement(voltage_x_in_phase=1.5, voltage_x_quadrature=1.5, voltage_y_in_phase=1.5, voltage_y_quadrature=1.5, voltage_z_in_phase=1.5, voltage_z_quadrature=1.5, timestamp=datetime(2026, 1, 1, tzinfo=timezone.utc))
     instance = AefiVoltageSampleAcquired(acquisition_id=acquisition_id, sample_index=sample_index, sample=sample)
     with pytest.raises(dataclasses.FrozenInstanceError):
-        instance.acquisition_id = acquisition_id
+        instance.acquisition_id = acquisition_id  # type: ignore[misc]

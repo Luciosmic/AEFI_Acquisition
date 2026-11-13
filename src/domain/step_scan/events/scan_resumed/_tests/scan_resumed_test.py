@@ -21,4 +21,4 @@ def test_scanresumed_est_immuable() -> None:
     resume_from_point_index = 3
     instance = ScanResumed(scan_id=scan_id, resume_from_point_index=resume_from_point_index)
     with pytest.raises(dataclasses.FrozenInstanceError):
-        instance.scan_id = scan_id
+        instance.scan_id = scan_id  # type: ignore[misc]

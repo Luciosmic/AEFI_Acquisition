@@ -14,7 +14,7 @@ def test_nardapointalreadyacquirederror_nomme_ses_arguments_dans_son_message() -
 
 def test_nardapointincompleteerror_nomme_ses_arguments_dans_son_message() -> None:
     with pytest.raises(NardaPointIncompleteError) as info:
-        raise NardaPointIncompleteError('valeur_narda_point_id', 'valeur_expected', 'valeur_received')
+        raise NardaPointIncompleteError('valeur_narda_point_id', 'valeur_expected', 'valeur_received')  # type: ignore[arg-type]
     assert info.value.narda_point_id == 'valeur_narda_point_id'
     assert info.value.expected == 'valeur_expected'
     assert info.value.received == 'valeur_received'

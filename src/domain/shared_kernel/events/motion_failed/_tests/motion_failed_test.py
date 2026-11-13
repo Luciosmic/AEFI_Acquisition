@@ -20,4 +20,4 @@ def test_motionfailed_est_immuable() -> None:
     error = "x"
     instance = MotionFailed(motion_id=motion_id, error=error)
     with pytest.raises(dataclasses.FrozenInstanceError):
-        instance.motion_id = motion_id
+        instance.motion_id = motion_id  # type: ignore[misc]

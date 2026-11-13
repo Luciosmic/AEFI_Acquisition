@@ -18,4 +18,4 @@ def test_position2d_est_immuable() -> None:
     y = 1.5
     instance = Position2D(x=x, y=y)
     with pytest.raises(dataclasses.FrozenInstanceError):
-        instance.x = x
+        instance.x = x  # type: ignore[misc]

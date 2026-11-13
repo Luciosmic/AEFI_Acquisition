@@ -23,4 +23,4 @@ def test_motionconversionbecameavailable_est_immuable() -> None:
     stepper_driver_name = "x"
     instance = MotionConversionBecameAvailable(microns_per_pulse=microns_per_pulse, motor_name=motor_name, stepper_driver_name=stepper_driver_name)
     with pytest.raises(dataclasses.FrozenInstanceError):
-        instance.microns_per_pulse = microns_per_pulse
+        instance.microns_per_pulse = microns_per_pulse  # type: ignore[misc]

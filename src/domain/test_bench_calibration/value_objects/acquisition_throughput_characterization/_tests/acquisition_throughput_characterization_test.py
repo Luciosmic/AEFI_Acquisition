@@ -37,7 +37,7 @@ def test_acquisitionthroughputpoint_est_immuable() -> None:
     sample_count = 3
     instance = AcquisitionThroughputPoint(n_avg=n_avg, sample_period_s=sample_period_s, sample_rate_per_s=sample_rate_per_s, adc_conversions_per_s=adc_conversions_per_s, noise_v_rms=noise_v_rms, noise_rms_v=noise_rms_v, noise_in_one_second_v=noise_in_one_second_v, sample_count=sample_count)
     with pytest.raises(dataclasses.FrozenInstanceError):
-        instance.n_avg = n_avg
+        instance.n_avg = n_avg  # type: ignore[misc]
 
 
 def test_acquisitionthroughputcharacterization_garde_ses_champs() -> None:
@@ -65,4 +65,4 @@ def test_acquisitionthroughputcharacterization_est_immuable() -> None:
     noise_relative_uncertainty = 1.5
     instance = AcquisitionThroughputCharacterization(points=points, overhead_s=overhead_s, adc_output_rate_hz=adc_output_rate_hz, fit_max_relative_residual=fit_max_relative_residual, recommended_n_avg=recommended_n_avg, noise_relative_uncertainty=noise_relative_uncertainty)
     with pytest.raises(dataclasses.FrozenInstanceError):
-        instance.points = points
+        instance.points = points  # type: ignore[misc]

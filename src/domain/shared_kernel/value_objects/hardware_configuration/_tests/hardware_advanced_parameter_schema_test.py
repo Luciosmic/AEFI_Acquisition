@@ -26,7 +26,7 @@ def test_hardwareadvancedparameterschema_est_immuable() -> None:
     display_name = "x"
     instance = HardwareAdvancedParameterSchema(key=key, display_name=display_name)
     with pytest.raises(dataclasses.FrozenInstanceError):
-        instance.key = key
+        instance.key = key  # type: ignore[misc]
 
 
 def test_numberparameterschema_garde_ses_champs() -> None:
@@ -42,7 +42,7 @@ def test_numberparameterschema_est_immuable() -> None:
     display_name = "x"
     instance = NumberParameterSchema(key=key, display_name=display_name)
     with pytest.raises(dataclasses.FrozenInstanceError):
-        instance.key = key
+        instance.key = key  # type: ignore[misc]
 
 
 def test_enumparameterschema_garde_ses_champs() -> None:
@@ -58,7 +58,7 @@ def test_enumparameterschema_est_immuable() -> None:
     display_name = "x"
     instance = EnumParameterSchema(key=key, display_name=display_name)
     with pytest.raises(dataclasses.FrozenInstanceError):
-        instance.key = key
+        instance.key = key  # type: ignore[misc]
 
 
 def test_booleanparameterschema_garde_ses_champs() -> None:
@@ -74,4 +74,4 @@ def test_booleanparameterschema_est_immuable() -> None:
     display_name = "x"
     instance = BooleanParameterSchema(key=key, display_name=display_name)
     with pytest.raises(dataclasses.FrozenInstanceError):
-        instance.key = key
+        instance.key = key  # type: ignore[misc]

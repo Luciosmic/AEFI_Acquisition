@@ -23,4 +23,4 @@ def test_ddschannelconfigchanged_est_immuable() -> None:
     phase = 3
     instance = DdsChannelConfigChanged(channel=channel, gain=gain, phase=phase)
     with pytest.raises(dataclasses.FrozenInstanceError):
-        instance.channel = channel
+        instance.channel = channel  # type: ignore[misc]

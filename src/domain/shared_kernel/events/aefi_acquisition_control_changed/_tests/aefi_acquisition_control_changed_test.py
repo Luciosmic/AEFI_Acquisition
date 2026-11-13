@@ -17,4 +17,4 @@ def test_aefiacquisitioncontrolchanged_est_immuable() -> None:
     controller = None
     instance = AefiAcquisitionControlChanged(controller=controller)
     with pytest.raises(dataclasses.FrozenInstanceError):
-        instance.controller = controller
+        instance.controller = controller  # type: ignore[misc]

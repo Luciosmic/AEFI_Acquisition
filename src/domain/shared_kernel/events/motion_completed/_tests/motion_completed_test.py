@@ -24,4 +24,4 @@ def test_motioncompleted_est_immuable() -> None:
     duration_ms = 1.5
     instance = MotionCompleted(motion_id=motion_id, final_position=final_position, duration_ms=duration_ms)
     with pytest.raises(dataclasses.FrozenInstanceError):
-        instance.motion_id = motion_id
+        instance.motion_id = motion_id  # type: ignore[misc]

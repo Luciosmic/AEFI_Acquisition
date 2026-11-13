@@ -23,4 +23,4 @@ def test_motorincrementsupdated_est_immuable() -> None:
     is_moving = True
     instance = MotorIncrementsUpdated(x_increments=x_increments, y_increments=y_increments, is_moving=is_moving)
     with pytest.raises(dataclasses.FrozenInstanceError):
-        instance.x_increments = x_increments
+        instance.x_increments = x_increments  # type: ignore[misc]

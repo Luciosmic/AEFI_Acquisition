@@ -21,4 +21,4 @@ def test_scancompleted_est_immuable() -> None:
     total_points = 3
     instance = ScanCompleted(scan_id=scan_id, total_points=total_points)
     with pytest.raises(dataclasses.FrozenInstanceError):
-        instance.scan_id = scan_id
+        instance.scan_id = scan_id  # type: ignore[misc]

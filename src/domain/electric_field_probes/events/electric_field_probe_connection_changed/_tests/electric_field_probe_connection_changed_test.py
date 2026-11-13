@@ -17,4 +17,4 @@ def test_electricfieldprobeconnectionchanged_est_immuable() -> None:
     connected = True
     instance = ElectricFieldProbeConnectionChanged(connected=connected)
     with pytest.raises(dataclasses.FrozenInstanceError):
-        instance.connected = connected
+        instance.connected = connected  # type: ignore[misc]

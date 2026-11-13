@@ -18,4 +18,4 @@ def test_electricfieldprobebatteryrefreshed_est_immuable() -> None:
     probe = ElectricFieldProbe(brand="x", model="x", serial_number="x", axis_labels=("x",))
     instance = ElectricFieldProbeBatteryRefreshed(probe=probe)
     with pytest.raises(dataclasses.FrozenInstanceError):
-        instance.probe = probe
+        instance.probe = probe  # type: ignore[misc]

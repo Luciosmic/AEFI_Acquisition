@@ -18,4 +18,4 @@ def test_aefisignalcorrectioncalibrationupdated_est_immuable() -> None:
     calibration = AefiSignalCorrectionCalibration()
     instance = AefiSignalCorrectionCalibrationUpdated(calibration=calibration)
     with pytest.raises(dataclasses.FrozenInstanceError):
-        instance.calibration = calibration
+        instance.calibration = calibration  # type: ignore[misc]

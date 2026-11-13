@@ -11,7 +11,7 @@ def test_frequencysweepcompleted_garde_ses_champs() -> None:
     frequency_sweep_id = UUID(int=1)
     role = "x"
     frequency_count = 3
-    instance = FrequencySweepCompleted(frequency_sweep_id=frequency_sweep_id, role=role, frequency_count=frequency_count)
+    instance = FrequencySweepCompleted(frequency_sweep_id=frequency_sweep_id, role=role, frequency_count=frequency_count)  # type: ignore[arg-type]
     assert isinstance(instance, DomainEvent)
     assert instance.frequency_sweep_id == frequency_sweep_id
     assert instance.role == role
@@ -22,6 +22,6 @@ def test_frequencysweepcompleted_est_immuable() -> None:
     frequency_sweep_id = UUID(int=1)
     role = "x"
     frequency_count = 3
-    instance = FrequencySweepCompleted(frequency_sweep_id=frequency_sweep_id, role=role, frequency_count=frequency_count)
+    instance = FrequencySweepCompleted(frequency_sweep_id=frequency_sweep_id, role=role, frequency_count=frequency_count)  # type: ignore[arg-type]
     with pytest.raises(dataclasses.FrozenInstanceError):
-        instance.frequency_sweep_id = frequency_sweep_id
+        instance.frequency_sweep_id = frequency_sweep_id  # type: ignore[assignment,misc]

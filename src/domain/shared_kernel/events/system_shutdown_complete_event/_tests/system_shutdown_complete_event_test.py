@@ -17,4 +17,4 @@ def test_systemshutdowncompleteevent_est_immuable() -> None:
     success = True
     instance = SystemShutdownCompleteEvent(success=success)
     with pytest.raises(dataclasses.FrozenInstanceError):
-        instance.success = success
+        instance.success = success  # type: ignore[misc]

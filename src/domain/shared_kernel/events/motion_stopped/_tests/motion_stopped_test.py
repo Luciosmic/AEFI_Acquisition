@@ -17,4 +17,4 @@ def test_motionstopped_est_immuable() -> None:
     reason = "x"
     instance = MotionStopped(reason=reason)
     with pytest.raises(dataclasses.FrozenInstanceError):
-        instance.reason = reason
+        instance.reason = reason  # type: ignore[misc]

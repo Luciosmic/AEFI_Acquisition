@@ -17,7 +17,7 @@ def test_frequencypointacquired_garde_ses_champs() -> None:
     measurement = AefiVoltageMeasurement(voltage_x_in_phase=1.5, voltage_x_quadrature=1.5, voltage_y_in_phase=1.5, voltage_y_quadrature=1.5, voltage_z_in_phase=1.5, voltage_z_quadrature=1.5, timestamp=datetime(2026, 1, 1, tzinfo=timezone.utc))
     samples_count = 3
     table_height_mm = 1.5
-    instance = FrequencyPointAcquired(frequency_sweep_id=frequency_sweep_id, role=role, frequency_index=frequency_index, frequency_hz=frequency_hz, measurement=measurement, samples_count=samples_count, table_height_mm=table_height_mm)
+    instance = FrequencyPointAcquired(frequency_sweep_id=frequency_sweep_id, role=role, frequency_index=frequency_index, frequency_hz=frequency_hz, measurement=measurement, samples_count=samples_count, table_height_mm=table_height_mm)  # type: ignore[arg-type]
     assert isinstance(instance, DomainEvent)
     assert instance.frequency_sweep_id == frequency_sweep_id
     assert instance.role == role
@@ -36,6 +36,6 @@ def test_frequencypointacquired_est_immuable() -> None:
     measurement = AefiVoltageMeasurement(voltage_x_in_phase=1.5, voltage_x_quadrature=1.5, voltage_y_in_phase=1.5, voltage_y_quadrature=1.5, voltage_z_in_phase=1.5, voltage_z_quadrature=1.5, timestamp=datetime(2026, 1, 1, tzinfo=timezone.utc))
     samples_count = 3
     table_height_mm = 1.5
-    instance = FrequencyPointAcquired(frequency_sweep_id=frequency_sweep_id, role=role, frequency_index=frequency_index, frequency_hz=frequency_hz, measurement=measurement, samples_count=samples_count, table_height_mm=table_height_mm)
+    instance = FrequencyPointAcquired(frequency_sweep_id=frequency_sweep_id, role=role, frequency_index=frequency_index, frequency_hz=frequency_hz, measurement=measurement, samples_count=samples_count, table_height_mm=table_height_mm)  # type: ignore[arg-type]
     with pytest.raises(dataclasses.FrozenInstanceError):
-        instance.frequency_sweep_id = frequency_sweep_id
+        instance.frequency_sweep_id = frequency_sweep_id  # type: ignore[assignment,misc]

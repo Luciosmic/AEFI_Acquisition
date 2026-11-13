@@ -18,4 +18,4 @@ def test_scancancelled_est_immuable() -> None:
     scan_id = UUID(int=1)
     instance = ScanCancelled(scan_id=scan_id)
     with pytest.raises(dataclasses.FrozenInstanceError):
-        instance.scan_id = scan_id
+        instance.scan_id = scan_id  # type: ignore[misc]

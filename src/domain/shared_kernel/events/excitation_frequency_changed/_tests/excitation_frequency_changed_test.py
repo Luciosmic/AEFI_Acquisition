@@ -17,4 +17,4 @@ def test_excitationfrequencychanged_est_immuable() -> None:
     frequency_hz = 1.5
     instance = ExcitationFrequencyChanged(frequency_hz=frequency_hz)
     with pytest.raises(dataclasses.FrozenInstanceError):
-        instance.frequency_hz = frequency_hz
+        instance.frequency_hz = frequency_hz  # type: ignore[misc]

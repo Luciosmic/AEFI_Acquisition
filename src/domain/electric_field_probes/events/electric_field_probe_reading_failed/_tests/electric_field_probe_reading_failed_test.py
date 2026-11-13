@@ -21,4 +21,4 @@ def test_electricfieldprobereadingfailed_est_immuable() -> None:
     reason = "x"
     instance = ElectricFieldProbeReadingFailed(acquisition_id=acquisition_id, reason=reason)
     with pytest.raises(dataclasses.FrozenInstanceError):
-        instance.acquisition_id = acquisition_id
+        instance.acquisition_id = acquisition_id  # type: ignore[misc]

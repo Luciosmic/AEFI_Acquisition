@@ -21,4 +21,4 @@ def test_scanpaused_est_immuable() -> None:
     current_point_index = 3
     instance = ScanPaused(scan_id=scan_id, current_point_index=current_point_index)
     with pytest.raises(dataclasses.FrozenInstanceError):
-        instance.scan_id = scan_id
+        instance.scan_id = scan_id  # type: ignore[misc]

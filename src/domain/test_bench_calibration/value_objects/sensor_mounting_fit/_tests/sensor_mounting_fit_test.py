@@ -25,4 +25,4 @@ def test_sensormountingfit_est_immuable() -> None:
     response_separation_degrees = 1.5
     instance = SensorMountingFit(angles=angles, misalignment_x_degrees=misalignment_x_degrees, misalignment_y_degrees=misalignment_y_degrees, response_separation_degrees=response_separation_degrees)
     with pytest.raises(dataclasses.FrozenInstanceError):
-        instance.angles = angles
+        instance.angles = angles  # type: ignore[misc]

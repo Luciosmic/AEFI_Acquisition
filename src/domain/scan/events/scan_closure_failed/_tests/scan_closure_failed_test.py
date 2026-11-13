@@ -27,4 +27,4 @@ def test_scanclosurefailed_est_immuable() -> None:
     reason = "x"
     instance = ScanClosureFailed(scan_id=scan_id, source=source, acquisition_id=acquisition_id, reason=reason)
     with pytest.raises(dataclasses.FrozenInstanceError):
-        instance.scan_id = scan_id
+        instance.scan_id = scan_id  # type: ignore[misc]

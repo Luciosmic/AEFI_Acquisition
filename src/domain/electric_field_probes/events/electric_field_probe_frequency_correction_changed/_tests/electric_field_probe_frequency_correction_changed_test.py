@@ -23,4 +23,4 @@ def test_electricfieldprobefrequencycorrectionchanged_est_immuable() -> None:
     in_range = True
     instance = ElectricFieldProbeFrequencyCorrectionChanged(requested_hz=requested_hz, applied_hz=applied_hz, in_range=in_range)
     with pytest.raises(dataclasses.FrozenInstanceError):
-        instance.requested_hz = requested_hz
+        instance.requested_hz = requested_hz  # type: ignore[misc]

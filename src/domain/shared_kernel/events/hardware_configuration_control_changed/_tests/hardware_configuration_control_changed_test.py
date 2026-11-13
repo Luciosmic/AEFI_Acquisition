@@ -20,4 +20,4 @@ def test_hardwareconfigurationcontrolchanged_est_immuable() -> None:
     controller = None
     instance = HardwareConfigurationControlChanged(hardware_id=hardware_id, controller=controller)
     with pytest.raises(dataclasses.FrozenInstanceError):
-        instance.hardware_id = hardware_id
+        instance.hardware_id = hardware_id  # type: ignore[misc]

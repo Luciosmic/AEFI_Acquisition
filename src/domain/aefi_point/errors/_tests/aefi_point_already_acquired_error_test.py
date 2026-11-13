@@ -14,7 +14,7 @@ def test_aefipointalreadyacquirederror_nomme_ses_arguments_dans_son_message() ->
 
 def test_aefipointincompleteerror_nomme_ses_arguments_dans_son_message() -> None:
     with pytest.raises(AefiPointIncompleteError) as info:
-        raise AefiPointIncompleteError('valeur_aefi_point_id', 'valeur_expected', 'valeur_received')
+        raise AefiPointIncompleteError('valeur_aefi_point_id', 'valeur_expected', 'valeur_received')  # type: ignore[arg-type]
     assert info.value.aefi_point_id == 'valeur_aefi_point_id'
     assert info.value.expected == 'valeur_expected'
     assert info.value.received == 'valeur_received'

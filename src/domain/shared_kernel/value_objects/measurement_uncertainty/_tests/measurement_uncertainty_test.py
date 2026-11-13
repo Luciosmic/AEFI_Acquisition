@@ -15,4 +15,4 @@ def test_measurementuncertainty_est_immuable() -> None:
     max_uncertainty_volts = 1.5
     instance = MeasurementUncertainty(max_uncertainty_volts=max_uncertainty_volts)
     with pytest.raises(dataclasses.FrozenInstanceError):
-        instance.max_uncertainty_volts = max_uncertainty_volts
+        instance.max_uncertainty_volts = max_uncertainty_volts  # type: ignore[misc]

@@ -15,7 +15,7 @@ class TestExcitationControlChanged(unittest.TestCase):
     def test_is_frozen(self) -> None:
         event = ExcitationControlChanged(controller="scan")
         with self.assertRaises(Exception):
-            event.controller = None
+            event.controller = None  # type: ignore[misc]
 
 
 if __name__ == "__main__":

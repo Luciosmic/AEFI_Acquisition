@@ -29,4 +29,4 @@ def test_fieldsampleacquired_est_immuable() -> None:
     sample = FieldMeasurement(components=(1.5,), timestamp=datetime(2026, 1, 1, tzinfo=timezone.utc))
     instance = FieldSampleAcquired(probe_serial_number=probe_serial_number, acquisition_id=acquisition_id, sample_index=sample_index, sample=sample)
     with pytest.raises(dataclasses.FrozenInstanceError):
-        instance.probe_serial_number = probe_serial_number
+        instance.probe_serial_number = probe_serial_number  # type: ignore[misc]

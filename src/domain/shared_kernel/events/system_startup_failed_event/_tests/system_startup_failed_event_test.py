@@ -17,4 +17,4 @@ def test_systemstartupfailedevent_est_immuable() -> None:
     reason = "x"
     instance = SystemStartupFailedEvent(reason=reason)
     with pytest.raises(dataclasses.FrozenInstanceError):
-        instance.reason = reason
+        instance.reason = reason  # type: ignore[misc]

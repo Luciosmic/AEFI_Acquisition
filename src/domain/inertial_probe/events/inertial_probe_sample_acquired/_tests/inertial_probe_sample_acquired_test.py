@@ -24,4 +24,4 @@ def test_inertialprobesampleacquired_est_immuable() -> None:
     timestamp_s = 1.5
     instance = InertialProbeSampleAcquired(acquisition_id=acquisition_id, sample_index=sample_index, timestamp_s=timestamp_s)
     with pytest.raises(dataclasses.FrozenInstanceError):
-        instance.acquisition_id = acquisition_id
+        instance.acquisition_id = acquisition_id  # type: ignore[misc]

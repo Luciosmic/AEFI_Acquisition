@@ -16,4 +16,4 @@ def test_scantrajectory_est_immuable() -> None:
     points = [Position2D(x=1.5, y=1.5)]
     instance = ScanTrajectory(points=points)
     with pytest.raises(dataclasses.FrozenInstanceError):
-        instance.points = points
+        instance.points = points  # type: ignore[misc]

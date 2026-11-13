@@ -13,7 +13,7 @@ class TestExcitationDdsLinkChanged(unittest.TestCase):
     def test_is_frozen(self) -> None:
         event = ExcitationDdsLinkChanged(linked=False)
         with self.assertRaises(Exception):
-            event.linked = True
+            event.linked = True  # type: ignore[misc]
 
 
 if __name__ == "__main__":

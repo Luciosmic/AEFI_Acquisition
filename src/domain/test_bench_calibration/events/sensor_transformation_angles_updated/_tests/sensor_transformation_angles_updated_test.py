@@ -23,4 +23,4 @@ def test_sensortransformationanglesupdated_est_immuable() -> None:
     theta_z = 1.5
     instance = SensorTransformationAnglesUpdated(theta_x=theta_x, theta_y=theta_y, theta_z=theta_z)
     with pytest.raises(dataclasses.FrozenInstanceError):
-        instance.theta_x = theta_x
+        instance.theta_x = theta_x  # type: ignore[misc]

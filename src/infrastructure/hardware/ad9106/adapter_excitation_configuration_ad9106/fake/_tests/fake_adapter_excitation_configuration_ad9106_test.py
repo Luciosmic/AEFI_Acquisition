@@ -21,8 +21,8 @@ def test_le_gain_sans_excitation_appliquee_ne_change_rien_puis_remplace_les_nive
     assert port.last_parameters is None
     port.apply_excitation(ExcitationParameters.off())
     port.set_gain(10.0, 20.0)
-    assert port.last_parameters.level_s1_s2 == ExcitationLevel(10.0)
-    assert port.last_parameters.level_s3_s4 == ExcitationLevel(20.0)
+    assert port.last_parameters.level_s1_s2 == ExcitationLevel(10.0)  # type: ignore[attr-defined]
+    assert port.last_parameters.level_s3_s4 == ExcitationLevel(20.0)  # type: ignore[attr-defined]
 
 
 def test_le_lien_des_deux_generateurs_se_retient() -> None:

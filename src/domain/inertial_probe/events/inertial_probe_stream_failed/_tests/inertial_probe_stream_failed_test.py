@@ -21,4 +21,4 @@ def test_inertialprobestreamfailed_est_immuable() -> None:
     reason = "x"
     instance = InertialProbeStreamFailed(acquisition_id=acquisition_id, reason=reason)
     with pytest.raises(dataclasses.FrozenInstanceError):
-        instance.acquisition_id = acquisition_id
+        instance.acquisition_id = acquisition_id  # type: ignore[misc]
