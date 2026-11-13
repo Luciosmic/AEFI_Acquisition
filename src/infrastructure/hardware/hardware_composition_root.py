@@ -81,7 +81,7 @@ class HardwareCompositionRoot:
             logger.info("Acquisition -> real (MCUCompositionRoot)")
             self.mcu_root = MCUCompositionRoot(event_bus=event_bus)
         else:
-            from infrastructure.hardware.micro_controller.fake.fake_mcu_serial_communicator import (
+            from infrastructure.hardware.micro_controller.fake.fake_micro_controller import (
                 FakeMCUSerialCommunicator,
             )
             logger.info("Acquisition -> mock (MCUCompositionRoot, simulated communicator)")

@@ -12,7 +12,7 @@ from unittest.mock import MagicMock
 root_dir = Path(__file__).resolve().parents[4]
 sys.path.insert(0, str(root_dir / "src"))
 
-from infrastructure.hardware.micro_controller.adapter_lifecycle_mcu import MCULifecycleAdapter
+from infrastructure.hardware.micro_controller.adapter_lifecycle_mcu.adapter_lifecycle_mcu import MCULifecycleAdapter
 from infrastructure.hardware.ads131a04.adapter_i_acquistion_port_ads131a04.adapter_i_acquistion_port_ads131a04 import ADS131A04Adapter
 from infrastructure.hardware.ads131a04.ads131_controller import ADS131Controller
 from infrastructure.hardware.ads131a04.ads131a04_advanced_configurator.ads131a04_advanced_configurator import (

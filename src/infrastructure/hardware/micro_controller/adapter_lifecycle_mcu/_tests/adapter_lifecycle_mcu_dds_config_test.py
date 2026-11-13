@@ -15,10 +15,10 @@ from pathlib import Path
 root_dir = Path(__file__).resolve().parents[4]
 sys.path.insert(0, str(root_dir / "src"))
 
-from infrastructure.hardware.micro_controller.fake.fake_mcu_serial_communicator import (
+from infrastructure.hardware.micro_controller.fake.fake_micro_controller import (
     FakeMCUSerialCommunicator,
 )
-from infrastructure.hardware.micro_controller.adapter_lifecycle_mcu import MCULifecycleAdapter
+from infrastructure.hardware.micro_controller.adapter_lifecycle_mcu.adapter_lifecycle_mcu import MCULifecycleAdapter
 from infrastructure.hardware.ad9106.ad9106_controller import AD9106Controller
 from infrastructure.hardware.ad9106.ad9106_advanced_configurator.ad9106_advanced_configurator import AD9106AdvancedConfigurator
 from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus

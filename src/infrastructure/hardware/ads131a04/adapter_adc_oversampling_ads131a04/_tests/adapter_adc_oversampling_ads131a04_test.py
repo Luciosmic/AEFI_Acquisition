@@ -4,7 +4,7 @@ from infrastructure.hardware.ads131a04.adapter_adc_oversampling_ads131a04.adapte
     AdapterAdcOversamplingAds131a04,
 )
 from infrastructure.hardware.ads131a04.ads131_controller import ADS131Controller
-from infrastructure.hardware.micro_controller.fake.fake_mcu_serial_communicator import FakeMCUSerialCommunicator
+from infrastructure.hardware.micro_controller.fake.fake_micro_controller import FakeMCUSerialCommunicator
 
 
 class TestAdapterAdcOversamplingAds131a04(unittest.TestCase):

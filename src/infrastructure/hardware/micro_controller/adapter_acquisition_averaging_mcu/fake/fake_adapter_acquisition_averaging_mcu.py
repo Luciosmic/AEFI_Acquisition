@@ -1,7 +1,7 @@
 """
 Fake Acquisition Averaging Port
 
-See fake_acquisition_averaging_port_intention.md.
+See fake_adapter_acquisition_averaging_mcu_intention.md.
 """
 
 from typing import List, Tuple

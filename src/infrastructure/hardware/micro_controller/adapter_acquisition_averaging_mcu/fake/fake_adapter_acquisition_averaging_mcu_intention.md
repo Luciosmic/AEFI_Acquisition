@@ -1,4 +1,4 @@
-# fake_acquisition_averaging_port — Intention
+# fake_adapter_acquisition_averaging_mcu — Intention
 
 ## Rationale
 

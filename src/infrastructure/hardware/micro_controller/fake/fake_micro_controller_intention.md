@@ -1,4 +1,4 @@
-# fake_mcu_serial_communicator — Intention
+# fake_micro_controller — Intention
 
 ## Rationale
 

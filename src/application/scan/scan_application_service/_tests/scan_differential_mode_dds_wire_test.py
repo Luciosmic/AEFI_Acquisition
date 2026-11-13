@@ -33,7 +33,7 @@ from infrastructure.mocks.adapter_mock_i_motion_port import MockMotionPort
 from infrastructure.mocks.adapter_mock_i_aefi_acquisition_executor import MockAefiAcquisitionExecutor
 from infrastructure.mocks.adapter_mock_i_acquisition_port import RandomNoiseAcquisitionPort
 from infrastructure.hardware.micro_controller.mcu_composition_root import MCUCompositionRoot
-from infrastructure.hardware.micro_controller.fake.fake_mcu_serial_communicator import FakeMCUSerialCommunicator
+from infrastructure.hardware.micro_controller.fake.fake_micro_controller import FakeMCUSerialCommunicator
 from infrastructure.hardware.ad9106.adapter_excitation_configuration_ad9106.adapter_excitation_configuration_ad9106 import (
     AdapterExcitationConfigurationAD9106,
 )

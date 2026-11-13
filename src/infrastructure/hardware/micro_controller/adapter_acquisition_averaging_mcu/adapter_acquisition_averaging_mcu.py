@@ -11,7 +11,7 @@ from application.test_bench_calibration.acquisition_throughput_characterization_
     IAcquisitionAveragingPort,
 )
 from domain.shared_kernel.operation_result import OperationResult
-from infrastructure.hardware.micro_controller.mcu_advanced_configurator import MCUAdvancedConfigurator
+from infrastructure.hardware.micro_controller.mcu_advanced_configurator.mcu_advanced_configurator import MCUAdvancedConfigurator
 
 logger = logging.getLogger(__name__)
 

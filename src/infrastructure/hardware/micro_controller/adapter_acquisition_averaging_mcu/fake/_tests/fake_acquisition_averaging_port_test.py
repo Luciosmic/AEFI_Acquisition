@@ -1,6 +1,6 @@
 import unittest
 
-from infrastructure.hardware.micro_controller.fake.fake_acquisition_averaging_port import FakeAcquisitionAveragingPort
+from infrastructure.hardware.micro_controller.adapter_acquisition_averaging_mcu.fake.fake_adapter_acquisition_averaging_mcu import FakeAcquisitionAveragingPort
 
 
 class TestFakeAcquisitionAveragingPort(unittest.TestCase):
