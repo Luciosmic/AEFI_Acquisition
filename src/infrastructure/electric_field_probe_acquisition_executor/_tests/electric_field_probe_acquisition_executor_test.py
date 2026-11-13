@@ -6,7 +6,7 @@ from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEvent
 from infrastructure.electric_field_probe_acquisition_executor.electric_field_probe_acquisition_executor import (
     ElectricFieldProbeAcquisitionExecutor,
 )
-from infrastructure.hardware.narda_ep600.fake.fake_electric_field_probe_adapter import (
+from infrastructure.hardware.narda_ep600.fake.fake_narda_ep600 import (
     FakeElectricFieldProbeAdapter,
 )
 from application.electric_field_probes.electric_field_probe_service.dtos.electric_field_probe_dtos import (

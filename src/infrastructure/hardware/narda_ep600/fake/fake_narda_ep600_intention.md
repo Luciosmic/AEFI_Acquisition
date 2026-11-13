@@ -1,4 +1,4 @@
-# fake_electric_field_probe_adapter — Intention
+# fake_narda_ep600 — Intention
 
 ## Rationale
 

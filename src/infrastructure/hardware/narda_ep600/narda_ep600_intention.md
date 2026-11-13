@@ -1,4 +1,4 @@
-# adapter_electric_field_probe_port — Intention
+# narda_ep600 — Intention
 
 ## Rationale
 

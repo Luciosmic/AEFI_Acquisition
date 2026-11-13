@@ -29,7 +29,7 @@ from infrastructure.hardware.lsm9ds1.adapter_inertial_probe_stream_port import L
 from infrastructure.hardware.lsm9ds1.lsm9ds1_config_loader import Lsm9ds1Config
 from infrastructure.hardware.arcus_performax_4ex.composition_root_arcus import ArcusCompositionRoot
 from infrastructure.hardware.micro_controller.mcu_composition_root import MCUCompositionRoot
-from infrastructure.hardware.narda_ep600.adapter_electric_field_probe_port import NardaEP601ProbeAdapter
+from infrastructure.hardware.narda_ep600.narda_ep600 import NardaEP601ProbeAdapter
 
 logger = logging.getLogger(__name__)
 
@@ -146,7 +146,7 @@ class HardwareCompositionRoot:
             logger.info(f"Electric field probe -> real (Narda EP-601 on {narda_com_port})")
             self.probe_port: IElectricFieldProbePort = NardaEP601ProbeAdapter(port=narda_com_port)
         else:
-            from infrastructure.hardware.narda_ep600.fake.fake_electric_field_probe_adapter import FakeElectricFieldProbeAdapter
+            from infrastructure.hardware.narda_ep600.fake.fake_narda_ep600 import FakeElectricFieldProbeAdapter
             logger.info("Electric field probe -> mock")
             self.probe_port: IElectricFieldProbePort = FakeElectricFieldProbeAdapter()
 

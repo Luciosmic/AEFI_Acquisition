@@ -14,7 +14,7 @@ from application.electric_field_probes.electric_field_probe_service.dtos.electri
     ElectricFieldProbeAcquisitionConfig,
 )
 
-from infrastructure.hardware.narda_ep600.fake.fake_electric_field_probe_adapter import (
+from infrastructure.hardware.narda_ep600.fake.fake_narda_ep600 import (
     FakeElectricFieldProbeAdapter,
 )
 
