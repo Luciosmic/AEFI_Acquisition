@@ -1,3 +1,4 @@
 13:03 | depart | quoi=separer test_bench en calibration et configuration, typer le noyau partage | session=16aa76a0-8c3f-49ba-a745-816691cd9858
 13:03 | jalon | gate=les demons d'ACQ etaient arretes ; relances par scripts/demarrer-les-demons-d-un-vault.sh de sh-agent-os ; outils mcp__au-aefi-acquisition__* charges apres coup
 13:03 | jalon | plan=outiller-le-developpement-solidai ; budget=5 h ou 250 tours ; reference : verify 1031, mypy 2943, pytest 1709 verts 3 sautes
+13:20 | jalon | etape=1 faite commits=c1947ff,3038aea ; i_acquisition_port et aefi_acquisition_service dans application/shared/ ; application/services supprime (reste : 2 artefacts *_results ignores par git) ; pytest shared+scan 189 verts 2 sautes ; collecte src sans nouvelle erreur
