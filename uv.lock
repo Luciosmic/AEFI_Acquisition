@@ -60,7 +60,7 @@ requires-dist = [
     { name = "moderngl", specifier = ">=5.8.0" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=0.950" },
     { name = "numba", specifier = ">=0.57.0" },
-    { name = "numpy", specifier = ">=1.26.0" },
+    { name = "numpy", specifier = "~=2.2" },
     { name = "pandas", specifier = ">=1.5.0" },
     { name = "pylablib", specifier = ">=1.4.2" },
     { name = "pyside6", specifier = ">=6.0.0" },
@@ -69,7 +69,7 @@ requires-dist = [
     { name = "pytest-qt", marker = "extra == 'dev'", specifier = ">=4.0.0" },
     { name = "pyvista", specifier = ">=0.42.3" },
     { name = "pyvistaqt", specifier = ">=0.13.1" },
-    { name = "scipy", specifier = ">=1.11.0" },
+    { name = "scipy", specifier = "~=1.14" },
 ]
 provides-extras = ["dev"]
 
