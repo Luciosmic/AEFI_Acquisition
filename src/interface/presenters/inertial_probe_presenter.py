@@ -17,7 +17,7 @@ from typing import Optional
 
 from PySide6.QtCore import QObject, QTimer, Signal, Slot
 
-from application.services.inertial_probe_service.inertial_probe_service import InertialProbeService
+from application.detection_devices.inertial_probe_service.inertial_probe_service import InertialProbeService
 from domain.detection_devices.inertial_probe.events.inertial_probe_connection_changed.inertial_probe_connection_changed import (
     InertialProbeConnectionChanged,
 )

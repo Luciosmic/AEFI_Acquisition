@@ -24,7 +24,7 @@ Design:
 from abc import ABC, abstractmethod
 from typing import Optional, Sequence
 
-from application.services.inertial_probe_service.dtos.inertial_probe_dtos import (
+from application.detection_devices.inertial_probe_service.dtos.inertial_probe_dtos import (
     InertialProbeStreamSample,
 )
 

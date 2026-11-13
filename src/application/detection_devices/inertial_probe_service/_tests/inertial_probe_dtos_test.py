@@ -2,7 +2,7 @@ import dataclasses
 
 import pytest
 
-from application.services.inertial_probe_service.dtos.inertial_probe_dtos import (
+from application.detection_devices.inertial_probe_service.dtos.inertial_probe_dtos import (
     ALL_CHANNELS,
     InertialProbeAcquisitionConfig,
     InertialProbeStreamSample,

@@ -2,7 +2,7 @@ import dataclasses
 import time
 import unittest
 
-from application.services.lidar_distance.ports.lidar_stream_error import (
+from application.detection_devices.lidar_distance.ports.lidar_stream_error import (
     LidarStreamBusyError,
     LidarUnavailableError,
 )

@@ -18,10 +18,10 @@ Design:
 
 from abc import ABC, abstractmethod
 
-from application.services.electric_field_probe_service.dtos.electric_field_probe_dtos import (
+from application.detection_devices.electric_field_probe_service.dtos.electric_field_probe_dtos import (
     ElectricFieldProbeAcquisitionConfig,
 )
-from application.services.electric_field_probe_service.ports.i_electric_field_probe_port import (
+from application.detection_devices.electric_field_probe_service.ports.i_electric_field_probe_port import (
     IElectricFieldProbePort,
 )
 

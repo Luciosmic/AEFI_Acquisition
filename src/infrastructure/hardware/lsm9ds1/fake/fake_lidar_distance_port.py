@@ -7,13 +7,13 @@ See fake_lidar_distance_port_intention.md.
 import random
 from typing import Callable, Optional
 
-from application.services.lidar_distance.dtos.lidar_distance_dtos import (
+from application.detection_devices.lidar_distance.dtos.lidar_distance_dtos import (
     LidarDistanceReading,
 )
-from application.services.lidar_distance.ports.i_lidar_distance_port import (
+from application.detection_devices.lidar_distance.ports.i_lidar_distance_port import (
     ILidarDistancePort,
 )
-from application.services.lidar_distance.ports.lidar_stream_error import (
+from application.detection_devices.lidar_distance.ports.lidar_stream_error import (
     LidarStreamBusyError,
     LidarUnavailableError,
 )

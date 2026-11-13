@@ -58,7 +58,7 @@ from .column_stabilization.column_stabilization import ColumnStabilization
 from .ports.i_motion_synchronizer import IMotionSynchronizer
 from .ports.i_scan_output_port import IScanOutputPort
 from .ports.i_unit_of_work import IUnitOfWork
-from application.services.electric_field_probe_service.ports.i_electric_field_probe_port import IElectricFieldProbePort
+from application.detection_devices.electric_field_probe_service.ports.i_electric_field_probe_port import IElectricFieldProbePort
 # ponytail: direct Application-Service-to-Application-Service dependency,
 # same precedent as ScanExportService's excitation_service coupling (see
 # that file's __init__ comment) — no domain event exists yet for
@@ -71,8 +71,8 @@ from application.services.excitation_configuration_service.excitation_configurat
 from application.services.aefi_acquisition_service.i_api_aefi_acquisition_service import IApiAefiAcquisitionService
 from application.services.aefi_acquisition_service.dtos.aefi_acquisition_dtos import AefiAcquisitionConfig
 from application.shared.exclusive_control.exclusive_control import ExclusiveControl, take_all
-from application.services.electric_field_probe_service.i_api_electric_field_probe_service import IApiElectricFieldProbeService
-from application.services.electric_field_probe_service.dtos.electric_field_probe_dtos import ElectricFieldProbeAcquisitionConfig
+from application.detection_devices.electric_field_probe_service.i_api_electric_field_probe_service import IApiElectricFieldProbeService
+from application.detection_devices.electric_field_probe_service.dtos.electric_field_probe_dtos import ElectricFieldProbeAcquisitionConfig
 from domain.shared_kernel.events.aefi_voltage_sample_acquired.aefi_voltage_sample_acquired import AefiVoltageSampleAcquired
 from domain.shared_kernel.motion.events.position_updated.position_updated import PositionUpdated
 

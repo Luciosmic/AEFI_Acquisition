@@ -25,17 +25,17 @@ from __future__ import annotations
 import logging
 from typing import Sequence
 
-from application.services.inertial_probe_service.dtos.inertial_probe_dtos import (
+from application.detection_devices.inertial_probe_service.dtos.inertial_probe_dtos import (
     ALL_CHANNELS,
     InertialProbeAcquisitionConfig,
 )
-from application.services.inertial_probe_service.i_api_inertial_probe_service import (
+from application.detection_devices.inertial_probe_service.i_api_inertial_probe_service import (
     IApiInertialProbeService,
 )
-from application.services.inertial_probe_service.ports.i_inertial_probe_acquisition_executor import (
+from application.detection_devices.inertial_probe_service.ports.i_inertial_probe_acquisition_executor import (
     IInertialProbeAcquisitionExecutor,
 )
-from application.services.inertial_probe_service.ports.i_inertial_probe_stream_port import (
+from application.detection_devices.inertial_probe_service.ports.i_inertial_probe_stream_port import (
     IInertialProbeStreamPort,
 )
 from domain.detection_devices.inertial_probe.events.inertial_probe_connection_changed.inertial_probe_connection_changed import (

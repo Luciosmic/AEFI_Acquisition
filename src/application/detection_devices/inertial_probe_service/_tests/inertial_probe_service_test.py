@@ -2,7 +2,7 @@ from typing import List
 
 import pytest
 
-from application.services.inertial_probe_service.inertial_probe_service import (
+from application.detection_devices.inertial_probe_service.inertial_probe_service import (
     CONNECTION_CHANGED_TOPIC,
     InertialProbeService,
 )

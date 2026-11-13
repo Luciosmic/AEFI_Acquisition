@@ -17,16 +17,16 @@ from __future__ import annotations
 
 import logging
 
-from application.services.electric_field_probe_service.i_api_electric_field_probe_service import (
+from application.detection_devices.electric_field_probe_service.i_api_electric_field_probe_service import (
     IApiElectricFieldProbeService,
 )
-from application.services.electric_field_probe_service.ports.i_electric_field_probe_port import (
+from application.detection_devices.electric_field_probe_service.ports.i_electric_field_probe_port import (
     IElectricFieldProbePort,
 )
-from application.services.electric_field_probe_service.ports.i_electric_field_probe_acquisition_executor import (
+from application.detection_devices.electric_field_probe_service.ports.i_electric_field_probe_acquisition_executor import (
     IElectricFieldProbeAcquisitionExecutor,
 )
-from application.services.electric_field_probe_service.dtos.electric_field_probe_dtos import (
+from application.detection_devices.electric_field_probe_service.dtos.electric_field_probe_dtos import (
     ElectricFieldProbeAcquisitionConfig,
     FrequencyCorrectionResult,
 )

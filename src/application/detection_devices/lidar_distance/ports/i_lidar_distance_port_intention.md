@@ -23,7 +23,7 @@ unique du flux.
 
 ## Design
 
-- Port sortant placé dans un dossier neutre `application/services/lidar_distance/ports/`
+- Port sortant placé dans un dossier neutre `application/detection_devices/lidar_distance/ports/`
   (même chemin que le pilote autonome LIDAR-VL53L0C-ESP32) : son premier consommateur,
   la calibration par barre, a été abandonné le 2026-10-30 ; le port reste pour tout
   lecteur du LIDAR, quel que soit le capteur derrière.

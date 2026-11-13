@@ -14,7 +14,7 @@ from uuid import uuid4
 from application.services.aefi_acquisition_service.i_api_aefi_acquisition_service import (
     IApiAefiAcquisitionService,
 )
-from application.services.aefi_signal_processing_service.i_api_aefi_signal_processing_service import (
+from application.detection_devices.aefi_signal_processing_service.i_api_aefi_signal_processing_service import (
     IApiAefiSignalProcessingService,
 )
 from domain.shared_kernel.operation_result import OperationResult

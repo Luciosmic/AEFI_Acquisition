@@ -25,13 +25,13 @@ import time
 from typing import Optional
 from uuid import UUID, uuid4
 
-from application.services.inertial_probe_service.dtos.inertial_probe_dtos import (
+from application.detection_devices.inertial_probe_service.dtos.inertial_probe_dtos import (
     InertialProbeAcquisitionConfig,
 )
-from application.services.inertial_probe_service.ports.i_inertial_probe_acquisition_executor import (
+from application.detection_devices.inertial_probe_service.ports.i_inertial_probe_acquisition_executor import (
     IInertialProbeAcquisitionExecutor,
 )
-from application.services.inertial_probe_service.ports.i_inertial_probe_stream_port import (
+from application.detection_devices.inertial_probe_service.ports.i_inertial_probe_stream_port import (
     IInertialProbeStreamPort,
 )
 from domain.detection_devices.inertial_probe.events.inertial_probe_sample_acquired.inertial_probe_sample_acquired import (

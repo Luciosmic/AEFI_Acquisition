@@ -5,7 +5,7 @@ from uuid import uuid4
 from tool.diagram_friendly_test import DiagramFriendlyTest
 from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 
-from application.services.aefi_signal_processing_service.aefi_signal_processing_service import (
+from application.detection_devices.aefi_signal_processing_service.aefi_signal_processing_service import (
     AefiSignalProcessingService,
 )
 from application.services.transformation_service.transformation_service import TransformationService

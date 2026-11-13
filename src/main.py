@@ -118,8 +118,8 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
     from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
     from application.services.motion_control_service.motion_control_service import MotionControlService
     from application.services.motion_control_service.motion_conversion_handler import MotionConversionHandler
-    from application.services.electric_field_probe_service.electric_field_probe_service import ElectricFieldProbeService
-    from application.services.inertial_probe_service.inertial_probe_service import InertialProbeService
+    from application.detection_devices.electric_field_probe_service.electric_field_probe_service import ElectricFieldProbeService
+    from application.detection_devices.inertial_probe_service.inertial_probe_service import InertialProbeService
     from application.services.scan_export_service.scan_export_service import ScanExportService
     from application.services.scan_application_service.scan_closure_handler.scan_closure_handler import ScanClosureHandler
     from application.services.scan_application_service.column_stabilization.column_stabilization import ColumnStabilization
@@ -135,7 +135,7 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
     )
     from application.services.transformation_service.transformation_service import TransformationService
     from application.services.transformation_service.dtos.transformation_dtos import SetRotationAnglesDTO
-    from application.services.aefi_signal_processing_service.aefi_signal_processing_service import (
+    from application.detection_devices.aefi_signal_processing_service.aefi_signal_processing_service import (
         AefiSignalProcessingService,
     )
     from application.services.hardware_configuration_service.hardware_configuration_service import HardwareConfigurationService

@@ -13,7 +13,7 @@ from application.services.aefi_acquisition_service.aefi_acquisition_service impo
     AefiAcquisitionService,
 )
 from application.services.aefi_acquisition_service.ports.i_aefi_acquisition_executor import AefiAcquisitionConfig
-from application.services.aefi_signal_processing_service.aefi_signal_processing_service import (
+from application.detection_devices.aefi_signal_processing_service.aefi_signal_processing_service import (
     AefiSignalProcessingService,
 )
 from application.services.scan_export_service.scan_export_service import ScanExportService

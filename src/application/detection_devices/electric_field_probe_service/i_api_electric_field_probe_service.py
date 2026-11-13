@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from application.services.electric_field_probe_service.dtos.electric_field_probe_dtos import (
+from application.detection_devices.electric_field_probe_service.dtos.electric_field_probe_dtos import (
     ElectricFieldProbeAcquisitionConfig,
 )
 

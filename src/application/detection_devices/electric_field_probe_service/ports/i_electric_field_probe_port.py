@@ -22,7 +22,7 @@ from domain.detection_devices.electric_field_probes.electric_field_probe import 
 from domain.detection_devices.electric_field_probes.value_objects.field_measurement.field_measurement import (
     FieldMeasurement,
 )
-from application.services.electric_field_probe_service.dtos.electric_field_probe_dtos import (
+from application.detection_devices.electric_field_probe_service.dtos.electric_field_probe_dtos import (
     FrequencyCorrectionResult,
 )
 

@@ -10,10 +10,10 @@ from typing import Any, Dict, Optional
 
 from PySide6.QtCore import QObject, Signal, Slot
 
-from application.services.electric_field_probe_service.electric_field_probe_service import (
+from application.detection_devices.electric_field_probe_service.electric_field_probe_service import (
     ElectricFieldProbeService,
 )
-from application.services.electric_field_probe_service.dtos.electric_field_probe_dtos import (
+from application.detection_devices.electric_field_probe_service.dtos.electric_field_probe_dtos import (
     ElectricFieldProbeAcquisitionConfig,
 )
 from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus

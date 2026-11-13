@@ -9,10 +9,10 @@ import math
 import time
 from typing import Optional, Sequence, Tuple
 
-from application.services.inertial_probe_service.dtos.inertial_probe_dtos import (
+from application.detection_devices.inertial_probe_service.dtos.inertial_probe_dtos import (
     InertialProbeStreamSample,
 )
-from application.services.inertial_probe_service.ports.i_inertial_probe_stream_port import (
+from application.detection_devices.inertial_probe_service.ports.i_inertial_probe_stream_port import (
     IInertialProbeStreamPort,
 )
 from domain.detection_devices.lidar.lidar_distance.lidar_distance import LidarDistance

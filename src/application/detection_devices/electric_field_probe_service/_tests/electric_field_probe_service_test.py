@@ -7,10 +7,10 @@ from infrastructure.electric_field_probe_acquisition_executor.electric_field_pro
     ElectricFieldProbeAcquisitionExecutor,
 )
 
-from application.services.electric_field_probe_service.electric_field_probe_service import (
+from application.detection_devices.electric_field_probe_service.electric_field_probe_service import (
     ElectricFieldProbeService,
 )
-from application.services.electric_field_probe_service.dtos.electric_field_probe_dtos import (
+from application.detection_devices.electric_field_probe_service.dtos.electric_field_probe_dtos import (
     ElectricFieldProbeAcquisitionConfig,
 )
 

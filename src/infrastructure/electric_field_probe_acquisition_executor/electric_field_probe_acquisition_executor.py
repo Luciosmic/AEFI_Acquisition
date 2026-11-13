@@ -22,13 +22,13 @@ import time
 from typing import Optional
 from uuid import UUID, uuid4
 
-from application.services.electric_field_probe_service.ports.i_electric_field_probe_acquisition_executor import (
+from application.detection_devices.electric_field_probe_service.ports.i_electric_field_probe_acquisition_executor import (
     IElectricFieldProbeAcquisitionExecutor,
 )
-from application.services.electric_field_probe_service.ports.i_electric_field_probe_port import (
+from application.detection_devices.electric_field_probe_service.ports.i_electric_field_probe_port import (
     IElectricFieldProbePort,
 )
-from application.services.electric_field_probe_service.dtos.electric_field_probe_dtos import (
+from application.detection_devices.electric_field_probe_service.dtos.electric_field_probe_dtos import (
     ElectricFieldProbeAcquisitionConfig,
 )
 from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus

@@ -18,10 +18,10 @@ Design:
 
 from abc import ABC, abstractmethod
 
-from application.services.inertial_probe_service.dtos.inertial_probe_dtos import (
+from application.detection_devices.inertial_probe_service.dtos.inertial_probe_dtos import (
     InertialProbeAcquisitionConfig,
 )
-from application.services.inertial_probe_service.ports.i_inertial_probe_stream_port import (
+from application.detection_devices.inertial_probe_service.ports.i_inertial_probe_stream_port import (
     IInertialProbeStreamPort,
 )
 

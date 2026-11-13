@@ -6,7 +6,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 import pytest
 from PySide6.QtWidgets import QApplication
 
-from application.services.inertial_probe_service.inertial_probe_service import InertialProbeService
+from application.detection_devices.inertial_probe_service.inertial_probe_service import InertialProbeService
 from domain.detection_devices.inertial_probe.events.inertial_probe_connection_changed.inertial_probe_connection_changed import (
     InertialProbeConnectionChanged,
 )
