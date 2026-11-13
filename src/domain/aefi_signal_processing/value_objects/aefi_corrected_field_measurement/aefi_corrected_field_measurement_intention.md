@@ -1,3 +1,10 @@
+---
+type: value-object::solidai-ddd
+tldr: "Stocker les 6 composantes de champ (en volts, mêmes unités que `AefiVoltageMeasurement`, repère sources) : `field_x_in_phase`, `field_x_quadrature`, `field_y_in_phase`,…"
+code: ["[[src/domain/aefi_signal_processing/value_objects/aefi_corrected_field_measurement/aefi_corrected_field_measurement.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/aefi_signal_processing/aefi_corrected_sample_intention]]"
+---
 # aefi_corrected_field_measurement — Intention
 
 ## Rationale

@@ -1,3 +1,10 @@
+---
+type: evenement-de-domaine::solidai-ddd
+tldr: "Fait passé : un échantillon brut a été corrigé (bruit/phase/primaire selon les étapes activées), avec succès — l'invariant de calibration complète est déjà validé au…"
+code: ["[[src/domain/aefi_signal_processing/events/aefi_sample_corrected/aefi_sample_corrected.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/aefi_signal_processing/aefi_corrected_sample_intention]]"
+---
 # aefi_sample_corrected — Intention
 
 ## Rationale

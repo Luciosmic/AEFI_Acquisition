@@ -1,3 +1,10 @@
+---
+type: evenement-de-domaine::solidai-ddd
+tldr: "Fait passé : la calibration de correction de signal a été mise à jour (calibration d'une étape, bascule d'activation, ou reset)."
+code: ["[[src/domain/aefi_signal_processing/events/aefi_signal_correction_calibration_updated/aefi_signal_correction_calibration_updated.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/aefi_signal_processing/aefi_corrected_sample_intention]]"
+---
 # aefi_signal_correction_calibration_updated — Intention
 
 ## Rationale

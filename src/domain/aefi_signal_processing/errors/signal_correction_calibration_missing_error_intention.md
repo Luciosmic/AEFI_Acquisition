@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Nommer la promesse refusée : « une étape de correction (bruit, phase ou champ primaire) activée exige une calibration pour les 3 axes avant d'être appliquée »."
+code: ["[[src/domain/aefi_signal_processing/errors/signal_correction_calibration_missing_error.py]]"]
+cause_de_changement: regle-metier
+---
 # signal_correction_calibration_missing_error — Intention
 
 ## Rationale

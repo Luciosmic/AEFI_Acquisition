@@ -6,6 +6,8 @@ cause_de_changement: regle-metier
 utilise_par:
   - "[[src/domain/aefi_line/aefi_line_intention]]"
   - "[[src/domain/aefi_point/aefi_point_intention]]"
+  - "[[src/domain/aefi_signal_processing/aefi_corrected_sample_intention]]"
+  - "[[src/domain/electric_field_probes/electric_field_probe_intention]]"
   - "[[src/domain/frequency_sweep/frequency_sweep_intention]]"
   - "[[src/domain/measured_object_registry/measured_object_registry_intention]]"
   - "[[src/domain/narda_point/narda_point_intention]]"

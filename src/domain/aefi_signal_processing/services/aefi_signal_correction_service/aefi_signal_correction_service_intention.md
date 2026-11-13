@@ -1,3 +1,9 @@
+---
+type: service-de-domaine::solidai-ddd
+tldr: "`apply(raw, calibration) -> AefiVoltageMeasurement` : applique dans l'ordre bruit → phase → champ primaire, uniquement pour les étapes activées dans `calibration`, et…"
+code: ["[[src/domain/aefi_signal_processing/services/aefi_signal_correction_service/aefi_signal_correction_service.py]]"]
+cause_de_changement: regle-metier
+---
 # aefi_signal_correction_service — Intention
 
 ## Rationale

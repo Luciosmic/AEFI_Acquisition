@@ -1,3 +1,9 @@
+---
+type: service-de-domaine::solidai-ddd
+tldr: "Calculate mean and standard deviation across a list of `FieldMeasurement` objects"
+code: ["[[src/domain/electric_field_probes/services/field_measurement_statistics_service/field_measurement_statistics_service.py]]"]
+cause_de_changement: regle-metier
+---
 # field_measurement_statistics_service — Intention
 
 ## Rationale

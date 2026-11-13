@@ -1,3 +1,9 @@
+---
+type: racine-d-agregat::solidai-ddd
+tldr: "Porter l'identité de la sonde utilisée (`brand`, `model`, `serial_number`)."
+code: ["[[src/domain/electric_field_probes/electric_field_probe.py]]"]
+cause_de_changement: regle-metier
+---
 # electric_field_probe — Intention
 
 ## Rationale

@@ -1,3 +1,10 @@
+---
+type: value-object::solidai-ddd
+tldr: "Stocker les composantes mesurées (`components`, en V/m) et l'horodatage."
+code: ["[[src/domain/electric_field_probes/value_objects/field_measurement/field_measurement.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/electric_field_probes/electric_field_probe_intention]]"
+---
 # field_measurement — Intention
 
 ## Rationale

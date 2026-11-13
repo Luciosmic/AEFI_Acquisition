@@ -1,3 +1,10 @@
+---
+type: evenement-de-domaine::solidai-ddd
+tldr: "Porter l'identifiant de la sonde source, l'identifiant d'acquisition, l'index de l'échantillon et la mesure (`FieldMeasurement`)."
+code: ["[[src/domain/electric_field_probes/events/field_sample_acquired/field_sample_acquired.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/electric_field_probes/electric_field_probe_intention]]"
+---
 # field_sample_acquired — Intention
 
 ## Rationale

@@ -1,3 +1,9 @@
+---
+type: racine-d-agregat::solidai-ddd
+tldr: "Construire, via `correct(raw, calibration, acquisition_id, sample_index)`, un échantillon corrigé à partir d'une mesure brute et d'un instantané de calibration."
+code: ["[[src/domain/aefi_signal_processing/aefi_corrected_sample.py]]"]
+cause_de_changement: regle-metier
+---
 # aefi_corrected_sample — Intention
 
 ## Rationale

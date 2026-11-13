@@ -1,3 +1,10 @@
+---
+type: evenement-de-domaine::solidai-ddd
+tldr: "Signale qu'une lecture continue de la sonde s'est arrêtée, normalement ou après un échec."
+code: ["[[src/domain/electric_field_probes/events/electric_field_probe_reading_stopped/electric_field_probe_reading_stopped.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/electric_field_probes/electric_field_probe_intention]]"
+---
 # electric_field_probe_reading_stopped — Intention
 
 ## Rationale

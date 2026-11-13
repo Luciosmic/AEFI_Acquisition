@@ -1,3 +1,10 @@
+---
+type: evenement-de-domaine::solidai-ddd
+tldr: "Signaler un changement d'état de connexion de la sonde : `connected=True` avec l'identité (`probe`), ou `connected=False` avec un message d'erreur optionnel (time-out,…"
+code: ["[[src/domain/electric_field_probes/events/electric_field_probe_connection_changed/electric_field_probe_connection_changed.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/electric_field_probes/electric_field_probe_intention]]"
+---
 # electric_field_probe_connection_changed — Intention
 
 ## Rationale

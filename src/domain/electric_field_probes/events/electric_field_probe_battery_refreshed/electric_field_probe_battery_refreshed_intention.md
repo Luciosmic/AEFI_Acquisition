@@ -1,3 +1,10 @@
+---
+type: evenement-de-domaine::solidai-ddd
+tldr: "Signaler qu'une lecture batterie à la demande a réussi et que l'identité `probe` (avec `battery_voltage_v`/`battery_percentage`/ `battery_remaining_hours` à jour) doit…"
+code: ["[[src/domain/electric_field_probes/events/electric_field_probe_battery_refreshed/electric_field_probe_battery_refreshed.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/electric_field_probes/electric_field_probe_intention]]"
+---
 # electric_field_probe_battery_refreshed — Intention
 
 ## Rationale

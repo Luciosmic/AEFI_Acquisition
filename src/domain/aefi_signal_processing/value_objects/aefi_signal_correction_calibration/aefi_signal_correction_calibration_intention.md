@@ -1,3 +1,10 @@
+---
+type: value-object::solidai-ddd
+tldr: "Porter l'état de calibration des trois étapes de correction (bruit, phase, champ primaire) : offset par axe (`x`/`y`/`z`), activation par étape."
+code: ["[[src/domain/aefi_signal_processing/value_objects/aefi_signal_correction_calibration/aefi_signal_correction_calibration.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/aefi_signal_processing/aefi_corrected_sample_intention]]"
+---
 # aefi_signal_correction_calibration — Intention
 
 ## Rationale

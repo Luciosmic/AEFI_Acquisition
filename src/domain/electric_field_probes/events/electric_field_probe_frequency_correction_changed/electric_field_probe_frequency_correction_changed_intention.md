@@ -1,3 +1,10 @@
+---
+type: evenement-de-domaine::solidai-ddd
+tldr: "Signaler le résultat d'une tentative de correction fréquence, quelle que soit l'issue : appliquée, hors-plage sonde, ou erreur matérielle."
+code: ["[[src/domain/electric_field_probes/events/electric_field_probe_frequency_correction_changed/electric_field_probe_frequency_correction_changed.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/electric_field_probes/electric_field_probe_intention]]"
+---
 # electric_field_probe_frequency_correction_changed — Intention
 
 ## Rationale
