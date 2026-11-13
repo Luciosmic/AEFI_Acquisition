@@ -36,7 +36,7 @@ Le domaine nomme déjà `test_bench`, `scan` et `detection_devices` des « conte
 | `scan_export_service` | `scan` | domaine : `step_scan` (6), `narda_point` (1) contre `detection_devices/electric_field_probes` (2) ; couplage faible à `detection_devices`, voir ci-dessous |
 | `frequency_sweep_service` | `frequency_sweep` | domaine : `frequency_sweep` (5) |
 | `measured_object_service` | `measured_object_registry` | domaine : `measured_object_registry` (4) |
-| `operator_service` | `operator_registry` | domaine : `operator_registry` (5) |
+| `operator_service` | `operator_registry` | domaine : `operator_registry` (4) |
 | `excitation_configuration_service` | `shared` | domaine : `shared_kernel/excitation` seul ; appelé par `scan_application_service`, `scan_export_service`, `frequency_sweep_service` et 3 services de `test_bench` |
 | `hardware_configuration_service` | `shared` | domaine : `shared_kernel` seul ; appelé par 2 services de `test_bench`, la configuration avancée et l'infrastructure matérielle (7) |
 | `event_log_maintenance_service` | `shared` | domaine : `shared_kernel` seul ; appelants : le journal d'événements de l'infrastructure et son presenter |
