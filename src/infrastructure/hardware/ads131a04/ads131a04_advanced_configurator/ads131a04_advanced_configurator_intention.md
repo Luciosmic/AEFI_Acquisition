@@ -1,3 +1,10 @@
+---
+type: adaptateur::solidai-hexagonal
+tldr: "Adaptateur `ads131a04_advanced_configurator` : Définir les specs des paramètres ADS131A04 avancés via `get_parameter_specs()` — lit uniquement `ads131a04_default_config.json` (pas de résolution default+last comme AD9106/MCU, angle mort connu et documenté dans `_system/ops/tasks.md`)."
+code: ["[[src/infrastructure/hardware/ads131a04/ads131a04_advanced_configurator/ads131a04_advanced_configurator.py]]"]
+cause_de_changement: outil
+implements: ["[[src/application/shared/hardware_configuration_service/ports/i_hardware_advanced_configurator_intention]]"]
+---
 # ads131a04_advanced_configurator — Intention
 
 ## Rationale

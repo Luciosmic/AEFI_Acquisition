@@ -1,3 +1,10 @@
+---
+type: adaptateur::solidai-hexagonal
+tldr: "Adaptateur `adapter_raw_increment_motion_arcus` : Implémenter `IRawIncrementMotionPort` sur `ArcusPerformax4EXController` (ou le `FakeArcusPerformax4EXController` en mode mock)."
+code: ["[[src/infrastructure/hardware/arcus_performax_4ex/adapter_raw_increment_motion_arcus/adapter_raw_increment_motion_arcus.py]]"]
+cause_de_changement: outil
+implements: ["[[src/application/test_bench_calibration/raw_increment_motion/ports/i_raw_increment_motion_port_intention]]"]
+---
 # adapter_raw_increment_motion_arcus — Intention
 
 ## Rationale

@@ -1,8 +1,9 @@
 ---
-type: atome::solidai-atome
+type: adaptateur::solidai-hexagonal
 tldr: "Adaptateur Real implémentant IExcitationPort pour l'AD9106 DDS."
 code: ["[[src/infrastructure/hardware/ad9106/ad9106_advanced_configurator/ad9106_advanced_configurator.py]]", "[[src/infrastructure/hardware/ad9106/ad9106_controller.py]]", "[[src/infrastructure/hardware/ad9106/adapter_excitation_configuration_ad9106/adapter_excitation_configuration_ad9106.py]]", "[[src/infrastructure/hardware/ad9106/adapter_synchronous_detection_ad9106/adapter_synchronous_detection_ad9106.py]]"]
 cause_de_changement: outil
+implements: ["[[src/application/shared/excitation_configuration_service/ports/i_excitation_port_intention]]"]
 ---
 # adapter_excitation_configuration_ad9106 — Intention
 

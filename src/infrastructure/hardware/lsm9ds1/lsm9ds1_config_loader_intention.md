@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Module `lsm9ds1_config_loader` : `load_lsm9ds1_config(path)` : lit le JSON et renvoie `Lsm9ds1Config` gelé (`com_port`, `baudrate`, `channels`, `rate_hz`)."
+code: ["[[src/infrastructure/hardware/lsm9ds1/lsm9ds1_config_loader.py]]"]
+cause_de_changement: outil
+---
 # lsm9ds1_config_loader — Intention
 
 ## Rationale

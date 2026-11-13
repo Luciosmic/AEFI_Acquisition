@@ -1,3 +1,11 @@
+---
+type: doublure-de-test::solidai-hexagonal
+tldr: "Doublure `fake_file_event_log_storage` : Implémenter `IEventLogStoragePort` en mémoire."
+code: ["[[src/infrastructure/file_event_log_storage/fake/fake_file_event_log_storage.py]]"]
+cause_de_changement: outil
+implements: ["[[src/application/shared/event_log_maintenance_service/ports/i_event_log_storage_port_intention]]"]
+double_de: "[[src/infrastructure/file_event_log_storage/file_event_log_storage_intention]]"
+---
 # fake_event_log_storage — Intention
 
 ## Rationale

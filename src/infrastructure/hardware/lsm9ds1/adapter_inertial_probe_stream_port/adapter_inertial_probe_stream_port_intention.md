@@ -1,3 +1,10 @@
+---
+type: adaptateur::solidai-hexagonal
+tldr: "Adaptateur `adapter_inertial_probe_stream_port` : Implémenter `IInertialProbeStreamPort` au-dessus de `LSM9DS1StreamDriver` et de la conversion LSB vers unités physiques."
+code: ["[[src/infrastructure/hardware/lsm9ds1/adapter_inertial_probe_stream_port/adapter_inertial_probe_stream_port.py]]"]
+cause_de_changement: outil
+implements: ["[[src/application/inertial_probe/inertial_probe_service/ports/i_inertial_probe_stream_port_intention]]"]
+---
 # adapter_inertial_probe_stream_port — Intention
 
 ## Rationale

@@ -1,3 +1,10 @@
+---
+type: adaptateur::solidai-hexagonal
+tldr: "Adaptateur `event_bus_motion_synchronizer` : Implement `IMotionSynchronizer` by subscribing to 4 motion event topics and translating each terminal state into `OperationResult[None, MotionSyncError]`."
+code: ["[[src/infrastructure/event_bus_motion_synchronizer/event_bus_motion_synchronizer.py]]"]
+cause_de_changement: outil
+implements: ["[[src/application/scan/scan_application_service/ports/i_motion_synchronizer_intention]]"]
+---
 # event_bus_motion_synchronizer — Intention
 
 ## Rationale

@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Module `ad9106_controller` : Configurer les registres AD9106 via le MCU (mode SPI bridgé)."
+code: ["[[src/infrastructure/hardware/ad9106/ad9106_controller.py]]"]
+cause_de_changement: outil
+---
 # ad9106_controller — Intention
 
 ## Rationale

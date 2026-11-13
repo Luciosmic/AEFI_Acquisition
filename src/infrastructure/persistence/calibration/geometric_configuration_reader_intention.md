@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Module `geometric_configuration_reader` : Read `config_templates/aefi_device_config.json` (or an injected path) and map its `excitation.sources_geometry` section to a `GeometricConfigurationSignature`."
+code: ["[[src/infrastructure/persistence/calibration/geometric_configuration_reader.py]]"]
+cause_de_changement: outil
+---
 # geometric_configuration_reader — Intention
 
 ## Rationale

@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Module `event_audit_log` : S'abonner au wildcard `\"*\"` du bus pour voir tous les événements sans être modifié à chaque nouveau type ajouté."
+code: ["[[src/infrastructure/events/event_audit_log.py]]"]
+cause_de_changement: outil
+---
 # event_audit_log — Intention
 
 ## Rationale

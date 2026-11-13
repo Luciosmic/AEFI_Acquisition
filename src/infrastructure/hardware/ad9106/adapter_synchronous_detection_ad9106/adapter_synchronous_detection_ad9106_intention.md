@@ -1,3 +1,10 @@
+---
+type: adaptateur::solidai-hexagonal
+tldr: "Adaptateur `adapter_synchronous_detection_ad9106` : Implémenter `ISynchronousDetectionHardwarePort`."
+code: ["[[src/infrastructure/hardware/ad9106/adapter_synchronous_detection_ad9106/adapter_synchronous_detection_ad9106.py]]"]
+cause_de_changement: outil
+implements: ["[[src/application/test_bench_calibration/synchronous_detection_service/ports/i_synchronous_detection_hardware_port_intention]]"]
+---
 # adapter_synchronous_detection_ad9106 — Intention
 
 ## Rationale

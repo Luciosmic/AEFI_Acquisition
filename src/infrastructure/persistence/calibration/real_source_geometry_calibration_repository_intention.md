@@ -1,3 +1,10 @@
+---
+type: adaptateur::solidai-hexagonal
+tldr: "Adaptateur `real_source_geometry_calibration_repository` : Implement `ISourceGeometryCalibrationRepository` against a single JSON file: `{\"entries\": [...]}`."
+code: ["[[src/infrastructure/persistence/calibration/real_source_geometry_calibration_repository.py]]"]
+cause_de_changement: outil
+implements: ["[[src/domain/test_bench_calibration/calibration_intention^^i-source-geometry-calibration-repository]]"]
+---
 # real_source_geometry_calibration_repository — Intention
 
 ## Rationale

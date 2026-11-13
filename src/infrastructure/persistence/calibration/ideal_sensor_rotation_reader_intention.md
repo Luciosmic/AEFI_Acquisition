@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Module `ideal_sensor_rotation_reader` : Read the angles and the convention block and build a `SensorRotationAngles` (the `RotationConvention` VO rejects any unsupported convention)."
+code: ["[[src/infrastructure/persistence/calibration/ideal_sensor_rotation_reader.py]]"]
+cause_de_changement: outil
+---
 # ideal_sensor_rotation_reader — Intention
 
 ## Rationale

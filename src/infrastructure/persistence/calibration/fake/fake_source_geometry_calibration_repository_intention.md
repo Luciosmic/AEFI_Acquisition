@@ -1,3 +1,11 @@
+---
+type: doublure-de-test::solidai-hexagonal
+tldr: "Doublure `fake_source_geometry_calibration_repository` : Implement `ISourceGeometryCalibrationRepository` purely in memory: a list of entries."
+code: ["[[src/infrastructure/persistence/calibration/fake/fake_source_geometry_calibration_repository.py]]"]
+cause_de_changement: outil
+implements: ["[[src/domain/test_bench_calibration/calibration_intention^^i-source-geometry-calibration-repository]]"]
+double_de: "[[src/infrastructure/persistence/calibration/real_source_geometry_calibration_repository_intention]]"
+---
 # fake_source_geometry_calibration_repository — Intention
 
 ## Rationale

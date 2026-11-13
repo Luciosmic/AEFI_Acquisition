@@ -1,3 +1,10 @@
+---
+type: adaptateur::solidai-hexagonal
+tldr: "Adaptateur `adapter_aefi_acquisition_ads131a04` : Configurer l'ADS131A04 en mode streaming continu."
+code: ["[[src/infrastructure/hardware/ads131a04/adapter_aefi_acquisition_ads131a04/adapter_aefi_acquisition_ads131a04.py]]"]
+cause_de_changement: outil
+implements: ["[[src/application/shared/aefi_acquisition_service/ports/i_aefi_acquisition_executor_intention]]"]
+---
 # adapter_aefi_acquisition_ads131a04 — Intention
 
 ## Rationale

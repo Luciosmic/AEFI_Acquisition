@@ -1,3 +1,11 @@
+---
+type: doublure-de-test::solidai-hexagonal
+tldr: "Doublure `fake_synchronous_detection_phase_calibration_repository` : Implement `ISynchronousDetectionPhaseCalibrationRepository` purely in memory: a list of entries plus a bool flag."
+code: ["[[src/infrastructure/persistence/calibration/fake/fake_synchronous_detection_phase_calibration_repository.py]]"]
+cause_de_changement: outil
+implements: ["[[src/domain/test_bench_calibration/calibration_intention^^i-synchronous-detection-phase-calibration-repository]]"]
+double_de: "[[src/infrastructure/persistence/calibration/real_synchronous_detection_phase_calibration_repository_intention]]"
+---
 # fake_synchronous_detection_phase_calibration_repository — Intention
 
 ## Rationale

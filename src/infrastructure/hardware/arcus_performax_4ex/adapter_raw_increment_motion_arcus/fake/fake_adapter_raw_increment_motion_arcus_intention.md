@@ -1,3 +1,11 @@
+---
+type: doublure-de-test::solidai-hexagonal
+tldr: "Doublure `fake_adapter_raw_increment_motion_arcus` : Implémenter `IRawIncrementMotionPort` en mémoire : deux axes, mouvement linéaire dans le temps de l'horloge injectée (`FakeClock` en test, temps réel sinon), butée + à `plus_limit_increments`."
+code: ["[[src/infrastructure/hardware/arcus_performax_4ex/adapter_raw_increment_motion_arcus/fake/fake_adapter_raw_increment_motion_arcus.py]]"]
+cause_de_changement: outil
+implements: ["[[src/application/test_bench_calibration/raw_increment_motion/ports/i_raw_increment_motion_port_intention]]"]
+double_de: "[[src/infrastructure/hardware/arcus_performax_4ex/adapter_raw_increment_motion_arcus/adapter_raw_increment_motion_arcus_intention]]"
+---
 # fake_adapter_raw_increment_motion_arcus — Intention
 
 ## Rationale

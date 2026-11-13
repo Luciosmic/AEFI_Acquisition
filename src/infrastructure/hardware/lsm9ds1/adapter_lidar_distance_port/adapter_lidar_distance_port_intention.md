@@ -1,3 +1,10 @@
+---
+type: adaptateur::solidai-hexagonal
+tldr: "Adaptateur `adapter_lidar_distance_port` : Implémenter `ILidarDistancePort` sur `IInertialProbeStreamPort`, canal LIDAR seul."
+code: ["[[src/infrastructure/hardware/lsm9ds1/adapter_lidar_distance_port/adapter_lidar_distance_port.py]]"]
+cause_de_changement: outil
+implements: ["[[src/application/inertial_probe/lidar_distance/ports/i_lidar_distance_port_intention]]"]
+---
 # adapter_lidar_distance_port — Intention
 
 ## Rationale

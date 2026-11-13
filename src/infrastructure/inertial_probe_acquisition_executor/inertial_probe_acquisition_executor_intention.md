@@ -1,3 +1,10 @@
+---
+type: adaptateur::solidai-hexagonal
+tldr: "Adaptateur `inertial_probe_acquisition_executor` : Implémenter `IInertialProbeAcquisitionExecutor`."
+code: ["[[src/infrastructure/inertial_probe_acquisition_executor/inertial_probe_acquisition_executor.py]]"]
+cause_de_changement: outil
+implements: ["[[src/application/inertial_probe/inertial_probe_service/ports/i_inertial_probe_acquisition_executor_intention]]"]
+---
 # inertial_probe_acquisition_executor — Intention
 
 ## Rationale

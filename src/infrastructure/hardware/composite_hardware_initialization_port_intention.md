@@ -1,3 +1,10 @@
+---
+type: adaptateur::solidai-hexagonal
+tldr: "Adaptateur `composite_hardware_initialization_port` : `initialize_all()` : appeler `initialize()` sur chaque adaptateur de lifecycle dans l'ordre correct (MCU d'abord, puis Arcus)."
+code: ["[[src/infrastructure/hardware/composite_hardware_initialization_port.py]]"]
+cause_de_changement: outil
+implements: ["[[src/application/shared/system_lifecycle_service/ports/i_hardware_initialization_port_intention]]"]
+---
 # composite_hardware_initialization_port — Intention
 
 ## Rationale

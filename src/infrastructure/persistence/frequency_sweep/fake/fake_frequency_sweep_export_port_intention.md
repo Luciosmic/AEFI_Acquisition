@@ -1,3 +1,11 @@
+---
+type: doublure-de-test::solidai-hexagonal
+tldr: "Doublure `fake_frequency_sweep_export_port` : Garder en mémoire chaque ouverture, export et écriture des paramètres."
+code: ["[[src/infrastructure/persistence/frequency_sweep/fake/fake_frequency_sweep_export_port.py]]"]
+cause_de_changement: outil
+implements: ["[[src/application/frequency_sweep/frequency_sweep_service/ports/i_frequency_sweep_export_port_intention]]"]
+double_de: "[[src/infrastructure/persistence/frequency_sweep/csv_frequency_sweep_export_port_intention]]"
+---
 # fake_frequency_sweep_export_port — Intention
 
 ## Rationale

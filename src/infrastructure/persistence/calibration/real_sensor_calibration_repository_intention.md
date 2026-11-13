@@ -1,3 +1,10 @@
+---
+type: adaptateur::solidai-hexagonal
+tldr: "Adaptateur `real_sensor_calibration_repository` : Implement `ISensorCalibrationRepository` against a single JSON file: `{\"entries\": [...]}`."
+code: ["[[src/infrastructure/persistence/calibration/real_sensor_calibration_repository.py]]"]
+cause_de_changement: outil
+implements: ["[[src/domain/test_bench_calibration/calibration_intention^^i-sensor-calibration-repository]]"]
+---
 # real_sensor_calibration_repository — Intention
 
 ## Rationale

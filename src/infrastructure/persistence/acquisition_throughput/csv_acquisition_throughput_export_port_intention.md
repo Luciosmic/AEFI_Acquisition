@@ -1,3 +1,10 @@
+---
+type: adaptateur::solidai-hexagonal
+tldr: "Adaptateur `csv_acquisition_throughput_export_port` : `open_export` : créer, au démarrage, un dossier daté `<YYYY-MM-DD_HHMMSS>_mcuThroughput_osr<OSR>_excitation-<cond>` sous `~/Desktop/AEFI_Acquisition_Exports`."
+code: ["[[src/infrastructure/persistence/acquisition_throughput/csv_acquisition_throughput_export_port.py]]"]
+cause_de_changement: outil
+implements: ["[[src/application/test_bench_calibration/acquisition_throughput_characterization_service/ports/i_acquisition_throughput_export_port_intention]]"]
+---
 # csv_acquisition_throughput_export_port — Intention
 
 ## Rationale

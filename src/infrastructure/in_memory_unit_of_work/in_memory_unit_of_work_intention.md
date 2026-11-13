@@ -1,3 +1,10 @@
+---
+type: adaptateur::solidai-hexagonal
+tldr: "Adaptateur `in_memory_unit_of_work` : Implémenter `IUnitOfWork` en mémoire (Real et fake de test : mono-processus, sans DB)."
+code: ["[[src/infrastructure/in_memory_unit_of_work/in_memory_unit_of_work.py]]"]
+cause_de_changement: outil
+implements: ["[[src/application/scan/scan_application_service/ports/i_unit_of_work_intention]]"]
+---
 # in_memory_unit_of_work — Intention
 
 ## Rationale

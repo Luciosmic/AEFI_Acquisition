@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Module `scan_acquisition_parameters_v1_serializer` : `serialize_scan_acquisition_parameters_v1(parameters, generated_at)` : le document 1.x d'un scan pas-à-pas, d'un scan en vol ou d'une série temporelle, prêt pour JSON."
+code: ["[[src/infrastructure/persistence/scan_acquisition_parameters_v1_serializer.py]]"]
+cause_de_changement: outil
+---
 # scan_acquisition_parameters_v1_serializer — Intention
 
 ## Rationale

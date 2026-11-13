@@ -1,3 +1,10 @@
+---
+type: adaptateur::solidai-hexagonal
+tldr: "Adaptateur `csv_frequency_sweep_export_port` : `open_export` : créer `<date>_frequencySweep_<rôle>_table<hauteur>mm/` sous le dossier d'export (Bureau, `AEFI_Acquisition_Exports`)."
+code: ["[[src/infrastructure/persistence/frequency_sweep/csv_frequency_sweep_export_port.py]]"]
+cause_de_changement: outil
+implements: ["[[src/application/frequency_sweep/frequency_sweep_service/ports/i_frequency_sweep_export_port_intention]]"]
+---
 # csv_frequency_sweep_export_port — Intention
 
 ## Rationale

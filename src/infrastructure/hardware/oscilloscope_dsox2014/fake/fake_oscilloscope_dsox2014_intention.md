@@ -1,3 +1,11 @@
+---
+type: doublure-de-test::solidai-hexagonal
+tldr: "Doublure `fake_oscilloscope_dsox2014` : Fronts descendants à `f_MOD / OSR`, l'OSR lu sur une source injectée (le port d'OSR simulé), sur la fenêtre demandée, avec la gigue mesurée au banc."
+code: ["[[src/infrastructure/hardware/oscilloscope_dsox2014/fake/fake_oscilloscope_dsox2014.py]]"]
+cause_de_changement: outil
+implements: ["[[src/application/test_bench_calibration/adc_output_rate_characterization_service/ports/i_drdy_capture_port_intention]]"]
+double_de: "[[src/infrastructure/hardware/oscilloscope_dsox2014/oscilloscope_dsox2014_intention]]"
+---
 # fake_oscilloscope_dsox2014 — Intention
 
 ## Rationale

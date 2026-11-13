@@ -1,3 +1,10 @@
+---
+type: adaptateur::solidai-hexagonal
+tldr: "Adaptateur `adapter_motion_port_arcus_performax4ex` : Implémenter `move_to(position) → str` : commander le déplacement et retourner un `motion_id` unique pour la synchronisation event-based."
+code: ["[[src/infrastructure/hardware/arcus_performax_4ex/adapter_motion_port_arcus_performax4ex/adapter_motion_port_arcus_performax4ex.py]]"]
+cause_de_changement: outil
+implements: ["[[src/application/test_bench_calibration/motion_control_service/ports/i_motion_port_intention]]"]
+---
 # adapter_motion_port_arcus_performax4ex — Intention
 
 ## Rationale

@@ -1,3 +1,10 @@
+---
+type: adaptateur::solidai-hexagonal
+tldr: "Adaptateur `oscilloscope_dsox2014` : Implémenter `IDrdyCapturePort` pour l'Agilent DSO-X 2014A en VISA : sauvegarder la configuration de l'instrument, capturer en acquisition unique la voie demandée sur la fenêtre demandée (déclenchement front descendant à mi-tension."
+code: ["[[src/infrastructure/hardware/oscilloscope_dsox2014/oscilloscope_dsox2014.py]]"]
+cause_de_changement: outil
+implements: ["[[src/application/test_bench_calibration/adc_output_rate_characterization_service/ports/i_drdy_capture_port_intention]]"]
+---
 # oscilloscope_dsox2014 — Intention
 
 ## Rationale

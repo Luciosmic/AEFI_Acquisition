@@ -1,3 +1,10 @@
+---
+type: adaptateur::solidai-hexagonal
+tldr: "Adaptateur `adapter_lifecycle_arcus_performax4ex` : Ouvrir et configurer la connexion au contrôleur Arcus via la DLL."
+code: ["[[src/infrastructure/hardware/arcus_performax_4ex/adapter_lifecycle_arcus_performax4ex/adapter_lifecycle_arcus_performax4ex.py]]"]
+cause_de_changement: outil
+implements: ["[[src/application/shared/system_lifecycle_service/ports/i_hardware_initialization_port_intention]]"]
+---
 # adapter_lifecycle_arcus_performax4ex — Intention
 
 ## Rationale

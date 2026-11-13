@@ -1,3 +1,11 @@
+---
+type: doublure-de-test::solidai-hexagonal
+tldr: "Doublure `fake_adapter_motion_port_arcus_performax4ex` : Implémenter `IMotionPort` en mémoire : `move_to()` enregistre la position et retourne un `motion_id`."
+code: ["[[src/infrastructure/hardware/arcus_performax_4ex/adapter_motion_port_arcus_performax4ex/fake/fake_adapter_motion_port_arcus_performax4ex.py]]"]
+cause_de_changement: outil
+implements: ["[[src/application/test_bench_calibration/motion_control_service/ports/i_motion_port_intention]]"]
+double_de: "[[src/infrastructure/hardware/arcus_performax_4ex/adapter_motion_port_arcus_performax4ex/adapter_motion_port_arcus_performax4ex_intention]]"
+---
 # fake_adapter_motion_port_arcus_performax4ex — Intention
 
 ## Rationale

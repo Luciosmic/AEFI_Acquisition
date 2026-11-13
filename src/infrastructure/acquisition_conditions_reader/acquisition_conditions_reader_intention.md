@@ -1,3 +1,10 @@
+---
+type: adaptateur::solidai-hexagonal
+tldr: "Adaptateur `acquisition_conditions_reader` : Implémenter `IAcquisitionConditionsPort`."
+code: ["[[src/infrastructure/acquisition_conditions_reader/acquisition_conditions_reader.py]]"]
+cause_de_changement: outil
+implements: ["[[src/application/shared/acquisition_parameters/i_acquisition_conditions_port_intention]]"]
+---
 # acquisition_conditions_reader — Intention
 
 ## Rationale

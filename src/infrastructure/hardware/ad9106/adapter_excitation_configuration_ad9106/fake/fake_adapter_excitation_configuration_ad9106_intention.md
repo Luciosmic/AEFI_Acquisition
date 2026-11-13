@@ -1,3 +1,11 @@
+---
+type: doublure-de-test::solidai-hexagonal
+tldr: "Doublure `fake_adapter_excitation_configuration_ad9106` : Implémenter `IExcitationPort` en mémoire : `apply_excitation()`, `set_gain()`, `set_link_dds1_dds2()`."
+code: ["[[src/infrastructure/hardware/ad9106/adapter_excitation_configuration_ad9106/fake/fake_adapter_excitation_configuration_ad9106.py]]"]
+cause_de_changement: outil
+implements: ["[[src/application/shared/excitation_configuration_service/ports/i_excitation_port_intention]]"]
+double_de: "[[src/infrastructure/hardware/ad9106/adapter_excitation_configuration_ad9106/adapter_excitation_configuration_ad9106_intention]]"
+---
 # fake_adapter_excitation_configuration_ad9106 — Intention
 
 ## Rationale

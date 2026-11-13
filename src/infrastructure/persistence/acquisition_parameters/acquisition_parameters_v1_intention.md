@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Module `acquisition_parameters_v1` : Écrire, à partir des DTO partagés (`application/shared/acquisition_parameters/`), les sections communes du schéma 1.0 : `provenance`, `feature_of_interest`, `components` (catalogue, réglages ADC et AD9106), `host_link`, `deployment`."
+code: ["[[src/infrastructure/persistence/acquisition_parameters/acquisition_parameters_v1.py]]"]
+cause_de_changement: outil
+---
 # acquisition_parameters_v1 — Intention
 
 ## Rationale

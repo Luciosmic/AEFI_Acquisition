@@ -1,3 +1,11 @@
+---
+type: doublure-de-test::solidai-hexagonal
+tldr: "Doublure `fake_mechanical_transmission_calibration_repository` : Implement `IMechanicalTransmissionCalibrationRepository` in memory, append only, `find_all()` returning a copy."
+code: ["[[src/infrastructure/persistence/calibration/fake/fake_mechanical_transmission_calibration_repository.py]]"]
+cause_de_changement: outil
+implements: ["[[src/domain/test_bench_calibration/calibration_intention^^i-mechanical-transmission-calibration-repository]]"]
+double_de: "[[src/infrastructure/persistence/calibration/real_mechanical_transmission_calibration_repository_intention]]"
+---
 # fake_mechanical_transmission_calibration_repository — Intention
 
 ## Rationale

@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Module `motion_timing_characterizer` : Mesurer, sur le banc réel, la durée d'un déplacement en fonction de la distance, pour chaque mode de vitesse (`slow`, `medium`, `fast`)."
+code: ["[[src/infrastructure/hardware/arcus_performax_4ex/characterization/motion_timing_characterizer.py]]"]
+cause_de_changement: outil
+---
 # motion_timing_characterizer — Intention
 
 ## Rationale

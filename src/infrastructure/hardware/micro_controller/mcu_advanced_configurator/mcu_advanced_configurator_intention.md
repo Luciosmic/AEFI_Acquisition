@@ -1,3 +1,10 @@
+---
+type: adaptateur::solidai-hexagonal
+tldr: "Adaptateur `mcu_advanced_configurator` : `get_parameter_specs()` : définir la spec `n_avg` (bornes `NAVG_MIN`/`NAVG_MAX` = 1-127) et la peupler avec l'état **résolu** (default+last, via `hardware_config_resolution.resolve_config()`) — pas le default seul, sinon le panel affiche."
+code: ["[[src/infrastructure/hardware/micro_controller/mcu_advanced_configurator/mcu_advanced_configurator.py]]"]
+cause_de_changement: outil
+implements: ["[[src/application/shared/hardware_configuration_service/ports/i_hardware_advanced_configurator_intention]]"]
+---
 # mcu_advanced_configurator — Intention
 
 ## Rationale

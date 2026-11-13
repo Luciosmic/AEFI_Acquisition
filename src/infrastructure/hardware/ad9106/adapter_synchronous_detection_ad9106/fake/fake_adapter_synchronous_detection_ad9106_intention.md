@@ -1,3 +1,11 @@
+---
+type: doublure-de-test::solidai-hexagonal
+tldr: "Doublure `fake_adapter_synchronous_detection_ad9106` : Tenir `ISynchronousDetectionHardwarePort` entièrement en mémoire : les registres de phase, le gain de verrouillage et l'application de la quadrature."
+code: ["[[src/infrastructure/hardware/ad9106/adapter_synchronous_detection_ad9106/fake/fake_adapter_synchronous_detection_ad9106.py]]"]
+cause_de_changement: outil
+implements: ["[[src/application/test_bench_calibration/synchronous_detection_service/ports/i_synchronous_detection_hardware_port_intention]]"]
+double_de: "[[src/infrastructure/hardware/ad9106/adapter_synchronous_detection_ad9106/adapter_synchronous_detection_ad9106_intention]]"
+---
 # fake_adapter_synchronous_detection_ad9106 — Intention
 
 ## Rationale

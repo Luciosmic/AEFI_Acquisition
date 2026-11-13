@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Module `config_bootstrapper` : Ensure that runtime config files exist in `.aefi_acquisition/configs/` before the application starts reading them."
+code: ["[[src/infrastructure/config/config_bootstrapper.py]]"]
+cause_de_changement: outil
+---
 ## Responsibility
 Ensure that runtime config files exist in `.aefi_acquisition/configs/` before the application starts reading them.
 

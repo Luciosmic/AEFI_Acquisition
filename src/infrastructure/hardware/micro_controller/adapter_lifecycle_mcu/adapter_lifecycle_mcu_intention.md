@@ -1,3 +1,10 @@
+---
+type: adaptateur::solidai-hexagonal
+tldr: "Adaptateur `adapter_lifecycle_mcu` : Ouvrir le port série au MCU avec les bons paramètres (baudrate, timeout)."
+code: ["[[src/infrastructure/hardware/micro_controller/adapter_lifecycle_mcu/adapter_lifecycle_mcu.py]]"]
+cause_de_changement: outil
+implements: ["[[src/application/shared/system_lifecycle_service/ports/i_hardware_initialization_port_intention]]"]
+---
 # adapter_lifecycle_mcu — Intention
 
 ## Rationale

@@ -1,3 +1,11 @@
+---
+type: doublure-de-test::solidai-hexagonal
+tldr: "Doublure `fake_mcu_advanced_configurator` : Implémenter `get_parameter_specs()`, `apply_config()`, `save_config_as_default()`, `reset_to_default()` en mémoire."
+code: ["[[src/infrastructure/hardware/micro_controller/mcu_advanced_configurator/fake/fake_mcu_advanced_configurator.py]]"]
+cause_de_changement: outil
+implements: ["[[src/application/shared/hardware_configuration_service/ports/i_hardware_advanced_configurator_intention]]"]
+double_de: "[[src/infrastructure/hardware/micro_controller/mcu_advanced_configurator/mcu_advanced_configurator_intention]]"
+---
 # fake_mcu_advanced_configurator — Intention
 
 ## Rationale

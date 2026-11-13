@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Module `hardware_signature_reader` : Read `config_templates/aefi_device_config.json` (or an injected path) and map it to a `HardwareSignature`."
+code: ["[[src/infrastructure/persistence/calibration/hardware_signature_reader.py]]"]
+cause_de_changement: outil
+---
 # hardware_signature_reader — Intention
 
 ## Rationale

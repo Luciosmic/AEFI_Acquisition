@@ -1,3 +1,10 @@
+---
+type: adaptateur::solidai-hexagonal
+tldr: "Adaptateur `electric_field_probe_acquisition_executor` : Implémenter `IElectricFieldProbeAcquisitionExecutor`."
+code: ["[[src/infrastructure/electric_field_probe_acquisition_executor/electric_field_probe_acquisition_executor.py]]"]
+cause_de_changement: outil
+implements: ["[[src/application/electric_field_probes/electric_field_probe_service/ports/i_electric_field_probe_acquisition_executor_intention]]"]
+---
 # electric_field_probe_acquisition_executor — Intention
 
 ## Rationale

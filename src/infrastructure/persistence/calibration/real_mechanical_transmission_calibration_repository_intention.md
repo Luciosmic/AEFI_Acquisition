@@ -1,3 +1,10 @@
+---
+type: adaptateur::solidai-hexagonal
+tldr: "Adaptateur `real_mechanical_transmission_calibration_repository` : Implement `IMechanicalTransmissionCalibrationRepository` against `.aefi_acquisition/calibrations/mechanical_transmission_calibration.json`: `{\"entries\": [{entry_id, motor_mounting_id, stepper_driver_mounting_id, microsteps, driver_current_a, driver_peak_current_a, microns_per_pulse, recorded_at}]}`."
+code: ["[[src/infrastructure/persistence/calibration/real_mechanical_transmission_calibration_repository.py]]"]
+cause_de_changement: outil
+implements: ["[[src/domain/test_bench_calibration/calibration_intention^^i-mechanical-transmission-calibration-repository]]"]
+---
 # real_mechanical_transmission_calibration_repository — Intention
 
 ## Rationale

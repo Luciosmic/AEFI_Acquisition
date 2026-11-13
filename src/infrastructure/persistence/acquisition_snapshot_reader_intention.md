@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Module `acquisition_snapshot_reader` : `hardware_configuration` — depuis les registres domaine : pour chaque type de composant, le composant monté et sa caractérisation courante."
+code: ["[[src/infrastructure/persistence/acquisition_snapshot_reader.py]]"]
+cause_de_changement: outil
+---
 # acquisition_snapshot_reader — Intention
 
 ## Rationale

@@ -1,3 +1,10 @@
+---
+type: adaptateur::solidai-hexagonal
+tldr: "Adaptateur `adapter_acquisition_averaging_mcu` : Implémenter `IAcquisitionAveragingPort` : `get/set_n_avg` via le configurateur MCU, bornes `NAVG_MIN`/`NAVG_MAX`, OSR depuis `ads131_controller.memory_state[\"Oversampling_ratio\"]`."
+code: ["[[src/infrastructure/hardware/micro_controller/adapter_acquisition_averaging_mcu/adapter_acquisition_averaging_mcu.py]]"]
+cause_de_changement: outil
+implements: ["[[src/application/test_bench_calibration/acquisition_throughput_characterization_service/ports/i_acquisition_averaging_port_intention]]"]
+---
 # adapter_acquisition_averaging_mcu — Intention
 
 ## Rationale

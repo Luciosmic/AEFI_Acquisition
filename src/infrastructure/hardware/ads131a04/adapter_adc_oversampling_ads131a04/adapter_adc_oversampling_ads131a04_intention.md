@@ -1,3 +1,10 @@
+---
+type: adaptateur::solidai-hexagonal
+tldr: "Adaptateur `adapter_adc_oversampling_ads131a04` : Implémenter `IAdcOversamplingPort` via `ADS131Controller.set_oversampling_ratio` (même écriture de registre que le configurateur, diviseur ICLK conservé), sans persistance."
+code: ["[[src/infrastructure/hardware/ads131a04/adapter_adc_oversampling_ads131a04/adapter_adc_oversampling_ads131a04.py]]"]
+cause_de_changement: outil
+implements: ["[[src/application/test_bench_calibration/adc_output_rate_characterization_service/ports/i_adc_oversampling_port_intention]]"]
+---
 # adapter_adc_oversampling_ads131a04 — Intention
 
 ## Rationale

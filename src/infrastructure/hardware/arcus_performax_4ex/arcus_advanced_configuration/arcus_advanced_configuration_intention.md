@@ -1,3 +1,10 @@
+---
+type: adaptateur::solidai-hexagonal
+tldr: "Adaptateur `arcus_advanced_configuration` : Définir les specs des paramètres Arcus avancés (`get_parameter_specs() → List[HardwareAdvancedParameterSchema]`)."
+code: ["[[src/infrastructure/hardware/arcus_performax_4ex/arcus_advanced_configuration/arcus_advanced_configuration.py]]"]
+cause_de_changement: outil
+implements: ["[[src/application/shared/hardware_configuration_service/ports/i_hardware_advanced_configurator_intention]]"]
+---
 # arcus_advanced_configuration — Intention
 
 ## Rationale

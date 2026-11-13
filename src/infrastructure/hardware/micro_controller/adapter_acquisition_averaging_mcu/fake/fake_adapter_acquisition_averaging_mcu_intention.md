@@ -1,3 +1,11 @@
+---
+type: doublure-de-test::solidai-hexagonal
+tldr: "Doublure `fake_adapter_acquisition_averaging_mcu` : `n_avg` en mémoire (`get`/`set`), bornes 1-127, OSR fixe."
+code: ["[[src/infrastructure/hardware/micro_controller/adapter_acquisition_averaging_mcu/fake/fake_adapter_acquisition_averaging_mcu.py]]"]
+cause_de_changement: outil
+implements: ["[[src/application/test_bench_calibration/acquisition_throughput_characterization_service/ports/i_acquisition_averaging_port_intention]]"]
+double_de: "[[src/infrastructure/hardware/micro_controller/adapter_acquisition_averaging_mcu/adapter_acquisition_averaging_mcu_intention]]"
+---
 # fake_adapter_acquisition_averaging_mcu — Intention
 
 ## Rationale

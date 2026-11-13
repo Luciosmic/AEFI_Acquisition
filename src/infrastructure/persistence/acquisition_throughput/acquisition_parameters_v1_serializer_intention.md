@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Module `acquisition_parameters_v1_serializer` : `serialize_acquisition_parameters_v1(parameters, generated_at)` : le document 1.0 d'un balayage, prêt pour JSON — provenance PROV (activité, logiciel, opérateur), objet mesuré (absent, déclaré), procédure, composants (catalogue + réglages."
+code: ["[[src/infrastructure/persistence/acquisition_throughput/acquisition_parameters_v1_serializer.py]]"]
+cause_de_changement: outil
+---
 # acquisition_parameters_v1_serializer — Intention
 
 ## Rationale

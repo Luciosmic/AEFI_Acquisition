@@ -1,3 +1,10 @@
+---
+type: adaptateur::solidai-hexagonal
+tldr: "Adaptateur `adapter_i_acquistion_port_ads131a04` : Implémenter `acquire_sample() → AefiVoltageMeasurement` : déclencher une acquisition ADS131A04, lire les 6 canaux (X/Y/Z × In-Phase/Quadrature), convertir en volts, retourner."
+code: ["[[src/infrastructure/hardware/ads131a04/adapter_i_acquistion_port_ads131a04/adapter_i_acquistion_port_ads131a04.py]]"]
+cause_de_changement: outil
+implements: ["[[src/application/shared/ports/i_acquisition_port_intention]]"]
+---
 # adapter_i_acquisition_port_ads131a04 — Intention
 
 ## Rationale

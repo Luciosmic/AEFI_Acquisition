@@ -1,3 +1,11 @@
+---
+type: doublure-de-test::solidai-hexagonal
+tldr: "Doublure `fake_event_bus_motion_synchronizer` : Implement `IMotionSynchronizer` for tests: each `wait_for_motion()` call pops the next pre-programmed `OperationResult` from the configured list."
+code: ["[[src/infrastructure/event_bus_motion_synchronizer/fake/fake_event_bus_motion_synchronizer.py]]"]
+cause_de_changement: outil
+implements: ["[[src/application/scan/scan_application_service/ports/i_motion_synchronizer_intention]]"]
+double_de: "[[src/infrastructure/event_bus_motion_synchronizer/event_bus_motion_synchronizer_intention]]"
+---
 # fake_event_bus_motion_synchronizer — Intention
 
 ## Rationale

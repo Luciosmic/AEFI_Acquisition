@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Module `driver_lsm9ds1_stream` : `connect()` : ouvre, envoie `S*` (un flux peut survivre à la fermeture précédente), vide le tampon."
+code: ["[[src/infrastructure/hardware/lsm9ds1/driver_lsm9ds1_stream.py]]"]
+cause_de_changement: outil
+---
 # driver_lsm9ds1_stream — Intention
 
 ## Rationale

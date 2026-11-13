@@ -1,3 +1,10 @@
+---
+type: adaptateur::solidai-hexagonal
+tldr: "Adaptateur `csv_scan_export_port` : Exporter les résultats de scan 2D en CSV avec une ligne par point (position X, Y, et les 6 composantes de tension)."
+code: ["[[src/infrastructure/persistence/csv_scan_export_port.py]]"]
+cause_de_changement: outil
+implements: ["[[src/application/scan/scan_export_service/ports/i_scan_export_port_intention]]"]
+---
 # csv_scan_export_port — Intention
 
 ## Rationale

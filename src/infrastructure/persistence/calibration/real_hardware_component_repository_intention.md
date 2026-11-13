@@ -1,3 +1,10 @@
+---
+type: adaptateur::solidai-hexagonal
+tldr: "Adaptateur `real_hardware_component_repository` : Persist, per `HardwareComponentKind`, in `.aefi_acquisition/calibrations/<kind>_calibration.json`: `{\"entries\": [{entry_id, component_name, characterization{key: value}, recorded_at}], \"selections\": [{component_name, selected_at}]}`."
+code: ["[[src/infrastructure/persistence/calibration/real_hardware_component_repository.py]]"]
+cause_de_changement: outil
+implements: ["[[src/domain/test_bench_configuration/bench_configuration_intention^^i-hardware-component-repository]]"]
+---
 # real_hardware_component_repository — Intention
 
 ## Rationale

@@ -1,3 +1,11 @@
+---
+type: doublure-de-test::solidai-hexagonal
+tldr: "Doublure `fake_adapter_lidar_distance_port` : Implémenter `ILidarDistancePort` : une distance toutes les 40 ms (25 Hz mesurés sur la carte) de l'horloge injectée, valeur donnée par une fonction (scène de barre lisant un faux moteur), horodatée à son instant d'arrivée."
+code: ["[[src/infrastructure/hardware/lsm9ds1/adapter_lidar_distance_port/fake/fake_adapter_lidar_distance_port.py]]"]
+cause_de_changement: outil
+implements: ["[[src/application/inertial_probe/lidar_distance/ports/i_lidar_distance_port_intention]]"]
+double_de: "[[src/infrastructure/hardware/lsm9ds1/adapter_lidar_distance_port/adapter_lidar_distance_port_intention]]"
+---
 # fake_adapter_lidar_distance_port — Intention
 
 ## Rationale

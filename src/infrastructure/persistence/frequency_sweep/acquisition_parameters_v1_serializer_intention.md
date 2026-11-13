@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Module `acquisition_parameters_v1_serializer` : Écrire le document `acquisition-parameters.json` (schéma 1.3) d'un balayage en fréquence : provenance (activité `frequency_sweep`, opérateur), absence d'objet par construction, procédure (`procedure.frequency_sweep` : rôle, grille."
+code: ["[[src/infrastructure/persistence/frequency_sweep/acquisition_parameters_v1_serializer.py]]"]
+cause_de_changement: outil
+---
 # acquisition_parameters_v1_serializer (balayage en fréquence) — Intention
 
 ## Rationale

@@ -1,3 +1,10 @@
+---
+type: adaptateur::solidai-hexagonal
+tldr: "Adaptateur `ad9106_advanced_configurator` : `get_parameter_specs()` : définir les specs (`frequency_hz`, `link_dds1_dds2`, `ch{1-4}_gain/phase/offset`) et les peupler avec l'état **résolu** (default+last, via `hardware_config_resolution.resolve_config()`) — pas le default seul."
+code: ["[[src/infrastructure/hardware/ad9106/ad9106_advanced_configurator/ad9106_advanced_configurator.py]]"]
+cause_de_changement: outil
+implements: ["[[src/application/shared/hardware_configuration_service/ports/i_hardware_advanced_configurator_intention]]"]
+---
 # ad9106_advanced_configurator — Intention
 
 ## Rationale

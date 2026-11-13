@@ -1,3 +1,10 @@
+---
+type: adaptateur::solidai-hexagonal
+tldr: "Adaptateur `serial_link` : Implémenter `IUsbLatencyTimerPort` : pour un port série (`COM10`), trouver le périphérique FTDI dont `PortName` est ce port et rendre sa valeur `LatencyTimer` (ms)."
+code: ["[[src/infrastructure/hardware/serial_link/serial_link.py]]"]
+cause_de_changement: outil
+implements: ["[[src/application/shared/acquisition_parameters/i_usb_latency_timer_port_intention]]"]
+---
 # serial_link — Intention
 
 ## Rationale

@@ -1,3 +1,11 @@
+---
+type: doublure-de-test::solidai-hexagonal
+tldr: "Doublure `fake_acquisition_conditions_reader` : `make_bench_conditions()` : un banc plausible (tous les composants montés, bruit ADC non caractérisé, AD9106 coupé, capteur aux angles idéaux, MCU sur COM10)."
+code: ["[[src/infrastructure/acquisition_conditions_reader/fake/fake_acquisition_conditions_reader.py]]"]
+cause_de_changement: outil
+implements: ["[[src/application/shared/acquisition_parameters/i_acquisition_conditions_port_intention]]"]
+double_de: "[[src/infrastructure/acquisition_conditions_reader/acquisition_conditions_reader_intention]]"
+---
 # fake_acquisition_conditions — Intention
 
 ## Rationale

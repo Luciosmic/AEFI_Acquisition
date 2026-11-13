@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Module `ui_adapter_ads131a04` : Adapter les données ADS131A04 brutes pour l'affichage dans les widgets UI (ex."
+code: ["[[src/infrastructure/hardware/ads131a04/ui_adapter_ads131a04.py]]"]
+cause_de_changement: outil
+---
 # ui_adapter_ads131a04 — Intention
 
 ## Rationale

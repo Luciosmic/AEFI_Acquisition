@@ -1,3 +1,10 @@
+---
+type: adaptateur::solidai-hexagonal
+tldr: "Adaptateur `esp32_serial_lidar` : Implémenter `ILidarDistancePort` sur un port série tenu par un ESP32 qui émet en continu, sans commande."
+code: ["[[src/infrastructure/hardware/esp32_serial_lidar/esp32_serial_lidar.py]]"]
+cause_de_changement: outil
+implements: ["[[src/application/inertial_probe/lidar_distance/ports/i_lidar_distance_port_intention]]"]
+---
 # esp32_serial_lidar (ESP32 série) — Intention
 
 ## Rationale

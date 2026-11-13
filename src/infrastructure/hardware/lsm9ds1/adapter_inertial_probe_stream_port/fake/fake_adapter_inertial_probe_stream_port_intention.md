@@ -1,3 +1,11 @@
+---
+type: doublure-de-test::solidai-hexagonal
+tldr: "Doublure `fake_adapter_inertial_probe_stream_port` : Implémenter `IInertialProbeStreamPort` en mémoire, déterministe : mêmes valeurs pour un même index d'échantillon (gravité 1 g sur Z)."
+code: ["[[src/infrastructure/hardware/lsm9ds1/adapter_inertial_probe_stream_port/fake/fake_adapter_inertial_probe_stream_port.py]]"]
+cause_de_changement: outil
+implements: ["[[src/application/inertial_probe/inertial_probe_service/ports/i_inertial_probe_stream_port_intention]]"]
+double_de: "[[src/infrastructure/hardware/lsm9ds1/adapter_inertial_probe_stream_port/adapter_inertial_probe_stream_port_intention]]"
+---
 # fake_adapter_inertial_probe_stream_port — Intention
 
 ## Rationale

@@ -1,3 +1,10 @@
+---
+type: adaptateur::solidai-hexagonal
+tldr: "Adaptateur `file_event_log_storage` : Lister les fichiers `events_<horodatage UTC>_<hex>.jsonl` du dossier : nom, date de démarrage (lue dans le nom), taille, et s'il s'agit de la session en cours (`live_session`, le fichier d'`EventAuditLog.path`)."
+code: ["[[src/infrastructure/file_event_log_storage/file_event_log_storage.py]]"]
+cause_de_changement: outil
+implements: ["[[src/application/shared/event_log_maintenance_service/ports/i_event_log_storage_port_intention]]"]
+---
 # file_event_log_storage — Intention
 
 ## Rationale
