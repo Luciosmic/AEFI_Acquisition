@@ -11,8 +11,8 @@ from PySide6.QtCore import Qt
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication
 
-from application.services.frequency_sweep_service.i_api_frequency_sweep_service import IApiFrequencySweepService
-from application.services.measured_object_service.dtos.measured_object_dto import MeasuredObjectDTO
+from application.frequency_sweep.frequency_sweep_service.i_api_frequency_sweep_service import IApiFrequencySweepService
+from application.measured_object_registry.measured_object_service.dtos.measured_object_dto import MeasuredObjectDTO
 from interface.presenters.frequency_sweep_presenter import FrequencySweepPresenter
 from interface.shell.dashboard_wiring import wire_frequency_sweep
 from interface.widgets.panels.frequency_sweep_panel import FrequencySweepPanel

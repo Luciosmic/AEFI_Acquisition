@@ -5,4 +5,4 @@ from domain.frequency_sweep.value_objects.frequency_sweep_role.frequency_sweep_r
 
 
 def test_frequencysweeprole_liste_ses_membres() -> None:
-    assert [m.name for m in FrequencySweepRole] == ['INSTRUMENT_REFERENCE', 'BACKGROUND']
+    assert [m.name for m in FrequencySweepRole] == ['INSTRUMENT_REFERENCE', 'BACKGROUND', 'OBJECT_MEASUREMENT']
