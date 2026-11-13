@@ -1,7 +1,7 @@
 import subprocess
 import unittest
 
-from infrastructure.provenance.git_software_provenance_reader import GitSoftwareProvenanceReader
+from infrastructure.git_software_provenance_reader.git_software_provenance_reader import GitSoftwareProvenanceReader
 
 ANSWERS = {
     ("rev-parse", "HEAD"): "71d88feabeb8341267fdaa52617f4027e41eec66",

@@ -33,7 +33,7 @@ from infrastructure.hardware.arcus_performax_4ex.fake.fake_arcus_performax4ex_co
 from infrastructure.mocks.adapter_mock_i_acquisition_port import MockAcquisitionPort
 from infrastructure.mocks.adapter_mock_i_aefi_acquisition_executor import MockAefiAcquisitionExecutor
 from infrastructure.mocks.adapter_mock_i_motion_port import MockMotionPort
-from infrastructure.unit_of_work.in_memory_unit_of_work import InMemoryUnitOfWork
+from infrastructure.in_memory_unit_of_work.in_memory_unit_of_work import InMemoryUnitOfWork
 from uuid import uuid4
 
 SHORT = ColumnRestCriterion(rest_measurement_s=0.2, window_s=0.1, factor=1.5, timeout_s=1.0)

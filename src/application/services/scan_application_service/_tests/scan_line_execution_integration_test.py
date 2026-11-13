@@ -9,7 +9,7 @@ import pytest
 
 from application.services.scan_application_service.scan_application_service import ScanApplicationService
 from application.services.scan_application_service.scan_closure_handler.scan_closure_handler import ScanClosureHandler
-from infrastructure.unit_of_work.in_memory_unit_of_work import InMemoryUnitOfWork
+from infrastructure.in_memory_unit_of_work.in_memory_unit_of_work import InMemoryUnitOfWork
 from application.services.scan_application_service.dtos.scan_dtos import LineScanConfigDTO
 from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
 from domain.step_scan.value_objects.scan_status.scan_status import ScanStatus

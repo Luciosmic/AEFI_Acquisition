@@ -146,9 +146,9 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
     from infrastructure.persistence.acquisition_throughput.csv_acquisition_throughput_export_port import (
         CsvAcquisitionThroughputExportPort,
     )
-    from infrastructure.acquisition_conditions.acquisition_conditions_reader import AcquisitionConditionsReader
+    from infrastructure.acquisition_conditions_reader.acquisition_conditions_reader import AcquisitionConditionsReader
     from infrastructure.hardware.serial_link.ftdi_usb_latency_timer_reader import FtdiUsbLatencyTimerReader
-    from infrastructure.provenance.git_software_provenance_reader import GitSoftwareProvenanceReader
+    from infrastructure.git_software_provenance_reader.git_software_provenance_reader import GitSoftwareProvenanceReader
     from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
     from infrastructure.events.event_audit_log import EventAuditLog
     from infrastructure.file_event_log_storage.file_event_log_storage import FileEventLogStorage
@@ -176,8 +176,8 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
     from infrastructure.hardware.micro_controller.ad9106.adapter_synchronous_detection_ad9106 import (
         AdapterSynchronousDetectionAD9106,
     )
-    from infrastructure.post_processing.aefi_post_processor_port import AefiPostProcessorPort, rotation_origin
-    from infrastructure.unit_of_work.in_memory_unit_of_work import InMemoryUnitOfWork
+    from infrastructure.aefi_post_processor_port.aefi_post_processor_port import AefiPostProcessorPort, rotation_origin
+    from infrastructure.in_memory_unit_of_work.in_memory_unit_of_work import InMemoryUnitOfWork
     from infrastructure.electric_field_probe_acquisition_executor.electric_field_probe_acquisition_executor import ElectricFieldProbeAcquisitionExecutor
     from infrastructure.inertial_probe_acquisition_executor.inertial_probe_acquisition_executor import InertialProbeAcquisitionExecutor
     from infrastructure.hardware.lsm9ds1.lsm9ds1_config_loader import load_lsm9ds1_config

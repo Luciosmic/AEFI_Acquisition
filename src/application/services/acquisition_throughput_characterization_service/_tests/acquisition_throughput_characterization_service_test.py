@@ -38,12 +38,12 @@ from application.shared.acquisition_parameters.acquisition_conditions_dtos impor
     BenchPositionDTO,
     HostLinkDTO,
 )
-from infrastructure.acquisition_conditions.fake.fake_acquisition_conditions import (
+from infrastructure.acquisition_conditions_reader.fake.fake_acquisition_conditions_reader import (
     FakeAcquisitionConditionsPort,
     make_bench_conditions,
 )
 from infrastructure.hardware.serial_link.fake.fake_usb_latency_timer_port import FakeUsbLatencyTimerPort
-from infrastructure.provenance.fake.fake_provenance import FakeSoftwareProvenancePort
+from infrastructure.git_software_provenance_reader.fake.fake_git_software_provenance_reader import FakeSoftwareProvenancePort
 from dataclasses import replace
 
 ADC_OUTPUT_RATE_HZ = 2000.0

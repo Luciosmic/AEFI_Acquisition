@@ -19,7 +19,7 @@ from application.shared.acquisition_parameters.i_software_provenance_port import
 logger = logging.getLogger(__name__)
 
 SOFTWARE_NAME = "AEFI Acquisition"
-REPOSITORY_ROOT = Path(__file__).resolve().parents[3]  # src/infrastructure/provenance/ -> repo root
+REPOSITORY_ROOT = Path(__file__).resolve().parents[3]  # src/infrastructure/git_software_provenance_reader/ -> repo root
 GIT_TIMEOUT_S = 5.0
 
 # Runs `git <args>` in the repository; returns stdout, raises on any failure.

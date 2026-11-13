@@ -9,7 +9,7 @@ from domain.test_bench.calibration.entities.hardware_component_selection.hardwar
 from domain.test_bench.calibration.entities.sensor_calibration_entry.sensor_calibration_entry import SensorCalibrationEntry
 from domain.test_bench.calibration.value_objects.hardware_component_kind.hardware_component_kind import HardwareComponentKind
 from domain.test_bench.calibration.value_objects.sensor_rotation_angles.sensor_rotation_angles import SensorRotationAngles
-from infrastructure.acquisition_conditions.acquisition_conditions_reader import AcquisitionConditionsReader
+from infrastructure.acquisition_conditions_reader.acquisition_conditions_reader import AcquisitionConditionsReader
 from infrastructure.mocks.adapter_mock_i_motion_port import MockMotionPort
 from infrastructure.persistence.calibration.fake.fake_hardware_component_repository import (
     FakeHardwareComponentRepository,
@@ -91,7 +91,7 @@ class TestAcquisitionConditionsReader(unittest.TestCase):
         from pathlib import Path
         from unittest import mock
 
-        from infrastructure.acquisition_conditions import acquisition_conditions_reader as module
+        from infrastructure.acquisition_conditions_reader import acquisition_conditions_reader as module
 
         with tempfile.TemporaryDirectory() as tmp:
             arcus, motion = Path(tmp) / "arcus.json", Path(tmp) / "motion.json"
@@ -114,7 +114,7 @@ class TestAcquisitionConditionsReader(unittest.TestCase):
         from pathlib import Path
         from unittest import mock
 
-        from infrastructure.acquisition_conditions import acquisition_conditions_reader as module
+        from infrastructure.acquisition_conditions_reader import acquisition_conditions_reader as module
 
         with tempfile.TemporaryDirectory() as tmp:
             arcus = Path(tmp) / "arcus.json"
@@ -133,7 +133,7 @@ class TestAcquisitionConditionsReader(unittest.TestCase):
         from pathlib import Path
         from unittest import mock
 
-        from infrastructure.acquisition_conditions import acquisition_conditions_reader as module
+        from infrastructure.acquisition_conditions_reader import acquisition_conditions_reader as module
 
         with mock.patch.object(module, "ARCUS_CONFIG", Path("does/not/exist.json")):
             conditions = self.reader().read_conditions()

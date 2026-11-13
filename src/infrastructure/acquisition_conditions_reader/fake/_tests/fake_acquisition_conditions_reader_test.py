@@ -3,7 +3,7 @@ import unittest
 from application.shared.acquisition_parameters.acquisition_conditions_dtos import (
     BenchPositionDTO,
 )
-from infrastructure.acquisition_conditions.fake.fake_acquisition_conditions import (
+from infrastructure.acquisition_conditions_reader.fake.fake_acquisition_conditions_reader import (
     FakeAcquisitionConditionsPort,
     make_bench_conditions,
 )

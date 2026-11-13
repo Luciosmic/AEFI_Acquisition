@@ -18,7 +18,7 @@ from application.services.frequency_sweep_service.dtos.frequency_sweep_dtos impo
 )
 from application.services.frequency_sweep_service.frequency_sweep_service import CONTROLLER
 from application.shared.acquisition_parameters.acquisition_conditions_dtos import BenchPositionDTO, ExportedFileDTO
-from infrastructure.acquisition_conditions.fake.fake_acquisition_conditions import make_bench_conditions
+from infrastructure.acquisition_conditions_reader.fake.fake_acquisition_conditions_reader import make_bench_conditions
 from infrastructure.persistence.acquisition_parameters.acquisition_parameters_v1 import UCUM_UNITS
 from infrastructure.persistence.acquisition_throughput._tests.acquisition_parameters_v1_serializer_test import (
     UCUM_SYNTAX,
@@ -30,7 +30,7 @@ from infrastructure.persistence.frequency_sweep.acquisition_parameters_v1_serial
     serialize_acquisition_parameters_v1,
 )
 from infrastructure.persistence.frequency_sweep.csv_frequency_sweep_export_port import CsvFrequencySweepExportPort
-from infrastructure.provenance.fake.fake_provenance import CLEAN
+from infrastructure.git_software_provenance_reader.fake.fake_git_software_provenance_reader import CLEAN
 
 FREQUENCIES = (100.0, 1000.0, 10000.0)
 ACTIVITY = FrequencySweepActivityDTO(

@@ -15,7 +15,7 @@ from application.shared.acquisition_parameters.acquisition_conditions_dtos impor
 from application.services.acquisition_throughput_characterization_service.dtos.acquisition_parameters_dtos import (
     AcquisitionParametersDTO,
 )
-from infrastructure.acquisition_conditions.fake.fake_acquisition_conditions import make_bench_conditions
+from infrastructure.acquisition_conditions_reader.fake.fake_acquisition_conditions_reader import make_bench_conditions
 from infrastructure.persistence.acquisition_throughput._tests import (
     make_acquisition_parameters_dto,
     make_throughput_activity_dto,
@@ -24,7 +24,7 @@ from infrastructure.persistence.acquisition_throughput.acquisition_parameters_v1
     UCUM_UNITS,
     serialize_acquisition_parameters_v1,
 )
-from infrastructure.provenance.fake.fake_provenance import CLEAN, GIT_UNAVAILABLE
+from infrastructure.git_software_provenance_reader.fake.fake_git_software_provenance_reader import CLEAN, GIT_UNAVAILABLE
 
 ACTIVITY = make_throughput_activity_dto()
 PARAMETERS = make_acquisition_parameters_dto()

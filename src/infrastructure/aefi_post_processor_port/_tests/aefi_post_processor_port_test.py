@@ -18,7 +18,7 @@ from domain.test_bench.calibration.value_objects.sensor_rotation_angles.sensor_r
     SensorRotationAngles,
 )
 from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
-from infrastructure.post_processing.aefi_post_processor_port import (
+from infrastructure.aefi_post_processor_port.aefi_post_processor_port import (
     AefiPostProcessorPort,
     rotation_origin,
 )

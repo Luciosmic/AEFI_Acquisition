@@ -1,6 +1,6 @@
 import unittest
 
-from infrastructure.provenance.fake.fake_provenance import (
+from infrastructure.git_software_provenance_reader.fake.fake_git_software_provenance_reader import (
     GIT_UNAVAILABLE,
     FakeSoftwareProvenancePort,
 )

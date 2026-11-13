@@ -15,7 +15,7 @@ from infrastructure.execution.thread_pool_task_runner import ThreadPoolTaskRunne
 from infrastructure.mocks.adapter_mock_i_acquisition_port import MockAcquisitionPort
 from infrastructure.mocks.adapter_mock_i_aefi_acquisition_executor import MockAefiAcquisitionExecutor
 from infrastructure.mocks.adapter_mock_i_motion_port import MockMotionPort
-from infrastructure.unit_of_work.in_memory_unit_of_work import InMemoryUnitOfWork
+from infrastructure.in_memory_unit_of_work.in_memory_unit_of_work import InMemoryUnitOfWork
 
 
 class UncalibratedMotionPort(MockMotionPort):

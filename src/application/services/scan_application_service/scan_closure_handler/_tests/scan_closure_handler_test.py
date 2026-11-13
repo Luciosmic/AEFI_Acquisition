@@ -15,7 +15,7 @@ from domain.shared_kernel.value_objects.acquisition.aefi_voltage_measurement imp
 from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
 from domain.step_scan.events.scan_completed.scan_completed import ScanCompleted
 from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
-from infrastructure.unit_of_work.in_memory_unit_of_work import InMemoryUnitOfWork
+from infrastructure.in_memory_unit_of_work.in_memory_unit_of_work import InMemoryUnitOfWork
 
 
 def _samples(n=2):

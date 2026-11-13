@@ -8,7 +8,7 @@ from domain.aefi_line.value_objects.line_grid_point.line_grid_point import LineG
 from domain.shared_kernel.value_objects.acquisition.aefi_voltage_measurement import AefiVoltageMeasurement
 from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
 from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
-from infrastructure.unit_of_work.in_memory_unit_of_work import InMemoryUnitOfWork
+from infrastructure.in_memory_unit_of_work.in_memory_unit_of_work import InMemoryUnitOfWork
 
 M = AefiVoltageMeasurement(1, 1, 1, 1, 1, 1, timestamp=datetime(2026, 10, 9, tzinfo=timezone.utc))
 

@@ -19,7 +19,7 @@ les noms et formats de fichiers.
 
 - ABC pure. Implémenté par `infrastructure/persistence/acquisition_snapshot_reader.py`.
 - Depuis le 2026-10-02, son seul consommateur est
-  `infrastructure/acquisition_conditions/acquisition_conditions_reader.py`,
+  `infrastructure/acquisition_conditions_reader/acquisition_conditions_reader.py`,
   qui le traduit en `AcquisitionConditionsDTO` pour tous les exports
   (`IAcquisitionConditionsPort`). `ScanExportService` ne le lit plus.
   `ponytail:` le port reste dans le dossier du service d'export alors qu'il ne

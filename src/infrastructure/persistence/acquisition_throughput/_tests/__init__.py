@@ -19,8 +19,8 @@ from application.services.acquisition_throughput_characterization_service.dtos.a
 from application.services.acquisition_throughput_characterization_service.dtos.acquisition_throughput_dtos import (
     AcquisitionThroughputRequestDTO,
 )
-from infrastructure.acquisition_conditions.fake.fake_acquisition_conditions import make_bench_conditions
-from infrastructure.provenance.fake.fake_provenance import CLEAN
+from infrastructure.acquisition_conditions_reader.fake.fake_acquisition_conditions_reader import make_bench_conditions
+from infrastructure.git_software_provenance_reader.fake.fake_git_software_provenance_reader import CLEAN
 
 
 def make_throughput_activity_dto(**overrides) -> ThroughputActivityDTO:

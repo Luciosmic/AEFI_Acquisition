@@ -8,7 +8,7 @@ from domain.aefi_point.value_objects.sample.sample import Sample
 from domain.shared_kernel.value_objects.acquisition.aefi_voltage_measurement import AefiVoltageMeasurement
 from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
 from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
-from infrastructure.unit_of_work.in_memory_unit_of_work import InMemoryUnitOfWork
+from infrastructure.in_memory_unit_of_work.in_memory_unit_of_work import InMemoryUnitOfWork
 
 
 def _point(scan_id, n=2) -> AefiPoint:
