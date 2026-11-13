@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from application.services.frequency_sweep_service.dtos.frequency_sweep_dtos import (
+from application.frequency_sweep.frequency_sweep_service.dtos.frequency_sweep_dtos import (
     FrequencyPointDTO,
     FrequencySweepResultDTO,
 )

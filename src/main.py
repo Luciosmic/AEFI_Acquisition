@@ -102,7 +102,7 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
     from application.services.excitation_configuration_service.excitation_configuration_service import ExcitationConfigurationService
     from application.services.synchronous_detection_service.synchronous_detection_service import SynchronousDetectionService
     from application.services.sensor_calibration_service.sensor_calibration_service import SensorCalibrationService
-    from application.services.frequency_sweep_service.frequency_sweep_service import FrequencySweepService
+    from application.frequency_sweep.frequency_sweep_service.frequency_sweep_service import FrequencySweepService
     from infrastructure.persistence.frequency_sweep.csv_frequency_sweep_export_port import CsvFrequencySweepExportPort
     from interface.presenters.frequency_sweep_presenter import FrequencySweepPresenter
     from application.services.acquisition_throughput_characterization_service.acquisition_throughput_characterization_service import (

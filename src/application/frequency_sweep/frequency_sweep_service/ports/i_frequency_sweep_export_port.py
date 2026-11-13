@@ -1,10 +1,10 @@
 from abc import ABC, abstractmethod
 from typing import Sequence, Tuple
 
-from application.services.frequency_sweep_service.dtos.acquisition_parameters_dtos import (
+from application.frequency_sweep.frequency_sweep_service.dtos.acquisition_parameters_dtos import (
     FrequencySweepAcquisitionParametersDTO,
 )
-from application.services.frequency_sweep_service.dtos.frequency_sweep_dtos import (
+from application.frequency_sweep.frequency_sweep_service.dtos.frequency_sweep_dtos import (
     FrequencySweepResultDTO,
     FrequencySweepSampleDTO,
 )

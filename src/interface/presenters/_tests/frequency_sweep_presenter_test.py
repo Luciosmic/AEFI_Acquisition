@@ -2,11 +2,11 @@
 
 import unittest
 
-from application.services.frequency_sweep_service.dtos.frequency_sweep_dtos import (
+from application.frequency_sweep.frequency_sweep_service.dtos.frequency_sweep_dtos import (
     FrequencyPointDTO,
     FrequencySweepResultDTO,
 )
-from application.services.frequency_sweep_service.i_api_frequency_sweep_service import IApiFrequencySweepService
+from application.frequency_sweep.frequency_sweep_service.i_api_frequency_sweep_service import IApiFrequencySweepService
 from interface.presenters.frequency_sweep_presenter import FrequencySweepPresenter
 
 

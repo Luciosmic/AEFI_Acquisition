@@ -6,17 +6,17 @@ from dataclasses import replace
 from datetime import datetime, timezone
 from pathlib import Path
 
-from application.services.frequency_sweep_service.dtos.acquisition_parameters_dtos import (
+from application.frequency_sweep.frequency_sweep_service.dtos.acquisition_parameters_dtos import (
     FrequencySweepAcquisitionParametersDTO,
     FrequencySweepActivityDTO,
     SweptExcitationDTO,
 )
-from application.services.frequency_sweep_service.dtos.frequency_sweep_dtos import (
+from application.frequency_sweep.frequency_sweep_service.dtos.frequency_sweep_dtos import (
     FrequencyPointDTO,
     FrequencySweepResultDTO,
     FrequencySweepSampleDTO,
 )
-from application.services.frequency_sweep_service.frequency_sweep_service import CONTROLLER
+from application.frequency_sweep.frequency_sweep_service.frequency_sweep_service import CONTROLLER
 from application.shared.acquisition_parameters.acquisition_conditions_dtos import BenchPositionDTO, ExportedFileDTO
 from infrastructure.acquisition_conditions_reader.fake.fake_acquisition_conditions_reader import make_bench_conditions
 from infrastructure.persistence.acquisition_parameters.acquisition_parameters_v1 import UCUM_UNITS

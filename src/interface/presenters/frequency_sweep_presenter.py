@@ -13,14 +13,14 @@ from typing import Tuple
 
 from PySide6.QtCore import QObject, Signal, Slot
 
-from application.services.frequency_sweep_service.dtos.frequency_sweep_dtos import (
+from application.frequency_sweep.frequency_sweep_service.dtos.frequency_sweep_dtos import (
     ROLE_LABELS,
     FrequencyPointDTO,
     FrequencySweepRequestDTO,
     FrequencySweepResultDTO,
 )
-from application.services.frequency_sweep_service.i_api_frequency_sweep_service import IApiFrequencySweepService
-from application.services.frequency_sweep_service.ports.i_frequency_sweep_output_port import IFrequencySweepOutputPort
+from application.frequency_sweep.frequency_sweep_service.i_api_frequency_sweep_service import IApiFrequencySweepService
+from application.frequency_sweep.frequency_sweep_service.ports.i_frequency_sweep_output_port import IFrequencySweepOutputPort
 from interface.qt_abc import QABCMeta
 
 logger = logging.getLogger(__name__)

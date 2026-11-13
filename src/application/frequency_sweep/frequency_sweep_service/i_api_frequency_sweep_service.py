@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
-from application.services.frequency_sweep_service.dtos.frequency_sweep_dtos import FrequencySweepRequestDTO
-from application.services.frequency_sweep_service.ports.i_frequency_sweep_output_port import IFrequencySweepOutputPort
+from application.frequency_sweep.frequency_sweep_service.dtos.frequency_sweep_dtos import FrequencySweepRequestDTO
+from application.frequency_sweep.frequency_sweep_service.ports.i_frequency_sweep_output_port import IFrequencySweepOutputPort
 
 
 class IApiFrequencySweepService(ABC):
