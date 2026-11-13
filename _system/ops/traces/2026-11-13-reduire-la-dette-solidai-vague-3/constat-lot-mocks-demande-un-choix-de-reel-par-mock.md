@@ -33,7 +33,7 @@ Le choix du réel n'est pas déductible du nom, et plusieurs doubles visent le m
 | `adapter_mock_i_inertial_probe_acquisition_executor` | exécuteur sonde inertielle | 2 | `hardware/lsm9ds1/` ? | |
 | `adapter_mock_i_export_port` | `IExportPort` | 0 | `persistence/` ? | aucun import hors du dossier : candidat à la suppression |
 
-Chaque déplacement change des imports dans environ 80 fichiers de test et de composition (`hardware_composition_root.py` construit déjà l'un d'eux en mode simulation).
+Le lot entier change des imports dans environ 80 fichiers de test et de composition (colonne « imports », cumul) (`hardware_composition_root.py` construit déjà l'un d'eux en mode simulation).
 
 ## Simulateurs physiques, laissés en place
 
