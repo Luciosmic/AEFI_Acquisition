@@ -14,6 +14,6 @@ Les ports déjà typés ainsi avant la vague (`i_software_provenance_port_intent
 ## Deux voies
 
 1. **Ajouter `port` et `interface-de-repository` aux types que A20 accepte** (paramètre `types` de `solidai-intention-non-typee` dans solidai-atome). Une ligne de configuration, aucune note à toucher. Les ports gardent leur intention propre, ce que H5 déconseille (« le port n'a pas d'intention propre : sa docstring en tient lieu »).
-2. **Suivre H5 jusqu'au bout** : copier Responsibility, Rationale et Design de chaque intention de port dans la docstring de sa classe, déclarer le port en enregistrement inline dans `ports:` de son service, supprimer le fichier. Environ 56 fichiers, du texte français réécrit en docstrings anglaises, et la prose des intentions disparaît.
+2. **Suivre H5 jusqu'au bout** : copier Responsibility, Rationale et Design de chaque intention de port dans la docstring de sa classe, déclarer le port en enregistrement inline dans `ports:` de son service, supprimer le fichier. 51 fichiers, du texte français réécrit en docstrings anglaises, et la prose des intentions disparaît.
 
 Recommandation : la voie 1 maintenant (elle débloque `implements` tel que le lot l'a écrit), la voie 2 service par service quand on touche à un port.
