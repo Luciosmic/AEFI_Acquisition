@@ -14,11 +14,11 @@ from application.shared.excitation_configuration_service.excitation_configuratio
 from domain.shared_kernel.excitation.events.excitation_frequency_changed.excitation_frequency_changed import (
     ExcitationFrequencyChanged,
 )
-from domain.test_bench.calibration.entities.synchronous_detection_phase_calibration_entry.synchronous_detection_phase_calibration_entry import (
+from domain.test_bench_calibration.entities.synchronous_detection_phase_calibration_entry.synchronous_detection_phase_calibration_entry import (
     SynchronousDetectionPhaseCalibrationEntry,
 )
 from domain.test_bench_configuration.value_objects.hardware_signature.hardware_signature import HardwareSignature
-from domain.test_bench.calibration.value_objects.synchronous_detection_phase_calibration_point.synchronous_detection_phase_calibration_point import (
+from domain.test_bench_calibration.value_objects.synchronous_detection_phase_calibration_point.synchronous_detection_phase_calibration_point import (
     SynchronousDetectionPhaseCalibrationPoint,
 )
 from domain.shared_kernel.excitation.value_objects.phase_angle import PhaseAngle

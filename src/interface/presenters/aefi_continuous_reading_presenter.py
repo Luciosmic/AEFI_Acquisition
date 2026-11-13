@@ -24,7 +24,7 @@ from domain.shared_kernel.events.aefi_voltage_reading_failed.aefi_voltage_readin
 from domain.shared_kernel.events.aefi_voltage_reading_stopped.aefi_voltage_reading_stopped import (
     AefiVoltageReadingStopped,
 )
-from domain.test_bench.calibration.events.sensor_transformation_angles_updated.sensor_transformation_angles_updated import (
+from domain.test_bench_calibration.events.sensor_transformation_angles_updated.sensor_transformation_angles_updated import (
     SensorTransformationAnglesUpdated,
 )
 from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus

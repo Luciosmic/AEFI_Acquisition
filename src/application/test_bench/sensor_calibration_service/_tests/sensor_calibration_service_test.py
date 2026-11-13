@@ -17,7 +17,7 @@ from application.test_bench.hardware_component_service.hardware_component_servic
 from infrastructure.persistence.calibration.fake.fake_source_geometry_calibration_repository import (
     FakeSourceGeometryCalibrationRepository,
 )
-from domain.test_bench.calibration.entities.sensor_calibration_entry.sensor_calibration_entry import (
+from domain.test_bench_calibration.entities.sensor_calibration_entry.sensor_calibration_entry import (
     SensorCalibrationEntry,
 )
 from domain.test_bench_configuration.events.hardware_component_events.hardware_component_events import (
@@ -26,7 +26,7 @@ from domain.test_bench_configuration.events.hardware_component_events.hardware_c
 from domain.test_bench_configuration.value_objects.hardware_component_kind.hardware_component_kind import (
     HardwareComponentKind,
 )
-from domain.test_bench.calibration.value_objects.sensor_rotation_angles.sensor_rotation_angles import (
+from domain.test_bench_calibration.value_objects.sensor_rotation_angles.sensor_rotation_angles import (
     SensorRotationAngles,
 )
 from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus

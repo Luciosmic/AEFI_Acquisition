@@ -35,7 +35,7 @@ so recorded calibrations were never used.
   formula. "Enregistrer calibration" then records the angles as a new
   calibration entry. The procedure text shows the convention; its reference
   definition is
-  `domain/test_bench/calibration/value_objects/rotation_convention/rotation_convention_intention.md`.
+  `domain/test_bench_calibration/value_objects/rotation_convention/rotation_convention_intention.md`.
 - Document the manual procedure inside the tab, as numbered steps in the order
   the operator does them (check the mounted sensor and the source geometry;
   excitation level and X mode; Start + "Apply Rotation" in Continuous Reading;

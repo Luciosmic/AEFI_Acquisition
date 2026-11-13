@@ -33,18 +33,18 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from domain.test_bench_configuration.bench_configuration import BenchConfiguration
-from domain.test_bench.calibration.calibration import Calibration
-from domain.test_bench.calibration.entities.source_geometry_calibration_entry.source_geometry_calibration_entry import (
+from domain.test_bench_calibration.calibration import Calibration
+from domain.test_bench_calibration.entities.source_geometry_calibration_entry.source_geometry_calibration_entry import (
     SourceGeometryCalibrationEntry,
 )
-from domain.test_bench.calibration.errors.source_geometry_inconsistent_error import SourceGeometryInconsistentError
-from domain.test_bench.calibration.services.source_frame_solver.source_frame_solver import SourceFrameSolver
+from domain.test_bench_calibration.errors.source_geometry_inconsistent_error import SourceGeometryInconsistentError
+from domain.test_bench_calibration.services.source_frame_solver.source_frame_solver import SourceFrameSolver
 from domain.test_bench_configuration.repositories.i_hardware_component_repository import IHardwareComponentRepository
-from domain.test_bench.calibration.repositories.i_mechanical_transmission_calibration_repository import (
+from domain.test_bench_calibration.repositories.i_mechanical_transmission_calibration_repository import (
     IMechanicalTransmissionCalibrationRepository,
 )
-from domain.test_bench.calibration.repositories.i_sensor_calibration_repository import ISensorCalibrationRepository
-from domain.test_bench.calibration.repositories.i_source_geometry_calibration_repository import (
+from domain.test_bench_calibration.repositories.i_sensor_calibration_repository import ISensorCalibrationRepository
+from domain.test_bench_calibration.repositories.i_source_geometry_calibration_repository import (
     ISourceGeometryCalibrationRepository,
 )
 from domain.test_bench_configuration.value_objects.hardware_component_kind.hardware_component_kind import (

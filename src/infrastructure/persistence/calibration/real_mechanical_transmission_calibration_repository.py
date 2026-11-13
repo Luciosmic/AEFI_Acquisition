@@ -15,10 +15,10 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
-from domain.test_bench.calibration.entities.mechanical_transmission_calibration_entry.mechanical_transmission_calibration_entry import (
+from domain.test_bench_calibration.entities.mechanical_transmission_calibration_entry.mechanical_transmission_calibration_entry import (
     MechanicalTransmissionCalibrationEntry,
 )
-from domain.test_bench.calibration.repositories.i_mechanical_transmission_calibration_repository import (
+from domain.test_bench_calibration.repositories.i_mechanical_transmission_calibration_repository import (
     IMechanicalTransmissionCalibrationRepository,
 )
 

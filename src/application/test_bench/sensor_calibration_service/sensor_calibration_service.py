@@ -30,8 +30,8 @@ from application.test_bench.sensor_calibration_service.ports.i_sensor_calibratio
 from application.shared.exclusive_control.exclusive_control import take_all
 from application.shared.ports.i_async_task_runner import IAsyncTaskRunner
 from application.shared.settled_sample_collection.settled_sample_collection import collect_settled_samples
-from domain.test_bench.calibration.errors.sensor_response_degenerate_error import SensorResponseDegenerateError
-from domain.test_bench.calibration.services.sensor_mounting_solver.sensor_mounting_solver import solve_mounting_angles
+from domain.test_bench_calibration.errors.sensor_response_degenerate_error import SensorResponseDegenerateError
+from domain.test_bench_calibration.services.sensor_mounting_solver.sensor_mounting_solver import solve_mounting_angles
 from domain.shared_kernel.excitation.value_objects.excitation_mode import ExcitationMode
 from application.test_bench.source_geometry_calibration_service.source_geometry_calibration_service import (
     SOURCE_GEOMETRY_CALIBRATION_ENTRY_ADDED_TOPIC,
@@ -39,20 +39,20 @@ from application.test_bench.source_geometry_calibration_service.source_geometry_
 from application.test_bench.hardware_component_service.hardware_component_service import (
     HARDWARE_COMPONENT_MOUNTED_TOPIC,
 )
-from domain.test_bench.calibration.calibration import Calibration
-from domain.test_bench.calibration.entities.sensor_calibration_entry.sensor_calibration_entry import (
+from domain.test_bench_calibration.calibration import Calibration
+from domain.test_bench_calibration.entities.sensor_calibration_entry.sensor_calibration_entry import (
     SensorCalibrationEntry,
 )
-from domain.test_bench.calibration.events.active_sensor_rotation_changed.active_sensor_rotation_changed import (
+from domain.test_bench_calibration.events.active_sensor_rotation_changed.active_sensor_rotation_changed import (
     ActiveSensorRotationChanged,
 )
-from domain.test_bench.calibration.repositories.i_sensor_calibration_repository import (
+from domain.test_bench_calibration.repositories.i_sensor_calibration_repository import (
     ISensorCalibrationRepository,
 )
 from domain.test_bench_configuration.value_objects.hardware_component_kind.hardware_component_kind import (
     HardwareComponentKind,
 )
-from domain.test_bench.calibration.value_objects.sensor_rotation_angles.sensor_rotation_angles import (
+from domain.test_bench_calibration.value_objects.sensor_rotation_angles.sensor_rotation_angles import (
     SensorRotationAngles,
 )
 from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
@@ -76,7 +76,7 @@ class SensorCalibrationService(IApiSensorCalibrationService):
     capteur monté (amène le capteur du repère sources au montage actuel ;
     mesure E_sensor = Pᵀ·E_sources ; correction E_sources = P·E_sensor),
     procédure décrite dans le vault de thèse. Définition des repères et de P :
-    domain/test_bench/calibration/value_objects/rotation_convention/rotation_convention_intention.md.
+    domain/test_bench_calibration/value_objects/rotation_convention/rotation_convention_intention.md.
 
     L'identité et le gain du capteur relèvent du catalogue des composants
     (onglet « Capteur ») ; ici, seuls les angles, mesurés sur UN montage du

@@ -2,7 +2,7 @@
 
 ## Rationale
 
-Appliquer à chaque échantillon la transformation de coordonnées qui ramène la mesure dans le repère sources : `E_sources = P·E_sensor`, où `P = Rx(θx)·Ry(θy)·Rz(θz)` est la rotation de montage (elle amène le capteur, aligné sur le repère sources, jusqu'à son montage actuel). Le capteur mesure `E_sensor = Pᵀ·E_sources` ; la correction en est la transposée. Les angles d'essai (tâtonnement) s'appliquent aussi, en direct. Elle corrige l'orientation mécanique du capteur AEFI. Définition des repères et de P : `domain/test_bench/calibration/value_objects/rotation_convention/rotation_convention_intention.md`.
+Appliquer à chaque échantillon la transformation de coordonnées qui ramène la mesure dans le repère sources : `E_sources = P·E_sensor`, où `P = Rx(θx)·Ry(θy)·Rz(θz)` est la rotation de montage (elle amène le capteur, aligné sur le repère sources, jusqu'à son montage actuel). Le capteur mesure `E_sensor = Pᵀ·E_sources` ; la correction en est la transposée. Les angles d'essai (tâtonnement) s'appliquent aussi, en direct. Elle corrige l'orientation mécanique du capteur AEFI. Définition des repères et de P : `domain/test_bench_calibration/value_objects/rotation_convention/rotation_convention_intention.md`.
 
 Les angles viennent de la calibration capteur (rotation active : dernière calibration pour la géométrie source courante, sinon angles idéaux). Avant, ils venaient d'un panneau séparé non persisté (Sensor Transformation), supprimé.
 

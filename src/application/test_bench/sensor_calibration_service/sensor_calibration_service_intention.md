@@ -14,7 +14,7 @@
 The sensor calibration procedure (thesis vault) yields the 3 mounting angles
 P (brings the sensor from the sources frame to its current mounting;
 measurement E_sensor = Pᵀ·E_sources; correction E_sources = P·E_sensor; frames
-and definition of P: `domain/test_bench/calibration/value_objects/rotation_convention/rotation_convention_intention.md`)
+and definition of P: `domain/test_bench_calibration/value_objects/rotation_convention/rotation_convention_intention.md`)
 that must be recorded with full traceability — which sensor, which hardware,
 which sphere geometry, when — and later retrieved for the current setup.
 The sensor identity (version + serial number) used to live in

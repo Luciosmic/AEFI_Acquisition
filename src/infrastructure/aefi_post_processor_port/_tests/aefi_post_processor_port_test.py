@@ -11,10 +11,10 @@ from unittest.mock import patch
 from application.test_bench.sensor_calibration_service.sensor_calibration_service import (
     ACTIVE_SENSOR_ROTATION_CHANGED_TOPIC,
 )
-from domain.test_bench.calibration.events.active_sensor_rotation_changed.active_sensor_rotation_changed import (
+from domain.test_bench_calibration.events.active_sensor_rotation_changed.active_sensor_rotation_changed import (
     ActiveSensorRotationChanged,
 )
-from domain.test_bench.calibration.value_objects.sensor_rotation_angles.sensor_rotation_angles import (
+from domain.test_bench_calibration.value_objects.sensor_rotation_angles.sensor_rotation_angles import (
     SensorRotationAngles,
 )
 from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus

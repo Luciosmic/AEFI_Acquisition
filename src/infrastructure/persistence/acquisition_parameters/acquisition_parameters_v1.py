@@ -21,7 +21,7 @@ from application.shared.acquisition_parameters.acquisition_conditions_dtos impor
     SignalGenerationSettingsDTO,
     SoftwareProvenanceDTO,
 )
-from domain.test_bench.calibration.value_objects.rotation_convention.rotation_convention import RotationConvention
+from domain.test_bench_calibration.value_objects.rotation_convention.rotation_convention import RotationConvention
 from domain.shared_kernel.excitation.value_objects.phase_angle import PhaseAngle
 
 ACQUISITION_PARAMETERS_FILE_NAME = "acquisition-parameters.json"

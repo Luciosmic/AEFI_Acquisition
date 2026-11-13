@@ -73,9 +73,9 @@ Implémentée et validée dans `shared_kernel` (2026-07-24 → 2026-07-29), puis
 
 **Réintégrée dans le domain `calibration` (2026-10-01)** — le besoin s'est confirmé : reconstruire les positions depuis les mesures au pied à coulisse, les exporter dans le JSON d'acquisition, et les visualiser en direct dans l'onglet de calibration de la géométrie. Un seul langage : l'entrée est `SourceGeometryCalibrationEntry` (ordre `D_S1_S2, D_S3_S4, D_S1_S3, D_S1_S4, D_S2_S3, D_S2_S4`), le résultat `SourceFrameGeometry` est exprimé dans **le** repère source (centroïde, chaque sphère dans son quadrant `x_neg_y_pos`…) ; le repère de travail du solveur (S1 à l'origine) n'est plus exposé. `external_modules/source_geometry/` est supprimé.
 
-- `domain/test_bench/calibration/services/source_frame_solver/` — reconstruction DGP coplanaire + carré ajusté (historique des corrections dans son intention).
-- `domain/test_bench/calibration/value_objects/source_frame_geometry/` — résultat.
-- `domain/test_bench/calibration/errors/source_geometry_inconsistent_error.py` — chevauchement / triangle qui ne ferme pas ; l'agrégat refuse d'enregistrer une géométrie non reconstructible.
+- `domain/test_bench_calibration/services/source_frame_solver/` — reconstruction DGP coplanaire + carré ajusté (historique des corrections dans son intention).
+- `domain/test_bench_calibration/value_objects/source_frame_geometry/` — résultat.
+- `domain/test_bench_calibration/errors/source_geometry_inconsistent_error.py` — chevauchement / triangle qui ne ferme pas ; l'agrégat refuse d'enregistrer une géométrie non reconstructible.
 - `SourceGeometryCalibrationService.preview_source_frame` → `OperationResult` (aperçu live, rien d'enregistré).
 - Export : `hardware_configuration.source_frame_reconstruction` dans le JSON d'acquisition.
 - Non fait : `PointChargeFieldSimulator` suppose toujours un carré parfait.

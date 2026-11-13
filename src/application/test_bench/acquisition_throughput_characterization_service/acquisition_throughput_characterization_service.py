@@ -64,11 +64,11 @@ from application.shared.hardware_configuration_service.i_api_hardware_configurat
 from application.shared.exclusive_control.exclusive_control import take_all
 from application.shared.ports.i_async_task_runner import IAsyncTaskRunner
 from application.shared.settled_sample_collection.settled_sample_collection import collect_settled_samples
-from domain.test_bench.calibration.services.acquisition_throughput_analysis.acquisition_throughput_analysis import (
+from domain.test_bench_calibration.services.acquisition_throughput_analysis.acquisition_throughput_analysis import (
     characterize_acquisition_throughput,
     characterize_point,
 )
-from domain.test_bench.calibration.value_objects.acquisition_throughput_characterization.acquisition_throughput_characterization import (
+from domain.test_bench_calibration.value_objects.acquisition_throughput_characterization.acquisition_throughput_characterization import (
     AcquisitionThroughputPoint,
 )
 from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus

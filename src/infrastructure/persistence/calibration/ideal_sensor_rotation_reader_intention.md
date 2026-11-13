@@ -25,4 +25,4 @@ measured field without any visible error.
 - `read(path: Optional[Path] = None) -> SensorRotationAngles`.
 - Called once by the composition root (`main.py`), result injected into
   `SensorCalibrationService` as `default_angles`.
-- Frames and definition of the mounting rotation P (brings the sensor from the sources frame to its current mounting): `domain/test_bench/calibration/value_objects/rotation_convention/rotation_convention_intention.md`.
+- Frames and definition of the mounting rotation P (brings the sensor from the sources frame to its current mounting): `domain/test_bench_calibration/value_objects/rotation_convention/rotation_convention_intention.md`.

@@ -17,7 +17,7 @@ from application.test_bench.sensor_calibration_service.ports.i_sensor_calibratio
     ISensorCalibrationOutputPort,
 )
 from application.test_bench.sensor_calibration_service.sensor_calibration_service import SensorCalibrationService
-from domain.test_bench.calibration.value_objects.sensor_rotation_angles.sensor_rotation_angles import SensorRotationAngles
+from domain.test_bench_calibration.value_objects.sensor_rotation_angles.sensor_rotation_angles import SensorRotationAngles
 from domain.shared_kernel.events.aefi_voltage_sample_acquired.aefi_voltage_sample_acquired import (
     AefiVoltageSampleAcquired,
 )

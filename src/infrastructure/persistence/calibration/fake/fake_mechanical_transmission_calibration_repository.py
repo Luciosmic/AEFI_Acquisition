@@ -10,10 +10,10 @@ from __future__ import annotations
 
 from typing import List
 
-from domain.test_bench.calibration.entities.mechanical_transmission_calibration_entry.mechanical_transmission_calibration_entry import (
+from domain.test_bench_calibration.entities.mechanical_transmission_calibration_entry.mechanical_transmission_calibration_entry import (
     MechanicalTransmissionCalibrationEntry,
 )
-from domain.test_bench.calibration.repositories.i_mechanical_transmission_calibration_repository import (
+from domain.test_bench_calibration.repositories.i_mechanical_transmission_calibration_repository import (
     IMechanicalTransmissionCalibrationRepository,
 )
 

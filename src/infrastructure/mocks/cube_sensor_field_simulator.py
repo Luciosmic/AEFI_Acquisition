@@ -11,7 +11,7 @@ from typing import Optional, Tuple
 
 import numpy as np
 
-from domain.test_bench.calibration.value_objects.sensor_rotation_angles.sensor_rotation_angles import (
+from domain.test_bench_calibration.value_objects.sensor_rotation_angles.sensor_rotation_angles import (
     SensorRotationAngles,
 )
 from infrastructure.mocks.point_charge_field_simulator import PointChargeFieldSimulator

@@ -35,11 +35,11 @@ from application.shared.hardware_configuration_service.i_api_hardware_configurat
 )
 from application.shared.exclusive_control.exclusive_control import take_all
 from application.shared.ports.i_async_task_runner import IAsyncTaskRunner
-from domain.test_bench.calibration.services.adc_output_rate_analysis.adc_output_rate_analysis import (
+from domain.test_bench_calibration.services.adc_output_rate_analysis.adc_output_rate_analysis import (
     characterize_output_rate,
     measure_output_rate,
 )
-from domain.test_bench.calibration.value_objects.adc_output_rate_characterization.adc_output_rate_characterization import (
+from domain.test_bench_calibration.value_objects.adc_output_rate_characterization.adc_output_rate_characterization import (
     AdcOutputRateMeasurement,
 )
 

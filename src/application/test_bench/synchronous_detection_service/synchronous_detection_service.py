@@ -11,12 +11,12 @@ from application.test_bench.synchronous_detection_service.i_api_synchronous_dete
 from application.shared.excitation_configuration_service.excitation_configuration_service import (
     EXCITATION_FREQUENCY_CHANGED_TOPIC,
 )
-from domain.test_bench.calibration.calibration import Calibration
-from domain.test_bench.calibration.repositories.i_synchronous_detection_phase_calibration_repository import (
+from domain.test_bench_calibration.calibration import Calibration
+from domain.test_bench_calibration.repositories.i_synchronous_detection_phase_calibration_repository import (
     ISynchronousDetectionPhaseCalibrationRepository,
 )
 from domain.test_bench_configuration.value_objects.hardware_signature.hardware_signature import HardwareSignature
-from domain.test_bench.calibration.value_objects.synchronous_detection_phase_calibration_point.synchronous_detection_phase_calibration_point import (
+from domain.test_bench_calibration.value_objects.synchronous_detection_phase_calibration_point.synchronous_detection_phase_calibration_point import (
     SynchronousDetectionPhaseCalibrationPoint,
 )
 from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus

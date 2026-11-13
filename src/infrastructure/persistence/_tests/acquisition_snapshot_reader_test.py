@@ -4,9 +4,9 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from domain.test_bench.calibration.calibration import Calibration
+from domain.test_bench_calibration.calibration import Calibration
 from domain.test_bench_configuration.bench_configuration import BenchConfiguration
-from domain.test_bench.calibration.value_objects.caliper_measurement.caliper_measurement import CaliperMeasurement
+from domain.test_bench_calibration.value_objects.caliper_measurement.caliper_measurement import CaliperMeasurement
 from domain.test_bench_configuration.entities.hardware_component_selection.hardware_component_selection import (
     HardwareComponentSelection,
 )

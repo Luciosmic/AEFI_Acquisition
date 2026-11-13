@@ -10,10 +10,10 @@ from application.test_bench.mechanical_transmission_calibration_service.dtos.mec
 from application.test_bench.mechanical_transmission_calibration_service.i_api_mechanical_transmission_calibration_service import (
     IApiMechanicalTransmissionCalibrationService,
 )
-from domain.test_bench.calibration.calibration import Calibration
+from domain.test_bench_calibration.calibration import Calibration
 from domain.test_bench_configuration.bench_configuration import BenchConfiguration
 from domain.test_bench_configuration.repositories.i_hardware_component_repository import IHardwareComponentRepository
-from domain.test_bench.calibration.repositories.i_mechanical_transmission_calibration_repository import (
+from domain.test_bench_calibration.repositories.i_mechanical_transmission_calibration_repository import (
     IMechanicalTransmissionCalibrationRepository,
 )
 from domain.test_bench_configuration.value_objects.hardware_component_kind.hardware_component_kind import (
