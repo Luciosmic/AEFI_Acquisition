@@ -9,3 +9,20 @@
 01:17 | annonce | etape=4 lots typage 2 a 16, un par appel | par lot : annotation -> None (ast, refus si la fonction rend une valeur ou est un generateur), boucle-tdd sur les atomes (dossiers des fichiers, le controle du tri etant mypy), puis pytest + verify + mypy en parallele | duree=4-6 min par lot | arret=controle en echec -> annulation du lot, budget
 01:24 | jalon | lot=2 premier essai annule | pytest=1 echec hors lot (scan_averaging_integration_test::test_comb_averaging, ecart-type 1.199 > 1.0, test aleatoire sensible a la charge, aucun fichier du lot) | mypy=no-untyped-def -63 exact, 30 erreurs revelees (corps des fonctions annotees desormais verifies), aucun code nouveau | verify=identique | boucle-tdd=CASSE, deja CASSE avant le lot (collecte, aucun-test) | logs=run-pytest-lot-2.log, run-boucle-tdd-lot-2*.log
 01:26 | decision | critere mypy lu a la lettre : no-untyped-def baisse exactement du nombre du lot et aucun code mypy nouveau (categorie) n'apparait ; les erreurs revelees dans les corps desormais verifies sont comptees a part | pytest : un echec hors des fichiers du lot se rejoue seul une fois, vert = identique | boucle-tdd : verdict note, non bloquant, car il compte comme nouvelles les erreurs anciennes d'un fichier modifie ; verify complet identique fait foi
+01:03 | jalon | lot=2 | annule | mypy=-63 no-untyped-def, code nouveau list-item (30 revelees) | pytest=identique apres rejeu du test de moyennage | verify=identique
+01:06 | jalon | lot=3 | fait | commit=d9affe8 | mypy=-59, 10 revelees | pytest=identique | verify=identique | boucle=CASSE (collecte, aucun-test, verify ancien)
+01:09 | jalon | lot=4 | annule | mypy=-41 no-untyped-def, code nouveau list-item (7 revelees)
+01:12 | jalon | lot=5 | fait | commit=caea79f | mypy=-142, 44 revelees | pytest=identique | verify=identique
+01:16 | jalon | lot=6 | fait | commit=8c5de29 | mypy=-85, 17 revelees | pytest=identique | verify=identique
+01:19 | jalon | lot=7 | fait | commit=a4f80b1 | mypy=-13, 4 revelees | boucle=VERT-AVEC-DETTE
+01:22 | jalon | lot=8 | fait | commit=28ef456 | mypy=-20, 5 revelees
+01:25 | jalon | lot=9 | fait | commit=853c2df | mypy=-30, 5 revelees
+01:28 | jalon | lot=10 | fait | commit=32010b2 | mypy=-28, 3 revelees
+01:31 | jalon | lot=11 | fait | commit=1285caf | mypy=-18, 6 revelees
+01:35 | jalon | lot=12 | fait | commit=a2362c0 | mypy=-24, 7 revelees
+01:38 | jalon | lot=13 | fait | commit=3b41609 | mypy=-16, 4 revelees
+01:41 | jalon | lot=14 | commite (a359de0) puis defait | controles verts avant commit, mais le commit fait passer co-changement-entre-couches 63->69 (vu par les lots 15 et 16, annules a tort au premier essai ; script lit les fichiers BOM en utf-8-sig apres un refus a tort)
+01:48 | decision | lot 14 defait par git reset --soft HEAD~1 + restauration (commit local de cette session, aucune autre session sur ACQ) | verify revient a 63 avertissements | lot.sh controle desormais verify apres commit
+01:53 | jalon | lot=15 | fait | commit=1f0df49 | mypy=-28, 3 revelees | verify identique apres commit
+01:56 | jalon | lot=16 | commite puis defait | le commit fait passer co-changement 63->61 | constat=constat-lots-14-et-16-annules-car-leur-commit-deplace-le-co-changement.md
+01:57 | jalon | etape=5 bilan | verify=1266->1215 erreurs, 63 avertissements | mypy=3298->2943, no-untyped-def 2864->2401, 108 revelees | lots faits=11, annules=4, sautes=0 | restants=1 lot verify (9), 21 lots typage (1291) | bilan=bilan-vague-2.md | tri=run-tri-apres.txt
