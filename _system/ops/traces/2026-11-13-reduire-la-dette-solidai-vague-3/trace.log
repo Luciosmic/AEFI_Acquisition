@@ -1,1 +1,2 @@
 02:15 | depart | quoi=noyau partage puis vague 3 | session=f6f1718f-0350-4d84-a878-2faf7a374b52
+02:28 | etape-a | cas=green-service-importe-le-noyau-partage(rouge puis vert),red-service-importe-un-autre-contexte(temoin signale) | commits=solidai-hexagonal 281aa86(cas) d39a08d(regle, param noyaux_partages=[shared], Evans ch.14) | test-pack hexagonal 54/54 atome 43/43 ddd 26/26 | pytest solidai-verify vert | scripts/_tests 7/7 verts
