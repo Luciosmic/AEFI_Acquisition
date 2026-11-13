@@ -7,7 +7,7 @@ statut: to_validate
 
 # Les intentions de ports restent comptées « non typées » par A20
 
-**Constat** : 47 intentions de ports d'application (`ports/i_*_intention.md`, `i_api_*_intention.md`) et 9 intentions d'interfaces de repository du domaine portent bien un type (`port::solidai-hexagonal`), mais la vérification `solidai-intention-non-typee` ne compte que `atome` et ses sous-types, pas `port`. Elles restent donc dans l'erreur A20 (environ 56 sur les 120 restantes).
+**Constat** : 40 intentions de ports d'application (`ports/i_*_intention.md`, `i_api_*_intention.md`) portent bien un type (`port::solidai-hexagonal`), et 11 intentions d'interfaces de repository du domaine sont dans le même cas, mais la vérification `solidai-intention-non-typee` ne compte que `atome` et ses sous-types, pas `port`. Elles restent donc dans l'erreur A20 (51 sur les 120 restantes).
 
 Les ports déjà typés ainsi avant la vague (`i_software_provenance_port_intention.md`) sont dans le même cas. Le type `service-applicatif` refuse en plus une liste `ports:` de liens vers ces fichiers : il attend des enregistrements `^:` inline (le moteur donnait 33 erreurs, retirées au commit `d7cfc64f`).
 
