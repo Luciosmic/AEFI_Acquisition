@@ -66,7 +66,7 @@ class FrequencySweepPresenter(QObject, IFrequencySweepOutputPort, metaclass=QABC
     @Slot(object)
     def on_start_requested(self, parameters: dict) -> None:
         """`parameters`: the panel's fields (role, start_hz, stop_hz,
-        frequency_count, samples_per_frequency, table_height_mm, operator_name,
+        points_per_decade, frequency_list_hz, samples_per_frequency, table_height_mm, operator_name,
         operator_id)."""
         self.running_changed.emit(True)
         self.status_message.emit("Balayage lancé…")

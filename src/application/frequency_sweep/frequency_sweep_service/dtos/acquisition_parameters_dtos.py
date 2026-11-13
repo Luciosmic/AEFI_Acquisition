@@ -38,6 +38,9 @@ class FrequencySweepActivityDTO:
     status: str
     role: str
     frequencies_hz: Tuple[float, ...]
+    # How the grid was built: "logarithmic_per_decade" (with points_per_decade) | "operator_list".
+    grid_spacing: str
+    points_per_decade: Optional[int]
     samples_per_frequency: int
     table_height_mm: float
     settle_delay_s: float

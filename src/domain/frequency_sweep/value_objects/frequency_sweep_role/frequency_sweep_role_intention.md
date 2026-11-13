@@ -1,6 +1,6 @@
 ---
 type: value-object::solidai-ddd
-tldr: "Nommer ce qu'un balayage caractérise : INSTRUMENT_REFERENCE (table en position basse, sans objet), BACKGROUND (table à la hauteur de travail, sans objet)."
+tldr: "Nommer ce qu'un balayage caractérise : INSTRUMENT_REFERENCE (table en position basse, sans objet), BACKGROUND (table à la hauteur de travail, support de l'objet en place, sans objet)."
 code: ["[[src/domain/frequency_sweep/value_objects/frequency_sweep_role/frequency_sweep_role.py]]"]
 cause_de_changement: regle-metier
 part_of: "[[src/domain/frequency_sweep/frequency_sweep_intention]]"
@@ -13,7 +13,7 @@ Le protocole d'acquisition en fréquence enchaîne des balayages acquis de la m�
 
 ## Responsibility
 
-- Nommer ce qu'un balayage caractérise : `INSTRUMENT_REFERENCE` (table en position basse, sans objet), `BACKGROUND` (table à la hauteur de travail, sans objet), `OBJECT_MEASUREMENT` (même hauteur de table que le fond, objet posé).
+- Nommer ce qu'un balayage caractérise : `INSTRUMENT_REFERENCE` (table en position basse, sans objet), `BACKGROUND` (table à la hauteur de travail, support de l'objet en place, sans objet), `OBJECT_MEASUREMENT` (même hauteur de table que le fond, objet posé sur son support). Le support est en place dès le fond : la différence objet − fond ne garde alors que l'objet.
 - `measures_an_object` : seul le rôle mesure objet porte un objet mesuré.
 
 ## Design

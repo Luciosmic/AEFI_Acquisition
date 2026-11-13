@@ -13,8 +13,8 @@ VALUE_CHANNELS = ("x_in_phase", "y_in_phase", "z_in_phase", "x_quadrature", "y_q
 # Stable role identifiers (FrequencySweepRole values) and their operator labels.
 ROLE_LABELS = (
     ("instrument_reference", "Référence instrument (table en position basse, sans objet)"),
-    ("background", "Fond (table à la hauteur de travail, sans objet)"),
-    ("object_measurement", "Mesure objet (même hauteur de table que le fond, objet posé)"),
+    ("background", "Fond (table à la hauteur de travail, support de l'objet en place, sans objet)"),
+    ("object_measurement", "Mesure objet (même hauteur de table que le fond, objet posé sur son support)"),
 )
 
 
@@ -23,12 +23,16 @@ class FrequencySweepRequestDTO:
     """What the operator asks for. `table_height_mm` None = not entered
     (refused); `operator_*` empty = not chosen (exported as such).
     `measured_object_*`, `lift_off_mm`: object measurement only (object
-    required, lift-off None = not entered, warned in the export)."""
+    required, lift-off None = not entered, warned in the export).
+    Grid: `frequency_list_hz` None = `points_per_decade` points per decade
+    between `start_hz` and `stop_hz`; otherwise the operator's list (the
+    bounds and the density are then unused)."""
 
     role: str = "instrument_reference"
     start_hz: float = 100.0
     stop_hz: float = 10000.0
-    frequency_count: int = 21
+    points_per_decade: int = 10
+    frequency_list_hz: Optional[Tuple[float, ...]] = None
     samples_per_frequency: int = 50
     table_height_mm: Optional[float] = None
     operator_name: str = ""

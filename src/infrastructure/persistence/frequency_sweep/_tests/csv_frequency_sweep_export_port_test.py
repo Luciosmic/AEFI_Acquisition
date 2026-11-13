@@ -39,6 +39,8 @@ ACTIVITY = FrequencySweepActivityDTO(
     status="completed",
     role="background",
     frequencies_hz=FREQUENCIES,
+    grid_spacing="logarithmic_per_decade",
+    points_per_decade=1,
     samples_per_frequency=50,
     table_height_mm=42.5,
     settle_delay_s=0.5,
@@ -95,10 +97,18 @@ class TestFrequencySweepAcquisitionParameters(unittest.TestCase):
         self.assertEqual(procedure["role"], "background")
         self.assertEqual(procedure["frequency_grid"]["value"], list(FREQUENCIES))
         self.assertEqual(procedure["frequency_grid"]["unit"], "Hz")
+        self.assertEqual(procedure["frequency_grid"]["spacing"], "logarithmic_per_decade")
+        self.assertEqual(procedure["frequency_grid"]["points_per_decade"]["value"], 1)
         self.assertEqual(procedure["table_height"]["value"], 42.5)
         self.assertEqual(procedure["table_height"]["unit"], "mm")
         self.assertEqual(procedure["table_height"]["source"], "operator")
         self.assertFalse(document["feature_of_interest"]["present"])
+
+    def test_an_operator_list_is_stated_as_such_without_a_density(self):
+        listed = replace(PARAMETERS, activity=replace(ACTIVITY, grid_spacing="operator_list", points_per_decade=None))
+        grid = serialize(listed)["procedure"]["frequency_sweep"]["frequency_grid"]
+        self.assertEqual(grid["spacing"], "operator_list")
+        self.assertNotIn("points_per_decade", grid)
 
     def test_the_swept_frequency_refers_to_the_grid_instead_of_the_start_value(self):
         document = serialize()

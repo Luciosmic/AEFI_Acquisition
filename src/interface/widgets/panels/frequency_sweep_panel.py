@@ -5,7 +5,8 @@ See frequency_sweep_panel_intention.md. Display only: amplitudes and phases
 come computed in the view models; the fields are handed to the presenter as-is.
 """
 
-from typing import Optional
+import re
+from typing import Optional, Tuple
 
 from PySide6.QtCore import QRegularExpression, Signal
 from PySide6.QtGui import QRegularExpressionValidator
@@ -36,14 +37,40 @@ _AXIS_COLORS = ("#4FC3F7", "#81C784", "#FFB74D")
 _EXPLANATION = (
     "Balaye la fréquence d'excitation, avec le mode et les niveaux du panneau Excitation, et enregistre "
     "la réponse I/Q moyenne par axe à chaque fréquence. Rôle « Référence instrument » : table en position "
-    "basse, sans objet. Rôle « Fond » : table à la hauteur de travail, sans objet. Rôle « Mesure objet » : "
-    "même hauteur de table que le fond, objet posé. Excitation et flux "
+    "basse, sans objet. Rôle « Fond » : table à la hauteur de travail, support de l'objet en place, sans objet. "
+    "Rôle « Mesure objet » : même hauteur de table que le fond, objet posé sur son support. Excitation et flux "
     "d'acquisition sont verrouillés pendant le balayage ; la fréquence de l'opérateur est rétablie à la fin."
 )
 TABLE_HEIGHT_TOOLTIP = (
     "Hauteur de la table, en mm, lue sur le panneau de commande de la table.\n"
     "Un fond ne se réutilise qu'à hauteur égale : la saisie est obligatoire."
 )
+GRID_PER_DECADE = "per_decade"
+GRID_LIST = "list"
+POINTS_PER_DECADE_TOOLTIP = (
+    "Fréquences 10^(k/n) Hz entre les bornes : avec 10 par décade, 100 ; 125,9 ; 158,5 ; … ; 1000 ; …\n"
+    "Ancrées sur les décades : deux balayages de même densité ont les mêmes fréquences, quelles que soient\n"
+    "les bornes. Une borne hors de la décade n'est pas balayée : le premier point est celui qui la suit."
+)
+FREQUENCY_LIST_TOOLTIP = (
+    "Fréquences en Hz, séparées par des espaces ou des « ; » (virgule ou point décimal, 5e3 accepté).\n"
+    "Balayées par ordre croissant ; un doublon est refusé."
+)
+
+
+def parse_frequency_list(text: str) -> Tuple[float, ...]:
+    """The frequencies typed by the operator, in Hz, in the order typed.
+    ValueError (French message) on an empty list or a token that is not a number."""
+    tokens = [token for token in re.split(r"[;\s]+", text.strip()) if token]
+    if not tokens:
+        raise ValueError("liste de fréquences vide")
+    frequencies = []
+    for token in tokens:
+        try:
+            frequencies.append(float(token.replace(",", ".")))
+        except ValueError:
+            raise ValueError(f"« {token} » n'est pas une fréquence") from None
+    return tuple(frequencies)
 
 
 class FrequencySweepPanel(QWidget):
@@ -75,14 +102,28 @@ class FrequencySweepPanel(QWidget):
             QRegularExpressionValidator(QRegularExpression(r"^-?\d{0,4}([.,]\d{0,3})?$"), self)
         )
         form.addRow("Hauteur de la table (mm) :", self.input_table_height)
+        self.combo_grid = QComboBox()
+        self.combo_grid.addItem("Logarithmique, points par décade", GRID_PER_DECADE)
+        self.combo_grid.addItem("Liste de fréquences", GRID_LIST)
+        self.combo_grid.currentIndexChanged.connect(self._update_enabled)
+        form.addRow("Grille :", self.combo_grid)
         self.spin_start_hz = self._frequency_spin()
         form.addRow("Fréquence de début (Hz) :", self.spin_start_hz)
         self.spin_stop_hz = self._frequency_spin()
         form.addRow("Fréquence de fin (Hz) :", self.spin_stop_hz)
-        self.spin_frequency_count = QSpinBox()
-        self.spin_frequency_count.setRange(2, 1000)
-        self.spin_frequency_count.setToolTip("Nombre de fréquences, en espacement logarithmique, bornes incluses.")
-        form.addRow("Nombre de fréquences :", self.spin_frequency_count)
+        self.spin_points_per_decade = QSpinBox()
+        self.spin_points_per_decade.setRange(1, 1000)
+        self.spin_points_per_decade.setToolTip(POINTS_PER_DECADE_TOOLTIP)
+        form.addRow("Points par décade :", self.spin_points_per_decade)
+        self.input_frequency_list = QLineEdit()
+        self.input_frequency_list.setPlaceholderText("ex. 100 250 1000 5e3")
+        self.input_frequency_list.setToolTip(FREQUENCY_LIST_TOOLTIP)
+        self.input_frequency_list.textChanged.connect(self._on_frequency_list_changed)
+        form.addRow("Fréquences (Hz) :", self.input_frequency_list)
+        self.lbl_frequency_list = QLabel()
+        self.lbl_frequency_list.setWordWrap(True)
+        self.lbl_frequency_list.setStyleSheet(_MUTED)
+        form.addRow("", self.lbl_frequency_list)
         self.spin_samples = QSpinBox()
         self.spin_samples.setRange(3, 100000)
         form.addRow("Échantillons par fréquence :", self.spin_samples)
@@ -130,19 +171,52 @@ class FrequencySweepPanel(QWidget):
     def _measures_an_object(self) -> bool:
         return self.combo_role.currentData() == "object_measurement"
 
-    def _on_role_changed(self, *_args) -> None:
-        enabled = self._measures_an_object() and not getattr(self, "_running", False)
-        self.measured_object_selector.setEnabled(enabled)
-        self.input_lift_off.setEnabled(enabled)
+    def _uses_a_list(self) -> bool:
+        return self.combo_grid.currentData() == GRID_LIST
+
+    def _on_role_changed(self, *_args: object) -> None:
+        self._update_enabled()
+
+    def _update_enabled(self, *_args: object) -> None:
+        """Object fields for the object role only, grid fields for the chosen grid only; nothing while running."""
+        idle = not getattr(self, "_running", False)
+        object_enabled = self._measures_an_object() and idle
+        self.measured_object_selector.setEnabled(object_enabled)
+        self.input_lift_off.setEnabled(object_enabled)
+        for widget in (self.spin_start_hz, self.spin_stop_hz, self.spin_points_per_decade):
+            widget.setEnabled(idle and not self._uses_a_list())
+        for widget in (self.input_frequency_list, self.lbl_frequency_list):
+            widget.setEnabled(idle and self._uses_a_list())
+
+    def _on_frequency_list_changed(self, text: str) -> None:
+        """What will be read from the list, so a comma typed as a separator shows before the launch."""
+        if not text.strip():
+            self.lbl_frequency_list.setText("")
+            return
+        try:
+            frequencies = parse_frequency_list(text)
+        except ValueError as error:
+            self.lbl_frequency_list.setText(f"Erreur : {error}")
+            return
+        values = " ; ".join(f"{f:g}" for f in frequencies)
+        self.lbl_frequency_list.setText(f"{len(frequencies)} fréquences lues : {values} Hz")
 
     def _on_start_clicked(self) -> None:
+        frequency_list_hz = None
+        if self._uses_a_list():
+            try:
+                frequency_list_hz = parse_frequency_list(self.input_frequency_list.text())
+            except ValueError as error:
+                self.set_status_message(f"Erreur : {error}")
+                return
         operator = self.operator_selector.current_operator()
         measured_object = self.measured_object_selector.current_measured_object() if self._measures_an_object() else None
         self.start_requested.emit({
             "role": self.combo_role.currentData(),
             "start_hz": self.spin_start_hz.value(),
             "stop_hz": self.spin_stop_hz.value(),
-            "frequency_count": self.spin_frequency_count.value(),
+            "points_per_decade": self.spin_points_per_decade.value(),
+            "frequency_list_hz": frequency_list_hz,
             "samples_per_frequency": self.spin_samples.value(),
             "table_height_mm": self._table_height_mm(),
             "operator_name": operator.name if operator else "",
@@ -161,18 +235,18 @@ class FrequencySweepPanel(QWidget):
         self.combo_role.setCurrentIndex(max(0, self.combo_role.findData(request.role)))
         self.spin_start_hz.setValue(request.start_hz)
         self.spin_stop_hz.setValue(request.stop_hz)
-        self.spin_frequency_count.setValue(request.frequency_count)
+        self.spin_points_per_decade.setValue(request.points_per_decade)
         self.spin_samples.setValue(request.samples_per_frequency)
 
     def set_running(self, running: bool) -> None:
         for widget in (
-            self.btn_start, self.combo_role, self.input_table_height, self.spin_start_hz, self.spin_stop_hz,
-            self.spin_frequency_count, self.spin_samples, self.operator_selector,
+            self.btn_start, self.combo_role, self.combo_grid, self.input_table_height, self.spin_samples,
+            self.operator_selector,
         ):
             widget.setEnabled(not running)
         self.btn_stop.setEnabled(running)
         self._running = running
-        self._on_role_changed()
+        self._update_enabled()
         if running:
             self._points = []
             self._draw()

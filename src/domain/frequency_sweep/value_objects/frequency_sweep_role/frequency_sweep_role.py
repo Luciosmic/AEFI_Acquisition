@@ -9,9 +9,10 @@ class FrequencySweepRole(Enum):
 
     # Table at its lowest position, no object: the instrument's own response.
     INSTRUMENT_REFERENCE = "instrument_reference"
-    # Table at the working height, no object: what the bench adds at that height.
+    # Table at the working height, object support in place, no object: what the
+    # bench and the support add at that height.
     BACKGROUND = "background"
-    # Same table height as the background, object on the table.
+    # Same table height as the background, object on its support.
     OBJECT_MEASUREMENT = "object_measurement"
 
     @property
