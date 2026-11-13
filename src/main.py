@@ -102,6 +102,9 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
     from application.services.excitation_configuration_service.excitation_configuration_service import ExcitationConfigurationService
     from application.services.synchronous_detection_service.synchronous_detection_service import SynchronousDetectionService
     from application.services.sensor_calibration_service.sensor_calibration_service import SensorCalibrationService
+    from application.services.frequency_sweep_service.frequency_sweep_service import FrequencySweepService
+    from infrastructure.persistence.frequency_sweep.csv_frequency_sweep_export_port import CsvFrequencySweepExportPort
+    from interface.presenters.frequency_sweep_presenter import FrequencySweepPresenter
     from application.services.acquisition_throughput_characterization_service.acquisition_throughput_characterization_service import (
         AcquisitionThroughputCharacterizationService,
     )
@@ -538,6 +541,20 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
     )
     logger.info("Services -> AcquisitionThroughputCharacterizationService created")
 
+    # Frequency sweep (Frequency Sweep panel): instrument reference and background
+    # vs excitation frequency. Holds the excitation and the acquisition stream while it runs.
+    frequency_sweep_service = FrequencySweepService(
+        excitation_service=excitation_service,
+        acquisition_service=continuous_service,
+        export_port=CsvFrequencySweepExportPort(),
+        task_runner=task_runner,
+        event_bus=event_bus,
+        conditions_port=acquisition_conditions,
+        software_provenance_port=software_provenance,
+        usb_latency_timer_port=usb_latency_timer,
+    )
+    logger.info("Services -> FrequencySweepService created")
+
     # ADC output data rate on DRDY (ADC tab of the Calibration panel): holds the
     # ads131a04 configuration and the acquisition stream while it runs.
     adc_output_rate_service = AdcOutputRateCharacterizationService(
@@ -603,6 +620,7 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
     ]
     acquisition_throughput_presenter = AcquisitionThroughputCharacterizationPresenter(acquisition_throughput_service)
     adc_output_rate_presenter = AdcOutputRateCharacterizationPresenter(adc_output_rate_service)
+    frequency_sweep_presenter = FrequencySweepPresenter(frequency_sweep_service)
 
     # Signal correction (noise/phase/primary) — reacts to the continuous
     # acquisition stream via the event bus, built before the presenters that
@@ -664,6 +682,7 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
         operator_presenter,
         mechanical_transmission_presenter,
         measured_object_presenter,
+        frequency_sweep_presenter,
     )
 
     # 11. Observability MCP server (read-only) — lets an LLM client (e.g.

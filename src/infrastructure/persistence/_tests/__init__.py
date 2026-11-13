@@ -4,8 +4,10 @@ from dataclasses import replace
 from datetime import datetime, timezone
 
 from application.services.scan_export_service.dtos.scan_acquisition_parameters_dtos import (
+    FLY_SCAN,
     STEP_SCAN,
     ExcitationStateDTO,
+    FlyScanProcedureDTO,
     ScanAcquisitionParametersDTO,
     ScanActivityDTO,
     StepScanProcedureDTO,
@@ -29,12 +31,22 @@ def make_step_scan_procedure(**overrides) -> StepScanProcedureDTO:
     return StepScanProcedureDTO(**fields)
 
 
+def make_fly_scan_procedure() -> FlyScanProcedureDTO:
+    return FlyScanProcedureDTO(
+        x_min_mm=435.0, x_max_mm=835.0, y_min_mm=435.0, y_max_mm=835.0, x_nb_points=21, y_nb_points=21,
+        total_points=441, pattern="SERPENTINE", fast_axis="Y", stabilization_delay_ms=300.0,
+    )
+
+
+_PROCEDURES = {STEP_SCAN: make_step_scan_procedure, FLY_SCAN: make_fly_scan_procedure}
+
+
 def make_scan_activity(kind: str = STEP_SCAN, **overrides) -> ScanActivityDTO:
     fields = dict(
         activity_id="scan-1", kind=kind, started_at=STARTED, status="running",
         excitation=ExcitationStateDTO(mode="X_DIR", level_s1_s2_percent=80.0, level_s3_s4_percent=60.0),
         owner="scan", held_controls=("excitation",),
-        procedure=make_step_scan_procedure() if kind == STEP_SCAN else None,
+        procedure=_PROCEDURES[kind]() if kind in _PROCEDURES else None,
         bench_position_start=BenchPositionDTO(x_mm=435.0, y_mm=435.0), usb_latency_timer_ms=1.0,
     )
     fields.update(overrides)

@@ -22,7 +22,7 @@ import threading
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Union
 
 from .dtos.scan_export_dtos import ExportConfigDTO
 from .acquisition_name.acquisition_name import acquisition_name
@@ -40,10 +40,12 @@ from domain.scan.events.column_rest_measured.column_rest_measured import ColumnR
 from domain.scan.events.column_settled.column_settled import ColumnSettled
 from .ports.i_scan_export_port import IScanExportPort
 from .dtos.scan_acquisition_parameters_dtos import (
+    FLY_SCAN,
     STEP_SCAN,
     TIME_SERIES,
     ElectricFieldProbeDTO,
     ExcitationStateDTO,
+    FlyScanProcedureDTO,
     ScanAcquisitionParametersDTO,
     ScanActivityDTO,
     StepScanProcedureDTO,
@@ -290,11 +292,11 @@ class ScanExportService:
         logger.info("Starting scan export. scan_id=%s, dir=%s, name=%s", event.scan_id, directory, name)
 
         parameters = self._start_parameters(
-            str(event.scan_id), STEP_SCAN, self._config, self._step_scan_procedure(event)
+            str(event.scan_id), FLY_SCAN if self._fly_scan else STEP_SCAN, self._config, self._scan_procedure(event)
         )
         # Folder/file tag: a fly scan is an exploration map, not a measurement —
         # its files must not be mistaken for a step scan's.
-        acquisition_kind = "flyScan" if getattr(event.config, "fly_scan", False) else "stepScan"
+        acquisition_kind = "flyScan" if self._fly_scan else "stepScan"
         for port in ports:
             port.configure(directory, name, metadata, timestamp=timestamp, acquisition_kind=acquisition_kind)
             port.start()
@@ -537,11 +539,18 @@ class ScanExportService:
     # -- acquisition-parameters document (facts only; the port writes schema 1.0) --
 
     @staticmethod
-    def _step_scan_procedure(event: ScanStarted) -> Optional[StepScanProcedureDTO]:
+    def _scan_procedure(event: ScanStarted) -> Optional[Union[StepScanProcedureDTO, FlyScanProcedureDTO]]:
         cfg = event.config
         if isinstance(cfg, LineScanConfig):
             return None
         zone = cfg.scan_zone
+        if getattr(cfg, "fly_scan", False):
+            return FlyScanProcedureDTO(
+                x_min_mm=zone.x_min, x_max_mm=zone.x_max, y_min_mm=zone.y_min, y_max_mm=zone.y_max,
+                x_nb_points=cfg.x_nb_points, y_nb_points=cfg.y_nb_points, total_points=cfg.total_points(),
+                pattern=cfg.scan_pattern.name, fast_axis=cfg.scan_axis.name,
+                stabilization_delay_ms=cfg.stabilization_delay_ms,
+            )
         return StepScanProcedureDTO(
             x_min_mm=zone.x_min, x_max_mm=zone.x_max, y_min_mm=zone.y_min, y_max_mm=zone.y_max,
             x_nb_points=cfg.x_nb_points, y_nb_points=cfg.y_nb_points, total_points=cfg.total_points(),
@@ -553,7 +562,8 @@ class ScanExportService:
         )
 
     def _start_parameters(
-        self, activity_id: str, kind: str, config: ExportConfigDTO, procedure: Optional[StepScanProcedureDTO] = None
+        self, activity_id: str, kind: str, config: ExportConfigDTO,
+        procedure: Optional[Union[StepScanProcedureDTO, FlyScanProcedureDTO]] = None,
     ) -> ScanAcquisitionParametersDTO:
         """Gather the facts at acquisition start; kept to add the outcome at the end."""
         conditions = (

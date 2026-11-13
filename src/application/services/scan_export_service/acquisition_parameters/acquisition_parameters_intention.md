@@ -1,7 +1,7 @@
 # acquisition_parameters — Intention
 
-> Référence du schéma `acquisition-parameters.json` (version 1.3), écrit à côté de
-> chaque export (scan pas-à-pas, série temporelle). Ce fichier est le contrat :
+> Référence du schéma `acquisition-parameters.json` (version 1.4), écrit à côté de
+> chaque export (scan pas-à-pas, scan en vol, série temporelle). Ce fichier est le contrat :
 > les scripts d'analyse le lisent, les tests garde-fous l'appliquent.
 
 ## Rationale
@@ -148,7 +148,7 @@ exports entre eux (toutes les acquisitions faites avec telle calibration).
   "schema": { "name": "aefi-acquisition-parameters", "version": "1.0" },
 
   "provenance": {                                   // PROV-O : activité, agents
-    "activity": { "id": "…", "kind": "step_scan | time_series | mcu_throughput_characterization",
+    "activity": { "id": "…", "kind": "step_scan | fly_scan | time_series | mcu_throughput_characterization | frequency_sweep",
                   "started_at": "…", "ended_at": "… | null",
                   "status": "running | completed | failed | cancelled",
                   "failure_reason": null,
@@ -300,11 +300,28 @@ exports :
   convention ; `alias: "lift_off"` donne le nom court sous lequel on en parle. `null` +
   avertissement quand un objet est présent et la distance non saisie ; `null` sans
   avertissement quand il n'y a pas d'objet par construction (`present: false`).
-- **Commentaire de l'opérateur (1.3)** : `provenance.activity.operator_comment`, texte libre
+- **Balayage en fréquence (1.3)** : activité `kind: "frequency_sweep"`, procédure
+  `procedure.frequency_sweep` = `role` (`instrument_reference` : table en position basse, sans
+  objet ; `background` : table à la hauteur de travail, sans objet), `frequency_grid` (Hz,
+  `spacing: "logarithmic"`), `samples_per_frequency`, `settle_delay`, `frequency_timeout`,
+  `table_height` (mm, `source: "operator"` : lue par l'opérateur sur le panneau de commande de la
+  table, non mesurée par le logiciel), `acquired_frequency_count`. La fréquence de l'AD9106 étant
+  balayée, `components.signal_generation_chip.settings.frequency` et
+  `measurement_chain.excitation.state.frequency` renvoient à la grille (`derived_from`). Un balayage
+  non complet est signalé : ni référence ni fond utilisable. Fichiers : `frequency_response.csv`
+  (une ligne par fréquence) et `samples.csv`.
+- **Scan en vol (1.4)** : activité `kind: "fly_scan"`, procédure `procedure.fly_scan` = `zone`,
+  `grid`, `pattern`, `fast_axis` (mêmes clés que `procedure.step_scan`) et `stabilization_delay`,
+  attendu une fois par ligne, à son départ (`notes` le dit). Pas de `averaging_per_position`, de
+  `differential`, de `measurement_uncertainty` ni de `estimated_duration` : ils ne s'appliquent pas
+  au balayage en vol. Le scan en vol tient les moteurs (`motors_held_by_activity: true`) et décrit
+  les mêmes colonnes que le scan pas-à-pas. Avant 1.4, un scan en vol était écrit à tort sous
+  `kind: "step_scan"` / `procedure.step_scan` ; seul le nom de ses fichiers (`flyScan`) le distinguait.
+- **Commentaire de l'opérateur (1.4)** : `provenance.activity.operator_comment`, texte libre
   saisi au démarrage (panneaux Scan et Continuous Reading, case « Commentaire »), par exemple
   « scan de fond » ou une condition du banc. `null` sans avertissement quand rien n'est saisi :
   un commentaire est facultatif. Il n'entre jamais dans le nom des fichiers.
-- **Stabilisation de la colonne (1.3)** : `procedure.step_scan.column_stabilization`, écrit à la fin du
+- **Stabilisation de la colonne (1.4)** : `procedure.step_scan.column_stabilization`, écrit à la fin du
   scan (`null` dans le document du démarrage, et quand le délai de stabilisation est nul).
   `method` : `accelerometer` (chaque point attend le retour au repos), `fixed_delay` (repos non mesuré,
   avertissement avec la raison), `none` (pas de mesure du repos). `criterion` : `vibration` (RMS de
@@ -319,7 +336,7 @@ exports :
   pesanteur comprise, repère de la carte) et `<…>_column-stabilization.csv` (une ligne par attente quand
   les points sont jugés sur l'accéléromètre : `point_index`, `stabilization_method`,
   `stabilization_stopped_at`, `stabilization_waited`, `stabilization_vibration`, `stabilization_threshold`).
-- **Nom des fichiers (1.3)** : `<horodatage>_<stepScan|flyScan|timeSeries>_<objet mesuré>_liftoff-<valeur>mm`,
+- **Nom des fichiers (1.4)** : `<horodatage>_<stepScan|flyScan|timeSeries>_<objet mesuré>_liftoff-<valeur>mm`,
   composé à partir de `feature_of_interest` (`objet-non-saisi`, `liftoff-non-saisi` quand la
   valeur manque). La « base » libre tapée par l'opérateur est supprimée : le nom aide à
   retrouver un dossier, le contenu se lit dans ce document.
@@ -357,7 +374,7 @@ nouveau fichier sans ligne ici fait échouer la suite de tests.
 | `mcu_default_config.json` (+ `_last`) | `components.microcontroller.settings` |
 | `arcus_default_config.json` + `motion_last_config.json` | `components.motors.settings` |
 | `electric_field_probe_config.json` | `components.electric_field_probe.settings` |
-| `scan_default_config.json` | `procedure.step_scan` (la config **utilisée**, venue du domaine `StepScanConfig`) |
+| `scan_default_config.json` | `procedure.step_scan` ou `procedure.fly_scan` (la config **utilisée**, venue du domaine `StepScanConfig`) |
 | `aefi_device_config.json` | exclu : amorce historique. Ses parties vivantes sont migrées (géométrie → registre ; angles idéaux → `rotation_applied` avec `origin: ideal` ; identités → catalogue des composants) |
 | `scan_config.json`, `export_default_config.json` | exclus : préférences d'interface (`UIConfigStore`), pas des paramètres de mesure |
 | `acquisition_config.json`, `additional_sensors_config.json`, `bench_config.json` | exclus : lus par aucun code |

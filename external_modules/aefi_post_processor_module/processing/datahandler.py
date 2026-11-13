@@ -3,12 +3,15 @@ DataHandler - Manages HDF5 file lifecycle and CSV loading.
 Provides traceability by saving each processing step with metadata.
 """
 
+import logging
 from pathlib import Path
 from typing import Tuple, Dict, List, Optional, Any
 from datetime import datetime
 import pandas as pd
 import numpy as np
 import h5py
+
+logger = logging.getLogger(__name__)
 
 
 class DataHandler:
@@ -117,8 +120,12 @@ class DataHandler:
                         else:
                              # Dicts
                              group.attrs[key] = json.dumps(value)
-                    except Exception:
+                    except Exception as e:
                         # Fallback to string representation
+                        logger.debug(
+                            "hdf5.attribute_stored_as_text file=%s step=%s key=%s error_type=%s",
+                            self.file_path, step_name, key, type(e).__name__,
+                        )
                         group.attrs[key] = str(value)
                 elif isinstance(value, (str, int, float, bool)):
                     group.attrs[key] = value

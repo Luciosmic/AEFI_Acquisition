@@ -3,6 +3,7 @@ import unittest
 from datetime import datetime, timezone
 
 from application.services.scan_export_service.dtos.scan_acquisition_parameters_dtos import (
+    FLY_SCAN,
     TIME_SERIES,
     ElectricFieldProbeDTO,
 )
@@ -10,7 +11,7 @@ from application.shared.acquisition_parameters.acquisition_conditions_dtos impor
 from infrastructure.persistence._tests import make_scan_acquisition_parameters
 from infrastructure.persistence.acquisition_parameters.acquisition_parameters_v1 import UCUM_UNITS
 from infrastructure.persistence.scan_acquisition_parameters_v1_serializer import (
-    STEP_SCAN_COLUMNS,
+    SCAN_COLUMNS,
     TIME_SERIES_COLUMNS,
     serialize_scan_acquisition_parameters_v1,
 )
@@ -59,6 +60,23 @@ class TestScanAcquisitionParametersV1Serializer(unittest.TestCase):
         self.assertEqual(procedure["differential"]["enabled"], False)
         self.assertEqual(procedure["measurement_uncertainty"], {"value": 1e-6, "unit": "V"})
 
+    def test_a_fly_scan_procedure_is_filed_under_fly_scan_without_the_step_scan_only_settings(self):
+        document = serialize(make_scan_acquisition_parameters(FLY_SCAN))
+        self.assertEqual(document["provenance"]["activity"]["kind"], "fly_scan")
+        self.assertEqual(list(document["procedure"]), ["fly_scan"])
+        procedure = document["procedure"]["fly_scan"]
+        self.assertEqual(procedure["zone"]["x_min"], {"value": 435.0, "unit": "mm"})
+        self.assertEqual(procedure["stabilization_delay"]["unit"], "ms")
+        self.assertIn("une fois par ligne", procedure["stabilization_delay"]["notes"])
+        for absent in ("averaging_per_position", "differential", "measurement_uncertainty", "estimated_duration"):
+            self.assertNotIn(absent, procedure)
+
+    def test_a_fly_scan_holds_the_motors_and_describes_the_scan_columns(self):
+        document = serialize(make_scan_acquisition_parameters(FLY_SCAN, ended=True))
+        self.assertTrue(document["measurement_chain"]["positioning"]["state"]["motors_held_by_activity"])
+        self.assertNotIn("measurement_chain.positioning.state", warning_paths(document))
+        self.assertEqual(set(document["data"]["columns"]), set(SCAN_COLUMNS))
+
     def test_reproducibility_settings_are_present(self):
         components = serialize(make_scan_acquisition_parameters())["components"]
         self.assertEqual(components["microcontroller"]["settings"]["n_avg"], {"value": 127, "unit": "{sample}"})
@@ -79,15 +97,15 @@ class TestScanAcquisitionParametersV1Serializer(unittest.TestCase):
 
     def test_increment_columns_are_described_with_their_unit_and_how_they_were_obtained(self):
         for column in ("x_increments_commanded", "y_increments_commanded", "x_increments_read", "y_increments_read"):
-            self.assertEqual(STEP_SCAN_COLUMNS[column]["unit"], "{step}")
-            self.assertEqual(STEP_SCAN_COLUMNS[column]["frame"], "bench")
-        self.assertIn("commanded", STEP_SCAN_COLUMNS["x_increments_commanded"]["observed_property"])
-        self.assertIn("fly scan", STEP_SCAN_COLUMNS["x_increments_read"]["observed_property"])
+            self.assertEqual(SCAN_COLUMNS[column]["unit"], "{step}")
+            self.assertEqual(SCAN_COLUMNS[column]["frame"], "bench")
+        self.assertIn("commanded", SCAN_COLUMNS["x_increments_commanded"]["observed_property"])
+        self.assertIn("fly scan", SCAN_COLUMNS["x_increments_read"]["observed_property"])
 
     def test_exported_voltages_are_declared_in_the_sensor_frame(self):
         deployment = serialize(make_scan_acquisition_parameters())["measurement_chain"]["sensor"]["deployment"]
         self.assertFalse(deployment["rotation_applied"]["applies_to_data"])
-        self.assertEqual(STEP_SCAN_COLUMNS["voltage_x_in_phase"]["frame"], "sensor")
+        self.assertEqual(SCAN_COLUMNS["voltage_x_in_phase"]["frame"], "sensor")
 
     def test_undescribed_measured_object_is_a_warning(self):
         document = serialize(make_scan_acquisition_parameters())

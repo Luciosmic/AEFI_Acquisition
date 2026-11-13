@@ -10,7 +10,12 @@ from application.services.scan_export_service.ports.i_position_increments_port i
 from application.services.scan_export_service.scan_export_service import ScanExportService
 from application.services.scan_export_service.dtos.scan_export_dtos import ExportConfigDTO
 from application.services.scan_export_service.ports.i_scan_export_port import IScanExportPort
-from application.services.scan_export_service.dtos.scan_acquisition_parameters_dtos import STEP_SCAN, TIME_SERIES
+from application.services.scan_export_service.dtos.scan_acquisition_parameters_dtos import (
+    FLY_SCAN,
+    STEP_SCAN,
+    TIME_SERIES,
+    FlyScanProcedureDTO,
+)
 from application.shared.acquisition_parameters.acquisition_conditions_dtos import BenchPositionDTO
 from infrastructure.acquisition_conditions.fake.fake_acquisition_conditions_port import FakeAcquisitionConditionsPort
 from infrastructure.hardware.serial_link.fake.fake_usb_latency_timer_port import FakeUsbLatencyTimerPort
@@ -346,6 +351,14 @@ class TestScanExportServiceMetadata(unittest.TestCase):
         self.event_bus.publish("scanstarted", _make_scan_started_event(fly_scan=True))
         self.assertEqual(self.export_port.configured["acquisition_kind"], "flyScan")
         self.assertTrue(self.export_port.configured["metadata"]["fly_scan"])
+
+    def test_a_fly_scan_is_recorded_as_a_fly_scan_with_its_own_procedure(self):
+        self.event_bus.publish("scanstarted", _make_scan_started_event(fly_scan=True))
+
+        activity = self.export_port.parameters[0].activity
+        self.assertEqual(activity.kind, FLY_SCAN)
+        self.assertIsInstance(activity.procedure, FlyScanProcedureDTO)
+        self.assertEqual((activity.procedure.pattern, activity.procedure.fast_axis), ("SERPENTINE", "Y"))
 
     def test_line_scan_metadata_describes_the_line(self):
         from domain.step_scan.value_objects.line_scan_config.line_scan_config import LineScanConfig

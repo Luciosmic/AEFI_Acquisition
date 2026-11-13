@@ -9,11 +9,13 @@ a scan / time series did: procedure, excitation as set, probe, positions, column
 """
 
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any, Dict, Union
 
 from application.services.scan_export_service.dtos.scan_acquisition_parameters_dtos import (
+    FLY_SCAN,
     STEP_SCAN,
     ColumnStabilizationDTO,
+    FlyScanProcedureDTO,
     ScanAcquisitionParametersDTO,
     ScanActivityDTO,
     StepScanProcedureDTO,
@@ -51,11 +53,15 @@ def serialize_scan_acquisition_parameters_v1(
     components = v1.components(conditions, warn)
     components["microcontroller"]["settings"] = _microcontroller_settings(activity, conditions, warn)
     components["electric_field_probe"] = _probe(activity)
-    procedure = _step_scan_procedure(activity.procedure) if activity.kind == STEP_SCAN else {}
     if activity.kind == STEP_SCAN:
+        procedure = _step_scan_procedure(activity.procedure)
         procedure["column_stabilization"] = _column_stabilization(activity.column_stabilization, warn)
+    elif activity.kind == FLY_SCAN:
+        procedure = _fly_scan_procedure(activity.procedure)
+    else:
+        procedure = {}
     data = v1.data(
-        parameters.files, STEP_SCAN_COLUMNS if activity.kind == STEP_SCAN else TIME_SERIES_COLUMNS, document_name
+        parameters.files, SCAN_COLUMNS if activity.kind in _SCAN_KINDS else TIME_SERIES_COLUMNS, document_name
     )
     for listed in data["files"]:
         if listed["format"] == "HDF5":
@@ -75,7 +81,8 @@ def serialize_scan_acquisition_parameters_v1(
     }
 
 
-def _step_scan_procedure(procedure: StepScanProcedureDTO) -> Dict[str, Any]:
+def _grid(procedure: Union[StepScanProcedureDTO, FlyScanProcedureDTO]) -> Dict[str, Any]:
+    """Zone, grid and order of travel — the same for a step scan and a fly scan."""
     q = v1.quantity
     return {
         "zone": {
@@ -85,6 +92,24 @@ def _step_scan_procedure(procedure: StepScanProcedureDTO) -> Dict[str, Any]:
         "grid": {"x_nb_points": procedure.x_nb_points, "y_nb_points": procedure.y_nb_points, "total_points": procedure.total_points},
         "pattern": procedure.pattern,
         "fast_axis": procedure.fast_axis,
+    }
+
+
+def _fly_scan_procedure(procedure: FlyScanProcedureDTO) -> Dict[str, Any]:
+    """No averaging, no differential mode, no duration estimate: they don't apply to a fly scan."""
+    return {
+        **_grid(procedure),
+        "stabilization_delay": {
+            **v1.quantity(procedure.stabilization_delay_ms, "ms"),
+            "notes": "attendu une fois par ligne, à son départ, avant le balayage de la ligne",
+        },
+    }
+
+
+def _step_scan_procedure(procedure: StepScanProcedureDTO) -> Dict[str, Any]:
+    q = v1.quantity
+    return {
+        **_grid(procedure),
         "stabilization_delay": q(procedure.stabilization_delay_ms, "ms"),
         "averaging_per_position": q(procedure.averaging_per_position, "{sample}"),
         "measurement_uncertainty": q(procedure.measurement_uncertainty_v, "V"),
@@ -167,7 +192,7 @@ def _probe(activity: ScanActivityDTO) -> Dict[str, Any]:
 
 def _measurement_chain(activity: ScanActivityDTO, conditions: AcquisitionConditionsDTO, warn: v1.Warn) -> Dict[str, Any]:
     excitation = activity.excitation
-    step_scan = activity.kind == STEP_SCAN
+    scan = activity.kind in _SCAN_KINDS  # a step or fly scan holds the motors; a time series doesn't
     return {
         "excitation": {
             "uses": v1.excitation_uses(),
@@ -195,7 +220,7 @@ def _measurement_chain(activity: ScanActivityDTO, conditions: AcquisitionConditi
             "uses": [{"component": "motors"}],
             "state": v1.positioning_state(
                 activity.bench_position_start, activity.bench_position_end,
-                activity.bench_position_unknown_reason, motors_held=step_scan, warn=warn, motors=conditions.motors,
+                activity.bench_position_unknown_reason, motors_held=scan, warn=warn, motors=conditions.motors,
             ),
         },
         "auxiliary_probes": (
@@ -217,8 +242,10 @@ def _aefi_voltage_columns(prefix: str, meaning: str) -> Dict[str, Dict[str, str]
 
 _VOLTAGE = "AEFI sensor output voltage (electric field)"
 
+_SCAN_KINDS = (STEP_SCAN, FLY_SCAN)
+
 # Description of every column the scan CSV files write (main file + probe sidecar).
-STEP_SCAN_COLUMNS: Dict[str, Dict[str, str]] = {
+SCAN_COLUMNS: Dict[str, Dict[str, str]] = {
     "scan_id": {"observed_property": "acquisition id (provenance.activity.id)"},
     "point_index": {"observed_property": "scan point index (acquisition order)", "unit": "1"},
     "x": {"observed_property": "position", "axis": "x", "frame": "bench", "unit": "mm"},

@@ -6,7 +6,7 @@ conditions shared by every acquisition live in application/shared/acquisition_pa
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 
 from application.shared.acquisition_parameters.acquisition_conditions_dtos import (
     AcquisitionConditionsDTO,
@@ -16,6 +16,7 @@ from application.shared.acquisition_parameters.acquisition_conditions_dtos impor
 )
 
 STEP_SCAN = "step_scan"
+FLY_SCAN = "fly_scan"
 TIME_SERIES = "time_series"
 
 
@@ -38,6 +39,25 @@ class StepScanProcedureDTO:
     differential_mode: bool
     differential_settle_delay_ms: float
     estimated_duration_s: float
+
+
+@dataclass(frozen=True)
+class FlyScanProcedureDTO:
+    """The fly scan as asked for (StepScanConfig with fly_scan, in primitives):
+    same grid as a step scan, swept line by line while acquiring. Averaging and
+    differential mode don't apply; the stabilization delay is waited once per
+    line, at its start."""
+
+    x_min_mm: float
+    x_max_mm: float
+    y_min_mm: float
+    y_max_mm: float
+    x_nb_points: int
+    y_nb_points: int
+    total_points: int
+    pattern: str
+    fast_axis: str
+    stabilization_delay_ms: float
 
 
 @dataclass(frozen=True)
@@ -85,7 +105,7 @@ class ColumnStabilizationDTO:
 
 @dataclass(frozen=True)
 class ScanActivityDTO:
-    """One scan or time series as a PROV activity. `kind`: STEP_SCAN |
+    """One scan or time series as a PROV activity. `kind`: STEP_SCAN | FLY_SCAN |
     TIME_SERIES; `status`: "running" | "completed" | "failed" | "cancelled".
     Fields only known at the end are None while running."""
 
@@ -96,7 +116,7 @@ class ScanActivityDTO:
     excitation: ExcitationStateDTO
     owner: Optional[str]
     held_controls: Tuple[str, ...]
-    procedure: Optional[StepScanProcedureDTO] = None
+    procedure: Optional[Union[StepScanProcedureDTO, FlyScanProcedureDTO]] = None
     measured_object: Optional[str] = None  # chosen by the operator at start (None = not described)
     measured_object_id: Optional[str] = None  # from the measured objects registry
     # Lift-off: distance between the lowest point of the spheres and the highest point

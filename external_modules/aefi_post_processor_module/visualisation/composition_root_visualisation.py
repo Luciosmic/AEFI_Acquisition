@@ -4,6 +4,7 @@ Main entry point.
 """
 
 import sys
+import logging
 import argparse
 from pathlib import Path
 from PySide6.QtWidgets import QApplication
@@ -16,9 +17,13 @@ for p in (_external_modules, project_root):
     if s not in sys.path:
         sys.path.insert(0, s)
 
+from aefi_post_processor_module.logging_setup import configure_logging
 from aefi_post_processor_module.visualisation.model import VisualisationModel
 from aefi_post_processor_module.visualisation.view import VisualisationView
 from aefi_post_processor_module.visualisation.presenter import VisualisationPresenter
+
+logger = logging.getLogger(__name__)
+
 
 def main():
     parser = argparse.ArgumentParser(description="AEFI Data Visualization")
@@ -36,22 +41,23 @@ def main():
     )
     args = parser.parse_args()
     
+    feedback = configure_logging(project_root / ".aefi_acquisition" / "logs" / "post_processor.log")
+
     repo_path = Path(args.repo)
     if not repo_path.exists():
-        print(f"Warning: Repository path does not exist: {repo_path}")
-        # Try to fallback to the gitignore whitelisted one if default fails?
-        # But for now, we point to the synthetic one we just made.
+        logger.warning("visualisation.repo_missing repo=%s", repo_path)
     
     app = QApplication(sys.argv)
     app.setApplicationName("AEFI Visualisation")
     
     model = VisualisationModel(repo_path)
     view = VisualisationView()
+    feedback.attach(view.append_feedback)
     presenter = VisualisationPresenter(view, model)
     
     view.show()
     
-    print(f"Started Visualization App. Repo: {repo_path}")
+    logger.info("visualisation.opened repo=%s", repo_path)
     sys.exit(app.exec())
 
 if __name__ == "__main__":

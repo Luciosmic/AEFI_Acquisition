@@ -11,7 +11,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 try:
-    from tests.synthetic_scan_generator import SyntheticScanGenerator
+    from aefi_post_processor_module._tests.synthetic_scan_generator import SyntheticScanGenerator
 except ImportError:
     from synthetic_scan_generator import SyntheticScanGenerator
 

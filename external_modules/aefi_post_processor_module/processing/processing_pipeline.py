@@ -3,6 +3,7 @@ ProcessingPipeline - Orchestrates the complete data processing workflow.
 Manages the execution of all processing steps with proper error handling.
 """
 
+import logging
 from pathlib import Path
 from typing import Tuple, Optional, Dict
 import numpy as np
@@ -13,6 +14,8 @@ from .primary_field_phase_calibrator import PrimaryFieldPhaseCalibrator
 from .primary_field_amplitude_subtractor import PrimaryFieldAmplitudeSubtractor
 from .sensor_to_ef_sources_frame_rotator import SensorToEFSourcesFrameRotator
 from .data_interpolator import DataInterpolator
+
+logger = logging.getLogger(__name__)
 
 
 class ProcessingPipeline:
@@ -76,15 +79,22 @@ class ProcessingPipeline:
             'steps_completed': [],
             'errors': []
         }
-        
+        scan = self.output_path.stem
+        step = 'load_csv'
+        logger.info(
+            "pipeline.started scan=%s csv=%s rotation_angles_deg=%s reference_point=%s interpolation=%s",
+            scan, csv_path, rotation_angles, reference_point, not skip_interpolation,
+        )
+
         try:
             # Step 1: Load CSV
-            print("Loading CSV data...")
+            logger.debug("pipeline.step scan=%s step=%s", scan, step)
             df = self.data_handler.load_csv(csv_path)
             summary['steps_completed'].append('load_csv')
             
             # Step 2: Preprocess
-            print("Preprocessing data...")
+            step = 'preprocess'
+            logger.debug("pipeline.step scan=%s step=%s", scan, step)
             preprocessed, metadata = self.preprocessor.preprocess(df)
             self.data_handler.save_step('preprocessed', preprocessed, metadata)
             self.current_data = preprocessed
@@ -92,7 +102,8 @@ class ProcessingPipeline:
             summary['steps_completed'].append('preprocess')
             
             # Step 3: Phase calibration
-            print(f"Calibrating phase (Ref: {reference_point})...")
+            step = 'phase_calibration'
+            logger.debug("pipeline.step scan=%s step=%s reference_point=%s", scan, step, reference_point)
             phase_calibrated, phase_angles = self.phase_calibrator.calibrate(
                 preprocessed, 
                 reference_idx=reference_point
@@ -103,7 +114,8 @@ class ProcessingPipeline:
             summary['steps_completed'].append('phase_calibration')
             
             # Step 4: Amplitude subtraction
-            print(f"Subtracting primary field amplitude (Ref: {reference_point})...")
+            step = 'amplitude_subtraction'
+            logger.debug("pipeline.step scan=%s step=%s reference_point=%s", scan, step, reference_point)
             amplitude_subtracted, mean_amplitudes = self.amplitude_subtractor.subtract_primary_field(
                 phase_calibrated,
                 reference_idx=reference_point
@@ -115,7 +127,8 @@ class ProcessingPipeline:
             
             # Step 5: Frame rotation (if angles provided)
             if rotation_angles is not None:
-                print(f"Rotating sensor frame to sources frame (E_sources = P·E_sensor), angles {rotation_angles}...")
+                step = 'frame_rotation'
+                logger.debug("pipeline.step scan=%s step=%s rotation_angles_deg=%s", scan, step, rotation_angles)
                 rotated, rot_metadata = self.frame_rotator.rotate(
                     amplitude_subtracted,
                     rotation_angles
@@ -124,12 +137,13 @@ class ProcessingPipeline:
                 self.current_data = rotated
                 summary['steps_completed'].append('frame_rotation')
             else:
-                print("Skipping frame rotation (no angles provided)")
+                logger.warning("pipeline.frame_rotation_skipped scan=%s reason=no_rotation_angles", scan)
                 rotated = amplitude_subtracted
             
             # Step 6: Interpolation (if not skipped)
             if not skip_interpolation:
-                print("Interpolating to finer grid...")
+                step = 'interpolation'
+                logger.debug("pipeline.step scan=%s step=%s", scan, step)
                 extent = metadata['extent']
                 interpolated, interp_metadata = self.interpolator.interpolate(
                     rotated,
@@ -143,16 +157,16 @@ class ProcessingPipeline:
                 self.current_data = interpolated
                 summary['steps_completed'].append('interpolation')
             else:
-                print("Skipping interpolation")
+                logger.info("pipeline.interpolation_skipped scan=%s reason=requested", scan)
             
             # Finalize
-            print("Pipeline complete!")
+            logger.info("pipeline.finished scan=%s steps=%s output=%s", scan, summary['steps_completed'], self.output_path)
             summary['success'] = True
             summary['output_file'] = str(self.output_path)
             summary['processing_history'] = self.data_handler.get_processing_history()
             
         except Exception as e:
-            print(f"Error in pipeline: {e}")
+            logger.error("pipeline.failed scan=%s step=%s error_type=%s error=%s", scan, step, type(e).__name__, e)
             summary['success'] = False
             summary['errors'].append(str(e))
             raise
@@ -199,9 +213,12 @@ class ProcessingPipeline:
         if start_idx >= end_idx:
             raise ValueError("start_step must come before end_step")
         
+        scan = self.output_path.stem
+        step_name = start_step
+        logger.info("pipeline.partial_started scan=%s from=%s to=%s", scan, start_step, end_step)
+
         try:
             # Load starting data
-            print(f"Loading data from step: {start_step}")
             data, metadata = self.data_handler.load_step(start_step)
             self.current_data = data
             self.current_metadata = metadata
@@ -209,24 +226,24 @@ class ProcessingPipeline:
             # Execute steps in order
             for step_name in step_order[start_idx + 1:end_idx + 1]:
                 if step_name == 'phase_calibrated':
-                    print("Calibrating phase...")
+                    logger.debug("pipeline.step scan=%s step=%s", scan, step_name)
                     data, phase_angles = self.phase_calibrator.calibrate(data)
                     self.data_handler.save_step(step_name, data, {'phase_angles': phase_angles})
                     
                 elif step_name == 'amplitude_subtracted':
-                    print("Subtracting amplitude...")
+                    logger.debug("pipeline.step scan=%s step=%s", scan, step_name)
                     data, mean_amps = self.amplitude_subtractor.subtract_primary_field(data)
                     self.data_handler.save_step(step_name, data, {'mean_amplitudes': mean_amps.tolist()})
                     
                 elif step_name == 'rotated_frame':
                     if rotation_angles is None:
                         raise ValueError("rotation_angles required for frame rotation step")
-                    print("Rotating frame...")
+                    logger.debug("pipeline.step scan=%s step=%s rotation_angles_deg=%s", scan, step_name, rotation_angles)
                     data, rot_meta = self.frame_rotator.rotate(data, rotation_angles)
                     self.data_handler.save_step(step_name, data, rot_meta)
                     
                 elif step_name == 'interpolated':
-                    print("Interpolating...")
+                    logger.debug("pipeline.step scan=%s step=%s", scan, step_name)
                     extent = metadata.get('extent', [0, 1, 0, 1])
                     data, interp_meta = self.interpolator.interpolate(data, extent)
                     self.data_handler.save_step(step_name, data, interp_meta)
@@ -235,9 +252,12 @@ class ProcessingPipeline:
                 summary['steps_completed'].append(step_name)
             
             summary['success'] = True
-            
+            logger.info("pipeline.partial_finished scan=%s steps=%s", scan, summary['steps_completed'])
+
         except Exception as e:
-            print(f"Error in partial pipeline: {e}")
+            logger.error(
+                "pipeline.partial_failed scan=%s step=%s error_type=%s error=%s", scan, step_name, type(e).__name__, e
+            )
             summary['success'] = False
             summary['errors'].append(str(e))
             raise
