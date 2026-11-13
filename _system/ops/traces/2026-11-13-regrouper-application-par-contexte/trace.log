@@ -14,3 +14,4 @@
 13:50 | jalon | pytest complet=1709 reussis 3 sautes 0 echec (identique a la reference) | mypy=2943 identique | verify final=1031 erreurs 118 avertissements (reference 1039/89 ; -8 erreurs service-appelle-un-service par le noyau partage ; co-changement +29, avertissements) | mesure faite : constat-mesure-des-contextes.md
 13:52 | jalon | modeles .claude/commands (create-application-service, create-port-interface, create-presenter, pre-pr-quality-check) et exemple de prefixe de logger de l'observabilite suivent application/<contexte>/ ; au_diagnostics non lance : le gate au-aefi-acquisition n'etait pas expose a la session de reprise
 13:55 | fin | resultat=atteint : 6 contextes + shared ranges, 7 commits | verify 1039->1031 | mypy 2943 | pytest 1709 verts 3 sautes
+13:02 | fin | resultat=Application regroupée par contexte (verify 1 031, mypy 2 943, pytest 1 709 verts) ; suite : séparer test_bench., entree=Regrouper application par contexte, session=16aa76a0
