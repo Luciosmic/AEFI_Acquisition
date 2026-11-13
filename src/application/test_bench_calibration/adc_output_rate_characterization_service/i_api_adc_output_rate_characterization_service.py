@@ -14,6 +14,12 @@ class IApiAdcOutputRateCharacterizationService(ABC):
     Responsibility:
     - Inbound API contract for AdcOutputRateCharacterizationService
       (presenter -> application). Outcome through the output port.
+
+    Rationale:
+    - Hexagonal inbound port: the presenter starts the characterization through this inbound port, never through the concrete service, so the UI layer does not import the application implementation.
+
+    Design:
+    - Pure ABC. The outcome arrives through the output port.
     """
 
     @abstractmethod

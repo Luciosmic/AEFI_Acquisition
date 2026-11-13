@@ -11,6 +11,9 @@ class IApiMeasuredObjectService(ABC):
     Responsibility:
     - Inbound contract of the measured_object use cases, for the presenters.
 
+    Rationale:
+    - Hexagonal inbound port: presenters depend on this inbound port, never on the concrete service, so the UI layer does not import the application implementation.
+
     Design:
     - Pure ABC. Expected refusals are results (MeasuredObjectServiceError union),
       never exceptions. Implemented by MeasuredObjectService.

@@ -14,6 +14,9 @@ class IApiAcquisitionThroughputCharacterizationService(ABC):
     - Inbound API contract for AcquisitionThroughputCharacterizationService
       (presenter -> application).
 
+    Rationale:
+    - Hexagonal inbound port: the presenter starts the characterization through this inbound port, never through the concrete service, so the UI layer does not import the application implementation.
+
     Design:
     - Pure ABC. The outcome of start_characterization() arrives through the
       output port (the sweep runs in the background).
