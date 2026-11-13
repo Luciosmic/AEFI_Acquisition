@@ -49,12 +49,12 @@ class TestScanControlCommands(unittest.TestCase):
     def _names(self) -> List[str]:
         return [type(e).__name__ for e in self.events]
 
-    def test_status_before_any_scan_is_pending_and_empty(self):
+    def test_status_before_any_scan_is_pending_and_empty(self) -> None:
         status = self.service.get_status()
         self.assertEqual((status.status, status.current_point_index, status.total_points), ("pending", 0, 0))
         self.assertFalse(status.is_running)
 
-    def test_pause_resume_cancel_without_a_scan_do_nothing(self):
+    def test_pause_resume_cancel_without_a_scan_do_nothing(self) -> None:
         self.service.pause_scan()
         self.service.resume_scan()
         self.service.cancel_scan()
@@ -75,7 +75,7 @@ class TestScanControlCommands(unittest.TestCase):
         self.assertEqual((final.status, final.current_point_index, final.total_points), ("completed", 4, 4))
         self.assertAlmostEqual(final.progress_percentage, 100.0)
 
-    def test_pause_after_the_last_point_is_ignored(self):
+    def test_pause_after_the_last_point_is_ignored(self) -> None:
         self.assertTrue(self.service.execute_scan(_dto()))
         self.assertTrue(self.flags["scancompleted"].wait(10.0))
 
@@ -84,7 +84,7 @@ class TestScanControlCommands(unittest.TestCase):
         self.assertFalse(self.flags["scanpaused"].is_set())
         self.assertEqual(self.service.get_status().status, "completed")
 
-    def test_pause_then_resume_continues_to_completion(self):
+    def test_pause_then_resume_continues_to_completion(self) -> None:
         first = threading.Event()
 
         def pause_once(event):
@@ -109,7 +109,7 @@ class TestScanControlCommands(unittest.TestCase):
         self.assertEqual(resumed.resume_from_point_index, 1)
         self.assertEqual(self.service.get_status().current_point_index, 4)
 
-    def test_cancel_stops_the_loop_and_releases_the_stream(self):
+    def test_cancel_stops_the_loop_and_releases_the_stream(self) -> None:
         first = threading.Event()
 
         def cancel_once(event):
@@ -130,7 +130,7 @@ class TestScanControlCommands(unittest.TestCase):
         self.assertNotIn("ScanCompleted", self._names())
         self.assertLess(self.service.get_status().current_point_index, 4)
 
-    def test_cancel_in_the_window_after_the_last_point_is_ignored(self):
+    def test_cancel_in_the_window_after_the_last_point_is_ignored(self) -> None:
         def cancel_on_last(event):
             if self.service.get_status().current_point_index == self.service.get_status().total_points:
                 self.service.cancel_scan()
@@ -148,7 +148,7 @@ class TestScanControlCommands(unittest.TestCase):
         self.assertEqual(self.service.get_status().status, "completed")
         self.assertFalse(self.aefi.is_acquisition_running())
 
-    def test_cancel_after_a_final_status_is_a_no_op_and_does_not_raise(self):
+    def test_cancel_after_a_final_status_is_a_no_op_and_does_not_raise(self) -> None:
         self.assertTrue(self.service.execute_scan(_dto()))
         self.assertTrue(self.flags["scancompleted"].wait(10.0))
         before = len(self.events)

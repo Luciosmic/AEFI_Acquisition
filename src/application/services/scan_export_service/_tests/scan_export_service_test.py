@@ -83,7 +83,7 @@ class FakeExportPort(IScanExportPort):
             "acquisition_kind": acquisition_kind,
         }
 
-    def start(self):
+    def start(self) -> None:
         self.started = True
 
     def write_point(self, data):
@@ -104,7 +104,7 @@ class FakeExportPort(IScanExportPort):
     def get_output_path(self) -> Optional[Path]:
         return self._output_path
 
-    def stop(self):
+    def stop(self) -> None:
         self.stopped = True
 
 
@@ -119,12 +119,12 @@ class StrictExportPort(FakeExportPort):
         self.open = False
         self.refused = []
 
-    def start(self):
+    def start(self) -> None:
         self._event_bus.publish("racingevent", _make_scan_point_acquired_event())
         super().start()
         self.open = True
 
-    def stop(self):
+    def stop(self) -> None:
         self.open = False
         super().stop()
         self._event_bus.publish("racingevent", _make_scan_point_acquired_event())
@@ -193,7 +193,7 @@ class FakePositionIncrementsPort(IPositionIncrementsPort):
 
 
 class TestScanExportServiceMetadata(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.event_bus = InMemoryEventBus()
         self.export_port = FakeExportPort(output_path=Path("/fake/scan.csv"))
         self.hdf5_export_port = FakeExportPort(output_path=Path("/fake/scan.h5"))
@@ -223,7 +223,7 @@ class TestScanExportServiceMetadata(unittest.TestCase):
             ExportConfigDTO(enabled=True, output_directory="", filename_base="scan")
         )
 
-    def test_a_step_scan_point_carries_its_commanded_and_its_read_increments(self):
+    def test_a_step_scan_point_carries_its_commanded_and_its_read_increments(self) -> None:
         self.event_bus.publish("scanstarted", _make_scan_started_event())
         self.event_bus.publish("scanpointacquired", _make_scan_point_acquired_event())  # position (1.0, 2.0) mm
 
@@ -232,7 +232,7 @@ class TestScanExportServiceMetadata(unittest.TestCase):
         self.assertEqual((row["x_increments_commanded"], row["y_increments_commanded"]), (50, 100))
         self.assertEqual((row["x_increments_read"], row["y_increments_read"]), (110, 220))
 
-    def test_a_fly_scan_point_has_no_read_increments_because_the_axes_are_moving(self):
+    def test_a_fly_scan_point_has_no_read_increments_because_the_axes_are_moving(self) -> None:
         self.event_bus.publish("scanstarted", _make_scan_started_event(fly_scan=True))
         self.event_bus.publish("scanpointacquired", _make_scan_point_acquired_event())
 
@@ -241,14 +241,14 @@ class TestScanExportServiceMetadata(unittest.TestCase):
         self.assertIsNone(row["x_increments_read"])
         self.assertEqual(self.increments_port.reads, 0)
 
-    def test_without_an_applied_conversion_the_increments_are_empty_not_guessed(self):
+    def test_without_an_applied_conversion_the_increments_are_empty_not_guessed(self) -> None:
         self.increments_port.conversion_applied = False
         self.event_bus.publish("scanstarted", _make_scan_started_event())
         self.event_bus.publish("scanpointacquired", _make_scan_point_acquired_event())
 
         self.assertIsNone(self.export_port.points[0]["x_increments_commanded"])
 
-    def test_an_electric_field_point_carries_the_commanded_increments_too(self):
+    def test_an_electric_field_point_carries_the_commanded_increments_too(self) -> None:
         self.event_bus.publish("scanstarted", _make_scan_started_event())
         event = _narda_event(
             scan_id=uuid4(), point_index=0, position=Position2D(x=1.0, y=2.0),
@@ -258,7 +258,7 @@ class TestScanExportServiceMetadata(unittest.TestCase):
 
         self.assertEqual(self.export_port.field_points[0]["y_increments_commanded"], 100)
 
-    def test_scan_start_writes_the_acquisition_facts(self):
+    def test_scan_start_writes_the_acquisition_facts(self) -> None:
         started = _make_scan_started_event()
         self.event_bus.publish("scanstarted", started)
 
@@ -274,7 +274,7 @@ class TestScanExportServiceMetadata(unittest.TestCase):
         self.assertEqual(parameters.conditions.motors.microns_per_step, 21.8)
         self.assertIsNotNone(parameters.software.commit)
 
-    def test_scan_end_rewrites_the_document_with_its_outcome_after_closing_files(self):
+    def test_scan_end_rewrites_the_document_with_its_outcome_after_closing_files(self) -> None:
         started = _make_scan_started_event()
         self.event_bus.publish("scanstarted", started)
         self.event_bus.publish("scanpointacquired", _make_scan_point_acquired_event())
@@ -286,7 +286,7 @@ class TestScanExportServiceMetadata(unittest.TestCase):
         self.assertEqual(final.bench_position_end, BenchPositionDTO(x_mm=835.0, y_mm=835.0))
         self.assertTrue(self.export_port.stopped)  # written after stop(): every file closed
 
-    def test_measured_object_and_operator_typed_at_start_are_recorded(self):
+    def test_measured_object_and_operator_typed_at_start_are_recorded(self) -> None:
         self.service.configure_export(ExportConfigDTO(
             enabled=True, output_directory="", filename_base="scan",
             measured_object="  bouteille d'eau, 8 mm  ", operator_id="id-luis", operator="Luis",
@@ -299,7 +299,7 @@ class TestScanExportServiceMetadata(unittest.TestCase):
             ("bouteille d'eau, 8 mm", "id-luis", "Luis"),
         )
 
-    def test_blank_measured_object_is_not_described(self):
+    def test_blank_measured_object_is_not_described(self) -> None:
         self.event_bus.publish("scanstarted", _make_scan_started_event())  # setUp config: fields left empty
 
         activity = self.export_port.parameters[0].activity
@@ -307,7 +307,7 @@ class TestScanExportServiceMetadata(unittest.TestCase):
         self.assertIsNone(activity.operator)
         self.assertIsNone(activity.operator_id)
 
-    def test_missing_fact_readers_still_write_a_document(self):
+    def test_missing_fact_readers_still_write_a_document(self) -> None:
         self.service._conditions_port = None
         self.service._software_provenance_port = None
         self.service._usb_latency_timer_port = None
@@ -317,7 +317,7 @@ class TestScanExportServiceMetadata(unittest.TestCase):
         self.assertIn("non câblé", activity.bench_position_unknown_reason)
         self.assertIn("non câblé", activity.usb_latency_unknown_reason)
 
-    def test_files_are_tagged_step_scan_or_fly_scan(self):
+    def test_files_are_tagged_step_scan_or_fly_scan(self) -> None:
         self.event_bus.publish("scanstarted", _make_scan_started_event())
         self.assertEqual(self.export_port.configured["acquisition_kind"], "stepScan")
 
@@ -325,7 +325,7 @@ class TestScanExportServiceMetadata(unittest.TestCase):
         self.assertEqual(self.export_port.configured["acquisition_kind"], "flyScan")
         self.assertTrue(self.export_port.configured["metadata"]["fly_scan"])
 
-    def test_a_fly_scan_is_recorded_as_a_fly_scan_with_its_own_procedure(self):
+    def test_a_fly_scan_is_recorded_as_a_fly_scan_with_its_own_procedure(self) -> None:
         self.event_bus.publish("scanstarted", _make_scan_started_event(fly_scan=True))
 
         activity = self.export_port.parameters[0].activity
@@ -333,7 +333,7 @@ class TestScanExportServiceMetadata(unittest.TestCase):
         self.assertIsInstance(activity.procedure, FlyScanProcedureDTO)
         self.assertEqual((activity.procedure.pattern, activity.procedure.fast_axis), ("SERPENTINE", "Y"))
 
-    def test_line_scan_metadata_describes_the_line(self):
+    def test_line_scan_metadata_describes_the_line(self) -> None:
         from domain.step_scan.value_objects.line_scan_config.line_scan_config import LineScanConfig
         config = LineScanConfig(
             center=Position2D(600.0, 600.0), length_mm=100.0, n_points=11, theta_deg=90.0,
@@ -350,7 +350,7 @@ class TestScanExportServiceMetadata(unittest.TestCase):
         self.assertAlmostEqual(scan["end_y"], 650.0)
         self.assertEqual(scan["averaging_per_position"], 10)
 
-    def test_probe_connection_event_is_cached_into_next_metadata(self):
+    def test_probe_connection_event_is_cached_into_next_metadata(self) -> None:
         probe = ElectricFieldProbe(
             brand="Narda", model="EP-601", serial_number="SN123",
             axis_labels=("x", "y", "z"), battery_percentage=62.0,
@@ -367,7 +367,7 @@ class TestScanExportServiceMetadata(unittest.TestCase):
         self.assertEqual(probe_facts.axis_labels, ("x", "y", "z"))
         self.assertEqual(probe_facts.battery_percentage, 62.0)
 
-    def test_field_sidecar_label_is_derived_from_connected_probe(self):
+    def test_field_sidecar_label_is_derived_from_connected_probe(self) -> None:
         probe = ElectricFieldProbe(
             brand="Narda", model="EP-601", serial_number="SN123",
             axis_labels=("X", "Y", "Z"),
@@ -389,7 +389,7 @@ class TestScanExportServiceMetadata(unittest.TestCase):
         self.assertEqual(self.export_port.field_data_config["probe_info"]["probe_label"], "narda-ep601")
         self.assertEqual(self.export_port.field_data_config["probe_info"]["axis_labels"], ("x", "y", "z"))
 
-    def test_scan_exports_to_both_csv_and_hdf5_simultaneously(self):
+    def test_scan_exports_to_both_csv_and_hdf5_simultaneously(self) -> None:
         self.event_bus.publish("scanstarted", _make_scan_started_event())
         self.event_bus.publish(
             "scanpointacquired",
@@ -405,7 +405,7 @@ class TestScanExportServiceMetadata(unittest.TestCase):
             self.export_port.configured["timestamp"], self.hdf5_export_port.configured["timestamp"]
         )
 
-    def test_post_processing_runs_on_scan_completed_with_both_output_paths(self):
+    def test_post_processing_runs_on_scan_completed_with_both_output_paths(self) -> None:
         started = _make_scan_started_event()
         self.event_bus.publish("scanstarted", started)
         self.event_bus.publish("scancompleted", ScanCompleted(scan_id=started.scan_id, total_points=1))
@@ -414,7 +414,7 @@ class TestScanExportServiceMetadata(unittest.TestCase):
         self.assertTrue(self.export_port.stopped)
         self.assertTrue(self.hdf5_export_port.stopped)
 
-    def test_post_processing_does_not_run_on_scan_cancelled(self):
+    def test_post_processing_does_not_run_on_scan_cancelled(self) -> None:
         started = _make_scan_started_event()
         self.event_bus.publish("scanstarted", started)
         self.event_bus.publish("scancancelled", ScanCancelled(scan_id=started.scan_id))
@@ -422,14 +422,14 @@ class TestScanExportServiceMetadata(unittest.TestCase):
         self.assertEqual(self.post_processing_port.calls, [])
         self.assertTrue(self.export_port.stopped)
 
-    def test_non_differential_point_has_empty_baseline_columns(self):
+    def test_non_differential_point_has_empty_baseline_columns(self) -> None:
         self.event_bus.publish("scanstarted", _make_scan_started_event())
         self.event_bus.publish("scanpointacquired", _make_scan_point_acquired_event())
 
         row = self.export_port.points[0]
         self.assertIsNone(row["baseline_voltage_x_in_phase"])
 
-    def test_differential_point_carries_baseline_columns(self):
+    def test_differential_point_carries_baseline_columns(self) -> None:
         self.event_bus.publish("scanstarted", _make_scan_started_event())
         event = ScanPointAcquired(
             scan_id=uuid4(),
@@ -454,7 +454,7 @@ class TestScanExportServiceMetadata(unittest.TestCase):
         self.assertEqual(row["baseline_voltage_x_in_phase"], 0.1)
         self.assertEqual(row["voltage_x_in_phase"], 0.9)
 
-    def test_differential_field_point_carries_baseline_columns(self):
+    def test_differential_field_point_carries_baseline_columns(self) -> None:
         self.event_bus.publish("scanstarted", _make_scan_started_event())
         event = _narda_event(
             scan_id=uuid4(), point_index=0, position=Position2D(x=1.0, y=2.0),
@@ -466,7 +466,7 @@ class TestScanExportServiceMetadata(unittest.TestCase):
         row = self.export_port.field_points[0]
         self.assertEqual(row["baseline_field_components"], (0.1,))
 
-    def test_only_events_published_during_the_scan_are_exported(self):
+    def test_only_events_published_during_the_scan_are_exported(self) -> None:
         probe_event = ElectricFieldProbeConnectionChanged(connected=False, probe=None)
         self.event_bus.publish("electricfieldprobeconnectionchanged", probe_event)  # before
 
@@ -507,12 +507,12 @@ class TestTimeSeriesExport(unittest.TestCase):
 
     setUp = TestScanExportServiceMetadata.setUp
 
-    def _arm(self):
+    def _arm(self) -> None:
         self.service.configure_time_series_export(
             ExportConfigDTO(enabled=True, output_directory="", filename_base="drift")
         )
 
-    def test_armed_reading_is_exported_as_time_series_csv(self):
+    def test_armed_reading_is_exported_as_time_series_csv(self) -> None:
         self._arm()
         acquisition_id = _publish_reading(self.event_bus, n_samples=3)
 
@@ -525,14 +525,14 @@ class TestTimeSeriesExport(unittest.TestCase):
         self.assertTrue(self.export_port.stopped)
         self.assertFalse(self.hdf5_export_port.started)
 
-    def test_unarmed_reading_is_not_exported(self):
+    def test_unarmed_reading_is_not_exported(self) -> None:
         # Scans start the continuous ADC worker too — never export those.
         _publish_reading(self.event_bus, n_samples=3)
 
         self.assertFalse(self.export_port.started)
         self.assertEqual(self.export_port.points, [])
 
-    def test_arming_is_consumed_by_one_reading(self):
+    def test_arming_is_consumed_by_one_reading(self) -> None:
         self._arm()
         _publish_reading(self.event_bus, n_samples=1)
         _publish_reading(self.event_bus, n_samples=2)
@@ -544,7 +544,7 @@ class TestScanExportServiceEventRecordingRace(unittest.TestCase):
     """An event landing while the scan export opens or closes is not written
     into a port that is not open (it raised and logged an ERROR on the bench)."""
 
-    def test_events_racing_the_export_open_and_close_are_not_written_to_closed_ports(self):
+    def test_events_racing_the_export_open_and_close_are_not_written_to_closed_ports(self) -> None:
         bus = InMemoryEventBus()
         csv_port = StrictExportPort(bus, Path("/fake/scan.csv"))
         hdf5_port = StrictExportPort(bus, Path("/fake/scan.h5"))
@@ -571,7 +571,7 @@ class TestScanExportServiceZeroPointCleanup(unittest.TestCase):
     leave an empty acquisition folder (0-row CSV, near-empty HDF5) behind —
     see _system/ops/tasks.md discussion on export-folder clutter."""
 
-    def setUp(self):
+    def setUp(self) -> None:
         self.tmp_dir = Path(tempfile.mkdtemp())
         self.acquisition_dir = self.tmp_dir / "2024-01-01_000000_stepScan_scan"
         self.acquisition_dir.mkdir(parents=True)
@@ -596,10 +596,10 @@ class TestScanExportServiceZeroPointCleanup(unittest.TestCase):
             ExportConfigDTO(enabled=True, output_directory="", filename_base="scan")
         )
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         shutil.rmtree(self.tmp_dir, ignore_errors=True)
 
-    def test_zero_point_scan_removes_acquisition_folder_on_fail(self):
+    def test_zero_point_scan_removes_acquisition_folder_on_fail(self) -> None:
         started = _make_scan_started_event()
         self.event_bus.publish("scanstarted", started)
         # No ScanPointAcquired published — scan failed before any point.
@@ -609,14 +609,14 @@ class TestScanExportServiceZeroPointCleanup(unittest.TestCase):
 
         self.assertFalse(self.acquisition_dir.exists())
 
-    def test_zero_point_scan_removes_acquisition_folder_on_cancel(self):
+    def test_zero_point_scan_removes_acquisition_folder_on_cancel(self) -> None:
         started = _make_scan_started_event()
         self.event_bus.publish("scanstarted", started)
         self.event_bus.publish("scancancelled", ScanCancelled(scan_id=started.scan_id))
 
         self.assertFalse(self.acquisition_dir.exists())
 
-    def test_scan_with_points_keeps_acquisition_folder_on_cancel(self):
+    def test_scan_with_points_keeps_acquisition_folder_on_cancel(self) -> None:
         started = _make_scan_started_event()
         self.event_bus.publish("scanstarted", started)
         self.event_bus.publish("scanpointacquired", _make_scan_point_acquired_event())

@@ -32,7 +32,7 @@ def make_dto(**overrides):
 
 class TestScanLineExecution(unittest.TestCase):
 
-    def setUp(self):
+    def setUp(self) -> None:
         self.event_bus = InMemoryEventBus()
         continuous_service = AefiAcquisitionService(
             MockAefiAcquisitionExecutor(self.event_bus),
@@ -61,7 +61,7 @@ class TestScanLineExecution(unittest.TestCase):
         self.assertTrue(done.wait(timeout=10.0), "Line scan did not complete within timeout")
         return self.service._current_scan
 
-    def test_line_scan_visits_the_line_points_in_order(self):
+    def test_line_scan_visits_the_line_points_in_order(self) -> None:
         scan = self._run(make_dto())
 
         self.assertEqual(scan.status, ScanStatus.COMPLETED)
@@ -70,7 +70,7 @@ class TestScanLineExecution(unittest.TestCase):
         expected = [(600.0, 550.0), (600.0, 575.0), (600.0, 600.0), (600.0, 625.0), (600.0, 650.0)]
         self.assertEqual(positions, pytest.approx(expected))
 
-    def test_scan_started_is_presented_as_a_line(self):
+    def test_scan_started_is_presented_as_a_line(self) -> None:
         self._run(make_dto(theta_deg=0.0))
 
         self.assertEqual(len(self.started), 1)
@@ -82,12 +82,12 @@ class TestScanLineExecution(unittest.TestCase):
         self.assertAlmostEqual(config["start_x"], 550.0)
         self.assertAlmostEqual(config["end_x"], 650.0)
 
-    def test_invalid_line_is_rejected_without_starting(self):
+    def test_invalid_line_is_rejected_without_starting(self) -> None:
         # Line leaves the bench at x < 0.
         self.assertFalse(self.service.execute_line_scan(make_dto(center_x=10.0, theta_deg=0.0)))
         self.assertIsNone(self.service._current_scan)
 
-    def test_differential_line_scan_requires_excitation_service(self):
+    def test_differential_line_scan_requires_excitation_service(self) -> None:
         self.assertFalse(self.service.execute_line_scan(make_dto(differential_mode=True)))
 
 

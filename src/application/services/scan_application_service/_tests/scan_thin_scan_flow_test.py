@@ -62,7 +62,7 @@ class TestScanThinScanFlow(unittest.TestCase):
             return True
         return done.wait(timeout)
 
-    def test_starting_a_step_scan_creates_a_thin_scan_with_the_step_scan_id(self):
+    def test_starting_a_step_scan_creates_a_thin_scan_with_the_step_scan_id(self) -> None:
         self.assertTrue(self.service.execute_scan(_dto()))
         self._wait_terminal()
         started = next(e for e in self.events if isinstance(e, ScanStarted))
@@ -73,7 +73,7 @@ class TestScanThinScanFlow(unittest.TestCase):
         self.assertEqual(scan.total_points, 4)
         self.assertIn(scan.state, (ScanState.STARTED, ScanState.COMPLETED))
 
-    def test_step_scan_completes_the_thin_scan_with_a_single_scan_completed_after_all_points(self):
+    def test_step_scan_completes_the_thin_scan_with_a_single_scan_completed_after_all_points(self) -> None:
         self.assertTrue(self.service.execute_scan(_dto()))
         self.assertTrue(self._wait_terminal())
         started = next(e for e in self.events if isinstance(e, ScanStarted))
@@ -87,7 +87,7 @@ class TestScanThinScanFlow(unittest.TestCase):
         self.assertEqual(scan.state, ScanState.COMPLETED)
         self.assertEqual(len(scan.received("aefi_point")), 4)
 
-    def test_a_catch_all_subscriber_sees_scan_completed_after_the_last_point_that_triggers_it(self):
+    def test_a_catch_all_subscriber_sees_scan_completed_after_the_last_point_that_triggers_it(self) -> None:
         # Registered after the closure handler, like the export's event journal.
         names, seen_completed = [], threading.Event()
 
@@ -105,7 +105,7 @@ class TestScanThinScanFlow(unittest.TestCase):
         self.assertEqual(names.count("ScanCompleted"), 1)
         self.assertGreater(names.index("ScanCompleted"), points[-1], names[-8:])
 
-    def test_streams_are_released_before_scan_completed(self):
+    def test_streams_are_released_before_scan_completed(self) -> None:
         self.assertTrue(self.service.execute_scan(_dto()))
         self.assertTrue(self._wait_terminal())
         self.assertEqual(self.streams_running_at_completion, [False])

@@ -45,7 +45,7 @@ class _SpySerialCommunicator(FakeMCUSerialCommunicator):
     on the actual two-step 'a<addr>' / 'd<value>' register writes a scan
     produces, instead of trusting the domain-level ExcitationParameters."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.commands: list[str] = []
 
@@ -72,7 +72,7 @@ class TestScanDifferentialModeDdsWire(unittest.TestCase):
     GAIN_ADDR_CH1 = AD9106Controller.DDS_ADDRESSES["Gain"][1]
     GAIN_ADDR_CH2 = AD9106Controller.DDS_ADDRESSES["Gain"][2]
 
-    def setUp(self):
+    def setUp(self) -> None:
         self.event_bus = InMemoryEventBus()
 
         self.communicator = _SpySerialCommunicator()
@@ -114,7 +114,7 @@ class TestScanDifferentialModeDdsWire(unittest.TestCase):
         self.event_bus.subscribe("scancompleted", lambda e: done.set())
         return done.wait(timeout=timeout)
 
-    def test_differential_scan_toggles_dds_gain_off_then_on_on_the_wire(self):
+    def test_differential_scan_toggles_dds_gain_off_then_on_on_the_wire(self) -> None:
         expected_gain = int(
             self.EXCITATION_LEVEL_PERCENT / 100.0 * AdapterExcitationConfigurationAD9106.MAX_EXCITATION_GAIN
         )

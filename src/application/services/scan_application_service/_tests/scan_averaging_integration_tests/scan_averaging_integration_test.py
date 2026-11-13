@@ -58,13 +58,13 @@ class NoisyAcquisitionPort(IAcquisitionPort):
 
 class TestScanAveragingIntegration(unittest.TestCase):
 
-    def test_raster_averaging(self):
+    def test_raster_averaging(self) -> None:
         self._run_scan_test("RASTER")
 
-    def test_serpentine_averaging(self):
+    def test_serpentine_averaging(self) -> None:
         self._run_scan_test("SERPENTINE")
 
-    def test_comb_averaging(self):
+    def test_comb_averaging(self) -> None:
         self._run_scan_test("COMB")
 
     def _run_scan_test(self, pattern_name: str):

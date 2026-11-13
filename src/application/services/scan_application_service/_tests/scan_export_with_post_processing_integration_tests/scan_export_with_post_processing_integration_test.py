@@ -64,7 +64,7 @@ class _RecordingPostProcessorPort(AefiPostProcessorPort):
 
 
 class ScanExportWithPostProcessingIntegrationTest(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.output_dir = Path(tempfile.mkdtemp())
         self.event_bus = InMemoryEventBus()
 
@@ -106,7 +106,7 @@ class ScanExportWithPostProcessingIntegrationTest(unittest.TestCase):
             ExportConfigDTO(enabled=True, output_directory=str(self.output_dir), filename_base="e2e")
         )
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         shutil.rmtree(self.output_dir, ignore_errors=True)
 
     def test_scan_exports_both_formats_and_real_pipeline_fills_the_hdf5(self):

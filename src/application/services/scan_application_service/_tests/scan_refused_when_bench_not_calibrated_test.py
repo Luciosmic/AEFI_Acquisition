@@ -31,7 +31,7 @@ class FixedStatus(IMotionConversionStatusPort):
 
 
 class TestScanRefusedWhenBenchNotCalibrated(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.bus = InMemoryEventBus()
         self.service = ScanApplicationService(
             UncalibratedMotionPort(event_bus=self.bus, motion_delay_ms=1),
@@ -45,14 +45,14 @@ class TestScanRefusedWhenBenchNotCalibrated(unittest.TestCase):
         self.started = []
         self.bus.subscribe("scanstarted", self.started.append)
 
-    def test_refusal_is_typed_and_names_what_is_missing(self):
+    def test_refusal_is_typed_and_names_what_is_missing(self) -> None:
         refusal = self.service.get_start_refusal()
 
         self.assertIsInstance(refusal, ScanRefusedBenchNotCalibrated)
         self.assertEqual(refusal.missing_quantity, "µm par impulsion")
         self.assertIn("µm par impulsion", refusal.message)
 
-    def test_grid_scan_is_refused_and_nothing_starts(self):
+    def test_grid_scan_is_refused_and_nothing_starts(self) -> None:
         dto = Scan2DConfigDTO(
             x_min=0, x_max=1, x_nb_points=2, y_min=0, y_max=1, y_nb_points=2,
             scan_pattern="RASTER", stabilization_delay_ms=0, averaging_per_position=1, uncertainty_volts=1e-6,
@@ -61,7 +61,7 @@ class TestScanRefusedWhenBenchNotCalibrated(unittest.TestCase):
         self.assertFalse(self.service.execute_scan(dto))
         self.assertEqual(self.started, [])
 
-    def test_line_scan_is_refused_and_nothing_starts(self):
+    def test_line_scan_is_refused_and_nothing_starts(self) -> None:
         dto = LineScanConfigDTO(
             center_x=10.0, center_y=10.0, length_mm=5.0, n_points=3, theta_deg=0.0,
             stabilization_delay_ms=0, averaging_per_position=1,

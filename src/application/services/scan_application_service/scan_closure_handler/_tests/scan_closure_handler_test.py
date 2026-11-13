@@ -42,7 +42,7 @@ def _acquire(uow, scan_id, point=None):
     return point
 
 
-def test_three_points_complete_the_scan_through_separate_transactions():
+def test_three_points_complete_the_scan_through_separate_transactions() -> None:
     uow, completed, failed = _setup()
     scan = Scan(ScanId(uuid4()), {"aefi_point": ExpectedSource(3)}, 3)
     with uow:
@@ -60,7 +60,7 @@ def test_three_points_complete_the_scan_through_separate_transactions():
     assert failed == []
 
 
-def test_unknown_scan_publishes_closure_failed_without_propagating():
+def test_unknown_scan_publishes_closure_failed_without_propagating() -> None:
     uow, completed, failed = _setup()
     scan_id = uuid4()
     point = _acquire(uow, scan_id)
@@ -71,7 +71,7 @@ def test_unknown_scan_publishes_closure_failed_without_propagating():
     assert event.scan_id == scan_id and event.source == "aefi_point" and event.acquisition_id == point.id and "introuvable" in event.reason
 
 
-def test_point_received_before_scan_start_publishes_closure_failed():
+def test_point_received_before_scan_start_publishes_closure_failed() -> None:
     uow, completed, failed = _setup()
     scan = Scan(ScanId(uuid4()), {"aefi_point": ExpectedSource(1)}, 1)
     with uow:
@@ -110,7 +110,7 @@ def _first_event(point):
     )
 
 
-def test_handler_listens_to_every_declared_topic_and_any_source():
+def test_handler_listens_to_every_declared_topic_and_any_source() -> None:
     from dataclasses import dataclass
     from domain.shared_kernel.events.domain_event import DomainEvent
 
@@ -136,7 +136,7 @@ def test_handler_listens_to_every_declared_topic_and_any_source():
     assert scan.state is ScanState.COMPLETED and len(completed) == 1
 
 
-def test_undeclared_source_publishes_closure_failed():
+def test_undeclared_source_publishes_closure_failed() -> None:
     bus = InMemoryEventBus()
     uow = InMemoryUnitOfWork(bus)
     ScanClosureHandler(bus, uow, ("aefipointacquired",))
@@ -152,7 +152,7 @@ def test_undeclared_source_publishes_closure_failed():
     assert len(failed) == 1 and "ScanSourceNotDeclaredError" in failed[0].reason
 
 
-def test_three_lines_complete_a_fly_scan_with_grid_point_total():
+def test_three_lines_complete_a_fly_scan_with_grid_point_total() -> None:
     from domain.aefi_line.aefi_line import AefiLine
     from domain.aefi_line.value_objects.aefi_line_id.aefi_line_id import AefiLineId
     from domain.aefi_line.value_objects.line_grid_point.line_grid_point import LineGridPoint

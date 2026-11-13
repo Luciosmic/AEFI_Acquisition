@@ -41,7 +41,7 @@ def _narda_event(scan_id, point_index, position, field_measurement, baseline_fie
     )
 
 class TestScanApplicationService(DiagramFriendlyTest):
-    def setUp(self):
+    def setUp(self) -> None:
         super().setUp()
         self.log_interaction("Test", "CREATE", "ScanApplicationService", "Setup service and ports")
 
@@ -105,7 +105,7 @@ class TestScanApplicationService(DiagramFriendlyTest):
             return True
         return deadline.wait(timeout=timeout)
 
-    def test_full_scan_execution(self):
+    def test_full_scan_execution(self) -> None:
         self.log_interaction("Test", "START", "ScanApplicationService", "Start full scan execution test")
 
         scan_dto = Scan2DConfigDTO(
@@ -144,7 +144,7 @@ class TestScanApplicationService(DiagramFriendlyTest):
         # else was running it) — it must be stopped again once the scan ends.
         self.assertFalse(self.aefi_acquisition_service.is_acquisition_running())
 
-    def test_scan_does_not_stop_a_continuous_stream_it_did_not_start(self):
+    def test_scan_does_not_stop_a_continuous_stream_it_did_not_start(self) -> None:
         """A live-view session started before the scan must survive it."""
         self.aefi_acquisition_service.start_acquisition(AefiAcquisitionConfig())
         self.assertTrue(self.aefi_acquisition_service.is_acquisition_running())
@@ -163,7 +163,7 @@ class TestScanApplicationService(DiagramFriendlyTest):
         self.assertTrue(self.aefi_acquisition_service.is_acquisition_running())
         self.aefi_acquisition_service.stop_acquisition()
 
-    def test_subscriptions(self):
+    def test_subscriptions(self) -> None:
         """Test the subscription methods."""
         self.log_interaction("Test", "START", "ScanApplicationService", "Start subscription test")
 
@@ -202,7 +202,7 @@ class TestScanApplicationService(DiagramFriendlyTest):
         self.log_interaction("Test", "ASSERT", "ScanApplicationService", "Verify completion received", expect=1, got=len(received_completion))
         self.assertEqual(len(received_completion), 1)
 
-    def test_electric_field_scan_point_forwarded_to_output_port(self):
+    def test_electric_field_scan_point_forwarded_to_output_port(self) -> None:
         """NardaPointAcquired must be flattened (field_<axis> + norm) and forwarded.
         Falls back to field_<index> when the event carries no axis_labels (probe unknown)."""
         received = []
@@ -355,7 +355,7 @@ class _ScriptedFieldProbePort:
     def is_connected(self) -> bool:
         return True
 
-    def get_probe(self):
+    def get_probe(self) -> None:
         return None
 
 

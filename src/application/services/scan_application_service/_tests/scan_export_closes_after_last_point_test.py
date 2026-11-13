@@ -48,7 +48,7 @@ class _RecordingExportPort(IScanExportPort):
     def configure(self, directory, filename, metadata, timestamp=None, acquisition_kind="stepScan"):
         pass
 
-    def start(self):
+    def start(self) -> None:
         self.started = True
 
     def write_point(self, data):
@@ -70,12 +70,12 @@ class _RecordingExportPort(IScanExportPort):
     def get_output_path(self) -> Optional[Path]:
         return Path(f"/fake/{self.name}")
 
-    def stop(self):
+    def stop(self) -> None:
         self.stopped = True
 
 
 class TestScanExportClosesAfterLastPoint(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.journal: List[str] = []
         self.event_bus = InMemoryEventBus()
         uow = InMemoryUnitOfWork(self.event_bus)
@@ -125,7 +125,7 @@ class TestScanExportClosesAfterLastPoint(unittest.TestCase):
         self.assertTrue(self.service.execute_scan(dto))
         self.assertTrue(self.done.wait(timeout=10.0), "scan did not complete")
 
-    def test_every_point_is_written_to_both_ports_before_scan_completed_closes_the_export(self):
+    def test_every_point_is_written_to_both_ports_before_scan_completed_closes_the_export(self) -> None:
         self._run(differential_mode=False)
 
         self.assertEqual(len(self.csv_port.points), 3)
@@ -138,7 +138,7 @@ class TestScanExportClosesAfterLastPoint(unittest.TestCase):
             self.assertEqual(type(port.events[-1]).__name__, "ScanCompleted")
         self.assertFalse(self.export_service._export_active)
 
-    def test_differential_points_reach_the_export_with_their_baseline(self):
+    def test_differential_points_reach_the_export_with_their_baseline(self) -> None:
         self._run(differential_mode=True)
 
         for port in (self.csv_port, self.hdf5_port):

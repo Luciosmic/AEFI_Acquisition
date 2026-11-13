@@ -41,7 +41,7 @@ from infrastructure.mocks._tests.point_charge_field_simulator_test import make_s
 class TestScanDifferentialModeIntegration(unittest.TestCase):
     EXCITATION_LEVEL_PERCENT = 80.0
 
-    def setUp(self):
+    def setUp(self) -> None:
         self.event_bus = InMemoryEventBus()
         self.motion_port = MockMotionPort(event_bus=self.event_bus, motion_delay_ms=1)
 
@@ -143,19 +143,19 @@ class TestScanDifferentialModeIntegration(unittest.TestCase):
         self.assertTrue(stop_by_hand_refused[0])
         self.assertIsNone(self.continuous_service.get_controller())
 
-    def test_scan_is_refused_while_another_controller_holds_the_stream(self):
+    def test_scan_is_refused_while_another_controller_holds_the_stream(self) -> None:
         self.continuous_service.take_control("caractérisation débit MCU")
 
         self.assertFalse(self.service.execute_scan(self._one_point_scan()))
         self.assertIsNone(self.excitation_service.get_controller())  # given back
 
-    def test_scan_is_refused_while_another_controller_holds_the_excitation(self):
+    def test_scan_is_refused_while_another_controller_holds_the_excitation(self) -> None:
         self.excitation_service.take_control("calibration automatique du capteur")
 
         self.assertFalse(self.service.execute_scan(self._one_point_scan()))
         self.assertEqual(self.excitation_service.get_controller(), "calibration automatique du capteur")
 
-    def test_scan_is_refused_while_another_owner_drives_the_motors(self):
+    def test_scan_is_refused_while_another_owner_drives_the_motors(self) -> None:
         self.motion_control.take("calibration de la transmission")
 
         self.assertFalse(self.service.execute_scan(self._one_point_scan()))
@@ -172,7 +172,7 @@ class TestScanDifferentialModeIntegration(unittest.TestCase):
         self.assertEqual(owners[0], "scan")
         self.assertIsNone(self.motion_control.controller)
 
-    def test_mute_eliminates_excitation_offset_for_baseline_window(self):
+    def test_mute_eliminates_excitation_offset_for_baseline_window(self) -> None:
         scan_dto = Scan2DConfigDTO(
             x_min=0, x_max=1, x_nb_points=1,
             y_min=0, y_max=1, y_nb_points=1,
@@ -222,7 +222,7 @@ class TestScanDifferentialModeIntegration(unittest.TestCase):
         # lingering mute) — mute()/unmute() must be balanced.
         self.assertAlmostEqual(self.mock_excitation_port.last_parameters.level_s1_s2.value, self.EXCITATION_LEVEL_PERCENT)
 
-    def test_baseline_is_forwarded_to_output_port_as_its_own_channel(self):
+    def test_baseline_is_forwarded_to_output_port_as_its_own_channel(self) -> None:
         """The live plot only showed the excited sample — mute/unmute is too
         fast to see on hardware (~0.4s), so the baseline needs to be visible
         on screen too, not just recorded for export. Guards the
@@ -253,7 +253,7 @@ class TestScanDifferentialModeIntegration(unittest.TestCase):
         self.assertEqual(data["value"]["baseline_y_in_phase"], point.baseline_measurement.voltage_y_in_phase)
         self.assertEqual(data["value"]["x_in_phase"], point.measurement.voltage_x_in_phase)
 
-    def test_non_differential_scan_has_no_baseline(self):
+    def test_non_differential_scan_has_no_baseline(self) -> None:
         scan_dto = Scan2DConfigDTO(
             x_min=0, x_max=1, x_nb_points=1,
             y_min=0, y_max=1, y_nb_points=1,
@@ -294,10 +294,10 @@ class TestScanDifferentialModeIntegration(unittest.TestCase):
             self.assertIsNotNone(aefi.measurement.std_dev_x_in_phase)
             self.assertEqual(aefi.measurement_unit, "http://qudt.org/vocab/unit/V")
 
-    def test_aefi_point_acquired_matches_scan_point_acquired_in_differential_mode(self):
+    def test_aefi_point_acquired_matches_scan_point_acquired_in_differential_mode(self) -> None:
         self._assert_aefi_points_match_legacy_points(differential_mode=True)
 
-    def test_aefi_point_acquired_matches_scan_point_acquired_without_differential_mode(self):
+    def test_aefi_point_acquired_matches_scan_point_acquired_without_differential_mode(self) -> None:
         self._assert_aefi_points_match_legacy_points(differential_mode=False)
 
 

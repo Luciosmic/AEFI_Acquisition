@@ -64,11 +64,11 @@ class TestScanDriftIntegration(unittest.TestCase):
     """
 
     @unittest.skip("drift-vs-call-count model incompatible with continuous streaming acquisition — see class docstring")
-    def test_drift_raster(self):
+    def test_drift_raster(self) -> None:
         self._run_drift_test("RASTER")
 
     @unittest.skip("drift-vs-call-count model incompatible with continuous streaming acquisition — see class docstring")
-    def test_drift_serpentine(self):
+    def test_drift_serpentine(self) -> None:
         self._run_drift_test("SERPENTINE")
 
     def _run_drift_test(self, pattern_name: str):

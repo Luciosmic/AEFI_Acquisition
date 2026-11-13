@@ -32,10 +32,10 @@ class TestScanCurrentConfig(unittest.TestCase):
         self.completed = threading.Event()
         self.event_bus.subscribe("scancompleted", lambda e: self.completed.set())
 
-    def test_none_before_any_scan(self):
+    def test_none_before_any_scan(self) -> None:
         self.assertIsNone(self.service.get_current_config())
 
-    def test_step_scan_config_is_reported_with_grid_geometry(self):
+    def test_step_scan_config_is_reported_with_grid_geometry(self) -> None:
         dto = Scan2DConfigDTO(
             x_min=0, x_max=1, x_nb_points=2, y_min=0, y_max=2, y_nb_points=3,
             scan_pattern="RASTER", stabilization_delay_ms=7, averaging_per_position=2, uncertainty_volts=1e-6,
@@ -54,7 +54,7 @@ class TestScanCurrentConfig(unittest.TestCase):
         self.assertIsNotNone(snap.estimated_duration_s)
         self.assertIsNone(snap.excitation)  # no excitation service wired in this stack
 
-    def test_line_scan_config_is_reported_with_line_geometry(self):
+    def test_line_scan_config_is_reported_with_line_geometry(self) -> None:
         dto = LineScanConfigDTO(
             center_x=10.0, center_y=20.0, length_mm=4.0, n_points=3, theta_deg=0.0,
             stabilization_delay_ms=0, averaging_per_position=1,

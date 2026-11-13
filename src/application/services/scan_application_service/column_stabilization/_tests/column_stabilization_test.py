@@ -58,7 +58,7 @@ def _never():
     return False
 
 
-def test_rest_level_measured_over_ten_seconds_before_the_first_move():
+def test_rest_level_measured_over_ten_seconds_before_the_first_move() -> None:
     stabilization, bench = _setup()
     start = bench.now
     rest = stabilization.measure_rest("scan-1", _never)
@@ -91,7 +91,7 @@ def test_waits_until_the_column_is_back_at_rest_after_the_move():
     assert outcome.vibration_g <= outcome.threshold_g == pytest.approx(1.5 * rest)
 
 
-def test_never_shorter_than_the_fixed_delay_nor_than_one_window():
+def test_never_shorter_than_the_fixed_delay_nor_than_one_window() -> None:
     stabilization, bench = _setup()
     rest = stabilization.measure_rest("scan-1", _never)
     stop = bench.now

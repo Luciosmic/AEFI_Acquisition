@@ -15,21 +15,21 @@ LUIS = Operator(operator_id=uuid4(), name="Luis Saluden", registered_at=datetime
 
 
 class TestOperatorService(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.repository = FakeOperatorRepository([LUIS])
         self.event_bus = InMemoryEventBus()
         self.published = []
         self.event_bus.subscribe(OPERATOR_REGISTERED_TOPIC, self.published.append)
         self.service = OperatorService(self.repository, self.event_bus)
 
-    def test_lists_known_operators_sorted_by_name(self):
+    def test_lists_known_operators_sorted_by_name(self) -> None:
         self.repository.operators.append(
             Operator(operator_id=uuid4(), name="Anne Dupont", registered_at=datetime.now(timezone.utc))
         )
         names = [o.name for o in self.service.list_operators().value]
         self.assertEqual(names, ["Anne Dupont", "Luis Saluden"])
 
-    def test_registering_a_new_operator_persists_and_publishes_it(self):
+    def test_registering_a_new_operator_persists_and_publishes_it(self) -> None:
         result = self.service.register_operator("Marie  Curie")
 
         registration = result.value
@@ -39,7 +39,7 @@ class TestOperatorService(unittest.TestCase):
         self.assertEqual([e.name for e in self.published], ["Marie Curie"])
         self.assertEqual(str(self.published[0].operator_id), registration.operator.operator_id)
 
-    def test_a_known_spelling_returns_the_existing_operator_and_changes_nothing(self):
+    def test_a_known_spelling_returns_the_existing_operator_and_changes_nothing(self) -> None:
         result = self.service.register_operator("luis saluden")
 
         registration = result.value
@@ -48,19 +48,19 @@ class TestOperatorService(unittest.TestCase):
         self.assertEqual(len(self.repository.operators), 1)
         self.assertEqual(self.published, [])
 
-    def test_blank_name_is_refused(self):
+    def test_blank_name_is_refused(self) -> None:
         result = self.service.register_operator("   ")
         self.assertIsInstance(result.error, OperatorNameBlank)
         self.assertEqual(self.published, [])
 
-    def test_unreadable_registry_is_unavailable_for_listing_and_registering(self):
+    def test_unreadable_registry_is_unavailable_for_listing_and_registering(self) -> None:
         self.repository.read_failure = "registre illisible"
         self.assertIsInstance(self.service.list_operators().error, OperatorRegistryUnavailable)
         result = self.service.register_operator("Marie Curie")
         self.assertIsInstance(result.error, OperatorRegistryUnavailable)
         self.assertIn("registre illisible", result.error.reason)
 
-    def test_failed_write_publishes_nothing(self):
+    def test_failed_write_publishes_nothing(self) -> None:
         self.repository.write_failure = "disque plein"
         result = self.service.register_operator("Marie Curie")
         self.assertIsInstance(result.error, OperatorRegistryUnavailable)

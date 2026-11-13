@@ -61,15 +61,15 @@ class _StillAccelerometer:
         self._bus, self._stop = event_bus, threading.Event()
         self._thread = threading.Thread(target=self._loop, daemon=True)
 
-    def start(self):
+    def start(self) -> None:
         self._thread.start()
         time.sleep(0.05)  # started by the operator before the scan
 
-    def stop(self):
+    def stop(self) -> None:
         self._stop.set()
         self._thread.join(1.0)
 
-    def _loop(self):
+    def _loop(self) -> None:
         acquisition_id, k = uuid4(), 0
         while not self._stop.is_set():
             a = 0.002 if k % 2 else -0.002
@@ -111,18 +111,18 @@ class _Stack(unittest.TestCase):
         self.assertTrue(done.wait(timeout), "scan did not end")
         return self.service._current_scan
 
-    def _stream_accelerometer(self):
+    def _stream_accelerometer(self) -> None:
         accelerometer = _StillAccelerometer(self.event_bus)
         accelerometer.start()
         self.addCleanup(accelerometer.stop)
 
 
 class TestStepScanColumnStabilization(_Stack):
-    def setUp(self):
+    def setUp(self) -> None:
         self.event_bus = InMemoryEventBus()
         self._service(MockMotionPort(event_bus=self.event_bus, motion_delay_ms=1), ("aefipointacquired",))
 
-    def test_each_point_settles_on_the_accelerometer_when_it_streams(self):
+    def test_each_point_settles_on_the_accelerometer_when_it_streams(self) -> None:
         self._stream_accelerometer()
         scan = self._run(_step_dto())
         self.assertEqual(scan.status, ScanStatus.COMPLETED)
@@ -132,14 +132,14 @@ class TestStepScanColumnStabilization(_Stack):
         # At least one window after the stop, never less than the fixed delay.
         self.assertTrue(all(o.waited_s >= SHORT.window_s for o in self.stabilization.outcomes))
 
-    def test_falls_back_to_the_fixed_delay_when_the_accelerometer_is_not_streaming(self):
+    def test_falls_back_to_the_fixed_delay_when_the_accelerometer_is_not_streaming(self) -> None:
         scan = self._run(_step_dto())
         self.assertEqual(scan.status, ScanStatus.COMPLETED)
         self.assertEqual(self.stabilization.rests, [None])
         self.assertEqual([o.method for o in self.stabilization.outcomes], [FIXED_DELAY] * 4)
         self.assertTrue(all(o.waited_s >= DELAY_MS / 1000.0 for o in self.stabilization.outcomes))
 
-    def test_no_stabilization_at_all_when_the_delay_is_zero(self):
+    def test_no_stabilization_at_all_when_the_delay_is_zero(self) -> None:
         self._stream_accelerometer()
         scan = self._run(_step_dto(stabilization_delay_ms=0))
         self.assertEqual(scan.status, ScanStatus.COMPLETED)
@@ -147,7 +147,7 @@ class TestStepScanColumnStabilization(_Stack):
 
 
 class TestFlyScanColumnStabilization(_Stack):
-    def setUp(self):
+    def setUp(self) -> None:
         self.event_bus = InMemoryEventBus()
         controller = FakeArcusPerformax4EXController()
         controller.connect()
@@ -162,7 +162,7 @@ class TestFlyScanColumnStabilization(_Stack):
         adapter.set_speed_mode("fast")
         self._service(adapter, ("aefipointacquired", "aefilineacquired"))
 
-    def test_each_line_start_settles_on_the_accelerometer(self):
+    def test_each_line_start_settles_on_the_accelerometer(self) -> None:
         self._stream_accelerometer()
         scan = self._run(Scan2DConfigDTO(
             x_min=600.0, x_max=610.0, x_nb_points=2, y_min=600.0, y_max=630.0, y_nb_points=4,

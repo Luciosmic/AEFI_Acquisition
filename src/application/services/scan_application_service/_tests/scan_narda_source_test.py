@@ -54,7 +54,7 @@ class _FieldProbePort:
     def is_connected(self) -> bool:
         return True
 
-    def get_probe(self):
+    def get_probe(self) -> None:
         return None
 
 
@@ -107,7 +107,7 @@ class TestScanNardaSource(unittest.TestCase):
     def _of_type(self, cls):
         return [e for e in self.events if isinstance(e, cls)]
 
-    def test_ready_probe_is_a_required_source_and_scan_completes_with_both_sources(self):
+    def test_ready_probe_is_a_required_source_and_scan_completes_with_both_sources(self) -> None:
         self.assertTrue(self._service(_FieldProbePort()).execute_scan(_dto()))
         self.assertTrue(self.terminal.wait(10.0))
 
@@ -121,7 +121,7 @@ class TestScanNardaSource(unittest.TestCase):
         with self.uow as uow:
             self.assertEqual(len(uow.narda_points.list_by_scan(scan_id)), 4)
 
-    def test_narda_event_of_a_point_is_published_after_commit_and_before_the_aefi_point(self):
+    def test_narda_event_of_a_point_is_published_after_commit_and_before_the_aefi_point(self) -> None:
         self.assertTrue(self._service(_FieldProbePort()).execute_scan(_dto()))
         self.assertTrue(self.terminal.wait(10.0))
 
@@ -131,7 +131,7 @@ class TestScanNardaSource(unittest.TestCase):
         narda = self._of_type(NardaPointAcquired)
         self.assertEqual([e.point_index for e in narda], [0, 1, 2, 3])
 
-    def test_probe_not_ready_at_start_leaves_the_source_undeclared(self):
+    def test_probe_not_ready_at_start_leaves_the_source_undeclared(self) -> None:
         self.assertTrue(self._service(_FieldProbePort(ready=False)).execute_scan(_dto()))
         self.assertTrue(self.terminal.wait(10.0))
 
@@ -140,7 +140,7 @@ class TestScanNardaSource(unittest.TestCase):
         self.assertEqual(scan.state, ScanState.COMPLETED)
         self.assertEqual(self._of_type(NardaPointAcquired), [])
 
-    def test_probe_lost_mid_scan_fails_the_scan_with_an_explicit_reason(self):
+    def test_probe_lost_mid_scan_fails_the_scan_with_an_explicit_reason(self) -> None:
         probe = _FieldProbePort()
         service = self._service(probe)
 
