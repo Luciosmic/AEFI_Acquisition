@@ -46,6 +46,21 @@ class TestRealMeasuredObjectRepository(unittest.TestCase):
         self.assertEqual(data["measured_objects"][0]["name"], "Luis Saluden")
         self.assertEqual(data["measured_objects"][0]["registered_at"], "2026-10-02T09:00:00+00:00")
 
+    def test_save_all_replaces_the_registry(self):
+        luis, marie = _measured_object("Luis Saluden"), _measured_object("Marie Curie")
+        self.repository.add(luis)
+        self.repository.add(marie)
+
+        self.assertTrue(self.repository.save_all([marie]).is_success)
+
+        self.assertEqual(RealMeasuredObjectRepository(self.path).find_all().value, [marie])
+
+    def test_save_all_never_overwrites_an_unreadable_registry(self):
+        self.path.parent.mkdir(parents=True)
+        self.path.write_text("{not json", encoding="utf-8")
+        self.assertTrue(self.repository.save_all([]).is_failure)
+        self.assertEqual(self.path.read_text(encoding="utf-8"), "{not json")
+
 
 if __name__ == "__main__":
     unittest.main()

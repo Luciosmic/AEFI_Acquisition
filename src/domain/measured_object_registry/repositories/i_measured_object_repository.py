@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Sequence
 
 from domain.measured_object_registry.entities.measured_object.measured_object import MeasuredObject
 from domain.shared_kernel.operation_result import OperationResult
@@ -25,3 +25,7 @@ class IMeasuredObjectRepository(ABC):
 
     @abstractmethod
     def add(self, measured_object: MeasuredObject) -> OperationResult[None, str]: ...
+
+    @abstractmethod
+    def save_all(self, measured_objects: Sequence[MeasuredObject]) -> OperationResult[None, str]:
+        """Replace the registry by these measured_objects (after a rename or a deletion)."""

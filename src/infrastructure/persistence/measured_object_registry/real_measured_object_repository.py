@@ -8,7 +8,7 @@ import logging
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Sequence
 from uuid import UUID
 
 from domain.measured_object_registry.entities.measured_object.measured_object import MeasuredObject
@@ -39,16 +39,30 @@ class RealMeasuredObjectRepository(IMeasuredObjectRepository):
         loaded = self._load()
         if loaded.is_failure:  # never overwrite a registry we could not read
             return OperationResult.fail(loaded.error)
+        written = self._write(loaded.value + [self._serialize(measured_object)])
+        if written.is_success:
+            logger.info("MeasuredObject registry: measured_object_id=%s name=%s saved to %s", measured_object.measured_object_id, measured_object.name, self._path)
+        return written
+
+    def save_all(self, measured_objects: Sequence[MeasuredObject]) -> OperationResult[None, str]:
+        loaded = self._load()
+        if loaded.is_failure:  # never overwrite a registry we could not read
+            return OperationResult.fail(loaded.error)
+        written = self._write([self._serialize(o) for o in measured_objects])
+        if written.is_success:
+            logger.info("MeasuredObject registry: %d measured_objects saved to %s (was %d)", len(measured_objects), self._path, len(loaded.value))
+        return written
+
+    def _write(self, raw_measured_objects: List[Dict[str, Any]]) -> OperationResult[None, str]:
         temporary = self._path.with_suffix(".json.tmp")
         try:
             self._path.parent.mkdir(parents=True, exist_ok=True)
             with open(temporary, "w", encoding="utf-8") as f:
-                json.dump({"measured_objects": loaded.value + [self._serialize(measured_object)]}, f, indent=2, ensure_ascii=False)
+                json.dump({"measured_objects": raw_measured_objects}, f, indent=2, ensure_ascii=False)
             os.replace(temporary, self._path)
         except OSError as error:
             logger.error("MeasuredObject registry %s: cannot write: %s", self._path, error)
             return OperationResult.fail(f"registre des objets mesurés non écrit ({self._path}) : {error}")
-        logger.info("MeasuredObject registry: measured_object_id=%s name=%s saved to %s", measured_object.measured_object_id, measured_object.name, self._path)
         return OperationResult.ok(None)
 
     def _load(self) -> OperationResult[List[Dict[str, Any]], str]:

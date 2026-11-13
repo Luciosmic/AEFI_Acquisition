@@ -29,6 +29,13 @@ Calqué sur le registre des opérateurs (`domain/operator_registry/`), même inv
 - `register(name)` : rendre l'objet mesuré de ce nom — l'existant si
   l'orthographe est déjà connue à la casse et aux espaces près (aucun
   événement), sinon un nouvel objet mesuré (`MeasuredObjectRegistered`).
+- `rename(id, name)` : même identité, nouveau nom (`MeasuredObjectRenamed`) ;
+  la même orthographe ne change rien ; l'orthographe d'un autre objet est
+  refusée (`MeasuredObjectNameTakenError`) ; un changement de casse seul est un
+  renommage.
+- `delete(id)` : retire l'objet du registre (`MeasuredObjectDeleted`) ; son
+  nom peut être réenregistré ensuite, sous une nouvelle identité.
+- Identité absente : `MeasuredObjectNotFoundError` (renommage et suppression).
 - Invariants : I1 une seule orthographe ; I2 un nom non vide
   (`MeasuredObjectNameBlankError`) ; I3 identité stable (`measured_object_id` jamais réattribué).
 

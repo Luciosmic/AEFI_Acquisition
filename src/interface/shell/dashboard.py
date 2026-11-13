@@ -23,6 +23,7 @@ from interface.widgets.panels.hardware_advanced_config_panel import HardwareAdva
 from interface.widgets.panels.calibration_panel import CalibrationPanel
 from interface.widgets.panels.frequency_sweep_panel import FrequencySweepPanel
 from interface.widgets.panels.external_modules_panel import ExternalModulesPanel
+from interface.widgets.panels.measured_object_registry_panel import MeasuredObjectRegistryPanel
 from interface.widgets.sensor_orientation_view.sensor_orientation_view import SensorOrientationView
 from interface.widgets.panels.logs_panel import LogsPanel
 
@@ -57,6 +58,7 @@ class Dashboard(QWidget):
             "electric_field_map": ScanVisualizationPanel(channels=()),
             "electric_field_profiles": ScanVisualizationPanel(profiles=True, channels=()),
             "frequency_sweep": FrequencySweepPanel(),
+            "measured_objects": MeasuredObjectRegistryPanel(),
             "aefi_continuous_reading": AefiContinuousReadingPanel(),
             "electric_field_probe": ElectricFieldProbePanel(),
             "inertial_probe": InertialProbePanel(),
@@ -105,6 +107,7 @@ class Dashboard(QWidget):
             "electric_field_map": ("Narda Map Plot", "Scan"),
             "electric_field_profiles": ("Narda Profiles Plot", "Scan"),
             "frequency_sweep": ("Frequency Sweep", "Scan"),
+            "measured_objects": ("Objets mesurés", "Scan"),
             "aefi_continuous_reading": ("AEFI Continuous Reading", "Continuous Reading"),
             "electric_field_probe": ("Narda Continuous Reading", "Continuous Reading"),
             "inertial_probe": ("Capteur inertiel", "Continuous Reading"),

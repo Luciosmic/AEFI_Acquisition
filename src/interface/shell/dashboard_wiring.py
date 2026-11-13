@@ -87,17 +87,17 @@ def wire_dashboard(
         operator_presenter.registration_failed.connect(selector.on_registration_failed)
     operator_presenter.refresh_state()
 
-    # Measured object of an acquisition — same pattern: one registry, one selector per panel.
-    for selector in (
-        dashboard.panels["scan_control"].measured_object_selector,
-        dashboard.panels["aefi_continuous_reading"].measured_object_selector,
-        dashboard.panels["frequency_sweep"].measured_object_selector,
-    ):
-        selector.register_requested.connect(measured_object_presenter.on_register_requested)
-        measured_object_presenter.measured_objects_listed.connect(selector.set_measured_objects)
-        measured_object_presenter.measured_object_registered.connect(selector.on_measured_object_registered)
-        measured_object_presenter.registration_failed.connect(selector.on_registration_failed)
-    measured_object_presenter.refresh_state()
+    # Measured object of an acquisition — one registry, one selector per panel that
+    # starts an exported acquisition, and the Objets mesurés panel to manage it.
+    wire_measured_objects(
+        (
+            dashboard.panels["scan_control"].measured_object_selector,
+            dashboard.panels["aefi_continuous_reading"].measured_object_selector,
+            dashboard.panels["frequency_sweep"].measured_object_selector,
+        ),
+        dashboard.panels["measured_objects"],
+        measured_object_presenter,
+    )
 
     # Frequency sweep — reference / background / object vs excitation frequency
     wire_frequency_sweep(dashboard.panels["frequency_sweep"], frequency_sweep_presenter)
@@ -409,6 +409,28 @@ def wire_dashboard(
     logger.debug("Hardware config panel wired")
 
     logger.debug("Transformation panel wired (via constructor)")
+
+
+def wire_measured_objects(selectors, registry_panel, presenter: MeasuredObjectPresenter) -> None:
+    """Every measured object selector and the Objets mesurés panel follow one registry.
+    The panel keeps the presenter alive (Qt parent): Qt connections do not, and the
+    presenter, its service and its bus only reference each other (see wire_frequency_sweep)."""
+    presenter.setParent(registry_panel)
+    for selector in selectors:
+        selector.register_requested.connect(presenter.on_register_requested)
+        presenter.measured_objects_listed.connect(selector.set_measured_objects)
+        presenter.measured_object_registered.connect(selector.on_measured_object_registered)
+        presenter.registration_failed.connect(selector.on_registration_failed)
+
+    registry_panel.register_requested.connect(presenter.on_register_requested)
+    registry_panel.rename_requested.connect(presenter.on_rename_requested)
+    registry_panel.delete_requested.connect(presenter.on_delete_requested)
+    presenter.measured_objects_listed.connect(registry_panel.set_measured_objects)
+    presenter.measured_object_registered.connect(registry_panel.on_measured_object_registered)
+    presenter.registration_failed.connect(registry_panel.show_failure)
+    presenter.management_done.connect(registry_panel.show_done)
+    presenter.management_failed.connect(registry_panel.show_failure)
+    presenter.refresh_state()
 
 
 def wire_frequency_sweep(panel, presenter: FrequencySweepPresenter) -> None:
