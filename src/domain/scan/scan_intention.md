@@ -1,3 +1,9 @@
+---
+type: racine-d-agregat::solidai-ddd
+tldr: "Aggregate root fin : identité ScanId, sources attendues (mapping nom de source → ExpectedSource(count, required)), total_points (points de grille, pour le…"
+code: ["[[src/domain/scan/scan.py]]"]
+cause_de_changement: regle-metier
+---
 # scan — Intention
 
 ## Rationale

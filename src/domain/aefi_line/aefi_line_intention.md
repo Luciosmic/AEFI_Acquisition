@@ -1,3 +1,9 @@
+---
+type: racine-d-agregat::solidai-ddd
+tldr: "Aggregate root d'une ligne de fly-scan : identité AefiLineId, référence au scan par scan_id (identité seule), line_index, nombre de points de grille attendus."
+code: ["[[src/domain/aefi_line/aefi_line.py]]"]
+cause_de_changement: regle-metier
+---
 # aefi_line — Intention
 
 ## Rationale

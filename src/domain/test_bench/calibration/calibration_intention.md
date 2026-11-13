@@ -1,3 +1,9 @@
+---
+type: racine-d-agregat::solidai-ddd
+tldr: "Hold the domain-level, persisted synchronous_detection_compensation_enabled flag and mutate it idempotently, emitting…"
+code: ["[[src/domain/test_bench/calibration/calibration.py]]"]
+cause_de_changement: regle-metier
+---
 # calibration — Intention
 
 ## Rationale

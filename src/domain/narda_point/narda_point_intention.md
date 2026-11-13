@@ -1,3 +1,9 @@
+---
+type: racine-d-agregat::solidai-ddd
+tldr: "Aggregate root d'un point de champ électrique : identité NardaPointId, référence au scan par scan_id, point_index (clé de corrélation avec le point AEFI et…"
+code: ["[[src/domain/narda_point/narda_point.py]]"]
+cause_de_changement: regle-metier
+---
 # narda_point — Intention
 
 ## Rationale

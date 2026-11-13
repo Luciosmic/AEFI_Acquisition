@@ -1,3 +1,9 @@
+---
+type: racine-d-agregat::solidai-ddd
+tldr: "Aggregate root d'un balayage en fréquence : identité FrequencySweepId, rôle (FrequencySweepRole), grille (FrequencyGrid), hauteur de la table (TableHeight),…"
+code: ["[[src/domain/frequency_sweep/frequency_sweep.py]]"]
+cause_de_changement: regle-metier
+---
 # frequency_sweep — Intention
 
 ## Rationale

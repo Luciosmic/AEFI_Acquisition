@@ -1,3 +1,9 @@
+---
+type: racine-d-agregat::solidai-ddd
+tldr: "register(name) : rendre l'opérateur de ce nom — l'existant si l'orthographe est déjà connue à la casse et aux espaces près (aucun événement), sinon un nouvel…"
+code: ["[[src/domain/operator_registry/operator_registry.py]]"]
+cause_de_changement: regle-metier
+---
 # operator_registry — Intention
 
 ## Rationale
