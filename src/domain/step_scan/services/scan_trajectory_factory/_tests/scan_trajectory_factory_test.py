@@ -23,13 +23,13 @@ def _base(pattern, axis=ScanAxis.Y):
 
 class TestScanTrajectoryFactory(unittest.TestCase):
 
-    def test_total_points(self):
+    def test_total_points(self) -> None:
         traj = ScanTrajectoryFactory.create_trajectory(_base(ScanPattern.RASTER))
         self.assertEqual(len(traj), 9)
 
     # --- RASTER ---
 
-    def test_raster_y_axis(self):
+    def test_raster_y_axis(self) -> None:
         """Default Y-axis: outer=X columns, inner=Y rows (columns-first)."""
         pts = list(ScanTrajectoryFactory.create_trajectory(_base(ScanPattern.RASTER, ScanAxis.Y)))
         # Column x=0: y=0,5,10
@@ -39,7 +39,7 @@ class TestScanTrajectoryFactory(unittest.TestCase):
         # Column x=5: y=0,5,10
         self.assertEqual((pts[3].x, pts[3].y), (5.0, 0.0))
 
-    def test_raster_x_axis(self):
+    def test_raster_x_axis(self) -> None:
         """X-axis: outer=Y rows, inner=X columns (rows-first, legacy)."""
         pts = list(ScanTrajectoryFactory.create_trajectory(_base(ScanPattern.RASTER, ScanAxis.X)))
         # Row y=0: x=0,5,10
@@ -51,7 +51,7 @@ class TestScanTrajectoryFactory(unittest.TestCase):
 
     # --- SERPENTINE ---
 
-    def test_serpentine_y_axis(self):
+    def test_serpentine_y_axis(self) -> None:
         """Default Y-axis: zigzag along Y for each X column."""
         pts = list(ScanTrajectoryFactory.create_trajectory(_base(ScanPattern.SERPENTINE, ScanAxis.Y)))
         # Column x=0 (even): y=0,5,10 (bottomâ†’top)
@@ -64,7 +64,7 @@ class TestScanTrajectoryFactory(unittest.TestCase):
         self.assertEqual((pts[6].x, pts[6].y), (10.0, 0.0))
         self.assertEqual((pts[8].x, pts[8].y), (10.0, 10.0))
 
-    def test_serpentine_x_axis(self):
+    def test_serpentine_x_axis(self) -> None:
         """X-axis: zigzag along X for each Y row (legacy)."""
         pts = list(ScanTrajectoryFactory.create_trajectory(_base(ScanPattern.SERPENTINE, ScanAxis.X)))
         # Row y=0 (even): x=0,5,10
@@ -76,7 +76,7 @@ class TestScanTrajectoryFactory(unittest.TestCase):
 
     # --- COMB (axis-independent) ---
 
-    def test_comb_trajectory(self):
+    def test_comb_trajectory(self) -> None:
         """COMB: always Y-first columns regardless of scan_axis."""
         pts = list(ScanTrajectoryFactory.create_trajectory(_base(ScanPattern.COMB)))
         self.assertEqual((pts[0].x, pts[0].y), (0.0, 0.0))

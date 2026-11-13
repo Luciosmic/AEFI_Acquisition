@@ -18,7 +18,7 @@ def _measurement(value: float = 0.0) -> AefiVoltageMeasurement:
     )
 
 
-def test_baseline_measurement_defaults_to_none():
+def test_baseline_measurement_defaults_to_none() -> None:
     event = ScanPointAcquired(
         scan_id=uuid4(), point_index=0, position=Position2D(0.0, 0.0), measurement=_measurement()
     )
@@ -26,7 +26,7 @@ def test_baseline_measurement_defaults_to_none():
     assert event.baseline_measurement is None
 
 
-def test_baseline_measurement_can_be_attached():
+def test_baseline_measurement_can_be_attached() -> None:
     baseline = _measurement(0.1)
     event = ScanPointAcquired(
         scan_id=uuid4(),

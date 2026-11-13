@@ -10,7 +10,7 @@ from domain.step_scan.services.scan_trajectory_factory.scan_trajectory_factory i
 
 class TestScanTrajectoryVisual(unittest.TestCase):
     
-    def setUp(self):
+    def setUp(self) -> None:
         self.base_config = StepScanConfig(
             scan_zone=ScanZone(x_min=0.0, x_max=10.0, y_min=0.0, y_max=10.0),
             x_nb_points=5,
@@ -57,13 +57,13 @@ class TestScanTrajectoryVisual(unittest.TestCase):
         print(f"Plot saved to {filepath}")
         # plt.show() # Uncomment to show interactively
 
-    def test_visual_raster(self):
+    def test_visual_raster(self) -> None:
         """Generate and plot Raster trajectory."""
         config = self.base_config
         trajectory = ScanTrajectoryFactory.create_trajectory(config)
         self._plot_trajectory(trajectory, "Raster Scan")
 
-    def test_visual_serpentine(self):
+    def test_visual_serpentine(self) -> None:
         """Generate and plot Serpentine trajectory."""
         config = StepScanConfig(
             scan_zone=self.base_config.scan_zone,
@@ -77,7 +77,7 @@ class TestScanTrajectoryVisual(unittest.TestCase):
         trajectory = ScanTrajectoryFactory.create_trajectory(config)
         self._plot_trajectory(trajectory, "Serpentine Scan")
 
-    def test_visual_comb(self):
+    def test_visual_comb(self) -> None:
         """Generate and plot Comb trajectory."""
         config = StepScanConfig(
             scan_zone=self.base_config.scan_zone,
