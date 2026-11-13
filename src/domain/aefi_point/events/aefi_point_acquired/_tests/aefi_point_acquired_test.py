@@ -11,7 +11,7 @@ from domain.shared_kernel.value_objects.acquisition.aefi_voltage_measurement imp
 from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
 
 
-def test_event_is_a_frozen_domain_event_with_timestamp():
+def test_event_is_a_frozen_domain_event_with_timestamp() -> None:
     m = AefiVoltageMeasurement(0, 0, 0, 0, 0, 0, timestamp=datetime(2026, 10, 9, tzinfo=timezone.utc))
     event = AefiPointAcquired(AefiPointId(uuid4()), uuid4(), 0, Position2D(0, 0), m, 5)
     assert isinstance(event, DomainEvent)
@@ -20,7 +20,7 @@ def test_event_is_a_frozen_domain_event_with_timestamp():
         event.samples_count = 1
 
 
-def test_event_respects_the_probe_acquisition_contract():
+def test_event_respects_the_probe_acquisition_contract() -> None:
     from domain.scan.events.probe_acquisition_event.probe_acquisition_event import ProbeAcquisitionEvent
 
     m = AefiVoltageMeasurement(0, 0, 0, 0, 0, 0, timestamp=datetime(2026, 10, 9, tzinfo=timezone.utc))
@@ -30,7 +30,7 @@ def test_event_respects_the_probe_acquisition_contract():
     assert event.source == "aefi_point" and event.acquisition_id == point_id
 
 
-def test_event_is_a_self_contained_snapshot_of_what_the_export_reads():
+def test_event_is_a_self_contained_snapshot_of_what_the_export_reads() -> None:
     """Index, position, measurement and unit: replayable without the StepScan event."""
     m = AefiVoltageMeasurement(1, 2, 3, 4, 5, 6, timestamp=datetime(2026, 10, 9, tzinfo=timezone.utc))
     event = AefiPointAcquired(

@@ -10,13 +10,13 @@ from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
 M = AefiVoltageMeasurement(1, 1, 1, 1, 1, 1, timestamp=datetime(2026, 10, 9, tzinfo=timezone.utc))
 
 
-def test_frozen_value_object():
+def test_frozen_value_object() -> None:
     point = LineGridPoint(0, Position2D(0.0, 1.0), M)
     with pytest.raises(dataclasses.FrozenInstanceError):
         point.index_in_line = 1
     assert point == LineGridPoint(0, Position2D(0.0, 1.0), M)
 
 
-def test_index_must_not_be_negative():
+def test_index_must_not_be_negative() -> None:
     with pytest.raises(ValueError):
         LineGridPoint(-1, Position2D(0.0, 1.0), M)

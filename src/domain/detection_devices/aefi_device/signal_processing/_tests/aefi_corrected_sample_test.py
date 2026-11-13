@@ -20,7 +20,7 @@ def make_raw(v: float = 1.0) -> AefiVoltageMeasurement:
     return AefiVoltageMeasurement(v, v, v, v, v, v, timestamp=TIMESTAMP)
 
 
-def test_correct_with_all_stages_disabled_accepts_and_emits_event():
+def test_correct_with_all_stages_disabled_accepts_and_emits_event() -> None:
     acquisition_id = uuid4()
     sample = AefiCorrectedSample.correct(
         make_raw(1.0), AefiSignalCorrectionCalibration(), acquisition_id, sample_index=0
@@ -34,7 +34,7 @@ def test_correct_with_all_stages_disabled_accepts_and_emits_event():
     assert event.sample == sample.measurement
 
 
-def test_correct_with_fully_calibrated_stages_accepts_and_emits_event():
+def test_correct_with_fully_calibrated_stages_accepts_and_emits_event() -> None:
     calibration = AefiSignalCorrectionCalibration(
         noise_offset={"x": (0.1, 0.1), "y": (0.1, 0.1), "z": (0.1, 0.1)},
         noise_correction_enabled=True,
@@ -50,7 +50,7 @@ def test_correct_with_fully_calibrated_stages_accepts_and_emits_event():
     assert len(sample.domain_events) == 1
 
 
-def test_domain_events_property_clears_the_list():
+def test_domain_events_property_clears_the_list() -> None:
     sample = AefiCorrectedSample.correct(
         make_raw(1.0), AefiSignalCorrectionCalibration(), uuid4(), sample_index=0
     )
@@ -58,7 +58,7 @@ def test_domain_events_property_clears_the_list():
     assert sample.domain_events == []
 
 
-def test_noise_correction_enabled_without_calibration_for_one_axis_is_rejected():
+def test_noise_correction_enabled_without_calibration_for_one_axis_is_rejected() -> None:
     calibration = AefiSignalCorrectionCalibration(
         noise_offset={"x": (0.1, 0.1), "y": (0.1, 0.1)},  # missing "z"
         noise_correction_enabled=True,
@@ -70,7 +70,7 @@ def test_noise_correction_enabled_without_calibration_for_one_axis_is_rejected()
     assert excinfo.value.stage == "noise"
 
 
-def test_phase_correction_enabled_without_calibration_for_one_axis_is_rejected():
+def test_phase_correction_enabled_without_calibration_for_one_axis_is_rejected() -> None:
     calibration = AefiSignalCorrectionCalibration(
         phase_angles={"x": 0.0, "z": 0.0},  # missing "y"
         phase_correction_enabled=True,
@@ -82,7 +82,7 @@ def test_phase_correction_enabled_without_calibration_for_one_axis_is_rejected()
     assert excinfo.value.stage == "phase"
 
 
-def test_primary_correction_enabled_without_any_calibration_is_rejected():
+def test_primary_correction_enabled_without_any_calibration_is_rejected() -> None:
     calibration = AefiSignalCorrectionCalibration(primary_correction_enabled=True)
 
     with pytest.raises(SignalCorrectionCalibrationMissingError) as excinfo:

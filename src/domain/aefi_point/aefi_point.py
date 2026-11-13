@@ -27,7 +27,7 @@ class AefiPoint:
     _measurement: Optional[AefiVoltageMeasurement] = None
     _domain_events: List[DomainEvent] = field(default_factory=list)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.expected_samples < 1:
             raise ValueError("expected_samples must be >= 1")
         if self.point_index < 0:
