@@ -10,3 +10,4 @@
 16:56 | jalon | lot=8 docstrings commit=cf8d35c5 : Rationale ajoute a 5 ports i_api (H5) ; verify 621->616 ; 3 autres ports sans docstring sautes (pas d'intention, Rationale a inventer)
 16:58 | jalon | controles de fin : pytest src 1849 verts 3 sautes (run-pytest-complet-fin.log) ; mypy 3013 -> ed6d0a2d (66 type: ignore sur tests de caracterisation) -> 2941 (run-mypy-complet-fin3.log) ; verify 616 erreurs 182 avertissements (run-verify-fin.json) ; au_diagnostics = 2 erreurs yaml anciennes
 16:59 | fin | verdict=atteint-avec-reserve | verify 816->616 (182 avertissements) | mypy 2941 (ref 2943) | pytest 1849 verts 3 sautes | lots=1,5,6,7,8 faits ; 2 saute | constats=3 a discuter | bilan=bilan-vague-5-suite.md
+17:02 | fin | resultat=Fin : verify 816->616, mypy 2941, pytest 1849 verts ; lots 1,5,6,7,8 faits, racines sautees ; 3 constats a discuter, voir bilan-vague-5-suite.md, entree=Dette SolidAI ACQ vague 5 suite, session=16aa76a0
