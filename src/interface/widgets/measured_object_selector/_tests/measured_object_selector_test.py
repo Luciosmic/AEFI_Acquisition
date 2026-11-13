@@ -4,7 +4,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtWidgets import QApplication
 
-from application.services.measured_object_service.dtos.measured_object_dto import MeasuredObjectDTO
+from application.measured_object_registry.measured_object_service.dtos.measured_object_dto import MeasuredObjectDTO
 from interface.widgets.measured_object_selector.measured_object_selector import NEW_MEASURED_OBJECT_LABEL, MeasuredObjectSelector
 
 LUIS = MeasuredObjectDTO(measured_object_id="id-luis", name="Luis Saluden")

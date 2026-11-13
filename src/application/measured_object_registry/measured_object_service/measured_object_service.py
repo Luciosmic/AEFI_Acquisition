@@ -5,9 +5,9 @@ MeasuredObject Service — the measured_object use cases (see measured_object_se
 import logging
 from typing import List
 
-from application.services.measured_object_service.dtos.measured_object_dto import MeasuredObjectDTO, MeasuredObjectRegistrationDTO
-from application.services.measured_object_service.i_api_measured_object_service import IApiMeasuredObjectService
-from application.services.measured_object_service.measured_object_service_errors import (
+from application.measured_object_registry.measured_object_service.dtos.measured_object_dto import MeasuredObjectDTO, MeasuredObjectRegistrationDTO
+from application.measured_object_registry.measured_object_service.i_api_measured_object_service import IApiMeasuredObjectService
+from application.measured_object_registry.measured_object_service.measured_object_service_errors import (
     MeasuredObjectNameBlank,
     MeasuredObjectRegistryUnavailable,
     MeasuredObjectServiceError,

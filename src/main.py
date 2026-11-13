@@ -129,7 +129,7 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
         StartupConfig
     )
     from application.operator_registry.operator_service.operator_service import OperatorService
-    from application.services.measured_object_service.measured_object_service import MeasuredObjectService
+    from application.measured_object_registry.measured_object_service.measured_object_service import MeasuredObjectService
     from application.services.adc_output_rate_characterization_service.adc_output_rate_characterization_service import (
         AdcOutputRateCharacterizationService,
     )

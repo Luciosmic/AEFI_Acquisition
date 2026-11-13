@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import List
 
-from application.services.measured_object_service.dtos.measured_object_dto import MeasuredObjectDTO, MeasuredObjectRegistrationDTO
-from application.services.measured_object_service.measured_object_service_errors import MeasuredObjectServiceError
+from application.measured_object_registry.measured_object_service.dtos.measured_object_dto import MeasuredObjectDTO, MeasuredObjectRegistrationDTO
+from application.measured_object_registry.measured_object_service.measured_object_service_errors import MeasuredObjectServiceError
 from domain.shared_kernel.operation_result import OperationResult
 
 

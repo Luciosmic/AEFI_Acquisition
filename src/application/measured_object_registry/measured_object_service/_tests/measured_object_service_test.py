@@ -2,8 +2,8 @@ import unittest
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from application.services.measured_object_service.measured_object_service import MEASURED_OBJECT_REGISTERED_TOPIC, MeasuredObjectService
-from application.services.measured_object_service.measured_object_service_errors import (
+from application.measured_object_registry.measured_object_service.measured_object_service import MEASURED_OBJECT_REGISTERED_TOPIC, MeasuredObjectService
+from application.measured_object_registry.measured_object_service.measured_object_service_errors import (
     MeasuredObjectNameBlank,
     MeasuredObjectRegistryUnavailable,
 )

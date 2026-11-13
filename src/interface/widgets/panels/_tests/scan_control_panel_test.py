@@ -5,7 +5,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 from PySide6.QtWidgets import QApplication
 
 from application.operator_registry.operator_service.dtos.operator_dto import OperatorDTO
-from application.services.measured_object_service.dtos.measured_object_dto import MeasuredObjectDTO
+from application.measured_object_registry.measured_object_service.dtos.measured_object_dto import MeasuredObjectDTO
 
 from interface.widgets.panels.scan_control_panel import ScanControlPanel
 
