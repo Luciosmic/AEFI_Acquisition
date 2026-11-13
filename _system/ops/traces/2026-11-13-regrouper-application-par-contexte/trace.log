@@ -1,1 +1,3 @@
-06:00 | depart | quoi=regrouper application/ par contexte | session=en-attente-id
+06:00 | depart | quoi=regrouper application/ par contexte | session=16aa76a0-8c3f-49ba-a745-816691cd9858
+06:07 | jalon | registre inscrit, bilan vague 3 lu ; 29 dossiers sous services/ dont 3 vides (noms a espace) ; debut affectation lecture seule
+06:08 | annonce | commande=solidai graphe (json) sur ACQ | duree_estimee=1-3 min | arret=timeout 10 min | log=run-graphe-json.log
