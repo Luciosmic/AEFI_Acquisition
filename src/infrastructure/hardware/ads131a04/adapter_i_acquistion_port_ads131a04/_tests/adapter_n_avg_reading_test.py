@@ -5,7 +5,7 @@ import os
 import tempfile
 import unittest
 
-from infrastructure.hardware.ads131a04.adapter_i_acquistion_port_ads131a04 import ADS131A04Adapter
+from infrastructure.hardware.ads131a04.adapter_i_acquistion_port_ads131a04.adapter_i_acquistion_port_ads131a04 import ADS131A04Adapter
 
 ADC_CONFIG = {
     "channels": {str(ch): {"gain": 1, "enabled": True} for ch in range(1, 9)},

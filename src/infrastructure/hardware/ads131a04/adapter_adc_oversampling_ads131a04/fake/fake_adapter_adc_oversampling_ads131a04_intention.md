@@ -1,4 +1,4 @@
-# fake_adc_oversampling_port — Intention
+# fake_adapter_adc_oversampling_ads131a04 — Intention
 
 ## Rationale
 

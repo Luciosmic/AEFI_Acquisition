@@ -8,7 +8,7 @@ from application.shared.hardware_configuration_service.ports.i_hardware_advanced
 from domain.shared_kernel.value_objects.hardware_configuration.hardware_advanced_parameter_schema import (
     HardwareAdvancedParameterSchema, NumberParameterSchema, EnumParameterSchema, BooleanParameterSchema
 )
-from infrastructure.hardware.ads131a04.adapter_i_acquistion_port_ads131a04 import ADS131A04Adapter
+from infrastructure.hardware.ads131a04.adapter_i_acquistion_port_ads131a04.adapter_i_acquistion_port_ads131a04 import ADS131A04Adapter
 
 logger = logging.getLogger(__name__)
 

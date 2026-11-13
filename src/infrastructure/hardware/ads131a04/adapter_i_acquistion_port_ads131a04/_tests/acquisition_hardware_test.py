@@ -9,7 +9,7 @@ import serial.tools.list_ports
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../../../..'))
 
 from infrastructure.hardware.micro_controller.mcu_serial_communicator import MCU_SerialCommunicator
-from infrastructure.hardware.ads131a04.adapter_i_acquistion_port_ads131a04 import ADS131A04Adapter
+from infrastructure.hardware.ads131a04.adapter_i_acquistion_port_ads131a04.adapter_i_acquistion_port_ads131a04 import ADS131A04Adapter
 from domain.shared_kernel.value_objects.measurement_uncertainty.measurement_uncertainty import MeasurementUncertainty
 
 def list_serial_ports():

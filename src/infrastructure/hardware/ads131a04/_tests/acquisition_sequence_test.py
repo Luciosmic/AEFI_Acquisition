@@ -15,7 +15,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '../../../../..'))
 
 from tool.diagram_friendly_test import DiagramFriendlyTest
 from infrastructure.hardware.micro_controller.adapter_lifecycle_mcu import MCULifecycleAdapter
-from infrastructure.hardware.ads131a04.adapter_i_acquistion_port_ads131a04 import ADS131A04Adapter
+from infrastructure.hardware.ads131a04.adapter_i_acquistion_port_ads131a04.adapter_i_acquistion_port_ads131a04 import ADS131A04Adapter
 from domain.shared_kernel.value_objects.measurement_uncertainty.measurement_uncertainty import MeasurementUncertainty
 
 class TestAcquisitionSequence(DiagramFriendlyTest):

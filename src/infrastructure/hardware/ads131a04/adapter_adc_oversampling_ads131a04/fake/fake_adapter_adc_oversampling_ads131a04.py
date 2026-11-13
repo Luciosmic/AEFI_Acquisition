@@ -1,7 +1,7 @@
 """
 Fake ADC Oversampling Port
 
-See fake_adc_oversampling_port_intention.md.
+See fake_adapter_adc_oversampling_ads131a04_intention.md.
 """
 
 from typing import List, Tuple
