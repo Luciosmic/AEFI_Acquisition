@@ -21,7 +21,7 @@ root_dir = Path(__file__).resolve().parents[6]
 sys.path.insert(0, str(root_dir / "src"))
 
 from infrastructure.hardware.micro_controller.ad9106.ad9106_controller import AD9106Controller
-from infrastructure.hardware.micro_controller.MCU_serial_communicator import MCU_SerialCommunicator
+from infrastructure.hardware.micro_controller.mcu_serial_communicator import MCU_SerialCommunicator
 
 def main():
     print("=== AD9106 Hardware Verification ===")

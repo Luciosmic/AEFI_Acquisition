@@ -15,7 +15,7 @@ src_dir = Path(__file__).resolve().parents[4]
 sys.path.insert(0, str(src_dir))
 
 from tool.diagram_friendly_test import DiagramFriendlyTest
-from infrastructure.hardware.micro_controller.MCU_serial_communicator import MCU_SerialCommunicator
+from infrastructure.hardware.micro_controller.mcu_serial_communicator import MCU_SerialCommunicator
 from infrastructure.hardware.micro_controller.ad9106.ad9106_controller import AD9106Controller
 from domain.shared_kernel.operation_result import OperationResult
 

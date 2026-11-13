@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 # Measured on the real bench (Arcus Performax 4EX, 21.8 um/step), port level:
 # ArcusAdapter.move_to -> MotionCompleted, t = t0 + max(|dx|, |dy|) / v —
 # both axes move together. Source:
-# infrastructure/hardware/arcus_performax_4ex/characterization/results/2026-10-01_184301_arcus_motion_timing.json
+# infrastructure/hardware/arcus_performax_4ex/characterization/results/2026_10_01_184301_arcus_motion_timing.json
 # ponytail: linear model, acceleration ramp ignored — fast mode overestimates a
 # 2.5 mm move by ~0.05 s; switch to a trapezoid if a test needs that precision.
 MEASURED_PORT_TIMING = {  # speed mode: (t0_s, speed_mm_s)

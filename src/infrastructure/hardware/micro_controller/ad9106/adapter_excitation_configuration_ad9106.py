@@ -42,7 +42,7 @@ from application.services.excitation_configuration_service.ports.i_excitation_po
 
 # INFRASTRUCTURE
 from infrastructure.hardware.micro_controller.ad9106.ad9106_controller import AD9106Controller
-from infrastructure.hardware.micro_controller.MCU_serial_communicator import MCU_SerialCommunicator
+from infrastructure.hardware.micro_controller.mcu_serial_communicator import MCU_SerialCommunicator
 from infrastructure.hardware.micro_controller.hardware_config_resolution import (
     load_json_if_exists,
     resolve_config,

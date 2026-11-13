@@ -15,7 +15,7 @@ root_dir = Path(__file__).resolve().parents[6]
 sys.path.insert(0, str(root_dir / "src"))
 
 from tool.diagram_friendly_test import DiagramFriendlyTest
-from infrastructure.hardware.micro_controller.MCU_serial_communicator import MCU_SerialCommunicator
+from infrastructure.hardware.micro_controller.mcu_serial_communicator import MCU_SerialCommunicator
 from infrastructure.hardware.micro_controller.ad9106.ad9106_controller import AD9106Controller
 from infrastructure.hardware.micro_controller.ad9106.adapter_excitation_configuration_ad9106 import AdapterExcitationConfigurationAD9106
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus

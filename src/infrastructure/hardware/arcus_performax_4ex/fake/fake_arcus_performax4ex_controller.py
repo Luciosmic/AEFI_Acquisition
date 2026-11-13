@@ -18,7 +18,7 @@ _SIMULATED_MOVE_DELAY_S = 0.2
 # Measured on the real bench, controller level (driver command -> axes stopped
 # at target): t = t0 + |delta_steps| / speed, per axis, both axes moving
 # together. Keyed by the HS (Hz) of the speed presets. Source:
-# ../characterization/results/2026-10-01_184301_arcus_motion_timing.json
+# ../characterization/results/2026_10_01_184301_arcus_motion_timing.json
 # (fitted in mm/s at 21.8 um/step, stored here in steps/s: calibration-free).
 # ponytail: linear model, acceleration ramp folded into the fit — fast
 # (ACC=500 ms) overestimates a 2.5 mm move by ~0.1 s; trapezoid if needed.

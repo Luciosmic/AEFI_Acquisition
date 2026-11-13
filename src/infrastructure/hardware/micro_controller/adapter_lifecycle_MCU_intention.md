@@ -1,4 +1,4 @@
-# adapter_lifecycle_MCU — Intention
+# adapter_lifecycle_mcu — Intention
 
 ## Rationale
 

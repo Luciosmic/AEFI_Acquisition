@@ -61,7 +61,7 @@ class ADS131A04Adapter(IAcquisitionPort):
     def __init__(self, serial_communicator, n_avg_reader: Optional[Callable[[], int]] = None):
         """
         Args:
-            serial_communicator: MCU_serial_communicator (singleton)
+            serial_communicator: mcu_serial_communicator (singleton)
             n_avg_reader: where the MCU averaging n_avg is read before each
                 sample — defaults to mcu_last_config.json (re-read live, so a
                 change from Hardware Config applies to the next sample). Tests

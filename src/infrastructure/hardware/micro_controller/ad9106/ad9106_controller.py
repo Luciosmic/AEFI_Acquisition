@@ -19,7 +19,7 @@ Design (QCS):
 
 import logging
 from typing import Dict, Optional, Tuple
-from infrastructure.hardware.micro_controller.MCU_serial_communicator import MCU_SerialCommunicator
+from infrastructure.hardware.micro_controller.mcu_serial_communicator import MCU_SerialCommunicator
 from domain.shared_kernel.operation_result import OperationResult
 
 logger = logging.getLogger(__name__)

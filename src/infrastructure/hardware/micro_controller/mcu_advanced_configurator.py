@@ -8,7 +8,7 @@ from application.services.hardware_configuration_service.ports.i_hardware_advanc
 from domain.shared_kernel.value_objects.hardware_configuration.hardware_advanced_parameter_schema import (
     HardwareAdvancedParameterSchema, NumberParameterSchema
 )
-from infrastructure.hardware.micro_controller.MCU_serial_communicator import MCU_SerialCommunicator
+from infrastructure.hardware.micro_controller.mcu_serial_communicator import MCU_SerialCommunicator
 from infrastructure.hardware.micro_controller.hardware_config_resolution import (
     load_json_if_exists,
     resolve_config,

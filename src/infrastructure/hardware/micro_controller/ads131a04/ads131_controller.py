@@ -1,6 +1,6 @@
 import logging
 import math
-from infrastructure.hardware.micro_controller.MCU_serial_communicator import MCU_SerialCommunicator
+from infrastructure.hardware.micro_controller.mcu_serial_communicator import MCU_SerialCommunicator
 
 logger = logging.getLogger(__name__)
 

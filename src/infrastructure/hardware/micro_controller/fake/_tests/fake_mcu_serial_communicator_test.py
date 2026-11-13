@@ -5,7 +5,7 @@ from infrastructure.hardware.micro_controller.fake.fake_mcu_serial_communicator 
     FakeMCUSerialCommunicator,
 )
 from infrastructure.hardware.micro_controller.ad9106.ad9106_controller import AD9106Controller
-from infrastructure.hardware.micro_controller.adapter_lifecycle_MCU import MCULifecycleAdapter
+from infrastructure.hardware.micro_controller.adapter_lifecycle_mcu import MCULifecycleAdapter
 
 
 class TestFakeMCUSerialCommunicator(unittest.TestCase):
