@@ -1,7 +1,7 @@
 """
 ESP32 Serial LIDAR Adapter
 
-See adapter_lidar_distance_port_intention.md.
+See esp32_serial_lidar_intention.md.
 """
 
 import logging

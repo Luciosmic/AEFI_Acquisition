@@ -1,4 +1,4 @@
-# adapter_lidar_distance_port (ESP32 série) — Intention
+# esp32_serial_lidar (ESP32 série) — Intention
 
 ## Rationale
 

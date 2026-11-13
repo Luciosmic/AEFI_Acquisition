@@ -31,7 +31,7 @@ import pyqtgraph as pg  # noqa: E402
 from application.inertial_probe.lidar_distance.ports.lidar_stream_error import (  # noqa: E402
     LidarUnavailableError,
 )
-from infrastructure.hardware.esp32_serial_lidar.adapter_lidar_distance_port import (  # noqa: E402
+from infrastructure.hardware.esp32_serial_lidar.esp32_serial_lidar import (  # noqa: E402
     Esp32SerialLidarAdapter,
 )
 

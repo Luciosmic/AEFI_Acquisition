@@ -5,7 +5,7 @@ import unittest
 from application.inertial_probe.lidar_distance.ports.lidar_stream_error import (
     LidarUnavailableError,
 )
-from infrastructure.hardware.esp32_serial_lidar.adapter_lidar_distance_port import (
+from infrastructure.hardware.esp32_serial_lidar.esp32_serial_lidar import (
     Esp32SerialLidarAdapter,
     parse_raw_distance,
 )
