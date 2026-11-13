@@ -1,7 +1,7 @@
 """
 Fake DRDY Capture Port
 
-See fake_drdy_capture_port_intention.md.
+See fake_oscilloscope_dsox2014_intention.md.
 """
 
 import random

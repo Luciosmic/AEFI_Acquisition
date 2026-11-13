@@ -1,7 +1,7 @@
 """
 DRDY Capture Adapter — Agilent DSO-X 2014A (VISA/SCPI)
 
-See adapter_drdy_capture_dsox2014_intention.md.
+See oscilloscope_dsox2014_intention.md.
 """
 
 import logging

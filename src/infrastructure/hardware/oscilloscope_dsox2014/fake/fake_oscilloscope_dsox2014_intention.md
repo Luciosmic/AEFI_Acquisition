@@ -1,4 +1,4 @@
-# fake_drdy_capture_port — Intention
+# fake_oscilloscope_dsox2014 — Intention
 
 ## Rationale
 

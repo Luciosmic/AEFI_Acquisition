@@ -5,7 +5,7 @@ import numpy as np
 from application.test_bench_calibration.adc_output_rate_characterization_service.dtos.adc_output_rate_dtos import (
     DrdyCaptureRequestDTO,
 )
-from infrastructure.hardware.oscilloscope_dsox2014.adapter_drdy_capture_dsox2014 import (
+from infrastructure.hardware.oscilloscope_dsox2014.oscilloscope_dsox2014 import (
     AdapterDrdyCaptureDsox2014,
     falling_edges,
 )

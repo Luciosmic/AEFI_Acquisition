@@ -1,4 +1,4 @@
-# adapter_drdy_capture_dsox2014 — Intention
+# oscilloscope_dsox2014 — Intention
 
 ## Rationale
 
