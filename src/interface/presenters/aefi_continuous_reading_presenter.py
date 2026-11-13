@@ -8,11 +8,11 @@ Adapted from interface v1 for PySide6.
 from PySide6.QtCore import QObject, Signal, Slot
 from typing import Dict, Any
 
-from application.services.aefi_acquisition_service.aefi_acquisition_service import (
+from application.shared.aefi_acquisition_service.aefi_acquisition_service import (
     AEFI_ACQUISITION_CONTROL_CHANGED_TOPIC,
     AefiAcquisitionService,
 )
-from application.services.aefi_acquisition_service.ports.i_aefi_acquisition_executor import AefiAcquisitionConfig
+from application.shared.aefi_acquisition_service.ports.i_aefi_acquisition_executor import AefiAcquisitionConfig
 from application.detection_devices.aefi_signal_processing_service.aefi_signal_processing_service import (
     AefiSignalProcessingService,
 )

@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 from typing import Optional
 from uuid import uuid4
 
-from application.services.aefi_acquisition_service.i_api_aefi_acquisition_service import (
+from application.shared.aefi_acquisition_service.i_api_aefi_acquisition_service import (
     IApiAefiAcquisitionService,
 )
 from application.detection_devices.aefi_signal_processing_service.i_api_aefi_signal_processing_service import (
