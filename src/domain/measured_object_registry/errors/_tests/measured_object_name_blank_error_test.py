@@ -4,7 +4,7 @@ import pytest
 from domain.measured_object_registry.errors.measured_object_name_blank_error import MeasuredObjectNameBlankError
 
 
-def test_measuredobjectnameblankerror_est_une_exception_qui_garde_son_message():
+def test_measuredobjectnameblankerror_est_une_exception_qui_garde_son_message() -> None:
     with pytest.raises(MeasuredObjectNameBlankError) as info:
         raise MeasuredObjectNameBlankError("raison")
     assert "raison" in str(info.value)

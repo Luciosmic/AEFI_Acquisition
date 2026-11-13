@@ -8,7 +8,7 @@ from infrastructure.hardware.ads131a04.adapter_i_acquistion_port_ads131a04.fake.
 )
 
 
-def test_le_double_synthetique_tient_le_port_et_numerote_ses_echantillons():
+def test_le_double_synthetique_tient_le_port_et_numerote_ses_echantillons() -> None:
     port = MockAcquisitionPort()
     first = port.acquire_sample()
     second = port.acquire_sample()
@@ -18,7 +18,7 @@ def test_le_double_synthetique_tient_le_port_et_numerote_ses_echantillons():
     assert port.is_ready()
 
 
-def test_le_double_bruite_rejoue_la_meme_suite_avec_la_meme_graine():
+def test_le_double_bruite_rejoue_la_meme_suite_avec_la_meme_graine() -> None:
     a = RandomNoiseAcquisitionPort(noise_std=0.5, seed=7)
     b = RandomNoiseAcquisitionPort(noise_std=0.5, seed=7)
     assert isinstance(a, IAcquisitionPort)

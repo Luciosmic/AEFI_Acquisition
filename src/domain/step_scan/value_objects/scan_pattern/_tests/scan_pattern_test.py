@@ -4,5 +4,5 @@ import pytest
 from domain.step_scan.value_objects.scan_pattern.scan_pattern import ScanPattern
 
 
-def test_scanpattern_liste_ses_membres():
+def test_scanpattern_liste_ses_membres() -> None:
     assert [m.name for m in ScanPattern] == ['SERPENTINE', 'RASTER', 'COMB']

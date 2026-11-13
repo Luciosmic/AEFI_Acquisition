@@ -6,14 +6,14 @@ from domain.shared_kernel.events.domain_event.domain_event import DomainEvent
 from domain.shared_kernel.excitation.events.excitation_frequency_changed.excitation_frequency_changed import ExcitationFrequencyChanged
 
 
-def test_excitationfrequencychanged_garde_ses_champs():
+def test_excitationfrequencychanged_garde_ses_champs() -> None:
     frequency_hz = 1.5
     instance = ExcitationFrequencyChanged(frequency_hz=frequency_hz)
     assert isinstance(instance, DomainEvent)
     assert instance.frequency_hz == frequency_hz
 
 
-def test_excitationfrequencychanged_est_immuable():
+def test_excitationfrequencychanged_est_immuable() -> None:
     frequency_hz = 1.5
     instance = ExcitationFrequencyChanged(frequency_hz=frequency_hz)
     with pytest.raises(dataclasses.FrozenInstanceError):

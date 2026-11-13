@@ -9,7 +9,7 @@ from domain.aefi_signal_processing.value_objects.aefi_corrected_field_measuremen
 from domain.shared_kernel.events.domain_event.domain_event import DomainEvent
 
 
-def test_aeficorrectedfieldsampleacquired_garde_ses_champs():
+def test_aeficorrectedfieldsampleacquired_garde_ses_champs() -> None:
     acquisition_id = UUID(int=1)
     sample_index = 3
     sample = AefiCorrectedFieldMeasurement(field_x_in_phase=1.5, field_x_quadrature=1.5, field_y_in_phase=1.5, field_y_quadrature=1.5, field_z_in_phase=1.5, field_z_quadrature=1.5, timestamp=datetime(2026, 1, 1, tzinfo=timezone.utc))
@@ -20,7 +20,7 @@ def test_aeficorrectedfieldsampleacquired_garde_ses_champs():
     assert instance.sample == sample
 
 
-def test_aeficorrectedfieldsampleacquired_est_immuable():
+def test_aeficorrectedfieldsampleacquired_est_immuable() -> None:
     acquisition_id = UUID(int=1)
     sample_index = 3
     sample = AefiCorrectedFieldMeasurement(field_x_in_phase=1.5, field_x_quadrature=1.5, field_y_in_phase=1.5, field_y_quadrature=1.5, field_z_in_phase=1.5, field_z_quadrature=1.5, timestamp=datetime(2026, 1, 1, tzinfo=timezone.utc))

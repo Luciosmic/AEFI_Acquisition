@@ -7,7 +7,7 @@ from domain.frequency_sweep.events.frequency_sweep_completed.frequency_sweep_com
 from domain.shared_kernel.events.domain_event.domain_event import DomainEvent
 
 
-def test_frequencysweepcompleted_garde_ses_champs():
+def test_frequencysweepcompleted_garde_ses_champs() -> None:
     frequency_sweep_id = UUID(int=1)
     role = "x"
     frequency_count = 3
@@ -18,7 +18,7 @@ def test_frequencysweepcompleted_garde_ses_champs():
     assert instance.frequency_count == frequency_count
 
 
-def test_frequencysweepcompleted_est_immuable():
+def test_frequencysweepcompleted_est_immuable() -> None:
     frequency_sweep_id = UUID(int=1)
     role = "x"
     frequency_count = 3

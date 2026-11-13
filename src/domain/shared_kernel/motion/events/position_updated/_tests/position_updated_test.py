@@ -7,7 +7,7 @@ from domain.shared_kernel.motion.events.position_updated.position_updated import
 from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
 
 
-def test_positionupdated_garde_ses_champs():
+def test_positionupdated_garde_ses_champs() -> None:
     position = Position2D(x=1.5, y=1.5)
     is_moving = True
     instance = PositionUpdated(position=position, is_moving=is_moving)
@@ -16,7 +16,7 @@ def test_positionupdated_garde_ses_champs():
     assert instance.is_moving == is_moving
 
 
-def test_positionupdated_est_immuable():
+def test_positionupdated_est_immuable() -> None:
     position = Position2D(x=1.5, y=1.5)
     is_moving = True
     instance = PositionUpdated(position=position, is_moving=is_moving)

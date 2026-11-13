@@ -6,7 +6,7 @@ from domain.test_bench_calibration.value_objects.acquisition_throughput_characte
 from domain.test_bench_calibration.value_objects.acquisition_throughput_characterization.acquisition_throughput_characterization import AcquisitionThroughputPoint
 
 
-def test_acquisitionthroughputpoint_garde_ses_champs():
+def test_acquisitionthroughputpoint_garde_ses_champs() -> None:
     n_avg = 3
     sample_period_s = 1.5
     sample_rate_per_s = 1.5
@@ -26,7 +26,7 @@ def test_acquisitionthroughputpoint_garde_ses_champs():
     assert instance.sample_count == sample_count
 
 
-def test_acquisitionthroughputpoint_est_immuable():
+def test_acquisitionthroughputpoint_est_immuable() -> None:
     n_avg = 3
     sample_period_s = 1.5
     sample_rate_per_s = 1.5
@@ -40,7 +40,7 @@ def test_acquisitionthroughputpoint_est_immuable():
         instance.n_avg = n_avg
 
 
-def test_acquisitionthroughputcharacterization_garde_ses_champs():
+def test_acquisitionthroughputcharacterization_garde_ses_champs() -> None:
     points = (AcquisitionThroughputPoint(n_avg=3, sample_period_s=1.5, sample_rate_per_s=1.5, adc_conversions_per_s=1.5, noise_v_rms=(1.5,), noise_rms_v=1.5, noise_in_one_second_v=1.5, sample_count=3),)
     overhead_s = 1.5
     adc_output_rate_hz = None
@@ -56,7 +56,7 @@ def test_acquisitionthroughputcharacterization_garde_ses_champs():
     assert instance.noise_relative_uncertainty == noise_relative_uncertainty
 
 
-def test_acquisitionthroughputcharacterization_est_immuable():
+def test_acquisitionthroughputcharacterization_est_immuable() -> None:
     points = (AcquisitionThroughputPoint(n_avg=3, sample_period_s=1.5, sample_rate_per_s=1.5, adc_conversions_per_s=1.5, noise_v_rms=(1.5,), noise_rms_v=1.5, noise_in_one_second_v=1.5, sample_count=3),)
     overhead_s = 1.5
     adc_output_rate_hz = None

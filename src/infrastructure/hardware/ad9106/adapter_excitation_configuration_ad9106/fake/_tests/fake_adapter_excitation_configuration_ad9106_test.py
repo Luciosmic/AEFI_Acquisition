@@ -7,7 +7,7 @@ from infrastructure.hardware.ad9106.adapter_excitation_configuration_ad9106.fake
 )
 
 
-def test_le_double_tient_le_port_et_retient_la_derniere_excitation():
+def test_le_double_tient_le_port_et_retient_la_derniere_excitation() -> None:
     port = MockExcitationPort()
     params = ExcitationParameters.off()
     port.apply_excitation(params)
@@ -15,7 +15,7 @@ def test_le_double_tient_le_port_et_retient_la_derniere_excitation():
     assert port.last_parameters == params
 
 
-def test_le_gain_sans_excitation_appliquee_ne_change_rien_puis_remplace_les_niveaux():
+def test_le_gain_sans_excitation_appliquee_ne_change_rien_puis_remplace_les_niveaux() -> None:
     port = MockExcitationPort()
     port.set_gain(10.0, 20.0)
     assert port.last_parameters is None
@@ -25,7 +25,7 @@ def test_le_gain_sans_excitation_appliquee_ne_change_rien_puis_remplace_les_nive
     assert port.last_parameters.level_s3_s4 == ExcitationLevel(20.0)
 
 
-def test_le_lien_des_deux_generateurs_se_retient():
+def test_le_lien_des_deux_generateurs_se_retient() -> None:
     port = MockExcitationPort()
     port.set_link_dds1_dds2(False)
     assert port.linked is False

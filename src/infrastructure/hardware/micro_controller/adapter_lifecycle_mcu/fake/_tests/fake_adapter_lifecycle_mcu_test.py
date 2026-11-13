@@ -7,7 +7,7 @@ from infrastructure.hardware.micro_controller.adapter_lifecycle_mcu.fake.fake_ad
 )
 
 
-def test_initialiser_puis_fermer_bascule_les_drapeaux_et_rend_les_doubles_de_mouvement_et_d_acquisition():
+def test_initialiser_puis_fermer_bascule_les_drapeaux_et_rend_les_doubles_de_mouvement_et_d_acquisition() -> None:
     port = MockHardwareInitializationPort()
     assert isinstance(port, IHardwareInitializationPort)
     hardware = port.initialize_all()
@@ -17,5 +17,5 @@ def test_initialiser_puis_fermer_bascule_les_drapeaux_et_rend_les_doubles_de_mou
     assert port.closed and not port.initialized
 
 
-def test_la_verification_passe_toujours():
+def test_la_verification_passe_toujours() -> None:
     assert MockHardwareInitializationPort().verify_all() is True

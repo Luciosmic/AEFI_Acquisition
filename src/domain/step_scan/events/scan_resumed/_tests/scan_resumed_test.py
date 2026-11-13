@@ -7,7 +7,7 @@ from domain.shared_kernel.events.domain_event.domain_event import DomainEvent
 from domain.step_scan.events.scan_resumed.scan_resumed import ScanResumed
 
 
-def test_scanresumed_garde_ses_champs():
+def test_scanresumed_garde_ses_champs() -> None:
     scan_id = UUID(int=1)
     resume_from_point_index = 3
     instance = ScanResumed(scan_id=scan_id, resume_from_point_index=resume_from_point_index)
@@ -16,7 +16,7 @@ def test_scanresumed_garde_ses_champs():
     assert instance.resume_from_point_index == resume_from_point_index
 
 
-def test_scanresumed_est_immuable():
+def test_scanresumed_est_immuable() -> None:
     scan_id = UUID(int=1)
     resume_from_point_index = 3
     instance = ScanResumed(scan_id=scan_id, resume_from_point_index=resume_from_point_index)

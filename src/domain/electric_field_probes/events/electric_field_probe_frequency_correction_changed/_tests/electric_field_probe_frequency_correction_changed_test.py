@@ -6,7 +6,7 @@ from domain.electric_field_probes.events.electric_field_probe_frequency_correcti
 from domain.shared_kernel.events.domain_event.domain_event import DomainEvent
 
 
-def test_electricfieldprobefrequencycorrectionchanged_garde_ses_champs():
+def test_electricfieldprobefrequencycorrectionchanged_garde_ses_champs() -> None:
     requested_hz = 1.5
     applied_hz = None
     in_range = True
@@ -17,7 +17,7 @@ def test_electricfieldprobefrequencycorrectionchanged_garde_ses_champs():
     assert instance.in_range == in_range
 
 
-def test_electricfieldprobefrequencycorrectionchanged_est_immuable():
+def test_electricfieldprobefrequencycorrectionchanged_est_immuable() -> None:
     requested_hz = 1.5
     applied_hz = None
     in_range = True

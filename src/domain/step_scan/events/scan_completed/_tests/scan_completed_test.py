@@ -7,7 +7,7 @@ from domain.shared_kernel.events.domain_event.domain_event import DomainEvent
 from domain.step_scan.events.scan_completed.scan_completed import ScanCompleted
 
 
-def test_scancompleted_garde_ses_champs():
+def test_scancompleted_garde_ses_champs() -> None:
     scan_id = UUID(int=1)
     total_points = 3
     instance = ScanCompleted(scan_id=scan_id, total_points=total_points)
@@ -16,7 +16,7 @@ def test_scancompleted_garde_ses_champs():
     assert instance.total_points == total_points
 
 
-def test_scancompleted_est_immuable():
+def test_scancompleted_est_immuable() -> None:
     scan_id = UUID(int=1)
     total_points = 3
     instance = ScanCompleted(scan_id=scan_id, total_points=total_points)

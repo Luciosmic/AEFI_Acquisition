@@ -6,7 +6,7 @@ from domain.shared_kernel.events.domain_event.domain_event import DomainEvent
 from domain.shared_kernel.motion.events.motion_failed.motion_failed import MotionFailed
 
 
-def test_motionfailed_garde_ses_champs():
+def test_motionfailed_garde_ses_champs() -> None:
     motion_id = "x"
     error = "x"
     instance = MotionFailed(motion_id=motion_id, error=error)
@@ -15,7 +15,7 @@ def test_motionfailed_garde_ses_champs():
     assert instance.error == error
 
 
-def test_motionfailed_est_immuable():
+def test_motionfailed_est_immuable() -> None:
     motion_id = "x"
     error = "x"
     instance = MotionFailed(motion_id=motion_id, error=error)

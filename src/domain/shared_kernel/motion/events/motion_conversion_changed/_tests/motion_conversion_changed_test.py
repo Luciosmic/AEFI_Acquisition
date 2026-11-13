@@ -6,7 +6,7 @@ from domain.shared_kernel.events.domain_event.domain_event import DomainEvent
 from domain.shared_kernel.motion.events.motion_conversion_changed.motion_conversion_changed import MotionConversionChanged
 
 
-def test_motionconversionchanged_garde_ses_champs():
+def test_motionconversionchanged_garde_ses_champs() -> None:
     previous_microns_per_pulse = None
     microns_per_pulse = 1.5
     motor_name = "x"
@@ -19,7 +19,7 @@ def test_motionconversionchanged_garde_ses_champs():
     assert instance.stepper_driver_name == stepper_driver_name
 
 
-def test_motionconversionchanged_est_immuable():
+def test_motionconversionchanged_est_immuable() -> None:
     previous_microns_per_pulse = None
     microns_per_pulse = 1.5
     motor_name = "x"

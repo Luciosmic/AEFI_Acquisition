@@ -7,7 +7,7 @@ from domain.inertial_probe.events.inertial_probe_sample_acquired.inertial_probe_
 from domain.shared_kernel.events.domain_event.domain_event import DomainEvent
 
 
-def test_inertialprobesampleacquired_garde_ses_champs():
+def test_inertialprobesampleacquired_garde_ses_champs() -> None:
     acquisition_id = UUID(int=1)
     sample_index = 3
     timestamp_s = 1.5
@@ -18,7 +18,7 @@ def test_inertialprobesampleacquired_garde_ses_champs():
     assert instance.timestamp_s == timestamp_s
 
 
-def test_inertialprobesampleacquired_est_immuable():
+def test_inertialprobesampleacquired_est_immuable() -> None:
     acquisition_id = UUID(int=1)
     sample_index = 3
     timestamp_s = 1.5

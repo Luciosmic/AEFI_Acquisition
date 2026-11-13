@@ -7,14 +7,14 @@ from domain.aefi_signal_processing.value_objects.aefi_signal_correction_calibrat
 from domain.shared_kernel.events.domain_event.domain_event import DomainEvent
 
 
-def test_aefisignalcorrectioncalibrationupdated_garde_ses_champs():
+def test_aefisignalcorrectioncalibrationupdated_garde_ses_champs() -> None:
     calibration = AefiSignalCorrectionCalibration()
     instance = AefiSignalCorrectionCalibrationUpdated(calibration=calibration)
     assert isinstance(instance, DomainEvent)
     assert instance.calibration == calibration
 
 
-def test_aefisignalcorrectioncalibrationupdated_est_immuable():
+def test_aefisignalcorrectioncalibrationupdated_est_immuable() -> None:
     calibration = AefiSignalCorrectionCalibration()
     instance = AefiSignalCorrectionCalibrationUpdated(calibration=calibration)
     with pytest.raises(dataclasses.FrozenInstanceError):

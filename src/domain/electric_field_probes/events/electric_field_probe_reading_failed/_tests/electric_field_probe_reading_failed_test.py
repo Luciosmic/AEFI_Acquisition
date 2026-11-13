@@ -7,7 +7,7 @@ from domain.electric_field_probes.events.electric_field_probe_reading_failed.ele
 from domain.shared_kernel.events.domain_event.domain_event import DomainEvent
 
 
-def test_electricfieldprobereadingfailed_garde_ses_champs():
+def test_electricfieldprobereadingfailed_garde_ses_champs() -> None:
     acquisition_id = UUID(int=1)
     reason = "x"
     instance = ElectricFieldProbeReadingFailed(acquisition_id=acquisition_id, reason=reason)
@@ -16,7 +16,7 @@ def test_electricfieldprobereadingfailed_garde_ses_champs():
     assert instance.reason == reason
 
 
-def test_electricfieldprobereadingfailed_est_immuable():
+def test_electricfieldprobereadingfailed_est_immuable() -> None:
     acquisition_id = UUID(int=1)
     reason = "x"
     instance = ElectricFieldProbeReadingFailed(acquisition_id=acquisition_id, reason=reason)

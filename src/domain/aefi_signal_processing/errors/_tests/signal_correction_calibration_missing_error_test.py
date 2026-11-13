@@ -4,7 +4,7 @@ import pytest
 from domain.aefi_signal_processing.errors.signal_correction_calibration_missing_error import SignalCorrectionCalibrationMissingError
 
 
-def test_signalcorrectioncalibrationmissingerror_nomme_ses_arguments_dans_son_message():
+def test_signalcorrectioncalibrationmissingerror_nomme_ses_arguments_dans_son_message() -> None:
     with pytest.raises(SignalCorrectionCalibrationMissingError) as info:
         raise SignalCorrectionCalibrationMissingError('valeur_stage', 'valeur_calibration')
     assert info.value.stage == 'valeur_stage'

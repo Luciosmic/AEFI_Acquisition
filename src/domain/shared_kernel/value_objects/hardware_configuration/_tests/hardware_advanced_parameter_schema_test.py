@@ -9,11 +9,11 @@ from domain.shared_kernel.value_objects.hardware_configuration.hardware_advanced
 from domain.shared_kernel.value_objects.hardware_configuration.hardware_advanced_parameter_schema import ParameterType
 
 
-def test_parametertype_liste_ses_membres():
+def test_parametertype_liste_ses_membres() -> None:
     assert [m.name for m in ParameterType] == ['NUMBER', 'ENUM', 'BOOLEAN']
 
 
-def test_hardwareadvancedparameterschema_garde_ses_champs():
+def test_hardwareadvancedparameterschema_garde_ses_champs() -> None:
     key = "x"
     display_name = "x"
     instance = HardwareAdvancedParameterSchema(key=key, display_name=display_name)
@@ -21,7 +21,7 @@ def test_hardwareadvancedparameterschema_garde_ses_champs():
     assert instance.display_name == display_name
 
 
-def test_hardwareadvancedparameterschema_est_immuable():
+def test_hardwareadvancedparameterschema_est_immuable() -> None:
     key = "x"
     display_name = "x"
     instance = HardwareAdvancedParameterSchema(key=key, display_name=display_name)
@@ -29,7 +29,7 @@ def test_hardwareadvancedparameterschema_est_immuable():
         instance.key = key
 
 
-def test_numberparameterschema_garde_ses_champs():
+def test_numberparameterschema_garde_ses_champs() -> None:
     key = "x"
     display_name = "x"
     instance = NumberParameterSchema(key=key, display_name=display_name)
@@ -37,7 +37,7 @@ def test_numberparameterschema_garde_ses_champs():
     assert instance.display_name == display_name
 
 
-def test_numberparameterschema_est_immuable():
+def test_numberparameterschema_est_immuable() -> None:
     key = "x"
     display_name = "x"
     instance = NumberParameterSchema(key=key, display_name=display_name)
@@ -45,7 +45,7 @@ def test_numberparameterschema_est_immuable():
         instance.key = key
 
 
-def test_enumparameterschema_garde_ses_champs():
+def test_enumparameterschema_garde_ses_champs() -> None:
     key = "x"
     display_name = "x"
     instance = EnumParameterSchema(key=key, display_name=display_name)
@@ -53,7 +53,7 @@ def test_enumparameterschema_garde_ses_champs():
     assert instance.display_name == display_name
 
 
-def test_enumparameterschema_est_immuable():
+def test_enumparameterschema_est_immuable() -> None:
     key = "x"
     display_name = "x"
     instance = EnumParameterSchema(key=key, display_name=display_name)
@@ -61,7 +61,7 @@ def test_enumparameterschema_est_immuable():
         instance.key = key
 
 
-def test_booleanparameterschema_garde_ses_champs():
+def test_booleanparameterschema_garde_ses_champs() -> None:
     key = "x"
     display_name = "x"
     instance = BooleanParameterSchema(key=key, display_name=display_name)
@@ -69,7 +69,7 @@ def test_booleanparameterschema_garde_ses_champs():
     assert instance.display_name == display_name
 
 
-def test_booleanparameterschema_est_immuable():
+def test_booleanparameterschema_est_immuable() -> None:
     key = "x"
     display_name = "x"
     instance = BooleanParameterSchema(key=key, display_name=display_name)

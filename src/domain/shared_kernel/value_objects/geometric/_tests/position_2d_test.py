@@ -5,7 +5,7 @@ import pytest
 from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
 
 
-def test_position2d_garde_ses_champs():
+def test_position2d_garde_ses_champs() -> None:
     x = 1.5
     y = 1.5
     instance = Position2D(x=x, y=y)
@@ -13,7 +13,7 @@ def test_position2d_garde_ses_champs():
     assert instance.y == y
 
 
-def test_position2d_est_immuable():
+def test_position2d_est_immuable() -> None:
     x = 1.5
     y = 1.5
     instance = Position2D(x=x, y=y)

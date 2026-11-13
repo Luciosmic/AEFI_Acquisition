@@ -9,7 +9,7 @@ from domain.shared_kernel.events.domain_event.domain_event import DomainEvent
 from domain.shared_kernel.value_objects.acquisition.aefi_voltage_measurement import AefiVoltageMeasurement
 
 
-def test_frequencypointacquired_garde_ses_champs():
+def test_frequencypointacquired_garde_ses_champs() -> None:
     frequency_sweep_id = UUID(int=1)
     role = "x"
     frequency_index = 3
@@ -28,7 +28,7 @@ def test_frequencypointacquired_garde_ses_champs():
     assert instance.table_height_mm == table_height_mm
 
 
-def test_frequencypointacquired_est_immuable():
+def test_frequencypointacquired_est_immuable() -> None:
     frequency_sweep_id = UUID(int=1)
     role = "x"
     frequency_index = 3

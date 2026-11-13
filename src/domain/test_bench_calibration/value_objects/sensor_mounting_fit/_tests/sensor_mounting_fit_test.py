@@ -6,7 +6,7 @@ from domain.test_bench_calibration.value_objects.sensor_mounting_fit.sensor_moun
 from domain.test_bench_calibration.value_objects.sensor_rotation_angles.sensor_rotation_angles import SensorRotationAngles
 
 
-def test_sensormountingfit_garde_ses_champs():
+def test_sensormountingfit_garde_ses_champs() -> None:
     angles = SensorRotationAngles(theta_x_degrees=1.5, theta_y_degrees=1.5, theta_z_degrees=1.5)
     misalignment_x_degrees = 1.5
     misalignment_y_degrees = 1.5
@@ -18,7 +18,7 @@ def test_sensormountingfit_garde_ses_champs():
     assert instance.response_separation_degrees == response_separation_degrees
 
 
-def test_sensormountingfit_est_immuable():
+def test_sensormountingfit_est_immuable() -> None:
     angles = SensorRotationAngles(theta_x_degrees=1.5, theta_y_degrees=1.5, theta_z_degrees=1.5)
     misalignment_x_degrees = 1.5
     misalignment_y_degrees = 1.5

@@ -7,14 +7,14 @@ from domain.shared_kernel.events.aefi_voltage_reading_started.aefi_voltage_readi
 from domain.shared_kernel.events.domain_event.domain_event import DomainEvent
 
 
-def test_aefivoltagereadingstarted_garde_ses_champs():
+def test_aefivoltagereadingstarted_garde_ses_champs() -> None:
     acquisition_id = UUID(int=1)
     instance = AefiVoltageReadingStarted(acquisition_id=acquisition_id)
     assert isinstance(instance, DomainEvent)
     assert instance.acquisition_id == acquisition_id
 
 
-def test_aefivoltagereadingstarted_est_immuable():
+def test_aefivoltagereadingstarted_est_immuable() -> None:
     acquisition_id = UUID(int=1)
     instance = AefiVoltageReadingStarted(acquisition_id=acquisition_id)
     with pytest.raises(dataclasses.FrozenInstanceError):

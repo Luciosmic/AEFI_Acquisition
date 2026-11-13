@@ -7,7 +7,7 @@ from domain.scan.events.scan_closure_failed.scan_closure_failed import ScanClosu
 from domain.shared_kernel.events.domain_event.domain_event import DomainEvent
 
 
-def test_scanclosurefailed_garde_ses_champs():
+def test_scanclosurefailed_garde_ses_champs() -> None:
     scan_id = UUID(int=1)
     source = "x"
     acquisition_id = UUID(int=1)
@@ -20,7 +20,7 @@ def test_scanclosurefailed_garde_ses_champs():
     assert instance.reason == reason
 
 
-def test_scanclosurefailed_est_immuable():
+def test_scanclosurefailed_est_immuable() -> None:
     scan_id = UUID(int=1)
     source = "x"
     acquisition_id = UUID(int=1)

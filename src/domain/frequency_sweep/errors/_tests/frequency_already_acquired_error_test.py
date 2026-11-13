@@ -6,7 +6,7 @@ from domain.frequency_sweep.errors.frequency_not_in_grid_error import FrequencyN
 from domain.frequency_sweep.errors.frequency_point_incomplete_error import FrequencyPointIncompleteError
 
 
-def test_frequencyalreadyacquirederror_nomme_ses_arguments_dans_son_message():
+def test_frequencyalreadyacquirederror_nomme_ses_arguments_dans_son_message() -> None:
     with pytest.raises(FrequencyAlreadyAcquiredError) as info:
         raise FrequencyAlreadyAcquiredError('valeur_frequency_sweep_id', 'valeur_frequency_hz')
     assert info.value.frequency_sweep_id == 'valeur_frequency_sweep_id'
@@ -14,7 +14,7 @@ def test_frequencyalreadyacquirederror_nomme_ses_arguments_dans_son_message():
     assert "valeur_frequency_sweep_id" in str(info.value)
 
 
-def test_frequencynotingriderror_nomme_ses_arguments_dans_son_message():
+def test_frequencynotingriderror_nomme_ses_arguments_dans_son_message() -> None:
     with pytest.raises(FrequencyNotInGridError) as info:
         raise FrequencyNotInGridError('valeur_frequency_sweep_id', 'valeur_frequency_hz')
     assert info.value.frequency_sweep_id == 'valeur_frequency_sweep_id'
@@ -22,7 +22,7 @@ def test_frequencynotingriderror_nomme_ses_arguments_dans_son_message():
     assert "valeur_frequency_sweep_id" in str(info.value)
 
 
-def test_frequencypointincompleteerror_nomme_ses_arguments_dans_son_message():
+def test_frequencypointincompleteerror_nomme_ses_arguments_dans_son_message() -> None:
     with pytest.raises(FrequencyPointIncompleteError) as info:
         raise FrequencyPointIncompleteError('valeur_frequency_sweep_id', 'valeur_frequency_hz', 'valeur_expected', 'valeur_received')
     assert info.value.frequency_sweep_id == 'valeur_frequency_sweep_id'

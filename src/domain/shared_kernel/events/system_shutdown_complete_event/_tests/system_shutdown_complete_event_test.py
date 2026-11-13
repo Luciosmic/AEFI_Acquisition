@@ -6,14 +6,14 @@ from domain.shared_kernel.events.domain_event.domain_event import DomainEvent
 from domain.shared_kernel.events.system_shutdown_complete_event.system_shutdown_complete_event import SystemShutdownCompleteEvent
 
 
-def test_systemshutdowncompleteevent_garde_ses_champs():
+def test_systemshutdowncompleteevent_garde_ses_champs() -> None:
     success = True
     instance = SystemShutdownCompleteEvent(success=success)
     assert isinstance(instance, DomainEvent)
     assert instance.success == success
 
 
-def test_systemshutdowncompleteevent_est_immuable():
+def test_systemshutdowncompleteevent_est_immuable() -> None:
     success = True
     instance = SystemShutdownCompleteEvent(success=success)
     with pytest.raises(dataclasses.FrozenInstanceError):

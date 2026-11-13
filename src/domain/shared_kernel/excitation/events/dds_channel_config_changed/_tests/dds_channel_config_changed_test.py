@@ -6,7 +6,7 @@ from domain.shared_kernel.events.domain_event.domain_event import DomainEvent
 from domain.shared_kernel.excitation.events.dds_channel_config_changed.dds_channel_config_changed import DdsChannelConfigChanged
 
 
-def test_ddschannelconfigchanged_garde_ses_champs():
+def test_ddschannelconfigchanged_garde_ses_champs() -> None:
     channel = 3
     gain = 3
     phase = 3
@@ -17,7 +17,7 @@ def test_ddschannelconfigchanged_garde_ses_champs():
     assert instance.phase == phase
 
 
-def test_ddschannelconfigchanged_est_immuable():
+def test_ddschannelconfigchanged_est_immuable() -> None:
     channel = 3
     gain = 3
     phase = 3

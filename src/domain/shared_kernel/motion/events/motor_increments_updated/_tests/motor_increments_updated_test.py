@@ -6,7 +6,7 @@ from domain.shared_kernel.events.domain_event.domain_event import DomainEvent
 from domain.shared_kernel.motion.events.motor_increments_updated.motor_increments_updated import MotorIncrementsUpdated
 
 
-def test_motorincrementsupdated_garde_ses_champs():
+def test_motorincrementsupdated_garde_ses_champs() -> None:
     x_increments = 3
     y_increments = 3
     is_moving = True
@@ -17,7 +17,7 @@ def test_motorincrementsupdated_garde_ses_champs():
     assert instance.is_moving == is_moving
 
 
-def test_motorincrementsupdated_est_immuable():
+def test_motorincrementsupdated_est_immuable() -> None:
     x_increments = 3
     y_increments = 3
     is_moving = True

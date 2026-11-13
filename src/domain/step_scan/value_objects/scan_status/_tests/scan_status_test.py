@@ -4,5 +4,5 @@ import pytest
 from domain.step_scan.value_objects.scan_status.scan_status import ScanStatus
 
 
-def test_scanstatus_liste_ses_membres():
+def test_scanstatus_liste_ses_membres() -> None:
     assert [m.name for m in ScanStatus] == ['PENDING', 'RUNNING', 'PAUSED', 'COMPLETED', 'FAILED', 'CANCELLED']

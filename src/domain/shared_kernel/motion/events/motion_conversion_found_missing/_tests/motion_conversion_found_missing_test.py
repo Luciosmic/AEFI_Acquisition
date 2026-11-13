@@ -6,7 +6,7 @@ from domain.shared_kernel.events.domain_event.domain_event import DomainEvent
 from domain.shared_kernel.motion.events.motion_conversion_found_missing.motion_conversion_found_missing import MotionConversionFoundMissing
 
 
-def test_motionconversionfoundmissing_garde_ses_champs():
+def test_motionconversionfoundmissing_garde_ses_champs() -> None:
     motor_name = None
     missing_quantity = "x"
     where_to_enter = "x"
@@ -17,7 +17,7 @@ def test_motionconversionfoundmissing_garde_ses_champs():
     assert instance.where_to_enter == where_to_enter
 
 
-def test_motionconversionfoundmissing_est_immuable():
+def test_motionconversionfoundmissing_est_immuable() -> None:
     motor_name = None
     missing_quantity = "x"
     where_to_enter = "x"

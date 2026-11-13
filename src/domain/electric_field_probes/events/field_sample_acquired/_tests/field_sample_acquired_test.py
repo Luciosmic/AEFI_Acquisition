@@ -9,7 +9,7 @@ from domain.electric_field_probes.value_objects.field_measurement.field_measurem
 from domain.shared_kernel.events.domain_event.domain_event import DomainEvent
 
 
-def test_fieldsampleacquired_garde_ses_champs():
+def test_fieldsampleacquired_garde_ses_champs() -> None:
     probe_serial_number = "x"
     acquisition_id = UUID(int=1)
     sample_index = 3
@@ -22,7 +22,7 @@ def test_fieldsampleacquired_garde_ses_champs():
     assert instance.sample == sample
 
 
-def test_fieldsampleacquired_est_immuable():
+def test_fieldsampleacquired_est_immuable() -> None:
     probe_serial_number = "x"
     acquisition_id = UUID(int=1)
     sample_index = 3

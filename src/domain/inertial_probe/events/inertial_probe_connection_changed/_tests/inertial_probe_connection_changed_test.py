@@ -6,14 +6,14 @@ from domain.inertial_probe.events.inertial_probe_connection_changed.inertial_pro
 from domain.shared_kernel.events.domain_event.domain_event import DomainEvent
 
 
-def test_inertialprobeconnectionchanged_garde_ses_champs():
+def test_inertialprobeconnectionchanged_garde_ses_champs() -> None:
     connected = True
     instance = InertialProbeConnectionChanged(connected=connected)
     assert isinstance(instance, DomainEvent)
     assert instance.connected == connected
 
 
-def test_inertialprobeconnectionchanged_est_immuable():
+def test_inertialprobeconnectionchanged_est_immuable() -> None:
     connected = True
     instance = InertialProbeConnectionChanged(connected=connected)
     with pytest.raises(dataclasses.FrozenInstanceError):

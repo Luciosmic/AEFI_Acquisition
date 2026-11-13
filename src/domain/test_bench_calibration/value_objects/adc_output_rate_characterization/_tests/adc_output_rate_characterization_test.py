@@ -6,7 +6,7 @@ from domain.test_bench_calibration.value_objects.adc_output_rate_characterizatio
 from domain.test_bench_calibration.value_objects.adc_output_rate_characterization.adc_output_rate_characterization import AdcOutputRateMeasurement
 
 
-def test_adcoutputratemeasurement_garde_ses_champs():
+def test_adcoutputratemeasurement_garde_ses_champs() -> None:
     oversampling_ratio = 3
     regular_interval_count = 3
     irregular_interval_count = 3
@@ -26,7 +26,7 @@ def test_adcoutputratemeasurement_garde_ses_champs():
     assert instance.implied_modulator_frequency_hz == implied_modulator_frequency_hz
 
 
-def test_adcoutputratemeasurement_est_immuable():
+def test_adcoutputratemeasurement_est_immuable() -> None:
     oversampling_ratio = 3
     regular_interval_count = 3
     irregular_interval_count = 3
@@ -40,7 +40,7 @@ def test_adcoutputratemeasurement_est_immuable():
         instance.oversampling_ratio = oversampling_ratio
 
 
-def test_adcoutputratecharacterization_garde_ses_champs():
+def test_adcoutputratecharacterization_garde_ses_champs() -> None:
     measurements = (AdcOutputRateMeasurement(oversampling_ratio=3, regular_interval_count=3, irregular_interval_count=3, median_interval_s=1.5, mean_interval_s=1.5, interval_std_s=1.5, output_rate_hz=1.5, implied_modulator_frequency_hz=1.5),)
     mean_modulator_frequency_hz = 1.5
     max_modulator_frequency_relative_deviation = 1.5
@@ -50,7 +50,7 @@ def test_adcoutputratecharacterization_garde_ses_champs():
     assert instance.max_modulator_frequency_relative_deviation == max_modulator_frequency_relative_deviation
 
 
-def test_adcoutputratecharacterization_est_immuable():
+def test_adcoutputratecharacterization_est_immuable() -> None:
     measurements = (AdcOutputRateMeasurement(oversampling_ratio=3, regular_interval_count=3, irregular_interval_count=3, median_interval_s=1.5, mean_interval_s=1.5, interval_std_s=1.5, output_rate_hz=1.5, implied_modulator_frequency_hz=1.5),)
     mean_modulator_frequency_hz = 1.5
     max_modulator_frequency_relative_deviation = 1.5
