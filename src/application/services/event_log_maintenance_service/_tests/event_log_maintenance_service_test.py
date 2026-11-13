@@ -22,7 +22,7 @@ def _service(*sessions, locked=()):
     return EventLogMaintenanceService(storage, now=lambda: NOW), storage
 
 
-def test_summary_previews_only_sessions_older_than_90_days():
+def test_summary_previews_only_sessions_older_than_90_days() -> None:
     service, _ = _service(
         _session("old", 120, size=3 * MB),
         _session("older", 200, size=2 * MB),
@@ -43,13 +43,13 @@ def test_summary_previews_only_sessions_older_than_90_days():
     assert summary.expired_newest_started_at == NOW - timedelta(days=120)
 
 
-def test_size_warning_from_20_gb():
+def test_size_warning_from_20_gb() -> None:
     service, _ = _service(_session("big", 1, size=SIZE_WARNING_BYTES))
 
     assert service.get_summary().size_warning
 
 
-def test_delete_removes_expired_sessions_and_keeps_recent_and_live():
+def test_delete_removes_expired_sessions_and_keeps_recent_and_live() -> None:
     service, storage = _service(
         _session("old", 120, size=3 * MB),
         _session("recent", 10),
@@ -64,7 +64,7 @@ def test_delete_removes_expired_sessions_and_keeps_recent_and_live():
     assert set(storage.sessions) == {"recent", "live_but_old_clock"}
 
 
-def test_locked_session_is_reported_not_fatal():
+def test_locked_session_is_reported_not_fatal() -> None:
     service, storage = _service(_session("locked", 120), _session("old", 130, size=2 * MB), locked=["locked"])
 
     result = service.delete_expired_sessions()
@@ -75,7 +75,7 @@ def test_locked_session_is_reported_not_fatal():
     assert set(storage.sessions) == {"locked"}
 
 
-def test_nothing_expired_deletes_nothing():
+def test_nothing_expired_deletes_nothing() -> None:
     service, storage = _service(_session("recent", 5))
 
     result = service.delete_expired_sessions()

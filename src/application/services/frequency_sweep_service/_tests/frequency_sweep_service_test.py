@@ -57,7 +57,7 @@ class RecordingOutputPort(IFrequencySweepOutputPort):
 
 
 class TestFrequencySweepService(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.event_bus = InMemoryEventBus()
         self.excitation_port = MockExcitationPort()
         self.excitation_service = ExcitationConfigurationService(self.excitation_port, self.event_bus)
@@ -106,7 +106,7 @@ class TestFrequencySweepService(unittest.TestCase):
         self.assertEqual((result.status, result.role, result.table_height_mm), ("completed", "background", 42.5))
         self.assertEqual(result.export_path, FakeFrequencySweepExportPort.LOCATION)
 
-    def test_restores_the_operator_frequency_and_releases_the_controls(self):
+    def test_restores_the_operator_frequency_and_releases_the_controls(self) -> None:
         self._service().start_sweep(REQUEST)
 
         self.assertEqual(self.excitation_service.get_current_parameters().frequency, OPERATOR_FREQUENCY_HZ)
@@ -114,12 +114,12 @@ class TestFrequencySweepService(unittest.TestCase):
         self.assertIsNone(self.acquisition_service.get_controller())
         self.assertFalse(self.acquisition_service.is_acquisition_running())
 
-    def test_publishes_one_event_per_frequency_then_completion(self):
+    def test_publishes_one_event_per_frequency_then_completion(self) -> None:
         self._service().start_sweep(REQUEST)
         names = [type(e).__name__ for e in self.published]
         self.assertEqual(names, ["FrequencyPointAcquired"] * 3 + ["FrequencySweepCompleted"])
 
-    def test_exports_raw_samples_and_the_parameters_of_the_sweep(self):
+    def test_exports_raw_samples_and_the_parameters_of_the_sweep(self) -> None:
         self._service().start_sweep(REQUEST)
 
         self.assertEqual(self.export.opened, [("background", 42.5)])
@@ -146,7 +146,7 @@ class TestFrequencySweepService(unittest.TestCase):
         self.assertEqual(self.export.last_parameters.activity.status, "cancelled")
         self.assertEqual(self.excitation_service.get_current_parameters().frequency, OPERATOR_FREQUENCY_HZ)
 
-    def test_refuses_without_table_height_and_starts_nothing(self):
+    def test_refuses_without_table_height_and_starts_nothing(self) -> None:
         from dataclasses import replace
 
         self._service().start_sweep(replace(REQUEST, table_height_mm=None))
@@ -155,7 +155,7 @@ class TestFrequencySweepService(unittest.TestCase):
         self.assertEqual(self.export.opened, [])
         self.assertIsNone(self.excitation_service.get_controller())
 
-    def test_refuses_an_excitation_that_is_off_or_custom(self):
+    def test_refuses_an_excitation_that_is_off_or_custom(self) -> None:
         self.excitation_service.set_excitation(ExcitationMode.X_DIR, 0.0, 0.0, OPERATOR_FREQUENCY_HZ)
         self._service().start_sweep(REQUEST)
         self.excitation_service.set_excitation(ExcitationMode.CUSTOM, 40.0, 40.0, OPERATOR_FREQUENCY_HZ)
@@ -165,7 +165,7 @@ class TestFrequencySweepService(unittest.TestCase):
         self.assertIn("personnalisé", self.output.failed[1])
         self.assertEqual(self.export.opened, [])
 
-    def test_refused_while_a_scan_holds_the_excitation(self):
+    def test_refused_while_a_scan_holds_the_excitation(self) -> None:
         self.excitation_service.take_control("scan")
 
         self._service().start_sweep(REQUEST)

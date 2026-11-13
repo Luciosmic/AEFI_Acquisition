@@ -13,7 +13,7 @@ from infrastructure.mocks.adapter_mock_i_excitation_port import MockExcitationPo
 
 
 class TestExcitationControl(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.event_bus = InMemoryEventBus()
         self.port = MockExcitationPort()
         self.service = ExcitationConfigurationService(self.port, self.event_bus)
@@ -23,16 +23,16 @@ class TestExcitationControl(unittest.TestCase):
     def _set(self, controller=None, level=40.0):
         return self.service.set_excitation(ExcitationMode.X_DIR, level, level, 1000.0, controller=controller)
 
-    def test_free_excitation_is_settable_by_hand(self):
+    def test_free_excitation_is_settable_by_hand(self) -> None:
         self.assertTrue(self._set().is_success)
         self.assertIsNone(self.service.get_controller())
 
-    def test_controller_holds_the_excitation_and_publishes_it(self):
+    def test_controller_holds_the_excitation_and_publishes_it(self) -> None:
         self.assertTrue(self.service.take_control("scan").is_success)
         self.assertEqual(self.service.get_controller(), "scan")
         self.assertEqual([e.controller for e in self.control_events], ["scan"])
 
-    def test_hand_changes_are_refused_while_controlled(self):
+    def test_hand_changes_are_refused_while_controlled(self) -> None:
         self._set(level=40.0)
         self.service.take_control("scan")
 
@@ -42,16 +42,16 @@ class TestExcitationControl(unittest.TestCase):
         self.assertIn("scan", result.error)
         self.assertEqual(self.port.last_parameters.level_s1_s2.value, 40.0)
 
-    def test_link_toggle_is_refused_while_controlled(self):
+    def test_link_toggle_is_refused_while_controlled(self) -> None:
         self.service.take_control("scan")
         self.assertTrue(self.service.set_link(False).is_failure)
 
-    def test_owner_may_change_the_excitation(self):
+    def test_owner_may_change_the_excitation(self) -> None:
         self.service.take_control("calibration")
         self.assertTrue(self._set(controller="calibration", level=70.0).is_success)
         self.assertEqual(self.port.last_parameters.level_s1_s2.value, 70.0)
 
-    def test_second_controller_is_refused(self):
+    def test_second_controller_is_refused(self) -> None:
         self.service.take_control("scan")
 
         result = self.service.take_control("calibration")
@@ -60,12 +60,12 @@ class TestExcitationControl(unittest.TestCase):
         self.assertIn("scan", result.error)
         self.assertEqual(self.service.get_controller(), "scan")
 
-    def test_taking_control_twice_is_idempotent(self):
+    def test_taking_control_twice_is_idempotent(self) -> None:
         self.service.take_control("scan")
         self.assertTrue(self.service.take_control("scan").is_success)
         self.assertEqual(len(self.control_events), 1)
 
-    def test_release_frees_the_excitation(self):
+    def test_release_frees_the_excitation(self) -> None:
         self.service.take_control("scan")
         self.service.release_control("scan")
 
@@ -73,12 +73,12 @@ class TestExcitationControl(unittest.TestCase):
         self.assertEqual([e.controller for e in self.control_events], ["scan", None])
         self.assertTrue(self._set().is_success)
 
-    def test_release_by_a_non_owner_is_ignored(self):
+    def test_release_by_a_non_owner_is_ignored(self) -> None:
         self.service.take_control("scan")
         self.service.release_control("calibration")
         self.assertEqual(self.service.get_controller(), "scan")
 
-    def test_release_is_idempotent(self):
+    def test_release_is_idempotent(self) -> None:
         self.service.take_control("scan")
         self.service.release_control("scan")
         self.service.release_control("scan")

@@ -16,19 +16,19 @@ MCU = "microcontroller"
 
 
 class TestHardwareComponentService(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.repository = FakeHardwareComponentRepository()
         self.event_bus = InMemoryEventBus()
         self.service = HardwareComponentService(repository=self.repository, event_bus=self.event_bus)
 
-    def test_list_kinds_describes_quantities_for_the_ui(self):
+    def test_list_kinds_describes_quantities_for_the_ui(self) -> None:
         kinds = {k.key: k for k in self.service.list_kinds()}
 
         self.assertIn("signal_generation_chip", kinds)
         curve = {q.key: q for q in kinds[MCU].quantities}["optimal_acquisition_rate_per_s"]
         self.assertEqual(curve.curve_x_label, "n_avg")
 
-    def test_every_quantity_may_be_left_uncharacterized(self):
+    def test_every_quantity_may_be_left_uncharacterized(self) -> None:
         received = []
         self.event_bus.subscribe(HARDWARE_COMPONENT_CHARACTERIZED_TOPIC, received.append)
 
@@ -40,14 +40,14 @@ class TestHardwareComponentService(unittest.TestCase):
         self.assertIn("gain, bandwidth_hz NOT CHARACTERIZED", logs.output[0])
         self.assertEqual(len(received), 1)
 
-    def test_completing_keeps_history_and_updates_current(self):
+    def test_completing_keeps_history_and_updates_current(self) -> None:
         self.service.record_characterization(EXCITATION, "AmpliHT", {})
         self.service.record_characterization(EXCITATION, "AmpliHT", {"gain": 20.0})
 
         self.assertEqual(len(self.repository.find_all(self.repository_kind(EXCITATION))), 2)
         self.assertEqual(self.service.list_components(EXCITATION)[0].values["gain"], 20.0)
 
-    def test_recording_an_existing_name_warns_but_is_not_refused(self):
+    def test_recording_an_existing_name_warns_but_is_not_refused(self) -> None:
         first = self.service.record_characterization(EXCITATION, "AmpliHT", {})
         again = self.service.record_characterization(EXCITATION, "AmpliHT", {"gain": 20.0})
         other_kind = self.service.record_characterization(MCU, "AmpliHT", {})
@@ -57,19 +57,19 @@ class TestHardwareComponentService(unittest.TestCase):
         self.assertFalse(other_kind.name_already_recorded)  # registers are per kind
         self.assertEqual(len(self.repository.find_all(self.repository_kind(EXCITATION))), 2)
 
-    def test_curve_values_round_trip(self):
+    def test_curve_values_round_trip(self) -> None:
         self.service.record_characterization(MCU, "STM32", {"optimal_acquisition_rate_per_s": [(1, 1000), (8, 700)]})
 
         values = self.service.list_components(MCU)[0].values
         self.assertEqual(values["optimal_acquisition_rate_per_s"], ((1.0, 1000.0), (8.0, 700.0)))
 
-    def test_rejects_non_physical_value_and_blank_name(self):
+    def test_rejects_non_physical_value_and_blank_name(self) -> None:
         with self.assertRaises(ValueError):
             self.service.record_characterization(EXCITATION, "AmpliHT", {"gain": -1.0})
         with self.assertRaises(ValueError):
             self.service.record_characterization(EXCITATION, " ", {})
 
-    def test_mount_component_and_incomplete_configuration(self):
+    def test_mount_component_and_incomplete_configuration(self) -> None:
         received = []
         self.event_bus.subscribe(HARDWARE_COMPONENT_MOUNTED_TOPIC, received.append)
         self.service.record_characterization(MCU, "STM32", {})
@@ -84,7 +84,7 @@ class TestHardwareComponentService(unittest.TestCase):
         self.assertEqual(self.service.get_mounted_component(MCU).component_name, "STM32")
         self.assertEqual(len(received), 1)
 
-    def test_mount_unknown_component_is_refused(self):
+    def test_mount_unknown_component_is_refused(self) -> None:
         with self.assertRaises(ValueError):
             self.service.mount_component(MCU, "Never_characterized")
 

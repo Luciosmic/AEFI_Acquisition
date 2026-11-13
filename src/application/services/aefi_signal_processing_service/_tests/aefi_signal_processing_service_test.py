@@ -48,7 +48,7 @@ class TestAefiSignalProcessingService(DiagramFriendlyTest):
         self.event_bus.subscribe("aeficorrectedfieldsampleacquired", self.field_events.append)
         self.event_bus.subscribe("aefisignalcorrectioncalibrationupdated", self.calibration_events.append)
 
-    def test_raw_sample_with_calibration_disabled_is_corrected_and_republished(self):
+    def test_raw_sample_with_calibration_disabled_is_corrected_and_republished(self) -> None:
         self.log_divider("Accepted correction")
         acquisition_id = uuid4()
         event = AefiVoltageSampleAcquired(acquisition_id=acquisition_id, sample_index=0, sample=make_raw(1.0))
@@ -63,7 +63,7 @@ class TestAefiSignalProcessingService(DiagramFriendlyTest):
         # TransformationService disabled by default -> values pass through unchanged.
         self.assertAlmostEqual(self.field_events[0].sample.field_x_in_phase, 1.0)
 
-    def test_phase_enabled_without_calibration_rejects_silently(self):
+    def test_phase_enabled_without_calibration_rejects_silently(self) -> None:
         self.log_divider("Rejected correction")
         self.service.set_phase_correction_enabled(True)
         self.calibration_events.clear()  # discard the toggle's own AefiSignalCorrectionCalibrationUpdated
@@ -75,7 +75,7 @@ class TestAefiSignalProcessingService(DiagramFriendlyTest):
         self.assertEqual(self.corrected_events, [])
         self.assertEqual(self.field_events, [])
 
-    def test_calibrate_noise_uses_last_raw_sample_and_publishes_update(self):
+    def test_calibrate_noise_uses_last_raw_sample_and_publishes_update(self) -> None:
         event = AefiVoltageSampleAcquired(acquisition_id=uuid4(), sample_index=0, sample=make_raw(0.5))
         self.event_bus.publish("aefivoltagesampleacquired", event)
         self.calibration_events.clear()
@@ -87,7 +87,7 @@ class TestAefiSignalProcessingService(DiagramFriendlyTest):
         self.assertEqual(calibration.noise_offset["x"], (0.5, 0.5))
         self.assertEqual(len(self.calibration_events), 1)
 
-    def test_calibrate_phase_computes_angle_from_last_raw_sample(self):
+    def test_calibrate_phase_computes_angle_from_last_raw_sample(self) -> None:
         # Equal I/Q on every axis -> angle = atan2(1, 1) = pi/4.
         event = AefiVoltageSampleAcquired(acquisition_id=uuid4(), sample_index=0, sample=make_raw(1.0))
         self.event_bus.publish("aefivoltagesampleacquired", event)
@@ -98,7 +98,7 @@ class TestAefiSignalProcessingService(DiagramFriendlyTest):
         self.assertTrue(calibration.phase_correction_enabled)
         self.assertAlmostEqual(calibration.phase_angles["x"], 0.7853981633974483)
 
-    def test_calibrate_primary_uses_fully_processed_sample(self):
+    def test_calibrate_primary_uses_fully_processed_sample(self) -> None:
         event = AefiVoltageSampleAcquired(acquisition_id=uuid4(), sample_index=0, sample=make_raw(2.0))
         self.event_bus.publish("aefivoltagesampleacquired", event)
 
@@ -108,7 +108,7 @@ class TestAefiSignalProcessingService(DiagramFriendlyTest):
         self.assertTrue(calibration.primary_correction_enabled)
         self.assertEqual(calibration.primary_offset["x"], (2.0, 2.0))
 
-    def test_reset_calibration_clears_state_and_publishes_update(self):
+    def test_reset_calibration_clears_state_and_publishes_update(self) -> None:
         self.service.set_noise_correction_enabled(True)
         self.calibration_events.clear()
 
