@@ -1,3 +1,10 @@
+---
+type: evenement-de-domaine::solidai-ddd
+tldr: "Signale qu'un nouvel échantillon de tension a été acquis dans le cadre d'une acquisition continue."
+code: ["[[src/domain/shared_kernel/events/aefi_voltage_sample_acquired/aefi_voltage_sample_acquired.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/shared_kernel/operation_result_intention]]"
+---
 # aefi_voltage_sample_acquired — Intention
 
 ## Rationale

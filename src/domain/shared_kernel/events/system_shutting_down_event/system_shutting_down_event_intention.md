@@ -1,3 +1,10 @@
+---
+type: evenement-de-domaine::solidai-ddd
+tldr: "`SystemShuttingDownEvent` : arrêt en cours — signal pour que les services actifs s'arrêtent proprement."
+code: ["[[src/domain/shared_kernel/events/system_shutting_down_event/system_shutting_down_event.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/shared_kernel/operation_result_intention]]"
+---
 # system_shutting_down_event — Intention
 
 ## Rationale
