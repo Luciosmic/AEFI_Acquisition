@@ -2,8 +2,8 @@ import logging
 from typing import Dict, Any
 import time
 from application.shared.system_lifecycle_service.ports.i_hardware_initialization_port import IHardwareInitializationPort
-from infrastructure.mocks.adapter_mock_i_motion_port import MockMotionPort
-from infrastructure.mocks.adapter_mock_i_acquisition_port import MockAcquisitionPort
+from infrastructure.hardware.arcus_performax_4ex.adapter_motion_port_arcus_performax4ex.fake.fake_adapter_motion_port_arcus_performax4ex import MockMotionPort
+from infrastructure.hardware.ads131a04.adapter_i_acquistion_port_ads131a04.fake.fake_adapter_i_acquistion_port_ads131a04 import MockAcquisitionPort
 
 logger = logging.getLogger(__name__)
 

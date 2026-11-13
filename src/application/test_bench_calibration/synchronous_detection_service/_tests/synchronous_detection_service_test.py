@@ -23,7 +23,7 @@ from domain.test_bench_calibration.value_objects.synchronous_detection_phase_cal
 )
 from domain.shared_kernel.excitation.value_objects.phase_angle import PhaseAngle
 from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
-from infrastructure.mocks.adapter_mock_i_synchronous_detection_hardware_port import (
+from infrastructure.hardware.ad9106.adapter_synchronous_detection_ad9106.fake.fake_adapter_synchronous_detection_ad9106 import (
     MockSynchronousDetectionHardwarePort,
 )
 from infrastructure.persistence.calibration.fake.fake_synchronous_detection_phase_calibration_repository import (

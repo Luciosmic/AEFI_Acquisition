@@ -9,7 +9,7 @@ from application.shared.excitation_configuration_service.excitation_configuratio
 )
 from domain.shared_kernel.excitation.value_objects.excitation_mode import ExcitationMode
 from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
-from infrastructure.mocks.adapter_mock_i_excitation_port import MockExcitationPort
+from infrastructure.hardware.ad9106.adapter_excitation_configuration_ad9106.fake.fake_adapter_excitation_configuration_ad9106 import MockExcitationPort
 
 
 class TestExcitationControl(unittest.TestCase):

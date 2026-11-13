@@ -1,4 +1,4 @@
-# adapter_mock_i_hardware_initialization_port — Intention
+# fake_adapter_lifecycle_mcu — Intention
 
 ## Rationale
 

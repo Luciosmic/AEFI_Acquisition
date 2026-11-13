@@ -6,7 +6,7 @@ import pytest
 
 from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
 from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
-from infrastructure.mocks.adapter_mock_i_motion_port import (
+from infrastructure.hardware.arcus_performax_4ex.adapter_motion_port_arcus_performax4ex.fake.fake_adapter_motion_port_arcus_performax4ex import (
     MEASURED_PORT_TIMING,
     MockMotionPort,
     measured_move_duration_s,

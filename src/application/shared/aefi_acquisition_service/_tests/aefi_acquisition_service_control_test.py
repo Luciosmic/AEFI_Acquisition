@@ -9,7 +9,7 @@ from application.shared.aefi_acquisition_service.aefi_acquisition_service import
 )
 from application.shared.aefi_acquisition_service.dtos.aefi_acquisition_dtos import AefiAcquisitionConfig
 from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
-from infrastructure.mocks.adapter_mock_i_acquisition_port import RandomNoiseAcquisitionPort
+from infrastructure.hardware.ads131a04.adapter_i_acquistion_port_ads131a04.fake.fake_adapter_i_acquistion_port_ads131a04 import RandomNoiseAcquisitionPort
 from infrastructure.mocks.adapter_mock_i_aefi_acquisition_executor import MockAefiAcquisitionExecutor
 
 

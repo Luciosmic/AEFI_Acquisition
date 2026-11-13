@@ -1,4 +1,4 @@
-# adapter_mock_i_motion_port — Intention
+# fake_adapter_motion_port_arcus_performax4ex — Intention
 
 ## Rationale
 

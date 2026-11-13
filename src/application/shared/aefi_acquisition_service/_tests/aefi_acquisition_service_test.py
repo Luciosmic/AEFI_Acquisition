@@ -17,7 +17,7 @@ from application.shared.aefi_acquisition_service.ports.i_aefi_acquisition_execut
 from infrastructure.execution.aefi_acquisition_executor import (
     AefiAcquisitionExecutor,
 )
-from infrastructure.mocks.adapter_mock_i_acquisition_port import MockAcquisitionPort
+from infrastructure.hardware.ads131a04.adapter_i_acquistion_port_ads131a04.fake.fake_adapter_i_acquistion_port_ads131a04 import MockAcquisitionPort
 
 from domain.shared_kernel.events.aefi_voltage_sample_acquired.aefi_voltage_sample_acquired import (
     AefiVoltageSampleAcquired,

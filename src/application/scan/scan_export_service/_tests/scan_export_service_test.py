@@ -26,7 +26,7 @@ from application.shared.excitation_configuration_service.excitation_configuratio
 )
 
 from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
-from infrastructure.mocks.adapter_mock_i_excitation_port import MockExcitationPort
+from infrastructure.hardware.ad9106.adapter_excitation_configuration_ad9106.fake.fake_adapter_excitation_configuration_ad9106 import MockExcitationPort
 from infrastructure.execution.fake.fake_thread_pool_task_runner import FakeThreadPoolTaskRunner
 
 from domain.step_scan.events.scan_started.scan_started import ScanStarted

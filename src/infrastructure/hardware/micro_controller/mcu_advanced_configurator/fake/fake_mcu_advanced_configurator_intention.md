@@ -1,4 +1,4 @@
-# adapter_mock_i_hardware_advanced_configurator — Intention
+# fake_mcu_advanced_configurator — Intention
 
 ## Rationale
 

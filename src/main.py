@@ -260,7 +260,7 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
         from infrastructure.hardware.composite_hardware_initialization_port import CompositeHardwareInitializationPort
         init_port = CompositeHardwareInitializationPort(hw.lifecycle_adapters)
     else:
-        from infrastructure.mocks.adapter_mock_i_hardware_initialization_port import MockHardwareInitializationPort
+        from infrastructure.hardware.micro_controller.adapter_lifecycle_mcu.fake.fake_adapter_lifecycle_mcu import MockHardwareInitializationPort
         init_port = MockHardwareInitializationPort()
     
     # 6. Create Application Services

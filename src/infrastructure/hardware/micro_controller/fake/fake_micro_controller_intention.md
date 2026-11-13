@@ -3,7 +3,7 @@
 ## Rationale
 
 Le mode "mock" de l'app construisait jusqu'ici des doubles bas-de-gamme
-(`infrastructure/mocks/adapter_mock_i_excitation_port.py`, etc.) qui court-
+(`infrastructure/hardware/ad9106/adapter_excitation_configuration_ad9106/fake/fake_adapter_excitation_configuration_ad9106.py`, etc.) qui court-
 circuitent tout le code réel — résultat : en mock, l'onglet Hardware Config
 n'affiche même pas l'AD9106, et rien du câblage réel (dont la synchro
 fréquence Hardware Config ↔ Excitation) n'est vérifiable sans le vrai banc.

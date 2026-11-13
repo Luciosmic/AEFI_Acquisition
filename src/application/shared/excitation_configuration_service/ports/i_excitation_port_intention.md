@@ -18,4 +18,4 @@ Port outbound du `ExcitationConfigurationService` vers le hardware DDS (AD9106).
 
 - **Port outbound** co-localisé dans `excitation_configuration_service/`.
 - Implémenté par `AdapterExcitationConfigurationAD9106` (Real) et `MockExcitationPort` (Mock,
-  `infrastructure/mocks/adapter_mock_i_excitation_port.py`).
+  `infrastructure/hardware/ad9106/adapter_excitation_configuration_ad9106/fake/fake_adapter_excitation_configuration_ad9106.py`).

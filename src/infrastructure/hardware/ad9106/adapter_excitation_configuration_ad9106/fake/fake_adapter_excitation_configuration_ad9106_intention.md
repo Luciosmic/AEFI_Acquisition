@@ -1,4 +1,4 @@
-# adapter_mock_i_excitation_port — Intention
+# fake_adapter_excitation_configuration_ad9106 — Intention
 
 ## Rationale
 

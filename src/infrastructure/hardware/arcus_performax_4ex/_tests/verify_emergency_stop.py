@@ -27,7 +27,7 @@ except ImportError:
     from infrastructure.hardware.arcus_performax_4ex.arcus_composition_root import ArcusCompositionRoot
 
 # from infrastructure.hardware.micro_controller.mcu_composition_root import MCUCompositionRoot
-from infrastructure.mocks.adapter_mock_i_acquisition_port import MockAcquisitionPort
+from infrastructure.hardware.ads131a04.adapter_i_acquistion_port_ads131a04.fake.fake_adapter_i_acquistion_port_ads131a04 import MockAcquisitionPort
 from application.scan.scan_application_service.scan_application_service import ScanApplicationService
 from application.scan.scan_application_service.scan_closure_handler.scan_closure_handler import ScanClosureHandler
 from infrastructure.in_memory_unit_of_work.in_memory_unit_of_work import InMemoryUnitOfWork

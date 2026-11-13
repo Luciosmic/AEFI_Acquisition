@@ -1,4 +1,4 @@
-# adapter_mock_i_acquisition_port — Intention
+# fake_adapter_i_acquistion_port_ads131a04 — Intention
 
 ## Rationale
 

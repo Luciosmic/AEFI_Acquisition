@@ -19,7 +19,7 @@ class ISynchronousDetectionHardwarePort(ABC):
 
     Design:
         - **Port outbound** co-localisé dans `synchronous_detection_service/`.
-        - Implémenté par `AdapterSynchronousDetectionAD9106` (Real, infrastructure) et `MockSynchronousDetectionHardwarePort` (Fake, `infrastructure/mocks/adapter_mock_i_synchronous_detection_hardware_port.py`).
+        - Implémenté par `AdapterSynchronousDetectionAD9106` (Real, infrastructure) et `MockSynchronousDetectionHardwarePort` (Fake, `infrastructure/hardware/ad9106/adapter_synchronous_detection_ad9106/fake/fake_adapter_synchronous_detection_ad9106.py`).
     """
 
     @abstractmethod
