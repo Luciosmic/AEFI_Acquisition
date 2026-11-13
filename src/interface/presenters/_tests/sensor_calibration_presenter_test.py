@@ -6,14 +6,14 @@ from typing import Optional
 
 from interface.presenters.sensor_calibration_presenter import SensorCalibrationPresenter
 from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
-from application.test_bench.sensor_calibration_service.i_api_sensor_calibration_service import (
+from application.test_bench_calibration.sensor_calibration_service.i_api_sensor_calibration_service import (
     IApiSensorCalibrationService,
 )
-from application.test_bench.sensor_calibration_service.dtos.sensor_calibration_dto import (
+from application.test_bench_calibration.sensor_calibration_service.dtos.sensor_calibration_dto import (
     ActiveSensorRotationDTO,
     SensorCalibrationDTO,
 )
-from application.test_bench.sensor_calibration_service.sensor_calibration_service import (
+from application.test_bench_calibration.sensor_calibration_service.sensor_calibration_service import (
     ACTIVE_SENSOR_ROTATION_CHANGED_TOPIC,
     SENSOR_CALIBRATION_ENTRY_ADDED_TOPIC,
 )

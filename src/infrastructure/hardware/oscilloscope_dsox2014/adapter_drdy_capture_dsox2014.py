@@ -9,11 +9,11 @@ from typing import Callable, Optional, Tuple
 
 import numpy as np
 
-from application.test_bench.adc_output_rate_characterization_service.dtos.adc_output_rate_dtos import (
+from application.test_bench_calibration.adc_output_rate_characterization_service.dtos.adc_output_rate_dtos import (
     DrdyCaptureDTO,
     DrdyCaptureRequestDTO,
 )
-from application.test_bench.adc_output_rate_characterization_service.ports.i_drdy_capture_port import IDrdyCapturePort
+from application.test_bench_calibration.adc_output_rate_characterization_service.ports.i_drdy_capture_port import IDrdyCapturePort
 from domain.shared_kernel.operation_result import OperationResult
 
 logger = logging.getLogger(__name__)

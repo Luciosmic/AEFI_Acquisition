@@ -45,10 +45,10 @@ from domain.shared_kernel.value_objects.acquisition.aefi_voltage_measurement imp
 from domain.step_scan.value_objects.scan_trajectory.scan_trajectory import ScanTrajectory
 
 # Ports
-from application.test_bench.motion_control_service.ports.i_motion_conversion_status_port import (
+from application.test_bench_calibration.motion_control_service.ports.i_motion_conversion_status_port import (
     IMotionConversionStatusPort,
 )
-from application.test_bench.motion_control_service.ports.i_motion_port import IMotionPort
+from application.test_bench_calibration.motion_control_service.ports.i_motion_port import IMotionPort
 from application.scan.scan_application_service.errors.scan_start_error import (
     ScanRefusedBenchNotCalibrated,
     ScanStartError,

@@ -14,7 +14,7 @@ import logging
 from typing import Optional
 from pathlib import Path
 
-from application.test_bench.motion_control_service.ports.i_motion_port import IMotionPort
+from application.test_bench_calibration.motion_control_service.ports.i_motion_port import IMotionPort
 from application.shared.system_lifecycle_service.ports.i_hardware_initialization_port import IHardwareInitializationPort
 from application.shared.hardware_configuration_service.ports.i_hardware_advanced_configurator import IHardwareAdvancedConfigurator
 

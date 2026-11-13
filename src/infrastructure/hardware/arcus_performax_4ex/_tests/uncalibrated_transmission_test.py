@@ -20,7 +20,7 @@ import logging
 import time
 import unittest
 
-from application.test_bench.motion_control_service.ports.motion_conversion_unavailable_error import (
+from application.test_bench_calibration.motion_control_service.ports.motion_conversion_unavailable_error import (
     MotionConversionUnavailableError,
 )
 from domain.shared_kernel.value_objects.geometric.position_2d import Position2D

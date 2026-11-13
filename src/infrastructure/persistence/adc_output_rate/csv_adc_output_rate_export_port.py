@@ -12,11 +12,11 @@ from typing import Callable, Optional, Sequence, Tuple
 
 import numpy as np
 
-from application.test_bench.adc_output_rate_characterization_service.dtos.adc_output_rate_dtos import (
+from application.test_bench_calibration.adc_output_rate_characterization_service.dtos.adc_output_rate_dtos import (
     AdcOutputRateCharacterizationDTO,
     DrdyCaptureDTO,
 )
-from application.test_bench.adc_output_rate_characterization_service.ports.i_adc_output_rate_export_port import (
+from application.test_bench_calibration.adc_output_rate_characterization_service.ports.i_adc_output_rate_export_port import (
     IAdcOutputRateExportPort,
 )
 from domain.shared_kernel.operation_result import OperationResult

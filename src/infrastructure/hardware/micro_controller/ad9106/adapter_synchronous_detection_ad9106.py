@@ -21,7 +21,7 @@ Design:
 import logging
 from typing import Dict
 
-from application.test_bench.synchronous_detection_service.ports.i_synchronous_detection_hardware_port import (
+from application.test_bench_calibration.synchronous_detection_service.ports.i_synchronous_detection_hardware_port import (
     ISynchronousDetectionHardwarePort,
 )
 from infrastructure.hardware.micro_controller.ad9106.ad9106_controller import AD9106Controller

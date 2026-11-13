@@ -6,11 +6,11 @@ See fake_adc_output_rate_export_port_intention.md.
 
 from typing import List, Sequence, Tuple
 
-from application.test_bench.adc_output_rate_characterization_service.dtos.adc_output_rate_dtos import (
+from application.test_bench_calibration.adc_output_rate_characterization_service.dtos.adc_output_rate_dtos import (
     AdcOutputRateCharacterizationDTO,
     DrdyCaptureDTO,
 )
-from application.test_bench.adc_output_rate_characterization_service.ports.i_adc_output_rate_export_port import (
+from application.test_bench_calibration.adc_output_rate_characterization_service.ports.i_adc_output_rate_export_port import (
     IAdcOutputRateExportPort,
 )
 from domain.shared_kernel.operation_result import OperationResult

@@ -17,7 +17,7 @@ Rationale:
 import logging
 from typing import Optional
 
-from application.test_bench.motion_control_service.ports.i_motion_port import IMotionPort
+from application.test_bench_calibration.motion_control_service.ports.i_motion_port import IMotionPort
 from application.shared.ports.i_acquisition_port import IAcquisitionPort
 from application.shared.excitation_configuration_service.ports.i_excitation_port import IExcitationPort
 from application.shared.aefi_acquisition_service.ports.i_aefi_acquisition_executor import IAefiAcquisitionExecutor

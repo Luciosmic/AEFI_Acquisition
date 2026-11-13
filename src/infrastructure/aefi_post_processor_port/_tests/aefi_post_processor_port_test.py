@@ -8,7 +8,7 @@ from datetime import datetime
 from pathlib import Path
 from unittest.mock import patch
 
-from application.test_bench.sensor_calibration_service.sensor_calibration_service import (
+from application.test_bench_calibration.sensor_calibration_service.sensor_calibration_service import (
     ACTIVE_SENSOR_ROTATION_CHANGED_TOPIC,
 )
 from domain.test_bench_calibration.events.active_sensor_rotation_changed.active_sensor_rotation_changed import (

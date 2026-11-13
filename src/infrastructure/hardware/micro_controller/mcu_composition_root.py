@@ -36,7 +36,7 @@ from infrastructure.hardware.micro_controller.adapter_acquisition_averaging_mcu 
 from infrastructure.hardware.micro_controller.ads131a04.adapter_adc_oversampling_ads131a04 import (
     AdapterAdcOversamplingAds131a04,
 )
-from application.test_bench.acquisition_throughput_characterization_service.ports.i_acquisition_averaging_port import (
+from application.test_bench_calibration.acquisition_throughput_characterization_service.ports.i_acquisition_averaging_port import (
     IAcquisitionAveragingPort,
 )
 from infrastructure.hardware.micro_controller.hardware_config_resolution import (

@@ -8,10 +8,10 @@ import logging
 import time
 from typing import Callable, TypeVar
 
-from application.test_bench.raw_increment_motion.ports.i_raw_increment_motion_port import (
+from application.test_bench_calibration.raw_increment_motion.ports.i_raw_increment_motion_port import (
     IRawIncrementMotionPort,
 )
-from application.test_bench.raw_increment_motion.ports.raw_increment_motion_error import (
+from application.test_bench_calibration.raw_increment_motion.ports.raw_increment_motion_error import (
     RawIncrementMotionError,
 )
 

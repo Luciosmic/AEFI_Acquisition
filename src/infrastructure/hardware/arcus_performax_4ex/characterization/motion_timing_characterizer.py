@@ -40,7 +40,7 @@ if str(_SRC) not in sys.path:
 from domain.shared_kernel.value_objects.geometric.position_2d import Position2D  # noqa: E402
 from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus  # noqa: E402
 from infrastructure.hardware.arcus_performax_4ex.composition_root_arcus import ArcusCompositionRoot  # noqa: E402
-from application.test_bench.mechanical_transmission_calibration_service.mechanical_transmission_calibration_service import (  # noqa: E402
+from application.test_bench_calibration.mechanical_transmission_calibration_service.mechanical_transmission_calibration_service import (  # noqa: E402
     MechanicalTransmissionCalibrationService,
 )
 from infrastructure.persistence.calibration.real_hardware_component_repository import RealHardwareComponentRepository  # noqa: E402

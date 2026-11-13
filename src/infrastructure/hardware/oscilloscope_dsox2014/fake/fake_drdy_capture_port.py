@@ -7,11 +7,11 @@ See fake_drdy_capture_port_intention.md.
 import random
 from typing import Callable, Optional
 
-from application.test_bench.adc_output_rate_characterization_service.dtos.adc_output_rate_dtos import (
+from application.test_bench_calibration.adc_output_rate_characterization_service.dtos.adc_output_rate_dtos import (
     DrdyCaptureDTO,
     DrdyCaptureRequestDTO,
 )
-from application.test_bench.adc_output_rate_characterization_service.ports.i_drdy_capture_port import IDrdyCapturePort
+from application.test_bench_calibration.adc_output_rate_characterization_service.ports.i_drdy_capture_port import IDrdyCapturePort
 from domain.shared_kernel.operation_result import OperationResult
 
 # Bench values measured 2026-10-02: DRDY 1000,000 us at OSR 4096; interval std

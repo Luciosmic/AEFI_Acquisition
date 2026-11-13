@@ -4,7 +4,7 @@ import logging
 from dataclasses import replace
 from typing import Optional
 
-from application.test_bench.transformation_service.transformation_service import TransformationService
+from application.test_bench_calibration.transformation_service.transformation_service import TransformationService
 from domain.shared_kernel.events.aefi_voltage_sample_acquired.aefi_voltage_sample_acquired import (
     AefiVoltageSampleAcquired,
 )

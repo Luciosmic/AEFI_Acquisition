@@ -7,7 +7,7 @@ See adapter_acquisition_averaging_mcu_intention.md.
 import logging
 from typing import Tuple
 
-from application.test_bench.acquisition_throughput_characterization_service.ports.i_acquisition_averaging_port import (
+from application.test_bench_calibration.acquisition_throughput_characterization_service.ports.i_acquisition_averaging_port import (
     IAcquisitionAveragingPort,
 )
 from domain.shared_kernel.operation_result import OperationResult

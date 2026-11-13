@@ -1,0 +1,138 @@
+import logging
+from typing import Optional, Tuple
+
+from application.test_bench_calibration.mechanical_transmission_calibration_service.dtos.mechanical_transmission_calibration_dto import (
+    MechanicalTransmissionCalibrationDTO,
+)
+from application.test_bench_calibration.mechanical_transmission_calibration_service.dtos.mechanical_transmission_gap_dto import (
+    MechanicalTransmissionGapDTO,
+)
+from application.test_bench_calibration.mechanical_transmission_calibration_service.i_api_mechanical_transmission_calibration_service import (
+    IApiMechanicalTransmissionCalibrationService,
+)
+from domain.test_bench_calibration.calibration import Calibration
+from domain.test_bench_configuration.bench_configuration import BenchConfiguration
+from domain.test_bench_configuration.repositories.i_hardware_component_repository import IHardwareComponentRepository
+from domain.test_bench_calibration.repositories.i_mechanical_transmission_calibration_repository import (
+    IMechanicalTransmissionCalibrationRepository,
+)
+from domain.test_bench_configuration.value_objects.hardware_component_kind.hardware_component_kind import (
+    HardwareComponentKind,
+)
+from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
+
+MECHANICAL_TRANSMISSION_CALIBRATION_ENTRY_ADDED_TOPIC = "mechanicaltransmissioncalibrationentryadded"
+
+logger = logging.getLogger(__name__)
+
+
+class MechanicalTransmissionCalibrationService(IApiMechanicalTransmissionCalibrationService):
+    """
+    Application Service de la transmission mécanique du banc : réglage de la
+    chaîne de mouvement (moteur et driver montés, micro-pas, courant) et
+    distance par impulsion moteur caractérisée sur le banc.
+    """
+
+    def __init__(
+        self,
+        calibration_repository: IMechanicalTransmissionCalibrationRepository,
+        hardware_component_repository: IHardwareComponentRepository,
+        event_bus: IDomainEventBus,
+    ) -> None:
+        self._calibration_repository = calibration_repository
+        self._components = hardware_component_repository
+        self._event_bus = event_bus
+
+    # -- commands -----------------------------------------------------------------
+
+    def record_calibration(
+        self,
+        microsteps: int,
+        driver_current_a: float,
+        driver_peak_current_a: float,
+        microns_per_pulse: float,
+    ) -> None:
+        logger.info(
+            "MechanicalTransmissionCalibrationService: Command record_calibration microsteps=%s "
+            "driver_current_a=%s driver_peak_current_a=%s microns_per_pulse=%s",
+            microsteps, driver_current_a, driver_peak_current_a, microns_per_pulse,
+        )
+        calibration = Calibration()
+        entry = calibration.record_mechanical_transmission_calibration_entry(
+            self._mounting_id(HardwareComponentKind.MOTORS),
+            self._mounting_id(HardwareComponentKind.STEPPER_DRIVER),
+            microsteps,
+            driver_current_a,
+            driver_peak_current_a,
+            microns_per_pulse,
+        )
+        self._calibration_repository.add(entry)
+        # Applied live by MotionConversionHandler (never during a scan).
+        logger.info("MechanicalTransmissionCalibrationService: transmission %s recorded", entry.entry_id)
+        for event in calibration.domain_events:
+            self._event_bus.publish(type(event).__name__.lower(), event)
+
+    # -- queries ------------------------------------------------------------------
+
+    def get_current_calibration(self) -> Optional[MechanicalTransmissionCalibrationDTO]:
+        return self._resolve(log_gap=True)[0]
+
+    def get_current_gap(self) -> Optional[MechanicalTransmissionGapDTO]:
+        """What blocks the mm/pulse conversion; None when it can be derived."""
+        return self._resolve(log_gap=False)[1]
+
+    def _resolve(
+        self, log_gap: bool
+    ) -> Tuple[Optional[MechanicalTransmissionCalibrationDTO], Optional[MechanicalTransmissionGapDTO]]:
+        def gap(motor_name: Optional[str], missing_quantity: str, where_to_enter: str, log_message: str):
+            if log_gap:
+                logger.warning("MechanicalTransmissionCalibrationService: %s", log_message)
+            return None, MechanicalTransmissionGapDTO(motor_name, missing_quantity, where_to_enter)
+
+        motor = BenchConfiguration.current_mounting(self._components.find_selections(HardwareComponentKind.MOTORS))
+        driver = BenchConfiguration.current_mounting(self._components.find_selections(HardwareComponentKind.STEPPER_DRIVER))
+        motor_name = motor.component_name if motor else None
+        entry = Calibration.current_mechanical_transmission(
+            self._calibration_repository.find_all(),
+            motor.mounting_id if motor else None,
+            driver.mounting_id if driver else None,
+        )
+        if motor is None or driver is None or entry is None:
+            return gap(
+                motor_name,
+                "réglage de la transmission mécanique (moteur et driver montés, micro-pas, courant, µm par impulsion)",
+                "panneau Calibration, onglets « Moteurs » et « Driver pas à pas » pour monter le moteur et le driver, "
+                "puis onglet « Transmission » pour enregistrer le réglage",
+                f"no transmission recorded for mounted motor={motor_name} "
+                f"driver={driver.component_name if driver else None}",
+            )
+
+        motor_entry = BenchConfiguration.current_characterization(
+            self._components.find_all(HardwareComponentKind.MOTORS), motor.component_name
+        )
+        motor_values = motor_entry.characterization.values if motor_entry else {}
+        rated_current = motor_values.get("rated_current_a")
+        warning = entry.driver_current_shortfall(rated_current) if rated_current is not None else None
+        if log_gap and warning:
+            logger.warning("MechanicalTransmissionCalibrationService: %s", warning)
+        if log_gap and rated_current is None:
+            logger.warning(
+                "MechanicalTransmissionCalibrationService: motor '%s' rated current NOT CHARACTERIZED — "
+                "driver current not checked",
+                motor.component_name,
+            )
+
+        return MechanicalTransmissionCalibrationDTO(
+            motor_name=motor.component_name,
+            stepper_driver_name=driver.component_name,
+            microsteps=entry.microsteps,
+            driver_current_a=entry.driver_current_a,
+            driver_peak_current_a=entry.driver_peak_current_a,
+            microns_per_pulse=entry.microns_per_pulse,
+            driver_current_warning=warning,
+            recorded_at=entry.recorded_at,
+        ), None
+
+    def _mounting_id(self, kind: HardwareComponentKind):
+        mounting = BenchConfiguration.current_mounting(self._components.find_selections(kind))
+        return mounting.mounting_id if mounting else None

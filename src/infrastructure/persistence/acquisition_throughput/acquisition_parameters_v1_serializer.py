@@ -11,11 +11,11 @@ procedure, swept n_avg, cut excitation, stream origin, bench position, columns.
 from datetime import datetime
 from typing import Any, Dict
 
-from application.test_bench.acquisition_throughput_characterization_service.dtos.acquisition_parameters_dtos import (
+from application.test_bench_calibration.acquisition_throughput_characterization_service.dtos.acquisition_parameters_dtos import (
     AcquisitionParametersDTO,
     ThroughputActivityDTO,
 )
-from application.test_bench.acquisition_throughput_characterization_service.dtos.acquisition_throughput_dtos import (
+from application.test_bench_calibration.acquisition_throughput_characterization_service.dtos.acquisition_throughput_dtos import (
     VALUE_CHANNELS,
 )
 from application.shared.acquisition_parameters.acquisition_conditions_dtos import AcquisitionConditionsDTO

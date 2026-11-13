@@ -34,7 +34,7 @@ from domain.detection_devices.aefi_device.signal_processing.events.aefi_correcte
 from domain.detection_devices.aefi_device.signal_processing.events.aefi_signal_correction_calibration_updated.aefi_signal_correction_calibration_updated import (
     AefiSignalCorrectionCalibrationUpdated,
 )
-from application.test_bench.transformation_service.transformation_service import TransformationService
+from application.test_bench_calibration.transformation_service.transformation_service import TransformationService
 from interface.view_models.aefi_continuous_reading_sample_view_model import (
     AefiContinuousReadingSampleViewModel,
 )

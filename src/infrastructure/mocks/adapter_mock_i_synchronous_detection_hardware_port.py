@@ -1,7 +1,7 @@
 import logging
 from typing import Dict, Optional
 
-from application.test_bench.synchronous_detection_service.ports.i_synchronous_detection_hardware_port import (
+from application.test_bench_calibration.synchronous_detection_service.ports.i_synchronous_detection_hardware_port import (
     ISynchronousDetectionHardwarePort,
 )
 

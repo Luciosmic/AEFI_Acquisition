@@ -2,8 +2,8 @@
 import unittest
 
 from application.shared.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
-from application.test_bench.motion_control_service.dtos.motion_conversion_status_dto import MotionConversionStatusDTO
-from application.test_bench.motion_control_service.ports.i_motion_conversion_status_port import (
+from application.test_bench_calibration.motion_control_service.dtos.motion_conversion_status_dto import MotionConversionStatusDTO
+from application.test_bench_calibration.motion_control_service.ports.i_motion_conversion_status_port import (
     IMotionConversionStatusPort,
 )
 from application.scan.scan_application_service.dtos.scan_dtos import LineScanConfigDTO, Scan2DConfigDTO

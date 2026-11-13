@@ -8,7 +8,7 @@ import queue
 import time
 import unittest
 
-from application.test_bench.raw_increment_motion.ports.raw_increment_motion_error import (
+from application.test_bench_calibration.raw_increment_motion.ports.raw_increment_motion_error import (
     RawIncrementMotionError,
 )
 from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus

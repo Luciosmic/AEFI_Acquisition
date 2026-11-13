@@ -2,10 +2,10 @@
 
 import unittest
 
-from application.test_bench.acquisition_throughput_characterization_service.dtos.acquisition_throughput_dtos import (
+from application.test_bench_calibration.acquisition_throughput_characterization_service.dtos.acquisition_throughput_dtos import (
     AcquisitionThroughputCharacterizationDTO,
 )
-from application.test_bench.acquisition_throughput_characterization_service.i_api_acquisition_throughput_characterization_service import (
+from application.test_bench_calibration.acquisition_throughput_characterization_service.i_api_acquisition_throughput_characterization_service import (
     IApiAcquisitionThroughputCharacterizationService,
 )
 from interface.presenters.acquisition_throughput_characterization_presenter import (

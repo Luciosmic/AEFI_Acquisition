@@ -1,6 +1,6 @@
 import unittest
 
-from application.test_bench.raw_increment_motion.ports.raw_increment_motion_error import (
+from application.test_bench_calibration.raw_increment_motion.ports.raw_increment_motion_error import (
     RawIncrementMotionError,
 )
 from infrastructure.execution.fake.fake_clock import FakeClock
