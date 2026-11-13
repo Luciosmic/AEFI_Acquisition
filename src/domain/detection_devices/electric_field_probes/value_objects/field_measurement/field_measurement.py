@@ -21,7 +21,7 @@ class FieldMeasurement:
     uncertainty_estimate: Optional[float] = None
     std_dev_components: Optional[Tuple[float, ...]] = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not self.components:
             raise ValueError("components must have at least one value")
         for value in self.components:

@@ -20,7 +20,7 @@ class LidarDistance:
 
     distance_mm: Optional[float]
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.distance_mm is not None and not (math.isfinite(self.distance_mm) and self.distance_mm > 0):
             raise ValueError(f"a valid LIDAR distance is finite and > 0 mm, got {self.distance_mm}")
 

@@ -28,7 +28,7 @@ def make_sweep(n: int = 2) -> FrequencySweep:
     )
 
 
-def test_a_grid_frequency_with_exactly_n_samples_is_averaged_and_announced():
+def test_a_grid_frequency_with_exactly_n_samples_is_averaged_and_announced() -> None:
     sweep = make_sweep(2)
     measurement = sweep.record_frequency_point(1000.0, [make_measurement(1.0), make_measurement(3.0)])
 
@@ -44,7 +44,7 @@ def test_a_grid_frequency_with_exactly_n_samples_is_averaged_and_announced():
     assert event.measurement_unit == "http://qudt.org/vocab/unit/V"
 
 
-def test_the_last_grid_frequency_completes_the_sweep_once():
+def test_the_last_grid_frequency_completes_the_sweep_once() -> None:
     sweep = make_sweep(1)
     for f in (10000.0, 100.0):
         sweep.record_frequency_point(f, [make_measurement(f)])
@@ -76,7 +76,7 @@ def test_refused_points_leave_the_sweep_unchanged(frequency, samples, error):
     assert sweep.domain_events == []
 
 
-def test_a_frequency_is_acquired_once():
+def test_a_frequency_is_acquired_once() -> None:
     sweep = make_sweep(1)
     sweep.record_frequency_point(100.0, [make_measurement(1.0)])
     with pytest.raises(FrequencyAlreadyAcquiredError):
@@ -84,6 +84,6 @@ def test_a_frequency_is_acquired_once():
     assert sweep.points[0][1].voltage_x_in_phase == 1.0
 
 
-def test_needs_at_least_one_sample_per_frequency():
+def test_needs_at_least_one_sample_per_frequency() -> None:
     with pytest.raises(ValueError):
         make_sweep(0)

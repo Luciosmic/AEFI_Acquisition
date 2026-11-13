@@ -29,7 +29,7 @@ class FrequencySweep:
     _points: Dict[float, AefiVoltageMeasurement] = field(default_factory=dict)
     _domain_events: List[DomainEvent] = field(default_factory=list)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.samples_per_frequency < 1:
             raise ValueError("samples_per_frequency must be >= 1")
 
