@@ -22,6 +22,17 @@ from domain.aefi_point.value_objects.aefi_point_id.aefi_point_id import AefiPoin
 
 
 class IAefiPointRepository(ABC):
+    """
+    Responsibility:
+        - `add(point)`, `get(point_id)`, `list_by_scan(scan_id)` (comptage des points d'un scan).
+
+    Rationale:
+        Sans port de persistance, le comptage des points d'un scan passe par l'état du service applicatif, ce qui signifie que le `Scan` dépend des détails de collecte, ce qui force à modifier la boucle de scan à chaque évolution du handler.
+
+    Design:
+        - ABC placée dans `domain/aefi_point/repositories/` (convention `calibration/repositories/`).
+        - Chaque implémentation appelle `uow.register(point)` sur les agrégats qu'elle voit.
+    """
     @abstractmethod
     def add(self, point: AefiPoint) -> None:
         """Persiste un point (nouveau ou mis à jour)."""

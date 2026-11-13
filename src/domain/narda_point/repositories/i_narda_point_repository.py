@@ -21,6 +21,17 @@ from domain.narda_point.value_objects.narda_point_id.narda_point_id import Narda
 
 
 class INardaPointRepository(ABC):
+    """
+    Responsibility:
+        - `add(point)`, `get(point_id)`, `list_by_scan(scan_id)`.
+
+    Rationale:
+        Sans port de persistance, le commit d'un point de champ ne publierait jamais `NardaPointAcquired` après transaction, et le `Scan` ne saurait pas que ses mesures de champ sont complètes.
+
+    Design:
+        - ABC placée dans `domain/narda_point/repositories/` (même forme que `IAefiPointRepository`).
+        - Chaque implémentation appelle `uow.register(point)` sur les agrégats qu'elle voit.
+    """
     @abstractmethod
     def add(self, point: NardaPoint) -> None:
         """Persiste un point (nouveau ou mis à jour)."""

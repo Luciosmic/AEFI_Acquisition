@@ -21,6 +21,16 @@ from domain.scan.value_objects.scan_id.scan_id import ScanId
 
 
 class IScanRepository(ABC):
+    """
+    Responsibility:
+        - Contrat `add` / `get` de l'agrégat `Scan`.
+
+    Rationale:
+        Sans port de persistance, le handler de clôture dépendrait d'un stockage concret, ce qui signifie un domaine non testable sans infrastructure.
+
+    Design:
+        - ABC pure ; `get` retourne `None` si inconnu (le handler décide quoi en faire).
+    """
     @abstractmethod
     def add(self, scan: Scan) -> None:
         """Persiste un scan (nouveau ou mis à jour)."""
