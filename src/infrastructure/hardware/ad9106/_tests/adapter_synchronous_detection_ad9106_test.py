@@ -13,9 +13,9 @@ root_dir = Path(__file__).resolve().parents[6]
 sys.path.insert(0, str(root_dir / "src"))
 
 from infrastructure.hardware.micro_controller.mcu_serial_communicator import MCU_SerialCommunicator
-from infrastructure.hardware.micro_controller.ad9106.ad9106_controller import AD9106Controller
-from infrastructure.hardware.micro_controller.ad9106.ad9106_advanced_configurator import AD9106AdvancedConfigurator
-from infrastructure.hardware.micro_controller.ad9106.adapter_synchronous_detection_ad9106 import (
+from infrastructure.hardware.ad9106.ad9106_controller import AD9106Controller
+from infrastructure.hardware.ad9106.ad9106_advanced_configurator import AD9106AdvancedConfigurator
+from infrastructure.hardware.ad9106.adapter_synchronous_detection_ad9106 import (
     AdapterSynchronousDetectionAD9106,
 )
 from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus

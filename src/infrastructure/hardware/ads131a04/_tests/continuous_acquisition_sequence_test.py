@@ -34,7 +34,7 @@ class RandomNoiseAcquisitionPort(IAcquisitionPort):
     def is_ready(self) -> bool:
         return True
 
-from infrastructure.hardware.micro_controller.ads131a04.adapter_aefi_acquisition_ads131a04 import AdapterAefiAcquisitionAds131a04
+from infrastructure.hardware.ads131a04.adapter_aefi_acquisition_ads131a04 import AdapterAefiAcquisitionAds131a04
 
 class TestContinuousAcquisitionSequence(DiagramFriendlyTest):
     def test_full_acquisition_cycle(self):

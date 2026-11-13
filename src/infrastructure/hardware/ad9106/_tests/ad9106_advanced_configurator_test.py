@@ -11,8 +11,8 @@ root_dir = Path(__file__).resolve().parents[6]
 sys.path.insert(0, str(root_dir / "src"))
 
 from infrastructure.hardware.micro_controller.mcu_serial_communicator import MCU_SerialCommunicator
-from infrastructure.hardware.micro_controller.ad9106.ad9106_controller import AD9106Controller
-from infrastructure.hardware.micro_controller.ad9106.ad9106_advanced_configurator import (
+from infrastructure.hardware.ad9106.ad9106_controller import AD9106Controller
+from infrastructure.hardware.ad9106.ad9106_advanced_configurator import (
     AD9106AdvancedConfigurator,
     DDS_SYNCHRONOUS_DETECTION_CHANNEL_CHANGED_TOPIC,
 )
@@ -287,7 +287,7 @@ class TestAD9106AdvancedConfiguratorSynchronousDetectionChannelEvent(unittest.Te
         _restore_ad9106_last_config(self._last_config_backup)
 
     def test_ch3_edit_publishes_on_synchronous_detection_topic_not_excitation_topic(self):
-        from infrastructure.hardware.micro_controller.ad9106.ad9106_advanced_configurator import (
+        from infrastructure.hardware.ad9106.ad9106_advanced_configurator import (
             DDS_SYNCHRONOUS_DETECTION_CHANNEL_CHANGED_TOPIC,
             DDS_CHANNEL_CONFIG_CHANGED_TOPIC,
         )
@@ -307,7 +307,7 @@ class TestAD9106AdvancedConfiguratorSynchronousDetectionChannelEvent(unittest.Te
         self.assertEqual(ch3_event.phase, 16384)
 
     def test_ch4_quadrature_derived_value_also_publishes_on_synchronous_detection_topic(self):
-        from infrastructure.hardware.micro_controller.ad9106.ad9106_advanced_configurator import (
+        from infrastructure.hardware.ad9106.ad9106_advanced_configurator import (
             DDS_SYNCHRONOUS_DETECTION_CHANNEL_CHANGED_TOPIC,
         )
 

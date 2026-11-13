@@ -17,8 +17,8 @@ _ARCUS_HARDWARE = [
 ]
 # ADS131A04 ADC
 _ADS_HARDWARE = [
-    "src/infrastructure/hardware/micro_controller/ads131a04/_tests/adapter_ads131a04_test.py",
-    "src/infrastructure/hardware/micro_controller/ads131a04/_tests/acquisition_sequence_test.py",
+    "src/infrastructure/hardware/ads131a04/_tests/adapter_ads131a04_test.py",
+    "src/infrastructure/hardware/ads131a04/_tests/acquisition_sequence_test.py",
 ]
 
 collect_ignore = _ARCUS_HARDWARE + _ADS_HARDWARE

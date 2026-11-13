@@ -38,13 +38,13 @@ from datetime import datetime, timezone
 import numpy as np
 import serial.tools.list_ports
 
-# Assuming this file is in src/infrastructure/hardware/micro_controller/ads131a04/_tests/
+# Assuming this file is in src/infrastructure/hardware/ads131a04/_tests/
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../../../..'))
 
 from infrastructure.hardware.micro_controller.mcu_serial_communicator import MCU_SerialCommunicator
-from infrastructure.hardware.micro_controller.ads131a04.adapter_i_acquistion_port_ads131a04 import ADS131A04Adapter
-from infrastructure.hardware.micro_controller.ads131a04.ads131_controller import ADS131Controller
-from infrastructure.hardware.micro_controller.ads131a04.adapter_adc_oversampling_ads131a04 import (
+from infrastructure.hardware.ads131a04.adapter_i_acquistion_port_ads131a04 import ADS131A04Adapter
+from infrastructure.hardware.ads131a04.ads131_controller import ADS131Controller
+from infrastructure.hardware.ads131a04.adapter_adc_oversampling_ads131a04 import (
     AdapterAdcOversamplingAds131a04,
 )
 

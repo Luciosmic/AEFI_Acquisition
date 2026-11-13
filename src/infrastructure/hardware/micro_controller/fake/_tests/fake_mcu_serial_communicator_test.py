@@ -4,7 +4,7 @@ import unittest
 from infrastructure.hardware.micro_controller.fake.fake_mcu_serial_communicator import (
     FakeMCUSerialCommunicator,
 )
-from infrastructure.hardware.micro_controller.ad9106.ad9106_controller import AD9106Controller
+from infrastructure.hardware.ad9106.ad9106_controller import AD9106Controller
 from infrastructure.hardware.micro_controller.adapter_lifecycle_mcu import MCULifecycleAdapter
 
 

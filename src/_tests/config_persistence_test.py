@@ -7,8 +7,8 @@ import json
 import shutil
 from unittest.mock import MagicMock
 
-from infrastructure.hardware.micro_controller.ads131a04.adapter_i_acquistion_port_ads131a04 import ADS131A04Adapter
-from infrastructure.hardware.micro_controller.ads131a04.ads131a04_advanced_configurator import ADS131A04AdvancedConfigurator
+from infrastructure.hardware.ads131a04.adapter_i_acquistion_port_ads131a04 import ADS131A04Adapter
+from infrastructure.hardware.ads131a04.ads131a04_advanced_configurator import ADS131A04AdvancedConfigurator
 
 class TestConfigPersistence(unittest.TestCase):
     def setUp(self):

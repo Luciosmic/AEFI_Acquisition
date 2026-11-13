@@ -173,7 +173,7 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
     from infrastructure.persistence.calibration.real_mechanical_transmission_calibration_repository import (
         RealMechanicalTransmissionCalibrationRepository,
     )
-    from infrastructure.hardware.micro_controller.ad9106.adapter_synchronous_detection_ad9106 import (
+    from infrastructure.hardware.ad9106.adapter_synchronous_detection_ad9106 import (
         AdapterSynchronousDetectionAD9106,
     )
     from infrastructure.aefi_post_processor_port.aefi_post_processor_port import AefiPostProcessorPort, rotation_origin
