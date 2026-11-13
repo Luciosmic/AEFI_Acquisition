@@ -51,25 +51,12 @@ breaking existing callers.
   driver_mounting_id)`: the latest entry set up with the motor and driver
   mounted now — None after a swap until a new transmission is recorded.
 - Hardware components (boards, signal generation chip, ADC, microcontroller,
-  motors — `HardwareComponentKind`) are product modules: each has a unique
-  name and a characterization (the kind's essential quantities, each
-  possibly "not characterized") that can be completed over time.
-  - `record_hardware_component_characterization(kind, name, values)`: mint a
-    characterization entry, emitting `HardwareComponentCharacterized`.
-    Recording again under the same name completes that component's history.
-  - `mount_hardware_component(kind, name, known_names, mounted_name)`:
-    declare the mounted component. Refused (`ValueError`) if never
-    characterized; logged no-op if already mounted; otherwise returns a
-    `HardwareComponentSelection` and emits `HardwareComponentMounted`.
-  - `mounted_component_name(selections)` / `current_characterization(entries,
-    name)`: the two reading rules (latest selection = mounted, latest entry =
-    current characterization), stated once so the service and the acquisition
-    export can't diverge.
-  - `resolve_current_hardware_signature(fallback, mounted_conditioning,
-    mounted_excitation)`: the board parts of `HardwareSignature` are the
-    mounted boards; the template `fallback` (generic names) only fills a kind
-    nobody selected yet, with a WARNING (incomplete configuration). The
-    sensor part stays with `SensorCalibrationService`.
+  motors — `HardwareComponentKind`) are no longer this root's concern: their
+  characterization, mounting and the resolution of the hardware signature
+  moved to the `BenchConfiguration` root of `test_bench_configuration`.
+  Calibration entries reference a mounting by identity (`sensor_mounting_id`,
+  `motor_mounting_id`) and a `HardwareSignature` by value; this aggregate
+  imports the configuration, never the other way round.
 - Provide `reconstitute(...)`, the single explicit entry point to rebuild
   the aggregate from persisted repository state (rehydration) — distinct
   from the default constructor `Calibration()`, which represents a
