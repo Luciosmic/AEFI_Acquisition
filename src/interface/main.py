@@ -7,11 +7,9 @@ import traceback
 import threading
 from pathlib import Path
 
-# Add src to sys.path to allow imports from any location
-root_dir = Path(__file__).parent.resolve()
-# main.py is in src, so its parent is the project root if we want src/top_level
-# Actually, since main.py is in src, it can import interface/application directly.
-# But for consistency with other scripts that might run from root:
+# Add src to sys.path to allow imports from any location.
+# main.py lives in src/interface/ : root_dir is src/, whose parent is the project root.
+root_dir = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(root_dir))
 
 from PySide6.QtWidgets import QApplication, QDialog, QVBoxLayout, QLabel, QProgressBar

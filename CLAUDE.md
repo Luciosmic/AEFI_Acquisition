@@ -10,7 +10,7 @@ Système d'acquisition pour l'AEFI (Active Electric Field Imaging). Pilote un ba
 - UI : **PySide6**
 - Architecture : **DDD** (domain / application / infrastructure / interface)
 - Tests : pytest (`src/_tests/`)
-- Lancement : `uv run python src/main.py` (matériel réel) ; `uv run python src/main_mock.py` (dev, tout mocké)
+- Lancement : `uv run python src/interface/main.py` (matériel réel) ; `uv run python src/main_mock.py` (dev, tout mocké)
 - Logs de debug : `AEFI_LOG_LEVEL=DEBUG` et `AEFI_LOG_FILE=<chemin>` (lisibles sans l'UI)
 - Serveur MCP d'observabilité (`develop` uniquement, lecture seule) : `src/infrastructure/mcp/`, démarré en thread à la fin de `main.py`, `http://127.0.0.1:8765/mcp`, déclaré dans `.mcp.json` (`aefi-observability`, tool `get_scan_status`)
 

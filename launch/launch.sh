@@ -8,4 +8,4 @@ cd "$(dirname "$0")/.."
 export UV_PROJECT_ENVIRONMENT="${UV_PROJECT_ENVIRONMENT:-$HOME/.venvs/AEFI_Acquisition}"
 
 # Run with uv (manages the venv above based on pyproject.toml)
-uv run python src/main.py
+uv run python src/interface/main.py

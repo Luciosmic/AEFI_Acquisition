@@ -17,7 +17,7 @@ import time
 from collections import deque
 from pathlib import Path
 
-# Rendre `src/` importable, comme src/main.py (racine du dépôt = deux niveaux au-dessus).
+# Rendre `src/` importable, comme src/interface/main.py (racine du dépôt = deux niveaux au-dessus).
 SRC_DIR = Path(__file__).resolve().parents[2] / "src"
 sys.path.insert(0, str(SRC_DIR))
 

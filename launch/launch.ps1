@@ -16,7 +16,7 @@ if (-not (Test-Path ".venv")) {
 }
 
 Write-Host "Starting AEFI Acquisition Interface..." -ForegroundColor Green
-uv run python src/main.py
+uv run python src/interface/main.py
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Application exited with error code $LASTEXITCODE" -ForegroundColor Red
