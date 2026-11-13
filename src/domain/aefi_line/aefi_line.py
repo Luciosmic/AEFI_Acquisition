@@ -21,7 +21,7 @@ class AefiLine:
     _points: Tuple[LineGridPoint, ...] = ()
     _domain_events: List[DomainEvent] = field(default_factory=list)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.expected_points < 1:
             raise ValueError("expected_points must be >= 1")
 

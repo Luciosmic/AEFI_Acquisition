@@ -9,7 +9,7 @@ from domain.scan.events.probe_acquisition_event.probe_acquisition_event import P
 from domain.shared_kernel.events.domain_event import DomainEvent
 
 
-def test_frozen_domain_event_respecting_the_probe_contract():
+def test_frozen_domain_event_respecting_the_probe_contract() -> None:
     line_id = AefiLineId(uuid4())
     event = AefiLineAcquired(line_id, uuid4(), 2, (), 0)
     assert isinstance(event, DomainEvent) and isinstance(event, ProbeAcquisitionEvent)

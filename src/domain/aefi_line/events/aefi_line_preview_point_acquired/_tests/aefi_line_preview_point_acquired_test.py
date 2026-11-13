@@ -10,7 +10,7 @@ from domain.shared_kernel.events.domain_event import DomainEvent
 from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
 
 
-def test_frozen_provisional_domain_event():
+def test_frozen_provisional_domain_event() -> None:
     event = AefiLinePreviewPointAcquired(uuid4(), 1, 2, Position2D(x=1.0, y=2.0), object())
     assert isinstance(event, DomainEvent)
     assert (event.line_index, event.index_in_line) == (1, 2)
