@@ -3,6 +3,27 @@ type: racine-d-agregat::solidai-ddd
 tldr: "Hold the domain-level, persisted synchronous_detection_compensation_enabled flag and mutate it idempotently, emitting…"
 code: ["[[src/domain/test_bench_calibration/calibration.py]]"]
 cause_de_changement: regle-metier
+repositories:
+  - ^: i-sensor-calibration-repository
+    type: interface-de-repository::solidai-ddd
+    tldr: "add(entry) : ajouter une entrée au registre sans jamais écraser ; find_all() et find_by_hardware_signature(signature) : relire les entrées."
+    sens: sortant
+    code: "[[src/domain/test_bench_calibration/repositories/i_sensor_calibration_repository.py]]"
+  - ^: i-source-geometry-calibration-repository
+    type: interface-de-repository::solidai-ddd
+    tldr: "add(entry) : ajouter une entrée sans jamais écraser ; find_all() : relire toutes les entrées."
+    sens: sortant
+    code: "[[src/domain/test_bench_calibration/repositories/i_source_geometry_calibration_repository.py]]"
+  - ^: i-mechanical-transmission-calibration-repository
+    type: interface-de-repository::solidai-ddd
+    tldr: "add(entry) : ajouter une entrée sans jamais écraser ; find_all() : relire toutes les entrées, dans l'ordre stocké."
+    sens: sortant
+    code: "[[src/domain/test_bench_calibration/repositories/i_mechanical_transmission_calibration_repository.py]]"
+  - ^: i-synchronous-detection-phase-calibration-repository
+    type: interface-de-repository::solidai-ddd
+    tldr: "add(entry) : ajouter une entrée sans jamais écraser ; find_by_hardware_signature(signature) ; load et save de l'état du drapeau de compensation."
+    sens: sortant
+    code: "[[src/domain/test_bench_calibration/repositories/i_synchronous_detection_phase_calibration_repository.py]]"
 ---
 # calibration — Intention
 
