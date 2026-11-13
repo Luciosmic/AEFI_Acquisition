@@ -28,7 +28,7 @@ TABLE_HEIGHT_KEY = "table_height"
 
 _ROLE_NOTES = {
     "instrument_reference": "Référence instrument : table en position basse, aucun objet sur le banc.",
-    "background": "Fond : table à la hauteur de travail, aucun objet sur le banc.",
+    "background": "Fond : table à la hauteur de travail, support de l'objet en place, aucun objet posé.",
 }
 OBJECT_MEASUREMENT = "object_measurement"
 
@@ -56,7 +56,7 @@ def serialize_acquisition_parameters_v1(
     if activity.role == OBJECT_MEASUREMENT:
         feature_of_interest = v1.feature_of_interest(
             present=True, description=activity.measured_object_name or None,
-            notes="Mesure objet : même hauteur de table que le fond, objet posé.", warn=warn,
+            notes="Mesure objet : même hauteur de table que le fond, objet posé sur son support.", warn=warn,
             measured_object_id=activity.measured_object_id or None, lift_off_mm=activity.lift_off_mm,
         )
     else:
@@ -91,10 +91,7 @@ def serialize_acquisition_parameters_v1(
 def _procedure(activity: FrequencySweepActivityDTO) -> Dict[str, Any]:
     return {
         "role": activity.role,
-        "frequency_grid": {
-            **v1.quantity(list(activity.frequencies_hz), "Hz"),
-            "spacing": "logarithmic",
-        },
+        "frequency_grid": _frequency_grid(activity),
         "samples_per_frequency": v1.quantity(activity.samples_per_frequency, "{sample}"),
         "settle_delay": v1.quantity(activity.settle_delay_s, "s"),
         "frequency_timeout": v1.quantity(activity.frequency_timeout_s, "s"),
@@ -105,6 +102,19 @@ def _procedure(activity: FrequencySweepActivityDTO) -> Dict[str, Any]:
         },
         "acquired_frequency_count": v1.quantity(activity.acquired_frequency_count, "1"),
     }
+
+
+def _frequency_grid(activity: FrequencySweepActivityDTO) -> Dict[str, Any]:
+    grid: Dict[str, Any] = {**v1.quantity(list(activity.frequencies_hz), "Hz"), "spacing": activity.grid_spacing}
+    if activity.grid_spacing == "logarithmic_per_decade":
+        grid["points_per_decade"] = v1.quantity(activity.points_per_decade, "1")
+        grid["notes"] = (
+            "fréquences 10^(k/n) Hz, k entier, n = points_per_decade, comprises entre les bornes demandées : "
+            "deux grilles de même n partagent toutes leurs fréquences communes"
+        )
+    else:
+        grid["notes"] = "liste de fréquences saisie par l'opérateur, balayée par ordre croissant"
+    return grid
 
 
 def _measurement_chain(

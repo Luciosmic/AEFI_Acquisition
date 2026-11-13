@@ -31,7 +31,7 @@ ADC_CONFIG = {
     "reference_voltage": 2.442,
 }
 REQUEST = FrequencySweepRequestDTO(
-    role="background", start_hz=100.0, stop_hz=10000.0, frequency_count=3, samples_per_frequency=4,
+    role="background", start_hz=100.0, stop_hz=10000.0, points_per_decade=1, samples_per_frequency=4,
     table_height_mm=42.5, operator_name="Luis", operator_id="op-1",
 )
 
@@ -219,6 +219,33 @@ class TestFrequencySweepService(unittest.TestCase):
         self.assertEqual(self.output.failed, [])
         activity = self.export.last_parameters.activity
         self.assertEqual((activity.measured_object_id, activity.lift_off_mm), ("", None))
+
+    def test_an_operator_list_is_swept_in_ascending_order_and_exported_as_a_list(self) -> None:
+        from dataclasses import replace
+
+        self._service().start_sweep(replace(REQUEST, frequency_list_hz=(5000.0, 200.0, 1000.0)))
+
+        self.assertEqual([p.frequency_hz for p in self.output.points], [200.0, 1000.0, 5000.0])
+        parameters = self.export.last_parameters
+        assert parameters is not None
+        activity = parameters.activity
+        self.assertEqual((activity.grid_spacing, activity.points_per_decade), ("operator_list", None))
+
+    def test_a_per_decade_grid_records_its_density(self) -> None:
+        self._service().start_sweep(REQUEST)
+
+        parameters = self.export.last_parameters
+        assert parameters is not None
+        activity = parameters.activity
+        self.assertEqual((activity.grid_spacing, activity.points_per_decade), ("logarithmic_per_decade", 1))
+
+    def test_a_list_with_a_duplicate_is_refused_and_starts_nothing(self) -> None:
+        from dataclasses import replace
+
+        self._service().start_sweep(replace(REQUEST, frequency_list_hz=(100.0, 100.0)))
+
+        self.assertIn("grille", self.output.failed[0])
+        self.assertEqual(self.export.opened, [])
 
 
 if __name__ == "__main__":

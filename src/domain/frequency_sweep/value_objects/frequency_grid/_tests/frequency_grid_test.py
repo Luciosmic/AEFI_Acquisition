@@ -3,13 +3,25 @@ import pytest
 from domain.frequency_sweep.value_objects.frequency_grid.frequency_grid import FrequencyGrid
 
 
-def test_logarithmic_grid_spans_bounds_evenly_on_a_log_scale() -> None:
-    grid = FrequencyGrid.logarithmic(100.0, 10000.0, 3)
-    assert grid.frequencies_hz == (100.0, 1000.0, 10000.0)
+def test_per_decade_grid_is_anchored_on_the_decades() -> None:
+    assert FrequencyGrid.per_decade(100.0, 10000.0, 1).frequencies_hz == (100.0, 1000.0, 10000.0)
+    assert FrequencyGrid.per_decade(100.0, 1000.0, 4).frequencies_hz == (100.0, 177.828, 316.228, 562.341, 1000.0)
 
 
-def test_logarithmic_grids_from_the_same_bounds_are_equal() -> None:
-    assert FrequencyGrid.logarithmic(200.0, 50000.0, 17) == FrequencyGrid.logarithmic(200.0, 50000.0, 17)
+def test_per_decade_grids_share_their_common_frequencies_whatever_the_bounds() -> None:
+    wide = FrequencyGrid.per_decade(100.0, 100000.0, 10).frequencies_hz
+    narrow = FrequencyGrid.per_decade(150.0, 2000.0, 10).frequencies_hz
+    assert set(narrow) <= set(wide)
+    assert narrow[0] == 158.489  # first decade point above the start bound
+
+
+def test_a_list_is_swept_in_ascending_order() -> None:
+    assert FrequencyGrid.from_list([1000.0, 100.0, 250.0]).frequencies_hz == (100.0, 250.0, 1000.0)
+
+
+def test_a_list_with_a_duplicate_is_refused() -> None:
+    with pytest.raises(ValueError):
+        FrequencyGrid.from_list([100.0, 1000.0, 100.0])
 
 
 @pytest.mark.parametrize("frequencies", [(1000.0,), (100.0, 100.0), (1000.0, 100.0), (0.0, 100.0), (-1.0, 100.0)])
@@ -18,10 +30,10 @@ def test_refuses_a_grid_that_cannot_be_compared(frequencies):
         FrequencyGrid(frequencies)
 
 
-@pytest.mark.parametrize("start, stop, count", [(100.0, 100.0, 5), (0.0, 100.0, 5), (100.0, 1000.0, 1)])
-def test_refuses_impossible_logarithmic_bounds(start, stop, count):
+@pytest.mark.parametrize("start, stop, per_decade", [(100.0, 100.0, 5), (0.0, 100.0, 5), (100.0, 1000.0, 0), (110.0, 120.0, 10)])
+def test_refuses_impossible_per_decade_bounds(start, stop, per_decade):
     with pytest.raises(ValueError):
-        FrequencyGrid.logarithmic(start, stop, count)
+        FrequencyGrid.per_decade(start, stop, per_decade)
 
 
 def test_index_of_a_grid_frequency() -> None:

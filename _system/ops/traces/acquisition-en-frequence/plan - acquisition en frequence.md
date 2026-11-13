@@ -1,6 +1,6 @@
 # Plan — Acquisition en fréquence
 
-**État :** tranche 1 au banc le 2026-11-12 (un balayage court terminé et exporté) ; rôle « Mesure objet » ajouté (objet du registre + lift-off, exportés) — première moitié de la tranche 2, la différence objet − fond se fait encore à l'analyse.
+**État :** tranche 1 au banc le 2026-11-12 (un balayage court terminé et exporté) ; rôle « Mesure objet » ajouté (objet du registre + lift-off, exportés) — première moitié de la tranche 2, la différence objet − fond se fait encore à l'analyse. Le 2026-11-13 : grille en points par décade ou en liste de fréquences ; le fond se fait avec le support de l'objet en place.
 **Prochaine action :** au banc, la chaîne complète : deux références instrument à la suite (superposition), un fond, une mesure objet à la même hauteur ; puis coder le choix du fond et la différence affichée (seconde moitié de la tranche 2). Constat du premier essai : à 100 Hz l'écart-type vaut un quart du signal (0,1 V pour 0,4 V), contre 0,0006 V à 10 kHz — revoir la borne basse ou N.
 
 ## Pourquoi
@@ -14,8 +14,8 @@ Il faut donc suivre, dès le premier balayage, tout ce qui conditionne la reprod
 
 ```mermaid
 flowchart TD
-    A["1. Référence instrument<br/>table en position basse, sans objet"] --> B["2. Fond<br/>table montée à la hauteur de travail, sans objet"]
-    B --> C["3. Mesure objet<br/>même hauteur de table, objet posé"]
+    A["1. Référence instrument<br/>table en position basse, sans objet"] --> B["2. Fond<br/>table montée à la hauteur de travail,<br/>support de l'objet en place, sans objet"]
+    B --> C["3. Mesure objet<br/>même hauteur de table, objet posé sur son support"]
     C --> D["Signal de l'objet = 3 − 2<br/>par fréquence, par axe"]
     A -. "doit être identique d'un jour à l'autre<br/>→ contrôle que l'instrument n'a pas bougé" .-> R[(Référence instrument enregistrée)]
     B -. "doit être identique à hauteur de table égale<br/>→ réutilisable" .-> P[(Profil de fond à cette hauteur)]
@@ -98,7 +98,8 @@ Chaque tranche se teste au banc avant la suivante ; un point = un commit = un re
 ## Choix pris sur recommandation
 
 - I et Q bruts, sans correction de champ primaire : le fond fait ce travail, et la correction reste possible à l'analyse.
-- Grille définie par début, fin, nombre de points, en espacement logarithmique ; bornes saisies dans le panneau, défaut fixé au premier essai au banc.
+- Grille, au choix de l'opérateur (demande du 2026-11-13) : des points par décade entre deux bornes (défaut 10 par décade de 100 Hz à 10 kHz, soit 21 fréquences), ou une liste de fréquences saisie. Les points par décade sont ancrés sur les puissances de 10 (10^(k/n) Hz), pas sur les bornes : deux balayages de même densité partagent leurs fréquences communes, ce qui permet de soustraire et combiner des fonds acquis sur des plages différentes. Une liste est balayée par ordre croissant, un doublon est refusé.
+- Fond avec le support de l'objet en place (demande du 2026-11-13) : la différence objet − fond ne garde alors que l'objet.
 - Délai de stabilisation après chaque changement de fréquence : 0,5 s par défaut, réglable, exporté.
 
 ## Hauteur de la table (tranché le 2026-11-12)

@@ -112,9 +112,9 @@ class FrequencySweepService(IApiFrequencySweepService):
 
     def start_sweep(self, request: FrequencySweepRequestDTO) -> None:
         logger.info(
-            "FrequencySweepService: Command start_sweep role=%s start_hz=%s stop_hz=%s frequency_count=%s "
-            "samples_per_frequency=%s table_height_mm=%s",
-            request.role, request.start_hz, request.stop_hz, request.frequency_count,
+            "FrequencySweepService: Command start_sweep role=%s start_hz=%s stop_hz=%s points_per_decade=%s "
+            "frequency_list_hz=%s samples_per_frequency=%s table_height_mm=%s",
+            request.role, request.start_hz, request.stop_hz, request.points_per_decade, request.frequency_list_hz,
             request.samples_per_frequency, request.table_height_mm,
         )
         if self._running:
@@ -171,7 +171,10 @@ class FrequencySweepService(IApiFrequencySweepService):
         if excitation.level_s1_s2.value <= 0 and excitation.level_s3_s4.value <= 0:
             return "excitation éteinte : régler un niveau dans le panneau Excitation"
         try:
-            grid = FrequencyGrid.logarithmic(request.start_hz, request.stop_hz, request.frequency_count)
+            grid = (
+                FrequencyGrid.from_list(request.frequency_list_hz) if request.frequency_list_hz is not None
+                else FrequencyGrid.per_decade(request.start_hz, request.stop_hz, request.points_per_decade)
+            )
             table_height = TableHeight(request.table_height_mm)
         except ValueError as error:
             return f"grille ou hauteur invalide : {error}"
@@ -336,6 +339,8 @@ class FrequencySweepService(IApiFrequencySweepService):
             status="running",
             role=sweep.role.value,
             frequencies_hz=sweep.grid.frequencies_hz,
+            grid_spacing="operator_list" if request.frequency_list_hz is not None else "logarithmic_per_decade",
+            points_per_decade=None if request.frequency_list_hz is not None else request.points_per_decade,
             samples_per_frequency=sweep.samples_per_frequency,
             table_height_mm=sweep.table_height.millimetres,
             settle_delay_s=self._settle_delay_s,

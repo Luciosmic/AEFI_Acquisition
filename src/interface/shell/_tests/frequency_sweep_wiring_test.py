@@ -61,6 +61,47 @@ def test_a_click_on_start_reaches_the_service_after_composition_returned():
     assert not panel.btn_start.isEnabled()  # running: fields locked until the sweep ends
 
 
+def test_a_frequency_list_typed_by_the_operator_reaches_the_service():
+    received = []
+    panel = _composed_panel(received)
+    assert not panel.input_frequency_list.isEnabled()  # per-decade grid by default
+    panel.combo_grid.setCurrentIndex(panel.combo_grid.findData("list"))
+    assert panel.input_frequency_list.isEnabled() and not panel.spin_points_per_decade.isEnabled()
+    panel.input_frequency_list.setText("5e3 ; 200 1000,5")
+    assert panel.lbl_frequency_list.text().startswith("3 fréquences lues")
+    panel.input_table_height.setText("60")
+
+    QTest.mouseClick(panel.btn_start, Qt.MouseButton.LeftButton)
+
+    (request,) = received
+    assert request.frequency_list_hz == (5000.0, 200.0, 1000.5)
+
+
+def test_an_unreadable_frequency_list_blocks_the_launch_with_its_error():
+    received = []
+    panel = _composed_panel(received)
+    panel.combo_grid.setCurrentIndex(panel.combo_grid.findData("list"))
+    panel.input_frequency_list.setText("100 abc")
+    panel.input_table_height.setText("60")
+
+    QTest.mouseClick(panel.btn_start, Qt.MouseButton.LeftButton)
+
+    assert received == []
+    assert "abc" in panel.lbl_status.text()
+
+
+def test_a_per_decade_grid_sends_its_density_and_no_list():
+    received = []
+    panel = _composed_panel(received)
+    panel.spin_points_per_decade.setValue(5)
+    panel.input_table_height.setText("60")
+
+    QTest.mouseClick(panel.btn_start, Qt.MouseButton.LeftButton)
+
+    (request,) = received
+    assert (request.points_per_decade, request.frequency_list_hz) == (5, None)
+
+
 def test_an_object_measurement_carries_the_chosen_object_and_its_lift_off():
     received = []
     panel = _composed_panel(received)

@@ -42,11 +42,11 @@ class TestFrequencySweepPresenter(unittest.TestCase):
 
     def test_start_forwards_the_panel_fields_as_a_request(self):
         self.presenter.on_start_requested({
-            "role": "background", "start_hz": 10.0, "stop_hz": 1000.0, "frequency_count": 5,
+            "role": "background", "start_hz": 10.0, "stop_hz": 1000.0, "points_per_decade": 5, "frequency_list_hz": None,
             "samples_per_frequency": 20, "table_height_mm": 42.5, "operator_name": "Luis", "operator_id": "op-1",
         })
         (request,) = self.service.requests
-        self.assertEqual((request.role, request.table_height_mm, request.frequency_count), ("background", 42.5, 5))
+        self.assertEqual((request.role, request.table_height_mm, request.points_per_decade), ("background", 42.5, 5))
         self.assertEqual(self.running, [True])
 
     def test_a_point_is_shown_as_amplitude_and_phase_per_axis(self):

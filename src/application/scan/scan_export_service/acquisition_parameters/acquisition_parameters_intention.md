@@ -301,8 +301,9 @@ exports :
   avertissement quand il n'y a pas d'objet par construction (`present: false`).
 - **Balayage en fréquence (1.3)** : activité `kind: "frequency_sweep"`, procédure
   `procedure.frequency_sweep` = `role` (`instrument_reference` : table en position basse, sans
-  objet ; `background` : table à la hauteur de travail, sans objet), `frequency_grid` (Hz,
-  `spacing: "logarithmic"`), `samples_per_frequency`, `settle_delay`, `frequency_timeout`,
+  objet ; `background` : table à la hauteur de travail, support de l'objet en place, sans objet),
+  `frequency_grid` (Hz ; `spacing: "logarithmic_per_decade"` avec `points_per_decade` — fréquences
+  10^(k/n) Hz entre les bornes —, ou `spacing: "operator_list"`), `samples_per_frequency`, `settle_delay`, `frequency_timeout`,
   `table_height` (mm, `source: "operator"` : lue par l'opérateur sur le panneau de commande de la
   table, non mesurée par le logiciel), `acquired_frequency_count`. La fréquence de l'AD9106 étant
   balayée, `components.signal_generation_chip.settings.frequency` et
