@@ -1,0 +1,124 @@
+........................................................................ [  4%]
+........................................................................ [  8%]
+.............................................................ss......... [ 12%]
+....................F.F.....F........................................... [ 16%]
+........................................................................ [ 21%]
+........................................................................ [ 25%]
+........................................................................ [ 29%]
+........................................................................ [ 33%]
+........................................................................ [ 37%]
+........................................................................ [ 42%]
+........................................................................ [ 46%]
+........................................................................ [ 50%]
+............s........................................................... [ 54%]
+........................................................................ [ 58%]
+........................................................................ [ 63%]
+........................................................................ [ 67%]
+........................................................................ [ 71%]
+........................................................................ [ 75%]
+............................................................................................. [ 81%]
+........................................................................................... [ 86%]
+........................................................................ [ 90%]
+........................................................................ [ 94%]
+........................................................................ [ 99%]
+..............                                                           [100%]
+=================================== FAILURES ===================================
+_ ScanExportWithPostProcessingIntegrationTest.test_scan_exports_both_formats_and_real_pipeline_fills_the_hdf5 _
+
+self = <scan_application_service._tests.scan_export_with_post_processing_integration_tests.scan_export_with_post_processing_i...ScanExportWithPostProcessingIntegrationTest testMethod=test_scan_exports_both_formats_and_real_pipeline_fills_the_hdf5>
+
+    def test_scan_exports_both_formats_and_real_pipeline_fills_the_hdf5(self):
+        config = Scan2DConfigDTO(
+            x_min=0, x_max=2, x_nb_points=3,
+            y_min=0, y_max=2, y_nb_points=3,
+            scan_pattern="RASTER",
+            stabilization_delay_ms=0,
+            averaging_per_position=1,
+            uncertainty_volts=1e-6,
+        )
+    
+        done = threading.Event()
+        self.event_bus.subscribe("scancompleted", lambda e: done.set())
+    
+        self.assertTrue(self.scan_service.execute_scan(config))
+>       self.assertTrue(done.wait(timeout=30.0), "Scan + post-processing did not complete in time")
+E       AssertionError: False is not true : Scan + post-processing did not complete in time
+
+src/application/services/scan_application_service/_tests/scan_export_with_post_processing_integration_tests/scan_export_with_post_processing_integration_test.py:126: AssertionError
+------------------------------ Captured log call -------------------------------
+WARNING  infrastructure.events.in_memory_event_bus:in_memory_event_bus.py:33 [InMemoryEventBus] No subscribers for event 'positionupdated' (said once; later ones at DEBUG)
+_ TestFlyScanOnTheFaithfulMotionStack.test_a_provisional_preview_is_published_during_the_sweep_and_counts_for_nothing _
+
+self = <scan_application_service._tests.scan_fly_execution_integration_test.TestFlyScanOnTheFaithfulMotionStack testMethod=test_a_provisional_preview_is_published_during_the_sweep_and_counts_for_nothing>
+
+    def test_a_provisional_preview_is_published_during_the_sweep_and_counts_for_nothing(self):
+        kinds = []
+        self.event_bus.subscribe("aefilinepreviewpointacquired", lambda e: kinds.append(("preview", e.line_index, e.index_in_line)))
+        self.event_bus.subscribe("aefilineacquired", lambda e: kinds.append(("commit", e.line_index, None)))
+        self.event_bus.subscribe("scanpointacquired", lambda e: kinds.append(("point", None, None)))
+        shown = []
+        port = _PreviewPort(shown, self.service)
+        self.service.set_output_port(port)
+    
+>       self._run(make_dto())
+
+src/application/services/scan_application_service/_tests/scan_fly_execution_integration_test.py:233: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/application/services/scan_application_service/_tests/scan_fly_execution_integration_test.py:99: in _run
+    self.assertTrue(done.wait(timeout=timeout), f"No {until} within timeout")
+E   AssertionError: False is not true : No scancompleted within timeout
+------------------------------ Captured log call -------------------------------
+WARNING  infrastructure.events.in_memory_event_bus:in_memory_event_bus.py:33 [InMemoryEventBus] No subscribers for event 'motorincrementsupdated' (said once; later ones at DEBUG)
+WARNING  infrastructure.events.in_memory_event_bus:in_memory_event_bus.py:33 [InMemoryEventBus] No subscribers for event 'aefivoltagereadingstarted' (said once; later ones at DEBUG)
+WARNING  infrastructure.events.in_memory_event_bus:in_memory_event_bus.py:33 [InMemoryEventBus] No subscribers for event 'aefivoltagereadingstopped' (said once; later ones at DEBUG)
+_ TestFlyScanOnTheFaithfulMotionStack.test_streams_are_released_once_without_unsubscribe_warnings _
+
+self = <scan_application_service._tests.scan_fly_execution_integration_test.TestFlyScanOnTheFaithfulMotionStack testMethod=test_streams_are_released_once_without_unsubscribe_warnings>
+
+    def test_streams_are_released_once_without_unsubscribe_warnings(self):
+        # Released before the last commit, then again by the loop's `finally`: the second call is a no-op.
+        messages = []
+        handler = logging.Handler(level=logging.WARNING)
+        handler.emit = lambda record: messages.append(record.getMessage())
+        logging.getLogger().addHandler(handler)
+        self.addCleanup(logging.getLogger().removeHandler, handler)
+    
+>       self._run(make_dto())
+
+src/application/services/scan_application_service/_tests/scan_fly_execution_integration_test.py:255: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/application/services/scan_application_service/_tests/scan_fly_execution_integration_test.py:99: in _run
+    self.assertTrue(done.wait(timeout=timeout), f"No {until} within timeout")
+E   AssertionError: False is not true : No scancompleted within timeout
+------------------------------ Captured log call -------------------------------
+WARNING  infrastructure.events.in_memory_event_bus:in_memory_event_bus.py:33 [InMemoryEventBus] No subscribers for event 'motorincrementsupdated' (said once; later ones at DEBUG)
+WARNING  infrastructure.events.in_memory_event_bus:in_memory_event_bus.py:33 [InMemoryEventBus] No subscribers for event 'positionupdated' (said once; later ones at DEBUG)
+WARNING  infrastructure.events.in_memory_event_bus:in_memory_event_bus.py:33 [InMemoryEventBus] No subscribers for event 'aefivoltagereadingstarted' (said once; later ones at DEBUG)
+WARNING  infrastructure.events.in_memory_event_bus:in_memory_event_bus.py:33 [InMemoryEventBus] No subscribers for event 'aefivoltagereadingstopped' (said once; later ones at DEBUG)
+=============================== warnings summary ===============================
+src/interface/widgets/panels/_tests/scan_visualization_panel_test.py::test_first_show_draws_and_lays_out_once
+src/interface/widgets/panels/_tests/scan_visualization_panel_test.py::test_data_received_while_hidden_is_drawn_at_show
+  /Users/luis/Library/CloudStorage/Dropbox/Luis/1 PROJETS/1 - THESE/EXPERIMENTAL/AEFI_Acquisition/src/interface/widgets/panels/scan_visualization_panel.py:540: RuntimeWarning: All-NaN slice encountered
+    vmin = np.nanmin(data)
+
+src/interface/widgets/panels/_tests/scan_visualization_panel_test.py::test_first_show_draws_and_lays_out_once
+src/interface/widgets/panels/_tests/scan_visualization_panel_test.py::test_data_received_while_hidden_is_drawn_at_show
+  /Users/luis/Library/CloudStorage/Dropbox/Luis/1 PROJETS/1 - THESE/EXPERIMENTAL/AEFI_Acquisition/src/interface/widgets/panels/scan_visualization_panel.py:541: RuntimeWarning: All-NaN slice encountered
+    vmax = np.nanmax(data)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED src/application/services/scan_application_service/_tests/scan_export_with_post_processing_integration_tests/scan_export_with_post_processing_integration_test.py::ScanExportWithPostProcessingIntegrationTest::test_scan_exports_both_formats_and_real_pipeline_fills_the_hdf5
+FAILED src/application/services/scan_application_service/_tests/scan_fly_execution_integration_test.py::TestFlyScanOnTheFaithfulMotionStack::test_a_provisional_preview_is_published_during_the_sweep_and_counts_for_nothing
+FAILED src/application/services/scan_application_service/_tests/scan_fly_execution_integration_test.py::TestFlyScanOnTheFaithfulMotionStack::test_streams_are_released_once_without_unsubscribe_warnings
+3 failed, 1704 passed, 3 skipped, 4 warnings, 248 subtests passed in 456.33s (0:07:36)
+This plugin does not support createPlatformOpenGLContext!
+This plugin does not support createPlatformOpenGLContext!
+This plugin does not support createPlatformOpenGLContext!
+This plugin does not support createPlatformOpenGLContext!
+This plugin does not support createPlatformOpenGLContext!
+This plugin does not support createPlatformOpenGLContext!
+This plugin does not support createPlatformOpenGLContext!
+This plugin does not support createPlatformOpenGLContext!
+This plugin does not support createPlatformOpenGLContext!
+This plugin does not support createPlatformOpenGLContext!

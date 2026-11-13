@@ -1,0 +1,45 @@
+ok   1. installation --dry-run (code 0)
+ok   1. le plan annonce [tool.mypy]
+ok   1. dry-run : rien écrit
+ok   2. installation (code 0)
+ok   2. pyproject.toml créé : identique à l'oracle (6 lignes)
+ok   2. pre-commit : étape typage non stricte
+ok   2. un commit pyproject.toml
+ok   3. seconde installation (code 0)
+ok   3. pre-commit déjà posé
+ok   3. configuration déjà présente
+ok   3. idempotence : aucun commit, pre-commit et pyproject.toml inchangés
+ok   4. verifier (code 1)
+ok   4. OK typage
+ok   5. mypy sur le petit cas : identique à l'oracle (6 lignes)
+ok   6. tri --typage-seul : code 0
+ok   6. tri : lecture seule
+ok   6. tri du petit cas : identique à l'oracle (32 lignes)
+ok   7. commit sans .py (code 0)
+ok   7. aucune sortie du typage
+ok   7. mypy non lancé
+ok   8. non strict : .py non annoté (code 0)
+ok   8. signalé
+ok   9. installation --typage strict (code 0)
+ok   9. pre-commit strict
+ok   9. strict : .py non annoté (code 1)
+ok   9. bloqué
+ok   9. HEAD inchangé
+ok   9. strict : .py annoté (code 0)
+ok   9. seconde installation sans --typage (code 0)
+ok   9. le mode strict se garde
+ok   10. [tool.mypy] existant (code 0)
+ok   10. section existante non écrasée
+ok   11. mypy absent (code 0)
+ok   11. dit mypy absent
+ok   11. donne la commande
+ok   11. rien installé
+ok   11. verifier (code 1)
+ok   11. KO typage
+ok   banc : installation (code 0)
+ok   banc : [tool.mypy] ajouté
+ok   banc : section ajoutée : identique à l'oracle (6 lignes)
+ok   banc : mypy : identique à l'oracle (47 lignes)
+ok   banc : tri code 0, lecture seule
+ok   banc : synthèse du tri : identique à l'oracle (1 lignes)
+44/44 vérifications passées

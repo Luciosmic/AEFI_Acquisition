@@ -1,0 +1,8 @@
+ok   creer-repo-dev (code 0)
+ok   le repo a son propre .git
+ok   fichiers commités dans le .git du repo (9 suivis)
+ok   repo propre après création (hors trace que finaliser commite)
+ok   la sortie annonce le mode dépôt imbriqué
+ok   dépôt parent inchangé (HEAD, index, status hors du repo créé)
+ok   git status du parent : seul le dossier neuf apparaît, non suivi
+7/7 vérifications passées

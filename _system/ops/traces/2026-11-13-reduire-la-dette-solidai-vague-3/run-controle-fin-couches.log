@@ -1,0 +1,4 @@
+verify errors 1039 hors untracked 1033 warnings 89
+mypy: 2943
+1709 passed, 3 skipped, 4 warnings, 248 subtests passed in 253.42s (0:04:13)
+FIN

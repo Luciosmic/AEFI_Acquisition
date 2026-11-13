@@ -1,0 +1,62 @@
+ok   deps : commentaires de fin de ligne et lignes commentées ignorés
+ok   packmind : une mention en prose n'est pas une trace
+ok   packmind : un renvoi vers .packmind/ reste une trace
+ok   packmind : le bloc Packmind du CLAUDE.md reste une trace
+démons du clone prêts (essai 1)
+ok   verifier avant migration (code 1)
+ok   verifier avant : KO profil
+ok   verifier avant : KO deps
+ok   verifier avant : KO packmind
+ok   verifier avant : KO garde
+ok   migrer --dry-run (code 0)
+ok   dry-run annonce le retrait de Packmind
+ok   migrer --dry-run : rien écrit
+ok   migrer (code 0)
+ok   solidai.yaml identique à l'oracle
+ok   profil-actif identique à l'oracle
+ok   .arsumbris/repo.yaml identique à l'oracle
+ok   git ls-tree hors _system/ops/ identique à l'oracle
+ok   src/ intact
+ok   4 commits, un par opération
+ok   clone propre après migration
+ok   installer-garde --dry-run (code 0)
+ok   installer-garde --dry-run : rien posé
+ok   installer-garde (code 0)
+ok   pre-commit non strict posé
+ok   pre-commit exécutable, sans --strict
+ok   hook PostToolUse posé
+ok   seconde pose de la garde (code 0)
+ok   seconde pose : pre-commit déjà posé
+ok   seconde pose : hook déjà présent
+ok   seconde pose : rien ne change
+ok   commit sans .py, à travers le pre-commit (code 0)
+ok   commit d'un .py fautif : signalé, pas bloqué (code 0)
+ok   le .py fautif est signalé au commit
+ok   hook PostToolUse sur le .py fautif (code 2)
+ok   le hook nomme l'erreur à l'agent
+ok   verifier après migration (code 0)
+ok   verifier après : OK demons
+ok   verifier après : OK sous-agent
+ok   verifier après : OK profil
+ok   verifier après : OK deps
+ok   verifier après : OK packmind
+ok   verifier après : OK garde
+ok   seconde migration (code 0)
+ok   seconde migration : aucun commit
+ok   profil existant différent, sans --profil (code 2)
+ok   profil existant différent : rien écrit
+ok   repo sale (code 1)
+ok   repo sale : rien écrit
+ok   standard Packmind sans foyer (code 2)
+ok   le standard sans foyer est nommé
+ok   standard sans foyer : rien écrit
+ok   profil non conforme (code 2)
+ok   l'inject manquant est nommé
+ok   profil non conforme : rien écrit
+ok   installer-garde --dry-run, core.hooksPath mort (code 0)
+ok   le core.hooksPath mort est nommé
+ok   pre-commit étranger (code 2)
+ok   pre-commit étranger intact
+ok   pre-commit étranger : rien écrit
+59/59 vérifications passées
+démons du clone arrêtés

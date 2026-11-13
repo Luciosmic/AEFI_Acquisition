@@ -1,0 +1,52 @@
+démon du moteur du clone prêt (essai 1)
+oracle : 11 pas
+ok   pas 0 : lecture seule (git status inchangé, aucun cache)
+ok   pas 0 : code 0
+ok   pas 0 : verdict VERT et résumé identiques à l'oracle
+ok   pas 1 : lecture seule (git status inchangé, aucun cache)
+ok   pas 1 : code 0
+ok   pas 1 : verdict VERT et résumé identiques à l'oracle
+ok   pas 2 : lecture seule (git status inchangé, aucun cache)
+ok   pas 2 : code 1
+ok   pas 2 : verdict ROUGE-ATTENDU et résumé identiques à l'oracle
+ok   pas 3 : lecture seule (git status inchangé, aucun cache)
+ok   pas 3 : code 0
+ok   pas 3 : verdict VERT et résumé identiques à l'oracle
+ok   pas 4 : lecture seule (git status inchangé, aucun cache)
+ok   pas 4 : code 0
+ok   pas 4 : verdict VERT et résumé identiques à l'oracle
+ok   pas 5 : lecture seule (git status inchangé, aucun cache)
+ok   pas 5 : code 3
+ok   pas 5 : verdict VERT-AVEC-DETTE et résumé identiques à l'oracle
+ok   pas 6 : lecture seule (git status inchangé, aucun cache)
+ok   pas 6 : code 2
+ok   pas 6 : verdict CASSE et résumé identiques à l'oracle
+ok   pas 7 : lecture seule (git status inchangé, aucun cache)
+ok   pas 7 : code 0
+ok   pas 7 : verdict VERT et résumé identiques à l'oracle
+ok   pas 8 : lecture seule (git status inchangé, aucun cache)
+ok   pas 8 : code 3
+ok   pas 8 : verdict VERT-AVEC-DETTE et résumé identiques à l'oracle
+ok   pas 9 : lecture seule (git status inchangé, aucun cache)
+ok   pas 9 : code 3
+ok   pas 9 : verdict VERT-AVEC-DETTE et résumé identiques à l'oracle
+ok   pas 10 : lecture seule (git status inchangé, aucun cache)
+ok   pas 10 : code 4
+ok   pas 10 : verdict HORS-PORTEE et résumé identiques à l'oracle
+
+pas  attendu          obtenu           code attendu/obtenu
+0    VERT             VERT             0/0
+1    VERT             VERT             0/0
+2    ROUGE-ATTENDU    ROUGE-ATTENDU    1/1
+3    VERT             VERT             0/0
+4    VERT             VERT             0/0
+5    VERT-AVEC-DETTE  VERT-AVEC-DETTE  3/3
+6    CASSE            CASSE            2/2
+7    VERT             VERT             0/0
+8    VERT-AVEC-DETTE  VERT-AVEC-DETTE  3/3
+9    VERT-AVEC-DETTE  VERT-AVEC-DETTE  3/3
+10   HORS-PORTEE      HORS-PORTEE      4/4
+
+ok   clone propre après le dernier pas
+34/34 vérifications passées
+démons du clone arrêtés
