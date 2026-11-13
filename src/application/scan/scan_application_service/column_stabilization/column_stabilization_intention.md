@@ -21,7 +21,7 @@ L'accéléromètre de la carte LSM9DS1 est fragile (trois pannes, une soudure l�
 
 ## Design
 
-- Le scan ne démarre pas l'accéléromètre : connexion et acquisition restent des actions de l'opérateur, dans le panneau du capteur inertiel (pas d'automatisme caché). Acquisition arrêtée = délai fixe, et le journal le dit.
+- Le scan ne démarre pas l'accéléromètre : l'application l'ouvre et lance son flux à son démarrage, le panneau du capteur inertiel le montre et l'opérateur peut l'arrêter. Acquisition arrêtée = délai fixe, et le journal le dit.
 - Le repli se décide point par point : un capteur qui revient en cours de scan sert de nouveau.
 - Horloge et attente injectées (`clock`, `sleep`) pour tester sans attendre ; l'horloge doit être celle des `timestamp_s` des échantillons (`perf_counter` à la réception).
 - Chaque attente rend un `StabilizationOutcome` (accéléromètre, délai fixe, délai maximal dépassé, scan interrompu) et se journalise avec l'identifiant du scan.

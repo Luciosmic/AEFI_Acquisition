@@ -27,6 +27,9 @@ panneau Qt, rien de plus.
   (grandeur de diagnostic) sont produits ici.
 - Le widget ne reçoit jamais de type `domain/` : uniquement des booléens, des
   chaînes et le view model gelé.
-- Aucune automatisation cachée : connexion et démarrage sont déclenchés par
-  l'opérateur ; le presenter ne reconnecte ni ne redémarre jamais.
+- Une seule action automatique visible : `open_at_startup`, appelée une fois
+  le démarrage matériel réussi, enchaîne connexion et démarrage par le chemin
+  des boutons, pour que les scans jugent la colonne sur l'accéléromètre. Carte
+  absente : l'erreur reste dans le panneau, les scans prennent le délai fixe.
+  Ensuite, le presenter ne reconnecte ni ne redémarre jamais.
 - Le timer d'affichage ne tourne que pendant une acquisition.

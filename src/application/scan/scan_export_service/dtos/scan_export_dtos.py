@@ -10,11 +10,17 @@ from typing import Optional
 
 @dataclass(frozen=True)
 class ExportConfigDTO:
-    """Configuration for data export. Every scan is exported to both CSV and HDF5."""
+    """Configuration for data export. Every scan is exported to both CSV and HDF5.
+
+    The exported names come from the measured object and the lift-off
+    (see acquisition_name), never from free text.
+    """
     enabled: bool
     output_directory: str
-    filename_base: str
     include_metadata: bool = True
+    # Free text typed by the operator, written in acquisition-parameters.json
+    # (provenance.activity.operator_comment) — never in a file name.
+    comment: str = ""
     # Written in acquisition-parameters.json (feature_of_interest.description,
     # provenance.operator {id, name}) — empty = declared missing, never guessed.
     # The operator comes from the operators registry (OperatorService).

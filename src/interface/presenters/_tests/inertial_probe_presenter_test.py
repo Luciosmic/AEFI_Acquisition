@@ -178,3 +178,21 @@ def test_late_connection_event_after_shutdown_is_ignored():
     rig.presenter.shutdown()
     rig.bus.publish("inertialprobeconnectionchanged", InertialProbeConnectionChanged(connected=True))
     assert rig.connections == []
+
+
+def test_open_at_startup_connects_and_starts_like_the_panel_buttons():
+    rig = Rig()
+    rig.presenter.open_at_startup()
+    assert rig.port.is_connected()
+    assert rig.service.is_acquisition_running()
+    assert rig.connections == [(True, "Connecté")]
+    assert rig.started == [True]
+    assert rig.presenter.is_display_timer_active
+
+
+def test_open_at_startup_without_board_leaves_the_error_and_does_not_start():
+    rig = Rig(port=FakeInertialProbeStreamAdapter(simulate_connection_failure=True))
+    rig.presenter.open_at_startup()
+    assert rig.connections[-1][0] is False
+    assert not rig.service.is_acquisition_running()
+    assert rig.started == []

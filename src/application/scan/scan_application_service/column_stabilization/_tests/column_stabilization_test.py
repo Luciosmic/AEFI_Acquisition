@@ -61,21 +61,25 @@ def _never():
 def test_rest_level_measured_over_ten_seconds_before_the_first_move() -> None:
     stabilization, bench = _setup()
     start = bench.now
-    rest = stabilization.measure_rest("scan-1", _never)
+    measurement = stabilization.measure_rest("scan-1", _never)
+    rest = measurement.vibration_g
     assert rest == pytest.approx(REST_G, rel=1e-3)
+    assert measurement.sample_count == 251 and measurement.unavailable_reason is None  # 10 s at 25 Hz, both ends
     assert bench.now - start == pytest.approx(10.0)
 
 
 def test_no_rest_level_when_the_accelerometer_is_not_streaming():
     stabilization, bench = _setup(silent=lambda t: True)
     start = bench.now
-    assert stabilization.measure_rest("scan-1", _never) is None
+    measurement = stabilization.measure_rest("scan-1", _never)
+    assert measurement.vibration_g is None
+    assert measurement.unavailable_reason == "accéléromètre non en acquisition au démarrage du scan"
     assert bench.now == start  # no 10 s wait for nothing
 
 
 def test_no_rest_level_when_the_accelerometer_falls_silent_during_the_measurement():
     stabilization, _ = _setup(silent=lambda t: t > 2.1)
-    assert stabilization.measure_rest("scan-1", _never) is None
+    assert stabilization.measure_rest("scan-1", _never).vibration_g is None
 
 
 def test_waits_until_the_column_is_back_at_rest_after_the_move():
@@ -83,7 +87,7 @@ def test_waits_until_the_column_is_back_at_rest_after_the_move():
     # 20× the rest amplitude right after the stop, decaying with τ = 1 s: back under 1.5× at ~3 s.
     stabilization, bench = _setup(amplitude=lambda t: REST_G * (1 + 19 * math.exp(-(t - stop))) if t >= stop
                                   else REST_G)
-    rest = stabilization.measure_rest("scan-1", _never)
+    rest = stabilization.measure_rest("scan-1", _never).vibration_g
     bench.sleep(stop - bench.now)
     outcome = stabilization.wait_until_settled("scan-1", "point 0", rest, bench.now, 0.3, _never)
     assert outcome.method == ACCELEROMETER
@@ -93,7 +97,7 @@ def test_waits_until_the_column_is_back_at_rest_after_the_move():
 
 def test_never_shorter_than_the_fixed_delay_nor_than_one_window() -> None:
     stabilization, bench = _setup()
-    rest = stabilization.measure_rest("scan-1", _never)
+    rest = stabilization.measure_rest("scan-1", _never).vibration_g
     stop = bench.now
     assert stabilization.wait_until_settled("s", "p", rest, stop, 0.3, _never).waited_s == pytest.approx(1.0)
     stop = bench.now
@@ -102,7 +106,7 @@ def test_never_shorter_than_the_fixed_delay_nor_than_one_window() -> None:
 
 def test_measures_anyway_past_the_timeout():
     stabilization, bench = _setup(amplitude=lambda t: REST_G if t < 12.0 else 10 * REST_G)
-    rest = stabilization.measure_rest("scan-1", _never)
+    rest = stabilization.measure_rest("scan-1", _never).vibration_g
     bench.sleep(12.0 - bench.now)
     outcome = stabilization.wait_until_settled("scan-1", "point 0", rest, bench.now, 0.3, _never)
     assert outcome.method == TIMEOUT
@@ -121,7 +125,7 @@ def test_falls_back_to_the_fixed_delay_when_the_accelerometer_falls_silent_mid_s
     # Vibrating and then silent after the stop: without the fallback it would wait the 30 s timeout.
     stabilization, bench = _setup(amplitude=lambda t: REST_G if t < 12.0 else 10 * REST_G,
                                   silent=lambda t: t >= 12.0)
-    rest = stabilization.measure_rest("scan-1", _never)
+    rest = stabilization.measure_rest("scan-1", _never).vibration_g
     bench.sleep(12.0 - bench.now)
     outcome = stabilization.wait_until_settled("scan-1", "point 0", rest, bench.now, 0.3, _never)
     assert outcome.method == FIXED_DELAY
@@ -130,7 +134,7 @@ def test_falls_back_to_the_fixed_delay_when_the_accelerometer_falls_silent_mid_s
 
 def test_a_cancelled_scan_stops_waiting():
     stabilization, bench = _setup(amplitude=lambda t: REST_G if t < 12.0 else 10 * REST_G)
-    rest = stabilization.measure_rest("scan-1", _never)
+    rest = stabilization.measure_rest("scan-1", _never).vibration_g
     bench.sleep(12.0 - bench.now)
     stop = bench.now
     outcome = stabilization.wait_until_settled("scan-1", "point 0", rest, stop, 0.3, lambda: bench.now > stop + 2.0)
@@ -142,7 +146,7 @@ def test_samples_without_accelerometer_channel_are_ignored_and_close_unsubscribe
     bus = InMemoryEventBus()
     stabilization = ColumnStabilization(bus, clock=lambda: 0.5)
     bus.publish(INERTIAL_PROBE_SAMPLE_TOPIC, SimpleNamespace(timestamp_s=0.4, acceleration_g=None))
-    assert stabilization.measure_rest("scan-1", _never) is None
+    assert stabilization.measure_rest("scan-1", _never).vibration_g is None
     stabilization.close()
     bus.publish(INERTIAL_PROBE_SAMPLE_TOPIC, SimpleNamespace(timestamp_s=0.45, acceleration_g=(0, 0, 1)))
-    assert stabilization.measure_rest("scan-1", _never) is None
+    assert stabilization.measure_rest("scan-1", _never).vibration_g is None

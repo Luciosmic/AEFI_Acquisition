@@ -15,10 +15,11 @@ import os
 import csv
 import json
 import logging
+import threading
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Any, Optional, List, TextIO
+from typing import Dict, Any, Optional, List, Sequence, TextIO, Tuple
 
 from dataclasses import replace
 
@@ -77,6 +78,10 @@ class CsvScanExportPort(IScanExportPort):
     _scan_name: Optional[str] = field(init=False, default=None)
     _log_handler: Optional[logging.FileHandler] = field(init=False, default=None)
     _events_file: Optional[TextIO] = field(init=False, default=None)
+    # Sidecar tables (`<timestamp>_<kind>_<name>_<tag>.csv`), fed from other threads
+    # (the accelerometer stream): opened, written and closed under one lock.
+    _sidecars: Dict[str, Tuple[TextIO, csv.DictWriter]] = field(init=False, default_factory=dict)
+    _sidecar_lock: threading.Lock = field(init=False, default_factory=threading.Lock)
 
     def configure(
         self, directory: str, filename: str, metadata: Dict[str, Any], timestamp: Optional[str] = None,
@@ -87,7 +92,8 @@ class CsvScanExportPort(IScanExportPort):
 
         - `directory`: if absolute, used as-is; if relative or empty, it is
           resolved under `base_output_dir`.
-        - `filename`: scan name (without date/time, device tag, or extension).
+        - `filename`: acquisition name, `<measured object>_liftoff-<value>mm`
+          (without date/time, kind, device tag, or extension; see acquisition_name).
         - `metadata`: currently unused here but kept for API symmetry and
           potential future use (e.g. writing a sidecar JSON file).
         - `timestamp`: reuse a caller-supplied stamp instead of generating
@@ -110,8 +116,9 @@ class CsvScanExportPort(IScanExportPort):
             dir_path = self.base_output_dir
 
         timestamp = timestamp or datetime.now().strftime("%Y-%m-%d_%H%M%S")
+        # "." kept for a decimal lift-off in the name (liftoff-2.5mm).
         safe_base = "".join(
-            c for c in filename if c.isalnum() or c in ("-", "_")
+            c for c in filename if c.isalnum() or c in ("-", "_", ".")
         )
 
         # `_scan_name` carries the kind tag so every per-file name below reads
@@ -290,6 +297,40 @@ class CsvScanExportPort(IScanExportPort):
         self._events_file.write(line + "\n")
         self._events_file.flush()
 
+    def open_sidecar(self, tag: str, columns: Sequence[str]) -> None:
+        """Open `<timestamp>_<kind>_<name>_<tag>.csv` in the acquisition folder, header
+        written now. Idempotent per tag; closed by stop()."""
+        if self._dir_path is None or self._timestamp is None:
+            raise RuntimeError("CsvScanExportPort.configure() must be called before open_sidecar().")
+        with self._sidecar_lock:
+            if tag in self._sidecars:
+                return
+            path = self._dir_path / f"{self._timestamp}_{self._scan_name}_{tag}.csv"
+            handle = path.open(mode="w", newline="", encoding="utf-8")
+            writer = csv.DictWriter(handle, fieldnames=list(columns))
+            writer.writeheader()
+            self._sidecars[tag] = (handle, writer)
+        logger.info("Sidecar export opened: %s", path)
+
+    def write_sidecar_row(self, tag: str, row: Dict[str, Any]) -> bool:
+        """Append one row to an open sidecar table. False (row dropped) once it is
+        closed: a sample from another thread may land right after stop()."""
+        with self._sidecar_lock:
+            opened = self._sidecars.get(tag)
+            if opened is None:
+                return False
+            opened[1].writerow(row)
+            return True
+
+    def _close_sidecars(self) -> None:
+        with self._sidecar_lock:
+            sidecars, self._sidecars = self._sidecars, {}
+        for handle, _ in sidecars.values():
+            try:
+                handle.flush()
+            finally:
+                handle.close()
+
     def get_output_path(self) -> Optional[Path]:
         """Path to the main `_aefi.csv` file, once configured."""
         return self._configured_path
@@ -324,6 +365,8 @@ class CsvScanExportPort(IScanExportPort):
         if self._events_file is not None:
             self._events_file.close()
             self._events_file = None
+
+        self._close_sidecars()
 
         # Closed last so the file releases its Windows lock before
         # ScanExportService may rmtree an empty acquisition folder.

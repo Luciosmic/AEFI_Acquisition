@@ -220,7 +220,7 @@ class TestScanExportServiceMetadata(unittest.TestCase):
             position_increments_port=self.increments_port,
         )
         self.service.configure_export(
-            ExportConfigDTO(enabled=True, output_directory="", filename_base="scan")
+            ExportConfigDTO(enabled=True, output_directory="")
         )
 
     def test_a_step_scan_point_carries_its_commanded_and_its_read_increments(self) -> None:
@@ -288,7 +288,7 @@ class TestScanExportServiceMetadata(unittest.TestCase):
 
     def test_measured_object_and_operator_typed_at_start_are_recorded(self) -> None:
         self.service.configure_export(ExportConfigDTO(
-            enabled=True, output_directory="", filename_base="scan",
+            enabled=True, output_directory="",
             measured_object="  bouteille d'eau, 8 mm  ", operator_id="id-luis", operator="Luis",
         ))
         self.event_bus.publish("scanstarted", _make_scan_started_event())
@@ -298,6 +298,33 @@ class TestScanExportServiceMetadata(unittest.TestCase):
             (activity.measured_object, activity.operator_id, activity.operator),
             ("bouteille d'eau, 8 mm", "id-luis", "Luis"),
         )
+
+    def test_both_files_are_named_after_the_measured_object_and_the_lift_off(self) -> None:
+        self.service.configure_export(ExportConfigDTO(
+            enabled=True, output_directory="", measured_object="hexagone metallique", lift_off_mm=15.0,
+            comment="scan de fond",
+        ))
+        self.event_bus.publish("scanstarted", _make_scan_started_event())
+
+        for port in (self.export_port, self.hdf5_export_port):
+            self.assertEqual(port.configured["filename"], "hexagone-metallique_liftoff-15mm")
+            self.assertEqual(port.configured["acquisition_kind"], "stepScan")
+
+    def test_the_comment_goes_to_the_parameters_never_to_the_name(self) -> None:
+        self.service.configure_export(ExportConfigDTO(
+            enabled=True, output_directory="", measured_object="plaque", lift_off_mm=2.5,
+            comment="  sonde déplacée de 2 mm  ",
+        ))
+        self.event_bus.publish("scanstarted", _make_scan_started_event())
+
+        self.assertEqual(self.export_port.parameters[0].activity.comment, "sonde déplacée de 2 mm")
+        self.assertEqual(self.export_port.configured["filename"], "plaque_liftoff-2.5mm")
+
+    def test_a_scan_without_object_nor_lift_off_says_so_in_its_name_and_has_no_comment(self) -> None:
+        self.event_bus.publish("scanstarted", _make_scan_started_event())  # setUp config: fields left empty
+
+        self.assertEqual(self.export_port.configured["filename"], "objet-non-saisi_liftoff-non-saisi")
+        self.assertIsNone(self.export_port.parameters[0].activity.comment)
 
     def test_blank_measured_object_is_not_described(self) -> None:
         self.event_bus.publish("scanstarted", _make_scan_started_event())  # setUp config: fields left empty
@@ -509,7 +536,7 @@ class TestTimeSeriesExport(unittest.TestCase):
 
     def _arm(self) -> None:
         self.service.configure_time_series_export(
-            ExportConfigDTO(enabled=True, output_directory="", filename_base="drift")
+            ExportConfigDTO(enabled=True, output_directory="")
         )
 
     def test_armed_reading_is_exported_as_time_series_csv(self) -> None:
@@ -524,6 +551,15 @@ class TestTimeSeriesExport(unittest.TestCase):
         self.assertEqual((final.status, final.records_written), ("completed", 3))
         self.assertTrue(self.export_port.stopped)
         self.assertFalse(self.hdf5_export_port.started)
+
+    def test_time_series_is_named_like_a_scan_and_keeps_its_comment(self) -> None:
+        self.service.configure_time_series_export(ExportConfigDTO(
+            enabled=True, output_directory="", measured_object="plaque", lift_off_mm=8.0, comment="référence",
+        ))
+        _publish_reading(self.event_bus, n_samples=1)
+
+        self.assertEqual(self.export_port.configured["filename"], "plaque_liftoff-8mm")
+        self.assertEqual(self.export_port.parameters[0].activity.comment, "référence")
 
     def test_unarmed_reading_is_not_exported(self) -> None:
         # Scans start the continuous ADC worker too — never export those.
@@ -555,7 +591,7 @@ class TestScanExportServiceEventRecordingRace(unittest.TestCase):
             excitation_service=ExcitationConfigurationService(MockExcitationPort(), bus),
             task_runner=FakeThreadPoolTaskRunner(),
         )
-        service.configure_export(ExportConfigDTO(enabled=True, output_directory="", filename_base="scan"))
+        service.configure_export(ExportConfigDTO(enabled=True, output_directory=""))
 
         started = _make_scan_started_event()
         bus.publish("scanstarted", started)
@@ -593,7 +629,7 @@ class TestScanExportServiceZeroPointCleanup(unittest.TestCase):
             excitation_service=excitation_service,
         )
         self.service.configure_export(
-            ExportConfigDTO(enabled=True, output_directory="", filename_base="scan")
+            ExportConfigDTO(enabled=True, output_directory="")
         )
 
     def tearDown(self) -> None:

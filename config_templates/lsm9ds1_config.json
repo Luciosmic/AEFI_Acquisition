@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "description": "Connection and stream parameters of the LSM9DS1 inertial sensor board (accelerometer, gyroscope, magnetometer) read through a microcontroller serial board that also carries a lidar. Units follow UCUM (https://ucum.org). Connection and stream start are manual from the panel, never at app startup.",
+  "description": "Connection and stream parameters of the LSM9DS1 inertial sensor board (accelerometer, gyroscope, magnetometer) read through a microcontroller serial board that also carries a lidar. Units follow UCUM (https://ucum.org). Opened and streamed once the app startup succeeded, for the column stabilization of the scans; the panel keeps manual connect/start/stop.",
   "subject": {
     "id": "lsm9ds1_board",
     "description": "Serial board (unknown firmware) exposing a LSM9DS1 inertial sensor and a lidar; protocol observed, not documented by the manufacturer"

@@ -34,6 +34,7 @@ UCUM_UNITS = frozenset({
     "{sample}", "{sample}/s", "{conversion}/s", "{step}",
     "{DDS_gain_code}", "{DDS_offset_code}", "{DDS_constant_code}",
     "V/(V/m)", "V/V", "V/{sqrt_Hz}", "{DDS_gain_code}/V", "V/{LSB}", "V{RMS}", "um/{step}", "mm/s", "mm/s2",
+    "[g]",  # 1.3: accelerometer (column stabilization)
 })
 # Component catalog display units (HardwareComponentKind) -> UCUM.
 _UCUM_BY_CATALOG_UNIT = {
@@ -111,6 +112,7 @@ def provenance(
     warn: Warn,
     operator_name: Optional[str] = None,
     operator_id: Optional[str] = None,
+    operator_comment: Optional[str] = None,
 ) -> Dict[str, Any]:
     if ended_at is None:
         warn(
@@ -139,6 +141,8 @@ def provenance(
             "status": status,
             "failure_reason": failure_reason,
             "exclusive_control": {"owner": owner, "held": list(held_controls)},
+            # 1.3: free text typed by the operator at start; null = no comment (not a warning).
+            "operator_comment": operator_comment or None,
         },
         "software": {
             "name": software.name,

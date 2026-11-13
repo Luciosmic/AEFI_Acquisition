@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
 from interface.widgets.operator_selector.operator_selector import OperatorSelector
 from interface.widgets.measured_object_selector.measured_object_selector import MeasuredObjectSelector
 from interface.widgets.lift_off_input.lift_off_input import LIFT_OFF_LABEL, LIFT_OFF_TOOLTIP, LiftOffInput
+from interface.widgets.export_comment_input.export_comment_input import ExportCommentInput
 from PySide6.QtCore import Qt, Signal
 import pyqtgraph as pg  # type: ignore[import]
 
@@ -108,16 +109,14 @@ class AefiContinuousReadingPanel(QWidget):
 
         # Export vs time (CSV) — armed on Start, closed on Stop
         self.chk_export = QCheckBox("Export CSV")
-        self.input_export_filename = QLineEdit("continuous")
-        self.input_export_filename.setFixedWidth(90)
-        self.input_export_filename.setToolTip("Written to ~/Desktop/AEFI_Acquisition_Exports/<date>_timeSeries_<name>/")
+        self.chk_export.setToolTip(
+            "Écrit dans ~/Desktop/AEFI_Acquisition_Exports/<date>_timeSeries_<objet>_liftoff-<valeur>mm/"
+        )
 
         l_ctrl.addWidget(self.btn_start, 0, 0)
         l_ctrl.addWidget(self.btn_stop, 0, 1)
         l_ctrl.addWidget(self.lbl_status, 0, 2)
         l_ctrl.addWidget(self.chk_export, 1, 0)
-        l_ctrl.addWidget(QLabel("Filename base:"), 1, 1)
-        l_ctrl.addWidget(self.input_export_filename, 1, 2)
 
         # Traceability, written in acquisition-parameters.json; empty = flagged
         # as missing in the document. Kept for the session, never saved.
@@ -131,6 +130,9 @@ class AefiContinuousReadingPanel(QWidget):
         l_ctrl.addWidget(self.operator_selector, 2, 2)
         l_ctrl.addWidget(lbl_lift_off, 3, 1)
         l_ctrl.addWidget(self.input_lift_off, 3, 2)
+        # Written in acquisition-parameters.json, never in the file names. Kept for the session.
+        self.input_comment = ExportCommentInput(placeholder="Commentaire")
+        l_ctrl.addWidget(self.input_comment, 4, 0, 1, 3)
         controls_layout.addWidget(grp_ctrl)
 
         # 2. Display: scale + Y mode, fixed calibre underneath (Oscillo only)
@@ -314,7 +316,7 @@ class AefiContinuousReadingPanel(QWidget):
         params = {
             "max_duration_s": None,  # Infinite duration
             "export_enabled": self.chk_export.isChecked(),
-            "export_filename_base": self.input_export_filename.text(),
+            "export_comment": self.input_comment.comment(),
             "measured_object": measured_object.name if measured_object else "",
             "measured_object_id": measured_object.measured_object_id if measured_object else "",
             "lift_off_mm": self.input_lift_off.lift_off_mm(),

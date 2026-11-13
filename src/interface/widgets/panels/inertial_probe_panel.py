@@ -2,8 +2,9 @@
 Inertial Probe Panel
 
 Live values of the inertial probe (accelerometer, gyroscope, magnetometer)
-and of the lidar that travels in the same stream. Connection and start are
-operator actions, never tied to application startup.
+and of the lidar that travels in the same stream. The board is opened and
+streamed once at application startup (for the scans' column stabilization);
+the buttons stay the operator's actions afterwards.
 
 The widget never imports domain/ types: it receives booleans, strings and the
 frozen InertialProbeReadingViewModel.

@@ -225,7 +225,7 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
             "motion": "real",
             "aefi_device": "real",   # whole MCU stack (ADS131A04 acquisition + AD9106 excitation + lifecycle + continuous)
             "electric_field_probe": "real",  # picks the adapter only, connection is manual (cf. panel)
-            "inertial_probe": "real",  # LSM9DS1 board: picks the adapter only, connection is manual (cf. panel)
+            "inertial_probe": "real",  # LSM9DS1 board: opened and streamed once the startup succeeded (column stabilization)
             "oscilloscope": "real",  # DSO-X 2014A on DRDY, opened only during an ODR measurement
         }
     NARDA_COM_PORT = "COM8"  # cf. config_templates/electric_field_probe_config.json
@@ -289,9 +289,10 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
     )
     logger.info("Services -> ElectricFieldProbeService created")
 
-    # Inertial Probe Service (LSM9DS1 board). Connection and stream start are
-    # operator actions; the only automatic action is the safety stream stop at
-    # application exit — the board keeps its stream active with the port closed.
+    # Inertial Probe Service (LSM9DS1 board). Opened and streamed once the hardware
+    # startup succeeded (see on_startup_finished), for the column stabilization of the
+    # scans; the panel shows the result and keeps the operator's buttons. Safety stream
+    # stop at application exit — the board keeps its stream active with the port closed.
     inertial_probe_service = InertialProbeService(
         executor=InertialProbeAcquisitionExecutor(event_bus),
         stream_port=hw.inertial_probe_port,
@@ -428,8 +429,8 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
         auxiliary_probes=[narda_channel],
         excitation_service=excitation_service,
         conversion_status=motion_conversion_handler,
-        # Settles on the accelerometer when the operator streams it (inertial probe panel),
-        # fixed stabilization delay otherwise.
+        # Settles on the accelerometer (streamed from startup, inertial probe panel),
+        # fixed stabilization delay when it does not stream.
         column_stabilization=ColumnStabilization(event_bus),
     )
     logger.info("Services -> ScanApplicationService created (auxiliary_probes=1, column stabilization on the accelerometer)")
@@ -720,6 +721,9 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
         if success:
             logger.info("Hardware initialization successful.")
             motion_presenter.on_speed_mode_requested(dashboard.panels["motion"].get_current_speed_mode())
+            # Accelerometer opened and streamed for the column stabilization of the scans;
+            # a missing board leaves the error in its panel and the scans on the fixed delay.
+            inertial_probe_presenter.open_at_startup()
             startup_view.close()
 
             print("\n--- Launching Dashboard ---")

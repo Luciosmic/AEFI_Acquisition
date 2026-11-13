@@ -30,9 +30,11 @@ par une exception dans le thread de l'interface.
 
 ## Design
 
-- **Connexion et démarrage restent des actions de l'opérateur** : aucune
-  automatisation cachée (pas de reconnexion ni de redémarrage automatique).
-  Seul l'arrêt de sécurité à la fermeture est automatique.
+- **Connexion et démarrage sont des actions demandées de l'extérieur** : le
+  bouton du panneau, ou une fois au démarrage de l'application (pour la
+  stabilisation de la colonne des scans), par le même chemin. Aucune
+  reconnexion ni aucun redémarrage automatique ; l'arrêt de sécurité à la
+  fermeture est automatique.
 - Le capteur n'est pas une étape du démarrage matériel bloquant (une carte
   débranchée ne doit pas empêcher l'application de démarrer).
 - Aucune calibration au repos appliquée : valeurs brutes converties
