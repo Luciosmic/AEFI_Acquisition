@@ -16,7 +16,8 @@ mesures.
   dette (« canal provisoire : concept distinct à venir » pour le lidar).
 - Afficher la cadence mesurée et le nombre d'échantillons.
 - Émettre les demandes de l'opérateur : connecter, déconnecter, démarrer,
-  arrêter. Connexion et démarrage ne sont jamais déclenchés automatiquement.
+  arrêter. Au démarrage de l'application, la carte est ouverte et son flux
+  démarré une fois, par ces mêmes demandes : le panneau en montre le résultat.
 - Indiquer l'état (non connecté, connecté, acquisition en cours, flux en
   échec avec sa raison).
 

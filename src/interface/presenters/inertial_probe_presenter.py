@@ -4,6 +4,8 @@ Inertial Probe Presenter
 Bridges InertialProbeService and InertialProbePanel.
 
 - Operator actions (@Slot) forward to the service; no domain logic here.
+- open_at_startup runs the operator's connect then start once the hardware
+  startup succeeded: the scans settle the column on the accelerometer.
 - Domain events arrive from a worker thread at the stream rate (25 Hz): the
   handler only keeps the latest sample; a QTimer of the Qt thread emits a
   ready-to-display view model at ~10 Hz.
@@ -109,6 +111,17 @@ class InertialProbePresenter(QObject):
             self._acquiring = True
             self._timer.start()
             self.acquisition_started.emit()
+
+    @Slot()
+    def open_at_startup(self) -> None:
+        """Connect and start the stream at application startup, through the same
+        path as the panel buttons, so the panel shows the result: the scans
+        settle the column on this accelerometer (fixed delay when it is absent)."""
+        logger.info("InertialProbePresenter: open at startup (column stabilization of the scans)")
+        self.on_connect_requested()
+        self.on_start_requested()  # refused by the service when the board did not open
+        if not self._service.is_acquisition_running():
+            logger.warning("InertialProbePresenter: accelerometer not streaming after startup; scans will use the fixed delay.")
 
     @Slot()
     def on_stop_requested(self) -> None:

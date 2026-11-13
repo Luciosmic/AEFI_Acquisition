@@ -15,8 +15,9 @@ Rationale:
   port. Same pattern as ElectricFieldProbeService.
 
 Design:
-- Connection and start are operator actions: no automatic reconnection or
-  restart (visible state, user-triggered actions).
+- Connection and start are requested from outside (panel buttons, or once at
+  application startup through the same path): no automatic reconnection or
+  restart.
 - The lidar is one channel of the same stream (see the ponytail note below).
 """
 
