@@ -7,7 +7,9 @@ date: 2026-11-13
 
 # Typer le noyau partagé fait monter `solidai verify` de 987 à 1 070, et la règle ne se satisfait pas aujourd'hui
 
-**À trancher.** Le typage du noyau (`domain/shared_kernel/`) est retiré (commit `f57f411`), les 12 événements et 2 objets-valeurs à plat restent non rattachés. Ni la règle ni l'outil ne sont en cause : c'est l'étendue de D14 sur ACQ.
+**Tranché par l'humain : choix 1** (D14 ne compare plus que les utilisateurs sous `domain/`, solidai-ddd `b7f1265`, solidai-verify `7f02cf9`). Le noyau est ensuite typé avec ses 10 utilisateurs typés du domaine ; les restants sont dans `constat-restants-du-noyau-partage-et-de-detection-devices.md`. Ce qui suit garde l'essai d'origine.
+
+**Essai d'origine.** Le typage du noyau (`domain/shared_kernel/`) est retiré (commit `f57f411`), les 12 événements et 2 objets-valeurs à plat restent non rattachés. Ni la règle ni l'outil ne sont en cause : c'est l'étendue de D14 sur ACQ.
 
 ## Ce qui a été essayé
 
