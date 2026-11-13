@@ -1,3 +1,10 @@
+---
+type: value-object::solidai-ddd
+tldr: "Stocker `is_valid: bool`, `errors: List[str]`, `warnings: List[str]`."
+code: ["[[src/domain/shared_kernel/value_objects/validation_result/validation_result.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/shared_kernel/operation_result_intention]]"
+---
 # validation_result — Intention
 
 ## Rationale
