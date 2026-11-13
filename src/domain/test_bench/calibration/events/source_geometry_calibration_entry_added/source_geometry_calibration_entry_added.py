@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from domain.shared_kernel.events.domain_event import DomainEvent
+from domain.shared_kernel.events.domain_event.domain_event import DomainEvent
 from domain.test_bench.calibration.entities.source_geometry_calibration_entry.source_geometry_calibration_entry import (
     SourceGeometryCalibrationEntry,
 )

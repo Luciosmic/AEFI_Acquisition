@@ -48,7 +48,7 @@ from application.services.scan_application_service.ports.i_motion_synchronizer i
 from domain.shared_kernel.motion.events.emergency_stop_triggered.emergency_stop_triggered import (
     EmergencyStopTriggered,
 )
-from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
 from domain.shared_kernel.motion.events.motion_completed.motion_completed import MotionCompleted
 from domain.shared_kernel.motion.events.motion_failed.motion_failed import MotionFailed
 from domain.shared_kernel.motion.events.motion_stopped.motion_stopped import MotionStopped

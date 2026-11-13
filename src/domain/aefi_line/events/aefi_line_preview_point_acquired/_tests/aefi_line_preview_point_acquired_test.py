@@ -6,7 +6,7 @@ import pytest
 from domain.aefi_line.events.aefi_line_preview_point_acquired.aefi_line_preview_point_acquired import (
     AefiLinePreviewPointAcquired,
 )
-from domain.shared_kernel.events.domain_event import DomainEvent
+from domain.shared_kernel.events.domain_event.domain_event import DomainEvent
 from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
 
 

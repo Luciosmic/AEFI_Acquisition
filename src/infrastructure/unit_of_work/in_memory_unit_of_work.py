@@ -3,7 +3,7 @@ import threading
 from typing import Any, List, Optional, Tuple
 
 from application.services.scan_application_service.ports.i_unit_of_work import IUnitOfWork
-from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
 from infrastructure.persistence.aefi_line.in_memory_aefi_line_repository import InMemoryAefiLineRepository
 from infrastructure.persistence.aefi_point.in_memory_aefi_point_repository import InMemoryAefiPointRepository
 from infrastructure.persistence.narda_point.in_memory_narda_point_repository import InMemoryNardaPointRepository

@@ -10,7 +10,7 @@ from uuid import uuid4
 from domain.operator_registry.entities.operator.operator import Operator
 from domain.operator_registry.errors.operator_name_blank_error import OperatorNameBlankError
 from domain.operator_registry.events.operator_registered.operator_registered import OperatorRegistered
-from domain.shared_kernel.events.domain_event import DomainEvent
+from domain.shared_kernel.events.domain_event.domain_event import DomainEvent
 
 
 def _spelling(name: str) -> str:

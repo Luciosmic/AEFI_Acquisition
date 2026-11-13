@@ -6,7 +6,7 @@ import pytest
 from domain.aefi_line.events.aefi_line_acquired.aefi_line_acquired import AefiLineAcquired
 from domain.aefi_line.value_objects.aefi_line_id.aefi_line_id import AefiLineId
 from domain.scan.events.probe_acquisition_event.probe_acquisition_event import ProbeAcquisitionEvent
-from domain.shared_kernel.events.domain_event import DomainEvent
+from domain.shared_kernel.events.domain_event.domain_event import DomainEvent
 
 
 def test_frozen_domain_event_respecting_the_probe_contract() -> None:

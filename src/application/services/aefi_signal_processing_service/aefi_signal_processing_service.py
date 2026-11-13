@@ -8,7 +8,7 @@ from application.services.transformation_service.transformation_service import T
 from domain.shared_kernel.events.aefi_voltage_sample_acquired.aefi_voltage_sample_acquired import (
     AefiVoltageSampleAcquired,
 )
-from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
 from domain.shared_kernel.value_objects.acquisition.aefi_voltage_measurement import AefiVoltageMeasurement
 from domain.detection_devices.aefi_device.signal_processing.aefi_corrected_sample import AefiCorrectedSample
 from domain.detection_devices.aefi_device.signal_processing.errors.signal_correction_calibration_missing_error import (

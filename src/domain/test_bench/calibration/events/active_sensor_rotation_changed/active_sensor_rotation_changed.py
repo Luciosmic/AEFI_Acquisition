@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
 
-from domain.shared_kernel.events.domain_event import DomainEvent
+from domain.shared_kernel.events.domain_event.domain_event import DomainEvent
 from domain.test_bench.calibration.value_objects.sensor_rotation_angles.sensor_rotation_angles import (
     SensorRotationAngles,
 )

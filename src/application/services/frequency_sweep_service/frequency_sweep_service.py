@@ -49,7 +49,7 @@ from domain.frequency_sweep.value_objects.frequency_grid.frequency_grid import F
 from domain.frequency_sweep.value_objects.frequency_sweep_id.frequency_sweep_id import FrequencySweepId
 from domain.frequency_sweep.value_objects.frequency_sweep_role.frequency_sweep_role import FrequencySweepRole
 from domain.frequency_sweep.value_objects.table_height.table_height import TableHeight
-from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
 from domain.shared_kernel.excitation.value_objects.excitation_mode import ExcitationMode
 from domain.shared_kernel.excitation.value_objects.phase_angle import PhaseAngle
 

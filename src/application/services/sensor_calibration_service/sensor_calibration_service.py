@@ -55,7 +55,7 @@ from domain.test_bench.calibration.value_objects.hardware_component_kind.hardwar
 from domain.test_bench.calibration.value_objects.sensor_rotation_angles.sensor_rotation_angles import (
     SensorRotationAngles,
 )
-from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
 
 SENSOR_CALIBRATION_ENTRY_ADDED_TOPIC = "sensorcalibrationentryadded"
 ACTIVE_SENSOR_ROTATION_CHANGED_TOPIC = "activesensorrotationchanged"

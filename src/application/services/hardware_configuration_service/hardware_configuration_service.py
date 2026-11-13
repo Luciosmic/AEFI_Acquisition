@@ -21,7 +21,7 @@ from application.shared.exclusive_control.exclusive_control import ExclusiveCont
 from domain.shared_kernel.events.hardware_configuration_control_changed.hardware_configuration_control_changed import (
     HardwareConfigurationControlChanged,
 )
-from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
 from domain.shared_kernel.operation_result import OperationResult
 from domain.shared_kernel.value_objects.hardware_configuration.hardware_advanced_parameter_schema import HardwareAdvancedParameterSchema
 from .i_api_hardware_configuration_service import IApiHardwareConfigurationService

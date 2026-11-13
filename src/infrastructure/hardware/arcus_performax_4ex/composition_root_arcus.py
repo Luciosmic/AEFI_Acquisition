@@ -24,7 +24,7 @@ from infrastructure.hardware.arcus_performax_4ex.adapter_lifecycle_arcus_perform
 from infrastructure.hardware.arcus_performax_4ex.adapter_raw_increment_motion_arcus import ArcusRawIncrementMotionAdapter
 from infrastructure.hardware.arcus_performax_4ex.adapter_position_increments_arcus import ArcusPositionIncrementsAdapter
 from infrastructure.hardware.arcus_performax_4ex.arcus_advanced_configuration import ArcusPerformax4EXAdvancedConfigurator
-from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
 
 logger = logging.getLogger(__name__)
 

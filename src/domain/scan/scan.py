@@ -11,7 +11,7 @@ from domain.scan.errors.scan_source_not_declared_error import ScanSourceNotDecla
 from domain.scan.value_objects.expected_source.expected_source import ExpectedSource
 from domain.scan.value_objects.scan_id.scan_id import ScanId
 from domain.scan.value_objects.scan_state.scan_state import ScanState
-from domain.shared_kernel.events.domain_event import DomainEvent
+from domain.shared_kernel.events.domain_event.domain_event import DomainEvent
 from domain.step_scan.events.scan_completed.scan_completed import ScanCompleted
 
 

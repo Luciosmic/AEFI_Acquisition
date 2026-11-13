@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from uuid import UUID
 
 from domain.aefi_point.value_objects.aefi_point_id.aefi_point_id import AefiPointId
-from domain.shared_kernel.events.domain_event import DomainEvent
+from domain.shared_kernel.events.domain_event.domain_event import DomainEvent
 from domain.shared_kernel.value_objects.acquisition.aefi_voltage_measurement import AefiVoltageMeasurement
 from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
 

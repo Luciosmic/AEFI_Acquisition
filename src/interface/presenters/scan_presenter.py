@@ -7,7 +7,7 @@ from application.services.scan_application_service.ports.i_scan_output_port impo
 from application.services.scan_export_service.scan_export_service import ScanExportService
 from application.services.scan_application_service.dtos.scan_dtos import Scan2DConfigDTO, LineScanConfigDTO
 from application.services.scan_export_service.dtos.scan_export_dtos import ExportConfigDTO
-from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
 from interface.presentation.motion_conversion_banner_model import MotionConversionBannerViewModel
 from interface.qt_abc import QABCMeta
 

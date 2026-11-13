@@ -7,7 +7,7 @@ import pytest
 from domain.detection_devices.electric_field_probes.value_objects.field_measurement.field_measurement import FieldMeasurement
 from domain.narda_point.events.narda_point_acquired.narda_point_acquired import NardaPointAcquired
 from domain.narda_point.value_objects.narda_point_id.narda_point_id import NardaPointId
-from domain.shared_kernel.events.domain_event import DomainEvent
+from domain.shared_kernel.events.domain_event.domain_event import DomainEvent
 from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
 
 

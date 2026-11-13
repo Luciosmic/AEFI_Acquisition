@@ -28,7 +28,7 @@ from application.services.excitation_configuration_service.excitation_configurat
 # above) rather than importing from infrastructure/ — interface must not
 # depend on infrastructure. Source of truth: ad9106_advanced_configurator.py.
 DDS_SYNCHRONOUS_DETECTION_CHANNEL_CHANGED_TOPIC = "ddssynchronousdetectionchannelchanged"
-from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
 
 
 logger = logging.getLogger(__name__)

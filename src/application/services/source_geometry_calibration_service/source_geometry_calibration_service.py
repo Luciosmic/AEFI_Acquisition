@@ -25,7 +25,7 @@ from domain.test_bench.calibration.repositories.i_source_geometry_calibration_re
     ISourceGeometryCalibrationRepository,
 )
 from domain.test_bench.calibration.value_objects.caliper_measurement.caliper_measurement import CaliperMeasurement
-from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
 
 SOURCE_GEOMETRY_CALIBRATION_ENTRY_ADDED_TOPIC = "sourcegeometrycalibrationentryadded"
 

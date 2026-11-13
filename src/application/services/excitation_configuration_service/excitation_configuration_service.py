@@ -6,7 +6,7 @@ from .ports.i_excitation_port import IExcitationPort
 from domain.shared_kernel.excitation.value_objects.excitation_parameters import ExcitationParameters
 from domain.shared_kernel.excitation.value_objects.excitation_level import ExcitationLevel
 from domain.shared_kernel.excitation.value_objects.excitation_mode import ExcitationMode
-from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
 from domain.shared_kernel.excitation.events.excitation_frequency_changed.excitation_frequency_changed import (
     ExcitationFrequencyChanged,
 )

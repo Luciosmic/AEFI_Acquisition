@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from typing import List
 from uuid import UUID
 
-from domain.shared_kernel.events.domain_event import DomainEvent
+from domain.shared_kernel.events.domain_event.domain_event import DomainEvent
 from domain.shared_kernel.value_objects.acquisition.aefi_voltage_measurement import AefiVoltageMeasurement
 from domain.detection_devices.aefi_device.signal_processing.errors.signal_correction_calibration_missing_error import (
     SignalCorrectionCalibrationMissingError,

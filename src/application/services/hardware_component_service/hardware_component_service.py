@@ -22,7 +22,7 @@ from domain.test_bench.calibration.value_objects.hardware_component_name.hardwar
 from domain.test_bench.calibration.value_objects.hardware_component_kind.hardware_component_kind import (
     HardwareComponentKind,
 )
-from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
 
 HARDWARE_COMPONENT_CHARACTERIZED_TOPIC = "hardwarecomponentcharacterized"
 HARDWARE_COMPONENT_MOUNTED_TOPIC = "hardwarecomponentmounted"

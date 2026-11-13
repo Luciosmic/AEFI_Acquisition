@@ -16,7 +16,7 @@ from domain.operator_registry.entities.operator.operator import Operator
 from domain.operator_registry.errors.operator_name_blank_error import OperatorNameBlankError
 from domain.operator_registry.operator_registry import OperatorRegistry
 from domain.operator_registry.repositories.i_operator_repository import IOperatorRepository
-from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
 from domain.shared_kernel.operation_result import OperationResult
 
 OPERATOR_REGISTERED_TOPIC = "operatorregistered"

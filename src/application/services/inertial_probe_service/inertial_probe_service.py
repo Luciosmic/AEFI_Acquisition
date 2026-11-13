@@ -41,7 +41,7 @@ from application.services.inertial_probe_service.ports.i_inertial_probe_stream_p
 from domain.detection_devices.inertial_probe.events.inertial_probe_connection_changed.inertial_probe_connection_changed import (
     InertialProbeConnectionChanged,
 )
-from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
 
 CONNECTION_CHANGED_TOPIC = "inertialprobeconnectionchanged"
 

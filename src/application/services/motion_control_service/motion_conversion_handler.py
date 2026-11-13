@@ -9,7 +9,7 @@ from application.services.motion_control_service.ports.i_motion_conversion_statu
     IMotionConversionStatusPort,
 )
 from application.services.motion_control_service.ports.i_motion_port import IMotionPort
-from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
 from domain.shared_kernel.motion.events.motion_conversion_became_available.motion_conversion_became_available import (
     MotionConversionBecameAvailable,
 )

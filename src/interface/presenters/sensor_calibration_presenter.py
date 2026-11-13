@@ -22,7 +22,7 @@ from application.services.sensor_calibration_service.sensor_calibration_service 
     ACTIVE_SENSOR_ROTATION_CHANGED_TOPIC,
     SENSOR_CALIBRATION_ENTRY_ADDED_TOPIC,
 )
-from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
 from interface.qt_abc import QABCMeta
 
 logger = logging.getLogger(__name__)

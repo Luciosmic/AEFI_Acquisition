@@ -13,7 +13,7 @@ from PySide6.QtCore import QObject, Signal, Slot
 from application.services.measured_object_service.i_api_measured_object_service import IApiMeasuredObjectService
 from application.services.measured_object_service.measured_object_service import MEASURED_OBJECT_REGISTERED_TOPIC
 from application.services.measured_object_service.measured_object_service_errors import MeasuredObjectNameBlank
-from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
 
 logger = logging.getLogger(__name__)
 

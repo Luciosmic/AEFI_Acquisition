@@ -6,7 +6,7 @@ from uuid import UUID
 
 from domain.aefi_line.value_objects.aefi_line_id.aefi_line_id import AefiLineId
 from domain.aefi_line.value_objects.line_grid_point.line_grid_point import LineGridPoint
-from domain.shared_kernel.events.domain_event import DomainEvent
+from domain.shared_kernel.events.domain_event.domain_event import DomainEvent
 
 VOLT_UNIT_URI = "http://qudt.org/vocab/unit/V"
 AEFI_LINE_SOURCE = "aefi_line"

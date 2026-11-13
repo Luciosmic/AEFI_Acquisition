@@ -12,7 +12,7 @@ from domain.frequency_sweep.value_objects.frequency_grid.frequency_grid import F
 from domain.frequency_sweep.value_objects.frequency_sweep_id.frequency_sweep_id import FrequencySweepId
 from domain.frequency_sweep.value_objects.frequency_sweep_role.frequency_sweep_role import FrequencySweepRole
 from domain.frequency_sweep.value_objects.table_height.table_height import TableHeight
-from domain.shared_kernel.events.domain_event import DomainEvent
+from domain.shared_kernel.events.domain_event.domain_event import DomainEvent
 from domain.shared_kernel.value_objects.acquisition.aefi_voltage_measurement import AefiVoltageMeasurement
 from domain.step_scan.services.measurement_statistics_service.measurement_statistics_service import (
     MeasurementStatisticsService,

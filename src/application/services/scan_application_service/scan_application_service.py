@@ -137,8 +137,8 @@ from domain.step_scan.events.scan_cancelled.scan_cancelled import ScanCancelled
 from domain.step_scan.events.scan_paused.scan_paused import ScanPaused
 from domain.step_scan.events.scan_resumed.scan_resumed import ScanResumed
 from domain.narda_point.events.narda_point_acquired.narda_point_acquired import NardaPointAcquired
-from domain.shared_kernel.events.domain_event import DomainEvent
-from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from domain.shared_kernel.events.domain_event.domain_event import DomainEvent
+from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
 
 
 @dataclass

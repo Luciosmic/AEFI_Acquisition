@@ -10,7 +10,7 @@ from uuid import uuid4
 from domain.measured_object_registry.entities.measured_object.measured_object import MeasuredObject
 from domain.measured_object_registry.errors.measured_object_name_blank_error import MeasuredObjectNameBlankError
 from domain.measured_object_registry.events.measured_object_registered.measured_object_registered import MeasuredObjectRegistered
-from domain.shared_kernel.events.domain_event import DomainEvent
+from domain.shared_kernel.events.domain_event.domain_event import DomainEvent
 
 
 def _spelling(name: str) -> str:

@@ -112,7 +112,7 @@ def _first_event(point):
 
 def test_handler_listens_to_every_declared_topic_and_any_source() -> None:
     from dataclasses import dataclass
-    from domain.shared_kernel.events.domain_event import DomainEvent
+    from domain.shared_kernel.events.domain_event.domain_event import DomainEvent
 
     @dataclass(frozen=True)
     class NardaPointAcquired(DomainEvent):

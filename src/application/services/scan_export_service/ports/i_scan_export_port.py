@@ -12,7 +12,7 @@ from typing import Dict, Any, Optional
 from application.services.scan_export_service.dtos.scan_acquisition_parameters_dtos import (
     ScanAcquisitionParametersDTO,
 )
-from domain.shared_kernel.events.domain_event import DomainEvent
+from domain.shared_kernel.events.domain_event.domain_event import DomainEvent
 
 class IScanExportPort(ABC):
     """Interface for data export."""

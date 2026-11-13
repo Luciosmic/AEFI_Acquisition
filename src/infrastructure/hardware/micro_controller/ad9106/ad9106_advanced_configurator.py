@@ -22,7 +22,7 @@ from application.services.hardware_configuration_service.ports.i_hardware_advanc
 from domain.shared_kernel.value_objects.hardware_configuration.hardware_advanced_parameter_schema import (
     HardwareAdvancedParameterSchema, NumberParameterSchema, BooleanParameterSchema
 )
-from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
 from domain.shared_kernel.excitation.events.excitation_frequency_changed.excitation_frequency_changed import (
     ExcitationFrequencyChanged,
 )

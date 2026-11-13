@@ -71,7 +71,7 @@ from domain.test_bench.calibration.services.acquisition_throughput_analysis.acqu
 from domain.test_bench.calibration.value_objects.acquisition_throughput_characterization.acquisition_throughput_characterization import (
     AcquisitionThroughputPoint,
 )
-from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
 
 AEFI_VOLTAGE_SAMPLE_ACQUIRED_TOPIC = "aefivoltagesampleacquired"
 # Owner name of the excitation, the acquisition stream and the n_avg / OSR configuration.

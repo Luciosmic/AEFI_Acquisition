@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from uuid import UUID
 
-from domain.shared_kernel.events.domain_event import DomainEvent
+from domain.shared_kernel.events.domain_event.domain_event import DomainEvent
 from domain.detection_devices.electric_field_probes.value_objects.field_measurement.field_measurement import (
     FieldMeasurement,
 )

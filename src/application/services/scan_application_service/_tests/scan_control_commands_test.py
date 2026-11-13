@@ -8,7 +8,7 @@ from application.services.aefi_acquisition_service.aefi_acquisition_service impo
 from application.services.scan_application_service.dtos.scan_dtos import Scan2DConfigDTO
 from application.services.scan_application_service.scan_application_service import ScanApplicationService
 from application.services.scan_application_service.scan_closure_handler.scan_closure_handler import ScanClosureHandler
-from domain.shared_kernel.events.domain_event import DomainEvent
+from domain.shared_kernel.events.domain_event.domain_event import DomainEvent
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
 from infrastructure.execution.event_bus_motion_synchronizer import EventBusMotionSynchronizer
 from infrastructure.execution.thread_pool_task_runner import ThreadPoolTaskRunner

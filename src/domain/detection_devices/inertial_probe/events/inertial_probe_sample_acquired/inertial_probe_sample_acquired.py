@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Optional, Tuple
 from uuid import UUID
 
-from domain.shared_kernel.events.domain_event import DomainEvent
+from domain.shared_kernel.events.domain_event.domain_event import DomainEvent
 from domain.detection_devices.lidar.lidar_distance.lidar_distance import LidarDistance
 
 

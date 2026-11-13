@@ -40,7 +40,7 @@ from domain.detection_devices.inertial_probe.events.inertial_probe_sample_acquir
 from domain.detection_devices.inertial_probe.events.inertial_probe_stream_failed.inertial_probe_stream_failed import (
     InertialProbeStreamFailed,
 )
-from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
 
 logger = logging.getLogger(__name__)
 

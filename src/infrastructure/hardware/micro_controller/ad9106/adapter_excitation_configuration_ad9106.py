@@ -29,7 +29,7 @@ from domain.shared_kernel.excitation.value_objects.excitation_parameters import 
 from domain.shared_kernel.excitation.value_objects.excitation_level import ExcitationLevel
 from domain.shared_kernel.excitation.value_objects.excitation_mode import ExcitationMode
 from domain.shared_kernel.operation_result import OperationResult
-from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
 from domain.shared_kernel.excitation.events.dds_channel_config_changed.dds_channel_config_changed import (
     DdsChannelConfigChanged,
 )

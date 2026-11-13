@@ -3,7 +3,7 @@ from typing import Tuple, Optional
 import numpy as np
 
 from domain.test_bench.calibration.value_objects.sensor_rotation_angles.sensor_rotation_angles import SensorRotationAngles
-from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
 from domain.test_bench.calibration.events.sensor_transformation_angles_updated.sensor_transformation_angles_updated import SensorTransformationAnglesUpdated
 from application.services.sensor_calibration_service.sensor_calibration_service import (
     ACTIVE_SENSOR_ROTATION_CHANGED_TOPIC,

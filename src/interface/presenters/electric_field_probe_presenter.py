@@ -16,7 +16,7 @@ from application.services.electric_field_probe_service.electric_field_probe_serv
 from application.services.electric_field_probe_service.dtos.electric_field_probe_dtos import (
     ElectricFieldProbeAcquisitionConfig,
 )
-from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
 from domain.detection_devices.electric_field_probes.events.field_sample_acquired.field_sample_acquired import (
     FieldSampleAcquired,
 )

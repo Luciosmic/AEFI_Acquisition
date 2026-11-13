@@ -18,7 +18,7 @@ from domain.test_bench.calibration.repositories.i_mechanical_transmission_calibr
 from domain.test_bench.calibration.value_objects.hardware_component_kind.hardware_component_kind import (
     HardwareComponentKind,
 )
-from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
 
 MECHANICAL_TRANSMISSION_CALIBRATION_ENTRY_ADDED_TOPIC = "mechanicaltransmissioncalibrationentryadded"
 

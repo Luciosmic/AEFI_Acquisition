@@ -21,7 +21,7 @@ from application.shared.exclusive_control.exclusive_control import ExclusiveCont
 from domain.shared_kernel.events.aefi_acquisition_control_changed.aefi_acquisition_control_changed import (
     AefiAcquisitionControlChanged,
 )
-from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
 from domain.shared_kernel.operation_result import OperationResult
 
 AEFI_ACQUISITION_CONTROL_CHANGED_TOPIC = "aefiacquisitioncontrolchanged"

@@ -27,7 +27,7 @@ from domain.shared_kernel.events.aefi_voltage_reading_stopped.aefi_voltage_readi
 from domain.test_bench.calibration.events.sensor_transformation_angles_updated.sensor_transformation_angles_updated import (
     SensorTransformationAnglesUpdated,
 )
-from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
 from domain.detection_devices.aefi_device.signal_processing.events.aefi_corrected_field_sample_acquired.aefi_corrected_field_sample_acquired import (
     AefiCorrectedFieldSampleAcquired,
 )

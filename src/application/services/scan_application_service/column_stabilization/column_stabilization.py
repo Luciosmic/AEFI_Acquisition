@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from typing import Callable, Optional, Tuple
 
 from domain.scan.value_objects.column_rest_criterion.column_rest_criterion import ColumnRestCriterion
-from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
 
 logger = logging.getLogger(__name__)
 

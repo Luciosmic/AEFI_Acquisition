@@ -13,7 +13,7 @@ from uuid import UUID
 from dataclasses import dataclass, field, replace
 from typing import Collection, List, Mapping, Optional, Sequence, Tuple
 
-from domain.shared_kernel.events.domain_event import DomainEvent
+from domain.shared_kernel.events.domain_event.domain_event import DomainEvent
 from domain.test_bench.calibration.entities.synchronous_detection_phase_calibration_entry.synchronous_detection_phase_calibration_entry import (
     SynchronousDetectionPhaseCalibrationEntry,
 )

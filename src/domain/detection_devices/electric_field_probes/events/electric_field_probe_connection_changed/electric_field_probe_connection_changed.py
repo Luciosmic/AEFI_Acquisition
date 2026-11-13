@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Optional
 
-from domain.shared_kernel.events.domain_event import DomainEvent
+from domain.shared_kernel.events.domain_event.domain_event import DomainEvent
 from domain.detection_devices.electric_field_probes.electric_field_probe import ElectricFieldProbe
 
 

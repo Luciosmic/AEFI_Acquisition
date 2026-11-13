@@ -19,7 +19,7 @@ from domain.test_bench.calibration.value_objects.hardware_signature.hardware_sig
 from domain.test_bench.calibration.value_objects.synchronous_detection_phase_calibration_point.synchronous_detection_phase_calibration_point import (
     SynchronousDetectionPhaseCalibrationPoint,
 )
-from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
 from domain.shared_kernel.excitation.value_objects.phase_angle import PhaseAngle
 from domain.shared_kernel.excitation.value_objects.sphere_id import SphereId
 

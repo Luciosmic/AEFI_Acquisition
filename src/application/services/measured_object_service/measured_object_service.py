@@ -16,7 +16,7 @@ from domain.measured_object_registry.entities.measured_object.measured_object im
 from domain.measured_object_registry.errors.measured_object_name_blank_error import MeasuredObjectNameBlankError
 from domain.measured_object_registry.measured_object_registry import MeasuredObjectRegistry
 from domain.measured_object_registry.repositories.i_measured_object_repository import IMeasuredObjectRepository
-from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
 from domain.shared_kernel.operation_result import OperationResult
 
 MEASURED_OBJECT_REGISTERED_TOPIC = "measuredobjectregistered"

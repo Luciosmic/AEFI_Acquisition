@@ -5,7 +5,7 @@ from application.services.scan_application_service.ports.i_unit_of_work import I
 from domain.scan.events.probe_acquisition_event.probe_acquisition_event import ProbeAcquisitionEvent
 from domain.scan.events.scan_closure_failed.scan_closure_failed import ScanClosureFailed
 from domain.scan.value_objects.scan_id.scan_id import ScanId
-from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
 
 logger = logging.getLogger(__name__)
 

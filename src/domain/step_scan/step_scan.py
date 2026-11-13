@@ -15,7 +15,7 @@ from typing import List
 from domain.step_scan.entities.spatial_scan.spatial_scan import SpatialScan
 from domain.step_scan.value_objects.scan_point_result.scan_point_result import ScanPointResult
 from domain.step_scan.value_objects.scan_status.scan_status import ScanStatus
-from domain.shared_kernel.events.domain_event import DomainEvent
+from domain.shared_kernel.events.domain_event.domain_event import DomainEvent
 from domain.step_scan.events.scan_started.scan_started import ScanStarted
 from domain.step_scan.events.scan_point_acquired.scan_point_acquired import ScanPointAcquired
 from domain.step_scan.events.scan_failed.scan_failed import ScanFailed

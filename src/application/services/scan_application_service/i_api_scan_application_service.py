@@ -4,7 +4,7 @@ from typing import Callable, Dict, Any, Optional
 from .dtos.scan_dtos import Scan2DConfigDTO, LineScanConfigDTO, ScanStatusDTO, ScanConfigSnapshotDTO
 from .ports.i_scan_output_port import IScanOutputPort
 from .errors.scan_start_error import ScanStartError
-from domain.shared_kernel.events.domain_event import DomainEvent
+from domain.shared_kernel.events.domain_event.domain_event import DomainEvent
 
 
 class IApiScanApplicationService(ABC):

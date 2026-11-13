@@ -5,7 +5,7 @@ import time
 from uuid import uuid4
 from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
 from application.services.motion_control_service.ports.i_motion_port import IMotionPort
-from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
 from domain.shared_kernel.motion.events.motion_completed.motion_completed import MotionCompleted
 from domain.shared_kernel.motion.events.position_updated.position_updated import PositionUpdated
 from domain.shared_kernel.motion.events.motion_stopped.motion_stopped import MotionStopped

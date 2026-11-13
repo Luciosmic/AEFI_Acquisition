@@ -20,7 +20,7 @@ from application.services.hardware_component_service.hardware_component_service 
 from application.services.hardware_component_service.i_api_hardware_component_service import (
     IApiHardwareComponentService,
 )
-from domain.shared_kernel.events.i_domain_event_bus import IDomainEventBus
+from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
 
 logger = logging.getLogger(__name__)
 

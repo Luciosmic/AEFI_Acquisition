@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 
 from domain.frequency_sweep.value_objects.frequency_sweep_id.frequency_sweep_id import FrequencySweepId
-from domain.shared_kernel.events.domain_event import DomainEvent
+from domain.shared_kernel.events.domain_event.domain_event import DomainEvent
 
 
 @dataclass(frozen=True)

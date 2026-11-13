@@ -18,7 +18,7 @@ from domain.narda_point.events.narda_point_acquired.narda_point_acquired import 
 from domain.scan.value_objects.expected_source.expected_source import ExpectedSource
 from domain.scan.value_objects.scan_id.scan_id import ScanId
 from domain.scan.value_objects.scan_state.scan_state import ScanState
-from domain.shared_kernel.events.domain_event import DomainEvent
+from domain.shared_kernel.events.domain_event.domain_event import DomainEvent
 from domain.step_scan.events.scan_failed.scan_failed import ScanFailed
 from domain.step_scan.events.scan_started.scan_started import ScanStarted
 from infrastructure.events.in_memory_event_bus import InMemoryEventBus
