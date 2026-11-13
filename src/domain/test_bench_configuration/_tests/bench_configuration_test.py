@@ -12,7 +12,7 @@ from domain.test_bench_configuration.value_objects.hardware_component_kind.hardw
 from domain.test_bench_configuration.value_objects.hardware_signature.hardware_signature import HardwareSignature
 
 
-def make_hardware_signature(**overrides):
+def make_hardware_signature(**overrides: str) -> HardwareSignature:
     defaults = dict(
         excitation_electronics_board_name="v1.2",
         conditioning_electronics_board_name="v2.0",
