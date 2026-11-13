@@ -10,6 +10,6 @@ class TableHeight:
 
     millimetres: float
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not math.isfinite(self.millimetres):
             raise ValueError("table height must be a finite number of mm")

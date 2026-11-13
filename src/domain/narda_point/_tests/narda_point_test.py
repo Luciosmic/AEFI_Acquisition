@@ -20,7 +20,7 @@ def make_point(n: int = 3, baseline: bool = False) -> NardaPoint:
     return NardaPoint(NardaPointId(uuid4()), uuid4(), Position2D(1.0, 2.0), 7, n, baseline, ("X", "Y"))
 
 
-def test_exactly_n_samples_acquires_point_and_emits_event():
+def test_exactly_n_samples_acquires_point_and_emits_event() -> None:
     point = make_point(3)
     point.record_samples([fm(1.0), fm(2.0), fm(3.0)])
 
@@ -35,7 +35,7 @@ def test_exactly_n_samples_acquires_point_and_emits_event():
     assert event.baseline_field_measurement is None
 
 
-def test_domain_events_property_clears_the_list():
+def test_domain_events_property_clears_the_list() -> None:
     point = make_point(1)
     point.record_samples([fm()])
     assert len(point.domain_events) == 1
@@ -50,7 +50,7 @@ def test_wrong_sample_count_is_refused_and_leaves_no_trace(count):
     assert not point.is_acquired and point.domain_events == []
 
 
-def test_differential_point_requires_exactly_n_baseline_samples():
+def test_differential_point_requires_exactly_n_baseline_samples() -> None:
     point = make_point(2, baseline=True)
     point.record_samples([fm(1.0), fm(3.0)], [fm(10.0), fm(20.0)])
     (event,) = point.domain_events
@@ -65,20 +65,20 @@ def test_missing_or_short_baseline_is_refused_when_expected(baseline):
     assert not point.is_acquired
 
 
-def test_baseline_is_refused_when_not_expected():
+def test_baseline_is_refused_when_not_expected() -> None:
     point = make_point(2, baseline=False)
     with pytest.raises(NardaPointIncompleteError):
         point.record_samples([fm(), fm()], [fm(), fm()])
     assert not point.is_acquired
 
 
-def test_acquired_point_refuses_a_second_recording():
+def test_acquired_point_refuses_a_second_recording() -> None:
     point = make_point(1)
     point.record_samples([fm()])
     with pytest.raises(NardaPointAlreadyAcquiredError):
         point.record_samples([fm()])
 
 
-def test_expected_samples_must_be_positive():
+def test_expected_samples_must_be_positive() -> None:
     with pytest.raises(ValueError):
         make_point(0)

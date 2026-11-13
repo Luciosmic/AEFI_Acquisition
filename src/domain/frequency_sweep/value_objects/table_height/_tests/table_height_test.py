@@ -5,7 +5,7 @@ import pytest
 from domain.frequency_sweep.value_objects.table_height.table_height import TableHeight
 
 
-def test_keeps_the_height_given_by_the_operator():
+def test_keeps_the_height_given_by_the_operator() -> None:
     assert TableHeight(123.5).millimetres == 123.5
 
 
