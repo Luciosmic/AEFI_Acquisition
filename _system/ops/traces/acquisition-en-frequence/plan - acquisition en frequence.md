@@ -1,7 +1,7 @@
 # Plan — Acquisition en fréquence
 
-**État :** tranche 1 codée (2026-11-12), testée en simulé, pas encore au banc.
-**Prochaine action :** au banc, deux balayages « Référence instrument » à la suite, table en position basse ; vérifier qu'ils se superposent à leur dispersion près, et fixer les bornes de fréquence par défaut.
+**État :** tranche 1 au banc le 2026-11-12 (un balayage court terminé et exporté) ; rôle « Mesure objet » ajouté (objet du registre + lift-off, exportés) — première moitié de la tranche 2, la différence objet − fond se fait encore à l'analyse.
+**Prochaine action :** au banc, la chaîne complète : deux références instrument à la suite (superposition), un fond, une mesure objet à la même hauteur ; puis coder le choix du fond et la différence affichée (seconde moitié de la tranche 2). Constat du premier essai : à 100 Hz l'écart-type vaut un quart du signal (0,1 V pour 0,4 V), contre 0,0006 V à 10 kHz — revoir la borne basse ou N.
 
 ## Pourquoi
 

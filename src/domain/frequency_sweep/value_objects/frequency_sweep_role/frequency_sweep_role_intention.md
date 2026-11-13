@@ -13,10 +13,10 @@ Le protocole d'acquisition en fréquence enchaîne des balayages acquis de la m�
 
 ## Responsibility
 
-- Nommer ce qu'un balayage caractérise : `INSTRUMENT_REFERENCE` (table en position basse, sans objet), `BACKGROUND` (table à la hauteur de travail, sans objet).
+- Nommer ce qu'un balayage caractérise : `INSTRUMENT_REFERENCE` (table en position basse, sans objet), `BACKGROUND` (table à la hauteur de travail, sans objet), `OBJECT_MEASUREMENT` (même hauteur de table que le fond, objet posé).
+- `measures_an_object` : seul le rôle mesure objet porte un objet mesuré.
 
 ## Design
 
 - `Enum` ; la valeur est l'identifiant stable écrit dans l'export.
 - Le rôle ne change pas la façon d'acquérir.
-- La mesure objet (`OBJECT_MEASUREMENT`) arrive avec la tranche 2 du plan, en même temps que le choix de l'objet et du fond : pas avant.

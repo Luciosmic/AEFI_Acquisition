@@ -12,7 +12,7 @@ L'acquisition en fréquence enchaîne des balayages qu'on soustrait (objet − f
 
 ## Responsibility
 
-- Aggregate root d'un balayage en fréquence : identité `FrequencySweepId`, rôle (`FrequencySweepRole`), grille (`FrequencyGrid`), hauteur de la table (`TableHeight`), nombre N d'échantillons par fréquence (≥ 1).
+- Aggregate root d'un balayage en fréquence : identité `FrequencySweepId`, rôle (`FrequencySweepRole`), grille (`FrequencyGrid`), hauteur de la table (`TableHeight`), nombre N d'échantillons par fréquence (≥ 1), objet mesuré (identifiant du registre des objets mesurés) : requis pour une mesure objet, absent pour une référence ou un fond (`MeasuredObjectRoleMismatchError`).
 - `record_frequency_point(f, samples)` : refuse une fréquence hors grille (`FrequencyNotInGridError`), déjà acquise (`FrequencyAlreadyAcquiredError`), ou un nombre d'échantillons différent de N (`FrequencyPointIncompleteError`), sans modifier l'état. Sinon calcule la mesure moyennée, empile `FrequencyPointAcquired` et la retourne.
 - Complet quand toutes les fréquences de la grille sont acquises : empile alors `FrequencySweepCompleted`, une seule fois.
 - `points` : les fréquences acquises et leur mesure, dans l'ordre de la grille.

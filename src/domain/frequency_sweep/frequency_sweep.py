@@ -1,11 +1,12 @@
 """FrequencySweep aggregate root (see frequency_sweep_intention.md)."""
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Sequence, Tuple
+from typing import Dict, List, Optional, Sequence, Tuple
 
 from domain.frequency_sweep.errors.frequency_already_acquired_error import FrequencyAlreadyAcquiredError
 from domain.frequency_sweep.errors.frequency_not_in_grid_error import FrequencyNotInGridError
 from domain.frequency_sweep.errors.frequency_point_incomplete_error import FrequencyPointIncompleteError
+from domain.frequency_sweep.errors.measured_object_role_mismatch_error import MeasuredObjectRoleMismatchError
 from domain.frequency_sweep.events.frequency_point_acquired.frequency_point_acquired import FrequencyPointAcquired
 from domain.frequency_sweep.events.frequency_sweep_completed.frequency_sweep_completed import FrequencySweepCompleted
 from domain.frequency_sweep.value_objects.frequency_grid.frequency_grid import FrequencyGrid
@@ -26,12 +27,16 @@ class FrequencySweep:
     grid: FrequencyGrid
     table_height: TableHeight
     samples_per_frequency: int
+    # Measured objects registry id: required for an object measurement, absent otherwise.
+    measured_object_id: Optional[str] = None
     _points: Dict[float, AefiVoltageMeasurement] = field(default_factory=dict)
     _domain_events: List[DomainEvent] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         if self.samples_per_frequency < 1:
             raise ValueError("samples_per_frequency must be >= 1")
+        if self.role.measures_an_object != bool(self.measured_object_id):
+            raise MeasuredObjectRoleMismatchError(self.role, self.measured_object_id)
 
     @property
     def is_completed(self) -> bool:
@@ -69,6 +74,7 @@ class FrequencySweep:
                 measurement=measurement,
                 samples_count=self.samples_per_frequency,
                 table_height_mm=self.table_height.millimetres,
+                measured_object_id=self.measured_object_id,
             )
         )
         if self.is_completed:

@@ -20,4 +20,4 @@ Un fond ou une référence instrument ne se réutilise que si un lecteur, sans l
 - N'ajoute que ce que le balayage fait ; les sections communes viennent de `acquisition_parameters_v1.py` (calque du sérialiseur de la caractérisation du débit).
 - La fréquence de l'AD9106 est balayée : `components.signal_generation_chip.settings.frequency` et `measurement_chain.excitation.state.frequency` renvoient à la grille (`derived_from`) au lieu de recopier la fréquence lue au démarrage, qui est celle de l'opérateur.
 - La hauteur de la table porte `source: "operator"` : le logiciel ne la mesure pas.
-- `feature_of_interest.present: false` : référence et fond se font sans objet.
+- `feature_of_interest.present: false` pour la référence et le fond, qui se font sans objet ; pour la mesure objet, l'objet du registre (`id`, nom) et son lift-off, comme pour un scan (lift-off non saisi : signalé).

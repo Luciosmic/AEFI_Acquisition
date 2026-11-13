@@ -91,6 +91,7 @@ def wire_dashboard(
     for selector in (
         dashboard.panels["scan_control"].measured_object_selector,
         dashboard.panels["aefi_continuous_reading"].measured_object_selector,
+        dashboard.panels["frequency_sweep"].measured_object_selector,
     ):
         selector.register_requested.connect(measured_object_presenter.on_register_requested)
         measured_object_presenter.measured_objects_listed.connect(selector.set_measured_objects)
@@ -98,19 +99,8 @@ def wire_dashboard(
         measured_object_presenter.registration_failed.connect(selector.on_registration_failed)
     measured_object_presenter.refresh_state()
 
-    # Frequency sweep — reference / background acquisition vs excitation frequency
-    frequency_sweep_panel = dashboard.panels["frequency_sweep"]
-    # Nothing else references the presenter once main's composition returns (its
-    # service only references it back): without a Qt parent, the garbage collector
-    # deletes it and the Start button silently does nothing (seen at the bench on 2026-11-12).
-    frequency_sweep_presenter.setParent(frequency_sweep_panel)
-    frequency_sweep_panel.start_requested.connect(frequency_sweep_presenter.on_start_requested)
-    frequency_sweep_panel.stop_requested.connect(frequency_sweep_presenter.on_stop_requested)
-    frequency_sweep_presenter.request_defaults.connect(frequency_sweep_panel.set_request_defaults)
-    frequency_sweep_presenter.running_changed.connect(frequency_sweep_panel.set_running)
-    frequency_sweep_presenter.status_message.connect(frequency_sweep_panel.set_status_message)
-    frequency_sweep_presenter.point_measured.connect(frequency_sweep_panel.add_point)
-    frequency_sweep_presenter.refresh_state()
+    # Frequency sweep — reference / background / object vs excitation frequency
+    wire_frequency_sweep(dashboard.panels["frequency_sweep"], frequency_sweep_presenter)
 
     # Motion Panel
     motion_panel = dashboard.panels["motion"]
@@ -419,3 +409,19 @@ def wire_dashboard(
     logger.debug("Hardware config panel wired")
 
     logger.debug("Transformation panel wired (via constructor)")
+
+
+def wire_frequency_sweep(panel, presenter: FrequencySweepPresenter) -> None:
+    """Connect the Frequency Sweep panel to its presenter, and keep the
+    presenter alive. Nothing else references it once main's composition
+    returns (its service only references it back): without a Qt parent, the
+    garbage collector deletes it and the Start button silently does nothing
+    (seen at the bench on 2026-11-12)."""
+    presenter.setParent(panel)
+    panel.start_requested.connect(presenter.on_start_requested)
+    panel.stop_requested.connect(presenter.on_stop_requested)
+    presenter.request_defaults.connect(panel.set_request_defaults)
+    presenter.running_changed.connect(panel.set_running)
+    presenter.status_message.connect(panel.set_status_message)
+    presenter.point_measured.connect(panel.add_point)
+    presenter.refresh_state()

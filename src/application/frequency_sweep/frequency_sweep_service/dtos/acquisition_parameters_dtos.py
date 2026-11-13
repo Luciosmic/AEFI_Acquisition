@@ -48,6 +48,9 @@ class FrequencySweepActivityDTO:
     stream_started_here: bool
     operator_name: str = ""
     operator_id: str = ""
+    measured_object_name: str = ""
+    measured_object_id: str = ""
+    lift_off_mm: Optional[float] = None
     ended_at: Optional[datetime] = None
     failure_reason: Optional[str] = None
     acquired_frequency_count: int = 0

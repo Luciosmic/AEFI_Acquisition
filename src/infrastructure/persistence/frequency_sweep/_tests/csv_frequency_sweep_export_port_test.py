@@ -114,6 +114,20 @@ class TestFrequencySweepAcquisitionParameters(unittest.TestCase):
         self.assertNotIn("procedure.frequency_sweep.acquired_frequency_count", [w["path"] for w in serialize()["warnings"]])
 
 
+    def test_an_object_measurement_states_its_object_and_lift_off(self):
+        activity = replace(
+            ACTIVITY, role="object_measurement", measured_object_id="obj-1", measured_object_name="bouteille",
+            lift_off_mm=8.0,
+        )
+        feature = serialize(replace(PARAMETERS, activity=activity))["feature_of_interest"]
+        self.assertTrue(feature["present"])
+        self.assertEqual((feature["id"], feature["description"]), ("obj-1", "bouteille"))
+        self.assertEqual(
+            feature["distance_between_lowest_point_of_sphere_and_highest_point_of_object_under_test"],
+            {"value": 8.0, "unit": "mm", "alias": "lift_off"},
+        )
+
+
 class TestCsvFrequencySweepExportPort(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
