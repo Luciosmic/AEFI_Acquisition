@@ -1,3 +1,9 @@
+---
+type: service-de-domaine::solidai-ddd
+tldr: "calculate_statistics(measurements: List[AefiVoltageMeasurement]) → AefiVoltageMeasurement : retourner la mesure moyennée."
+code: ["[[src/domain/step_scan/services/measurement_statistics_service/measurement_statistics_service.py]]"]
+cause_de_changement: regle-metier
+---
 # measurement_statistics_service — Intention
 
 ## Rationale

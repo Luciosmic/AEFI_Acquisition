@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Nommer un seul refus métier : « un objet mesuré a un nom » (invariant I2 du registre MeasuredObjectRegistry)."
+code: ["[[src/domain/measured_object_registry/errors/measured_object_name_blank_error.py]]"]
+cause_de_changement: regle-metier
+---
 # measured_object_name_blank_error — Intention
 
 ## Rationale

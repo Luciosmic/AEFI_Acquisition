@@ -1,3 +1,10 @@
+---
+type: entite::solidai-ddd
+tldr: "Porter l'identité stable d'un opérateur (operator_id), son nom tel qu'enregistré (espaces normalisés) et sa date d'enregistrement."
+code: ["[[src/domain/operator_registry/entities/operator/operator.py]]"]
+cause_de_changement: regle-metier
+part_of: "[[src/domain/operator_registry/operator_registry_intention]]"
+---
 # operator — Intention
 
 ## Rationale

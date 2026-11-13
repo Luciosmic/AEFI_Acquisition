@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Nommer la promesse refusée : « une ligne contient tous ses points de grille, une fois chacun » ; porte l'id, le nombre attendu, les indices manquants et le nombre reçu."
+code: ["[[src/domain/aefi_line/errors/aefi_line_incomplete_error.py]]"]
+cause_de_changement: regle-metier
+---
 # aefi_line_incomplete_error — Intention
 
 ## Rationale

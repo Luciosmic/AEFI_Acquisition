@@ -1,3 +1,9 @@
+---
+type: service-de-domaine::solidai-ddd
+tldr: "Construire la **trace** de la ligne : couples (instant, abscisse le long de la ligne) reçus pendant le balayage (add_position)."
+code: ["[[src/domain/step_scan/services/fly_scan_line_projector/fly_scan_line_projector.py]]"]
+cause_de_changement: regle-metier
+---
 # fly_scan_line_projector — Intention
 
 ## Rationale

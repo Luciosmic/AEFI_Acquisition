@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Nommer la promesse refusée : un scan non démarré n'accepte aucun point."
+code: ["[[src/domain/scan/errors/scan_not_started_error.py]]"]
+cause_de_changement: regle-metier
+---
 # scan_not_started_error — Intention
 
 ## Rationale

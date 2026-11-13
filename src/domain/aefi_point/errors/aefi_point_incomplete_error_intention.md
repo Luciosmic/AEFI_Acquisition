@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Nommer la promesse refusée : « un point contient exactement N échantillons valides »."
+code: ["[[src/domain/aefi_point/errors/aefi_point_incomplete_error.py]]"]
+cause_de_changement: regle-metier
+---
 # aefi_point_incomplete_error — Intention
 
 ## Rationale

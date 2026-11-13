@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Nommer la promesse refusée : « chaque fréquence de la grille est acquise une seule fois »."
+code: ["[[src/domain/frequency_sweep/errors/frequency_already_acquired_error.py]]"]
+cause_de_changement: regle-metier
+---
 # frequency_already_acquired_error — Intention
 
 ## Rationale
