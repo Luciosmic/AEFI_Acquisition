@@ -42,7 +42,7 @@ from infrastructure.acquisition_conditions_reader.fake.fake_acquisition_conditio
     FakeAcquisitionConditionsPort,
     make_bench_conditions,
 )
-from infrastructure.hardware.serial_link.fake.fake_usb_latency_timer_port import FakeUsbLatencyTimerPort
+from infrastructure.hardware.serial_link.fake.fake_serial_link import FakeUsbLatencyTimerPort
 from infrastructure.git_software_provenance_reader.fake.fake_git_software_provenance_reader import FakeSoftwareProvenancePort
 from dataclasses import replace
 

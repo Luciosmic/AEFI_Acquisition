@@ -1,7 +1,7 @@
 """
 Fake USB Latency Timer Port
 
-See fake_usb_latency_timer_port_intention.md.
+See fake_serial_link_intention.md.
 """
 
 from typing import List, Optional

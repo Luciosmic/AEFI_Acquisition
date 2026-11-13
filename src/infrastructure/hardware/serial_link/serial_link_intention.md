@@ -1,4 +1,4 @@
-# ftdi_usb_latency_timer_reader — Intention
+# serial_link — Intention
 
 ## Rationale
 

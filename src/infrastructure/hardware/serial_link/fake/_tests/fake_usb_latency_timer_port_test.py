@@ -1,6 +1,6 @@
 import unittest
 
-from infrastructure.hardware.serial_link.fake.fake_usb_latency_timer_port import FakeUsbLatencyTimerPort
+from infrastructure.hardware.serial_link.fake.fake_serial_link import FakeUsbLatencyTimerPort
 
 
 class TestFakeUsbLatencyTimerPort(unittest.TestCase):

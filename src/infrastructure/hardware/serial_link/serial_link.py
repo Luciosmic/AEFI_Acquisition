@@ -1,7 +1,7 @@
 """
 FTDI USB Latency Timer Reader
 
-See ftdi_usb_latency_timer_reader_intention.md.
+See serial_link_intention.md.
 """
 
 import logging

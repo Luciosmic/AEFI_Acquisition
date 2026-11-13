@@ -1,4 +1,4 @@
-# fake_usb_latency_timer_port — Intention
+# fake_serial_link — Intention
 
 ## Rationale
 
