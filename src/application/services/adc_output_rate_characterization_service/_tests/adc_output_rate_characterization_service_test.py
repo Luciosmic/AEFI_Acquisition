@@ -18,7 +18,7 @@ from application.services.aefi_acquisition_service.dtos.aefi_acquisition_dtos im
 from application.services.hardware_configuration_service.hardware_configuration_service import (
     HardwareConfigurationService,
 )
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from infrastructure.execution.fake.fake_thread_pool_task_runner import FakeThreadPoolTaskRunner
 from infrastructure.hardware.micro_controller.ads131a04.fake.fake_adc_oversampling_port import FakeAdcOversamplingPort
 from infrastructure.hardware.oscilloscope_dsox2014.fake.fake_drdy_capture_port import FakeDrdyCapturePort

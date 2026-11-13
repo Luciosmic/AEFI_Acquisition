@@ -14,7 +14,7 @@ from domain.test_bench.calibration.events.active_sensor_rotation_changed.active_
 from domain.test_bench.calibration.value_objects.sensor_rotation_angles.sensor_rotation_angles import (
     SensorRotationAngles,
 )
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from tool.diagram_friendly_test import DiagramFriendlyTest
 
 

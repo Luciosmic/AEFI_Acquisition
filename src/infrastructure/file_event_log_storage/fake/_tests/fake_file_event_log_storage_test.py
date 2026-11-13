@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 
 from application.services.event_log_maintenance_service.ports.i_event_log_storage_port import StoredEventLogSession
-from infrastructure.events.fake.fake_event_log_storage import FakeEventLogStorage
+from infrastructure.file_event_log_storage.fake.fake_file_event_log_storage import FakeEventLogStorage
 
 
 def _session(name, day, live=False):

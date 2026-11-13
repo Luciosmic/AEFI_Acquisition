@@ -26,7 +26,7 @@ from application.services.excitation_configuration_service.excitation_configurat
     ExcitationConfigurationService,
 )
 from domain.shared_kernel.excitation.value_objects.excitation_mode import ExcitationMode
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from infrastructure.execution.thread_pool_task_runner import ThreadPoolTaskRunner
 from infrastructure.execution.event_bus_motion_synchronizer import EventBusMotionSynchronizer
 from infrastructure.mocks.adapter_mock_i_motion_port import MockMotionPort

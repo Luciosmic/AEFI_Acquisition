@@ -3,7 +3,7 @@ import pytest
 from application.services.inertial_probe_service.ports.i_inertial_probe_stream_port import (
     IInertialProbeStreamPort,
 )
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from infrastructure.hardware.hardware_composition_root import HardwareCompositionRoot
 from infrastructure.hardware.lsm9ds1.adapter_inertial_probe_stream_port import (
     Lsm9ds1InertialProbeStreamAdapter,

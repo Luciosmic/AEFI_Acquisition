@@ -25,7 +25,7 @@ from application.services.excitation_configuration_service.excitation_configurat
     ExcitationConfigurationService,
 )
 
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from infrastructure.mocks.adapter_mock_i_excitation_port import MockExcitationPort
 from infrastructure.execution.fake.fake_thread_pool_task_runner import FakeThreadPoolTaskRunner
 

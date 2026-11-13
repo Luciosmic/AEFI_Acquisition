@@ -16,7 +16,7 @@ from infrastructure.hardware.micro_controller.ad9106.ad9106_advanced_configurato
     AD9106AdvancedConfigurator,
     DDS_SYNCHRONOUS_DETECTION_CHANNEL_CHANGED_TOPIC,
 )
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from domain.shared_kernel.excitation.value_objects.phase_angle import PhaseAngle
 from domain.shared_kernel.excitation.events.excitation_frequency_changed.excitation_frequency_changed import (
     ExcitationFrequencyChanged,

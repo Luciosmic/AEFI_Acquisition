@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 
 import pytest
 
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from infrastructure.unit_of_work.in_memory_unit_of_work import InMemoryUnitOfWork
 
 

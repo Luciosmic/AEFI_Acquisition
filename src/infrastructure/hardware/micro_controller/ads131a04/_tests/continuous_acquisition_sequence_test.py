@@ -10,7 +10,7 @@ if str(src_path) not in sys.path:
     sys.path.append(str(src_path))
 
 from tool.diagram_friendly_test import DiagramFriendlyTest
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
 from application.services.aefi_acquisition_service.ports.i_aefi_acquisition_executor import AefiAcquisitionConfig
 from application.services.scan_application_service.ports.i_acquisition_port import IAcquisitionPort

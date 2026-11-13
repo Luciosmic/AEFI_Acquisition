@@ -2,7 +2,7 @@ import time
 from typing import List
 
 from tool.diagram_friendly_test import DiagramFriendlyTest
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 
 from application.services.aefi_acquisition_service.aefi_acquisition_service import (
     AefiAcquisitionService,

@@ -5,7 +5,7 @@ import unittest
 from unittest.mock import MagicMock
 
 from interface.presenters.excitation_presenter import ExcitationPresenter
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from application.services.excitation_configuration_service.excitation_configuration_service import (
     ExcitationConfigurationService,
     EXCITATION_DDS_LINK_CHANGED_TOPIC,

@@ -18,7 +18,7 @@ from infrastructure.hardware.micro_controller.ad9106.ad9106_advanced_configurato
 from infrastructure.hardware.micro_controller.ad9106.adapter_synchronous_detection_ad9106 import (
     AdapterSynchronousDetectionAD9106,
 )
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 
 _AD9106_LAST_CONFIG_PATH = os.path.join(".aefi_acquisition", "configs", "ad9106_last_config.json")
 

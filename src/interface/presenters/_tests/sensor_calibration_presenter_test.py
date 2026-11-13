@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from interface.presenters.sensor_calibration_presenter import SensorCalibrationPresenter
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from application.services.sensor_calibration_service.i_api_sensor_calibration_service import (
     IApiSensorCalibrationService,
 )

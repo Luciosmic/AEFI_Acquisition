@@ -19,7 +19,7 @@ from domain.scan.value_objects.scan_id.scan_id import ScanId
 from domain.scan.value_objects.scan_state.scan_state import ScanState
 from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
 from domain.step_scan.value_objects.scan_status.scan_status import ScanStatus
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from infrastructure.execution.thread_pool_task_runner import ThreadPoolTaskRunner
 from infrastructure.execution.event_bus_motion_synchronizer import EventBusMotionSynchronizer
 from infrastructure.hardware.arcus_performax_4ex.adapter_motion_port_arcus_performax4ex import ArcusAdapter

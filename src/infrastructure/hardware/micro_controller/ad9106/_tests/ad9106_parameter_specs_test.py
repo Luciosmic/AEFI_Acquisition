@@ -13,7 +13,7 @@ from application.services.hardware_configuration_service.hardware_configuration_
 from domain.shared_kernel.value_objects.hardware_configuration.hardware_advanced_parameter_schema import (
     NumberParameterSchema, EnumParameterSchema
 )
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 
 print("=== Test AD9106 Conversion Logic (Presenter logic without PyQt6) ===\n")
 

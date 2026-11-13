@@ -17,7 +17,7 @@ from domain.detection_devices.inertial_probe.events.inertial_probe_stream_failed
     InertialProbeStreamFailed,
 )
 from domain.detection_devices.lidar.lidar_distance.lidar_distance import LidarDistance
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from infrastructure.hardware.lsm9ds1.fake.fake_inertial_probe_stream_adapter import (
     FakeInertialProbeStreamAdapter,
 )

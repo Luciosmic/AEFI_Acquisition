@@ -22,7 +22,7 @@ from domain.shared_kernel.events.aefi_voltage_sample_acquired.aefi_voltage_sampl
     AefiVoltageSampleAcquired,
 )
 from domain.shared_kernel.excitation.value_objects.excitation_mode import ExcitationMode
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from infrastructure.execution.fake.fake_thread_pool_task_runner import FakeThreadPoolTaskRunner
 from infrastructure.mocks._tests.point_charge_field_simulator_test import make_synthetic_config
 from infrastructure.mocks.adapter_mock_excitation_aware_acquisition import ExcitationAwareAcquisitionPort

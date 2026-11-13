@@ -6,7 +6,7 @@ from application.services.inertial_probe_service.inertial_probe_service import (
     CONNECTION_CHANGED_TOPIC,
     InertialProbeService,
 )
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from infrastructure.hardware.lsm9ds1.fake.fake_inertial_probe_stream_adapter import (
     FakeInertialProbeStreamAdapter,
 )

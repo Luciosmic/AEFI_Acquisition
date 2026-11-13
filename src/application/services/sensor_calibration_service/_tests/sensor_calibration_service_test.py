@@ -29,7 +29,7 @@ from domain.test_bench.calibration.value_objects.hardware_component_kind.hardwar
 from domain.test_bench.calibration.value_objects.sensor_rotation_angles.sensor_rotation_angles import (
     SensorRotationAngles,
 )
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from infrastructure.persistence.calibration.fake.fake_sensor_calibration_repository import (
     FakeSensorCalibrationRepository,
 )

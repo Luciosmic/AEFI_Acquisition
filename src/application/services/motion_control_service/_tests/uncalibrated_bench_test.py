@@ -36,7 +36,7 @@ from application.services.motion_control_service.ports.motion_conversion_unavail
     MotionConversionUnavailableError,
 )
 from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from infrastructure.persistence.calibration.fake.fake_hardware_component_repository import (
     FakeHardwareComponentRepository,
 )

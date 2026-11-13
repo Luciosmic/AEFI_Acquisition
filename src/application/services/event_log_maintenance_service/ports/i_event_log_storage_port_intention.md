@@ -20,6 +20,6 @@ fuirait dans la couche application.
 ## Design
 
 - Port outbound, consommé par `EventLogMaintenanceService`.
-- Real : `infrastructure/events/file_event_log_storage.py` ; Fake :
-  `infrastructure/events/fake/fake_event_log_storage.py`.
+- Real : `infrastructure/file_event_log_storage/file_event_log_storage.py` ; Fake :
+  `infrastructure/file_event_log_storage/fake/fake_file_event_log_storage.py`.
 - `started_at` vient du nom de fichier (UTC), pas du `mtime`.

@@ -149,9 +149,9 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
     from infrastructure.acquisition_conditions.acquisition_conditions_reader import AcquisitionConditionsReader
     from infrastructure.hardware.serial_link.ftdi_usb_latency_timer_reader import FtdiUsbLatencyTimerReader
     from infrastructure.provenance.git_software_provenance_reader import GitSoftwareProvenanceReader
-    from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+    from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
     from infrastructure.events.event_audit_log import EventAuditLog
-    from infrastructure.events.file_event_log_storage import FileEventLogStorage
+    from infrastructure.file_event_log_storage.file_event_log_storage import FileEventLogStorage
     from infrastructure.execution.thread_pool_task_runner import ThreadPoolTaskRunner
     from infrastructure.execution.event_bus_motion_synchronizer import EventBusMotionSynchronizer
     from infrastructure.persistence.csv_scan_export_port import CsvScanExportPort

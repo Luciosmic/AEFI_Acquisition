@@ -21,7 +21,7 @@ from domain.scan.value_objects.scan_state.scan_state import ScanState
 from domain.shared_kernel.events.domain_event.domain_event import DomainEvent
 from domain.step_scan.events.scan_failed.scan_failed import ScanFailed
 from domain.step_scan.events.scan_started.scan_started import ScanStarted
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from infrastructure.execution.electric_field_probe_acquisition_executor import (
     ElectricFieldProbeAcquisitionExecutor,
 )

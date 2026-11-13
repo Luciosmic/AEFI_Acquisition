@@ -8,7 +8,7 @@ from application.services.operator_service.operator_service_errors import (
     OperatorRegistryUnavailable,
 )
 from domain.operator_registry.entities.operator.operator import Operator
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from infrastructure.persistence.operator_registry.fake.fake_operator_repository import FakeOperatorRepository
 
 LUIS = Operator(operator_id=uuid4(), name="Luis Saluden", registered_at=datetime(2026, 10, 1, tzinfo=timezone.utc))

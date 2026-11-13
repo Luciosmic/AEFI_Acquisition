@@ -4,7 +4,7 @@ from domain.scan.value_objects.expected_source.expected_source import ExpectedSo
 from domain.scan.scan import Scan
 from domain.scan.value_objects.scan_id.scan_id import ScanId
 from domain.step_scan.events.scan_completed.scan_completed import ScanCompleted
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from infrastructure.unit_of_work.in_memory_unit_of_work import InMemoryUnitOfWork
 
 

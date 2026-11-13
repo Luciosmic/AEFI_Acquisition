@@ -3,7 +3,7 @@
 import unittest
 
 from interface.presenters.synchronous_detection_presenter import SynchronousDetectionPresenter
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from application.services.synchronous_detection_service.i_api_synchronous_detection_service import (
     IApiSynchronousDetectionService,
 )

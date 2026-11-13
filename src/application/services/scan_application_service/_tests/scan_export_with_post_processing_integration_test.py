@@ -21,7 +21,7 @@ from typing import Any, Dict, List
 
 import h5py
 
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from application.services.scan_application_service.scan_closure_handler.scan_closure_handler import ScanClosureHandler
 from infrastructure.unit_of_work.in_memory_unit_of_work import InMemoryUnitOfWork
 from infrastructure.execution.thread_pool_task_runner import ThreadPoolTaskRunner

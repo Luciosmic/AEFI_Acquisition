@@ -14,7 +14,7 @@ from application.services.scan_application_service.column_stabilization.column_s
     TIMEOUT,
     ColumnStabilization,
 )
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 
 RATE_HZ = 25.0
 REST_G = 0.002  # amplitude of the still column

@@ -13,7 +13,7 @@ from application.services.scan_application_service.dtos.scan_dtos import Scan2DC
 from application.services.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
 from domain.step_scan.events.scan_started.scan_started import ScanStarted
 from domain.step_scan.events.scan_completed.scan_completed import ScanCompleted
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from infrastructure.execution.fake.fake_thread_pool_task_runner import FakeThreadPoolTaskRunner
 from infrastructure.execution.fake.fake_event_bus_motion_synchronizer import FakeEventBusMotionSynchronizer
 from infrastructure.mocks.adapter_mock_i_motion_port import MockMotionPort

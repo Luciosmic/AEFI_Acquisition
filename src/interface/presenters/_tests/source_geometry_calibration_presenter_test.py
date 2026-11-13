@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from typing import List, Optional
 
 from interface.presenters.source_geometry_calibration_presenter import SourceGeometryCalibrationPresenter
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from application.services.source_geometry_calibration_service.i_api_source_geometry_calibration_service import (
     IApiSourceGeometryCalibrationService,
 )

@@ -9,7 +9,7 @@ from application.services.motion_control_service.motion_control_service import M
 from application.services.motion_control_service.ports.i_motion_port import IMotionPort
 from application.services.raw_increment_motion.ports.i_raw_increment_motion_port import IRawIncrementMotionPort
 from application.services.raw_increment_motion.ports.raw_increment_motion_error import RawIncrementMotionError
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 
 
 def make_service(conversion_available=True, microns_per_pulse=21.46):

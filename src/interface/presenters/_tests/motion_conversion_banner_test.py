@@ -25,7 +25,7 @@ from domain.shared_kernel.motion.events.motion_conversion_became_available.motio
 from domain.shared_kernel.motion.events.motion_conversion_found_missing.motion_conversion_found_missing import (
     MotionConversionFoundMissing,
 )
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from interface.presenters.motion_presenter import MotionPresenter
 from interface.presenters.scan_presenter import ScanPresenter
 from interface.widgets.panels.motion_panel_compact import MotionPanelCompact

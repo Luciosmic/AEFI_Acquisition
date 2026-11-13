@@ -38,7 +38,7 @@ if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
 from domain.shared_kernel.value_objects.geometric.position_2d import Position2D  # noqa: E402
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus  # noqa: E402
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus  # noqa: E402
 from infrastructure.hardware.arcus_performax_4ex.composition_root_arcus import ArcusCompositionRoot  # noqa: E402
 from application.services.mechanical_transmission_calibration_service.mechanical_transmission_calibration_service import (  # noqa: E402
     MechanicalTransmissionCalibrationService,

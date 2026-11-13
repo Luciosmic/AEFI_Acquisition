@@ -10,7 +10,7 @@ from domain.test_bench.calibration.entities.source_geometry_calibration_entry.so
     SourceGeometryCalibrationEntry,
 )
 from domain.test_bench.calibration.value_objects.caliper_measurement.caliper_measurement import CaliperMeasurement
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from infrastructure.persistence.calibration.fake.fake_source_geometry_calibration_repository import (
     FakeSourceGeometryCalibrationRepository,
 )

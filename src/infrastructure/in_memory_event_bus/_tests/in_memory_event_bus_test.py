@@ -2,7 +2,7 @@
 Tests for InMemoryEventBus (Diagram-Friendly)
 """
 
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from tool.diagram_friendly_test import DiagramFriendlyTest
 
 class TestInMemoryEventBus(DiagramFriendlyTest):
@@ -222,7 +222,7 @@ class TestUnlistenedTopicLogging(DiagramFriendlyTest):
     def test_unlistened_topic_warns_once_then_stays_quiet(self):
         bus = InMemoryEventBus()
 
-        with self.assertLogs("infrastructure.events.in_memory_event_bus", level="WARNING") as captured:
+        with self.assertLogs("infrastructure.in_memory_event_bus.in_memory_event_bus", level="WARNING") as captured:
             for _ in range(50):
                 bus.publish("aefisamplecorrected", object())
 
@@ -232,7 +232,7 @@ class TestUnlistenedTopicLogging(DiagramFriendlyTest):
     def test_each_unlistened_topic_is_announced_on_its_own(self):
         bus = InMemoryEventBus()
 
-        with self.assertLogs("infrastructure.events.in_memory_event_bus", level="WARNING") as captured:
+        with self.assertLogs("infrastructure.in_memory_event_bus.in_memory_event_bus", level="WARNING") as captured:
             bus.publish("topic_a", object())
             bus.publish("topic_b", object())
             bus.publish("topic_a", object())

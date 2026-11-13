@@ -7,7 +7,7 @@ if str(src_path) not in sys.path:
     sys.path.append(str(src_path))
 
 from infrastructure.hardware.hardware_composition_root import HardwareCompositionRoot
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from application.services.motion_control_service.ports.i_motion_port import IMotionPort
 from application.services.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
 from application.services.excitation_configuration_service.ports.i_excitation_port import IExcitationPort

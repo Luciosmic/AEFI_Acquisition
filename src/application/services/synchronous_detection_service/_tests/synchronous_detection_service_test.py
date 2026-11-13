@@ -22,7 +22,7 @@ from domain.test_bench.calibration.value_objects.synchronous_detection_phase_cal
     SynchronousDetectionPhaseCalibrationPoint,
 )
 from domain.shared_kernel.excitation.value_objects.phase_angle import PhaseAngle
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from infrastructure.mocks.adapter_mock_i_synchronous_detection_hardware_port import (
     MockSynchronousDetectionHardwarePort,
 )

@@ -9,7 +9,7 @@ if str(src_path) not in sys.path:
 
 from tool.diagram_friendly_test import DiagramFriendlyTest
 from infrastructure.hardware.micro_controller.mcu_composition_root import MCUCompositionRoot
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from application.services.scan_application_service.ports.i_acquisition_port import IAcquisitionPort
 from application.services.system_lifecycle_service.ports.i_hardware_initialization_port import IHardwareInitializationPort
 from application.services.aefi_acquisition_service.ports.i_aefi_acquisition_executor import IAefiAcquisitionExecutor

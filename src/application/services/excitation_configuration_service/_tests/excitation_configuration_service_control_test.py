@@ -8,7 +8,7 @@ from application.services.excitation_configuration_service.excitation_configurat
     ExcitationConfigurationService,
 )
 from domain.shared_kernel.excitation.value_objects.excitation_mode import ExcitationMode
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from infrastructure.mocks.adapter_mock_i_excitation_port import MockExcitationPort
 
 

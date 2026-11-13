@@ -72,7 +72,7 @@ from infrastructure.hardware.micro_controller.ads131a04.adapter_aefi_acquisition
     AdapterAefiAcquisitionAds131a04,
 )
 from application.services.aefi_acquisition_service.ports.i_aefi_acquisition_executor import AefiAcquisitionConfig
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 
 SELECTED_PORT = "COM10"
 BAUDRATE = 1500000

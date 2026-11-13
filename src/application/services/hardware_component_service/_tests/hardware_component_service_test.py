@@ -5,7 +5,7 @@ from application.services.hardware_component_service.hardware_component_service 
     HARDWARE_COMPONENT_MOUNTED_TOPIC,
     HardwareComponentService,
 )
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from infrastructure.persistence.calibration.fake.fake_hardware_component_repository import (
     FakeHardwareComponentRepository,
 )

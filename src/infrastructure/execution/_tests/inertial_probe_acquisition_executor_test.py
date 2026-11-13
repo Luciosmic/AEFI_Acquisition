@@ -6,7 +6,7 @@ import pytest
 from application.services.inertial_probe_service.dtos.inertial_probe_dtos import (
     InertialProbeAcquisitionConfig,
 )
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from infrastructure.execution.inertial_probe_acquisition_executor import (
     SAMPLE_ACQUIRED_TOPIC,
     STREAM_FAILED_TOPIC,

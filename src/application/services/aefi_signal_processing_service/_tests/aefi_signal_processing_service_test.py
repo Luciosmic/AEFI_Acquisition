@@ -3,7 +3,7 @@ from typing import List
 from uuid import uuid4
 
 from tool.diagram_friendly_test import DiagramFriendlyTest
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 
 from application.services.aefi_signal_processing_service.aefi_signal_processing_service import (
     AefiSignalProcessingService,

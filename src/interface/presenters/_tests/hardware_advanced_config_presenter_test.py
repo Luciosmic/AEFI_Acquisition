@@ -6,7 +6,7 @@ Excitation panel (see hardware_advanced_config_presenter.py docstring).
 import unittest
 
 from interface.presenters.hardware_advanced_config_presenter import HardwareAdvancedConfigPresenter
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from application.services.hardware_configuration_service.hardware_configuration_service import (
     HardwareConfigurationService,
 )

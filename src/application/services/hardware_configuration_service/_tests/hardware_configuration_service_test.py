@@ -203,7 +203,7 @@ class TestHardwareConfigurationControl(unittest.TestCase):
     configuration, the Hardware Advanced Config panel cannot change it."""
 
     def setUp(self):
-        from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+        from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 
         self.provider = _FakeResettableProvider()
         self.event_bus = InMemoryEventBus()

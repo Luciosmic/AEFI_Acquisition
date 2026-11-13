@@ -7,7 +7,7 @@ from domain.aefi_point.value_objects.aefi_point_id.aefi_point_id import AefiPoin
 from domain.aefi_point.value_objects.sample.sample import Sample
 from domain.shared_kernel.value_objects.acquisition.aefi_voltage_measurement import AefiVoltageMeasurement
 from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from infrastructure.unit_of_work.in_memory_unit_of_work import InMemoryUnitOfWork
 
 

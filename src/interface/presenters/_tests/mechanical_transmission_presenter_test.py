@@ -13,7 +13,7 @@ from application.services.mechanical_transmission_calibration_service.dtos.mecha
 from application.services.mechanical_transmission_calibration_service.dtos.mechanical_transmission_gap_dto import (
     MechanicalTransmissionGapDTO,
 )
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from interface.presenters.mechanical_transmission_presenter import MechanicalTransmissionPresenter
 from interface.widgets.panels.mechanical_transmission_panel import MechanicalTransmissionPanel
 

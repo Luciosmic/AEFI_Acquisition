@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 
 import pytest
 
-from infrastructure.events.file_event_log_storage import FileEventLogStorage
+from infrastructure.file_event_log_storage.file_event_log_storage import FileEventLogStorage
 
 OLD = "events_20260731T125327Z_2c8a78.jsonl"
 LIVE = "events_20261001T122016Z_c7ea0e.jsonl"

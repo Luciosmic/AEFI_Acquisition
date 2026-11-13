@@ -2,7 +2,7 @@ import time
 import unittest
 from typing import List
 
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from infrastructure.execution.electric_field_probe_acquisition_executor import (
     ElectricFieldProbeAcquisitionExecutor,
 )

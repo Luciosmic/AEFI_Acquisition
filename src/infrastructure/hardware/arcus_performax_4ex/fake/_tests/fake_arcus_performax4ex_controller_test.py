@@ -3,7 +3,7 @@ import time
 import unittest
 
 from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from infrastructure.hardware.arcus_performax_4ex.fake.fake_arcus_performax4ex_controller import (
     FakeArcusPerformax4EXController,
     _MEASURED_TIMING_BY_HS,

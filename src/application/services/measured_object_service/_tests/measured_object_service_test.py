@@ -8,7 +8,7 @@ from application.services.measured_object_service.measured_object_service_errors
     MeasuredObjectRegistryUnavailable,
 )
 from domain.measured_object_registry.entities.measured_object.measured_object import MeasuredObject
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from infrastructure.persistence.measured_object_registry.fake.fake_measured_object_repository import FakeMeasuredObjectRepository
 
 LUIS = MeasuredObject(measured_object_id=uuid4(), name="Luis Saluden", registered_at=datetime(2026, 10, 1, tzinfo=timezone.utc))

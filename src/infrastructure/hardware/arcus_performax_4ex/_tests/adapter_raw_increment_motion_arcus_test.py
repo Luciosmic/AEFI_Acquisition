@@ -11,7 +11,7 @@ import unittest
 from application.services.raw_increment_motion.ports.raw_increment_motion_error import (
     RawIncrementMotionError,
 )
-from infrastructure.events.in_memory_event_bus import InMemoryEventBus
+from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
 from infrastructure.hardware.arcus_performax_4ex.adapter_motion_port_arcus_performax4ex import ArcusAdapter
 from infrastructure.hardware.arcus_performax_4ex.adapter_raw_increment_motion_arcus import (
     ArcusRawIncrementMotionAdapter,
