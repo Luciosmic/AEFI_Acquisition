@@ -1,0 +1,49 @@
+........................................................................ [  3%]
+..............................ss........................................ [  7%]
+........................................................................ [ 11%]
+........................................................................ [ 15%]
+........................................................................ [ 19%]
+........................................................................ [ 23%]
+........................................................................ [ 27%]
+........................................................................ [ 31%]
+........................................................................ [ 34%]
+........................................................................ [ 38%]
+........................................................................ [ 42%]
+........................................................................ [ 46%]
+........................................................................ [ 50%]
+........................................................................ [ 54%]
+..............................s......................................... [ 58%]
+........................................................................ [ 62%]
+........................................................................ [ 66%]
+........................................................................ [ 69%]
+........................................................................ [ 73%]
+........................................................................ [ 77%]
+............................................................................................. [ 82%]
+........................................................................................... [ 87%]
+........................................................................ [ 91%]
+........................................................................ [ 95%]
+........................................................................ [ 99%]
+............                                                             [100%]
+=============================== warnings summary ===============================
+src/interface/widgets/panels/_tests/scan_visualization_panel_test.py::test_first_show_draws_and_lays_out_once
+src/interface/widgets/panels/_tests/scan_visualization_panel_test.py::test_data_received_while_hidden_is_drawn_at_show
+  /Users/luis/Library/CloudStorage/Dropbox/Luis/1 PROJETS/1 - THESE/EXPERIMENTAL/AEFI_Acquisition/src/interface/widgets/panels/scan_visualization_panel.py:540: RuntimeWarning: All-NaN slice encountered
+    vmin = np.nanmin(data)
+
+src/interface/widgets/panels/_tests/scan_visualization_panel_test.py::test_first_show_draws_and_lays_out_once
+src/interface/widgets/panels/_tests/scan_visualization_panel_test.py::test_data_received_while_hidden_is_drawn_at_show
+  /Users/luis/Library/CloudStorage/Dropbox/Luis/1 PROJETS/1 - THESE/EXPERIMENTAL/AEFI_Acquisition/src/interface/widgets/panels/scan_visualization_panel.py:541: RuntimeWarning: All-NaN slice encountered
+    vmax = np.nanmax(data)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+1849 passed, 3 skipped, 4 warnings, 248 subtests passed in 183.60s (0:03:03)
+This plugin does not support createPlatformOpenGLContext!
+This plugin does not support createPlatformOpenGLContext!
+This plugin does not support createPlatformOpenGLContext!
+This plugin does not support createPlatformOpenGLContext!
+This plugin does not support createPlatformOpenGLContext!
+This plugin does not support createPlatformOpenGLContext!
+This plugin does not support createPlatformOpenGLContext!
+This plugin does not support createPlatformOpenGLContext!
+This plugin does not support createPlatformOpenGLContext!
+This plugin does not support createPlatformOpenGLContext!
