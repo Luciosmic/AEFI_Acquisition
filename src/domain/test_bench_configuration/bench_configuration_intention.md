@@ -1,3 +1,15 @@
+---
+type: racine-d-agregat::solidai-ddd
+tldr: "Enregistrer la caractérisation d'un composant du banc et monter un composant caractérisé, en émettant le fait passé correspondant."
+code: ["[[src/domain/test_bench_configuration/bench_configuration.py]]"]
+cause_de_changement: regle-metier
+repositories:
+  - ^: i-hardware-component-repository
+    type: interface-de-repository::solidai-ddd
+    tldr: "add(entry) / find_all(kind) : le catalogue des caractérisations ; add_selection(selection) / find_selections(kind) : le journal des montages."
+    sens: sortant
+    code: "[[src/domain/test_bench_configuration/repositories/i_hardware_component_repository.py]]"
+---
 # bench_configuration — Intention
 
 ## Rationale
