@@ -1,4 +1,13 @@
+---
+type: noyau-partage::solidai-ddd
+tldr: "Noyau partagé du domaine : le résultat d'opération, les événements transverses et les valeurs de mesure que plusieurs agrégats et couches utilisent."
+code: ["[[src/domain/shared_kernel/operation_result.py]]"]
+cause_de_changement: regle-metier
+utilise_par: ["[[src/domain/test_bench_calibration/calibration_intention]]"]
+---
 # operation_result — Intention
+
+Cette intention déclare aussi le noyau partagé `domain/shared_kernel/` (Evans, DDD, ch. 14, « Shared Kernel ») : le sous-ensemble du modèle que plusieurs agrégats s'accordent à partager. Ses événements et objets-valeurs lui sont rattachés par `part_of`, et `utilise_par` nomme ceux qui l'importent.
 
 ## Rationale
 
