@@ -17,7 +17,7 @@ date: 2026-11-13
 | 5 dépôts de calibration (port, réel, Fake) typés, enregistrements `repositories:` dans la racine `calibration` | −10 `intention-non-typee`, −5 `port-sortant-sans-fake` | +5 `solidai-repository-mal-place` : D7 veut `domain/<agrégat>/repositories/`, même cause |
 
 La racine `calibration` est typée (famille 1, commit `d17e8be`) : D1 et D6 la passent.
-Ses 38 intentions enfants (6 entités, 12 objets-valeurs, 8 événements, 5 dépôts, 4 services, 2 erreurs, 1 racine) restent à typer ; les entités, objets-valeurs et erreurs n'ont pas la règle de place et pourraient l'être sans erreur nouvelle, mais je ne les ai pas isolés dans cette vague.
+Ses 37 intentions enfants (6 entités, 12 objets-valeurs, 8 événements, 5 dépôts, 4 services, 2 erreurs) restent à typer : D2 et D3 fixent la place des entités et des objets-valeurs comme D4 celle des événements, et je ne les ai pas essayés isolément.
 
 ## Autres éléments du domaine laissés non typés
 
