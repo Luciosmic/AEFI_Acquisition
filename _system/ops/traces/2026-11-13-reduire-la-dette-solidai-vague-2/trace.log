@@ -26,3 +26,5 @@
 01:53 | jalon | lot=15 | fait | commit=1f0df49 | mypy=-28, 3 revelees | verify identique apres commit
 01:56 | jalon | lot=16 | commite puis defait | le commit fait passer co-changement 63->61 | constat=constat-lots-14-et-16-annules-car-leur-commit-deplace-le-co-changement.md
 01:57 | jalon | etape=5 bilan | verify=1266->1215 erreurs, 63 avertissements | mypy=3298->2943, no-untyped-def 2864->2401, 108 revelees | lots faits=11, annules=4, sautes=0 | restants=1 lot verify (9), 21 lots typage (1291) | bilan=bilan-vague-2.md | tri=run-tri-apres.txt
+01:59 | jalon | au_diagnostics=2 erreurs yaml anciennes (_system/promise_model, _system/thoughts_interface), 0 nouvelle ; 3 avertissements genere_par en attente de la note de tache | arcus_performax_4ex=0 diagnostic
+02:00 | fin | resultat=critere atteint | DLL64 exclu (b419bc7) | paquet renomme (ee73c44 renommages, 6648d33 references), import de controle ok | 15 lots typage tentes : 11 faits, 2 annules (list-item), 2 defaits (co-changement apres commit) | pytest identique a chaque etape | verify 1266->1215 | mypy 3298->2943 | bilan=bilan-vague-2.md
