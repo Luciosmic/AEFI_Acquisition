@@ -1,7 +1,7 @@
 # Plan — Post-traitement conforme à l'acquisition
 
 **État :** journal du post-traitement fait (2026-11-12) ; conception de l'architecture en panneaux et récits utilisateurs écrits, à valider.
-**Prochaine action :** faire valider par l'humain `2026-11-12-concevoir-l-architecture-par-panneaux/conception - post-traitement en panneaux.md` (et ses trois points à trancher), puis coder la tranche 1, la conformité de base.
+**Prochaine action :** consigne de l'humain du 2026-11-13 : 1) demander l'avis d'un agent chargé du profil `solidai` (`SOLIDAI-PACKAGES/solidai-developpement/profiles/solidai.yaml`, ou `SOLIDAI/_system/self/profiles/solidai.yaml`) sur `2026-11-12-concevoir-l-architecture-par-panneaux/conception - post-traitement en panneaux.md` et ses trois points à trancher ; 2) accepter ses recommandations sans revenir à l'humain ; 3) coder avec lui, en commençant par la tranche 1 (conformité de base), dans un worktree propre (`AEFI_Acquisition_dev_post_processor/`, branche `dev_post_processor` depuis `develop`), fusionné dans `develop` à la fin. Attention : la lecture de ces profils sous Dropbox a échoué (`EUNKNOWN`), probablement un fichier non synchronisé en local ; le rendre disponible hors ligne avant de reprendre.
 
 ## Pourquoi
 
