@@ -1,13 +1,10 @@
 """
-DataHandler - Manages HDF5 file lifecycle and CSV loading.
-Provides traceability by saving each processing step with metadata.
+DataHandler - Reads the processing steps of an HDF5 file (the writing moved to infrastructure/hdf5_step_writer).
 """
 
 import logging
 from pathlib import Path
 from typing import Tuple, Dict, List, Optional, Any
-from datetime import datetime
-import pandas as pd
 import numpy as np
 import h5py
 
@@ -16,8 +13,7 @@ logger = logging.getLogger(__name__)
 
 class DataHandler:
     """
-    Manages data loading from CSV and saving processing steps to HDF5.
-    Each processing step is saved with metadata for complete traceability.
+    Opens an HDF5 file and reads its processing steps with their metadata.
     """
     
     def __init__(self, file_path: Path, mode: str = 'a'):
@@ -44,100 +40,6 @@ class DataHandler:
         # Load processing history if it exists
         if 'processing_history' in self.hdf5_file.attrs:
             self.processing_history = list(self.hdf5_file.attrs['processing_history'])
-    
-    def load_csv(self, csv_path: Path) -> pd.DataFrame:
-        """
-        Load raw scan data from CSV file.
-        
-        Args:
-            csv_path: Path to CSV file
-            
-        Returns:
-            DataFrame with scan data
-        """
-        csv_path = Path(csv_path)
-        if not csv_path.exists():
-            raise FileNotFoundError(f"CSV file not found: {csv_path}")
-        
-        df = pd.read_csv(csv_path)
-        
-        # Save source file info to HDF5 metadata
-        if self.hdf5_file is not None:
-            self.hdf5_file.attrs['source_csv'] = str(csv_path)
-            self.hdf5_file.attrs['load_timestamp'] = datetime.now().isoformat()
-        
-        return df
-    
-    def save_step(self, step_name: str, data: np.ndarray, metadata: Optional[Dict[str, Any]] = None):
-        """
-        Save a processing step to HDF5 with metadata.
-        
-        Args:
-            step_name: Name of the processing step (e.g., 'preprocessed', 'phase_calibrated')
-            data: Numpy array with processed data
-            metadata: Optional dictionary with step-specific metadata
-        """
-        if self.hdf5_file is None:
-            raise RuntimeError("HDF5 file not open. Cannot save step.")
-        
-        # Create group for this step
-        group_name = f"/{step_name}"
-        
-        # Remove existing group if it exists
-        if group_name in self.hdf5_file:
-            del self.hdf5_file[group_name]
-        
-        group = self.hdf5_file.create_group(group_name)
-        
-        # Save data
-        group.create_dataset('data', data=data, compression='gzip', compression_opts=4)
-        
-        # Save metadata
-        group.attrs['timestamp'] = datetime.now().isoformat()
-        group.attrs['step_name'] = step_name
-        group.attrs['data_shape'] = data.shape
-        group.attrs['data_dtype'] = str(data.dtype)
-        
-        if metadata:
-            for key, value in metadata.items():
-                # Handle different types appropriately
-                if isinstance(value, (dict, list, tuple)):
-                    # Store complex structures as JSON string to avoid HDF5 type issues
-                    import json
-                    # Convert numpy types to python types for JSON serialization if needed
-                    # simplified approach: try json dumps
-                    try:
-                        # If it's a list/tuple of purely numbers, numpy array is fine and preferred for speed/access?
-                        # But for robustness against strings, JSON is safer.
-                        # Check if it is a list of strings
-                        if isinstance(value, (list, tuple)) and len(value) > 0 and isinstance(value[0], str):
-                             group.attrs[key] = json.dumps(value)
-                        elif isinstance(value, np.ndarray) and value.dtype.kind in ('U', 'S'):
-                             group.attrs[key] = json.dumps(value.tolist())
-                        elif isinstance(value, (np.ndarray, list, tuple)):
-                             # Fallback for numerical arrays
-                             group.attrs[key] = np.array(value)
-                        else:
-                             # Dicts
-                             group.attrs[key] = json.dumps(value)
-                    except Exception as e:
-                        # Fallback to string representation
-                        logger.debug(
-                            "hdf5.attribute_stored_as_text file=%s step=%s key=%s error_type=%s",
-                            self.file_path, step_name, key, type(e).__name__,
-                        )
-                        group.attrs[key] = str(value)
-                elif isinstance(value, (str, int, float, bool)):
-                    group.attrs[key] = value
-                else:
-                    group.attrs[key] = str(value)
-        
-        # Update processing history
-        self.processing_history.append(f"{step_name} @ {datetime.now().isoformat()}")
-        self.hdf5_file.attrs['processing_history'] = self.processing_history
-        
-        # Flush to disk
-        self.hdf5_file.flush()
     
     def load_step(self, step_name: str) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
