@@ -16,6 +16,7 @@ L'acquisition en fréquence est la base de la méthode lente et robuste : réfé
 - Balayage : pour chaque fréquence de la grille, appliquer le mode et les niveaux de l'opérateur à cette fréquence, attendre la stabilisation, collecter N échantillons acquis entièrement à cette fréquence (règle causale, `application/shared/settled_sample_collection`), les faire enregistrer par l'agrégat, publier ses événements, lire le décalage de phase de la référence de détection synchrone appliqué à cette fréquence, présenter le point.
 - `stop_sweep()` : arrêter après la fréquence en cours ; le balayage finit `cancelled`, ce qui a été acquis est exporté.
 - Fin : exporter la réponse par fréquence et les échantillons bruts (même partiels), écrire les paramètres d'acquisition (`completed`, `cancelled` ou `failed`), présenter le résultat.
+- Annoncer sur le bus l'export ouvert dès que son dossier existe (`AcquisitionExportOpened`, sorte `frequency_sweep`, identifiant du balayage, objet mesuré), et sa fermeture quoi qu'il arrive (`AcquisitionExportClosed`) : la garde de fermeture refuse de fermer l'application pendant le balayage, dont les échantillons ne s'écrivent qu'à la fin.
 - Restaurer quoi qu'il arrive : la fréquence de l'opérateur, le flux d'acquisition (arrêté s'il a été démarré ici), la propriété de l'excitation et du flux.
 
 ## Design

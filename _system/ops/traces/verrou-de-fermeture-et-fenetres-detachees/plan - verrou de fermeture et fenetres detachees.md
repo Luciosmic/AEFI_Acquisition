@@ -1,7 +1,14 @@
 # Plan — Verrou de fermeture pendant une acquisition, et panneaux détachés visibles dans Alt+Tab
 
-**État :** plan rédigé le 2026-11-14 sur le PC du labo, pendant une acquisition réelle. L'acquisition est terminée (2026-11-16). Rien n'est codé. Le développement se fait sur le PC du labo, où SolidAI est installé depuis le 2026-11-16 (décision de l'humain, qui remplace le Mac).
-**Prochaine action :** sur le PC du labo, créer le worktree `C:\Users\manip\AEFI_Acquisition_dev_verrou` sur une branche neuve `feature/verrou-fermeture-acquisition` depuis `develop` à jour, puis coder l'étape 1 (le cœur indépendant du système et l'adaptateur de l'action de l'opérateur, avec le message), testable en mode mock.
+**État :** étape 1 codée le 2026-11-16 dans le worktree `C:\Users\manip\AEFI_Acquisition_dev_verrou`, branche `feature/verrou-fermeture-acquisition`, poussée ; tests automatiques verts. Trace : `2026-11-16-coeur-du-verrou-de-fermeture/`.
+**Prochaine action :** l'humain vérifie l'étape 1 en mode mock (scan avec export, croix de la fenêtre, message, puis fermeture une fois le scan arrêté). Ensuite, étape 2 : panneaux détachés dans Alt+Tab, à vérifier aussi dans la fenêtre du post-traitement.
+
+**Ce que l'étape 1 a tranché au codage :**
+
+- Exports couverts : scans (pas à pas et au vol) et lecture continue avec export armé, balayage en fréquence, caractérisation du débit d'acquisition. La caractérisation de la cadence du convertisseur n'écrit qu'une fois, en fin de mesure : hors du verrou.
+- Les services d'export publient `AcquisitionExportOpened` et `AcquisitionExportClosed` (noyau partagé du domaine) ; dans le service d'export des scans, deux petites méthodes isolées, pour une fusion simple avec la tranche 2 du post-traitement.
+- Le texte du message vit dans un présentateur ; la décision de la fenêtre passe par l'adaptateur de l'action de l'opérateur. Seuls chemins de fermeture trouvés : la fenêtre principale et la demande de fin de session ; aucun `quit()` ailleurs dans l'interface.
+- En mode tout simulé, l'assemblage choisit le faux de la garde de session (ses appels apparaissent dans les logs) ; sinon l'adaptateur neutre, jusqu'à l'étape 3.
 
 **Où se vérifie chaque étape :** toutes sur le PC du labo, dans le worktree du verrou, jamais dans `C:\Users\manip\AEFI_Acquisition` (le dossier des acquisitions réelles).
 
