@@ -53,3 +53,4 @@ La config de la sonde de champ électrique vise COM8, absent au moment du relev�
 - `usbipd bind` demande les droits administrateur, une fois par appareil, donc le compte Windows `admin`. `usbipd attach` n'en demande plus ensuite.
 - Ne jamais lancer les tests dans `C:\Users\manip\AEFI_Acquisition`, la copie de travail des vrais runs.
 - Le repo contient déjà le `.venv/` Windows : sous Ubuntu, `uv` doit utiliser `~/.venvs/AEFI_Acquisition_dev` par `UV_PROJECT_ENVIRONMENT`, sinon il écraserait l'environnement Windows.
+- Le repo contient déjà le `.venv/` Windows : sous Ubuntu, `uv` doit utiliser `~/.venvs/AEFI_Acquisition_dev` par `UV_PROJECT_ENVIRONMENT`, sinon il écraserait l'environnement Windows.
