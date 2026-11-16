@@ -1,7 +1,12 @@
 # Plan — Portage Linux des pilotes matériels
 
-**État :** WSL 2 et Ubuntu 24.04 installés le 2026-11-16 sur le PC du labo, dans le compte Windows `manip` ; `usbipd-win` 5.3.0 installé côté Windows. Rien n'est encore installé dans Ubuntu, aucun appareil n'est confié à Linux, aucun pilote n'est porté.
-**Prochaine action :** installer dans Ubuntu `uv` et les outils USB (`usbutils`, `libusb-1.0-0`), puis confier à Linux un premier convertisseur série FTDI par `usbipd bind` et `usbipd attach --wsl`, et vérifier qu'il apparaît en `/dev/ttyUSB*`.
+**État :** étape 1 faite le 2026-11-16 ; le convertisseur FTDI de COM5 (bus 6-1) est confié à Linux et vu en `/dev/ttyUSB0`, nom stable `/dev/serial/by-id/usb-FTDI_LC234X_FT421G4I-if00-port0`. Aucun pilote n'est encore testé depuis Linux.
+**Prochaine action :** créer l'environnement Python de l'application dans Ubuntu, hors du repo (`UV_PROJECT_ENVIRONMENT=~/.venvs/AEFI_Acquisition_dev uv sync`), puis faire lire la centrale inertielle LSM9DS1 sur `/dev/ttyUSB0` par son pilote.
+
+## Fait
+
+- 2026-11-16 : dans Ubuntu, `uv` 0.13.8 (dans `~/.local/bin`), `usbutils`, `libusb-1.0-0` ; utilisateur `manip` ajouté aux groupes `dialout` et `plugdev`.
+- 2026-11-16 : `usbipd bind --busid 6-1` (compte `admin`), puis `usbipd attach --wsl --busid 6-1`. Après un débranchement ou un redémarrage, relancer seulement `usbipd attach --wsl --busid 6-1` depuis Windows.
 
 ## Pourquoi
 
