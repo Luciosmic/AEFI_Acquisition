@@ -4,20 +4,21 @@ Example usage of the data processing pipeline.
 Demonstrates how to process scan data from CSV to final HDF5.
 """
 
-from pathlib import Path
 import sys
+from pathlib import Path
 
-# Add parent directory to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
+# tool/ est dans le module : external_modules/ doit être sur sys.path pour importer aefi_post_processor_module.
+MODULE_DIR = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(MODULE_DIR.parent))
 
-from processing import ProcessingPipeline
+from aefi_post_processor_module.processing import ProcessingPipeline
 
 
 def main():
     """Example pipeline execution."""
     
     # Paths
-    project_root = Path(__file__).parent.parent.parent
+    project_root = MODULE_DIR.parent.parent
     scan_dir = project_root / ".aefi_acquisition" / "scans" / "raw_data"
     output_dir = project_root / ".aefi_acquisition" / "scans" / "processed_data"
     output_dir.mkdir(exist_ok=True)

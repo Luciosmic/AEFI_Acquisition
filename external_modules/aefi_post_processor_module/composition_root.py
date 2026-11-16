@@ -58,7 +58,7 @@ def _ideal_rotation_angles() -> tuple:
     rotation = json.loads(_DEVICE_CONFIG_PATH.read_text(encoding="utf-8"))["sensor"]["calibration"]["sources_to_sensor_rotation"]
     return (float(rotation["theta_x"]), float(rotation["theta_y"]), float(rotation["theta_z"]))
 
-from aefi_post_processor_module.logging_setup import configure_logging
+from aefi_post_processor_module.infrastructure.logging.logging_setup import configure_logging
 from aefi_post_processor_module.processing.processing_pipeline import ProcessingPipeline
 from aefi_post_processor_module.visualisation.model import VisualisationModel
 from aefi_post_processor_module.visualisation.view import VisualisationView

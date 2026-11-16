@@ -1,7 +1,14 @@
 
+import sys
+from pathlib import Path
+
+# tool/ est dans le module : external_modules/ doit être sur sys.path pour importer aefi_post_processor_module.
+MODULE_DIR = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(MODULE_DIR.parent))
+
 import unittest
 import numpy as np
-from tools.aefi_post_processor_modules.processing.primary_field_phase_calibrator import PrimaryFieldPhaseCalibrator
+from aefi_post_processor_module.processing.primary_field_phase_calibrator import PrimaryFieldPhaseCalibrator
 
 class TestPhaseCalibrationBug(unittest.TestCase):
     

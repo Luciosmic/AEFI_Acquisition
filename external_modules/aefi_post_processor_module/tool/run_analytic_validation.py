@@ -3,22 +3,23 @@ Analytic Validation Runner
 Executes all analytic analytic validation tests and generates a summary report.
 """
 
-import unittest
 import sys
-import os
 from pathlib import Path
 
-# Add 'tools/aefi_post_processor_modules' to path
-# This allows 'import processing' and 'import tests'
-sys.path.insert(0, str(Path(__file__).parent.parent))
+# tool/ est dans le module : external_modules/ doit être sur sys.path pour importer aefi_post_processor_module.
+MODULE_DIR = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(MODULE_DIR.parent))
+
+import unittest
+import os
 
 def run_tests():
     """Discover and run all tests in the tests directory."""
     
     # 1. Discover tests
     test_loader = unittest.TestLoader()
-    test_dir = Path(__file__).parent
-    suite = test_loader.discover(start_dir=str(test_dir), pattern='test_*.py')
+    test_dir = MODULE_DIR / "_tests"
+    suite = test_loader.discover(start_dir=str(test_dir), top_level_dir=str(MODULE_DIR.parent), pattern='*_test.py')
     
     # 2. Run tests
     print("="*60)

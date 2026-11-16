@@ -1,5 +1,9 @@
 import sys
 from pathlib import Path
+
+# tool/ est dans le module : external_modules/ doit être sur sys.path pour importer aefi_post_processor_module.
+MODULE_DIR = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(MODULE_DIR.parent))
 import traceback
 import os
 
@@ -9,15 +13,13 @@ print("="*40)
 print(f"Current Working Directory: {os.getcwd()}")
 print(f"Script Path: {Path(__file__).resolve()}")
 
-# Add path like runner
-expected_path = str(Path(__file__).parent.parent.resolve())
-sys.path.insert(0, expected_path)
-print(f"Added to sys.path: {expected_path}")
+expected_path = str(MODULE_DIR.parent)
+print(f"On sys.path: {expected_path}")
 print(f"sys.path[0]: {sys.path[0]}")
 
 print("\n--- TEST 1: Import processing ---")
 try:
-    import processing
+    import aefi_post_processor_module.processing as processing
     print("✅ import processing success")
     print(f"processing file: {processing.__file__}")
 except:
@@ -26,7 +28,7 @@ except:
 
 print("\n--- TEST 2: Import tests package ---")
 try:
-    import tests
+    import aefi_post_processor_module._tests as tests
     print("✅ import tests success")
     print(f"tests file: {tests.__file__}")
 except:
@@ -35,7 +37,7 @@ except:
 
 print("\n--- TEST 3: Import specific test module ---")
 try:
-    from tests import analytic_test_case
+    from aefi_post_processor_module._tests import analytic_test_case
     print("✅ from tests import analytic_test_case success")
 except:
     print("❌ from tests import analytic_test_case failed")
@@ -43,7 +45,7 @@ except:
 
 print("\n--- TEST 4: Import synthetic_scan_generator inside analytic_test_case ---")
 try:
-    from tests import synthetic_scan_generator
+    from aefi_post_processor_module._tests import synthetic_scan_generator
     print("✅ from tests import synthetic_scan_generator success")
 except:
     print("❌ from tests import synthetic_scan_generator failed")

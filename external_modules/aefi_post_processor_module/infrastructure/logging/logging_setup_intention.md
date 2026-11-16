@@ -1,3 +1,9 @@
+---
+type: atome::solidai-atome
+tldr: "Configurer une seule fois le journal du post-traitement : fichier lisible sans la fenêtre et cadre « System Feedback », sans print."
+code: ["[[external_modules/aefi_post_processor_module/infrastructure/logging/logging_setup.py]]"]
+cause_de_changement: outil
+---
 # logging_setup — Intention
 
 ## Rationale

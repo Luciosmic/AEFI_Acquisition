@@ -1,10 +1,16 @@
 
-import h5py
-import numpy as np
+import sys
 from pathlib import Path
 
+# tool/ est dans le module : external_modules/ doit être sur sys.path pour importer aefi_post_processor_module.
+MODULE_DIR = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(MODULE_DIR.parent))
+
+import h5py
+import numpy as np
+
 def inspect_baseline():
-    repo_dir = Path("tools/aefi_post_processor_modules/tests/synthetic_scans_data_repository")
+    repo_dir = MODULE_DIR / "_tests" / "synthetic_scans_data_repository"
     # Find latest batch
     batches = sorted([d for d in repo_dir.iterdir() if d.is_dir() and d.name.startswith("batch_")])
     if not batches:

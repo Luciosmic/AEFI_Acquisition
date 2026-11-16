@@ -5,15 +5,16 @@ Reads manifest.json to get scan parameters.
 """
 
 import sys
-import json
 from pathlib import Path
+
+# tool/ est dans le module : external_modules/ doit être sur sys.path pour importer aefi_post_processor_module.
+MODULE_DIR = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(MODULE_DIR.parent))
+
+import json
 from typing import Dict, Any
 
-# Add project root to path to import modules
-project_root = Path(__file__).parent.parent.parent.parent
-sys.path.append(str(project_root))
-
-from tools.aefi_post_processor_modules.processing.processing_pipeline import ProcessingPipeline
+from aefi_post_processor_module.processing.processing_pipeline import ProcessingPipeline
 
 def get_latest_batch_dir(base_dir: Path) -> Path:
     batches = sorted([d for d in base_dir.iterdir() if d.is_dir() and d.name.startswith("batch_")])
@@ -22,7 +23,7 @@ def get_latest_batch_dir(base_dir: Path) -> Path:
     return batches[-1]
 
 def run_campaign():
-    base_dir = Path(__file__).parent / "synthetic_scans_data_repository"
+    base_dir = MODULE_DIR / "_tests" / "synthetic_scans_data_repository"
     batch_dir = get_latest_batch_dir(base_dir)
     print(f"Running campaign on batch: {batch_dir.name}")
     

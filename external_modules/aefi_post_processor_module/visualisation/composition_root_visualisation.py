@@ -17,7 +17,7 @@ for p in (_external_modules, project_root):
     if s not in sys.path:
         sys.path.insert(0, s)
 
-from aefi_post_processor_module.logging_setup import configure_logging
+from aefi_post_processor_module.infrastructure.logging.logging_setup import configure_logging
 from aefi_post_processor_module.visualisation.model import VisualisationModel
 from aefi_post_processor_module.visualisation.view import VisualisationView
 from aefi_post_processor_module.visualisation.presenter import VisualisationPresenter

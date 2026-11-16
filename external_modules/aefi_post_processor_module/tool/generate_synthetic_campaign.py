@@ -4,16 +4,22 @@ Generates a batch of synthetic scans (CSV format) to cover processing pipeline t
 Produces a manifest.json describing the parameters for each scan.
 """
 
+import sys
 from pathlib import Path
+
+# tool/ est dans le module : external_modules/ doit être sur sys.path pour importer aefi_post_processor_module.
+MODULE_DIR = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(MODULE_DIR.parent))
+
 import json
 from datetime import datetime
 import numpy as np
 import pandas as pd
-from synthetic_scan_generator import SyntheticScanGenerator
+from aefi_post_processor_module._tests.synthetic_scan_generator import SyntheticScanGenerator
 
 def generate_campaign():
     # Setup paths
-    base_dir = Path(__file__).parent / "synthetic_scans_data_repository"
+    base_dir = MODULE_DIR / "_tests" / "synthetic_scans_data_repository"
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     output_dir = base_dir / f"batch_{timestamp}"
     output_dir.mkdir(parents=True, exist_ok=True)
