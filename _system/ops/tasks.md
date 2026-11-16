@@ -529,6 +529,16 @@ sauvegardée), jusqu'à ce que l'utilisateur clique manuellement sur "Apply".
 
 **Statut** : implémenté en TDD (2026-07-30) — mute()/unmute(), ScanPointResult/events + baseline, boucle différentielle, export CSV, checkbox UI. Suite complète verte (293 passed).
 
+**Décision du 2026-10-15 :** ce mode par point n'a jamais servi à une acquisition réelle, et l'humain a décidé de le
+retirer (étape 1 de la suite du retrait de StepScan, en tête de ce fichier). `mute()` / `unmute()` restent : ils servent
+à la caractérisation du débit et au futur bouton « mute » du widget d'excitation. Ne pas ajouter de baseline à
+`AefiPoint` ni à `AefiLine`.
+- La mesure différentielle ne concerne que le champ primaire (voie AEFI/ADC), pas Narda ni les sondes auxiliaires.
+- Piste préférée par l'humain, **non décidée et à ne pas construire** : un scan de référence complet, puis un scan de
+  mesure, liés par le `Scan` (par exemple `reference_scan_id`), la différence calculée en post-traitement en appariant
+  les points par position. Compromis signalé : l'alternance par point compense la dérive lente (thermique, capteur),
+  deux scans successifs non.
+
 ### Principe
 
 À chaque point de scan, en plus de la mesure normale existante (avec excitation), on
