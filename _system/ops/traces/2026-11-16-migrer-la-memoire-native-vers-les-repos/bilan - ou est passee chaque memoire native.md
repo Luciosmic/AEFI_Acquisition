@@ -23,6 +23,6 @@ Son contenu utile est désormais dans les repos :
 
 Écarts avec la proposition : les compléments prévus dans `goals.md` et `goals_dev_hardware.md` sont allés dans `tasks.md`.
 `goals_dev_hardware.md` ne traite que la compensation en fréquence de la sonde Narda, et `tasks.md` a déjà une section sur le différentiel.
-Les points ouverts du refactoring du scan y étaient déjà, sauf aucun : rien à ajouter.
+Les points ouverts du refactoring du scan y étaient déjà tous : rien à ajouter.
 
 Abandonnés, car déjà écrits ailleurs ou périmés : pas d'import du domaine dans un widget, worktree par contexte, graphique local plutôt qu'Artifact (outil désactivé), journal de progression dans le scratchpad (remplacé par le `trace.log`), pont n8n, état du retrait de StepScan, scan comme contexte cohésif, état du domaine scan d'octobre, journal d'événements, restructuration du Banc-test-II, LIDAR sur COM9.
