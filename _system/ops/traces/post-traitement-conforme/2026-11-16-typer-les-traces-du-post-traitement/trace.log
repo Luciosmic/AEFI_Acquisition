@@ -5,3 +5,8 @@
 13:47 | jalon | notes=5 generees et commitees (concevoir, avis, 1.0-1.3, 1.6-1.7, 1.8-1.9) ; alerte etape 1.5 absente du plan, voir constat
 13:48 | jalon | au_diagnostics erreurs=0 warnings=0 sur le dossier post-traitement-conforme ; premieres lignes de trace non modifiees, voir constat sur les sessions
 13:48 | fin | resultat=atteint ; reste=note de cette tache a generer
+14:00 | reprise | quoi=declarer les etapes 1.0 a 1.9 du plan en etapes inline et relier les notes de tache | demande=coordinateur | budget=20min,~50 appels
+14:02 | jalon | plan=10 etapes etape-1-0 a etape-1-9 (titres du decoupage, precedee_par en chaine) ; au_validate valide ; au_diagnostics warnings=0
+14:03 | jalon | liaison=etape= ajoute au depart de 3 traces (1.0-1.3, 1.6-1.7, 1.8-1.9) ; le generateur lit le premier etape= des lignes depart
+14:05 | jalon | notes regenerees (5 dossiers), plus d'alerte etape absente ; constat sur l'alerte supprime, constat sur la liaison a la premiere etape ajoute
+14:06 | fin | resultat=atteint
