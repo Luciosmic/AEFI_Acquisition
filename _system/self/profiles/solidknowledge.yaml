@@ -1,6 +1,7 @@
 # Profil de l'humain dans un dossier de travail de la thèse, lancé par le wrapper VSCode
-# (claude-wrappers/au-vscode/launch.sh). Aucun inject propre : tous sont partagés par lien qualifié,
-# sans copie, depuis GRAPHE-THESE et les packages (modèle : PUBLICATIONS/IEEE-SENSORS-JOURNAL).
+# (claude-wrappers/au-vscode/launch.sh). Un seul inject propre, le contexte du repo ; tous les autres
+# sont partagés par lien qualifié, sans copie, depuis GRAPHE-THESE et les packages
+# (modèle : PUBLICATIONS/IEEE-SENSORS-JOURNAL).
 type: agent-profile::au-mcp-sdk
 inject:
   # Arscontexta
@@ -11,6 +12,8 @@ inject:
   # Contributions de l'humain
   - "[[orient-work::GRAPHE-THESE]]"
   - "[[core-profile::sh-agent-os]]"
+  # Ce repo : lancement, données, branches et worktrees (remplace l'ancien CLAUDE.md, 2026-11-16)
+  - "[[contexte-du-repo-aefi-acquisition]]"
 # Refuse la première mutation d'une session non inscrite au registre des travaux (chemin relatif à
 # la racine du workspace servi).
 hookConfig:
