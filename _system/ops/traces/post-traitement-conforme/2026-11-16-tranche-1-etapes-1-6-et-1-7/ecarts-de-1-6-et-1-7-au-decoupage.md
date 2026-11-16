@@ -1,5 +1,7 @@
 ---
 doc_type: constat
+type: constat::sh-agent-os
+genere_par: "[[tache - tranche 1 etapes 1 6 et 1 7]]"
 ---
 
 # Étapes 1.6 et 1.7 : ce qui s'écarte du découpage, et pourquoi
