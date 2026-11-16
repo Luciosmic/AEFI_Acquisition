@@ -73,7 +73,7 @@ flowchart LR
 | `provenance.activity.id` | l'identité de l'acquisition | présent en 1.4 | tranche 2 |
 | `feature_of_interest` (objet, lift-off) | nommer l'objet mesuré dans la fenêtre | présent en 1.4 | tranche 2 |
 | `data.columns` | vérifier le sens des colonnes du CSV | présent en 1.4 | prévu par la conception |
-| `data.files`, empreinte du `.h5` | savoir quel fichier porte les données brutes et lequel les étapes | — | **à négocier** en tranche 2 (§ 6) |
+| `data.files`, empreinte du CSV | prouver de quelles données brutes dérive le fichier d'étapes | présent en 1.4 | tranche 2 (§ 6) |
 
 ### Les fichiers du dossier
 
@@ -81,7 +81,8 @@ flowchart LR
 |---|---|---|---|---|
 | `<acquisition>_aefi.csv` | acquisition | oui | positions `x`, `y` (mm) et les six tensions (en phase, quadrature, par axe) | `infrastructure/csv_scan_reader/` |
 | `<acquisition>_acquisition-parameters.json` (schéma `aefi-acquisition-parameters` 1.0 à 1.4) | acquisition | oui, en partie | la grille prévue (`procedure.step_scan.zone` et `.grid`) depuis le 2026-11-16 | `infrastructure/acquisition_parameters_scan_plan_reader/` |
-| `<acquisition>.h5` | acquisition (données brutes), puis post-traitement (étapes) | oui | les étapes rangées, pour la carte et l'état du catalogue | `infrastructure/hdf5_step_writer/`, `hdf5_step_reader/`, `export_folder_repository/` |
+| `<acquisition>.h5` | acquisition (données brutes), puis post-traitement (étapes) jusqu'à la tranche 2 | oui | les étapes rangées, pour la carte et l'état du catalogue | `infrastructure/hdf5_step_writer/`, `hdf5_step_reader/`, `export_folder_repository/` |
+| `<acquisition>_processing-steps.h5` (tranche 2) | post-traitement seul | oui | ses étapes et leur provenance | mêmes adaptateurs, sur ce fichier |
 | `<acquisition>_events.jsonl`, `_logs.log`, `_accelerometer.csv`, `_column-stabilization.csv` | acquisition | non | — | — |
 
 Le catalogue des acquisitions (`export_folder_repository`) liste les dossiers posés directement dans le dossier d'export. Un dossier rangé dans un sous-dossier (`BACKGROUND/`, `METALLIC/`…) n'y apparaît pas, ni un balayage en fréquence.
@@ -153,7 +154,13 @@ Décidé (2026-11-16) : corrigé en tranche 2, en lisant `rotation_applied` dans
 L'acquisition prend l'empreinte (taille, SHA-256) du `.h5` en fin de scan et l'écrit dans le fichier des paramètres, puis le post-traitement y ajoute ses étapes.
 Pour le scan de la bouteille d'eau : 2 455 328 octets enregistrés, 6 046 209 octets aujourd'hui.
 Un lecteur qui vérifie les empreintes conclurait à un fichier altéré.
-Décidé (2026-11-16) : corrigé en tranche 2. Reste à choisir comment, et c'est un premier besoin du client envers son fournisseur : ranger les étapes dans un fichier à part, que l'acquisition déclarerait dans `data.files` (recommandé : les données brutes et leur empreinte restent intactes), ou faire dire au fichier des paramètres que le `.h5` reçoit les étapes après son empreinte.
+Décidé (2026-11-16, choix laissé à l'agent par l'humain) : en tranche 2, le post-traitement range ses étapes dans **son propre fichier**, `<acquisition>_processing-steps.h5`, dans le dossier de l'acquisition, et n'écrit plus jamais dans `<acquisition>.h5`.
+
+- Les données brutes et leur empreinte restent telles que l'acquisition les a enregistrées : un fichier écrit par un logiciel n'est modifié par aucun autre.
+- Le fichier d'étapes porte sa propre provenance : le CSV source, son empreinte SHA-256 (comparable à celle de `data.files`) et l'identité de l'acquisition (`provenance.activity.id`). Un lecteur sait de quelles données brutes il dérive sans que l'acquisition le connaisse.
+- L'acquisition ne déclare pas ce fichier dans `data.files` : elle écrit son fichier des paramètres avant le traitement, et ne pourrait ni en donner l'empreinte ni garantir qu'il existera. Le contrat n'a donc pas à changer de version pour ce point.
+- Côté acquisition, seul l'adaptateur `AefiPostProcessorPort` change : il ne passe plus le chemin du `.h5` brut comme sortie du traitement.
+- Les acquisitions déjà traitées gardent dans leur `.h5` les étapes ajoutées avant la tranche 2, et une empreinte qui ne correspond plus ; on n'y touche pas. Elles apparaissent « à recalculer » jusqu'à ce qu'un « Traiter » écrive leur fichier d'étapes.
 
 **Le dossier d'export ne dit pas encore le sens de toutes ses colonnes au post-traitement.**
 Le fichier des paramètres décrit chaque colonne du CSV (`data.columns`, unités et repères), mais le lecteur de CSV lit les colonnes par leur nom, sans les vérifier contre cette description. Prévu par la conception (§ 1.1).
