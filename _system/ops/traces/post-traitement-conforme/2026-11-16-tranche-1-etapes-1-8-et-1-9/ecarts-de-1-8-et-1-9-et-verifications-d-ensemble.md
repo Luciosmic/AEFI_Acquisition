@@ -1,5 +1,7 @@
 ---
 doc_type: constat
+type: constat::sh-agent-os
+genere_par: "[[tache - tranche 1 etapes 1 8 et 1 9]]"
 ---
 
 # Étapes 1.8 et 1.9 : écarts au découpage, vérifications d'ensemble, à confirmer au laboratoire
