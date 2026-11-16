@@ -1,13 +1,11 @@
 ---
 type: correction.open::au-govern
 ---
-# Un skill multiplateforme isole ce qui dépend du système dans un adaptateur par plateforme
-
-## What I did
+# What I did
 
 Pour faire marcher le skill de rafraîchissement d'Ars Umbris sous Windows, j'allais ajouter les commandes Windows à côté des commandes Mac, dans le même fichier de déroulé.
 
-## What they wanted
+# What they wanted
 
 « Il faut que ce qui est propre à l'OS soit isolé pour pouvoir découpler la logique de l'infrastructure », « pattern hexagonal », avec « un diagnostic au démarrage pour reconnaître la plateforme ».
 
