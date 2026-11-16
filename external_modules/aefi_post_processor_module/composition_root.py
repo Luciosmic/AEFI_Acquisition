@@ -3,8 +3,8 @@ Post-Processor Composition Root
 Thin entry point: reads the arguments, settles the paths and the journal, builds the window of panels
 (`interface/shell/shell_wiring.py`) on the export directory and runs it.
 
-At launch, acquisitions to recompute are processed before the window shows (unchanged until step 1.8);
-`--repo-path` skips that and only lists them.
+The launch computes nothing: the window opens on the list of acquisitions with the state of each, and the journal
+says it. Processing starts from the "Traiter" button of the Acquisitions panel, or at launch with `--force`.
 """
 
 import argparse
@@ -65,13 +65,14 @@ def _processing_parameters() -> ProcessingParameters:
 
 def main():
     parser = argparse.ArgumentParser(description="AEFI Post-Processor Composition Root")
-    parser.add_argument("--force", action="store_true", help="Force re-processing of all scans")
+    parser.add_argument(
+        "--force", action="store_true", help="Process every acquisition at launch, before the window shows."
+    )
     parser.add_argument(
         "--repo-path",
         type=Path,
         default=None,
-        help="Open the window directly on this folder, skipping the processing at launch "
-             "(e.g. an export directory already fully post-processed).",
+        help="Open the window on this export folder instead of the one of the export configuration.",
     )
     parser.add_argument("--log-file", type=Path, default=_LOG_FILE, help="Where this run writes its journal.")
     parser.add_argument(
@@ -88,12 +89,10 @@ def main():
         feedback, str(args.log_file), str(args.layout_file), str(raw_dir), _processing_parameters, "ideal_template"
     )
 
-    if args.repo_path is not None:
-        logger.info("sync.skipped reason=repo_path_given repo=%s", raw_dir)
-        shell.acquisitions_presenter.refresh()
+    if args.force:
+        shell.acquisitions_presenter.process_pending(force=True)
     else:
-        # Behaviour unchanged until step 1.8: new or outdated acquisitions are processed before the window shows.
-        shell.acquisitions_presenter.process_pending(force=args.force)
+        shell.acquisitions_presenter.refresh()
 
     logger.info("window.opening repo=%s", raw_dir)
     shell.window.show()

@@ -123,6 +123,17 @@ def test_opening_lists_each_acquisition_with_its_type_object_and_state_and_compu
     assert parts.calls == [] and parts.writers == {}
 
 
+def test_opening_writes_the_state_of_each_acquisition_in_the_journal(parts, caplog):
+    with caplog.at_level(logging.INFO):
+        parts.presenter.refresh()
+
+    lines = [r.getMessage() for r in caplog.records if r.getMessage().startswith("acquisition.state ")]
+    assert f"acquisition.state scan={OK} state=à recalculer detail=jamais traitée" in lines
+    assert f"acquisition.state scan={DONE} state=traitée detail=" in lines
+    assert len(lines) == 4
+    assert parts.calls == []
+
+
 def test_an_export_without_acquisition_says_so_in_the_journal(caplog):
     class Empty:
         def list_acquisitions(self, export_folder):

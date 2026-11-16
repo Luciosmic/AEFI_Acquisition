@@ -93,7 +93,10 @@ class AcquisitionsPresenter:
         statuses = self._catalog.list_acquisitions(ListAcquisitionsDTO(self._export_folder, force))
         self._statuses = {status.name: status for status in statuses}
         self._selected = [name for name in self._selected if name in self._statuses]
-        self._view.set_rows([self._row(status) for status in statuses])
+        rows = [self._row(status) for status in statuses]
+        self._view.set_rows(rows)
+        for row in rows:
+            logger.info("acquisition.state scan=%s state=%s detail=%s", row.name, row.state, row.detail)
         if statuses:
             logger.info("acquisitions.shown export=%s count=%d", self._export_folder, len(statuses))
         else:

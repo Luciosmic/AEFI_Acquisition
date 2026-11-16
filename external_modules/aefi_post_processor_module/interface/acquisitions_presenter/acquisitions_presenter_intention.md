@@ -24,6 +24,6 @@ Le lancement de l'ancienne fenêtre calculait avant d'afficher, dans une boucle 
 
 - Classe Python sans Qt, ni domaine, ni infrastructure. Elle reçoit le catalogue, une fabrique `processor_factory(fichier)` qui rend le service lié au fichier d'étapes de l'acquisition et ce qu'il faut fermer, et un `parameters_provider()` appelé à chaque acquisition : un échec de lecture des paramètres compte comme l'échec de cette acquisition, comme le faisait l'ancienne boucle. Les tests la branchent sur une vue Fake, le vrai catalogue et le vrai service sur des Fakes.
 - Le traitement est synchrone, sur le fil de la fenêtre, comme l'ancien traitement au lancement.
-- Lister ne calcule ni n'écrit rien. Les messages gardent les noms de l'ancienne boucle (`scan.processing`, `scan.failed`, `sync.finished`).
+- Lister ne calcule ni n'écrit rien, et écrit dans le journal l'état de chaque acquisition (`acquisition.state`) : l'ouverture de la fenêtre n'appelle plus le traitement, que `--force` ou le bouton déclenchent. Les messages gardent les noms de l'ancienne boucle (`scan.processing`, `scan.failed`, `sync.finished`).
 - Un export sans acquisition donne l'avertissement `acquisitions.none_found` (l'ancienne boucle disait `sync.aborted` quand le dossier manquait).
 - La vue est `interface/acquisitions_panel/acquisitions_panel.py`, humble : ni type ni intention (A1), ses tests sont ceux de ce presenter.

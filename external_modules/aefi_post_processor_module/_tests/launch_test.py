@@ -7,6 +7,8 @@ import sys
 import time
 from pathlib import Path
 
+import h5py
+
 MODULE_DIR = Path(__file__).resolve().parents[1]
 COMPOSITION_ROOT = MODULE_DIR / "composition_root.py"
 LAUNCH_TIMEOUT_S = 60
@@ -72,3 +74,34 @@ def test_the_window_opens_on_an_export_and_lists_its_acquisitions_without_touchi
     assert "window.shown" in journal, output
     assert "acquisitions.shown" in journal and "count=2" in journal
     assert sorted((str(p), p.stat().st_mtime) for p in export.rglob("*")) == before
+
+
+def files_with_dates(folder):
+    return sorted((str(p), p.stat().st_mtime_ns) for p in folder.rglob("*"))
+
+
+def test_the_launch_computes_nothing_and_the_journal_says_the_acquisition_is_to_recompute(tmp_path):
+    name = "20261112_stepScan_baseline"
+    export = make_export(tmp_path, (name,))
+    before = files_with_dates(export)
+
+    journal, output = launch(tmp_path)
+
+    assert "window.shown" in journal, output
+    assert f"acquisition.state scan={name} state=à recalculer detail=jamais traitée" in journal
+    assert "scan.processing" not in journal
+    assert files_with_dates(export) == before
+    assert not list(export.rglob("*.h5"))
+
+
+def test_with_force_the_launch_processes_every_acquisition_before_the_window_shows(tmp_path):
+    name = "20261112_stepScan_baseline"
+    export = make_export(tmp_path, (name,))
+
+    journal, output = launch(tmp_path, "--force")
+
+    assert "window.shown" in journal, output
+    assert f"scan.processed scan={name}" in journal
+    with h5py.File(export / name / f"{name}.h5", "r") as steps_file:
+        assert list(steps_file.keys()) == ["amplitude_subtracted", "interpolated", "phase_calibrated", "preprocessed", "rotated_frame"]
+    assert f"acquisition.state scan={name} state=traitée" in journal
