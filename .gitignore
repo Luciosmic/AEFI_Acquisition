@@ -77,3 +77,6 @@ venv/
 *.tgz
 *.exe
 *.dll
+
+# Exports de scans faits pour tester l'application (données lourdes) ; les notes de tests_e2e/notes/ restent versionnées
+/tests_e2e/2026-*/
