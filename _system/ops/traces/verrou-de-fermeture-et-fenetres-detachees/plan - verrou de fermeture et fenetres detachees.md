@@ -1,12 +1,14 @@
 # Plan — Verrou de fermeture pendant une acquisition, et panneaux détachés visibles dans Alt+Tab
 
-**État :** plan rédigé le 2026-11-14 sur le PC du labo, pendant une acquisition réelle. L'acquisition est terminée (2026-11-16). Rien n'est codé. Le développement se fait sur le Mac.
-**Prochaine action :** sur le Mac, depuis `develop` à jour (il contient la tranche 1 du post-traitement conforme), créer `feature/verrou-fermeture-acquisition` et coder l'étape 1 (le cœur indépendant du système et l'adaptateur de l'action de l'opérateur, avec le message), testable en mode mock.
+**État :** plan rédigé le 2026-11-14 sur le PC du labo, pendant une acquisition réelle. L'acquisition est terminée (2026-11-16). Rien n'est codé. Le développement se fait sur le PC du labo, où SolidAI est installé depuis le 2026-11-16 (décision de l'humain, qui remplace le Mac).
+**Prochaine action :** sur le PC du labo, créer le worktree `C:\Users\manip\AEFI_Acquisition_dev_verrou` sur une branche neuve `feature/verrou-fermeture-acquisition` depuis `develop` à jour, puis coder l'étape 1 (le cœur indépendant du système et l'adaptateur de l'action de l'opérateur, avec le message), testable en mode mock.
 
-**Où se vérifie chaque étape :**
+**Où se vérifie chaque étape :** toutes sur le PC du labo, dans le worktree du verrou, jamais dans `C:\Users\manip\AEFI_Acquisition` (le dossier des acquisitions réelles).
 
-- étape 1 : entièrement sur le Mac, en mode mock (l'adaptateur neutre est celui que le Mac choisit) ; la demande d'arrêt de session se vérifie aussi sur macOS (fermer la session pendant un scan mock avec export) ;
-- étapes 2 et 3 : codées sur le Mac, avec leurs tests sur les faux, mais vérifiées seulement sur le PC du labo, seul à exécuter les adaptateurs Windows. Pousser la branche, la tirer dans `C:\Users\manip\AEFI_Acquisition_dev` (jamais dans le dossier des acquisitions réelles), et faire les tests au banc décrits plus bas.
+- étape 1 : en mode mock (l'adaptateur neutre est celui que choisit un système autre que Windows ; sous Windows, avant l'étape 3, l'assemblage choisit aussi l'adaptateur neutre) ;
+- étapes 2 et 3 : tests sur les faux, puis tests au banc décrits plus bas, qui exécutent les adaptateurs Windows.
+
+**Pourquoi un worktree à part :** une autre session écrit dans `C:\Users\manip\AEFI_Acquisition_dev` par le gate, qui commite sur la branche active de ce dossier. Le 2026-11-16, une branche créée dans ce dossier a reçu ses commits. Le worktree se crée avec `git -c core.longpaths=true worktree add …` : sans cette option, Windows refuse certains chemins trop longs du dépôt.
 
 ## Pourquoi
 
