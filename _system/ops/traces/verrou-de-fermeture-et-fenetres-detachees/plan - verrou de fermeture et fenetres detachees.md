@@ -2,7 +2,8 @@
 
 **État :** étape 1 codée le 2026-11-16 dans le worktree `C:\Users\manip\AEFI_Acquisition_dev_verrou`, branche `feature/verrou-fermeture-acquisition`, poussée ; tests automatiques verts. Trace : `2026-11-16-coeur-du-verrou-de-fermeture/`.
 **Vérifié par l'humain le 2026-11-16 :** en mode mock, la croix pendant un scan au vol avec export affiche le message et laisse la fenêtre ouverte (capture `2026-11-16_160606_flyScan_TEST_liftoff-non-saisi_fermeture-refusee-pendant-l-export.png`, rangée avec l'export de ce scan dans `tests_e2e/2026-11-16_160606_flyScan_TEST_liftoff-non-saisi/` du dossier de développement, hors git comme les exports de test).
-**Prochaine action :** décider comment reproduire un redémarrage de mise à jour de Windows pour tester le refus de fin de session (question ouverte de l'humain, 2026-11-16) ; puis étape 2 : panneaux détachés dans Alt+Tab, à vérifier aussi dans la fenêtre du post-traitement.
+**Décision de l'humain (2026-11-16) :** « on s'arrête là, c'est déjà bien de ne pas pouvoir fermer l'application ». L'étape 3 (adaptateur Windows : raison de blocage et anti-veille) et le réglage du PC contre les redémarrages de mise à jour ne se font pas ; la pause automatique des mises à jour à chaque acquisition, proposée puis écartée le même jour, non plus (le compte `manip` n'est pas administrateur, et la pause ne garantit pas d'empêcher le redémarrage d'une mise à jour déjà installée).
+**Prochaine action :** fusionner `feature/verrou-fermeture-acquisition` dans `develop` quand l'humain le demande. L'étape 2 (panneaux détachés dans Alt+Tab) reste possible, non commencée.
 
 **Ce que l'étape 1 a tranché au codage :**
 
