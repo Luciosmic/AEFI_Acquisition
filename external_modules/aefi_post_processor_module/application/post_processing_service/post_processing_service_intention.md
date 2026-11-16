@@ -1,7 +1,7 @@
 ---
 type: service-applicatif::solidai-hexagonal
 tldr: "Enchaîner les cinq étapes du traitement d'un scan (grille, calibration de phase, soustraction d'amplitude, rotation de repère, interpolation) et les ranger, sans connaître ni pandas ni h5py."
-code: ["[[external_modules/aefi_post_processor_module/application/post_processing_service/post_processing_service.py]]"]
+code: ["[[external_modules/aefi_post_processor_module/application/post_processing_service/post_processing_service.py]]", "[[external_modules/aefi_post_processor_module/application/post_processing_service/no_scan_plan_reader.py]]"]
 cause_de_changement: orchestration
 ports:
   - ^: i-api-post-processing-service
