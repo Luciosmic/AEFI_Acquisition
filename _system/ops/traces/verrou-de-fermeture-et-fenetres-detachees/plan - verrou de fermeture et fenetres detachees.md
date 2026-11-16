@@ -1,7 +1,8 @@
 # Plan — Verrou de fermeture pendant une acquisition, et panneaux détachés visibles dans Alt+Tab
 
 **État :** étape 1 codée le 2026-11-16 dans le worktree `C:\Users\manip\AEFI_Acquisition_dev_verrou`, branche `feature/verrou-fermeture-acquisition`, poussée ; tests automatiques verts. Trace : `2026-11-16-coeur-du-verrou-de-fermeture/`.
-**Prochaine action :** l'humain vérifie l'étape 1 en mode mock (scan avec export, croix de la fenêtre, message, puis fermeture une fois le scan arrêté). Ensuite, étape 2 : panneaux détachés dans Alt+Tab, à vérifier aussi dans la fenêtre du post-traitement.
+**Vérifié par l'humain le 2026-11-16 :** en mode mock, la croix pendant un scan au vol avec export affiche le message et laisse la fenêtre ouverte (capture dans `tests_e2e/image.png` du dossier de développement).
+**Prochaine action :** décider comment reproduire un redémarrage de mise à jour de Windows pour tester le refus de fin de session (question ouverte de l'humain, 2026-11-16) ; puis étape 2 : panneaux détachés dans Alt+Tab, à vérifier aussi dans la fenêtre du post-traitement.
 
 **Ce que l'étape 1 a tranché au codage :**
 
