@@ -14,7 +14,7 @@ Implémentation HDF5 de `IScanExportPort` pour l'export structuré des résultat
 ## Responsibility
 
 - Exporter les points de résultat scan (position + mesure) dans un fichier HDF5 avec les métadonnées de configuration (zone, pattern, datetime).
-- Organiser les données pour la relecture dans `plot_h5_images.py` et les outils d'analyse post-processing.
+- Organiser les données pour la relecture par les outils d'analyse post-processing.
 
 ## Design
 
