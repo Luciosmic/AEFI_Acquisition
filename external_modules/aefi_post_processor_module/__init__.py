@@ -1,1 +1,1 @@
-"""Post-traitement et visualisation des scans (module externe)."""
+"""Post-traitement des scans et carte de leurs étapes (module externe)."""

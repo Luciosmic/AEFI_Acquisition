@@ -1,10 +1,12 @@
 """Catalogue et carte avec les adaptateurs réels sur un dossier d'export synthétique (test d'acceptation de 1.5)."""
 
+import json
 import os
 import shutil
 import time
 from pathlib import Path
 
+import h5py
 import numpy as np
 import pytest
 
@@ -20,9 +22,10 @@ from aefi_post_processor_module.interface.shell.headless_wiring import (
     build_field_map_service,
     build_post_processing_service,
 )
-from aefi_post_processor_module.visualisation.model import VisualisationModel
 
 BATCH = Path(__file__).resolve().parent / "synthetic_scans_data_repository" / "batch_20260123_201635"
+DEFAULT_CHANNELS = ("voltage_x_in_phase", "voltage_x_quadrature", "voltage_y_in_phase", "voltage_y_quadrature",
+                    "voltage_z_in_phase", "voltage_z_quadrature")
 BASELINE, ROTATED, TRUNCATED = "20261112_stepScan_baseline", "20261113_stepScan_rotated", "20261114_flyScan_truncated"
 
 
@@ -97,19 +100,43 @@ def test_listing_the_catalog_creates_and_modifies_no_file(export):
     assert _files_with_dates(export) == before
 
 
-def test_the_map_of_a_processed_step_is_the_one_the_old_window_drew(export):
+def _stored_map(acquisition, step):
+    """The step read straight from the file with h5py, as the old window's model did: one grid per named channel and the extent."""
+    with h5py.File(acquisition, "r") as h5:
+        data = np.array(h5[step]["data"])
+        channels, extent = h5[step].attrs.get("channel_names"), h5[step].attrs.get("extent", [0, 1, 0, 1])
+    if channels is None:  # steps after the first carry no channel names: the six voltage channels, in order
+        channels = list(DEFAULT_CHANNELS)
+    channels = json.loads(channels) if isinstance(channels, str) else [str(c) for c in channels]
+    extent = json.loads(extent) if isinstance(extent, str) else extent
+    return {name: data[:, :, i] for i, name in enumerate(channels)}, [float(v) for v in extent]
+
+
+def test_the_map_of_a_processed_step_holds_the_grids_and_the_extent_stored_in_the_file(export):
     _process(export, ROTATED)
     acquisition = export / ROTATED / f"{ROTATED}.h5"
     field_map_service = build_field_map_service()
-    old_model = VisualisationModel(export)
 
     steps = field_map_service.list_steps(StepsRequestDTO(str(acquisition)))
     assert steps == STEP_NAMES
 
     for step in steps:
         new = field_map_service.load_step(LoadStepDTO(str(acquisition), step))
-        old_grids, old_extent, _ = old_model.get_step_data(acquisition, step)
-        assert list(new.grids) == list(old_grids)
-        for channel in old_grids:
-            assert np.array_equal(new.grids[channel], old_grids[channel], equal_nan=True), f"{step}/{channel}"
-        assert list(new.extent) == [float(v) for v in old_extent], step
+        grids, extent = _stored_map(acquisition, step)
+        assert list(new.grids) == list(grids)
+        for channel in grids:
+            assert np.array_equal(new.grids[channel], grids[channel], equal_nan=True), f"{step}/{channel}"
+        assert list(new.extent) == extent, step
+
+
+def test_a_failed_processing_leaves_a_steps_file_that_the_next_session_still_calls_to_recompute(export):
+    with pytest.raises(ValueError):
+        _process(export, TRUNCATED)
+    steps_file = export / TRUNCATED / f"{TRUNCATED}.h5"
+    csv_file = export / TRUNCATED / f"{TRUNCATED}_aefi.csv"
+    assert steps_file.exists() and steps_file.stat().st_mtime > csv_file.stat().st_mtime  # what made it look processed
+
+    next_session = build_acquisition_catalog_service()  # remembers no failure
+
+    status = _by_name(next_session, export)[TRUNCATED]
+    assert (status.state, status.reason) == (TO_RECOMPUTE, "incomplete")

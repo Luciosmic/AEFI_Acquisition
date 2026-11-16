@@ -13,7 +13,7 @@ class IApiPostProcessingService(ABC):
     - Callers (the raccord for the acquisition, later the Acquisitions panel) depend on this contract, never on the concrete service.
 
     Design:
-    - Pure ABC. A failed step raises after being logged; nothing is hidden in the summary. Implemented by PostProcessingService.
+    - Pure ABC. A failed step raises after being logged, with the original exception carrying the name of the step in `processing_step`; nothing is hidden in the summary. Implemented by PostProcessingService.
     """
 
     @abstractmethod

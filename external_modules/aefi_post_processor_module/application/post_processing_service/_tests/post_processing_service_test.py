@@ -82,3 +82,12 @@ def test_a_missing_scan_file_stops_before_anything_is_stored(parts):
         service.process_scan(ProcessScanDTO("/scans/absent.csv", STORE))
 
     assert writer.processing_history() == []
+
+
+def test_a_failure_names_the_step_it_happened_in_without_changing_the_exception(parts):
+    service, _writer = parts
+
+    with pytest.raises(FileNotFoundError) as failure:
+        service.process_scan(ProcessScanDTO("/scans/absent.csv", STORE))
+
+    assert failure.value.processing_step == "load_csv"

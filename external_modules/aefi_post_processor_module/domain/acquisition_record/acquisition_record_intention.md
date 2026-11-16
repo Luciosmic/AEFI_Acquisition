@@ -14,16 +14,16 @@ repositories:
 
 ## Rationale
 
-Le lancement du post-traitement décidait seul, dans une boucle de `sync_scans`, quelles acquisitions recalculer : fichier d'étapes absent, plus ancien que le CSV, ou recalcul forcé. Cette règle n'avait pas de nom ni de test, et la fenêtre ne pouvait pas montrer l'état d'une acquisition sans lancer le calcul. Sans elle dans le domaine, chaque appelant la réécrirait avec ses propres dates.
+Un traitement qui échoue avant d'avoir rangé sa première étape laisse un fichier d'étapes vide, plus récent que le scan : sans règle pour ce cas, l'acquisition apparaît « traitée » au lancement suivant, alors qu'elle n'a aucune étape. Le lancement du post-traitement décidait seul, dans une boucle de `sync_scans`, quelles acquisitions recalculer : fichier d'étapes absent, plus ancien que le CSV, ou recalcul forcé. Cette règle n'avait pas de nom ni de test, et la fenêtre ne pouvait pas montrer l'état d'une acquisition sans lancer le calcul. Sans elle dans le domaine, chaque appelant la réécrirait avec ses propres dates.
 
 ## Responsibility
 
 - Porter une acquisition de l'export : son nom (le dossier), son genre (`stepScan` ou `flyScan`), les chemins de son scan et de son fichier `.h5`, désignés par des chaînes, et les dates du scan et des étapes.
-- Décider si ses étapes sont à recalculer, et pourquoi : `new`, `forced` ou `source_newer`.
+- Décider si ses étapes sont à recalculer, et pourquoi : `new`, `incomplete`, `forced` ou `source_newer`.
 - Aucune méthode n'écrit dans l'export : l'agrégat est en lecture seule.
 
 ## Design
 
-- Une `@dataclass` ; la règle est `recalculation_reason(forced)`, dans l'ordre : fichier d'étapes absent, recalcul forcé, scan aussi récent que les étapes. Un fichier d'étapes qui existe sans contenir d'étapes compte comme présent, comme dans l'ancien `sync_scans`.
+- Une `@dataclass` ; la règle est `recalculation_reason(forced)`, dans l'ordre : fichier d'étapes absent, fichier d'étapes sans l'étape `preprocessed` (`incomplete`, même plus récent que le scan et même forcé), recalcul forcé, scan aussi récent que les étapes. Le dépôt dit si le fichier contient `preprocessed` (`steps_hold_preprocessed`). Un traitement qui échoue après avoir rangé `preprocessed` laisse des étapes partielles que cette règle ne voit pas : elle ne garde que le cas du fichier vide.
 - Le dépôt `IAcquisitionRepository` est un port sortant en lecture : le domaine ne connaît ni dossiers ni dates système.
 - Le refus d'une convention de rotation non appliquée (écart 7 de l'avis) attend la tranche 2, qui apporte la convention.

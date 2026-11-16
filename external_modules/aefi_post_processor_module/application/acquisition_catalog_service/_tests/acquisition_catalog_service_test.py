@@ -10,11 +10,12 @@ from ..dtos.list_acquisitions_dto import ListAcquisitionsDTO
 EXPORT = "/export"
 
 
-def _record(name, csv_time, steps_time):
+def _record(name, csv_time, steps_time, holds_preprocessed=True):
     folder = f"{EXPORT}/{name}"
     return AcquisitionRecord(
         name=name, kind="stepScan", folder=folder, csv_file=f"{folder}/{name}_aefi.csv",
         acquisition_file=f"{folder}/{name}.h5", csv_modified_at=csv_time, steps_modified_at=steps_time,
+        steps_hold_preprocessed=holds_preprocessed and steps_time is not None,
     )
 
 
@@ -61,3 +62,12 @@ def test_an_unknown_export_folder_lists_nothing(repository):
     service = AcquisitionCatalogService(repository)
 
     assert service.list_acquisitions(ListAcquisitionsDTO("/elsewhere")) == ()
+
+
+def test_a_steps_file_without_the_first_step_is_to_recompute_as_incomplete():
+    repository = FakeExportFolderRepository()
+    repository.add(EXPORT, _record("20261112_stepScan_empty", 100.0, 200.0, holds_preprocessed=False))
+
+    status = _states(AcquisitionCatalogService(repository))["20261112_stepScan_empty"]
+
+    assert status.state == TO_RECOMPUTE and status.reason == "incomplete"

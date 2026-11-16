@@ -1,23 +1,17 @@
 """
 Post-Processor Composition Root
-Orchestrates the full workflow:
-1. Scan the configured export directory (see `_export_output_directory`) for
-   per-acquisition subfolders (`<timestamp>_<stepScan|flyScan>_<name>/`), each holding
-   the device's `*_aefi.csv`.
-2. For each subfolder, check if its `.h5` (written alongside the CSV) is
-   missing or outdated.
-3. Run ProcessingPipeline on missing/outdated items.
-4. Open the window of panels on the export directory.
+Thin entry point: reads the arguments, settles the paths and the journal, builds the window of panels
+(`interface/shell/shell_wiring.py`) on the export directory and runs it.
+
+At launch, acquisitions to recompute are processed before the window shows (unchanged until step 1.8);
+`--repo-path` skips that and only lists them.
 """
 
+import argparse
 import json
 import logging
 import sys
-import time
-import argparse
-from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List
 
 from PySide6.QtWidgets import QApplication
 
@@ -59,80 +53,15 @@ def _ideal_rotation_angles() -> tuple:
     rotation = json.loads(_DEVICE_CONFIG_PATH.read_text(encoding="utf-8"))["sensor"]["calibration"]["sources_to_sensor_rotation"]
     return (float(rotation["theta_x"]), float(rotation["theta_y"]), float(rotation["theta_z"]))
 
+from aefi_post_processor_module.domain.processing.processing_steps.processing_steps import ProcessingParameters
 from aefi_post_processor_module.infrastructure.logging.logging_setup import configure_logging
-from aefi_post_processor_module.processing.processing_pipeline import ProcessingPipeline
-from aefi_post_processor_module.interface.shell.shell_wiring import build_window
-
-@dataclass
-class SyncSummary:
-    """Outcome of one batch sync, by acquisition folder name."""
-    processed: List[str] = field(default_factory=list)
-    skipped: List[str] = field(default_factory=list)
-    failed: List[str] = field(default_factory=list)
+from aefi_post_processor_module.interface.shell.shell_wiring import build_shell
 
 
-def sync_scans(raw_dir: Path, force: bool = False) -> SyncSummary:
-    """
-    Run pipeline on missing/outdated scans.
+def _processing_parameters() -> ProcessingParameters:
+    """Parameters of one processing: the default ones, with the ideal rotation angles of the device template."""
+    return ProcessingParameters(rotation_angles=_ideal_rotation_angles(), reference_point=(0, 0))
 
-    Each scan lives in its own acquisition subfolder (`<raw_dir>/<timestamp>_<stepScan|flyScan>_<name>/`);
-    the device CSV is found via `<subfolder>/*_aefi.csv` and the processed `.h5`
-    is written into that same subfolder.
-    """
-    summary = SyncSummary()
-
-    if not raw_dir.exists():
-        logger.error("sync.aborted reason=raw_dir_not_found raw_dir=%s", raw_dir)
-        return summary
-
-    # Step scans (measurements) and fly scans (exploration maps): same files, same pipeline.
-    csv_files = sorted(
-        path for kind in ("stepScan", "flyScan") for path in raw_dir.glob(f"*_{kind}_*/*_aefi.csv")
-    )
-    logger.info("sync.started raw_dir=%s scans_found=%d force=%s", raw_dir, len(csv_files), force)
-
-    for csv_path in csv_files:
-        scan_name = csv_path.parent.name
-        expected_output = csv_path.parent / f"{scan_name}.h5"
-
-        if not expected_output.exists():
-            reason = "new"
-        elif force:
-            reason = "forced"
-        elif csv_path.stat().st_mtime >= expected_output.stat().st_mtime:
-            reason = "source_newer"
-        else:
-            logger.debug("scan.up_to_date scan=%s action=none", scan_name)
-            summary.skipped.append(scan_name)
-            continue
-
-        try:
-            rotation_angles = _ideal_rotation_angles()
-            logger.info(
-                "scan.processing scan=%s reason=%s rotation_angles_deg=%s rotation_origin=ideal_template",
-                scan_name, reason, rotation_angles,
-            )
-            started = time.monotonic()
-            with ProcessingPipeline(output_path=expected_output) as pipeline:
-                pipeline.run_full_pipeline(
-                    csv_path,
-                    rotation_angles=rotation_angles,
-                    reference_point=(0, 0)
-                )
-            summary.processed.append(scan_name)
-            logger.info("scan.processed scan=%s elapsed_s=%.1f", scan_name, time.monotonic() - started)
-
-        except Exception as e:
-            summary.failed.append(scan_name)
-            logger.exception("scan.failed scan=%s error_type=%s error=%s", scan_name, type(e).__name__, e)
-
-    outcome_level = logging.WARNING if summary.failed else logging.INFO
-    logger.log(
-        outcome_level,
-        "sync.finished processed=%d skipped=%d failed=%d failed_scans=%s",
-        len(summary.processed), len(summary.skipped), len(summary.failed), summary.failed,
-    )
-    return summary
 
 def main():
     parser = argparse.ArgumentParser(description="AEFI Post-Processor Composition Root")
@@ -141,7 +70,7 @@ def main():
         "--repo-path",
         type=Path,
         default=None,
-        help="Open the window directly on this folder, skipping the sync step "
+        help="Open the window directly on this folder, skipping the processing at launch "
              "(e.g. an export directory already fully post-processed).",
     )
     parser.add_argument("--log-file", type=Path, default=_LOG_FILE, help="Where this run writes its journal.")
@@ -151,23 +80,23 @@ def main():
     args = parser.parse_args()
 
     feedback = configure_logging(args.log_file)
+    raw_dir = args.repo_path if args.repo_path is not None else _export_output_directory()
 
-    if args.repo_path is not None:
-        raw_dir = args.repo_path
-        logger.info("sync.skipped reason=repo_path_given repo=%s", raw_dir)
-    else:
-        raw_dir = _export_output_directory()
-
-        # 1. Sync
-        sync_scans(raw_dir, force=args.force)
-
-    # 2. Open the window
-    logger.info("window.opening repo=%s", raw_dir)
     app = QApplication(sys.argv)
     app.setApplicationName("AEFI Post-Processor")
+    shell = build_shell(
+        feedback, str(args.log_file), str(args.layout_file), str(raw_dir), _processing_parameters, "ideal_template"
+    )
 
-    window, presenters = build_window(feedback, str(args.log_file), str(args.layout_file))
-    window.show()
+    if args.repo_path is not None:
+        logger.info("sync.skipped reason=repo_path_given repo=%s", raw_dir)
+        shell.acquisitions_presenter.refresh()
+    else:
+        # Behaviour unchanged until step 1.8: new or outdated acquisitions are processed before the window shows.
+        shell.acquisitions_presenter.process_pending(force=args.force)
+
+    logger.info("window.opening repo=%s", raw_dir)
+    shell.window.show()
     sys.exit(app.exec())
 
 if __name__ == "__main__":

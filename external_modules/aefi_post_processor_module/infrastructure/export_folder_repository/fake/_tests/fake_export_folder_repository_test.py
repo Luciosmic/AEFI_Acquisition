@@ -8,10 +8,11 @@ class TestFakeExportFolderRepository(AcquisitionRepositoryContract):
 
     def repository_holding(self, specs):
         repository = FakeExportFolderRepository()
-        for name, kind, csv_time, steps_time in specs:
+        for name, kind, csv_time, steps_time, holds_preprocessed in specs:
             folder = f"{self.export_folder}/{name}"
             repository.add(self.export_folder, AcquisitionRecord(
                 name=name, kind=kind, folder=folder, csv_file=f"{folder}/{name}_aefi.csv",
                 acquisition_file=f"{folder}/{name}.h5", csv_modified_at=csv_time, steps_modified_at=steps_time,
+                steps_hold_preprocessed=holds_preprocessed,
             ))
         return repository

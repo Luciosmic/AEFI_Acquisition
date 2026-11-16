@@ -111,4 +111,5 @@ class PostProcessingService(IApiPostProcessingService):
             )
         except Exception as e:
             logger.error("pipeline.failed scan=%s step=%s error_type=%s error=%s", scan, step, type(e).__name__, e)
+            e.processing_step = step  # the caller reads which step failed without the exception changing type
             raise

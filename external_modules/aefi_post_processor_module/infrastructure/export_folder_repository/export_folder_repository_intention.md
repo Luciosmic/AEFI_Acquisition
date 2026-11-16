@@ -13,10 +13,11 @@ Les acquisitions vivent dans des sous-dossiers `<horodatage>_<stepScan|flyScan>_
 
 ## Responsibility
 
-- Implémenter `IAcquisitionRepository` : parcourir `*_stepScan_*` et `*_flyScan_*`, trier par nom de dossier, rendre un `AcquisitionRecord` par scan avec la date du CSV et celle du fichier d'étapes (absente s'il n'existe pas).
+- Implémenter `IAcquisitionRepository` : parcourir `*_stepScan_*` et `*_flyScan_*`, trier par nom de dossier, rendre un `AcquisitionRecord` par scan avec la date du CSV, celle du fichier d'étapes (absente s'il n'existe pas) et si ce fichier contient l'étape `preprocessed`.
 - Ne rien créer ni modifier.
 
 ## Design
 
 - Le fichier d'étapes se déduit du fichier d'acquisition `<dossier>/<nom>.h5` par `processing_store_path`, le même chemin que l'écriture.
+- Le fichier d'étapes s'ouvre en lecture seule pour chercher le groupe `preprocessed` (date inchangée) ; un fichier qui ne s'ouvre pas ne contient aucune étape.
 - Un dossier d'export absent ne contient aucune acquisition ; un dossier sans `*_aefi.csv` n'est pas une acquisition.

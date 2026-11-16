@@ -61,4 +61,4 @@ class FieldMapService(IApiFieldMapService):
             )
             extent = _DEFAULT_EXTENT
         left, right, bottom, top = (float(v) for v in extent)
-        return FieldMapDTO(step_name=request.step_name, grids=grids, extent=(left, right, bottom, top))
+        return FieldMapDTO(step_name=request.step_name, grids=grids, extent=(left, right, bottom, top), metadata=dict(metadata))

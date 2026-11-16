@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import Optional
 
 NEW = 'new'
+INCOMPLETE = 'incomplete'
 FORCED = 'forced'
 SOURCE_NEWER = 'source_newer'
 
@@ -20,17 +21,21 @@ class AcquisitionRecord:
     acquisition_file: str  # the .h5 of the acquisition, where the processing steps are stored
     csv_modified_at: float  # seconds since the epoch
     steps_modified_at: Optional[float]  # None: the steps file does not exist yet
+    steps_hold_preprocessed: bool  # the steps file holds the first step: a processing that failed early leaves it empty
 
     def recalculation_reason(self, forced: bool = False) -> Optional[str]:
         """
         Why the steps must be computed again, or None when they are up to date.
 
         - NEW: no steps file yet
+        - INCOMPLETE: the steps file exists but holds no `preprocessed` step (a processing failed before storing it)
         - FORCED: the caller asked to process everything
         - SOURCE_NEWER: the scan file is not older than the steps file
         """
         if self.steps_modified_at is None:
             return NEW
+        if not self.steps_hold_preprocessed:
+            return INCOMPLETE
         if forced:
             return FORCED
         if self.csv_modified_at >= self.steps_modified_at:
