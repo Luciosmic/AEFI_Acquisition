@@ -42,6 +42,11 @@ optimal vs n_avg » du microcontrôleur).
   puis à la fin (`completed` / `failed`, avec les fichiers écrits). Un
   balayage refusé (grille, contrôle pris) ne démarre aucune activité : rien
   n'est écrit.
+- Annoncer sur le bus l'export ouvert dès que son dossier existe
+  (`AcquisitionExportOpened`, sorte `acquisition_throughput`, identifiant
+  de l'activité), et sa fermeture quoi qu'il arrive
+  (`AcquisitionExportClosed`) : la garde de fermeture refuse de fermer
+  l'application pendant la caractérisation.
 - Restaurer quoi qu'il arrive : `n_avg` d'origine, excitation de
   l'opérateur, flux d'acquisition (arrêté s'il a été démarré ici),
   propriété de l'excitation.

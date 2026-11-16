@@ -76,6 +76,8 @@ from domain.shared_kernel.events.aefi_voltage_sample_acquired.aefi_voltage_sampl
 from domain.shared_kernel.events.aefi_voltage_reading_stopped.aefi_voltage_reading_stopped import AefiVoltageReadingStopped
 from domain.shared_kernel.events.domain_event.domain_event import DomainEvent
 from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
+from domain.shared_kernel.events.acquisition_export_closed.acquisition_export_closed import AcquisitionExportClosed
+from domain.shared_kernel.events.acquisition_export_opened.acquisition_export_opened import AcquisitionExportOpened
 from application.shared.excitation_configuration_service.excitation_configuration_service import ExcitationConfigurationService
 
 
@@ -131,6 +133,7 @@ class ScanExportService:
         self._post_processing_port = post_processing_port
         self._task_runner = task_runner
         self._active_ports: List[IScanExportPort] = []
+        self._open_export: Optional[tuple] = None  # (kind, id) announced as open, until announced closed
         # Events come from several threads (ADC worker, motion worker, scan
         # loop): the recorder must never see a port that is not open yet, or
         # write into one being closed by another thread.
@@ -301,6 +304,9 @@ class ScanExportService:
             port.configure(directory, name, metadata, timestamp=timestamp, acquisition_kind=acquisition_kind)
             port.start()
             port.write_acquisition_parameters(parameters)
+        # Files open; announced before the recorder sees them, so the announcement stays out of the scan's event store.
+        self._announce_export_opened(
+            "fly_scan" if self._fly_scan else "step_scan", str(event.scan_id), self._config.measured_object)
         with self._events_lock:  # visible to the event recorder only once open
             self._active_ports = ports
             # Same instant on the inertial samples' monotonic clock and on the host clock.
@@ -381,6 +387,7 @@ class ScanExportService:
         )
         port.start()
         port.write_acquisition_parameters(self._start_parameters(str(event.acquisition_id), TIME_SERIES, config))
+        self._announce_export_opened("time_series", str(event.acquisition_id), config.measured_object)
         with self._events_lock:  # visible to the event recorder only once open
             self._active_ports = [port]
         self._time_series_active = True
@@ -485,6 +492,7 @@ class ScanExportService:
             self._time_series_active = False
             self._active_ports = []
             self._parameters = None
+            self._announce_export_closed()
 
         if self._points_written == 0:
             # A scan/reading that ended before any point leaves nothing worth
@@ -495,6 +503,19 @@ class ScanExportService:
             for folder in {p.parent for p in paths if p is not None}:
                 shutil.rmtree(folder, ignore_errors=True)
         return paths
+
+    # -- open export announcement (the closing guard listens; this service calls no one) --
+
+    def _announce_export_opened(self, kind: str, acquisition_id: str, measured_object: str) -> None:
+        self._open_export = (kind, acquisition_id)
+        self._event_bus.publish("acquisitionexportopened", AcquisitionExportOpened(
+            acquisition_kind=kind, acquisition_id=acquisition_id, measured_object=measured_object))
+
+    def _announce_export_closed(self) -> None:
+        opened, self._open_export = self._open_export, None
+        if opened is not None:
+            self._event_bus.publish("acquisitionexportclosed", AcquisitionExportClosed(
+                acquisition_kind=opened[0], acquisition_id=opened[1]))
 
     def _handle_scan_finished(self, event: DomainEvent) -> None:
         if not self._export_active:

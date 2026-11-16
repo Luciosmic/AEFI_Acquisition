@@ -15,6 +15,8 @@ import logging
 from typing import List
 
 from interface.shell.dashboard import Dashboard
+from interface.close_request_adapter.close_request_adapter import CloseRequestAdapter
+from interface.presenters.closing_guard_presenter import ClosingGuardPresenter
 from interface.presenters.mechanical_transmission_presenter import MechanicalTransmissionPresenter
 from interface.presenters.motion_presenter import MotionPresenter
 from interface.presenters.excitation_presenter import ExcitationPresenter
@@ -447,3 +449,14 @@ def wire_frequency_sweep(panel, presenter: FrequencySweepPresenter) -> None:
     presenter.status_message.connect(panel.set_status_message)
     presenter.point_measured.connect(panel.add_point)
     presenter.refresh_state()
+
+
+def wire_closing_guard(app, dashboard: Dashboard, adapter: CloseRequestAdapter, presenter: ClosingGuardPresenter) -> None:
+    """Both ways the application closes go through the closing guard: the main window (cross, Alt+F4,
+    taskbar) and the system's session end request. The dashboard keeps the adapter alive (it holds its
+    close handler) and the presenter (Qt parent): nothing else references them once main's composition returns."""
+    presenter.setParent(dashboard)
+    presenter.close_refused.connect(dashboard.show_close_refused)
+    dashboard.set_close_request_handler(adapter.on_window_close)
+    app.commitDataRequest.connect(adapter.on_session_end_request)
+    logger.info("Closing guard wired: main window close and session end request.")
