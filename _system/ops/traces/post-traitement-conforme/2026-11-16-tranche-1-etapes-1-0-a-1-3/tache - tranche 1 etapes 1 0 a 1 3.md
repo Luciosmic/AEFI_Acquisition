@@ -1,5 +1,6 @@
 ---
 type: tache::sh-agent-os
+etape: "[[plan - post-traitement conforme^^etape-1-0]]"
 session: sous-agent au-aefi-acquisition
 debut: 2026-11-16T004400Z
 fin: 2026-11-16T010800Z
