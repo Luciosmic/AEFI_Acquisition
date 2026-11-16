@@ -4,6 +4,7 @@ AcquisitionsPresenter - What the Acquisitions panel shows and does (see acquisit
 
 import logging
 import time
+from datetime import datetime
 from typing import Callable, Dict, List, NamedTuple, Optional, Tuple
 
 from ...application.acquisition_catalog_service.dtos.acquisition_outcome_dto import AcquisitionOutcomeDTO
@@ -29,11 +30,15 @@ _REASON_LABELS = {
 
 
 class AcquisitionRow(NamedTuple):
-    """One line of the panel, all text: the folder name (what the view reports back), type, object, state and detail."""
+    """One line of the panel, all text. `name`, the acquisition folder, is what the view reports back; the view shows
+    the other fields, in this order, as its columns."""
 
     name: str
+    group: str
+    acquired_at: str
     kind: str
     measured_object: str
+    lift_off: str
     state: str
     detail: str
 
@@ -44,10 +49,19 @@ class _Batch(NamedTuple):
     failed: Dict[str, str]  # acquisition -> the step that failed
 
 
-def _measured_object(name: str) -> str:
-    """The object named in `<timestamp>_<stepScan|flyScan>_<object>`, until the acquisition parameters are read (tranche 2)."""
-    parts = name.split("_", 2)
-    return parts[2] if len(parts) == 3 else name
+# What the parameters file of the acquisition did not say.
+NOT_SAID = "non renseigné"
+UNKNOWN_DATE = "inconnue"
+ROOT_GROUP = "—"
+
+
+def _date(acquired_at: Optional[datetime]) -> str:
+    """The start of the acquisition, at the clock of the bench that recorded it."""
+    return acquired_at.strftime("%d/%m/%Y %H:%M") if acquired_at is not None else UNKNOWN_DATE
+
+
+def _lift_off(lift_off_mm: Optional[float]) -> str:
+    return f"{lift_off_mm:g} mm" if lift_off_mm is not None else NOT_SAID
 
 
 class AcquisitionsPresenter:
@@ -184,8 +198,11 @@ class AcquisitionsPresenter:
             detail = ""
         return AcquisitionRow(
             name=status.name,
+            group=status.group or ROOT_GROUP,
+            acquired_at=_date(status.acquired_at),
             kind=_KIND_LABELS.get(status.kind, status.kind),
-            measured_object=_measured_object(status.name),
+            measured_object=status.measured_object or NOT_SAID,
+            lift_off=_lift_off(status.lift_off_mm),
             state=_STATE_LABELS[status.state],
             detail=detail,
         )
