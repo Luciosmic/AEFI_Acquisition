@@ -1,7 +1,12 @@
 # Plan — Verrou de fermeture pendant une acquisition, et panneaux détachés visibles dans Alt+Tab
 
-**État :** plan rédigé le 2026-11-14 sur le PC du labo, pendant une acquisition réelle. Rien n'est codé, rien n'a été lancé.
-**Prochaine action :** une fois l'acquisition en cours terminée, créer `feature/verrou-fermeture-acquisition` depuis `develop` et coder l'étape 1 (le cœur indépendant du système et l'adaptateur de l'action de l'opérateur, avec le message), testable en mode mock.
+**État :** plan rédigé le 2026-11-14 sur le PC du labo, pendant une acquisition réelle. L'acquisition est terminée (2026-11-16). Rien n'est codé. Le développement se fait sur le Mac.
+**Prochaine action :** sur le Mac, depuis `develop` à jour (il contient la tranche 1 du post-traitement conforme), créer `feature/verrou-fermeture-acquisition` et coder l'étape 1 (le cœur indépendant du système et l'adaptateur de l'action de l'opérateur, avec le message), testable en mode mock.
+
+**Où se vérifie chaque étape :**
+
+- étape 1 : entièrement sur le Mac, en mode mock (l'adaptateur neutre est celui que le Mac choisit) ; la demande d'arrêt de session se vérifie aussi sur macOS (fermer la session pendant un scan mock avec export) ;
+- étapes 2 et 3 : codées sur le Mac, avec leurs tests sur les faux, mais vérifiées seulement sur le PC du labo, seul à exécuter les adaptateurs Windows. Pousser la branche, la tirer dans `C:\Users\manip\AEFI_Acquisition_dev` (jamais dans le dossier des acquisitions réelles), et faire les tests au banc décrits plus bas.
 
 ## Pourquoi
 
