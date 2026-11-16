@@ -7,6 +7,13 @@ from typing import Dict, Optional, Sequence, Tuple
 
 import numpy as np
 
+# The six measured channels, in the order of the last axis of a grid.
+VOLTAGE_CHANNELS: Tuple[str, ...] = (
+    'voltage_x_in_phase', 'voltage_x_quadrature',
+    'voltage_y_in_phase', 'voltage_y_quadrature',
+    'voltage_z_in_phase', 'voltage_z_quadrature',
+)
+
 
 def build_square_grid(
     x: np.ndarray,

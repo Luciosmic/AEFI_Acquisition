@@ -6,14 +6,9 @@ import os
 
 import pandas as pd
 
+from ...domain.processing.grid_builder.grid_builder import VOLTAGE_CHANNELS
 from ...application.post_processing_service.dtos.scan_samples_dto import ScanSamplesDTO
 from ...application.post_processing_service.ports.i_csv_scan_reader import ICsvScanReader
-
-VOLTAGE_COLUMNS = (
-    'voltage_x_in_phase', 'voltage_x_quadrature',
-    'voltage_y_in_phase', 'voltage_y_quadrature',
-    'voltage_z_in_phase', 'voltage_z_quadrature',
-)
 
 
 class CsvScanReader(ICsvScanReader):
@@ -21,7 +16,7 @@ class CsvScanReader(ICsvScanReader):
         if not os.path.exists(csv_path):
             raise FileNotFoundError(f"CSV file not found: {csv_path}")
         df = pd.read_csv(csv_path)
-        channels = tuple(col for col in VOLTAGE_COLUMNS if col in df.columns)
+        channels = tuple(col for col in VOLTAGE_CHANNELS if col in df.columns)
         return ScanSamplesDTO(
             x=df['x'].to_numpy(),
             y=df['y'].to_numpy(),
