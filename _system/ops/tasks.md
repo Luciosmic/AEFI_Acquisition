@@ -40,9 +40,19 @@
 - [ ] **`CLAUDE.md` :** l'import `@../../_system/manual/convention-des-notes-hors-graphe.md` ajouté depuis le Mac
       ne se résout pas sur le PC, où le dépôt est dans `C:\Users\manip\AEFI_Acquisition_dev`. À rendre valable
       sur les deux machines.
+- [ ] **Rangement du domaine, question ouverte :** la phase de détection synchrone et l'analyse de débit de l'ADC,
+      aujourd'hui dans l'agrégat Calibration (`domain/test_bench/calibration`), iraient-elles mieux dans
+      `detection_devices/aefi_device` ?
+- [ ] **`goals.md` :** le tableau « Migrations réalisées » (vers la ligne 352) est périmé : il marque comme faites
+      des migrations qui n'ont jamais eu lieu.
+- POC n8n (visualiser les traces par couche DDD, appeler des blocs du domaine en développement) : archivé le
+  2026-10-15 sur `origin/feature/n8n-ddd-workflow-viz`, sous `tools/n8n_workflow_poc/`. Deux pannes connues à la
+  reprise : le port 8765 est pris par le serveur MCP d'observabilité, et `dev_bridge.py` importe `domain.step_scan`.
+  Le pont passe par un serveur HTTP local persistant, pas par le nœud Execute Command de n8n, bloqué par défaut.
 
-**Ce qui n'est pas dans git :** la mémoire de Claude propre à chaque machine, et les données de fonctionnement
-de `.aefi_acquisition/` (configs, calibrations saisies dans l'application, scans).
+**Ce qui n'est pas dans git :** les données de fonctionnement de `.aefi_acquisition/` (configs, calibrations
+saisies dans l'application, scans). La mémoire native de Claude est coupée sur le PC depuis le 2026-11-16 ; son
+contenu est réparti dans ce repo (`_system/ops/traces/2026-11-16-migrer-la-memoire-native-vers-les-repos/`).
 
 ## Démarrage « banc non calibré » : parcours de calibration de la transmission mécanique
 
@@ -633,3 +643,20 @@ bout dans `ScanApplicationService`, sans dépendre du hardware réel.
 4. Implémentation de la boucle différentielle
 5. Events (`ScanPointAcquired`, `NardaPointAcquired`) + export CSV
 6. UI (case à cocher)
+
+## Skills d'instrument globaux (agent du PC du labo)
+
+**But (2026-11-12) :** l'agent de ce PC sait piloter les instruments du labo par nos pilotes, grâce à un skill global
+par instrument dans `C:\Users\manip\.claude\skills\<instrument>\`.
+
+- [x] Oscilloscope DSO-X 2014A (2026-11-12).
+- [ ] Mouvement de la colonne : Arcus Performax 4EX et LIDAR de la colonne (COM9).
+- [ ] Système AEFI : AD9106 et ADS131A04.
+
+Structure à reproduire, celle du skill de l'oscilloscope : `SKILL.md` (déroulé seul), `domain/` (règles de mesure
+et de partage), `infrastructure/` (mode d'emploi et outil en ligne de commande JSON qui importe le pilote depuis
+`Desktop\THESE-LUIS-EXPERIMENTAL\Hardware - Drivers\...`, avec son intention et ses `_tests/` sur une ressource fake).
+Le skill importe le pilote en place et ne le copie jamais : il a déjà été perdu une fois. Un venv dédié par skill
+dans `C:\Users\manip\venvs-python-hors-dropbox\<skill>` : `uv run` d'un script PEP 723 échoue ici (fichiers du
+cache uv verrouillés, os error 32/396). L'humain a souvent un montage en cours sur l'instrument : lectures libres,
+changement de réglage annoncé ; sortie du générateur, `*RST` et autoscale demandés.
