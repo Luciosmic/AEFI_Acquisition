@@ -1,7 +1,7 @@
 # Plan — Post-traitement conforme à l'acquisition
 
-**État :** journal du post-traitement fait (2026-11-12) ; conception de l'architecture en panneaux et récits utilisateurs écrits, à valider.
-**Prochaine action :** consigne de l'humain du 2026-11-13 : 1) demander l'avis d'un agent chargé du profil `solidai` (`SOLIDAI-PACKAGES/solidai-developpement/profiles/solidai.yaml`, ou `SOLIDAI/_system/self/profiles/solidai.yaml`) sur `2026-11-12-concevoir-l-architecture-par-panneaux/conception - post-traitement en panneaux.md` et ses trois points à trancher ; 2) accepter ses recommandations sans revenir à l'humain ; 3) coder avec lui, en commençant par la tranche 1 (conformité de base), dans un worktree propre (`AEFI_Acquisition_dev_post_processor/`, branche `dev_post_processor` depuis `develop`), fusionné dans `develop` à la fin. Attention : la lecture de ces profils sous Dropbox a échoué (`EUNKNOWN`), probablement un fichier non synchronisé en local ; le rendre disponible hors ligne avant de reprendre.
+**État :** tranche 1 (conformité de base) faite et fusionnée dans `develop` le 2026-11-16 (`c25ef87c`, `dev_post_processor` conservée) : couches DDD, fenêtre à panneaux Acquisitions, Carte et Logs, lancement qui ne calcule plus, étalon `golden_master_test` inchangé. Vérifiée : V1 = 132 réussis et les 2 échecs connus (180° sur x et y), V2 = 0 erreur, V3 = 8 réussis. À confirmer sur le PC du laboratoire : l'ouverture sur les vraies acquisitions, sans qu'aucun fichier ne change, et un « Traiter » (l'humain n'a vu la fenêtre que sur une copie de données synthétiques).
+**Prochaine action :** tranche 2 (lecture des paramètres d'acquisition : objet, angles réellement appliqués à la place des angles idéaux, `RotationConvention` empruntée). Même méthode que la tranche 1 : découpage en étapes avec test d'acceptation, un commit par étape, étalon à ne changer que par une décision sur les chiffres. À proposer à l'humain, hors des tranches 1 à 6 validées : « Traiter en tâche de fond » (le bouton « Traiter » fige la fenêtre pendant le calcul, comme l'ancien traitement au lancement ; un thread ou un processus avec progression, sans changer les résultats).
 
 ## Pourquoi
 
@@ -19,7 +19,7 @@ On le remet au niveau de l'acquisition : même fenêtre à panneaux, mêmes couc
 
 1. Journal du post-traitement lisible hors de sa fenêtre, bilan du traitement par lot, cadre System Feedback branché dessus — **fait**.
 2. Conception de l'architecture en panneaux et récits utilisateurs — **à valider**.
-3. Tranches 1 à 6 de la conception, une par commit, chacune vérifiée par l'humain.
+3. Tranches 1 à 6 de la conception, chacune vérifiée par l'humain. Tranche 1 **faite** (traces `2026-11-16-tranche-1-etapes-*`) ; tranches 2 à 6 à faire.
 
 ## Constats à ne pas perdre
 
