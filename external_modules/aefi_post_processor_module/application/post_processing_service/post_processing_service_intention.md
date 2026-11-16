@@ -39,6 +39,6 @@ Le traitement d'un scan vivait dans une classe qui lisait le CSV avec pandas, ap
 
 ## Design
 
-- Le lecteur de CSV, l'écrivain d'étapes et le lecteur de la grille prévue arrivent par le constructeur ; sans lecteur de grille prévue, chaque scan reçoit la grille carrée ; les calculs sont ceux du domaine, créés à chaque traitement avec les paramètres de la demande.
+- Le lecteur de CSV, l'écrivain d'étapes et le lecteur de la grille prévue arrivent par le constructeur ; sans lecteur de grille prévue, le service prend `NO_SCAN_PLAN` (`no_scan_plan_reader.py`), un lecteur qui ne connaît aucune grille, et chaque scan reçoit la grille carrée ; les calculs sont ceux du domaine, créés à chaque traitement avec les paramètres de la demande.
 - Un échec d'étape est journalisé puis relancé, comme avant : l'appelant (l'acquisition) l'attrape.
 - Sans angles de rotation, l'étape `rotated_frame` n'est pas écrite, et l'interpolation prend l'étape précédente.
