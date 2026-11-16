@@ -1,5 +1,7 @@
 ---
 doc_type: releve
+type: constat::sh-agent-os
+genere_par: "[[tache - tranche 1 etapes 1 0 a 1 3]]"
 ---
 
 # Relevés V1, V2, V3 à la base (develop efa1c540, worktree dev_post_processor)
