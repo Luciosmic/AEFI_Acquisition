@@ -3,17 +3,13 @@ Data Processing Pipeline for AEFI Acquisition
 Modular, traceable processing from CSV to calibrated HDF5 datasets.
 """
 
-from .datahandler import DataHandler
-from .data_preprocessor import DataPreProcessor
-from .primary_field_phase_calibrator import PrimaryFieldPhaseCalibrator
-from .primary_field_amplitude_subtractor import PrimaryFieldAmplitudeSubtractor
-from .sensor_to_ef_sources_frame_rotator import SensorToEFSourcesFrameRotator
-from .data_interpolator import DataInterpolator
+from aefi_post_processor_module.domain.processing.phase_calibrator.phase_calibrator import PrimaryFieldPhaseCalibrator
+from aefi_post_processor_module.domain.processing.amplitude_subtractor.amplitude_subtractor import PrimaryFieldAmplitudeSubtractor
+from aefi_post_processor_module.domain.processing.frame_rotator.frame_rotator import SensorToEFSourcesFrameRotator
+from aefi_post_processor_module.domain.processing.interpolator.interpolator import DataInterpolator
 from .processing_pipeline import ProcessingPipeline
 
 __all__ = [
-    'DataHandler',
-    'DataPreProcessor',
     'PrimaryFieldPhaseCalibrator',
     'PrimaryFieldAmplitudeSubtractor',
     'SensorToEFSourcesFrameRotator',

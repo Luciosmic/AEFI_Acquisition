@@ -1,0 +1,2 @@
+# Les etalons .npz sont versionnes ici (le .gitignore de la racine ignore *.npz)
+!*.npz
