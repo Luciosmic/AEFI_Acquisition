@@ -5,6 +5,8 @@ Relevée sur `develop` au commit `83b6fb4b`. Elle complète la carte de toute la
 
 La relation voulue est décrite dans la conception du post-traitement (`_system/ops/traces/post-traitement-conforme/2026-11-12-concevoir-l-architecture-par-panneaux/conception - post-traitement en panneaux.md`, § 1). Cette carte dit ce qui est en place, ce qui ne l'est pas encore, et où les deux logiciels divergent aujourd'hui.
 
+**Décision de l'humain (2026-11-16) :** le fichier des paramètres d'acquisition est un **contrat entre les deux logiciels, en relation client-fournisseur**. Le post-traitement est le client, l'acquisition le fournisseur : un besoin du post-traitement peut faire évoluer l'acquisition et son export. Cette décision remplace, pour ce fichier, le conformisme de la conception (§ 1.1), où le post-traitement prenait l'export tel quel sans rien pouvoir demander. Le code emprunté (lien ③) reste conformiste.
+
 ## 1. Vue d'ensemble
 
 Deux contextes bornés, et quatre liens.
@@ -26,7 +28,8 @@ flowchart LR
         WIN["Fenêtre à panneaux<br/>composition_root.py"]
     end
     SES -- "écrit" --> EXP
-    RD -- "① lit tel quel (conformiste)" --> EXP
+    RD -- "① lit selon le contrat<br/>(client-fournisseur)" --> EXP
+    PPS -. "① exprime ses besoins<br/>(nouveaux champs, version du schéma)" .-> SES
     PPS -- "écrit ses étapes dans le .h5" --> EXP
     ACL -- "② appelle en fin de scan, dans le même processus" --> RAC
     RAC --> PPS
@@ -37,14 +40,42 @@ flowchart LR
 
 | Lien | Sens | Motif | En place |
 |---|---|---|---|
-| ① Dossier d'export | l'acquisition écrit, le post-traitement lit | langage publié de l'acquisition, post-traitement conformiste | en partie : le CSV et la grille prévue sont lus, pas encore l'objet ni les angles |
-| ② Appel en fin de scan | l'acquisition appelle le post-traitement | l'acquisition est cliente ; son adaptateur est sa couche anticorruption | oui, par un raccord temporaire au lieu du service |
+| ① Dossier d'export, contrat porté par le fichier des paramètres | l'acquisition écrit, le post-traitement lit ; les besoins remontent du post-traitement vers l'acquisition | client-fournisseur : le post-traitement client, l'acquisition fournisseur | en partie : le CSV et la grille prévue sont lus, pas encore l'objet ni les angles |
+| ② Appel en fin de scan | l'acquisition appelle le post-traitement | l'acquisition est cliente du service du post-traitement ; son adaptateur est sa couche anticorruption | oui, par un raccord temporaire au lieu du service |
 | ③ Code emprunté | le post-traitement importe du code de l'acquisition | conformiste, par un seul paquet | oui, 5 pièces de l'interface |
 | ④ Configuration partagée | le post-traitement lit deux fichiers de configuration de l'acquisition | conformiste, dépendance au dossier de travail | oui |
 
-## 2. Le dossier d'export, langage publié de l'acquisition
+## 2. Le dossier d'export et son contrat
 
-Le contrat entre les deux logiciels est le dossier d'export d'une acquisition, pas le code de l'acquisition.
+Le contrat entre les deux logiciels est le dossier d'export d'une acquisition, pas le code de l'acquisition. Le fichier des paramètres d'acquisition en est le cœur : il décrit l'acquisition et chacun des autres fichiers (`data.files`, avec leurs empreintes, et `data.columns`, le sens de chaque colonne du CSV).
+
+### Comment fonctionne le contrat client-fournisseur
+
+```mermaid
+flowchart LR
+    B["Besoin du post-traitement<br/>(client)"] --> T["Inscrit dans cette carte :<br/>champ attendu, sens, unité"]
+    T --> A["L'acquisition (fournisseur)<br/>ajoute ou modifie le champ"]
+    A --> V["Version du schéma relevée<br/>mineure : champ ajouté<br/>majeure : champ changé ou retiré"]
+    V --> L["Le post-traitement lit le champ,<br/>et refuse une version majeure inconnue"]
+```
+
+- Un besoin du post-traitement se dit d'abord ici, dans le tableau « Ce que le post-traitement attend » plus bas : le champ, son sens, son unité, et pourquoi.
+- L'acquisition l'ajoute à son export et relève la version du schéma (`schema.version`) : version mineure pour un champ ajouté, majeure pour un champ changé ou retiré.
+- Le post-traitement ne lit que des champs inscrits au contrat. Il accepte les versions mineures, refuse une version majeure inconnue et la nomme dans son journal.
+- Les anciennes acquisitions restent lisibles : un champ ajouté par une version récente manque dans un fichier ancien, et le post-traitement le dit (par exemple, la grille carrée faute de grille prévue).
+
+### Ce que le post-traitement attend du fichier des paramètres
+
+| Champ | Pour quoi | Depuis le schéma | Lu |
+|---|---|---|---|
+| `procedure.step_scan.zone`, `procedure.step_scan.grid` | la grille prévue : distinguer un scan rectangulaire d'un scan interrompu | 1.0 | oui, depuis le 2026-11-16 |
+| `measurement_chain.sensor.deployment.rotation_applied` (angles, convention, origine) | traiter avec les angles réellement appliqués | présent en 1.4 | tranche 2 |
+| `provenance.activity.id` | l'identité de l'acquisition | présent en 1.4 | tranche 2 |
+| `feature_of_interest` (objet, lift-off) | nommer l'objet mesuré dans la fenêtre | présent en 1.4 | tranche 2 |
+| `data.columns` | vérifier le sens des colonnes du CSV | présent en 1.4 | prévu par la conception |
+| `data.files`, empreinte du `.h5` | savoir quel fichier porte les données brutes et lequel les étapes | — | **à négocier** en tranche 2 (§ 6) |
+
+### Les fichiers du dossier
 
 | Fichier | Écrit par | Lu par le post-traitement | Ce qui en est lu | Où, côté post-traitement |
 |---|---|---|---|---|
@@ -116,13 +147,13 @@ Les deux chemins partent de la racine du dépôt : la fenêtre ne trouve la conf
 En fin de scan, l'acquisition traite avec les angles de la calibration active (pour le scan de la bouteille d'eau du 13 novembre : 34,9°, 45,7°, −5,3°, calibrés).
 Le bouton « Traiter » de la fenêtre retraite avec les angles idéaux du gabarit (35,3°, 45°, 0°).
 Un scan retraité depuis la fenêtre change donc d'étape « repère tourné » et d'interpolation.
-Correction prévue : tranche 2, lire `rotation_applied` dans le fichier des paramètres de chaque acquisition.
+Décidé (2026-11-16) : corrigé en tranche 2, en lisant `rotation_applied` dans le fichier des paramètres de chaque acquisition. Le champ est déjà exporté : rien à demander à l'acquisition.
 
 **L'empreinte du `.h5` ne vaut plus après le traitement.**
 L'acquisition prend l'empreinte (taille, SHA-256) du `.h5` en fin de scan et l'écrit dans le fichier des paramètres, puis le post-traitement y ajoute ses étapes.
 Pour le scan de la bouteille d'eau : 2 455 328 octets enregistrés, 6 046 209 octets aujourd'hui.
 Un lecteur qui vérifie les empreintes conclurait à un fichier altéré.
-À trancher (point 1 de la conception) : ranger les étapes dans un fichier à part, ou dire dans le fichier des paramètres que le `.h5` reçoit les étapes après son empreinte.
+Décidé (2026-11-16) : corrigé en tranche 2. Reste à choisir comment, et c'est un premier besoin du client envers son fournisseur : ranger les étapes dans un fichier à part, que l'acquisition déclarerait dans `data.files` (recommandé : les données brutes et leur empreinte restent intactes), ou faire dire au fichier des paramètres que le `.h5` reçoit les étapes après son empreinte.
 
 **Le dossier d'export ne dit pas encore le sens de toutes ses colonnes au post-traitement.**
 Le fichier des paramètres décrit chaque colonne du CSV (`data.columns`, unités et repères), mais le lecteur de CSV lit les colonnes par leur nom, sans les vérifier contre cette description. Prévu par la conception (§ 1.1).
@@ -131,7 +162,8 @@ Le fichier des paramètres décrit chaque colonne du CSV (`data.columns`, unité
 
 | Changement côté acquisition | Effet côté post-traitement |
 |---|---|
-| nouvelle version majeure du schéma des paramètres | refus attendu de l'acquisition dans le catalogue (« format non pris en charge »), une fois la tranche 2 faite ; aujourd'hui seule la grille est lue, et un fichier sans grille fait revenir à la grille carrée |
+| champ ajouté au fichier des paramètres (version mineure) | rien, jusqu'à ce que le post-traitement l'inscrive au contrat et le lise |
+| nouvelle version majeure du schéma des paramètres | à annoncer au client avant de la publier ; refus attendu de l'acquisition dans le catalogue (« format non pris en charge »), une fois la tranche 2 faite ; aujourd'hui seule la grille est lue, et un fichier sans grille fait revenir à la grille carrée |
 | colonne renommée dans `_aefi.csv` | le canal disparaît du traitement |
 | pièce empruntée déplacée ou modifiée dans `src/interface/` | `aefi_acquisition_upstream/` casse à l'import, ou la fenêtre change |
 | nouveau type d'acquisition exporté (balayage en fréquence, lecture continue) | invisible dans le catalogue tant que le post-traitement ne le traite pas |
