@@ -72,7 +72,7 @@ def main(hardware_config: dict | None = None):
     logging.getLogger().addHandler(mcp_log_handler)
 
     lifecycle_presenter = SystemLifecyclePresenter()
-    startup_view = StartupView(lifecycle_presenter, logs_panel=splash_logs_panel)
+    startup_view = StartupView(lifecycle_presenter, logs_panel=splash_logs_panel, icon=app.windowIcon())
     startup_view.show()
     startup_view.set_phase("Démarrage...")
     app.processEvents()
