@@ -49,6 +49,8 @@ from domain.frequency_sweep.value_objects.frequency_grid.frequency_grid import F
 from domain.frequency_sweep.value_objects.frequency_sweep_id.frequency_sweep_id import FrequencySweepId
 from domain.frequency_sweep.value_objects.frequency_sweep_role.frequency_sweep_role import FrequencySweepRole
 from domain.frequency_sweep.value_objects.table_height.table_height import TableHeight
+from domain.shared_kernel.events.acquisition_export_closed.acquisition_export_closed import AcquisitionExportClosed
+from domain.shared_kernel.events.acquisition_export_opened.acquisition_export_opened import AcquisitionExportOpened
 from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
 from domain.shared_kernel.excitation.value_objects.excitation_mode import ExcitationMode
 from domain.shared_kernel.excitation.value_objects.phase_angle import PhaseAngle
@@ -57,6 +59,8 @@ AEFI_VOLTAGE_SAMPLE_ACQUIRED_TOPIC = "aefivoltagesampleacquired"
 # Owner name of the excitation and the acquisition stream while sweeping.
 CONTROLLER = "balayage en fréquence"
 MIN_SAMPLES_PER_FREQUENCY = 3
+# Acquisition kind announced with the open export (AcquisitionExportOpened / Closed).
+EXPORT_KIND = "frequency_sweep"
 
 logger = logging.getLogger(__name__)
 
@@ -205,6 +209,9 @@ class FrequencySweepService(IApiFrequencySweepService):
             for release in self._releases:
                 release()
             self._releases = []
+            if self._export_location is not None:
+                self._event_bus.publish("acquisitionexportclosed", AcquisitionExportClosed(
+                    acquisition_kind=EXPORT_KIND, acquisition_id=str(sweep.id)))
             self._running = False
 
     def _sweep(
@@ -375,6 +382,9 @@ class FrequencySweepService(IApiFrequencySweepService):
             logger.warning("FrequencySweepService: sweep_id=%s no export location: %s", sweep.id, opened.error)
             return
         self._export_location = opened.value
+        # The closing guard listens: the application must not close while this export is open.
+        self._event_bus.publish("acquisitionexportopened", AcquisitionExportOpened(
+            acquisition_kind=EXPORT_KIND, acquisition_id=str(sweep.id), measured_object=self._activity.measured_object_name))
         self._write_acquisition_parameters()
 
     def _read_usb_latency(self, serial_port: Optional[str]) -> Tuple[Optional[float], Optional[str]]:

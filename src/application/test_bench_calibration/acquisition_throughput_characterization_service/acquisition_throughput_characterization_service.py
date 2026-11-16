@@ -71,9 +71,13 @@ from domain.test_bench_calibration.services.acquisition_throughput_analysis.acqu
 from domain.test_bench_calibration.value_objects.acquisition_throughput_characterization.acquisition_throughput_characterization import (
     AcquisitionThroughputPoint,
 )
+from domain.shared_kernel.events.acquisition_export_closed.acquisition_export_closed import AcquisitionExportClosed
+from domain.shared_kernel.events.acquisition_export_opened.acquisition_export_opened import AcquisitionExportOpened
 from domain.shared_kernel.events.i_domain_event_bus.i_domain_event_bus import IDomainEventBus
 
 AEFI_VOLTAGE_SAMPLE_ACQUIRED_TOPIC = "aefivoltagesampleacquired"
+# Acquisition kind announced with the open export (AcquisitionExportOpened / Closed).
+EXPORT_KIND = "acquisition_throughput"
 # Owner name of the excitation, the acquisition stream and the n_avg / OSR configuration.
 CONTROLLER = "caractérisation débit MCU"
 EXCITATION_CONDITION = "coupée"
@@ -248,6 +252,9 @@ class AcquisitionThroughputCharacterizationService(IApiAcquisitionThroughputChar
             for release in self._releases:
                 release()
             self._releases = []
+            if self._export_location is not None:
+                self._event_bus.publish("acquisitionexportclosed", AcquisitionExportClosed(
+                    acquisition_kind=EXPORT_KIND, acquisition_id=self._activity.activity_id))
             self._running = False
 
     def _sweep(
@@ -350,6 +357,9 @@ class AcquisitionThroughputCharacterizationService(IApiAcquisitionThroughputChar
             )
             return
         self._export_location = opened.value
+        # The closing guard listens: the application must not close while this export is open.
+        self._event_bus.publish("acquisitionexportopened", AcquisitionExportOpened(
+            acquisition_kind=EXPORT_KIND, acquisition_id=self._activity.activity_id))
         self._write_acquisition_parameters()
 
     def _read_usb_latency(self, serial_port: Optional[str]) -> Tuple[Optional[float], Optional[str]]:

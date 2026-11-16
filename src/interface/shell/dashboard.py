@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QDockWidget, QHBoxLayout, QLabel, QGroupBox, QComboBox
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QDockWidget, QHBoxLayout, QLabel, QGroupBox, QComboBox, QMessageBox
 from PySide6.QtCore import Qt, Signal
 import os
 
@@ -227,7 +227,21 @@ class Dashboard(QWidget):
         except Exception:
             return False
     
+    # --- Close request (the closing guard decides, see wire_closing_guard) ---
+
+    _close_request_handler = None
+
+    def set_close_request_handler(self, handler) -> None:
+        """handler() -> bool: True lets the window close, False keeps it open."""
+        self._close_request_handler = handler
+
+    def show_close_refused(self, title: str, text: str) -> None:
+        QMessageBox.warning(self, title, text)
+
     def closeEvent(self, event):
-        """Auto-save layout on close."""
+        """Cross, Alt+F4, taskbar: ask the handler first; save the layout only for a close that happens."""
+        if self._close_request_handler is not None and not self._close_request_handler():
+            event.ignore()
+            return
         self.save_layout()
         event.accept()
