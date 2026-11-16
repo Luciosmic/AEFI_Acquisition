@@ -7,7 +7,7 @@ Orchestrates the full workflow:
 2. For each subfolder, check if its `.h5` (written alongside the CSV) is
    missing or outdated.
 3. Run ProcessingPipeline on missing/outdated items.
-4. Launch Visualization App on the export directory.
+4. Open the window of panels on the export directory.
 """
 
 import json
@@ -33,6 +33,7 @@ for p in (_external_modules, project_root):
 logger = logging.getLogger(__name__)
 
 _LOG_FILE = project_root / ".aefi_acquisition" / "logs" / "post_processor.log"
+_LAYOUT_FILE = Path.home() / ".aefi_post_processor_layout.dat"  # its own file: never the acquisition's layout
 _EXPORT_CONFIG_PATH = project_root / ".aefi_acquisition" / "configs" / "export_default_config.json"
 _DEFAULT_EXPORT_DIR = Path.home() / "Desktop" / "AEFI_Acquisition_Exports"
 
@@ -60,9 +61,7 @@ def _ideal_rotation_angles() -> tuple:
 
 from aefi_post_processor_module.infrastructure.logging.logging_setup import configure_logging
 from aefi_post_processor_module.processing.processing_pipeline import ProcessingPipeline
-from aefi_post_processor_module.visualisation.model import VisualisationModel
-from aefi_post_processor_module.visualisation.view import VisualisationView
-from aefi_post_processor_module.visualisation.presenter import VisualisationPresenter
+from aefi_post_processor_module.interface.shell.shell_wiring import build_window
 
 @dataclass
 class SyncSummary:
@@ -142,12 +141,16 @@ def main():
         "--repo-path",
         type=Path,
         default=None,
-        help="Open the visualizer directly on this folder, skipping the sync step "
+        help="Open the window directly on this folder, skipping the sync step "
              "(e.g. an export directory already fully post-processed).",
+    )
+    parser.add_argument("--log-file", type=Path, default=_LOG_FILE, help="Where this run writes its journal.")
+    parser.add_argument(
+        "--layout-file", type=Path, default=_LAYOUT_FILE, help="Where the layout of the panels is kept between runs."
     )
     args = parser.parse_args()
 
-    feedback = configure_logging(_LOG_FILE)
+    feedback = configure_logging(args.log_file)
 
     if args.repo_path is not None:
         raw_dir = args.repo_path
@@ -158,18 +161,13 @@ def main():
         # 1. Sync
         sync_scans(raw_dir, force=args.force)
 
-    # 2. Launch Visualization
-    logger.info("visualisation.opening repo=%s", raw_dir)
+    # 2. Open the window
+    logger.info("window.opening repo=%s", raw_dir)
     app = QApplication(sys.argv)
-    app.setApplicationName("AEFI Visualisation")
+    app.setApplicationName("AEFI Post-Processor")
 
-    # Point model to the export directory (recurses into acquisition subfolders)
-    model = VisualisationModel(raw_dir)
-    view = VisualisationView()
-    feedback.attach(view.append_feedback)
-    presenter = VisualisationPresenter(view, model)
-
-    view.show()
+    window, presenters = build_window(feedback, str(args.log_file), str(args.layout_file))
+    window.show()
     sys.exit(app.exec())
 
 if __name__ == "__main__":

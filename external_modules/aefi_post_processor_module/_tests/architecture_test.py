@@ -47,6 +47,8 @@ def test_no_module_imports_a_layer_without_qualifying_it():
     for path in sorted(MODULE_DIR.rglob("*.py")):
         if ".venv" in path.parts or "__pycache__" in path.parts:
             continue
+        if "aefi_acquisition_upstream" in path.parts:
+            continue  # the one place where `interface` is meant to be src/'s, once sys.path is settled
         for root, line, relative in _imports(path):
             if not relative and root in LAYER_NAMES:
                 offenders.append(f"{path.relative_to(MODULE_DIR)}:{line} importe {root} sans le qualifier")
@@ -55,3 +57,27 @@ def test_no_module_imports_a_layer_without_qualifying_it():
 
 def test_the_scan_sees_the_domain_it_guards():
     assert any(_python_files("domain")), "aucun fichier du domaine : le test ne garde plus rien"
+
+
+def _imported_names(path: Path):
+    """(module importé tel qu'écrit, numéro de ligne), relatifs compris."""
+    for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                yield alias.name, node.lineno
+        elif isinstance(node, ast.ImportFrom):
+            yield "." * node.level + (node.module or ""), node.lineno
+
+
+def test_presenters_import_neither_qt_nor_the_domain_nor_the_infrastructure():
+    offenders = []
+    presenters = sorted(
+        path for path in (MODULE_DIR / "interface").glob("*_presenter/*.py") if path.name != "__init__.py"
+    )
+    for path in presenters:
+        for name, line in _imported_names(path):
+            parts = name.lstrip(".").split(".")
+            if parts[0] in {"PySide6", "pandas", "h5py", "aefi_acquisition_upstream"} or "domain" in parts or "infrastructure" in parts:
+                offenders.append(f"{path.relative_to(MODULE_DIR)}:{line} importe {name}")
+    assert presenters, "aucun presenter : le test ne garde plus rien"
+    assert offenders == []
