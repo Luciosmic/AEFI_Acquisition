@@ -1,3 +1,4 @@
+import json
 import os
 
 import h5py
@@ -15,9 +16,10 @@ class TestExportFolderRepository(AcquisitionRepositoryContract):
         self.export_folder = str(self.root)
 
     def repository_holding(self, specs):
-        for name, _kind, csv_time, steps_time, holds_preprocessed in specs:
-            folder = self.root / name
-            folder.mkdir()
+        for path, _kind, csv_time, steps_time, holds_preprocessed in specs:
+            folder = self.root / path
+            folder.mkdir(parents=True)
+            name = folder.name
             csv = folder / f"{name}_aefi.csv"
             csv.write_text("x,y\n", encoding="utf-8")
             os.utime(csv, (csv_time, csv_time))
@@ -51,3 +53,71 @@ class TestExportFolderRepository(AcquisitionRepositoryContract):
         record = repository.list_acquisitions(self.export_folder)[0]
 
         assert record.steps_modified_at is not None and record.steps_hold_preprocessed is False
+
+
+def _write_parameters(folder, name, parameters):
+    (folder / f"{name}_acquisition-parameters.json").write_text(json.dumps(parameters), encoding="utf-8")
+
+
+class TestExportFolderRepositoryReadsTheContract:
+    @pytest.fixture(autouse=True)
+    def _export(self, tmp_path):
+        self.root = tmp_path / "export"
+        self.root.mkdir()
+
+    def _acquisition(self, path, parameters=None):
+        folder = self.root / path
+        folder.mkdir(parents=True)
+        (folder / f"{folder.name}_aefi.csv").write_text("x,y\n", encoding="utf-8")
+        if parameters is not None:
+            _write_parameters(folder, folder.name, parameters)
+        return folder
+
+    def _listed(self):
+        return {r.name: r for r in ExportFolderRepository().list_acquisitions(str(self.root))}
+
+    def test_date_object_and_lift_off_come_from_the_parameters_file_not_from_the_folder_name(self):
+        self._acquisition("METALLIC/2026-11-12_205659_stepScan_nom_trompeur_liftoff-99mm", {
+            "schema": {"version": "1.4"},
+            "provenance": {"activity": {"kind": "step_scan", "started_at": "2026-11-12T20:57:00.050+01:00"}},
+            "feature_of_interest": {"description": "cylindre_base_hexagonale_metallique",
+                                    "d": {"value": 15.0, "unit": "mm", "alias": "lift_off"}},
+        })
+
+        record = self._listed()["2026-11-12_205659_stepScan_nom_trompeur_liftoff-99mm"]
+
+        assert (record.group, record.kind, record.measured_object, record.lift_off_mm) == (
+            "METALLIC", "stepScan", "cylindre_base_hexagonale_metallique", 15.0)
+        assert record.acquired_at.isoformat() == "2026-11-12T20:57:00.050000+01:00"
+
+    def test_a_fly_scan_is_recognised_by_its_activity_whatever_its_folder_name(self):
+        self._acquisition("2026-11-14_100000_stepScan_x", {
+            "schema": {"version": "1.4"}, "provenance": {"activity": {"kind": "fly_scan"}}})
+
+        assert self._listed()["2026-11-14_100000_stepScan_x"].kind == "flyScan"
+
+    def test_before_schema_1_4_or_without_parameters_the_kind_falls_back_on_the_folder_name(self):
+        self._acquisition("2026-11-12_194400_flyScan_old", {
+            "schema": {"version": "1.2"}, "provenance": {"activity": {"kind": "step_scan"}}})
+        self._acquisition("WATER/2026-07-29_175721_stepScan_older")
+
+        listed = self._listed()
+
+        assert listed["2026-11-12_194400_flyScan_old"].kind == "flyScan"
+        assert listed["2026-07-29_175721_stepScan_older"].kind == "stepScan"
+        assert listed["2026-07-29_175721_stepScan_older"].measured_object is None
+
+    def test_a_time_series_or_a_folder_the_contract_and_the_name_do_not_call_a_scan_is_not_listed(self):
+        self._acquisition("2026-11-14_110000_timeSeries_plaque", {
+            "schema": {"version": "1.4"}, "provenance": {"activity": {"kind": "time_series"}}})
+        self._acquisition("BACKGROUND/sans_type_reconnu")
+
+        assert self._listed() == {}
+
+    def test_an_unreadable_parameters_file_leaves_the_acquisition_listed_with_unknown_details(self):
+        folder = self._acquisition("2026-11-14_120000_stepScan_y")
+        (folder / "2026-11-14_120000_stepScan_y_acquisition-parameters.json").write_text("{pas du json", encoding="utf-8")
+
+        record = self._listed()["2026-11-14_120000_stepScan_y"]
+
+        assert (record.kind, record.measured_object, record.acquired_at) == ("stepScan", None, None)

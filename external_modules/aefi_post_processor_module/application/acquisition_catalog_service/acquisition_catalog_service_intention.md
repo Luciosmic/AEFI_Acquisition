@@ -19,6 +19,7 @@ Le lancement de l'ancienne fenêtre calculait avant d'afficher : pour savoir que
 ## Responsibility
 
 - `list_acquisitions(ListAcquisitionsDTO)` : chaque acquisition du dossier d'export avec son état `processed`, `to_recompute` (et pourquoi : `new`, `incomplete`, `forced`, `source_newer`) ou `failed` (et son message).
+  Chaque état porte aussi ce qui reconnaît l'acquisition : le dossier où elle est rangée, sa date de début, l'objet mesuré et le lift-off, tels que les donne le dépôt.
 - `report_outcome(AcquisitionOutcomeDTO)` : retenir l'échec d'un traitement avec son message, ou l'oublier après un succès.
 - Ne créer ni modifier aucun fichier.
 

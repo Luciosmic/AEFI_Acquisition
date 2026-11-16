@@ -117,7 +117,9 @@ def test_opening_lists_each_acquisition_with_its_type_object_and_state_and_compu
     parts.presenter.refresh()
 
     row = parts.view.row(OK)
-    assert (row.kind, row.measured_object, row.state, row.detail) == ("pas à pas", "ok", "à recalculer", "jamais traitée")
+    assert (row.kind, row.state, row.detail) == ("pas à pas", "à recalculer", "jamais traitée")
+    # The folder name says "ok", the parameters say nothing: the name is never read as the object.
+    assert (row.group, row.acquired_at, row.measured_object, row.lift_off) == ("—", "inconnue", "non renseigné", "non renseigné")
     assert parts.view.row(OTHER).kind == "à la volée"
     assert parts.view.row(DONE).state == "traitée"
     assert parts.calls == [] and parts.writers == {}
@@ -246,3 +248,22 @@ def test_opening_the_folder_opens_the_selected_acquisition_or_else_the_export(pa
     parts.view.open_folder_requested.emit()
 
     assert parts.view.opened_folders == [EXPORT, f"{EXPORT}/{OK}"]
+
+
+def test_a_row_names_the_group_date_object_and_lift_off_from_the_parameters():
+    from dataclasses import replace
+    from datetime import datetime, timedelta, timezone
+
+    parts = _Parts()
+    listed = parts.export.list_acquisitions
+    started = datetime(2026, 11, 13, 20, 40, 52, tzinfo=timezone(timedelta(hours=1)))
+    parts.export.list_acquisitions = lambda folder: [
+        replace(r, group="WATER", acquired_at=started, measured_object="bouteille_cristalline", lift_off_mm=25.0)
+        if r.name == OK else r for r in listed(folder)
+    ]
+
+    parts.presenter.refresh()
+
+    row = parts.view.row(OK)
+    assert (row.group, row.acquired_at, row.measured_object, row.lift_off) == (
+        "WATER", "13/11/2026 20:40", "bouteille_cristalline", "25 mm")
