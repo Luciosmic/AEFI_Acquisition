@@ -260,6 +260,8 @@ flowchart LR
     end
 ```
 
+**Correction du 2026-11-16 : le redémarrage automatique de mise à jour n'est probablement pas couvert, même avant son échéance.** Microsoft documente le refus d'un arrêt par une application ([WM_QUERYENDSESSION](https://learn.microsoft.com/en-us/windows/win32/shutdown/wm-queryendsession), [Shutdown Changes for Windows Vista](https://learn.microsoft.com/en-us/windows/win32/shutdown/shutdown-changes-for-windows-vista)), mais pas la façon dont Windows Update redémarre. Une analyse indépendante (Windows 10, publiée en 2021) montre que le service de mise à jour lance son redémarrage avec la fermeture forcée de la session ([dennisbabkin.com](https://dennisbabkin.com/blog/?i=AAA07000)), un mode où, selon Microsoft, l'arrêt est garanti ([InitiateShutdownW](https://learn.microsoft.com/en-us/windows/win32/api/winreg/nf-winreg-initiateshutdownw)). Le tableau ci-dessus range donc à tort « Redémarrage de mise à jour avant son échéance » dans ce que l'application couvre : seuls l'arrêt et le redémarrage lancés à la main le sont. Contre les mises à jour, le réglage du PC est la vraie protection. Non vérifié sur Windows 11.
+
 Pour fermer cette porte, le réglage se fait sur la machine, pas dans l'application : par exemple la stratégie « Pas de redémarrage automatique avec des utilisateurs connectés », ou des heures d'activité couvrant les acquisitions. Ce réglage demande les droits administrateur du PC du labo : **à trancher avec l'humain** avant l'étape 3 (le faire, par qui, lequel).
 
 L'application ne mettra pas les mises à jour en pause d'elle-même : ce serait un comportement caché.
