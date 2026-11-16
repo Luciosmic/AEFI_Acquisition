@@ -3,6 +3,10 @@ import pytest
 
 from ....domain.processing._tests.synthetic_scan_generator import SyntheticScanGenerator
 from ....domain.processing.processing_steps.processing_steps import STEP_NAMES, ProcessingParameters
+from ....domain.processing.planned_scan_grid.planned_scan_grid import PlannedAxis, PlannedScanGrid
+from ....infrastructure.acquisition_parameters_scan_plan_reader.fake.fake_acquisition_parameters_scan_plan_reader import (
+    FakeAcquisitionParametersScanPlanReader,
+)
 from ....infrastructure.csv_scan_reader.fake.fake_csv_scan_reader import FakeCsvScanReader
 from ....infrastructure.hdf5_step_writer.fake.fake_hdf5_step_writer import FakeHdf5StepWriter
 from ..dtos.process_scan_dto import ProcessScanDTO
@@ -91,3 +95,42 @@ def test_a_failure_names_the_step_it_happened_in_without_changing_the_exception(
         service.process_scan(ProcessScanDTO("/scans/absent.csv", STORE))
 
     assert failure.value.processing_step == "load_csv"
+
+
+def _rectangular_samples():
+    """A complete scan of 6 columns (x from 0 to 10) and 3 rows (y from 0 to 4), every channel at 1."""
+    xs, ys = np.linspace(0.0, 10.0, 6), np.linspace(0.0, 4.0, 3)
+    x, y = np.meshgrid(xs, ys)
+    channels = ('voltage_x_in_phase', 'voltage_x_quadrature', 'voltage_y_in_phase',
+                'voltage_y_quadrature', 'voltage_z_in_phase', 'voltage_z_quadrature')
+    return ScanSamplesDTO(x=x.ravel(), y=y.ravel(), values=np.ones((18, 6)), channel_names=channels)
+
+
+def _service_with_plan(plan):
+    reader, writer, plans = FakeCsvScanReader(), FakeHdf5StepWriter(), FakeAcquisitionParametersScanPlanReader()
+    reader.add_file(CSV, _rectangular_samples())
+    if plan is not None:
+        plans.add_plan(CSV, plan)
+    return PostProcessingService(reader, writer, plans), writer
+
+
+def test_a_rectangular_scan_described_by_its_acquisition_keeps_its_shape_and_extent():
+    plan = PlannedScanGrid(x=PlannedAxis(0.0, 10.0, 6), y=PlannedAxis(0.0, 4.0, 3))
+    service, writer = _service_with_plan(plan)
+
+    service.process_scan(ProcessScanDTO(CSV, STORE, skip_interpolation=True))
+
+    grid, metadata = writer.load_step('preprocessed')
+    assert grid.shape == (3, 6, 6) and not np.isnan(grid).any()
+    assert metadata['extent'] == [-1.0, 11.0, -1.0, 5.0]
+    assert metadata['grid_origin'] == 'planned'
+
+
+def test_a_scan_without_description_keeps_the_square_grid():
+    service, writer = _service_with_plan(None)
+
+    service.process_scan(ProcessScanDTO(CSV, STORE, skip_interpolation=True))
+
+    grid, metadata = writer.load_step('preprocessed')
+    assert grid.shape == (6, 6, 6) and np.isnan(grid[3:, :, :]).all()
+    assert 'grid_origin' not in metadata

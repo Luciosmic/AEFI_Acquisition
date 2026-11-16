@@ -4,11 +4,11 @@ Post-processing service — the five processing steps of a scan (see post_proces
 
 import logging
 import os
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from ...domain.processing.amplitude_subtractor.amplitude_subtractor import PrimaryFieldAmplitudeSubtractor
 from ...domain.processing.frame_rotator.frame_rotator import SensorToEFSourcesFrameRotator
-from ...domain.processing.grid_builder.grid_builder import build_square_grid
+from ...domain.processing.grid_builder.grid_builder import GridOrigin, build_scan_grid
 from ...domain.processing.interpolator.interpolator import DataInterpolator
 from ...domain.processing.phase_calibrator.phase_calibrator import PrimaryFieldPhaseCalibrator
 from ...domain.processing.processing_steps.processing_steps import (
@@ -22,15 +22,22 @@ from .dtos.process_scan_dto import ProcessScanDTO
 from .dtos.processing_summary_dto import ProcessingSummaryDTO
 from .i_api_post_processing_service import IApiPostProcessingService
 from .ports.i_csv_scan_reader import ICsvScanReader
+from .ports.i_scan_plan_reader import IScanPlanReader
 from .ports.i_step_writer import IStepWriter
 
 logger = logging.getLogger(__name__)
 
 
 class PostProcessingService(IApiPostProcessingService):
-    def __init__(self, csv_reader: ICsvScanReader, step_writer: IStepWriter):
+    def __init__(
+        self,
+        csv_reader: ICsvScanReader,
+        step_writer: IStepWriter,
+        scan_plan_reader: Optional[IScanPlanReader] = None,
+    ):
         self._csv_reader = csv_reader
         self._step_writer = step_writer
+        self._scan_plan_reader = scan_plan_reader  # None: no description is read, every scan gets the square grid
 
     def process_scan(self, request: ProcessScanDTO) -> ProcessingSummaryDTO:
         params = request.parameters
@@ -52,9 +59,18 @@ class PostProcessingService(IApiPostProcessingService):
 
             step = 'preprocess'
             logger.debug("pipeline.step scan=%s step=%s", scan, step)
-            preprocessed, metadata = build_square_grid(
-                samples.x, samples.y, samples.values, samples.channel_names, None
+            planned = self._scan_plan_reader.planned_grid(request.csv_path) if self._scan_plan_reader else None
+            preprocessed, metadata, origin = build_scan_grid(
+                samples.x, samples.y, samples.values, samples.channel_names, planned
             )
+            if origin is GridOrigin.POINTS_OFF_PLAN:
+                logger.warning(
+                    "pipeline.grid scan=%s origin=%s shape=%s reason=a measured point lies outside the planned grid "
+                    "planned_x_points=%s planned_y_points=%s",
+                    scan, origin.value, preprocessed.shape[:2], planned.x.points, planned.y.points,
+                )
+            else:
+                logger.info("pipeline.grid scan=%s origin=%s shape=%s", scan, origin.value, preprocessed.shape[:2])
             self._step_writer.save_step(PREPROCESSED, preprocessed, metadata)
             completed.append('preprocess')
 

@@ -1,11 +1,14 @@
 """
-grid_builder - Builds the square scan grid from coordinates and channel values (numpy only).
+grid_builder - Builds the scan grid from coordinates and channel values: the planned grid when known, else a square one (numpy only).
 See grid_builder_intention.md.
 """
 
+from enum import Enum
 from typing import Dict, Optional, Sequence, Tuple
 
 import numpy as np
+
+from ..planned_scan_grid.planned_scan_grid import PlannedScanGrid
 
 # The six measured channels, in the order of the last axis of a grid.
 VOLTAGE_CHANNELS: Tuple[str, ...] = (
@@ -79,3 +82,89 @@ def build_square_grid(
         'total_points': grid_size * grid_size,
     }
     return grid, metadata
+
+
+class GridOrigin(Enum):
+    """Where the shape of the grid came from."""
+
+    PLANNED = 'planned'  # the grid the acquisition planned
+    NO_PLAN = 'no_plan'  # no planned grid known: square grid on the measured points
+    POINTS_OFF_PLAN = 'points_off_plan'  # a measured point lies outside the planned grid: square grid on the measured points
+
+
+def build_planned_grid(
+    x: np.ndarray,
+    y: np.ndarray,
+    values: np.ndarray,
+    channel_names: Sequence[str],
+    planned: PlannedScanGrid,
+) -> Optional[Tuple[np.ndarray, Dict[str, object]]]:
+    """
+    Place scan points on the grid the acquisition planned, NaN where no point was measured.
+
+    A complete rectangular scan fills its grid; an interrupted scan keeps its planned rows and columns, empty
+    where it stopped. Returns None when a point lies more than half a step from every node of the planned grid.
+
+    Returns:
+        (grid, metadata) - grid has shape (planned y points, planned x points, num_channels), indexed [y, x, channel];
+        metadata holds the same keys as build_square_grid, with grid_shape instead of grid_size.
+    """
+    if len(channel_names) == 0:
+        raise ValueError("No voltage columns found in DataFrame")
+
+    columns = planned.x.node_indices(x)
+    rows = planned.y.node_indices(y)
+    if columns is None or rows is None:
+        return None
+
+    n_rows, n_columns = planned.y.points, planned.x.points
+    num_channels = len(channel_names)
+    grid = np.full((n_rows, n_columns, num_channels), np.nan)
+    grid[rows, columns, :] = values
+
+    x_step, y_step = planned.x.step, planned.y.step
+    extent = [
+        planned.x.minimum - x_step / 2,
+        planned.x.maximum + x_step / 2,
+        planned.y.minimum - y_step / 2,
+        planned.y.maximum + y_step / 2,
+    ]
+
+    metadata = {
+        'extent': extent,
+        'x_coords': planned.x.nodes().tolist(),
+        'y_coords': planned.y.nodes().tolist(),
+        'x_step': x_step,
+        'y_step': y_step,
+        'grid_shape': [n_rows, n_columns],
+        'grid_origin': GridOrigin.PLANNED.value,
+        'original_nx': len(np.unique(x)),
+        'original_ny': len(np.unique(y)),
+        'num_channels': num_channels,
+        'channel_names': list(channel_names),
+        'valid_points': int(np.sum(~np.isnan(grid[:, :, 0]))),
+        'total_points': n_rows * n_columns,
+    }
+    return grid, metadata
+
+
+def build_scan_grid(
+    x: np.ndarray,
+    y: np.ndarray,
+    values: np.ndarray,
+    channel_names: Sequence[str],
+    planned: Optional[PlannedScanGrid],
+) -> Tuple[np.ndarray, Dict[str, object], GridOrigin]:
+    """
+    The grid of a scan: the planned one when it is known and holds every point, else the square grid
+    on the measured points (unchanged, so that scans without a description keep their numbers).
+    """
+    if planned is not None:
+        built = build_planned_grid(x, y, values, channel_names, planned)
+        if built is not None:
+            grid, metadata = built
+            return grid, metadata, GridOrigin.PLANNED
+        grid, metadata = build_square_grid(x, y, values, channel_names)
+        return grid, metadata, GridOrigin.POINTS_OFF_PLAN
+    grid, metadata = build_square_grid(x, y, values, channel_names)
+    return grid, metadata, GridOrigin.NO_PLAN
