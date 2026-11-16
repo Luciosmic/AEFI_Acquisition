@@ -1,6 +1,6 @@
 ---
 type: constat::sh-agent-os
-genere_par: "[[tache - typer les traces du post-traitement]]"
+genere_par: "[[tache - typer les traces du post traitement]]"
 ---
 
 # Quatre départs de trace sans identifiant de session
