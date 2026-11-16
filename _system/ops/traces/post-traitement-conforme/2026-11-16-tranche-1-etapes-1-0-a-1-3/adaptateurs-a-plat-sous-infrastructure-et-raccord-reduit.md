@@ -1,5 +1,7 @@
 ---
 doc_type: constat
+type: constat::sh-agent-os
+genere_par: "[[tache - tranche 1 etapes 1 0 a 1 3]]"
 ---
 
 # Étape 1.4 : adaptateurs à plat, raccord réduit
