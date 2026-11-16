@@ -1,7 +1,10 @@
 # Plan — Portage Linux des pilotes matériels
 
 **État :** étape 1 faite le 2026-11-16 ; le convertisseur FTDI de COM5 (bus 6-1) est confié à Linux et vu en `/dev/ttyUSB0`, nom stable `/dev/serial/by-id/usb-FTDI_LC234X_FT421G4I-if00-port0`. Aucun pilote n'est encore testé depuis Linux.
-**Prochaine action :** créer l'environnement Python de l'application dans Ubuntu, hors du repo (`UV_PROJECT_ENVIRONMENT=~/.venvs/AEFI_Acquisition_dev uv sync`), puis faire lire la centrale inertielle LSM9DS1 sur `/dev/ttyUSB0` par son pilote.
+**Prochaine action :** étape 3, choisir comment une config désigne un port série sous les deux systèmes (aujourd'hui `COM5` en dur dans `lsm9ds1_config.json` et dans les tests de l'adaptateur), puis relever les ports des autres appareils série.
+
+- 2026-11-16 : environnement de l'application créé dans Ubuntu par `UV_PROJECT_ENVIRONMENT=$HOME/.venvs/AEFI_Acquisition_dev UV_LINK_MODE=copy uv sync --frozen` (3 min 18 s).
+- 2026-11-16 : premier pilote lu depuis Linux. `LSM9DS1StreamDriver` sur `/dev/serial/by-id/usb-FTDI_LC234X_FT421G4I-if00-port0` à 256000 Bd, accéléromètre seul : 77 échantillons en 3 s (cadence de la carte, 25 Hz), aucune ligne rejetée, axe X vers 17 000 (environ 1 g). Le convertisseur a ensuite été rendu à Windows par `usbipd detach --busid 6-1` (état `Shared`, COM5 de nouveau visible).
 
 ## Fait
 
