@@ -1,0 +1,6 @@
+15:58 | depart | quoi=fenêtre de démarrage compacte : seulement la barre de chargement, agrandie aux logs (cases Debug et Warning) dès la première ligne écrite, avec l'icône de l'application | session=9a983c80-8b73-4b18-90dc-ca00ad80d685 | repo=aefi-acquisition | worktree=C:\Users\manip\AEFI_Acquisition_dev_demarrage | branche=feature/fenetre-de-demarrage-compacte
+15:58 | jalon | decision=worktree à part | pourquoi=hors du sujet du verrou ; la branche du verrou attend la vérification de l'humain
+15:58 | jalon | decision=icône | l'icône de l'application s'affiche dans la fenêtre (à gauche de la barre) et devient l'icône de la fenêtre ; elle est passée par l'assemblage (main.py), la vue ne lit aucun fichier
+16:01 | jalon | pas=test rouge puis code de la vue de démarrage | verdict=VERT | tests=6 (5 neufs, 1 ancien sur l'échec)
+16:01 | jalon | tests locaux=src/_tests src/interface/_tests src/interface/widgets/panels/_tests | resultat=92 verts, 4 rouges sans lien | cause=config_persistence_test attend .aefi_acquisition/configs, créé au premier lancement de l'application, absent d'un worktree neuf
+16:01 | fin | resultat=VERT | fichiers=src/interface/ui_system_lifecycle/view_startup.py, src/interface/main.py, src/_tests/startup_view_compact_test.py

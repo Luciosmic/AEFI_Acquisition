@@ -32,7 +32,8 @@ class DataInterpolator:
     def create_finer_grid(
         self, 
         original_extent: list, 
-        factor: int = 2
+        factor: int = 2,
+        shape: Optional[Tuple[int, int]] = None,
     ) -> Tuple[np.ndarray, np.ndarray]:
         """
         Create a finer grid based on original extent.
@@ -40,6 +41,9 @@ class DataInterpolator:
         Args:
             original_extent: [x_min, x_max, y_min, y_max]
             factor: Upsampling factor (2 = double resolution)
+            shape: (rows, columns) of the original grid. A rectangular grid keeps its proportions:
+                its longer side gets the target number of points, the shorter one as many in proportion.
+                None or a square grid: the same number of points on both axes.
             
         Returns:
             Tuple of (x_grid, y_grid) meshgrids
@@ -53,8 +57,15 @@ class DataInterpolator:
             # Assume original had some grid size, multiply by factor
             n_points = int(100 * factor)  # Default assumption
         
-        x_fine = np.linspace(x_min, x_max, n_points)
-        y_fine = np.linspace(y_min, y_max, n_points)
+        n_x, n_y = n_points, n_points
+        if shape is not None and shape[0] != shape[1]:
+            rows, columns = shape
+            longer = max(rows, columns)
+            n_x = max(2, int(round(n_points * columns / longer)))
+            n_y = max(2, int(round(n_points * rows / longer)))
+
+        x_fine = np.linspace(x_min, x_max, n_x)
+        y_fine = np.linspace(y_min, y_max, n_y)
         
         x_grid, y_grid = np.meshgrid(x_fine, y_fine)
         
@@ -141,7 +152,7 @@ class DataInterpolator:
         
         # Create finer grid
         factor = 2 if self.target_grid_size is None else int(self.target_grid_size / w)
-        x_grid, y_grid = self.create_finer_grid(extent, factor)
+        x_grid, y_grid = self.create_finer_grid(extent, factor, shape=(h, w))
         
         # Interpolate each channel
         h_fine, w_fine = x_grid.shape

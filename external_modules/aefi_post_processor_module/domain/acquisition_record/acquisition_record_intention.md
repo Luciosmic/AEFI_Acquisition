@@ -19,6 +19,7 @@ Un traitement qui échoue avant d'avoir rangé sa première étape laisse un fic
 ## Responsibility
 
 - Porter une acquisition de l'export : son nom (le dossier), son genre (`stepScan` ou `flyScan`), les chemins de son scan et de son fichier `.h5`, désignés par des chaînes, et les dates du scan et des étapes.
+- Porter ce que l'acquisition dit d'elle-même dans son fichier de paramètres, pour la reconnaître : date de début, objet mesuré, lift-off (absents quand le fichier ne le dit pas), et le dossier où l'opérateur l'a rangée (`group`, chemin relatif à l'export, vide à sa racine).
 - Décider si ses étapes sont à recalculer, et pourquoi : `new`, `incomplete`, `forced` ou `source_newer`.
 - Aucune méthode n'écrit dans l'export : l'agrégat est en lecture seule.
 

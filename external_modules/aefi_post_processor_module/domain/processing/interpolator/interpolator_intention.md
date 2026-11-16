@@ -12,7 +12,7 @@ La carte mesurée est grossière et trouée aux bords d'un scan incomplet. Sans 
 
 ## Responsibility
 
-- Construire une grille cible plus fine sur la même étendue.
+- Construire une grille cible plus fine sur la même étendue, aux proportions de la grille d'origine : un scan rectangulaire donne une grille fine rectangulaire, un scan carré la même grille qu'avant.
 - Interpoler chaque canal avec la méthode demandée (cubique par défaut), en gardant NaN hors de la zone mesurée.
 - Rendre le champ interpolé et ses métadonnées (taille, méthode, étendue).
 

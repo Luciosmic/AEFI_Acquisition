@@ -7,6 +7,8 @@ cable:
   - "[[src/infrastructure/git_software_provenance_reader/git_software_provenance_reader_intention]]"
   - "[[src/infrastructure/persistence/operator_registry/real_operator_repository_intention]]"
   - "[[src/infrastructure/persistence/measured_object_registry/real_measured_object_repository_intention]]"
+  - "[[src/infrastructure/null_system_session_guard/null_system_session_guard_intention]]"
+  - "[[src/infrastructure/null_system_session_guard/fake/fake_null_system_session_guard_intention]]"
 ---
 # main — Intention
 

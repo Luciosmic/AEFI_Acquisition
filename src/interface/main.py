@@ -72,7 +72,7 @@ def main(hardware_config: dict | None = None):
     logging.getLogger().addHandler(mcp_log_handler)
 
     lifecycle_presenter = SystemLifecyclePresenter()
-    startup_view = StartupView(lifecycle_presenter, logs_panel=splash_logs_panel)
+    startup_view = StartupView(lifecycle_presenter, logs_panel=splash_logs_panel, icon=app.windowIcon())
     startup_view.show()
     startup_view.set_phase("Démarrage...")
     app.processEvents()
@@ -148,6 +148,9 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
     from infrastructure.hardware.serial_link.serial_link import FtdiUsbLatencyTimerReader
     from infrastructure.git_software_provenance_reader.git_software_provenance_reader import GitSoftwareProvenanceReader
     from infrastructure.in_memory_event_bus.in_memory_event_bus import InMemoryEventBus
+    from application.closing_guard_service.closing_guard_service import ClosingGuardService
+    from infrastructure.null_system_session_guard.null_system_session_guard import NullSystemSessionGuard
+    from infrastructure.null_system_session_guard.fake.fake_null_system_session_guard import FakeNullSystemSessionGuard
     from infrastructure.events.event_audit_log import EventAuditLog
     from infrastructure.file_event_log_storage.file_event_log_storage import FileEventLogStorage
     from infrastructure.execution.thread_pool_task_runner import ThreadPoolTaskRunner
@@ -189,7 +192,9 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
     startup_view.set_phase("Interface...")
     app.processEvents()
     from interface.shell.dashboard import Dashboard
-    from interface.shell.dashboard_wiring import wire_dashboard
+    from interface.shell.dashboard_wiring import wire_closing_guard, wire_dashboard
+    from interface.close_request_adapter.close_request_adapter import CloseRequestAdapter
+    from interface.presenters.closing_guard_presenter import ClosingGuardPresenter
     from interface.presenters.mechanical_transmission_presenter import MechanicalTransmissionPresenter
     from interface.presenters.motion_presenter import MotionPresenter
     from interface.presenters.excitation_presenter import ExcitationPresenter
@@ -241,6 +246,16 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
     event_bus.subscribe("*", audit_log.record)
     event_ring_buffer = EventRingBuffer()  # tail served by the observability MCP (get_recent_events)
     event_bus.subscribe("*", event_ring_buffer.record)
+
+    # 3ter. Closing guard — follows the open acquisition exports from the bus, before any service publishes.
+    # All-mock: the in-memory fake (its holds show in the log). Otherwise the neutral guard: Windows'
+    # shutdown block reason and anti-sleep come with their own adapter (next step of the plan).
+    if all(backend == "mock" for backend in hardware_config.values()):
+        system_session_guard = FakeNullSystemSessionGuard()
+    else:
+        system_session_guard = NullSystemSessionGuard()
+    closing_guard_service = ClosingGuardService(event_bus, system_session_guard)
+    logger.info("Services -> ClosingGuardService created (session guard=%s)", type(system_session_guard).__name__)
 
     # 4. Instantiate Adapters
     print("\n--- Initializing Hardware Adapters ---")
@@ -683,6 +698,8 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
         measured_object_presenter,
         frequency_sweep_presenter,
     )
+    closing_guard_presenter = ClosingGuardPresenter()
+    wire_closing_guard(app, dashboard, CloseRequestAdapter(closing_guard_service, closing_guard_presenter), closing_guard_presenter)
 
     # 11. Observability MCP server (read-only) — lets an LLM client (e.g.
     # Claude) query scan status in parallel with the UI, over the same

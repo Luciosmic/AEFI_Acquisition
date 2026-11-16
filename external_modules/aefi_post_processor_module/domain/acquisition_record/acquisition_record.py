@@ -4,6 +4,7 @@ See acquisition_record_intention.md.
 """
 
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Optional
 
 NEW = 'new'
@@ -22,6 +23,11 @@ class AcquisitionRecord:
     csv_modified_at: float  # seconds since the epoch
     steps_modified_at: Optional[float]  # None: the steps file does not exist yet
     steps_hold_preprocessed: bool  # the steps file holds the first step: a processing that failed early leaves it empty
+    # What the acquisition says of itself in its parameters file (None: not said), and where the operator filed it.
+    group: str = ""  # the folder holding the acquisition folder, relative to the export ("" at its root)
+    acquired_at: Optional[datetime] = None
+    measured_object: Optional[str] = None
+    lift_off_mm: Optional[float] = None
 
     def recalculation_reason(self, forced: bool = False) -> Optional[str]:
         """

@@ -9,11 +9,13 @@ implements: ["[[external_modules/aefi_post_processor_module/domain/acquisition_r
 
 ## Rationale
 
-Les acquisitions vivent dans des sous-dossiers `<horodatage>_<stepScan|flyScan>_<nom>/` de l'export, avec leur `*_aefi.csv`. Sans adaptateur, le parcours du disque et la lecture des dates entrent dans le catalogue ou dans la règle du domaine.
+Les acquisitions vivent dans des dossiers de l'export, avec leur `*_aefi.csv` et leur fichier de paramètres, et l'opérateur les range dans des sous-dossiers par catégorie (`WATER/`, `METALLIC/`…). Un catalogue qui ne lit que le premier niveau perd toute acquisition rangée. Le nom d'un dossier se renomme à la main et n'a pas de version : ce que l'acquisition est se lit dans son fichier de paramètres, le contrat entre les deux logiciels. Sans adaptateur, le parcours du disque, la lecture des dates et celle du contrat entrent dans le catalogue ou dans la règle du domaine.
 
 ## Responsibility
 
-- Implémenter `IAcquisitionRepository` : parcourir `*_stepScan_*` et `*_flyScan_*`, trier par nom de dossier, rendre un `AcquisitionRecord` par scan avec la date du CSV, celle du fichier d'étapes (absente s'il n'existe pas) et si ce fichier contient l'étape `preprocessed`.
+- Implémenter `IAcquisitionRepository` : trouver à toute profondeur chaque dossier qui tient un `*_aefi.csv`, trier par nom de dossier, rendre un `AcquisitionRecord` par scan avec la date du CSV, celle du fichier d'étapes (absente s'il n'existe pas), si ce fichier contient l'étape `preprocessed`, le dossier parent relatif à l'export (`group`), et ce que dit le fichier de paramètres (type, date de début, objet mesuré, lift-off), par le traducteur `acl/acquisition_parameters_translator`.
+- Le type vient du contrat. Repli sur le nom du dossier (`_stepScan_`, `_flyScan_`), logué `catalog.kind_from_name`, dans deux cas seulement : pas de fichier de paramètres lisible, ou un `step_scan` déclaré avant le schéma 1.4, où un scan au vol était aussi déclaré `step_scan`.
+- Ne pas lister une activité que le contrat ne déclare pas comme scan (série temporelle, balayage en fréquence), ni un dossier dont ni le contrat ni le nom ne disent le type.
 - Ne rien créer ni modifier.
 
 ## Design

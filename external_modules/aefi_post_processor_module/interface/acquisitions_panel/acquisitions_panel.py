@@ -3,7 +3,7 @@ AcquisitionsPanel - Humble view of the acquisitions: shows the rows it is given 
 Its behaviour lives in acquisitions_presenter (see acquisitions_presenter_intention.md).
 """
 
-from PySide6.QtCore import QUrl, Signal
+from PySide6.QtCore import Qt, QUrl, Signal
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -15,7 +15,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-_COLUMNS = ("Acquisition", "Type", "Objet", "État", "Détail")
+_COLUMNS = ("Dossier", "Date", "Type", "Objet mesuré", "Lift-off", "État", "Détail")
+_NAME = Qt.ItemDataRole.UserRole  # the acquisition folder name, carried by the first cell of a row
 
 
 class AcquisitionsPanel(QWidget):
@@ -52,8 +53,12 @@ class AcquisitionsPanel(QWidget):
         self.table.blockSignals(True)
         self.table.setRowCount(len(rows))
         for r, row in enumerate(rows):
-            for c, text in enumerate(row):
-                self.table.setItem(r, c, QTableWidgetItem(text))
+            name, *shown = row
+            for c, text in enumerate(shown):
+                item = QTableWidgetItem(text)
+                item.setToolTip(name)
+                self.table.setItem(r, c, item)
+            self.table.item(r, 0).setData(_NAME, name)
         self.table.blockSignals(False)
 
     def open_folder(self, path: str) -> None:
@@ -61,4 +66,4 @@ class AcquisitionsPanel(QWidget):
 
     def _report_selection(self) -> None:
         rows = sorted({index.row() for index in self.table.selectedIndexes()})
-        self.selection_changed.emit([self.table.item(r, 0).text() for r in rows])
+        self.selection_changed.emit([self.table.item(r, 0).data(_NAME) for r in rows])

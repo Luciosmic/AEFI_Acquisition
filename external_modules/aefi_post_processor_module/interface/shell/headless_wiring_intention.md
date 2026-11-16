@@ -3,7 +3,7 @@ type: point-de-composition::solidai-hexagonal
 tldr: "Construire les services de traitement, de catalogue et de carte avec leurs adaptateurs réels, sans fenêtre ni Qt."
 code: ["[[external_modules/aefi_post_processor_module/interface/shell/headless_wiring.py]]"]
 cause_de_changement: outil
-cable: ["[[external_modules/aefi_post_processor_module/infrastructure/csv_scan_reader/csv_scan_reader_intention]]", "[[external_modules/aefi_post_processor_module/infrastructure/hdf5_step_writer/hdf5_step_writer_intention]]", "[[external_modules/aefi_post_processor_module/infrastructure/export_folder_repository/export_folder_repository_intention]]", "[[external_modules/aefi_post_processor_module/infrastructure/hdf5_step_reader/hdf5_step_reader_intention]]"]
+cable: ["[[external_modules/aefi_post_processor_module/infrastructure/csv_scan_reader/csv_scan_reader_intention]]", "[[external_modules/aefi_post_processor_module/infrastructure/acquisition_parameters_scan_plan_reader/acquisition_parameters_scan_plan_reader_intention]]", "[[external_modules/aefi_post_processor_module/infrastructure/hdf5_step_writer/hdf5_step_writer_intention]]", "[[external_modules/aefi_post_processor_module/infrastructure/export_folder_repository/export_folder_repository_intention]]", "[[external_modules/aefi_post_processor_module/infrastructure/hdf5_step_reader/hdf5_step_reader_intention]]"]
 ---
 # headless_wiring — Intention
 
@@ -13,7 +13,7 @@ Le traitement d'un scan se lance de deux endroits : l'acquisition, qui le calcul
 
 ## Responsibility
 
-- Construire `PostProcessingService` avec `CsvScanReader` et `Hdf5StepWriter` pour le fichier d'une acquisition, et rendre le service et son écrivain, que l'appelant ferme.
+- Construire `PostProcessingService` avec `CsvScanReader`, `AcquisitionParametersScanPlanReader` et `Hdf5StepWriter` pour le fichier d'une acquisition, et rendre le service et son écrivain, que l'appelant ferme.
 - Construire `AcquisitionCatalogService` (dépôt `ExportFolderRepository`) et `FieldMapService` (lecteur `Hdf5StepReader`).
 
 ## Design

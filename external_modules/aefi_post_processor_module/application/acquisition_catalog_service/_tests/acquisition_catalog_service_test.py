@@ -71,3 +71,20 @@ def test_a_steps_file_without_the_first_step_is_to_recompute_as_incomplete():
     status = _states(AcquisitionCatalogService(repository))["20261112_stepScan_empty"]
 
     assert status.state == TO_RECOMPUTE and status.reason == "incomplete"
+
+
+def test_each_status_carries_what_identifies_the_acquisition_its_group_date_object_and_lift_off():
+    from dataclasses import replace
+    from datetime import datetime, timedelta, timezone
+
+    started = datetime(2026, 11, 13, 20, 40, 52, tzinfo=timezone(timedelta(hours=1)))
+    repository = FakeExportFolderRepository()
+    repository.add(EXPORT, replace(
+        _record("2026-11-13_204052_stepScan_b", 100.0, None),
+        group="WATER", acquired_at=started, measured_object="bouteille", lift_off_mm=25.0,
+    ))
+
+    status = _states(AcquisitionCatalogService(repository))["2026-11-13_204052_stepScan_b"]
+
+    assert (status.group, status.acquired_at, status.measured_object, status.lift_off_mm) == (
+        "WATER", started, "bouteille", 25.0)

@@ -1,7 +1,24 @@
 # Plan — Verrou de fermeture pendant une acquisition, et panneaux détachés visibles dans Alt+Tab
 
-**État :** plan rédigé le 2026-11-14 sur le PC du labo, pendant une acquisition réelle. Rien n'est codé, rien n'a été lancé.
-**Prochaine action :** une fois l'acquisition en cours terminée, créer `feature/verrou-fermeture-acquisition` depuis `develop` et coder l'étape 1 (le cœur indépendant du système et l'adaptateur de l'action de l'opérateur, avec le message), testable en mode mock.
+**État :** étape 1 codée le 2026-11-16 dans le worktree `C:\Users\manip\AEFI_Acquisition_dev_verrou`, branche `feature/verrou-fermeture-acquisition`, poussée ; tests automatiques verts. Trace : `2026-11-16-coeur-du-verrou-de-fermeture/`.
+**Vérifié par l'humain le 2026-11-16 :** en mode mock, la croix pendant un scan au vol avec export affiche le message et laisse la fenêtre ouverte (capture `2026-11-16_160606_flyScan_TEST_liftoff-non-saisi_fermeture-refusee-pendant-l-export.png`, rangée avec l'export de ce scan dans `tests_e2e/2026-11-16_160606_flyScan_TEST_liftoff-non-saisi/` du dossier de développement, hors git comme les exports de test).
+**Décision de l'humain (2026-11-16) :** « on s'arrête là, c'est déjà bien de ne pas pouvoir fermer l'application ». L'étape 3 (adaptateur Windows : raison de blocage et anti-veille) et le réglage du PC contre les redémarrages de mise à jour ne se font pas ; la pause automatique des mises à jour à chaque acquisition, proposée puis écartée le même jour, non plus (le compte `manip` n'est pas administrateur, et la pause ne garantit pas d'empêcher le redémarrage d'une mise à jour déjà installée).
+**Fusionné dans `develop` le 2026-11-16**, avec la fenêtre de démarrage compacte ; branches et worktrees supprimés.
+**Prochaine action :** aucune. L'étape 2 (panneaux détachés dans Alt+Tab) reste possible, non commencée.
+
+**Ce que l'étape 1 a tranché au codage :**
+
+- Exports couverts : scans (pas à pas et au vol) et lecture continue avec export armé, balayage en fréquence, caractérisation du débit d'acquisition. La caractérisation de la cadence du convertisseur n'écrit qu'une fois, en fin de mesure : hors du verrou.
+- Les services d'export publient `AcquisitionExportOpened` et `AcquisitionExportClosed` (noyau partagé du domaine) ; dans le service d'export des scans, deux petites méthodes isolées, pour une fusion simple avec la tranche 2 du post-traitement.
+- Le texte du message vit dans un présentateur ; la décision de la fenêtre passe par l'adaptateur de l'action de l'opérateur. Seuls chemins de fermeture trouvés : la fenêtre principale et la demande de fin de session ; aucun `quit()` ailleurs dans l'interface.
+- En mode tout simulé, l'assemblage choisit le faux de la garde de session (ses appels apparaissent dans les logs) ; sinon l'adaptateur neutre, jusqu'à l'étape 3.
+
+**Où se vérifie chaque étape :** toutes sur le PC du labo, dans le worktree du verrou, jamais dans `C:\Users\manip\AEFI_Acquisition` (le dossier des acquisitions réelles).
+
+- étape 1 : en mode mock (l'adaptateur neutre est celui que choisit un système autre que Windows ; sous Windows, avant l'étape 3, l'assemblage choisit aussi l'adaptateur neutre) ;
+- étapes 2 et 3 : tests sur les faux, puis tests au banc décrits plus bas, qui exécutent les adaptateurs Windows.
+
+**Pourquoi un worktree à part :** une autre session écrit dans `C:\Users\manip\AEFI_Acquisition_dev` par le gate, qui commite sur la branche active de ce dossier. Le 2026-11-16, une branche créée dans ce dossier a reçu ses commits. Le worktree se crée avec `git -c core.longpaths=true worktree add …` : sans cette option, Windows refuse certains chemins trop longs du dépôt.
 
 ## Pourquoi
 
@@ -244,6 +261,8 @@ flowchart LR
         r3["Coupure de courant"]
     end
 ```
+
+**Correction du 2026-11-16 : le redémarrage automatique de mise à jour n'est probablement pas couvert, même avant son échéance.** Microsoft documente le refus d'un arrêt par une application ([WM_QUERYENDSESSION](https://learn.microsoft.com/en-us/windows/win32/shutdown/wm-queryendsession), [Shutdown Changes for Windows Vista](https://learn.microsoft.com/en-us/windows/win32/shutdown/shutdown-changes-for-windows-vista)), mais pas la façon dont Windows Update redémarre. Une analyse indépendante (Windows 10, publiée en 2021) montre que le service de mise à jour lance son redémarrage avec la fermeture forcée de la session ([dennisbabkin.com](https://dennisbabkin.com/blog/?i=AAA07000)), un mode où, selon Microsoft, l'arrêt est garanti ([InitiateShutdownW](https://learn.microsoft.com/en-us/windows/win32/api/winreg/nf-winreg-initiateshutdownw)). Le tableau ci-dessus range donc à tort « Redémarrage de mise à jour avant son échéance » dans ce que l'application couvre : seuls l'arrêt et le redémarrage lancés à la main le sont. Contre les mises à jour, le réglage du PC est la vraie protection. Non vérifié sur Windows 11.
 
 Pour fermer cette porte, le réglage se fait sur la machine, pas dans l'application : par exemple la stratégie « Pas de redémarrage automatique avec des utilisateurs connectés », ou des heures d'activité couvrant les acquisitions. Ce réglage demande les droits administrateur du PC du labo : **à trancher avec l'humain** avant l'étape 3 (le faire, par qui, lequel).
 

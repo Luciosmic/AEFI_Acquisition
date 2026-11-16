@@ -38,12 +38,14 @@ def test_processing_from_the_panel_then_choosing_a_step_draws_its_map_and_the_ba
         field_map = shell.window.carrier_view._panels["field_map"].widget()
         logs = shell.window.carrier_view._panels["logs"].widget()
         shell.acquisitions_presenter.refresh()
-        assert _cells(acquisitions) == [[NAME, "pas à pas", "baseline", "à recalculer", "jamais traitée"]]
+        # No parameters file: the folder name gives the type only, never the object.
+        assert _cells(acquisitions) == [["—", "inconnue", "pas à pas", "non renseigné", "non renseigné", "à recalculer", "jamais traitée"]]
+        assert acquisitions.table.item(0, 0).toolTip() == NAME
 
         acquisitions.table.selectRow(0)
         acquisitions.process_selection_requested.emit()
 
-        assert _cells(acquisitions)[0][3] == "traitée"
+        assert _cells(acquisitions)[0][5] == "traitée"
         assert [field_map.steps.item(i).text() for i in range(field_map.steps.count())] == [
             f"{i} - {step}" for i, step in enumerate(STEP_NAMES, 1)
         ]

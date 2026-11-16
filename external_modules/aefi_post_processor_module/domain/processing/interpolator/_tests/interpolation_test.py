@@ -57,3 +57,16 @@ class TestInterpolation(AnalyticTestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+def test_a_rectangular_grid_is_refined_in_proportion_and_a_square_one_as_before():
+    interpolator = DataInterpolator(interpolation_method='linear')
+    rectangular = np.ones((100, 150, 6))
+    square = np.ones((50, 50, 6))
+
+    fine_rectangular, x_r, y_r = interpolator.interpolate_values(rectangular, [0.0, 600.0, 0.0, 400.0])
+    fine_square, _, _ = interpolator.interpolate_values(square, [0.0, 1.0, 0.0, 1.0])
+
+    assert fine_rectangular.shape == (133, 200, 6)
+    assert x_r[0, 0] == 0.0 and x_r[0, -1] == 600.0 and y_r[-1, 0] == 400.0
+    assert fine_square.shape == (200, 200, 6)

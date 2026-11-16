@@ -39,3 +39,4 @@ deps:
   - name: sk-writing-style
   - name: solidai-developpement
   - name: solidai-verify
+  - name: sk-data

@@ -35,8 +35,11 @@ def launch(tmp_path, *extra_args):
         sys.executable, str(COMPOSITION_ROOT), "--repo-path", str(export),
         "--log-file", str(log_file), "--layout-file", str(tmp_path / "layout.dat"), *extra_args,
     ]
+    # The output goes to a file, not a pipe: a pipe read only at the end fills up and blocks the process.
+    output_file = tmp_path / "output.txt"
+    output_stream = open(output_file, "w", encoding="utf-8")
     process = subprocess.Popen(
-        command, cwd=tmp_path, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
+        command, cwd=tmp_path, stdout=output_stream, stderr=subprocess.STDOUT, text=True,
         env={**os.environ, "QT_QPA_PLATFORM": "offscreen", "PYTHONPATH": ""},
     )
     deadline = time.monotonic() + LAUNCH_TIMEOUT_S
@@ -51,10 +54,12 @@ def launch(tmp_path, *extra_args):
         if process.poll() is None:
             process.terminate()
         try:
-            output, _ = process.communicate(timeout=20)
+            process.wait(timeout=20)
         except subprocess.TimeoutExpired:
             process.kill()
-            output, _ = process.communicate()
+            process.wait()
+        output_stream.close()
+    output = output_file.read_text(encoding="utf-8", errors="replace")
     return (log_file.read_text(encoding="utf-8") if log_file.exists() else journal), output
 
 
