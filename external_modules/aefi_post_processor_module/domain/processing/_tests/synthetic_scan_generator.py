@@ -5,7 +5,6 @@ Produces scan data with known characteristics (phase, amplitude, rotation) for t
 
 from typing import Tuple, Optional, Dict
 import numpy as np
-import pandas as pd
 from scipy.spatial.transform import Rotation as R
 
 
@@ -14,7 +13,7 @@ class SyntheticScanGenerator:
     Generates synthetic scan data using analytic functions.
     Output formats:
     - NumPy array: (N, N, 6) for internal testing
-    - DataFrame: for pipeline preprocessing testing
+    - Rows (list of dicts): for pipeline preprocessing testing
     """
     
     def __init__(self, grid_size: int = 50, scan_range: float = 10.0):
@@ -152,9 +151,9 @@ class SyntheticScanGenerator:
         
         return flat_out.reshape(data.shape)
 
-    def to_dataframe(self, data: np.ndarray) -> pd.DataFrame:
+    def to_rows(self, data: np.ndarray) -> list:
         """
-        Convert (N, N, 6) array to DataFrame with columns:
+        Convert (N, N, 6) array to a list of row dicts (DataFrame-ready) with keys:
         x, y, voltage_x_in_phase, voltage_x_quadrature, ...
         """
         rows = []
@@ -176,5 +175,5 @@ class SyntheticScanGenerator:
                     'voltage_z_quadrature': vals[5],
                 }
                 rows.append(row)
-        return pd.DataFrame(rows)
+        return rows
 

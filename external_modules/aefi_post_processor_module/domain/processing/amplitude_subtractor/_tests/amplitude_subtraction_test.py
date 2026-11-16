@@ -1,16 +1,8 @@
 import unittest
 import numpy as np
-import sys
-from pathlib import Path
 
-# Add aefi_post_processor_modules to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
-try:
-    from aefi_post_processor_module._tests.analytic_test_case import AnalyticTestCase
-except ImportError:
-    from analytic_test_case import AnalyticTestCase
-from processing.primary_field_amplitude_subtractor import PrimaryFieldAmplitudeSubtractor
+from ..._tests.analytic_test_case import AnalyticTestCase
+from ...amplitude_subtractor.amplitude_subtractor import PrimaryFieldAmplitudeSubtractor
 
 class TestAmplitudeSubtraction(AnalyticTestCase):
     

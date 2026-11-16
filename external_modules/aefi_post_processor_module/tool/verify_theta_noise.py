@@ -7,8 +7,8 @@ MODULE_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(MODULE_DIR.parent))
 
 import numpy as np
-from aefi_post_processor_module._tests.synthetic_scan_generator import SyntheticScanGenerator
-from aefi_post_processor_module.processing.primary_field_phase_calibrator import PrimaryFieldPhaseCalibrator
+from aefi_post_processor_module.domain.processing._tests.synthetic_scan_generator import SyntheticScanGenerator
+from aefi_post_processor_module.domain.processing.phase_calibrator.phase_calibrator import PrimaryFieldPhaseCalibrator
 
 def verify_hypothesis():
     # 1. Generate Base Signal

@@ -28,7 +28,7 @@ except:
 
 print("\n--- TEST 2: Import tests package ---")
 try:
-    import aefi_post_processor_module._tests as tests
+    import aefi_post_processor_module.domain.processing._tests as tests
     print("✅ import tests success")
     print(f"tests file: {tests.__file__}")
 except:
@@ -37,7 +37,7 @@ except:
 
 print("\n--- TEST 3: Import specific test module ---")
 try:
-    from aefi_post_processor_module._tests import analytic_test_case
+    from aefi_post_processor_module.domain.processing._tests import analytic_test_case
     print("✅ from tests import analytic_test_case success")
 except:
     print("❌ from tests import analytic_test_case failed")
@@ -45,7 +45,7 @@ except:
 
 print("\n--- TEST 4: Import synthetic_scan_generator inside analytic_test_case ---")
 try:
-    from aefi_post_processor_module._tests import synthetic_scan_generator
+    from aefi_post_processor_module.domain.processing._tests import synthetic_scan_generator
     print("✅ from tests import synthetic_scan_generator success")
 except:
     print("❌ from tests import synthetic_scan_generator failed")

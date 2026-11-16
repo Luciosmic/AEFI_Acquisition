@@ -15,7 +15,7 @@ import json
 from datetime import datetime
 import numpy as np
 import pandas as pd
-from aefi_post_processor_module._tests.synthetic_scan_generator import SyntheticScanGenerator
+from aefi_post_processor_module.domain.processing._tests.synthetic_scan_generator import SyntheticScanGenerator
 
 def generate_campaign():
     # Setup paths
@@ -36,7 +36,7 @@ def generate_campaign():
     def save_scan(name, data, description, params=None):
         filename = f"{name}.csv"
         filepath = output_dir / filename
-        df = generator.to_dataframe(data)
+        df = pd.DataFrame(generator.to_rows(data))
         df.to_csv(filepath, index=False)
         
         manifest_entry = {

@@ -18,7 +18,7 @@ def run_tests():
     
     # 1. Discover tests
     test_loader = unittest.TestLoader()
-    test_dir = MODULE_DIR / "_tests"
+    test_dir = MODULE_DIR / "domain"
     suite = test_loader.discover(start_dir=str(test_dir), top_level_dir=str(MODULE_DIR.parent), pattern='*_test.py')
     
     # 2. Run tests

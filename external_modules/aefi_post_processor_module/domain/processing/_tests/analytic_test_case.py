@@ -4,16 +4,8 @@ AnalyticTestCase - Base class for analytic tests.
 
 import unittest
 import numpy as np
-import sys
-from pathlib import Path
 
-# Add modules to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
-try:
-    from aefi_post_processor_module._tests.synthetic_scan_generator import SyntheticScanGenerator
-except ImportError:
-    from synthetic_scan_generator import SyntheticScanGenerator
+from .synthetic_scan_generator import SyntheticScanGenerator
 
 class AnalyticTestCase(unittest.TestCase):
     """Base class for analytic tests."""

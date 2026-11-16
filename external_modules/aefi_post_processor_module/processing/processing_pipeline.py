@@ -10,10 +10,18 @@ import numpy as np
 
 from .datahandler import DataHandler
 from .data_preprocessor import DataPreProcessor
-from .primary_field_phase_calibrator import PrimaryFieldPhaseCalibrator
-from .primary_field_amplitude_subtractor import PrimaryFieldAmplitudeSubtractor
-from .sensor_to_ef_sources_frame_rotator import SensorToEFSourcesFrameRotator
-from .data_interpolator import DataInterpolator
+from aefi_post_processor_module.domain.processing.phase_calibrator.phase_calibrator import PrimaryFieldPhaseCalibrator
+from aefi_post_processor_module.domain.processing.amplitude_subtractor.amplitude_subtractor import PrimaryFieldAmplitudeSubtractor
+from aefi_post_processor_module.domain.processing.frame_rotator.frame_rotator import SensorToEFSourcesFrameRotator
+from aefi_post_processor_module.domain.processing.interpolator.interpolator import DataInterpolator
+from aefi_post_processor_module.domain.processing.processing_steps.processing_steps import (
+    AMPLITUDE_SUBTRACTED,
+    INTERPOLATED,
+    PHASE_CALIBRATED,
+    PREPROCESSED,
+    ROTATED_FRAME,
+    STEP_NAMES,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -96,7 +104,7 @@ class ProcessingPipeline:
             step = 'preprocess'
             logger.debug("pipeline.step scan=%s step=%s", scan, step)
             preprocessed, metadata = self.preprocessor.preprocess(df)
-            self.data_handler.save_step('preprocessed', preprocessed, metadata)
+            self.data_handler.save_step(PREPROCESSED, preprocessed, metadata)
             self.current_data = preprocessed
             self.current_metadata = metadata
             summary['steps_completed'].append('preprocess')
@@ -109,7 +117,7 @@ class ProcessingPipeline:
                 reference_idx=reference_point
             )
             phase_metadata = {'phase_angles': phase_angles, 'reference_point': reference_point}
-            self.data_handler.save_step('phase_calibrated', phase_calibrated, phase_metadata)
+            self.data_handler.save_step(PHASE_CALIBRATED, phase_calibrated, phase_metadata)
             self.current_data = phase_calibrated
             summary['steps_completed'].append('phase_calibration')
             
@@ -121,7 +129,7 @@ class ProcessingPipeline:
                 reference_idx=reference_point
             )
             amp_metadata = {'mean_amplitudes': mean_amplitudes.tolist()}
-            self.data_handler.save_step('amplitude_subtracted', amplitude_subtracted, amp_metadata)
+            self.data_handler.save_step(AMPLITUDE_SUBTRACTED, amplitude_subtracted, amp_metadata)
             self.current_data = amplitude_subtracted
             summary['steps_completed'].append('amplitude_subtraction')
             
@@ -133,7 +141,7 @@ class ProcessingPipeline:
                     amplitude_subtracted,
                     rotation_angles
                 )
-                self.data_handler.save_step('rotated_frame', rotated, rot_metadata)
+                self.data_handler.save_step(ROTATED_FRAME, rotated, rot_metadata)
                 self.current_data = rotated
                 summary['steps_completed'].append('frame_rotation')
             else:
@@ -153,7 +161,7 @@ class ProcessingPipeline:
                 if rotation_angles is not None:
                     interp_metadata['rotation_angles'] = rotation_angles
                 
-                self.data_handler.save_step('interpolated', interpolated, interp_metadata)
+                self.data_handler.save_step(INTERPOLATED, interpolated, interp_metadata)
                 self.current_data = interpolated
                 summary['steps_completed'].append('interpolation')
             else:
@@ -196,13 +204,7 @@ class ProcessingPipeline:
         }
         
         # Define step order
-        step_order = [
-            'preprocessed',
-            'phase_calibrated',
-            'amplitude_subtracted',
-            'rotated_frame',
-            'interpolated'
-        ]
+        step_order = list(STEP_NAMES)
         
         if start_step not in step_order or end_step not in step_order:
             raise ValueError(f"Invalid step names. Must be one of: {step_order}")
@@ -225,24 +227,24 @@ class ProcessingPipeline:
             
             # Execute steps in order
             for step_name in step_order[start_idx + 1:end_idx + 1]:
-                if step_name == 'phase_calibrated':
+                if step_name == PHASE_CALIBRATED:
                     logger.debug("pipeline.step scan=%s step=%s", scan, step_name)
                     data, phase_angles = self.phase_calibrator.calibrate(data)
                     self.data_handler.save_step(step_name, data, {'phase_angles': phase_angles})
                     
-                elif step_name == 'amplitude_subtracted':
+                elif step_name == AMPLITUDE_SUBTRACTED:
                     logger.debug("pipeline.step scan=%s step=%s", scan, step_name)
                     data, mean_amps = self.amplitude_subtractor.subtract_primary_field(data)
                     self.data_handler.save_step(step_name, data, {'mean_amplitudes': mean_amps.tolist()})
                     
-                elif step_name == 'rotated_frame':
+                elif step_name == ROTATED_FRAME:
                     if rotation_angles is None:
                         raise ValueError("rotation_angles required for frame rotation step")
                     logger.debug("pipeline.step scan=%s step=%s rotation_angles_deg=%s", scan, step_name, rotation_angles)
                     data, rot_meta = self.frame_rotator.rotate(data, rotation_angles)
                     self.data_handler.save_step(step_name, data, rot_meta)
                     
-                elif step_name == 'interpolated':
+                elif step_name == INTERPOLATED:
                     logger.debug("pipeline.step scan=%s step=%s", scan, step_name)
                     extent = metadata.get('extent', [0, 1, 0, 1])
                     data, interp_meta = self.interpolator.interpolate(data, extent)

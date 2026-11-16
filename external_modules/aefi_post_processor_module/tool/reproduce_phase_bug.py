@@ -8,7 +8,7 @@ sys.path.insert(0, str(MODULE_DIR.parent))
 
 import unittest
 import numpy as np
-from aefi_post_processor_module.processing.primary_field_phase_calibrator import PrimaryFieldPhaseCalibrator
+from aefi_post_processor_module.domain.processing.phase_calibrator.phase_calibrator import PrimaryFieldPhaseCalibrator
 
 class TestPhaseCalibrationBug(unittest.TestCase):
     
