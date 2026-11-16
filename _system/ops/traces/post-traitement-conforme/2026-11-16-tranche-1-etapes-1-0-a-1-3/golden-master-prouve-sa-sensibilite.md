@@ -1,5 +1,7 @@
 ---
 doc_type: constat
+type: constat::sh-agent-os
+genere_par: "[[tache - tranche 1 etapes 1 0 a 1 3]]"
 ---
 
 # Le golden master voit une dérive, mais pas celle que le découpage citait
