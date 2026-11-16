@@ -1,6 +1,6 @@
 ---
 type: constat::sh-agent-os
-genere_par: "[[tache - typer les traces du post-traitement]]"
+genere_par: "[[tache - typer les traces du post traitement]]"
 ---
 
 # Le plan est typé sans enregistrements d'étapes : une alerte du générateur
