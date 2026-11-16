@@ -17,6 +17,8 @@ inject:
   - "[[core-profile::sh-agent-os]]"
   # Écart de thèse 1 : registre des travaux de la thèse, tenu dans PILOTAGE
   - "[[orient-work::GRAPHE-THESE]]"
+  # Ce repo : lancement, données, branches et worktrees (remplace l'ancien CLAUDE.md, 2026-11-16)
+  - "[[contexte-du-repo-aefi-acquisition]]"
   # Développement
   - "[[co-developpeur::solidai-developpement]]"
   # Standards SolidAI, un index par niveau
