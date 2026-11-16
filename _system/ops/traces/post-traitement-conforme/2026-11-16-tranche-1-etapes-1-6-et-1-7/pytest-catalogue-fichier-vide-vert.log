@@ -1,0 +1,7 @@
+warning: `VIRTUAL_ENV=/Users/luis/Library/CloudStorage/Dropbox/Luis/1 PROJETS/1 - THESE/EXPERIMENTAL/AEFI_Acquisition/.venv` does not match the project environment path `/Users/luis/.venvs/AEFI_Acquisition_dev_post_processor` and will be ignored; use `--active` to target the active environment instead
+   Building aefi-acquisition @ file:///Users/luis/Library/CloudStorage/Dropbox/Luis/1%20PROJETS/1%20-%20THESE/EXPERIMENTAL/AEFI_Acquisition_dev_post_processor
+      Built aefi-acquisition @ file:///Users/luis/Library/CloudStorage/Dropbox/Luis/1%20PROJETS/1%20-%20THESE/EXPERIMENTAL/AEFI_Acquisition_dev_post_processor
+Uninstalled 1 package in 1ms
+Installed 1 package in 1ms
+...............................                                          [100%]
+31 passed in 1.31s

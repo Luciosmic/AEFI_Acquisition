@@ -1,0 +1,65 @@
+warning: `VIRTUAL_ENV=/Users/luis/Library/CloudStorage/Dropbox/Luis/1 PROJETS/1 - THESE/EXPERIMENTAL/AEFI_Acquisition/.venv` does not match the project environment path `/Users/luis/.venvs/AEFI_Acquisition_dev_post_processor` and will be ignored; use `--active` to target the active environment instead
+FFF                                                                      [100%]
+=================================== FAILURES ===================================
+__________ test_pipeline_reproduces_golden_master[scan_001_baseline] ___________
+
+name = 'scan_001_baseline'
+tmp_path = PosixPath('/private/var/folders/h2/qkf52_pn19l5zqfvld5jbd880000gn/T/pytest-of-luis/pytest-520/test_pipeline_reproduces_golde0')
+
+    @pytest.mark.parametrize("name", sorted(SCANS))
+    def test_pipeline_reproduces_golden_master(name, tmp_path):
+        arrays, meta = run_scan(name, tmp_path)
+        golden_arrays = np.load(_GOLDEN / f"{name}.npz")
+        golden_meta = json.loads((_GOLDEN / f"{name}.json").read_text(encoding="utf-8"))
+    
+        for step in STEPS:
+>           assert np.array_equal(golden_arrays[step], arrays[step], equal_nan=True), f"{name}: étape {step} différente"
+E           AssertionError: scan_001_baseline: étape interpolated différente
+E           assert False
+E            +  where False = <function array_equal at 0x103d251f0>(array([[[ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,\n          0.00000000e+00,  0.00000000e+00,  0.00000000e+00...5844433e-33,  1.62086135e-16,\n          1.98498266e-32,  4.41477817e-17,  5.40654396e-33]]],\n      shape=(200, 200, 6)), array([[[ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,\n          0.00000000e+00,  0.00000000e+00,  0.00000000e+00...5844433e-33,  1.62086135e-16,\n          1.98498266e-32,  4.41477817e-17,  5.40654396e-33]]],\n      shape=(200, 200, 6)), equal_nan=True)
+E            +    where <function array_equal at 0x103d251f0> = np.array_equal
+
+external_modules/aefi_post_processor_module/_tests/golden_master_test.py:100: AssertionError
+________ test_pipeline_reproduces_golden_master[scan_004_rotation_z45] _________
+
+name = 'scan_004_rotation_z45'
+tmp_path = PosixPath('/private/var/folders/h2/qkf52_pn19l5zqfvld5jbd880000gn/T/pytest-of-luis/pytest-520/test_pipeline_reproduces_golde1')
+
+    @pytest.mark.parametrize("name", sorted(SCANS))
+    def test_pipeline_reproduces_golden_master(name, tmp_path):
+        arrays, meta = run_scan(name, tmp_path)
+        golden_arrays = np.load(_GOLDEN / f"{name}.npz")
+        golden_meta = json.loads((_GOLDEN / f"{name}.json").read_text(encoding="utf-8"))
+    
+        for step in STEPS:
+>           assert np.array_equal(golden_arrays[step], arrays[step], equal_nan=True), f"{name}: étape {step} différente"
+E           AssertionError: scan_004_rotation_z45: étape interpolated différente
+E           assert False
+E            +  where False = <function array_equal at 0x103d251f0>(array([[[ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,\n          0.00000000e+00,  0.00000000e+00,  0.00000000e+00...9975978e-32,  1.22464680e-16,\n          1.49975978e-32,  0.00000000e+00,  0.00000000e+00]]],\n      shape=(200, 200, 6)), array([[[ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,\n          0.00000000e+00,  0.00000000e+00,  0.00000000e+00...9975978e-32,  1.22464680e-16,\n          1.49975978e-32,  0.00000000e+00,  0.00000000e+00]]],\n      shape=(200, 200, 6)), equal_nan=True)
+E            +    where <function array_equal at 0x103d251f0> = np.array_equal
+
+external_modules/aefi_post_processor_module/_tests/golden_master_test.py:100: AssertionError
+_______ test_pipeline_reproduces_golden_master[scan_008_incomplete_nan] ________
+
+name = 'scan_008_incomplete_nan'
+tmp_path = PosixPath('/private/var/folders/h2/qkf52_pn19l5zqfvld5jbd880000gn/T/pytest-of-luis/pytest-520/test_pipeline_reproduces_golde2')
+
+    @pytest.mark.parametrize("name", sorted(SCANS))
+    def test_pipeline_reproduces_golden_master(name, tmp_path):
+        arrays, meta = run_scan(name, tmp_path)
+        golden_arrays = np.load(_GOLDEN / f"{name}.npz")
+        golden_meta = json.loads((_GOLDEN / f"{name}.json").read_text(encoding="utf-8"))
+    
+        for step in STEPS:
+>           assert np.array_equal(golden_arrays[step], arrays[step], equal_nan=True), f"{name}: étape {step} différente"
+E           AssertionError: scan_008_incomplete_nan: étape interpolated différente
+E           assert False
+E            +  where False = <function array_equal at 0x103d251f0>(array([[[ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,\n          0.00000000e+00,  0.00000000e+00,  0.00000000e+00...        nan,             nan,\n                     nan,             nan,             nan]]],\n      shape=(200, 200, 6)), array([[[ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,\n          0.00000000e+00,  0.00000000e+00,  0.00000000e+00...        nan,             nan,\n                     nan,             nan,             nan]]],\n      shape=(200, 200, 6)), equal_nan=True)
+E            +    where <function array_equal at 0x103d251f0> = np.array_equal
+
+external_modules/aefi_post_processor_module/_tests/golden_master_test.py:100: AssertionError
+=========================== short test summary info ============================
+FAILED external_modules/aefi_post_processor_module/_tests/golden_master_test.py::test_pipeline_reproduces_golden_master[scan_001_baseline]
+FAILED external_modules/aefi_post_processor_module/_tests/golden_master_test.py::test_pipeline_reproduces_golden_master[scan_004_rotation_z45]
+FAILED external_modules/aefi_post_processor_module/_tests/golden_master_test.py::test_pipeline_reproduces_golden_master[scan_008_incomplete_nan]
+3 failed in 1.20s

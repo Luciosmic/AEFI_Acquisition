@@ -1,0 +1,10 @@
+# solidai verify /Users/luis/Library/CloudStorage/Dropbox/Luis/1 PROJETS/1 - THESE/EXPERIMENTAL/AEFI_Acquisition_dev_post_processor/external_modules/aefi_post_processor_module
+
+- 2 error(s), 0 warning(s), 46 checks played, 0 not played
+
+| severity | code | count |
+|---|---|---|
+| | `solidai-intention-non-typee` | 2 |
+
+- error `solidai-intention-non-typee` `application/post_processing_service/ports/i_csv_scan_reader_intention.md` : i_csv_scan_reader_intention.md claims no SolidAI type: the checks do not see it
+- error `solidai-intention-non-typee` `application/post_processing_service/ports/i_step_writer_intention.md` : i_step_writer_intention.md claims no SolidAI type: the checks do not see it

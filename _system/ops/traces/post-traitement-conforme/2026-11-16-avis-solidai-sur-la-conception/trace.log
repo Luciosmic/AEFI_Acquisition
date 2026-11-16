@@ -1,0 +1,7 @@
+01:24 | depart | quoi=avis solidai sur la conception du post-traitement en panneaux, lecture seule | budget=25min | heure=reconstituee
+01:30 | jalon | lu=conception,recits,plan,module(3657 lignes),adaptateur src,test d'integration,profil solidai | decouverte=adaptateur a src/infrastructure/aefi_post_processor_port/ (la conception dit post_processing/)
+01:34 | jalon | mesure=pytest module 8 reussis 2 echecs (amplitude offset_removal, phase_recovery) ; solidai verify --target module 1 erreur (intention logging non typee)
+01:37 | jalon | decouverte=le test d'integration de src fige un seul .h5 avec 5 etapes ; 3 references externes a composition_root.py ; noms de couches identiques a ceux de src
+01:42 | jalon | ecriture=avis-sur-les-trois-points-a-trancher.md, ecarts-de-la-conception-aux-standards-solidai.md (16 ecarts), decoupage-de-la-tranche-1.md (10 etapes, 9 commits)
+01:42 | note | ecriture=outils natifs (gate au-aefi-acquisition non essaye : budget) ; typage constat::sh-agent-os non fait, a la charge de la session
+01:42 | fin | verdict=atteint | ecarts=16 | sous_etapes=10 | aucune modification de code, rien de commite

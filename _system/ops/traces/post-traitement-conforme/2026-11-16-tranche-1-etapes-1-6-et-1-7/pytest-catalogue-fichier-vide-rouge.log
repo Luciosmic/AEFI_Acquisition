@@ -1,0 +1,29 @@
+warning: `VIRTUAL_ENV=/Users/luis/Library/CloudStorage/Dropbox/Luis/1 PROJETS/1 - THESE/EXPERIMENTAL/AEFI_Acquisition/.venv` does not match the project environment path `/Users/luis/.venvs/AEFI_Acquisition_dev_post_processor` and will be ignored; use `--active` to target the active environment instead
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_ test_a_failed_processing_leaves_a_steps_file_that_the_next_session_still_calls_to_recompute _
+
+export = PosixPath('/private/var/folders/h2/qkf52_pn19l5zqfvld5jbd880000gn/T/pytest-of-luis/pytest-558/test_a_failed_processing_leave0/export')
+
+    def test_a_failed_processing_leaves_a_steps_file_that_the_next_session_still_calls_to_recompute(export):
+        with pytest.raises(ValueError):
+            _process(export, TRUNCATED)
+        steps_file = export / TRUNCATED / f"{TRUNCATED}.h5"
+        csv_file = export / TRUNCATED / f"{TRUNCATED}_aefi.csv"
+        assert steps_file.exists() and steps_file.stat().st_mtime > csv_file.stat().st_mtime  # what made it look processed
+    
+        next_session = build_acquisition_catalog_service()  # remembers no failure
+    
+        status = _by_name(next_session, export)[TRUNCATED]
+>       assert (status.state, status.reason) == (TO_RECOMPUTE, "incomplete")
+E       AssertionError: assert ('processed', None) == ('to_recompute', 'incomplete')
+E         
+E         At index 0 diff: 'processed' != 'to_recompute'
+E         Use -v to get more diff
+
+external_modules/aefi_post_processor_module/_tests/acquisition_catalog_and_field_map_test.py:128: AssertionError
+------------------------------ Captured log call -------------------------------
+ERROR    aefi_post_processor_module.application.post_processing_service.post_processing_service:post_processing_service.py:113 pipeline.failed scan=20261114_flyScan_truncated step=preprocess error_type=ValueError error=No voltage columns found in DataFrame
+=========================== short test summary info ============================
+FAILED external_modules/aefi_post_processor_module/_tests/acquisition_catalog_and_field_map_test.py::test_a_failed_processing_leaves_a_steps_file_that_the_next_session_still_calls_to_recompute
+1 failed, 3 deselected in 0.81s

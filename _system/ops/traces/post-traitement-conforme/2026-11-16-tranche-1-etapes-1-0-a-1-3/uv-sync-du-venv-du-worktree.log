@@ -1,0 +1,102 @@
+warning: `VIRTUAL_ENV=/Users/luis/Library/CloudStorage/Dropbox/Luis/1 PROJETS/1 - THESE/EXPERIMENTAL/AEFI_Acquisition/.venv` does not match the project environment path `/Users/luis/.venvs/AEFI_Acquisition_dev_post_processor` and will be ignored; use `--active` to target the active environment instead
+Using CPython 3.13.10
+Creating virtual environment at: /Users/luis/.venvs/AEFI_Acquisition_dev_post_processor
+Resolved 101 packages in 1ms
+   Building aefi-acquisition @ file:///Users/luis/Library/CloudStorage/Dropbox/Luis/1%20PROJETS/1%20-%20THESE/EXPERIMENTAL/AEFI_Acquisition_dev_post_processor
+      Built aefi-acquisition @ file:///Users/luis/Library/CloudStorage/Dropbox/Luis/1%20PROJETS/1%20-%20THESE/EXPERIMENTAL/AEFI_Acquisition_dev_post_processor
+Prepared 1 package in 447ms
+Installed 93 packages in 969ms
+ + aefi-acquisition==0.1.0 (from file:///Users/luis/Library/CloudStorage/Dropbox/Luis/1%20PROJETS/1%20-%20THESE/EXPERIMENTAL/AEFI_Acquisition_dev_post_processor)
+ + annotated-types==0.8.0
+ + anyio==4.15.1
+ + attrs==26.1.0
+ + black==25.12.0
+ + certifi==2026.1.4
+ + cffi==2.1.1
+ + charset-normalizer==3.4.4
+ + click==8.3.1
+ + colorama==0.4.6
+ + contourpy==1.3.3
+ + cryptography==50.0.2
+ + cycler==0.12.1
+ + flake8==7.3.0
+ + fonttools==4.61.1
+ + glcontext==3.0.0
+ + glfw==2.10.0
+ + h11==0.16.0
+ + h5py==3.15.1
+ + httpcore==1.0.9
+ + httpx==0.28.1
+ + httpx-sse==0.4.3
+ + idna==3.20
+ + iniconfig==2.3.0
+ + jsonschema==4.26.0
+ + jsonschema-specifications==2025.9.1
+ + kiwisolver==1.4.9
+ + librt==0.7.8
+ + llvmlite==0.46.0
+ + matplotlib==3.10.8
+ + mccabe==0.7.0
+ + mcp==1.30.0
+ + moderngl==5.12.0
+ + mypy==1.19.1
+ + mypy-extensions==1.1.0
+ + numba==0.63.1
+ + numpy==2.3.5
+ + packaging==25.0
+ + pandas==2.3.3
+ + pathspec==1.0.3
+ + pillow==12.1.0
+ + platformdirs==4.5.1
+ + pluggy==1.6.0
+ + plumbum==1.10.0
+ + pooch==1.8.2
+ + pycodestyle==2.14.0
+ + pycparser==3.0
+ + pydantic==2.13.5
+ + pydantic-core==2.46.5
+ + pydantic-settings==2.15.0
+ + pyflakes==3.4.0
+ + pyft232==0.12
+ + pygments==2.19.2
+ + pyjwt==2.15.1
+ + pylablib==1.4.4
+ + pyparsing==3.3.1
+ + pyqt5==5.15.11
+ + pyqt5-qt5==5.15.18
+ + pyqt5-sip==12.18.0
+ + pyqtgraph==0.14.0
+ + pyserial==3.5
+ + pyside6==6.10.1
+ + pyside6-addons==6.10.1
+ + pyside6-essentials==6.10.1
+ + pyside6-qtads==4.4.1.2
+ + pytest==9.0.2
+ + pytest-qt==4.5.0
+ + python-dateutil==2.9.0.post0
+ + python-dotenv==1.2.4
+ + python-multipart==0.0.32
+ + pytokens==0.3.0
+ + pytz==2025.2
+ + pyusb==1.3.1
+ + pyvisa==1.16.1
+ + pyvista==0.46.4
+ + pyvistaqt==0.13.1
+ + qtpy==2.4.3
+ + referencing==0.37.0
+ + requests==2.32.5
+ + rpds-py==2026.9.1
+ + rpyc==6.0.2
+ + scipy==1.17.0
+ + scooby==0.11.0
+ + shiboken6==6.10.1
+ + six==1.17.0
+ + sse-starlette==3.5.0
+ + starlette==1.7.0
+ + typing-extensions==4.16.0
+ + typing-inspection==0.4.4
+ + tzdata==2025.3
+ + urllib3==2.6.3
+ + uvicorn==0.54.0
+ + vtk==9.5.2
+UV_PROJECT_ENVIRONMENT=~/.venvs/AEFI_Acquisition_dev_post_processor uv sync    0.17s user 0.58s system 44% cpu 1.713 total

@@ -1,0 +1,9 @@
+# solidai verify /Users/luis/Library/CloudStorage/Dropbox/Luis/1 PROJETS/1 - THESE/EXPERIMENTAL/AEFI_Acquisition_dev_post_processor/external_modules/aefi_post_processor_module
+
+- 1 error(s), 0 warning(s), 46 checks played, 0 not played
+
+| severity | code | count |
+|---|---|---|
+| | `solidai-intention-non-typee` | 1 |
+
+- error `solidai-intention-non-typee` `logging_setup_intention.md` : logging_setup_intention.md claims no SolidAI type: the checks do not see it

@@ -1,0 +1,14 @@
+01:44 | depart | quoi=tranche 1 etapes 1.0 a 1.3 du post-traitement conforme (worktree dev_post_processor) | budget=90min,~120 appels | session=sous-agent au-aefi-acquisition
+01:44 | note | ecriture=outils natifs (gate au indisponible, AU_MCP_SESSION absent) ; typage constat::sh-agent-os non fait, a la charge de la session
+01:48 | reprise | etat=worktree propre, aucun commit, V1/V3 releves, V2 bloque (demon au-engine du worktree absent ; 'au daemon start' tue a 120 s) ; budget 90 min recompte d'ici
+01:49 | jalon | etape=1.0 | V1=8ok+2echecs connus V2=1 erreur (intention logging non typee) V3=8ok | worktree=dev_post_processor | venv=~/.venvs/AEFI_Acquisition_dev_post_processor | demon au-engine du worktree demarre par script sh-agent-os
+01:51 | jalon | etape=1.1 | etalon ecrit 3 scans x 5 etapes, test vert ; border_width sans effet (parametre mort) donc preuve faite avec interpolation cubic->linear (3 echecs) puis annulee | decision=ecart au decoupage consigne
+01:51 | jalon | etape=1.1 commite | hash=0ad67bce | V1=11ok+2echecs connus
+01:53 | jalon | etape=1.2 commite | hash=e85d6699 | V1=11ok+2echecs connus (8 d'origine + 3 etalon) V2=0 erreur V3=8ok ; 8 scripts de tool/ s'importent | decision=journal avance sous infrastructure/logging (A15), consigne
+01:56 | jalon | etape=1.3 commite | hash=079aef1f | etalon vert (6 passed avec architecture_test) V1=23ok+2echecs connus (180 deg x et y) V2=0 erreur V3=8ok | decisions=imports relatifs dans le domaine (A9), to_dataframe->to_rows | fin
+01:57 | depart | quoi=etapes 1.4 et 1.5 (service de traitement, catalogue, carte) apres correction du decoupage | budget=120min,~150 appels
+01:57 | jalon | decoupage corrige (1.1 interpolation_method, 1.2/1.6 journal deja range, 1.3 imports relatifs) | fichier=decoupage-de-la-tranche-1.md
+02:03 | jalon | etape=1.4 commite | hash=afa04537 | golden inchange vert V1=51ok+2echecs connus V2=0 erreur V3=8ok (integration: un seul .h5) architecture_test vert | decisions=adaptateurs a plat (H16), raccord reduit, ports en enregistrements inline
+02:04 | depart | etape=1.5 catalogue des acquisitions et lecture d'une carte
+02:08 | jalon | etape=1.5 commite | hash=713c6799 | golden inchange vert V1=91ok+2echecs connus (180 deg x et y) V2=0 erreur (mutation D6 verifiee) V3=8ok architecture_test vert | limites=fichier d'etapes vide apres echec, rotation en tranche 2
+02:08 | fin | verdict=atteint 1.4 et 1.5 | commits=713c6799 afa04537  | src et launch intacts
