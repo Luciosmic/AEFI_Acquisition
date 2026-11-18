@@ -1,0 +1,564 @@
+.............................................F..............F........... [  3%]
+........................................................................ [  6%]
+.............................FFFF....................................... [ 10%]
+........................................................................ [ 13%]
+....................ss.................................................. [ 16%]
+........................................................................ [ 20%]
+........................................................................ [ 23%]
+........................................................................ [ 26%]
+........................................................................ [ 30%]
+........................................................................ [ 33%]
+........................................................................ [ 36%]
+........................................................................ [ 40%]
+........................................................................ [ 43%]
+........................................................................ [ 46%]
+........................................................................ [ 50%]
+........................................................................ [ 53%]
+........................................................................ [ 56%]
+..............................................................s........F [ 60%]
+FFFFF......................................FFFF......................... [ 63%]
+........................................................................ [ 67%]
+........................................................................ [ 70%]
+........................................................................ [ 73%]
+........................................................................ [ 77%]
+...F.................................................................... [ 80%]
+............................................................................................. [ 84%]
+.......................................................................................... [ 88%]
+........................................................................ [ 92%]
+........................................................................ [ 95%]
+........................................................................ [ 98%]
+......................                                                   [100%]
+=================================== FAILURES ===================================
+_________________ TestAmplitudeSubtraction.test_offset_removal _________________
+
+self = <aefi_post_processor_module.domain.processing.amplitude_subtractor._tests.amplitude_subtraction_test.TestAmplitudeSubtraction testMethod=test_offset_removal>
+
+    def test_offset_removal(self):
+        """
+        Verify that the amplitude subtractor correctly removes DC offsets
+        calculated from the border.
+        """
+        # 1. Define known offsets
+        # [Ux_I, Ux_Q, Uy_I, Uy_Q, Uz_I, Uz_Q]
+        known_offsets = np.array([1.5, -0.5, 2.0, 0.0, -1.0, 0.5])
+    
+        # 2. Add offsets to base signal
+        input_data = self.generator.add_dc_offset(self.base_data, known_offsets)
+    
+        # 3. Run subtraction
+        subtractor = PrimaryFieldAmplitudeSubtractor(border_width=2)
+        subtracted_data, recovered_offsets = subtractor.subtract_primary_field(input_data)
+    
+        # 4. Verify recovered offsets
+        # Since the base signal (sin*cos) averages to ~0 on the border for a sufficiently
+        # large integer number of cycles, the mean of (Signal + Offset) should be approx Offset.
+        # My generator uses 'kx' such that it's half a cycle.
+        # Wait, sin(kx * x) limits -range/2 to +range/2.
+        # If kx = 2*pi / (2*range), then argument goes from -pi/2 to +pi/2.
+        # sin(-pi/2) = -1, sin(pi/2) = 1.
+        # Average of sin(x) on [-pi/2, pi/2] is 0.
+        # So the mean of the base signal on the border should be reasonably close to 0,
+        # provided the sampling is symmetric.
+    
+        print("\nAmplitude Subtraction Test Results:")
+        print(f"  Expected Offsets: {known_offsets}")
+        print(f"  Recovered Offsets: {recovered_offsets}")
+    
+>       self.assertArrayAlmostEqual(recovered_offsets, known_offsets, tolerance=0.1,
+                                  msg="Recovered offsets diverge from injected DC offsets")
+
+external_modules/aefi_post_processor_module/domain/processing/amplitude_subtractor/_tests/amplitude_subtraction_test.py:40: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+external_modules/aefi_post_processor_module/domain/processing/_tests/analytic_test_case.py:23: in assertArrayAlmostEqual
+    self.fail(f"{msg} Max difference {max_diff} > tolerance {tolerance}")
+E   AssertionError: Recovered offsets diverge from injected DC offsets Max difference 1.0 > tolerance 0.1
+----------------------------- Captured stdout call -----------------------------
+
+Amplitude Subtraction Test Results:
+  Expected Offsets: [ 1.5 -0.5  2.   0.  -1.   0.5]
+  Recovered Offsets: [ 1.5 -0.5  2.   0.   0.   0.5]
+___________________ TestPhaseCalibration.test_phase_recovery ___________________
+
+self = <aefi_post_processor_module.domain.processing.phase_calibrator._tests.phase_calibration_test.TestPhaseCalibration testMethod=test_phase_recovery>
+
+    def test_phase_recovery(self):
+        """
+        Verify that the phase calibrator recovers the correct phase offset
+        and successfully zeroes out the Quadrature component on the border.
+        """
+        # 1. Define known phase offsets (radians)
+        # Using different angles for X, Y, Z to ensure independence
+        known_phases = (np.deg2rad(10.0), np.deg2rad(-25.0), np.deg2rad(45.0))
+    
+        # 2. Add phase offset to base signal (which has Q=0 originally)
+        # Note: add_phase_offset rotates (I, Q) by phi.
+        # So new vector is V * exp(j * phi)
+        input_data = self.generator.add_phase_offset(self.base_data, known_phases)
+    
+        # 3. Run calibration
+        calibrator = PrimaryFieldPhaseCalibrator(border_width=2)
+        calibrated_data, recovered_phases = calibrator.calibrate(input_data)
+    
+        # 4. Verify recovered phases
+        # The calibrator finds the angle of the vector mean on the border: theta
+        # And rotates by -theta.
+        # Since our signal is S * exp(j * phi), the angle should be phi.
+        # So we expect recovered_phases['x'] approx known_phases[0]
+    
+        print("\nPhase Calibration Test Results:")
+        axes = ['x', 'y', 'z']
+        for i, axis in enumerate(axes):
+            expected = known_phases[i]
+            # Convert recovered (radians) back for comparison
+            actual = recovered_phases[axis]
+    
+            print(f"  Axis {axis}: Expected {np.rad2deg(expected):.2f}°, Got {np.rad2deg(actual):.2f}°")
+    
+            # Tolerance note: Since the field isn't constant, the mean angle on the border
+            # might slightly differ from the global phase offset if the base signal
+            # has its own "structural" phase variation.
+            # However, my base signal (sin*cos) is Real-only, so its phase is 0 or 180 (pi).
+            # If the border averages to 0 (cancellation of positive and negative parts),
+            # then finding the phase might be unstable (atan2(0,0)).
+            # Checks: My base signal is sin(kx*x)*cos(ky*y).
+            # On the border, values are not all zero.
+            # But the MEAN of the vector sum could be zero if symmetric.
+            # Ideally, we should add a DC component or a carrier so the vector sum is non-zero.
+            # Or use a base signal that is predominantly one-signed on the border?
+            # Wait, the calibrator uses `mean(phases)`.
+            # `phases = arctan2(q, i)`. `mean_phase = mean(phases)`.
+            # If signal oscillates +1 and -1, phases will be 0 and pi. Mean is pi/2.
+            # That's dangerous.
+            # Correct approach for phase calibrator usually assumes a "Carrier" or "Primary Field"
+            # which is strong and constant-ish.
+            # Let's modify the test signal to simulated a Primary Field (Constant).
+    
+            # RE-RUN logic with a constant DC field + small variation
+    
+        # Re-doing data generation for valid test
+        # Base signal: Constant field (Primary field) + Perturbation
+        # V = [1.0, 0] + [small_var, 0]
+    
+        dc_field = np.ones_like(self.base_data) * 1.0 # Amplitude 1.0
+        # Zero out the Q components for DC field (strictly Real)
+        dc_field[:, :, [1, 3, 5]] = 0.0
+    
+        # Perturbed signal
+        base_signal = dc_field + 0.1 * self.base_data
+    
+        # Apply phase offset
+        input_data_dc = self.generator.add_phase_offset(base_signal, known_phases)
+    
+        # Run calibration again
+        calibrated_data, recovered_phases = calibrator.calibrate(input_data_dc)
+    
+        for i, axis in enumerate(axes):
+            expected = known_phases[i]
+            actual = recovered_phases[axis]
+            self.assertScalarAlmostEqual(actual, expected, tolerance=1e-3,
+                                       msg=f"Phase mismatch on axis {axis}")
+    
+        # 5. Verify Q component minimization on border
+>       border_pixels = calibrator.extract_border_pixels(calibrated_data)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'PrimaryFieldPhaseCalibrator' object has no attribute 'extract_border_pixels'
+
+external_modules/aefi_post_processor_module/domain/processing/phase_calibrator/_tests/phase_calibration_test.py:87: AttributeError
+----------------------------- Captured stdout call -----------------------------
+
+Phase Calibration Test Results:
+  Axis x: Expected 10.00°, Got -170.00°
+  Axis y: Expected -25.00°, Got 155.00°
+  Axis z: Expected 45.00°, Got 45.00°
+_ TestConfigPersistence.test_apply_4v_reference_reaches_chip_and_conversion_together _
+
+self = <src._tests.config_persistence_test.TestConfigPersistence testMethod=test_apply_4v_reference_reaches_chip_and_conversion_together>
+
+    def setUp(self):
+        # Paths — configs live in .aefi_acquisition/configs/ (seeded from config_templates/)
+        self.default_config_path = os.path.join(".aefi_acquisition", "configs", "ads131a04_default_config.json")
+        self.last_config_path = os.path.join(".aefi_acquisition", "configs", "ads131a04_last_config.json")
+    
+        # Backup existing files to restore later
+        self.backup_last_config = None
+        if os.path.exists(self.last_config_path):
+            with open(self.last_config_path, 'r') as f:
+                self.backup_last_config = f.read()
+    
+        # Read default config content for verification
+>       with open(self.default_config_path, 'r') as f:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '.aefi_acquisition/configs/ads131a04_default_config.json'
+
+src/_tests/config_persistence_test.py:26: FileNotFoundError
+_______ TestConfigPersistence.test_apply_config_updates_last_config_only _______
+
+self = <src._tests.config_persistence_test.TestConfigPersistence testMethod=test_apply_config_updates_last_config_only>
+
+    def setUp(self):
+        # Paths — configs live in .aefi_acquisition/configs/ (seeded from config_templates/)
+        self.default_config_path = os.path.join(".aefi_acquisition", "configs", "ads131a04_default_config.json")
+        self.last_config_path = os.path.join(".aefi_acquisition", "configs", "ads131a04_last_config.json")
+    
+        # Backup existing files to restore later
+        self.backup_last_config = None
+        if os.path.exists(self.last_config_path):
+            with open(self.last_config_path, 'r') as f:
+                self.backup_last_config = f.read()
+    
+        # Read default config content for verification
+>       with open(self.default_config_path, 'r') as f:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '.aefi_acquisition/configs/ads131a04_default_config.json'
+
+src/_tests/config_persistence_test.py:26: FileNotFoundError
+______ TestConfigPersistence.test_apply_writes_oversampling_ratio_to_chip ______
+
+self = <src._tests.config_persistence_test.TestConfigPersistence testMethod=test_apply_writes_oversampling_ratio_to_chip>
+
+    def setUp(self):
+        # Paths — configs live in .aefi_acquisition/configs/ (seeded from config_templates/)
+        self.default_config_path = os.path.join(".aefi_acquisition", "configs", "ads131a04_default_config.json")
+        self.last_config_path = os.path.join(".aefi_acquisition", "configs", "ads131a04_last_config.json")
+    
+        # Backup existing files to restore later
+        self.backup_last_config = None
+        if os.path.exists(self.last_config_path):
+            with open(self.last_config_path, 'r') as f:
+                self.backup_last_config = f.read()
+    
+        # Read default config content for verification
+>       with open(self.default_config_path, 'r') as f:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '.aefi_acquisition/configs/ads131a04_default_config.json'
+
+src/_tests/config_persistence_test.py:26: FileNotFoundError
+__ TestConfigPersistence.test_saved_config_uses_one_physical_name_per_setting __
+
+self = <src._tests.config_persistence_test.TestConfigPersistence testMethod=test_saved_config_uses_one_physical_name_per_setting>
+
+    def setUp(self):
+        # Paths — configs live in .aefi_acquisition/configs/ (seeded from config_templates/)
+        self.default_config_path = os.path.join(".aefi_acquisition", "configs", "ads131a04_default_config.json")
+        self.last_config_path = os.path.join(".aefi_acquisition", "configs", "ads131a04_last_config.json")
+    
+        # Backup existing files to restore later
+        self.backup_last_config = None
+        if os.path.exists(self.last_config_path):
+            with open(self.last_config_path, 'r') as f:
+                self.backup_last_config = f.read()
+    
+        # Read default config content for verification
+>       with open(self.default_config_path, 'r') as f:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '.aefi_acquisition/configs/ads131a04_default_config.json'
+
+src/_tests/config_persistence_test.py:26: FileNotFoundError
+____________________ test_missing_key_defaults_to_mock_fake ____________________
+
+    def test_missing_key_defaults_to_mock_fake():
+>       hw = HardwareCompositionRoot(BASE, InMemoryEventBus(), "COM_TEST")
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+src/infrastructure/hardware/_tests/hardware_composition_root_inertial_probe_test.py:32: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/infrastructure/hardware/hardware_composition_root.py:131: in __init__
+    self.acquisition_port: IAcquisitionPort = ExcitationAwareAcquisitionPort(
+src/infrastructure/mocks/adapter_mock_excitation_aware_acquisition.py:83: in __init__
+    self._field_simulator = field_simulator or CubeSensorFieldSimulator.from_default_config()
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = <class 'infrastructure.mocks.cube_sensor_field_simulator.CubeSensorFieldSimulator'>
+config_path = PosixPath('.aefi_acquisition/configs/aefi_device_config.json')
+
+    @classmethod
+    def from_default_config(cls, config_path: Path = _DEFAULT_CONFIG_PATH) -> "CubeSensorFieldSimulator":
+>       with open(config_path, encoding="utf-8") as f:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '.aefi_acquisition/configs/aefi_device_config.json'
+
+src/infrastructure/mocks/cube_sensor_field_simulator.py:106: FileNotFoundError
+________________________ test_mock_mode_builds_the_fake ________________________
+
+    def test_mock_mode_builds_the_fake():
+>       assert isinstance(build(inertial_probe="mock").inertial_probe_port, FakeInertialProbeStreamAdapter)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+src/infrastructure/hardware/_tests/hardware_composition_root_inertial_probe_test.py:38: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/infrastructure/hardware/_tests/hardware_composition_root_inertial_probe_test.py:23: in build
+    return HardwareCompositionRoot(
+src/infrastructure/hardware/hardware_composition_root.py:131: in __init__
+    self.acquisition_port: IAcquisitionPort = ExcitationAwareAcquisitionPort(
+src/infrastructure/mocks/adapter_mock_excitation_aware_acquisition.py:83: in __init__
+    self._field_simulator = field_simulator or CubeSensorFieldSimulator.from_default_config()
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = <class 'infrastructure.mocks.cube_sensor_field_simulator.CubeSensorFieldSimulator'>
+config_path = PosixPath('.aefi_acquisition/configs/aefi_device_config.json')
+
+    @classmethod
+    def from_default_config(cls, config_path: Path = _DEFAULT_CONFIG_PATH) -> "CubeSensorFieldSimulator":
+>       with open(config_path, encoding="utf-8") as f:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '.aefi_acquisition/configs/aefi_device_config.json'
+
+src/infrastructure/mocks/cube_sensor_field_simulator.py:106: FileNotFoundError
+______ test_real_mode_builds_the_lsm9ds1_adapter_without_opening_the_port ______
+
+    def test_real_mode_builds_the_lsm9ds1_adapter_without_opening_the_port():
+>       hw = build(inertial_probe="real")
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+src/infrastructure/hardware/_tests/hardware_composition_root_inertial_probe_test.py:42: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/infrastructure/hardware/_tests/hardware_composition_root_inertial_probe_test.py:23: in build
+    return HardwareCompositionRoot(
+src/infrastructure/hardware/hardware_composition_root.py:131: in __init__
+    self.acquisition_port: IAcquisitionPort = ExcitationAwareAcquisitionPort(
+src/infrastructure/mocks/adapter_mock_excitation_aware_acquisition.py:83: in __init__
+    self._field_simulator = field_simulator or CubeSensorFieldSimulator.from_default_config()
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = <class 'infrastructure.mocks.cube_sensor_field_simulator.CubeSensorFieldSimulator'>
+config_path = PosixPath('.aefi_acquisition/configs/aefi_device_config.json')
+
+    @classmethod
+    def from_default_config(cls, config_path: Path = _DEFAULT_CONFIG_PATH) -> "CubeSensorFieldSimulator":
+>       with open(config_path, encoding="utf-8") as f:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '.aefi_acquisition/configs/aefi_device_config.json'
+
+src/infrastructure/mocks/cube_sensor_field_simulator.py:106: FileNotFoundError
+___________________ test_real_mode_without_config_is_refused ___________________
+
+    def test_real_mode_without_config_is_refused():
+        with pytest.raises(ValueError, match="lsm9ds1_config"):
+>           HardwareCompositionRoot({**BASE, "inertial_probe": "real"}, InMemoryEventBus(), "COM_TEST")
+
+src/infrastructure/hardware/_tests/hardware_composition_root_inertial_probe_test.py:49: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/infrastructure/hardware/hardware_composition_root.py:131: in __init__
+    self.acquisition_port: IAcquisitionPort = ExcitationAwareAcquisitionPort(
+src/infrastructure/mocks/adapter_mock_excitation_aware_acquisition.py:83: in __init__
+    self._field_simulator = field_simulator or CubeSensorFieldSimulator.from_default_config()
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = <class 'infrastructure.mocks.cube_sensor_field_simulator.CubeSensorFieldSimulator'>
+config_path = PosixPath('.aefi_acquisition/configs/aefi_device_config.json')
+
+    @classmethod
+    def from_default_config(cls, config_path: Path = _DEFAULT_CONFIG_PATH) -> "CubeSensorFieldSimulator":
+>       with open(config_path, encoding="utf-8") as f:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '.aefi_acquisition/configs/aefi_device_config.json'
+
+src/infrastructure/mocks/cube_sensor_field_simulator.py:106: FileNotFoundError
+___________ test_inertial_probe_is_not_part_of_the_startup_lifecycle ___________
+
+    def test_inertial_probe_is_not_part_of_the_startup_lifecycle():
+>       assert len(build(inertial_probe="real").lifecycle_adapters) == len(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            build(inertial_probe="mock").lifecycle_adapters
+        )
+
+src/infrastructure/hardware/_tests/hardware_composition_root_inertial_probe_test.py:53: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/infrastructure/hardware/_tests/hardware_composition_root_inertial_probe_test.py:23: in build
+    return HardwareCompositionRoot(
+src/infrastructure/hardware/hardware_composition_root.py:131: in __init__
+    self.acquisition_port: IAcquisitionPort = ExcitationAwareAcquisitionPort(
+src/infrastructure/mocks/adapter_mock_excitation_aware_acquisition.py:83: in __init__
+    self._field_simulator = field_simulator or CubeSensorFieldSimulator.from_default_config()
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = <class 'infrastructure.mocks.cube_sensor_field_simulator.CubeSensorFieldSimulator'>
+config_path = PosixPath('.aefi_acquisition/configs/aefi_device_config.json')
+
+    @classmethod
+    def from_default_config(cls, config_path: Path = _DEFAULT_CONFIG_PATH) -> "CubeSensorFieldSimulator":
+>       with open(config_path, encoding="utf-8") as f:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '.aefi_acquisition/configs/aefi_device_config.json'
+
+src/infrastructure/mocks/cube_sensor_field_simulator.py:106: FileNotFoundError
+_______________ TestHardwareCompositionRoot.test_all_mock_wiring _______________
+
+self = <src.infrastructure.hardware._tests.hardware_composition_root_test.TestHardwareCompositionRoot testMethod=test_all_mock_wiring>
+
+    def test_all_mock_wiring(self):
+>       hw = HardwareCompositionRoot(
+            hardware_config={"motion": "mock", "aefi_device": "mock", "electric_field_probe": "mock"},
+            event_bus=InMemoryEventBus(),
+            narda_com_port="COM_TEST",
+        )
+
+src/infrastructure/hardware/_tests/hardware_composition_root_test.py:19: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/infrastructure/hardware/hardware_composition_root.py:131: in __init__
+    self.acquisition_port: IAcquisitionPort = ExcitationAwareAcquisitionPort(
+src/infrastructure/mocks/adapter_mock_excitation_aware_acquisition.py:83: in __init__
+    self._field_simulator = field_simulator or CubeSensorFieldSimulator.from_default_config()
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = <class 'infrastructure.mocks.cube_sensor_field_simulator.CubeSensorFieldSimulator'>
+config_path = PosixPath('.aefi_acquisition/configs/aefi_device_config.json')
+
+    @classmethod
+    def from_default_config(cls, config_path: Path = _DEFAULT_CONFIG_PATH) -> "CubeSensorFieldSimulator":
+>       with open(config_path, encoding="utf-8") as f:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '.aefi_acquisition/configs/aefi_device_config.json'
+
+src/infrastructure/mocks/cube_sensor_field_simulator.py:106: FileNotFoundError
+_ TestAD9106AdvancedConfiguratorDefaultCh3Gain.test_reads_ch3_gain_from_default_template _
+
+self = <src.infrastructure.hardware.ad9106.ad9106_advanced_configurator._tests.ad9106_advanced_configurator_test.TestAD9106AdvancedConfiguratorDefaultCh3Gain testMethod=test_reads_ch3_gain_from_default_template>
+
+    def test_reads_ch3_gain_from_default_template(self):
+        default_path = _AD9106_LAST_CONFIG_PATH.replace("last_config", "default_config")
+>       with open(default_path, "r") as f:
+             ^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '.aefi_acquisition/configs/ad9106_default_config.json'
+
+src/infrastructure/hardware/ad9106/ad9106_advanced_configurator/_tests/ad9106_advanced_configurator_test.py:525: FileNotFoundError
+_ TestAD9106AdvancedConfiguratorResetToDefault.test_reset_to_default_applies_default_gain_to_hardware _
+
+self = <src.infrastructure.hardware.ad9106.ad9106_advanced_configurator._tests.ad9106_advanced_configurator_test.TestAD9106AdvancedConfiguratorResetToDefault testMethod=test_reset_to_default_applies_default_gain_to_hardware>
+
+    def setUp(self):
+        self._last_config_backup = _backup_ad9106_last_config()
+        self._send_patcher = patch.object(MCU_SerialCommunicator, 'send_command', return_value=(True, "OK"))
+        self._send_patcher.start()
+        self.controller = AD9106Controller(MCU_SerialCommunicator())
+        self.event_bus = InMemoryEventBus()
+        self.configurator = AD9106AdvancedConfigurator(self.controller, self.event_bus)
+    
+        default_path = _AD9106_LAST_CONFIG_PATH.replace("last_config", "default_config")
+>       with open(default_path, "r") as f:
+             ^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '.aefi_acquisition/configs/ad9106_default_config.json'
+
+src/infrastructure/hardware/ad9106/ad9106_advanced_configurator/_tests/ad9106_advanced_configurator_test.py:547: FileNotFoundError
+_ TestAD9106AdvancedConfiguratorResetToDefault.test_reset_to_default_persists_default_to_last_config _
+
+self = <src.infrastructure.hardware.ad9106.ad9106_advanced_configurator._tests.ad9106_advanced_configurator_test.TestAD9106AdvancedConfiguratorResetToDefault testMethod=test_reset_to_default_persists_default_to_last_config>
+
+    def setUp(self):
+        self._last_config_backup = _backup_ad9106_last_config()
+        self._send_patcher = patch.object(MCU_SerialCommunicator, 'send_command', return_value=(True, "OK"))
+        self._send_patcher.start()
+        self.controller = AD9106Controller(MCU_SerialCommunicator())
+        self.event_bus = InMemoryEventBus()
+        self.configurator = AD9106AdvancedConfigurator(self.controller, self.event_bus)
+    
+        default_path = _AD9106_LAST_CONFIG_PATH.replace("last_config", "default_config")
+>       with open(default_path, "r") as f:
+             ^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '.aefi_acquisition/configs/ad9106_default_config.json'
+
+src/infrastructure/hardware/ad9106/ad9106_advanced_configurator/_tests/ad9106_advanced_configurator_test.py:547: FileNotFoundError
+_ TestAD9106AdvancedConfiguratorResetToDefault.test_reset_to_default_publishes_frequency_changed_when_drifted _
+
+self = <src.infrastructure.hardware.ad9106.ad9106_advanced_configurator._tests.ad9106_advanced_configurator_test.TestAD9106AdvancedConfiguratorResetToDefault testMethod=test_reset_to_default_publishes_frequency_changed_when_drifted>
+
+    def setUp(self):
+        self._last_config_backup = _backup_ad9106_last_config()
+        self._send_patcher = patch.object(MCU_SerialCommunicator, 'send_command', return_value=(True, "OK"))
+        self._send_patcher.start()
+        self.controller = AD9106Controller(MCU_SerialCommunicator())
+        self.event_bus = InMemoryEventBus()
+        self.configurator = AD9106AdvancedConfigurator(self.controller, self.event_bus)
+    
+        default_path = _AD9106_LAST_CONFIG_PATH.replace("last_config", "default_config")
+>       with open(default_path, "r") as f:
+             ^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '.aefi_acquisition/configs/ad9106_default_config.json'
+
+src/infrastructure/hardware/ad9106/ad9106_advanced_configurator/_tests/ad9106_advanced_configurator_test.py:547: FileNotFoundError
+_ TestCubeSensorFieldSimulator.test_from_default_config_has_nonzero_noise_by_default _
+
+self = <_tests.cube_sensor_field_simulator_test.TestCubeSensorFieldSimulator testMethod=test_from_default_config_has_nonzero_noise_by_default>
+
+    def test_from_default_config_has_nonzero_noise_by_default(self):
+>       sim = CubeSensorFieldSimulator.from_default_config()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+src/infrastructure/mocks/_tests/cube_sensor_field_simulator_test.py:98: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = <class 'infrastructure.mocks.cube_sensor_field_simulator.CubeSensorFieldSimulator'>
+config_path = PosixPath('.aefi_acquisition/configs/aefi_device_config.json')
+
+    @classmethod
+    def from_default_config(cls, config_path: Path = _DEFAULT_CONFIG_PATH) -> "CubeSensorFieldSimulator":
+>       with open(config_path, encoding="utf-8") as f:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '.aefi_acquisition/configs/aefi_device_config.json'
+
+src/infrastructure/mocks/cube_sensor_field_simulator.py:106: FileNotFoundError
+=============================== warnings summary ===============================
+external_modules/aefi_post_processor_module/interface/shell/_tests/post_processor_window_test.py: 8 warnings
+external_modules/aefi_post_processor_module/interface/shell/_tests/shell_wiring_test.py: 3 warnings
+src/interface/shell/_tests/closing_guard_wiring_test.py: 51 warnings
+  /Users/luis/Library/CloudStorage/Dropbox/Luis/1 PROJETS/1 - THESE/EXPERIMENTAL/AEFI_Acquisition_dev_post_processor/src/interface/widgets/carrier/windows_carrier.py:61: DeprecationWarning: Function: 'CDockWidget.CDockWidget(const QString &title, QWidget *parent)' is marked as deprecated, please check the documentation for more information.
+    dock = QtAds.CDockWidget(title)
+
+src/interface/shell/_tests/closing_guard_wiring_test.py::test_pendant_un_export_la_croix_laisse_la_fenetre_ouverte_et_affiche_le_message
+src/interface/shell/_tests/closing_guard_wiring_test.py::test_une_fois_l_export_ferme_la_croix_ferme_la_fenetre_et_garde_la_disposition
+src/interface/shell/_tests/closing_guard_wiring_test.py::test_la_demande_de_fin_de_session_est_reliee_a_la_garde
+  /Users/luis/Library/CloudStorage/Dropbox/Luis/1 PROJETS/1 - THESE/EXPERIMENTAL/AEFI_Acquisition_dev_post_processor/src/interface/widgets/panels/scan_visualization_panel.py:246: UserWarning: Tight layout not applied. tight_layout cannot make Axes height small enough to accommodate all Axes decorations.
+    self.figure.tight_layout()
+
+src/interface/widgets/panels/_tests/scan_visualization_panel_test.py::test_first_show_draws_and_lays_out_once
+src/interface/widgets/panels/_tests/scan_visualization_panel_test.py::test_data_received_while_hidden_is_drawn_at_show
+  /Users/luis/Library/CloudStorage/Dropbox/Luis/1 PROJETS/1 - THESE/EXPERIMENTAL/AEFI_Acquisition_dev_post_processor/src/interface/widgets/panels/scan_visualization_panel.py:540: RuntimeWarning: All-NaN slice encountered
+    vmin = np.nanmin(data)
+
+src/interface/widgets/panels/_tests/scan_visualization_panel_test.py::test_first_show_draws_and_lays_out_once
+src/interface/widgets/panels/_tests/scan_visualization_panel_test.py::test_data_received_while_hidden_is_drawn_at_show
+  /Users/luis/Library/CloudStorage/Dropbox/Luis/1 PROJETS/1 - THESE/EXPERIMENTAL/AEFI_Acquisition_dev_post_processor/src/interface/widgets/panels/scan_visualization_panel.py:541: RuntimeWarning: All-NaN slice encountered
+    vmax = np.nanmax(data)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED external_modules/aefi_post_processor_module/domain/processing/amplitude_subtractor/_tests/amplitude_subtraction_test.py::TestAmplitudeSubtraction::test_offset_removal
+FAILED external_modules/aefi_post_processor_module/domain/processing/phase_calibrator/_tests/phase_calibration_test.py::TestPhaseCalibration::test_phase_recovery
+FAILED src/_tests/config_persistence_test.py::TestConfigPersistence::test_apply_4v_reference_reaches_chip_and_conversion_together
+FAILED src/_tests/config_persistence_test.py::TestConfigPersistence::test_apply_config_updates_last_config_only
+FAILED src/_tests/config_persistence_test.py::TestConfigPersistence::test_apply_writes_oversampling_ratio_to_chip
+FAILED src/_tests/config_persistence_test.py::TestConfigPersistence::test_saved_config_uses_one_physical_name_per_setting
+FAILED src/infrastructure/hardware/_tests/hardware_composition_root_inertial_probe_test.py::test_missing_key_defaults_to_mock_fake
+FAILED src/infrastructure/hardware/_tests/hardware_composition_root_inertial_probe_test.py::test_mock_mode_builds_the_fake
+FAILED src/infrastructure/hardware/_tests/hardware_composition_root_inertial_probe_test.py::test_real_mode_builds_the_lsm9ds1_adapter_without_opening_the_port
+FAILED src/infrastructure/hardware/_tests/hardware_composition_root_inertial_probe_test.py::test_real_mode_without_config_is_refused
+FAILED src/infrastructure/hardware/_tests/hardware_composition_root_inertial_probe_test.py::test_inertial_probe_is_not_part_of_the_startup_lifecycle
+FAILED src/infrastructure/hardware/_tests/hardware_composition_root_test.py::TestHardwareCompositionRoot::test_all_mock_wiring
+FAILED src/infrastructure/hardware/ad9106/ad9106_advanced_configurator/_tests/ad9106_advanced_configurator_test.py::TestAD9106AdvancedConfiguratorDefaultCh3Gain::test_reads_ch3_gain_from_default_template
+FAILED src/infrastructure/hardware/ad9106/ad9106_advanced_configurator/_tests/ad9106_advanced_configurator_test.py::TestAD9106AdvancedConfiguratorResetToDefault::test_reset_to_default_applies_default_gain_to_hardware
+FAILED src/infrastructure/hardware/ad9106/ad9106_advanced_configurator/_tests/ad9106_advanced_configurator_test.py::TestAD9106AdvancedConfiguratorResetToDefault::test_reset_to_default_persists_default_to_last_config
+FAILED src/infrastructure/hardware/ad9106/ad9106_advanced_configurator/_tests/ad9106_advanced_configurator_test.py::TestAD9106AdvancedConfiguratorResetToDefault::test_reset_to_default_publishes_frequency_changed_when_drifted
+FAILED src/infrastructure/mocks/_tests/cube_sensor_field_simulator_test.py::TestCubeSensorFieldSimulator::test_from_default_config_has_nonzero_noise_by_default
+17 failed, 2129 passed, 3 skipped, 69 warnings, 249 subtests passed in 186.69s (0:03:06)
+This plugin does not support createPlatformOpenGLContext!
+This plugin does not support createPlatformOpenGLContext!
+This plugin does not support createPlatformOpenGLContext!
+This plugin does not support createPlatformOpenGLContext!
+This plugin does not support createPlatformOpenGLContext!
+This plugin does not support createPlatformOpenGLContext!
+This plugin does not support createPlatformOpenGLContext!
+This plugin does not support createPlatformOpenGLContext!
+This plugin does not support createPlatformOpenGLContext!
+This plugin does not support createPlatformOpenGLContext!
+This plugin does not support createPlatformOpenGLContext!
+This plugin does not support createPlatformOpenGLContext!
+This plugin does not support createPlatformOpenGLContext!
+This plugin does not support createPlatformOpenGLContext!
+This plugin does not support createPlatformOpenGLContext!
+This plugin does not support createPlatformOpenGLContext!

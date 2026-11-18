@@ -116,7 +116,6 @@ def verify_emergency_stop():
             scan_pattern="RASTER",
             stabilization_delay_ms=1000, # 1s stabilization to make it slower/clearer
             averaging_per_position=1,
-            uncertainty_volts=0.01
         )
         
         # 6. Trigger E-Stop in a thread after 5 seconds (Halfway)

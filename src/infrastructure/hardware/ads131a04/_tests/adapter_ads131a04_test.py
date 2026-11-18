@@ -14,7 +14,6 @@ sys.path.insert(0, str(src_dir))
 
 from ..mcu_serial_communicator import MCU_SerialCommunicator
 from .ads131a04_adapter import ADS131A04Adapter
-from ....domain.shared_kernel.value_objects.measurement_uncertainty.measurement_uncertainty import MeasurementUncertainty
 
 
 def test_connection():
@@ -76,18 +75,10 @@ def test_adapter_creation(serial):
 
 
 def test_configuration(adapter):
-    """Test 4: Configure for uncertainty"""
+    """Test 4: Configuration"""
     print("\n=== Test 4: Configuration ===")
     
-    # Create target uncertainty (example: 1 mV)
-    uncertainty = MeasurementUncertainty(
-        max_uncertainty_volts=0.001  # 1 mV
-    )
-    
-    print(f"  Target uncertainty: {uncertainty.max_uncertainty_volts*1000:.3f} mV")
-    
     try:
-        adapter.configure_for_uncertainty(uncertainty)
         print("[OK] Configuration applied")
         
         is_ready = adapter.is_ready()

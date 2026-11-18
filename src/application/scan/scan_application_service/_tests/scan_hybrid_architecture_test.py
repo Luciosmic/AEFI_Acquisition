@@ -72,7 +72,6 @@ class TestScanHybridArchitecture(DiagramFriendlyTest):
             scan_pattern="RASTER",
             stabilization_delay_ms=0,
             averaging_per_position=1,
-            uncertainty_volts=0.001,
         )
 
         # 5. EXECUTE SCAN (synchronous via FakeThreadPoolTaskRunner)

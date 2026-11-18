@@ -39,9 +39,6 @@ from domain.step_scan.value_objects.step_scan_config.step_scan_config import Ste
 from domain.step_scan.value_objects.scan_zone.scan_zone import ScanZone
 from domain.step_scan.value_objects.scan_pattern.scan_pattern import ScanPattern
 from domain.step_scan.value_objects.scan_axis.scan_axis import ScanAxis
-from domain.shared_kernel.value_objects.measurement_uncertainty.measurement_uncertainty import (
-    MeasurementUncertainty,
-)
 from domain.shared_kernel.excitation.value_objects.excitation_mode import ExcitationMode
 from domain.electric_field_probes.electric_field_probe import ElectricFieldProbe
 from domain.electric_field_probes.events.electric_field_probe_connection_changed.electric_field_probe_connection_changed import (
@@ -155,7 +152,6 @@ def _make_scan_started_event(fly_scan=False):
         scan_pattern=ScanPattern.SERPENTINE,
         stabilization_delay_ms=300,
         averaging_per_position=10,
-        measurement_uncertainty=MeasurementUncertainty(max_uncertainty_volts=1e-6),
         scan_axis=ScanAxis.Y,
         fly_scan=fly_scan,
     )

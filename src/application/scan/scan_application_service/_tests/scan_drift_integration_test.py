@@ -40,9 +40,6 @@ class DriftingAcquisitionPort(IAcquisitionPort):
             timestamp=datetime.now(),
         )
 
-    def configure_for_uncertainty(self, max_uncertainty_volts: float) -> None:
-        pass
-
     def is_ready(self) -> bool:
         return True
 
@@ -108,7 +105,6 @@ class TestScanDriftIntegration(unittest.TestCase):
             scan_pattern=pattern_name,
             stabilization_delay_ms=0,
             averaging_per_position=samples_per_point,
-            uncertainty_volts=1e-6,
         )
 
         print(f"    Configuration: 5x5 Grid, {samples_per_point} samples/point")

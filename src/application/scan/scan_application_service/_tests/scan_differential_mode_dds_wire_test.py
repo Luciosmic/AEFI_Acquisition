@@ -125,7 +125,6 @@ class TestScanDifferentialModeDdsWire(unittest.TestCase):
             scan_pattern="RASTER",
             stabilization_delay_ms=0,
             averaging_per_position=5,
-            uncertainty_volts=1e-6,
             differential_mode=True,
             differential_settle_delay_ms=20,
         )

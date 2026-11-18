@@ -9,3 +9,8 @@
 22:15 | jalon | vert=227 tests persistance+export ; suite complète 2118 verts, 28 échecs identiques sur HEAD propre (ad9106, composition root, config_persistence, post-traitement) = préexistants | log=run-pytest-suite-complete.log
 22:20 | jalon | audit=audit-ce-qui-depend-du-seuil-d-incertitude-retire-du-json.md | consommateurs hors dépôt : scan.type.yaml (GRAPHE-THESE) obligatoire ; 5 traces/donnée datées laissées
 22:21 | decision | attente=3 questions de l'audit ; constat 5 (liftoff-15mm dans le nom) non traité, en attente de l'accord
+22:35 | decision | choix=1 oui par humain : retirer toute la chaîne du seuil inutilisée ; garder les statistiques std_dev_* exportées | questions 2,3,4 non répondues
+22:40 | jalon | rouge=4 tests (scan_config_carries_no_unapplied_threshold_test) ; baseline garde-fou std_dev (statistiques, csv, hdf5, averaging, differential) relevée avant retrait
+22:50 | jalon | retrait fait : 7 fichiers src de production, objet-valeur MeasurementUncertainty supprimé (3 fichiers), 26 fichiers de tests/scripts nettoyés ; lancement de la suite complète | log=run-pytest-suite-complete-apres-retrait-chaine.log
+23:12 | jalon | suite racine apres retrait : 2128 verts, 18 échecs dont 17 préexistants identiques à la référence ; 1 nouveau test_raster_averaging (écart std 1.07>1.0, bruit à graine fixe 42, passe 3/3 isolé et dans la 1re suite) = course de timing présumée ; relance de la suite pour trancher
+23:20 | jalon | vert=4 tests rouges devenus verts ; 33 tests std_dev inchangés (33 avant, 33 après) ; suite racine 2129 verts, 17 échecs tous dans des fichiers déjà en échec (test_raster_averaging passe à la 2e suite : instable, course de timing) | logs=run-pytest-suite-complete-racine-apres-retrait*.log

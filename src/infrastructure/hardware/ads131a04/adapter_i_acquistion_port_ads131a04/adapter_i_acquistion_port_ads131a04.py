@@ -3,7 +3,7 @@ ADS131A04 Acquisition Adapter - Infrastructure Layer
 
 Responsibility:
 - Implement IAcquisitionPort interface
-- Translate domain concepts (MeasurementUncertainty) into hardware configuration
+- Apply the hardware configuration (gain, OSR, Vref) held in ADCHardwareConfig
 - Manage ADC hardware communication
 - Convert raw ADC data to domain AefiVoltageMeasurement
 
@@ -14,7 +14,7 @@ Rationale:
 
 Design:
 - Hexagonal Architecture: Adapter pattern
-- Translates MeasurementUncertainty → ADCHardwareConfig
+- ADCHardwareConfig carries the ADC settings (gain, OSR, Vref)
 - Quantization estimate: Vref / (2^N · Gain · √OSR); input-referred noise is set by OSR, not by the digital gain (datasheet SBAS590E 8.1)
 """
 

@@ -84,7 +84,7 @@ class _StillAccelerometer:
 def _step_dto(**overrides):
     params = dict(x_min=0, x_max=1, x_nb_points=2, y_min=0, y_max=1, y_nb_points=2,
                   scan_pattern="RASTER", stabilization_delay_ms=DELAY_MS,
-                  averaging_per_position=1, uncertainty_volts=1e-6)
+                  averaging_per_position=1)
     params.update(overrides)
     return Scan2DConfigDTO(**params)
 
@@ -168,7 +168,7 @@ class TestFlyScanColumnStabilization(_Stack):
         scan = self._run(Scan2DConfigDTO(
             x_min=600.0, x_max=610.0, x_nb_points=2, y_min=600.0, y_max=630.0, y_nb_points=4,
             scan_pattern="SERPENTINE", scan_axis="Y", stabilization_delay_ms=DELAY_MS,
-            averaging_per_position=1, uncertainty_volts=0.001, fly_scan=True,
+            averaging_per_position=1, fly_scan=True,
         ))
         self.assertEqual(scan.status, ScanStatus.COMPLETED)
         self.assertEqual(len(self.stabilization.rests), 1)

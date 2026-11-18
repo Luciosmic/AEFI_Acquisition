@@ -16,7 +16,6 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '../../../../..'))
 from tool.diagram_friendly_test import DiagramFriendlyTest
 from infrastructure.hardware.micro_controller.adapter_lifecycle_mcu.adapter_lifecycle_mcu import MCULifecycleAdapter
 from infrastructure.hardware.ads131a04.adapter_i_acquistion_port_ads131a04.adapter_i_acquistion_port_ads131a04 import ADS131A04Adapter
-from domain.shared_kernel.value_objects.measurement_uncertainty.measurement_uncertainty import MeasurementUncertainty
 
 class TestAcquisitionSequence(DiagramFriendlyTest):
     
@@ -58,16 +57,6 @@ class TestAcquisitionSequence(DiagramFriendlyTest):
         self.log_divider("Execution Phase")
         
         # 4. Configure Adapter
-        self.log_interaction(
-            actor="TestAcquisition",
-            action="CALL",
-            target="ADS131A04Adapter",
-            message="configure_for_uncertainty",
-            data={"max_uncertainty": 0.001}
-        )
-        uncertainty = MeasurementUncertainty(max_uncertainty_volts=0.001)
-        adapter.configure_for_uncertainty(uncertainty)
-        
         # 5. Acquire Sample
         self.log_interaction(
             actor="TestAcquisition",

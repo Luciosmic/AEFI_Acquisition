@@ -50,7 +50,7 @@ def make_dto(**overrides):
         x_min=600.0, x_max=620.0, x_nb_points=3,
         y_min=600.0, y_max=630.0, y_nb_points=4,
         scan_pattern="SERPENTINE", scan_axis="Y",
-        stabilization_delay_ms=0, averaging_per_position=1, uncertainty_volts=0.001,
+        stabilization_delay_ms=0, averaging_per_position=1,
         fly_scan=True,
     )
     params.update(overrides)

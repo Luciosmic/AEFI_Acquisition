@@ -1,11 +1,11 @@
 # ADS131A04 — Adaptateur ADC
 
 ## Rationale
-Ce module implémente l'acquisition des tensions électriques mesurées par le capteur AEFI via l'ADC Texas Instruments ADS131A04. Il traduit les concepts domaine (incertitude de mesure) en paramètres hardware (gain numérique, OSR, fréquence d'échantillonnage).
+Ce module implémente l'acquisition des tensions électriques mesurées par le capteur AEFI via l'ADC Texas Instruments ADS131A04. Il applique les paramètres hardware (gain numérique, OSR, fréquence d'échantillonnage) et rend des tensions domaine.
 
 ## Responsibility
 - `ADS131Controller` (`ads131_controller.py`) : contrôleur bas-niveau. Configure les registres de l'ADC (ICLK divider, OSR, gains par canal) via `MCU_SerialCommunicator` et déclenche les acquisitions.
-- `ADS131A04Adapter` (`adapter_i_acquistion_port_ads131a04.py`) : implémenter `IAcquisitionPort`. Traduit `MeasurementUncertainty` → `ADCHardwareConfig` (gain, OSR, Vref), lit les données brutes et les convertit en `AefiVoltageMeasurement` avec le mapping de canaux domaine (voltage_x_in_phase = ADC1_Ch1, etc.).
+- `ADS131A04Adapter` (`adapter_i_acquistion_port_ads131a04.py`) : implémenter `IAcquisitionPort`. Porte `ADCHardwareConfig` (gain, OSR, Vref), lit les données brutes et les convertit en `AefiVoltageMeasurement` avec le mapping de canaux domaine (voltage_x_in_phase = ADC1_Ch1, etc.).
 
 ## Design
 - Le bruit ramené à l'entrée est fixé par l'OSR, pas par le gain (datasheet SBAS590E, §8.1, tableaux 1 à 4) : au gain 1 et Vref 2,442 V, 1,82 µVrms à OSR 4096 et 96,82 µVrms à OSR 32. À OSR donné, il change peu du gain 1 au gain 16.

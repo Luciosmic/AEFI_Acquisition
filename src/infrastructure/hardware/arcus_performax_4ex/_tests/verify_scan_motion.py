@@ -128,7 +128,6 @@ def verify_scan_motion():
             scan_pattern="RASTER",
             stabilization_delay_ms=100,
             averaging_per_position=1,
-            uncertainty_volts=0.01
         )
         
         # 5. Execute

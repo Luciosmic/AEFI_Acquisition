@@ -196,7 +196,6 @@ class AefiContinuousReadingPresenter(QObject):
         ))
         config = AefiAcquisitionConfig(
             max_duration_s=params.get("max_duration_s", None),
-            target_uncertainty=None,
         )
         result = self._service.start_acquisition(config)
         if result.is_failure:

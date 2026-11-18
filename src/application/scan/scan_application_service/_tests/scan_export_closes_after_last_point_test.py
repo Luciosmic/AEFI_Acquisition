@@ -120,7 +120,7 @@ class TestScanExportClosesAfterLastPoint(unittest.TestCase):
             x_min=0, x_max=2, x_nb_points=3,
             y_min=0, y_max=1, y_nb_points=1,
             scan_pattern="RASTER", stabilization_delay_ms=0, averaging_per_position=1,
-            uncertainty_volts=1e-6, differential_mode=differential_mode, differential_settle_delay_ms=0,
+            differential_mode=differential_mode, differential_settle_delay_ms=0,
         )
         self.assertTrue(self.service.execute_scan(dto))
         self.assertTrue(self.done.wait(timeout=10.0), "scan did not complete")

@@ -3,7 +3,6 @@ import pytest
 from domain.step_scan.value_objects.step_scan_config.step_scan_config import StepScanConfig
 from domain.step_scan.value_objects.scan_zone.scan_zone import ScanZone
 from domain.step_scan.value_objects.scan_pattern.scan_pattern import ScanPattern
-from domain.shared_kernel.value_objects.measurement_uncertainty.measurement_uncertainty import MeasurementUncertainty
 
 
 def _make_config(scan_zone, **overrides):
@@ -13,7 +12,6 @@ def _make_config(scan_zone, **overrides):
         scan_pattern=ScanPattern.SERPENTINE,
         stabilization_delay_ms=100,
         averaging_per_position=5,
-        measurement_uncertainty=MeasurementUncertainty(max_uncertainty_volts=1e-6),
     )
     defaults.update(overrides)
     return StepScanConfig(scan_zone=scan_zone, **defaults)

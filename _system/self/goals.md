@@ -346,7 +346,7 @@ L'ordre est imposé par les dépendances : AcquisitionConfiguration d'abord, pui
 - `DomainEvent` base, `IDomainEventBus`
 - `OperationResult`, `ValidationResult`
 - `Position2D` (primitive géométrique partagée)
-- `MeasurementUncertainty`
+- ~~`MeasurementUncertainty`~~ (retiré le 2026-11-18 : seuil par défaut que rien n'appliquait)
 - `SensorReading` (protocole — introduit en D2)
 
 **Migrations réalisées :**
@@ -571,7 +571,7 @@ domain/
 │   ├── DomainEvent, IDomainEventBus
 │   ├── OperationResult, ValidationResult
 │   ├── Position2D
-│   ├── MeasurementUncertainty
+│   ├── ~~MeasurementUncertainty~~         (retiré le 2026-11-18)
 │   └── SensorReading (Protocol)    ← timestamp + raw_values() — après D2
 │
 ├── electric_field_probe/           ← capteur champ électrique
