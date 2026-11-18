@@ -4,3 +4,8 @@
 21:46 | jalon | constat=3 | verdict=confirmé | où=scan_acquisition_parameters_v1_serializer.py:115 (measurement_uncertainty = quantité en V, sans notes ni origine)
 21:47 | jalon | constat=4 | consommateurs trouvés hors liste initiale : GRAPHE-THESE/_system/self/type/scan.type.yaml ; sk-data/_system/ops/traces/.../constat-configs-a-migrer-hors-de-sk-data.md ; AEFI-THESIS-DATA-EXPERIMENTAL/acquisitions/2026-11-13_204052_*_acquisition-parameters.json (donnée publiée, à ne pas modifier)
 21:48 | decision | attente=choix A/B/C de l'humain sur le devenir du seuil | recommandation=B (nom explicite, origine « défaut », saisi dans l'interface)
+22:10 | decision | choix=A (retirer du JSON) | par=humain | version_schema=1.5 (proposée, non contredite)
+22:12 | jalon | rouge=6 tests (serialiseur, version 1.5 x4, service d'export) | baseline avant=226 verts sur persistance+export
+22:15 | jalon | vert=227 tests persistance+export ; suite complète 2118 verts, 28 échecs identiques sur HEAD propre (ad9106, composition root, config_persistence, post-traitement) = préexistants | log=run-pytest-suite-complete.log
+22:20 | jalon | audit=audit-ce-qui-depend-du-seuil-d-incertitude-retire-du-json.md | consommateurs hors dépôt : scan.type.yaml (GRAPHE-THESE) obligatoire ; 5 traces/donnée datées laissées
+22:21 | decision | attente=3 questions de l'audit ; constat 5 (liftoff-15mm dans le nom) non traité, en attente de l'accord
