@@ -58,7 +58,12 @@ class TestScanAcquisitionParametersV1Serializer(unittest.TestCase):
         self.assertEqual(procedure["zone"]["x_min"], {"value": 435.0, "unit": "mm"})
         self.assertEqual(procedure["averaging_per_position"], {"value": 10, "unit": "{sample}"})
         self.assertEqual(procedure["differential"]["enabled"], False)
-        self.assertEqual(procedure["measurement_uncertainty"], {"value": 1e-6, "unit": "V"})
+
+    def test_a_step_scan_declares_no_measurement_uncertainty_because_none_is_measured(self):
+        # The 0.001 V once exported was a hard-coded default nothing applied; the real dispersion
+        # is the per-point std_dev_* columns.
+        procedure = serialize(make_scan_acquisition_parameters())["procedure"]["step_scan"]
+        self.assertNotIn("measurement_uncertainty", procedure)
 
     def test_a_fly_scan_procedure_is_filed_under_fly_scan_without_the_step_scan_only_settings(self):
         document = serialize(make_scan_acquisition_parameters(FLY_SCAN))

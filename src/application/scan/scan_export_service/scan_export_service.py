@@ -577,7 +577,6 @@ class ScanExportService:
             x_nb_points=cfg.x_nb_points, y_nb_points=cfg.y_nb_points, total_points=cfg.total_points(),
             pattern=cfg.scan_pattern.name, fast_axis=cfg.scan_axis.name,
             stabilization_delay_ms=cfg.stabilization_delay_ms, averaging_per_position=cfg.averaging_per_position,
-            measurement_uncertainty_v=cfg.measurement_uncertainty.max_uncertainty_volts,
             differential_mode=cfg.differential_mode, differential_settle_delay_ms=cfg.differential_settle_delay_ms,
             estimated_duration_s=cfg.estimated_duration_seconds(),
         )

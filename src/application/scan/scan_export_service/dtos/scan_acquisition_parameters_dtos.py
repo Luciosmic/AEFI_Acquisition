@@ -35,7 +35,6 @@ class StepScanProcedureDTO:
     fast_axis: str
     stabilization_delay_ms: float
     averaging_per_position: int
-    measurement_uncertainty_v: float
     differential_mode: bool
     differential_settle_delay_ms: float
     estimated_duration_s: float

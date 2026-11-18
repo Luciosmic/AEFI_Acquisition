@@ -112,7 +112,6 @@ def _step_scan_procedure(procedure: StepScanProcedureDTO) -> Dict[str, Any]:
         **_grid(procedure),
         "stabilization_delay": q(procedure.stabilization_delay_ms, "ms"),
         "averaging_per_position": q(procedure.averaging_per_position, "{sample}"),
-        "measurement_uncertainty": q(procedure.measurement_uncertainty_v, "V"),
         "differential": {"enabled": procedure.differential_mode, "settle_delay": q(procedure.differential_settle_delay_ms, "ms")},
         "estimated_duration": q(procedure.estimated_duration_s, "s"),
     }

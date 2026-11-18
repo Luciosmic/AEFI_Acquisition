@@ -1,6 +1,6 @@
 # acquisition_parameters — Intention
 
-> Référence du schéma `acquisition-parameters.json` (version 1.4), écrit à côté de
+> Référence du schéma `acquisition-parameters.json` (version 1.5), écrit à côté de
 > chaque export (scan pas-à-pas, scan en vol, série temporelle). Ce fichier est le contrat :
 > les scripts d'analyse le lisent, les tests garde-fous l'appliquent.
 
@@ -175,7 +175,6 @@ exports entre eux (toutes les acquisitions faites avec telle calibration).
       "pattern": "SNAKE", "fast_axis": "Y",
       "stabilization_delay": { "value": …, "unit": "ms" },
       "averaging_per_position": { "value": 20, "unit": "{sample}" },
-      "measurement_uncertainty": { "value": …, "unit": "V" },
       "differential": { "enabled": false, "settle_delay": { "value": 50.0, "unit": "ms" } },
       "estimated_duration": { "value": …, "unit": "s" }
     },
@@ -314,7 +313,7 @@ exports :
 - **Scan en vol (1.4)** : activité `kind: "fly_scan"`, procédure `procedure.fly_scan` = `zone`,
   `grid`, `pattern`, `fast_axis` (mêmes clés que `procedure.step_scan`) et `stabilization_delay`,
   attendu une fois par ligne, à son départ (`notes` le dit). Pas de `averaging_per_position`, de
-  `differential`, de `measurement_uncertainty` ni de `estimated_duration` : ils ne s'appliquent pas
+  `differential` ni de `estimated_duration` : ils ne s'appliquent pas
   au balayage en vol. Le scan en vol tient les moteurs (`motors_held_by_activity: true`) et décrit
   les mêmes colonnes que le scan pas-à-pas. Avant 1.4, un scan en vol était écrit à tort sous
   `kind: "step_scan"` / `procedure.step_scan` ; seul le nom de ses fichiers (`flyScan`) le distinguait.
@@ -341,6 +340,11 @@ exports :
   composé à partir de `feature_of_interest` (`objet-non-saisi`, `liftoff-non-saisi` quand la
   valeur manque). La « base » libre tapée par l'opérateur est supprimée : le nom aide à
   retrouver un dossier, le contenu se lit dans ce document.
+- **Incertitude de mesure retirée (1.5)** : `procedure.step_scan.measurement_uncertainty` (0,001 V, présent de
+  1.0 à 1.4) n'est plus écrit. C'était un seuil par défaut codé en dur dans l'interface, que rien
+  n'appliquait : un lecteur le prenait pour une incertitude mesurée, alors qu'il dépassait de 4 à 20 fois la
+  dispersion réelle par point. La dispersion se lit dans les colonnes `std_dev_*`, calculées sur
+  `averaging_per_position` échantillons. Les fichiers 1.0 à 1.4 gardent le champ : ne pas le lire comme une mesure.
 - **Section non pertinente vs inconnue** : non pertinente → présente, vide, avec
   `notes` (ex. `auxiliary_probes.uses: []`) ; inconnue → `null` + avertissement.
 - **Langue** : clés et chemins en anglais, messages d'avertissement et `notes`

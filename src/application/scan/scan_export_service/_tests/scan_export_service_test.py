@@ -266,7 +266,7 @@ class TestScanExportServiceMetadata(unittest.TestCase):
         activity = parameters.activity
         self.assertEqual((activity.activity_id, activity.kind, activity.status), (str(started.scan_id), STEP_SCAN, "running"))
         self.assertEqual((activity.procedure.pattern, activity.procedure.fast_axis), ("SERPENTINE", "Y"))
-        self.assertEqual(activity.procedure.measurement_uncertainty_v, 1e-6)
+        self.assertFalse(hasattr(activity.procedure, "measurement_uncertainty_v"))
         self.assertEqual((activity.excitation.level_s1_s2_percent, activity.excitation.level_s3_s4_percent), (80.0, 60.0))
         self.assertIsNone(activity.probe)
         self.assertEqual(activity.bench_position_start, BenchPositionDTO(x_mm=435.0, y_mm=435.0))
