@@ -9,3 +9,4 @@
 18:58 | annonce | etape 2.9 : verifier.sh 2.9 (~2 min)
 19:03 | jalon | etape=2.9 pret a commiter | V1=232ok+2echecs connus (208 de base + 24 nouveaux ; etalon golden vert, _tests/golden intact) V2=0 erreur (46 verifications) V3=8ok | cree : port IAcquisitionProvenanceReader (+adaptateur, fake, intentions), SourceRecordDTO, groupe raw_scan, attributs source_*
 19:20 | annonce | etape 2.10 : verifier.sh 2.10 puis tests de persistence
+19:24 | jalon | etape=2.10 commite | hash=5d2b4343 | V1=233ok+2echecs connus V2=0 erreur V3=8ok | constat-attributs-de-configuration-de-l-ancien-h5-et-fichier-des-parametres.md : attributs couverts pour scans pas a pas et a la volee ; scan en ligne deja non exportable avant (AttributeError _grid(None))
