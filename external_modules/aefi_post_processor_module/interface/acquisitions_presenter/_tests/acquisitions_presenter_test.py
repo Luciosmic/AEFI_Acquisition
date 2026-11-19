@@ -318,3 +318,19 @@ def test_a_rotation_the_file_describes_but_the_application_refuses_falls_back_on
     warnings = [r for r in caplog.records if r.getMessage().startswith("scan.rotation_fallback")]
     assert len(warnings) == 1 and warnings[0].levelno == logging.WARNING
     assert f"scan={OK}" in warnings[0].getMessage() and "intrinsic" in warnings[0].getMessage()
+
+
+def test_a_listener_of_the_chosen_status_receives_the_whole_status_and_is_told_when_nothing_is_selected(parts):
+    from ....domain.acquisition_record.value_objects.applied_rotation.applied_rotation import AppliedRotation
+
+    parts.export.rotations[OTHER] = AppliedRotation((1.0, 2.0, 3.0), "extrinsic", "ZYX", "sources_to_sensor")
+    seen, cleared = [], []
+    parts.presenter.when_status_chosen(seen.append, lambda: cleared.append(True))
+    parts.presenter.refresh()
+
+    parts.view.selection_changed.emit([OTHER])
+    parts.view.selection_changed.emit([])
+
+    assert [status.name for status in seen] == [OTHER]
+    assert seen[0].applied_rotation.angles == (1.0, 2.0, 3.0) and seen[0].acquisition_file.endswith(f"{OTHER}.h5")
+    assert cleared == [True]
