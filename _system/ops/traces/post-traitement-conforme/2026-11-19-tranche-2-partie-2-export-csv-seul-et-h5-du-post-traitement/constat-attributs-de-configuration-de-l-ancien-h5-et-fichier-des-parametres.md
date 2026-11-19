@@ -27,3 +27,7 @@ genere_par: "[[tache - tranche 2 partie 2 export csv seul et h5 du post traiteme
 ## Ce que le `.h5` du post-traitement garde en plus
 
 Les points bruts relus du CSV (`raw_scan`), la source (CSV, SHA-256, activité, empreinte déclarée, égalité des deux) : décrits dans `hdf5_step_writer_intention.md`. Le `.h5` ne recopie aucun attribut de configuration : on les lit dans le fichier des paramètres, à côté.
+
+## À trancher : les points de la sonde de champ
+
+L'ancien `.h5` de l'acquisition portait aussi, en `/electric_field_data`, les points de la sonde de champ (Narda). La décision du 2026-11-16 parle des « données brutes relues des CSV » : le traitement ne lit aujourd'hui que `_aefi.csv`, et le `.h5` du post-traitement ne reprend donc que ces points. Ceux de la sonde restent dans leur CSV d'accompagnement (`<acquisition>_<sonde>.csv`), qui reste la source brute. Aucun code du post-traitement ne les utilise. Si l'humain veut les voir regroupés dans le `.h5`, c'est un lecteur de CSV de plus et un groupe `raw_field` à ranger, sans autre changement.

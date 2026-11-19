@@ -7,6 +7,9 @@
 18:40 | annonce | etape 2.8 : verifier.sh 2.8 (V1,V2,V3, ~2 min) puis suite des tests de src ciblee
 18:47 | jalon | etape=2.8 commite | hash=fa9512d1 | V1=208ok+2echecs connus V2=0 erreur V3=8ok (6 de base + 2 nouveaux) ; src ciblee (scan, persistence, _tests) : 4 echecs config_persistence deja dans la base, aucun nouveau
 18:58 | annonce | etape 2.9 : verifier.sh 2.9 (~2 min)
-19:03 | jalon | etape=2.9 pret a commiter | V1=232ok+2echecs connus (208 de base + 24 nouveaux ; etalon golden vert, _tests/golden intact) V2=0 erreur (46 verifications) V3=8ok | cree : port IAcquisitionProvenanceReader (+adaptateur, fake, intentions), SourceRecordDTO, groupe raw_scan, attributs source_*
+19:03 | jalon | etape=2.9 commite | hash=29a43989 | V1=232ok+2echecs connus (208 de base + 24 nouveaux ; etalon golden vert, _tests/golden intact) V2=0 erreur (46 verifications) V3=8ok | cree : port IAcquisitionProvenanceReader (+adaptateur, fake, intentions), SourceRecordDTO, groupe raw_scan, attributs source_*
 19:20 | annonce | etape 2.10 : verifier.sh 2.10 puis tests de persistence
 19:24 | jalon | etape=2.10 commite | hash=5d2b4343 | V1=233ok+2echecs connus V2=0 erreur V3=8ok | constat-attributs-de-configuration-de-l-ancien-h5-et-fichier-des-parametres.md : attributs couverts pour scans pas a pas et a la volee ; scan en ligne deja non exportable avant (AttributeError _grid(None))
+19:35 | annonce | etape 2.11 : suite complete (~3 min) -> pytest-suite-complete-finale.log ; solidai verify racine -> solidai-verify-racine-finale.log
+19:50 | jalon | etape=2.11 pret a commiter | V1=233ok+2echecs connus (etalon intact, _tests/golden non modifie) V2=0 erreur V3=8ok | suite complete 2188 reussis, 17 echecs = les 17 de la base (comm vide), solidai verify racine 630 erreurs (base 631) | docs : README, Data Processing Architecture, carte des contextes (ecarts 1 et 2 corriges), plan (prochaine action)
+19:51 | fin | verdict=atteint ; etapes=2.8 fa9512d1, 2.9 29a43989, 2.10 5d2b4343, 2.11 voir git log ; rien fusionne dans develop, rien pousse ; a decider par l'humain : points de la sonde de champ hors du .h5 (constat) ; demons du worktree arretes

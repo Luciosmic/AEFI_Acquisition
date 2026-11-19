@@ -19,7 +19,7 @@ flowchart LR
         UIK["Pièces génériques de l'interface<br/>dock, barre de tâches"]
         CFG["Configuration d'export<br/>.aefi_acquisition/configs/export_default_config.json<br/>Gabarit du dispositif<br/>config_templates/aefi_device_config.json"]
     end
-    EXP[("Dossier d'export d'une acquisition<br/>langage publié<br/>_aefi.csv · _acquisition-parameters.json · .h5<br/>_logs.log.xz · capteurs annexes")]
+    EXP[("Dossier d'export d'une acquisition<br/>langage publié<br/>_aefi.csv · _acquisition-parameters.json<br/>_logs.log.xz · capteurs annexes<br/>.h5 créé par le post-traitement")]
     subgraph PP["Post-traitement — aval (external_modules/aefi_post_processor_module/)"]
         RAC["Raccord ProcessingPipeline<br/>(temporaire)"]
         PPS["Service de traitement<br/>IApiPostProcessingService"]
@@ -30,7 +30,7 @@ flowchart LR
     SES -- "écrit" --> EXP
     RD -- "① lit selon le contrat<br/>(client-fournisseur)" --> EXP
     PPS -. "① exprime ses besoins<br/>(nouveaux champs, version du schéma)" .-> SES
-    PPS -- "écrit ses étapes dans le .h5" --> EXP
+    PPS -- "crée le .h5 : points bruts relus du CSV,<br/>cinq étapes, provenance" --> EXP
     ACL -- "② appelle en fin de scan, dans le même processus" --> RAC
     RAC --> PPS
     ACL -- "② puis lance la fenêtre (processus séparé)" --> WIN
@@ -69,12 +69,12 @@ flowchart LR
 | Champ | Pour quoi | Depuis le schéma | Lu |
 |---|---|---|---|
 | `procedure.step_scan.zone`, `procedure.step_scan.grid` | la grille prévue : distinguer un scan rectangulaire d'un scan interrompu | 1.0 | oui, depuis le 2026-11-16 |
-| `measurement_chain.sensor.deployment.rotation_applied` (angles, convention, origine) | traiter avec les angles réellement appliqués | présent en 1.4 | tranche 2 |
-| `provenance.activity.id` | l'identité de l'acquisition | présent en 1.4 | tranche 2 |
-| `feature_of_interest` (objet, lift-off) | nommer l'objet mesuré dans la fenêtre | présent en 1.4 | tranche 2 |
+| `measurement_chain.sensor.deployment.rotation_applied` (angles, convention, origine) | traiter avec les angles réellement appliqués | présent en 1.4 | oui, depuis le 2026-11-19 (tranche 2, partie 1) |
+| `provenance.activity.id` | l'identité de l'acquisition, consignée dans le `.h5` | présent en 1.4 | oui, depuis le 2026-11-19 (tranche 2, partie 2) |
+| `feature_of_interest` (objet, lift-off) | nommer l'objet mesuré dans la fenêtre | présent en 1.4 | oui, depuis le 2026-11-19 (tranche 2, partie 1) |
 | `data.columns` | vérifier le sens des colonnes du CSV | présent en 1.4 | prévu par la conception |
-| `data.files`, empreinte du CSV | prouver de quelles données brutes dérive le `.h5` | présent en 1.4 | tranche 2 (§ 6) |
-| `data.files` sans `.h5` | le `.h5` n'est plus un fichier brut de l'acquisition | version mineure suivante, à publier par l'acquisition | tranche 2 (§ 6) |
+| `data.files`, empreinte du CSV | prouver de quelles données brutes dérive le `.h5` : le `.h5` consigne l'empreinte qu'il a lue et celle-ci, et dit si elles sont égales | présent en 1.4 | oui, depuis le 2026-11-19 (tranche 2, partie 2) |
+| `data.files` sans `.h5` | le `.h5` n'est plus un fichier brut de l'acquisition | **1.7**, publiée par l'acquisition le 2026-11-19 | rien à lire : l'entrée disparaît |
 
 ### Qui lit chaque champ du fichier des paramètres
 
@@ -86,7 +86,9 @@ Un champ que personne ne lit se voit ici tout de suite. `measurement_uncertainty
 | `procedure.step_scan.zone`, `.grid` | post-traitement | demandé : la grille prévue |
 | `procedure.step_scan.averaging_per_position` | personne aujourd'hui | demandé : le nombre d'échantillons moyennés par point |
 | `std_dev_*` (colonnes de `_aefi.csv`, décrites par `data.columns`) | les chercheurs, à l'analyse | mesuré : la dispersion de chaque point, calculée sur `averaging_per_position` échantillons |
-| `feature_of_interest` (objet, lift-off) | personne dans le code ; tranche 2 | saisi par l'opérateur à l'export |
+| `feature_of_interest` (objet, lift-off) | post-traitement (catalogue, panneau « Paramètres d'acquisition ») | saisi par l'opérateur à l'export |
+| `measurement_chain.sensor.deployment.rotation_applied` | post-traitement (traducteur du catalogue, puis service de traitement) | les angles de la calibration appliqués par l'acquisition |
+| `provenance.activity.id`, `data.files[<CSV>].sha256` | post-traitement (lecteur de provenance, consigné dans le `.h5`) | l'identité de l'acquisition et l'empreinte du CSV à sa fermeture |
 | `procedure.step_scan.measurement_uncertainty` | **retiré en 1.5** ; personne ne le lisait | c'était un seuil par défaut de 0,001 V codé en dur, jamais appliqué ; il se lisait à tort comme une incertitude mesurée |
 
 ### Un champ exporté dit s'il est mesuré, demandé ou par défaut
@@ -115,13 +117,13 @@ C'est un lien du fournisseur (l'acquisition) vers la couche de données, que la 
 | Fichier | Écrit par | Lu par le post-traitement | Ce qui en est lu | Où, côté post-traitement |
 |---|---|---|---|---|
 | `<acquisition>_aefi.csv` | acquisition | oui | positions `x`, `y` (mm) et les six tensions (en phase, quadrature, par axe) | `infrastructure/csv_scan_reader/` |
-| `<acquisition>_acquisition-parameters.json` (schéma `aefi-acquisition-parameters` 1.0 à 1.6) | acquisition | oui, en partie | la grille prévue (`procedure.step_scan.zone` et `.grid`) depuis le 2026-11-16 | `infrastructure/acquisition_parameters_scan_plan_reader/` |
-| `<acquisition>.h5` | aujourd'hui : acquisition (données brutes), puis post-traitement (étapes) ; après la tranche 2 : post-traitement seul (données brutes regroupées depuis les CSV, étapes, provenance) | oui | les étapes rangées, pour la carte et l'état du catalogue | `infrastructure/hdf5_step_writer/`, `hdf5_step_reader/`, `export_folder_repository/` |
+| `<acquisition>_acquisition-parameters.json` (schéma `aefi-acquisition-parameters` 1.0 à 1.7) | acquisition | oui, en partie | la grille prévue (`procedure.step_scan.zone` et `.grid`), l'objet mesuré, le lift-off, les angles appliqués, la version du schéma, l'identité de l'acquisition et l'empreinte du CSV | `infrastructure/acquisition_parameters_scan_plan_reader/`, `acquisition_provenance_reader/`, `export_folder_repository/acl/` |
+| `<acquisition>.h5` | post-traitement seul, depuis le 2026-11-19 (points bruts relus du CSV, cinq étapes, provenance) ; les acquisitions antérieures gardent un `.h5` écrit par l'acquisition, que le post-traitement complète | oui | les étapes rangées, pour la carte et l'état du catalogue | `infrastructure/hdf5_step_writer/`, `hdf5_step_reader/`, `export_folder_repository/` |
 | `<acquisition>_logs.log.xz`, `_accelerometer.csv.xz` (archives écrites à l'arrêt du scan), `_column-stabilization.csv` ; plus de `_events.jsonl` depuis le schéma 1.6 | acquisition | non | — | — |
 
 Le catalogue des acquisitions (`export_folder_repository`) liste les dossiers posés directement dans le dossier d'export. Un dossier rangé dans un sous-dossier (`BACKGROUND/`, `METALLIC/`…) n'y apparaît pas, ni un balayage en fréquence.
 
-Ce que la tranche 2 du plan « post-traitement conforme » doit encore lire dans le fichier des paramètres : l'identité de l'acquisition (`provenance.activity.id`), l'objet mesuré et le lift-off (`feature_of_interest`), et surtout les angles appliqués (`measurement_chain.sensor.deployment.rotation_applied`, avec leur convention et leur origine). Elle prolonge le lecteur de la grille prévue, derrière le même port.
+La tranche 2 du plan « post-traitement conforme » a fait lire dans le fichier des paramètres l'objet mesuré et le lift-off (`feature_of_interest`), les angles appliqués (`measurement_chain.sensor.deployment.rotation_applied`, avec leur convention et leur origine) par le catalogue, et l'identité de l'acquisition (`provenance.activity.id`) avec l'empreinte du CSV (`data.files`) par un lecteur de provenance, derrière un port de plus.
 
 ## 3. L'acquisition appelle le post-traitement en fin de scan
 
@@ -136,21 +138,21 @@ sequenceDiagram
     participant F as Dossier d'export
     participant W as Fenêtre du post-traitement
     Scan->>SES: ScanCompleted
-    SES->>SES: ferme le CSV et le .h5,<br/>écrit le fichier des paramètres (empreintes comprises)
+    SES->>SES: ferme le CSV,<br/>écrit le fichier des paramètres (empreintes comprises)
     SES->>TR: lance le traitement, sans l'attendre
-    TR->>ACL: run(csv, h5)
+    TR->>ACL: run(csv)
     ACL->>PP: run_full_pipeline(csv, angles de la calibration active)
-    PP->>F: lit le CSV et la grille prévue
-    PP->>F: ajoute les cinq étapes dans le .h5
+    PP->>F: lit le CSV, la grille prévue, l'activité et l'empreinte déclarées
+    PP->>F: crée le .h5 : points bruts, source (SHA-256), cinq étapes
     ACL->>W: lance composition_root.py --repo-path <dossier><br/>(processus séparé)
 ```
 
 - Seul un scan **terminé** (`ScanCompleted`) est traité. Un scan annulé ou en échec ne l'est pas : il apparaît « à recalculer » dans le catalogue.
 - Le traitement tourne **dans le processus de l'acquisition**. L'acquisition importe donc le code du post-traitement. C'est pourquoi le domaine et l'application du post-traitement n'importent ni Qt ni le paquet d'emprunt : sinon l'acquisition importerait, à travers lui, sa propre interface. `_tests/architecture_test.py` du module le vérifie.
 - La fenêtre s'ouvre dans un **processus séparé**, car une seconde application Qt ne peut pas tourner dans la première.
-- Côté acquisition, le port `IPostProcessingPort` (`src/application/scan/scan_export_service/ports/i_post_processing_port.py`) ne connaît que « traiter ces deux fichiers ». Son adaptateur `src/infrastructure/aefi_post_processor_port/aefi_post_processor_port.py` est le seul endroit de l'acquisition qui connaît le post-traitement.
+- Côté acquisition, le port `IPostProcessingPort` (`src/application/scan/scan_export_service/ports/i_post_processing_port.py`) ne connaît que « traiter ce CSV » (`run(csv_path)`) : le `.h5` se crée à côté, sous le nom du dossier. Son adaptateur `src/infrastructure/aefi_post_processor_port/aefi_post_processor_port.py` est le seul endroit de l'acquisition qui connaît le post-traitement.
 - Cible : l'adaptateur appelle `IApiPostProcessingService`, l'entrée publique du post-traitement, au lieu du raccord `processing/processing_pipeline.py` (marqué `ponytail:`), qui garde l'ancienne signature.
-- Après la tranche 2 : l'acquisition ne ferme plus de `.h5` en fin de scan ; elle passe le seul CSV au traitement, qui crée le `.h5` (§ 6).
+- Depuis le 2026-11-19 (tranche 2) : l'acquisition ne ferme plus de `.h5` en fin de scan ; elle passe le seul CSV au traitement, qui crée le `.h5` (§ 6).
 
 ## 4. Le code emprunté
 
@@ -183,13 +185,13 @@ Les deux chemins partent de la racine du dépôt : la fenêtre ne trouve la conf
 En fin de scan, l'acquisition traite avec les angles de la calibration active (pour le scan de la bouteille d'eau du 13 novembre : 34,9°, 45,7°, −5,3°, calibrés).
 Le bouton « Traiter » de la fenêtre retraite avec les angles idéaux du gabarit (35,3°, 45°, 0°).
 Un scan retraité depuis la fenêtre change donc d'étape « repère tourné » et d'interpolation.
-Décidé (2026-11-16) : corrigé en tranche 2, en lisant `rotation_applied` dans le fichier des paramètres de chaque acquisition. Le champ est déjà exporté : rien à demander à l'acquisition.
+**Corrigé** (2026-11-19, tranche 2, partie 1) : le catalogue lit `rotation_applied` dans le fichier des paramètres de chaque acquisition, et le bouton « Traiter » retraite avec ces angles ; sans description, ou si l'acquisition a déjà tourné ses valeurs ou utilise une convention inconnue, il retombe sur les angles idéaux et le dit (panneau « Paramètres d'acquisition », journal).
 
-**L'empreinte du `.h5` ne vaut plus après le traitement.**
+**L'empreinte du `.h5` ne vaut plus après le traitement. Corrigé** (2026-11-19, tranche 2, partie 2).
 L'acquisition prend l'empreinte (taille, SHA-256) du `.h5` en fin de scan et l'écrit dans le fichier des paramètres, puis le post-traitement y ajoute ses étapes.
 Pour le scan de la bouteille d'eau : 2 455 328 octets enregistrés, 6 046 209 octets aujourd'hui.
 Un lecteur qui vérifie les empreintes conclurait à un fichier altéré.
-Décidé par l'humain (2026-11-16), en tranche 2 : **l'acquisition n'exporte plus que des CSV, et le `.h5` devient un produit du traitement.** Le post-traitement y regroupe tout : les données brutes relues des CSV et ses cinq étapes.
+Décidé par l'humain (2026-11-16) et appliqué : **l'acquisition n'exporte plus que des CSV, et le `.h5` devient un produit du traitement.** Le post-traitement y regroupe tout : les données brutes relues des CSV et ses cinq étapes.
 
 ```mermaid
 flowchart LR
@@ -207,8 +209,8 @@ flowchart LR
 - Le CSV est la seule source brute. Le fichier des paramètres ne donne d'empreinte qu'à des fichiers que l'acquisition a écrits et que personne ne modifie ensuite : le problème d'empreinte disparaît.
 - Le `.h5` se refait à tout moment depuis les CSV : un nouveau traitement, ou un traitement corrigé, le réécrit en entier.
 - Le `.h5` porte sa provenance : le CSV source, son empreinte (comparable à celle du fichier des paramètres) et l'identité de l'acquisition (`provenance.activity.id`).
-- Rien ne se perd : le `.h5` que l'acquisition écrit aujourd'hui ne tient que les points du scan, les points de la sonde de champ et des attributs de configuration, déjà présents dans les CSV et le fichier des paramètres. À revérifier au codage pour les attributs de configuration.
-- C'est le premier besoin du client envers son fournisseur. Côté acquisition : retirer l'export `.h5` (`Hdf5ScanExportPort`) du service d'export, déclencher le traitement sur le seul CSV, et relever la version mineure du schéma, puisque `data.files` ne liste plus de `.h5`.
+- Rien ne se perd : le `.h5` que l'acquisition écrivait ne tenait que les points du scan, les points de la sonde de champ et des attributs de configuration, déjà présents dans les CSV et le fichier des paramètres. Vérifié au codage : les attributs de configuration d'un scan pas à pas ou à la volée sont tous dans le fichier des paramètres ; le scan en ligne n'était déjà pas exporté. Le `.h5` du post-traitement reprend les points du seul `_aefi.csv` : ceux de la sonde de champ restent dans leur CSV d'accompagnement.
+- C'est le premier besoin du client envers son fournisseur, satisfait : `Hdf5ScanExportPort` est retiré, le traitement part du seul CSV (`IPostProcessingPort.run(csv_path)`), et le schéma passe en **1.7** (`data.files` ne liste plus de `.h5`).
 - Les acquisitions déjà exportées gardent dans leur fichier des paramètres l'empreinte d'un `.h5` écrit par l'acquisition, qui ne correspond plus. Un nouveau traitement réécrit ce `.h5` à partir des CSV, sans perte, et leur empreinte reste fausse : c'est une limite connue des exports antérieurs à ce changement.
 
 **Le dossier d'export ne dit pas encore le sens de toutes ses colonnes au post-traitement.**
@@ -219,9 +221,9 @@ Le fichier des paramètres décrit chaque colonne du CSV (`data.columns`, unité
 | Changement côté acquisition | Effet côté post-traitement |
 |---|---|
 | champ ajouté au fichier des paramètres (version mineure) | rien, jusqu'à ce que le post-traitement l'inscrive au contrat et le lise |
-| nouvelle version majeure du schéma des paramètres | à annoncer au client avant de la publier ; refus attendu de l'acquisition dans le catalogue (« format non pris en charge »), une fois la tranche 2 faite ; aujourd'hui seule la grille est lue, et un fichier sans grille fait revenir à la grille carrée |
+| nouvelle version majeure du schéma des paramètres | à annoncer au client avant de la publier ; refus attendu de l'acquisition dans le catalogue (« format non pris en charge »), à confirmer : le catalogue ne refuse pas encore une version majeure inconnue ; un fichier sans grille fait revenir à la grille carrée |
 | champ retiré du fichier des paramètres | version mineure si aucun lecteur ne le lit (§ 2, « Qui lit chaque champ »), comme `measurement_uncertainty` en 1.5 ; sinon version majeure annoncée au client avant publication. Vérifier aussi les lecteurs hors des deux logiciels (type `scan` du graphe) |
 | colonne renommée dans `_aefi.csv` | le canal disparaît du traitement |
 | pièce empruntée déplacée ou modifiée dans `src/interface/` | `aefi_acquisition_upstream/` casse à l'import, ou la fenêtre change |
 | nouveau type d'acquisition exporté (balayage en fréquence, lecture continue) | invisible dans le catalogue tant que le post-traitement ne le traite pas |
-| signature de `IPostProcessingPort` | seul l'adaptateur de l'acquisition change |
+| signature de `IPostProcessingPort` (`run(csv_path)`) | seul l'adaptateur de l'acquisition change |

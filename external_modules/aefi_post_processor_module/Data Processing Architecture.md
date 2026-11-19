@@ -1,6 +1,6 @@
 # Architecture du post-traitement AEFI
 
-Le post-traitement transforme le CSV d'un scan en cinq étapes calculées, rangées dans le `.h5` de l'acquisition, et les montre dans une fenêtre à panneaux.
+Le post-traitement transforme le CSV d'un scan en cinq étapes calculées, rangées dans un `.h5` qu'il crée à côté du CSV de l'acquisition (qui n'exporte que des CSV), et les montre dans une fenêtre à panneaux.
 Il suit les couches de l'acquisition. Le détail de chaque atome est dans son `<nom>_intention.md`, à côté de son code.
 
 ## Couches
@@ -60,12 +60,15 @@ sequenceDiagram
     participant C as acquisition_catalog_service
     participant S as post_processing_service
     participant R as csv_scan_reader
+    participant A as acquisition_provenance_reader
     participant W as hdf5_step_writer
     Opérateur->>P: bouton « Traiter »
     P->>C: list_acquisitions (état de chacune)
     loop chaque acquisition à recalculer
         P->>S: process_scan(csv, fichier d'étapes, paramètres)
-        S->>R: lire le CSV
+        S->>R: lire le CSV (points et SHA-256)
+        S->>A: activité et empreinte du CSV déclarées
+        S->>W: créer le .h5, consigner la source, ranger les points bruts
         loop cinq étapes
             S->>S: calcul du domaine
             S->>W: ranger l'étape
@@ -76,7 +79,7 @@ sequenceDiagram
 ```
 
 Une acquisition qui échoue ne stoppe pas les suivantes ; son échec nomme l'étape fautive.
-Le fichier d'étapes est le `.h5` de l'acquisition (`processing_store_path`, un seul endroit à changer quand les étapes iront dans un fichier propre, tranche 6).
+Le fichier d'étapes est le `.h5` du dossier de l'acquisition, `<dossier>/<nom du dossier>.h5` (`processing_store_path`). L'acquisition ne l'écrit plus : le post-traitement le crée au premier traitement et le complète ensuite, sans toucher au CSV.
 
 ## L'état d'une acquisition
 
@@ -98,6 +101,18 @@ Le catalogue liste ces états à l'ouverture et n'écrit aucun fichier : c'est c
 └── /interpolated          data [M×M×6], attrs : interpolation_method, quality_metrics, timestamp
 ```
 
+Chaque `.h5` créé par le post-traitement porte aussi, en plus des étapes :
+
+```
+├── /raw_scan              positions [n×2], values [n×6], attrs : channel_names   (les points relus du CSV, pas une étape)
+└── attributs de la racine : source_csv, source_sha256, source_activity_id, source_declared_sha256,
+                             source_sha256_matches, load_timestamp, processing_history
+```
+
+- `source_sha256` est l'empreinte des octets du CSV lus ; `source_declared_sha256` celle que l'acquisition a consignée dans `data.files` de son fichier de paramètres, `source_activity_id` son `provenance.activity.id`. `source_sha256_matches` dit si les deux sont égales : faux, le CSV n'est plus celui que l'acquisition a fermé (avertissement `pipeline.source_changed`), le traitement a lieu quand même. Absents quand le fichier des paramètres ne les dit pas.
+- Les points de la sonde de champ restent dans leur CSV d'accompagnement : le `.h5` ne les recopie pas.
+- Un `.h5` d'une acquisition antérieure à ce changement (écrit par l'acquisition, avec `/scan_data`) se complète de la même façon ; `raw_scan` s'y ajoute sans toucher à ses groupes.
+
 Les six canaux sont les tensions en phase et en quadrature de x, y et z.
 
 ## Tests
@@ -107,7 +122,8 @@ Les six canaux sont les tensions en phase et en quadrature de x, y et z.
 - **Adaptateurs** : chaque adaptateur a son Fake et une suite de contrat que le réel et le Fake passent.
 - **Presenters** : testés avec une vue Fake, le vrai catalogue et le vrai service sur des Fakes.
 - **Lancement** (`_tests/launch_test.py`) : `composition_root.py` en sous-processus, Qt hors écran.
-- **Côté acquisition** : `src/infrastructure/aefi_post_processor_port`, `scan_export_with_post_processing_integration_test.py` et `external_modules_panel_test.py` figent l'appel de l'adaptateur et le fichier produit.
+- **Le `.h5` naît du CSV seul** (`_tests/h5_created_from_the_csv_alone_test.py`) : un dossier avec le CSV et son fichier de paramètres, sans `.h5`, donne le `.h5` complet (cinq étapes, points bruts, source), avec une empreinte égale à celle du fichier des paramètres.
+- **Côté acquisition** : `src/infrastructure/aefi_post_processor_port`, `scan_export_with_post_processing_integration_test.py` (un scan simulé exporté, un seul CSV, aucun `.h5` avant le traitement, puis le `.h5` du traitement avec la provenance) et `external_modules_panel_test.py` figent l'appel de l'adaptateur et le fichier produit.
 
 Deux tests de calcul échouent depuis avant la refonte (écart de 180° sur x et y : `test_phase_recovery`, `test_offset_removal`) ; ils attendent la tranche 5.
 
