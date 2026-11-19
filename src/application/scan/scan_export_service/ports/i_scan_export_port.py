@@ -71,12 +71,6 @@ class IScanExportPort(ABC):
         pass
 
     @abstractmethod
-    def write_event(self, event: DomainEvent) -> None:
-        """Persist one domain event published during the scan (per-scan event store).
-        Ports that don't keep an event store implement it as a no-op."""
-        pass
-
-    @abstractmethod
     def get_output_path(self) -> Optional[Path]:
         """Path to this port's main data file, once configured (None before configure())."""
         pass

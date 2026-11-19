@@ -208,9 +208,14 @@ class TestStabilizationIsExported(_Stack):
     def _files(self):
         import csv
         import json
+        import lzma
         folder = next(self.output_dir.iterdir())
-        tables = {p.name.rsplit("_", 1)[-1]: list(csv.DictReader(p.open(encoding="utf-8")))
-                  for p in folder.glob("*.csv")}
+        # The accelerometer stream is archived at the end of the scan (`.csv.xz`); read either form.
+        tables = {}
+        for p in [*folder.glob("*.csv"), *folder.glob("*.csv.xz")]:
+            opener = lzma.open if p.suffix == ".xz" else open
+            with opener(p, "rt", newline="", encoding="utf-8") as f:
+                tables[p.name.removesuffix(".xz").rsplit("_", 1)[-1]] = list(csv.DictReader(f))
         document = json.loads(next(folder.glob("*_acquisition-parameters.json")).read_text(encoding="utf-8"))
         return tables, document
 
@@ -232,7 +237,12 @@ class TestStabilizationIsExported(_Stack):
         self.assertEqual(stabilization["criterion"]["window"], {"value": 0.1, "unit": "s"})
         self.assertEqual(stabilization["accelerometer_samples"], len(tables["accelerometer.csv"]))
         names = [f["name"] for f in document["data"]["files"]]
-        self.assertTrue(any(n.endswith("_plaque_liftoff-8mm_accelerometer.csv") for n in names), names)
+        self.assertTrue(any(n.endswith("_plaque_liftoff-8mm_accelerometer.csv.xz") for n in names), names)
+        self.assertFalse(any(n.endswith("_accelerometer.csv") for n in names), names)
+        listed = {f["name"].rsplit("_", 1)[-1]: f for f in document["data"]["files"]}
+        self.assertEqual(listed["accelerometer.csv.xz"]["format"], "CSV (xz)")
+        self.assertEqual(listed["logs.log.xz"]["format"], "text (xz)")
+        self.assertNotIn("events.jsonl", listed)
         self.assertEqual(document["data"]["columns"]["acceleration_x"]["unit"], "[g]")
 
     def test_without_accelerometer_only_the_parameters_say_fixed_delay(self):

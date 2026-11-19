@@ -15,6 +15,7 @@ Implémentation CSV de `IScanExportPort` comme alternative légère au format HD
 
 - Exporter les résultats de scan 2D en CSV avec une ligne par point (position X, Y, et les 6 composantes de tension).
 - Inclure un en-tête de colonnes.
+- À l'arrêt, remplacer le journal du scan (`_logs.log`) et le flux de l'accéléromètre (`_accelerometer.csv`) par une archive `.xz` chacun, avant le document des paramètres qui liste et hache ce qui est dans le dossier. Un échec de compression garde le fichier en clair. N'écrire aucun fichier d'événements.
 
 ## Design
 

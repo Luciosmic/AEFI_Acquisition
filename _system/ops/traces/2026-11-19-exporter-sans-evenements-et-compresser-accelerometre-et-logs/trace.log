@@ -1,0 +1,9 @@
+18:05 | depart | quoi=l'export d'un scan n'écrit plus _events.jsonl ; l'accéléromètre et les logs sont compressés en .xz à l'arrêt du scan (2 fichiers -> 2 archives) ; schéma du JSON 1.6 | session=5ccf4703-bc35-42b7-be39-a6d8798335e7
+18:05 | decision | format=.xz (choix A de l'humain : algorithme LZMA2 du 7z, bibliothèque standard, mesuré -23 % vs gzip sur un CSV réel) ; écriture en clair pendant le scan, compression à stop(), original supprimé ; audit global .aefi_acquisition/logs/events conservé (hypothèse annoncée, non contredite)
+18:06 | jalon | gate au rétabli, registre à nouveau utilisable ; entrée précédente close
+18:25 | jalon | rouge : tests du port CSV écrits (pas d'événements, logs et accéléromètre en .xz, stabilisation en clair, échec de compression garde l'original, version 1.6) | fichier=csv_scan_export_port_test.py
+18:50 | jalon | message du pair « Conformité post-traitement » (tranche 2 : plus de .h5 exporté, schéma mineur, angles lus) : chevauchement avec ma tâche sur data.files, version du schéma, ports et service d'export ; réponse envoyée
+19:05 | jalon | vert : port CSV, service d'export, stabilisation, intégration post-traitement adaptés ; reste : intention.md, doc du contrat 1.6, suite complète
+19:05 | jalon | vert : port CSV, service d'export, stabilisation, intégration post-traitement adaptés ; reste : intention.md, contrat 1.6, suite complète
+19:15 | jalon | docs à jour (intentions du service, du port, du contrat 1.6, carte des contextes) ; lancement de la suite complète | log=run-pytest-suite-complete.log
+19:30 | jalon | suite complète : 2131 verts, 17 échecs tous dans des fichiers déjà en échec (aucun nouveau) | log=run-pytest-suite-complete.log

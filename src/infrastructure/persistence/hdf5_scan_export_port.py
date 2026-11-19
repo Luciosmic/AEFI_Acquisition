@@ -382,9 +382,6 @@ class Hdf5ScanExportPort(IScanExportPort):
         """No-op: the CSV port writes acquisition-parameters.json into the shared
         acquisition folder, listing this `.h5` file with its size and SHA-256."""
 
-    def write_event(self, event) -> None:
-        """No-op: the CSV port writes the scan's events.jsonl into the shared acquisition folder."""
-
     def get_output_path(self) -> Optional[Path]:
         """Path to the `.h5` file, once configured."""
         return self._file_path

@@ -134,9 +134,9 @@ class ScanExportService:
         self._task_runner = task_runner
         self._active_ports: List[IScanExportPort] = []
         self._open_export: Optional[tuple] = None  # (kind, id) announced as open, until announced closed
-        # Events come from several threads (ADC worker, motion worker, scan
-        # loop): the recorder must never see a port that is not open yet, or
-        # write into one being closed by another thread.
+        # Samples come from several threads (ADC worker, motion worker, inertial probe,
+        # scan loop): none may write into a port that is not open yet, or into one being
+        # closed by another thread. Guards `_active_ports` and the stabilization record.
         self._events_lock = threading.RLock()
 
         self._config: Optional[ExportConfigDTO] = None
@@ -175,8 +175,6 @@ class ScanExportService:
         self._event_bus.subscribe("columnrestmeasured", self._on_event)
         self._event_bus.subscribe("columnsettled", self._on_event)
         self._event_bus.subscribe("inertialprobesampleacquired", self._on_event)
-        # Per-scan event store: every event published while the export is open.
-        self._event_bus.subscribe("*", self._record_event)
 
     # ------------------------------------------------------------------ #
     # Configuration API (called from UI / presenter)
@@ -245,25 +243,6 @@ class ScanExportService:
         except Exception as exc:
             logger.exception("Error handling %s: %s", type(event).__name__, exc)
 
-    def _record_event(self, event: DomainEvent) -> None:
-        """Forward every event published during the scan — not only the
-        scan_id-tagged ones: motion, excitation, probe events are the context
-        needed to replay what happened during the acquisition.
-
-        Relies on the bus dispatching "*" subscribers after typed ones: the
-        export is already open when ScanStarted reaches here, and already
-        closed for the finishing event (written by _close_export). The
-        acquisition that completes the scan (last AefiLineAcquired /
-        AefiPointAcquired) reaches here before ScanCompleted closes the
-        export: the unit of work delivers the ScanCompleted committed by the
-        closure handler only once that acquisition reached every subscriber.
-        `_active_ports` only lists open ports: filled once they are started,
-        emptied before they are closed — an event from another thread landing
-        while a scan export opens or closes is simply not recorded."""
-        with self._events_lock:
-            for port in self._active_ports:
-                port.write_event(event)
-
     def _handle_scan_started(self, event: ScanStarted) -> None:
         logger.info("Handling ScanStarted. scan_id=%s, config present: %s", event.scan_id, self._config is not None)
         self._fly_scan = bool(getattr(event.config, "fly_scan", False))
@@ -304,10 +283,10 @@ class ScanExportService:
             port.configure(directory, name, metadata, timestamp=timestamp, acquisition_kind=acquisition_kind)
             port.start()
             port.write_acquisition_parameters(parameters)
-        # Files open; announced before the recorder sees them, so the announcement stays out of the scan's event store.
+        # Files open: announce it.
         self._announce_export_opened(
             "fly_scan" if self._fly_scan else "step_scan", str(event.scan_id), self._config.measured_object)
-        with self._events_lock:  # visible to the event recorder only once open
+        with self._events_lock:  # visible to the sample handlers only once open
             self._active_ports = ports
             # Same instant on the inertial samples' monotonic clock and on the host clock.
             self._stabilization_record = ColumnStabilizationRecord(
@@ -388,7 +367,7 @@ class ScanExportService:
         port.start()
         port.write_acquisition_parameters(self._start_parameters(str(event.acquisition_id), TIME_SERIES, config))
         self._announce_export_opened("time_series", str(event.acquisition_id), config.measured_object)
-        with self._events_lock:  # visible to the event recorder only once open
+        with self._events_lock:  # visible to the sample handlers only once open
             self._active_ports = [port]
         self._time_series_active = True
         self._time_series_t0 = None
@@ -465,10 +444,10 @@ class ScanExportService:
                 self._write_table_row(STABILIZATION_TABLE, STABILIZATION_COLUMNS, row)
 
     def _close_export(self, event: DomainEvent) -> List[Optional[Path]]:
-        """Write the finishing event, close every active port, and drop the
+        """Close every active port, and drop the
         acquisition folder if nothing was written. Returns each active port's
         output path, in `_active_ports` order."""
-        # Hidden from the event recorder before closing: an event from another
+        # Hidden from the sample handlers before closing: a sample from another
         # thread can no longer reach a port being stopped.
         with self._events_lock:
             ports, self._active_ports = self._active_ports, []
@@ -481,7 +460,6 @@ class ScanExportService:
                 finished.activity, column_stabilization=record.summary()))
         try:
             for port in ports:
-                port.write_event(event)  # last event of the export, before its file closes
                 port.stop()
             # Once every file is closed: the final document lists and hashes them.
             if finished is not None:

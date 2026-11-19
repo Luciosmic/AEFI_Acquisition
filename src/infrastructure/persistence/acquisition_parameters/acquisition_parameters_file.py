@@ -13,7 +13,15 @@ from typing import Any, Dict
 from application.shared.acquisition_parameters.acquisition_conditions_dtos import ExportedFileDTO
 
 # File extension -> format name written in data.files.
-FORMATS = {".csv": "CSV", ".h5": "HDF5", ".jsonl": "JSON Lines", ".log": "text", ".json": "JSON"}
+FORMATS = {".csv": "CSV", ".h5": "HDF5", ".log": "text", ".json": "JSON"}
+
+
+def file_format(path: Path) -> str:
+    """Format name written in data.files; an `.xz` archive says what it holds: `text (xz)`."""
+    if path.suffix == ".xz":
+        inner = FORMATS.get(Path(path.stem).suffix)
+        return f"{inner} (xz)" if inner else "xz"
+    return FORMATS.get(path.suffix, path.suffix)
 
 
 def describe_file(path: Path, file_format: str) -> ExportedFileDTO:

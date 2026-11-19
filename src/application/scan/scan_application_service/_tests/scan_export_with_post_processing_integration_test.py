@@ -152,7 +152,8 @@ class ScanExportWithPostProcessingIntegrationTest(unittest.TestCase):
         self.assertEqual(document["schema"]["version"], SCHEMA["version"])
         self.assertEqual(document["provenance"]["activity"]["status"], "completed")
         listed = {f["format"] for f in document["data"]["files"] if "sha256" in f}
-        self.assertTrue({"CSV", "HDF5", "JSON Lines"} <= listed, listed)
+        self.assertTrue({"CSV", "HDF5", "text (xz)"} <= listed, listed)
+        self.assertNotIn("JSON Lines", listed)
 
         # Visualizer would have been launched on the acquisition folder
         # (stubbed here, so no real GUI process was spawned).

@@ -19,7 +19,7 @@ flowchart LR
         UIK["Pièces génériques de l'interface<br/>dock, barre de tâches"]
         CFG["Configuration d'export<br/>.aefi_acquisition/configs/export_default_config.json<br/>Gabarit du dispositif<br/>config_templates/aefi_device_config.json"]
     end
-    EXP[("Dossier d'export d'une acquisition<br/>langage publié<br/>_aefi.csv · _acquisition-parameters.json · .h5<br/>_events.jsonl · _logs.log · capteurs annexes")]
+    EXP[("Dossier d'export d'une acquisition<br/>langage publié<br/>_aefi.csv · _acquisition-parameters.json · .h5<br/>_logs.log.xz · capteurs annexes")]
     subgraph PP["Post-traitement — aval (external_modules/aefi_post_processor_module/)"]
         RAC["Raccord ProcessingPipeline<br/>(temporaire)"]
         PPS["Service de traitement<br/>IApiPostProcessingService"]
@@ -115,9 +115,9 @@ C'est un lien du fournisseur (l'acquisition) vers la couche de données, que la 
 | Fichier | Écrit par | Lu par le post-traitement | Ce qui en est lu | Où, côté post-traitement |
 |---|---|---|---|---|
 | `<acquisition>_aefi.csv` | acquisition | oui | positions `x`, `y` (mm) et les six tensions (en phase, quadrature, par axe) | `infrastructure/csv_scan_reader/` |
-| `<acquisition>_acquisition-parameters.json` (schéma `aefi-acquisition-parameters` 1.0 à 1.5) | acquisition | oui, en partie | la grille prévue (`procedure.step_scan.zone` et `.grid`) depuis le 2026-11-16 | `infrastructure/acquisition_parameters_scan_plan_reader/` |
+| `<acquisition>_acquisition-parameters.json` (schéma `aefi-acquisition-parameters` 1.0 à 1.6) | acquisition | oui, en partie | la grille prévue (`procedure.step_scan.zone` et `.grid`) depuis le 2026-11-16 | `infrastructure/acquisition_parameters_scan_plan_reader/` |
 | `<acquisition>.h5` | aujourd'hui : acquisition (données brutes), puis post-traitement (étapes) ; après la tranche 2 : post-traitement seul (données brutes regroupées depuis les CSV, étapes, provenance) | oui | les étapes rangées, pour la carte et l'état du catalogue | `infrastructure/hdf5_step_writer/`, `hdf5_step_reader/`, `export_folder_repository/` |
-| `<acquisition>_events.jsonl`, `_logs.log`, `_accelerometer.csv`, `_column-stabilization.csv` | acquisition | non | — | — |
+| `<acquisition>_logs.log.xz`, `_accelerometer.csv.xz` (archives écrites à l'arrêt du scan), `_column-stabilization.csv` ; plus de `_events.jsonl` depuis le schéma 1.6 | acquisition | non | — | — |
 
 Le catalogue des acquisitions (`export_folder_repository`) liste les dossiers posés directement dans le dossier d'export. Un dossier rangé dans un sous-dossier (`BACKGROUND/`, `METALLIC/`…) n'y apparaît pas, ni un balayage en fréquence.
 

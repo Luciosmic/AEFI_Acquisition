@@ -1,6 +1,6 @@
 # acquisition_parameters — Intention
 
-> Référence du schéma `acquisition-parameters.json` (version 1.5), écrit à côté de
+> Référence du schéma `acquisition-parameters.json` (version 1.6), écrit à côté de
 > chaque export (scan pas-à-pas, scan en vol, série temporelle). Ce fichier est le contrat :
 > les scripts d'analyse le lisent, les tests garde-fous l'appliquent.
 
@@ -331,7 +331,7 @@ exports :
   `accelerometer`, `fixed_delay`, `timeout`, `interrupted` ; avertissement s'il y a des `timeout` ou des
   `fixed_delay` dans un scan jugé sur l'accéléromètre), `accelerometer_samples`.
   Deux tables à côté, colonnes déclarées dans `data.columns` avec leur `file` :
-  `<…>_accelerometer.csv` (le flux de l'accéléromètre pendant tout le scan dès qu'il émet, mesure du
+  `<…>_accelerometer.csv.xz` (archive du flux de l'accéléromètre pendant tout le scan dès qu'il émet, mesure du
   repos comprise : `accelerometer_sample_index`, `accelerometer_timestamp`, `acceleration_x|y|z` en `[g]`,
   pesanteur comprise, repère de la carte) et `<…>_column-stabilization.csv` (une ligne par attente quand
   les points sont jugés sur l'accéléromètre : `point_index`, `stabilization_method`,
@@ -345,6 +345,7 @@ exports :
   n'appliquait : un lecteur le prenait pour une incertitude mesurée, alors qu'il dépassait de 4 à 20 fois la
   dispersion réelle par point. La dispersion se lit dans les colonnes `std_dev_*`, calculées sur
   `averaging_per_position` échantillons. Les fichiers 1.0 à 1.4 gardent le champ : ne pas le lire comme une mesure.
+- **Fichiers allégés (1.6)** : `<…>_events.jsonl` n'est plus écrit (trop lourd pour ce qu'on en lisait). Le journal et le flux de l'accéléromètre, rarement lus, sont écrits en clair pendant le scan puis remplacés à son arrêt par une archive `.xz` chacun : `<…>_logs.log.xz` et `<…>_accelerometer.csv.xz`. `data.files` les liste sous leur nom d'archive, avec la taille et l'empreinte de l'archive, et les formats `text (xz)` et `CSV (xz)`. `data.columns[...].file` reste `accelerometer`. Si la compression échoue, le fichier en clair reste et est listé tel quel. Version mineure : aucun lecteur connu de ces fichiers (carte des contextes, § 2). Pour lire : `lzma.open`, ou `pandas.read_csv("….csv.xz")`.
 - **Section non pertinente vs inconnue** : non pertinente → présente, vide, avec
   `notes` (ex. `auxiliary_probes.uses: []`) ; inconnue → `null` + avertissement.
 - **Langue** : clés et chemins en anglais, messages d'avertissement et `notes`

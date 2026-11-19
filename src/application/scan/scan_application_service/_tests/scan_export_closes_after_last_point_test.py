@@ -41,7 +41,6 @@ class _RecordingExportPort(IScanExportPort):
         self.name = name
         self.journal = journal
         self.points: List[Dict[str, Any]] = []
-        self.events: List[Any] = []
         self.started = False
         self.stopped = False
 
@@ -63,9 +62,6 @@ class _RecordingExportPort(IScanExportPort):
 
     def write_field_point(self, data):
         pass
-
-    def write_event(self, event):
-        self.events.append(event)
 
     def get_output_path(self) -> Optional[Path]:
         return Path(f"/fake/{self.name}")
@@ -135,7 +131,6 @@ class TestScanExportClosesAfterLastPoint(unittest.TestCase):
         self.assertEqual(self.journal.count("ScanCompleted"), 1)
         for port in (self.csv_port, self.hdf5_port):
             self.assertTrue(port.stopped)
-            self.assertEqual(type(port.events[-1]).__name__, "ScanCompleted")
         self.assertFalse(self.export_service._export_active)
 
     def test_differential_points_reach_the_export_with_their_baseline(self) -> None:

@@ -1,5 +1,6 @@
 import csv
 import json
+import lzma
 import shutil
 import tempfile
 import unittest
@@ -132,7 +133,7 @@ class TestCsvScanExportPortMetadata(unittest.TestCase):
 
         data = self._document()
         self.port.stop()
-        self.assertEqual(data["schema"]["version"], "1.5")
+        self.assertEqual(data["schema"]["version"], "1.6")
         self.assertEqual(data["provenance"]["activity"]["status"], "running")
         self.assertEqual(data["procedure"]["step_scan"]["pattern"], "SERPENTINE")
         # Files are listed only once the acquisition has ended; the document lists itself by its real name.
@@ -150,9 +151,14 @@ class TestCsvScanExportPortMetadata(unittest.TestCase):
         self.assertEqual(data["provenance"]["activity"]["status"], "completed")
         files = {f["name"].rsplit("_", 1)[-1]: f for f in data["data"]["files"]}
         self.assertIn("aefi.csv", files)
-        self.assertIn("events.jsonl", files)
+        self.assertNotIn("events.jsonl", files)
         self.assertEqual(len(files["aefi.csv"]["sha256"]), 64)
         self.assertEqual(files["aefi.csv"]["format"], "CSV")
+        # The logs are listed as the archive they are, with its own size and hash.
+        self.assertIn("logs.log.xz", files)
+        self.assertNotIn("logs.log", files)
+        self.assertEqual(files["logs.log.xz"]["format"], "text (xz)")
+        self.assertEqual(len(files["logs.log.xz"]["sha256"]), 64)
 
 
 class TestCsvScanExportPortLogs(unittest.TestCase):
@@ -165,7 +171,7 @@ class TestCsvScanExportPortLogs(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.tmp_dir, ignore_errors=True)
 
-    def test_logs_between_start_and_stop_land_in_acquisition_folder(self):
+    def test_logs_between_start_and_stop_land_in_acquisition_folder_as_an_xz_archive(self):
         import logging
         logging.getLogger().setLevel(logging.INFO)
         self.port.configure(str(self.tmp_dir), "scan", metadata={})
@@ -174,30 +180,91 @@ class TestCsvScanExportPortLogs(unittest.TestCase):
         self.port.stop()
         logging.getLogger("some.module").info("after scan")
 
-        log_files = list(self.tmp_dir.glob("*_stepScan_*/*_stepScan_scan_logs.log"))
+        # One archive replaces the plain log: never both.
+        self.assertEqual(list(self.tmp_dir.glob("*_stepScan_*/*_stepScan_scan_logs.log")), [])
+        log_files = list(self.tmp_dir.glob("*_stepScan_*/*_stepScan_scan_logs.log.xz"))
         self.assertEqual(len(log_files), 1)
-        content = log_files[0].read_text(encoding="utf-8")
+        with lzma.open(log_files[0], "rt", encoding="utf-8") as f:
+            content = f.read()
         self.assertIn("during scan", content)
         self.assertNotIn("after scan", content)
 
-    def test_write_event_appends_jsonl_line_in_acquisition_folder(self):
-        from dataclasses import dataclass
-
-        @dataclass(frozen=True)
-        class _SampleEvent:
-            scan_id: str
-
+    def test_a_failed_compression_keeps_the_plain_log(self):
+        import logging
+        from unittest import mock
+        logging.getLogger().setLevel(logging.INFO)
         self.port.configure(str(self.tmp_dir), "scan", metadata={})
         self.port.start()
-        self.port.write_event(_SampleEvent(scan_id="abc"))
-        self.port.write_event(_SampleEvent(scan_id="abc"))
+        logging.getLogger("some.module").info("during scan")
+        with mock.patch("infrastructure.persistence.csv_scan_export_port.lzma.open", side_effect=OSError("disk full")):
+            self.port.stop()
+
+        plain = list(self.tmp_dir.glob("*_stepScan_*/*_stepScan_scan_logs.log"))
+        self.assertEqual(len(plain), 1)
+        self.assertIn("during scan", plain[0].read_text(encoding="utf-8"))
+        self.assertEqual(list(self.tmp_dir.glob("*_stepScan_*/*.xz")), [])
+        self.assertEqual(list(self.tmp_dir.glob("*_stepScan_*/*.tmp")), [])
+
+    def test_a_scan_writes_no_events_file(self):
+        self.port.configure(str(self.tmp_dir), "scan", metadata={})
+        self.port.start()
         self.port.stop()
 
-        event_files = list(self.tmp_dir.glob("*_stepScan_*/*_stepScan_scan_events.jsonl"))
-        self.assertEqual(len(event_files), 1)
-        lines = event_files[0].read_text(encoding="utf-8").strip().splitlines()
-        self.assertEqual(len(lines), 2)
-        self.assertEqual(json.loads(lines[0]), {"event_type": "_SampleEvent", "scan_id": "abc"})
+        self.assertEqual(list(self.tmp_dir.glob("*_stepScan_*/*events*")), [])
+        self.assertFalse(hasattr(self.port, "write_event"))
+
+
+class TestCsvScanExportPortSidecars(unittest.TestCase):
+    """The accelerometer stream is archived at the end of the scan; the stabilization table stays a plain CSV."""
+
+    COLUMNS = ("accelerometer_sample_index", "acceleration_x")
+
+    def setUp(self):
+        self.tmp_dir = Path(tempfile.mkdtemp())
+        self.port = CsvScanExportPort()
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp_dir, ignore_errors=True)
+
+    def _folder(self):
+        folders = list(self.tmp_dir.glob("*_stepScan_*"))
+        self.assertEqual(len(folders), 1)
+        return folders[0]
+
+    def test_accelerometer_is_one_xz_archive_replacing_the_plain_csv(self):
+        self.port.configure(str(self.tmp_dir), "scan", metadata={})
+        self.port.start()
+        self.port.open_sidecar("accelerometer", self.COLUMNS)
+        self.port.write_sidecar_row("accelerometer", {"accelerometer_sample_index": 0, "acceleration_x": 9.81})
+        self.port.write_sidecar_row("accelerometer", {"accelerometer_sample_index": 1, "acceleration_x": 9.80})
+        self.port.stop()
+
+        folder = self._folder()
+        self.assertEqual(list(folder.glob("*_accelerometer.csv")), [])
+        archives = list(folder.glob("*_stepScan_scan_accelerometer.csv.xz"))
+        self.assertEqual(len(archives), 1)
+        with lzma.open(archives[0], "rt", newline="", encoding="utf-8") as f:
+            rows = list(csv.DictReader(f))
+        self.assertEqual([r["acceleration_x"] for r in rows], ["9.81", "9.8"])
+
+    def test_column_stabilization_table_stays_a_plain_csv(self):
+        self.port.configure(str(self.tmp_dir), "scan", metadata={})
+        self.port.start()
+        self.port.open_sidecar("column-stabilization", ("wait_index",))
+        self.port.write_sidecar_row("column-stabilization", {"wait_index": 0})
+        self.port.stop()
+
+        folder = self._folder()
+        self.assertEqual(len(list(folder.glob("*_column-stabilization.csv"))), 1)
+        self.assertEqual(list(folder.glob("*_column-stabilization.csv.xz")), [])
+
+    def test_a_row_arriving_after_stop_is_dropped_not_written_into_the_archive(self):
+        self.port.configure(str(self.tmp_dir), "scan", metadata={})
+        self.port.start()
+        self.port.open_sidecar("accelerometer", self.COLUMNS)
+        self.port.stop()
+
+        self.assertFalse(self.port.write_sidecar_row("accelerometer", {"accelerometer_sample_index": 9, "acceleration_x": 0.0}))
 
 
 if __name__ == "__main__":
