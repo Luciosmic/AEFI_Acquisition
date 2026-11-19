@@ -4,3 +4,4 @@
 01:27 | jalon | installer-garde-repo-dev.sh=rc 0 | pre-commit=.git/hooks/pre-commit | hook=.claude/settings.json (ignoré par .gitignore : sans commit) | core.hooksPath=retiré (pointait vers Ressources/ExperimentalData_ASSOCE/..., dossier absent : aucun hook ne tournait)
 01:27 | temoin | gate de la session hors ACQ (garde-des-depots refuse) : écriture native de ce fichier + commit manuel non-.py à travers le pre-commit
 01:12 | temoin | ecriture du gate a travers le pre-commit | resultat=ok
+18:21 | fin | resultat=garde posee (pre-commit non strict + hook PostToolUse), temoins ok | cloture=2026-11-19 sur decision de l'humain, ligne fin ajoutee apres coup par la session d'entretien des traces
