@@ -60,7 +60,7 @@ flowchart LR
 ```
 
 - Un besoin du post-traitement se dit d'abord ici, dans le tableau « Ce que le post-traitement attend » plus bas : le champ, son sens, son unité, et pourquoi.
-- L'acquisition l'ajoute à son export et relève la version du schéma (`schema.version`) : version mineure pour un champ ajouté, majeure pour un champ changé ou retiré.
+- L'acquisition l'ajoute à son export et relève la version du schéma (`schema.version`) : version mineure pour un champ ajouté, majeure pour un champ changé ou retiré. Un champ qu'aucun lecteur ne lit (tableaux ci-dessous) se retire en version mineure.
 - Le post-traitement ne lit que des champs inscrits au contrat. Il accepte les versions mineures, refuse une version majeure inconnue et la nomme dans son journal.
 - Les anciennes acquisitions restent lisibles : un champ ajouté par une version récente manque dans un fichier ancien, et le post-traitement le dit (par exemple, la grille carrée faute de grille prévue).
 
@@ -76,12 +76,46 @@ flowchart LR
 | `data.files`, empreinte du CSV | prouver de quelles données brutes dérive le `.h5` | présent en 1.4 | tranche 2 (§ 6) |
 | `data.files` sans `.h5` | le `.h5` n'est plus un fichier brut de l'acquisition | version mineure suivante, à publier par l'acquisition | tranche 2 (§ 6) |
 
+### Qui lit chaque champ du fichier des paramètres
+
+Un champ que personne ne lit se voit ici tout de suite. `measurement_uncertainty` serait apparu comme tel.
+
+| Champ | Lu par | Dit quoi |
+|---|---|---|
+| `schema.version` | post-traitement (la version, comparée comme un tuple) | la version du contrat |
+| `procedure.step_scan.zone`, `.grid` | post-traitement | demandé : la grille prévue |
+| `procedure.step_scan.averaging_per_position` | personne aujourd'hui | demandé : le nombre d'échantillons moyennés par point |
+| `std_dev_*` (colonnes de `_aefi.csv`, décrites par `data.columns`) | les chercheurs, à l'analyse | mesuré : la dispersion de chaque point, calculée sur `averaging_per_position` échantillons |
+| `feature_of_interest` (objet, lift-off) | personne dans le code ; tranche 2 | saisi par l'opérateur à l'export |
+| `procedure.step_scan.measurement_uncertainty` | **retiré en 1.5** ; personne ne le lisait | c'était un seuil par défaut de 0,001 V codé en dur, jamais appliqué ; il se lisait à tort comme une incertitude mesurée |
+
+### Un champ exporté dit s'il est mesuré, demandé ou par défaut
+
+Règle posée le 2026-11-19. Chaque champ du fichier des paramètres est l'un des trois :
+
+- **mesuré** : sorti d'un instrument ou calculé sur des mesures (`std_dev_*`) ;
+- **demandé** : la consigne de l'opérateur ou de la config (la grille, le nombre de moyennes, le lift-off) ;
+- **par défaut** : une valeur que personne n'a choisie. Elle ne s'exporte pas sous un nom qui la ferait passer pour une mesure ou une consigne : on la retire, ou on la nomme et on en dit l'origine.
+
+Le seuil d'incertitude enfreignait la règle : un défaut exporté comme une incertitude, 4 à 20 fois au-dessus de la dispersion réelle par point (0,06 à 0,30 mV).
+
+### Les lecteurs hors des deux logiciels
+
+Le fichier des paramètres n'est pas lu que par le post-traitement. Le graphe de la thèse reprend des champs de l'acquisition :
+
+| Lecteur | Ce qu'il reprenait | Ce qui a été décidé |
+|---|---|---|
+| type `scan` de GRAPHE-THESE (`_system/self/type/scan.type.yaml`) | `measurement_uncertainty_max_V`, champ obligatoire, traduit tel quel du champ du logiciel sans demander s'il était mesuré | retrait du type décidé le 2026-11-19 (option A) |
+| JSON déjà publiés en 1.4 (par exemple dans `AEFI-THESIS-DATA-EXPERIMENTAL/acquisitions/`) | `measurement_uncertainty` = 0,001 V | non modifiés ; les fichiers 1.0 à 1.4 ne se lisent pas comme une mesure |
+
+C'est un lien du fournisseur (l'acquisition) vers la couche de données, que la carte ne montrait pas. Un champ ajouté ou retiré du fichier se vérifie donc aussi contre ces lecteurs.
+
 ### Les fichiers du dossier
 
 | Fichier | Écrit par | Lu par le post-traitement | Ce qui en est lu | Où, côté post-traitement |
 |---|---|---|---|---|
 | `<acquisition>_aefi.csv` | acquisition | oui | positions `x`, `y` (mm) et les six tensions (en phase, quadrature, par axe) | `infrastructure/csv_scan_reader/` |
-| `<acquisition>_acquisition-parameters.json` (schéma `aefi-acquisition-parameters` 1.0 à 1.4) | acquisition | oui, en partie | la grille prévue (`procedure.step_scan.zone` et `.grid`) depuis le 2026-11-16 | `infrastructure/acquisition_parameters_scan_plan_reader/` |
+| `<acquisition>_acquisition-parameters.json` (schéma `aefi-acquisition-parameters` 1.0 à 1.5) | acquisition | oui, en partie | la grille prévue (`procedure.step_scan.zone` et `.grid`) depuis le 2026-11-16 | `infrastructure/acquisition_parameters_scan_plan_reader/` |
 | `<acquisition>.h5` | aujourd'hui : acquisition (données brutes), puis post-traitement (étapes) ; après la tranche 2 : post-traitement seul (données brutes regroupées depuis les CSV, étapes, provenance) | oui | les étapes rangées, pour la carte et l'état du catalogue | `infrastructure/hdf5_step_writer/`, `hdf5_step_reader/`, `export_folder_repository/` |
 | `<acquisition>_events.jsonl`, `_logs.log`, `_accelerometer.csv`, `_column-stabilization.csv` | acquisition | non | — | — |
 
@@ -186,6 +220,7 @@ Le fichier des paramètres décrit chaque colonne du CSV (`data.columns`, unité
 |---|---|
 | champ ajouté au fichier des paramètres (version mineure) | rien, jusqu'à ce que le post-traitement l'inscrive au contrat et le lise |
 | nouvelle version majeure du schéma des paramètres | à annoncer au client avant de la publier ; refus attendu de l'acquisition dans le catalogue (« format non pris en charge »), une fois la tranche 2 faite ; aujourd'hui seule la grille est lue, et un fichier sans grille fait revenir à la grille carrée |
+| champ retiré du fichier des paramètres | version mineure si aucun lecteur ne le lit (§ 2, « Qui lit chaque champ »), comme `measurement_uncertainty` en 1.5 ; sinon version majeure annoncée au client avant publication. Vérifier aussi les lecteurs hors des deux logiciels (type `scan` du graphe) |
 | colonne renommée dans `_aefi.csv` | le canal disparaît du traitement |
 | pièce empruntée déplacée ou modifiée dans `src/interface/` | `aefi_acquisition_upstream/` casse à l'import, ou la fenêtre change |
 | nouveau type d'acquisition exporté (balayage en fréquence, lecture continue) | invisible dans le catalogue tant que le post-traitement ne le traite pas |
