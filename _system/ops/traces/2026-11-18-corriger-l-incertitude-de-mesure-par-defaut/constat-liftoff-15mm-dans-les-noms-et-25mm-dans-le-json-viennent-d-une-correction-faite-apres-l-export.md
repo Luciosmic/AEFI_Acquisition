@@ -5,7 +5,7 @@ statut: to_validate
 
 # Le scan du 2026-11-16 : `liftoff-15mm` dans les noms, 25 mm dans le JSON
 
-Enquête en lecture seule, rien n'a été corrigé. Elle ne dit pas laquelle des deux valeurs est juste : seul l'opérateur le sait.
+Enquête en lecture seule, rien n'a été corrigé. Réponse de l'opérateur (2026-11-19) : le lift-off réel était de **25 mm** ; 15 mm a été saisi par erreur dans l'interface au lancement du scan. Le `25.0` du JSON est donc la bonne valeur, les noms de fichiers en `15mm` sont faux.
 
 ## Verdict
 
@@ -31,7 +31,7 @@ Ce qui reste une déduction : l'édition à la main du JSON et du nom. Aucun jou
 
 ## Proposition (sans code)
 
-1. L'humain dit quelle valeur de lift-off est juste pour ce scan.
+1. Valeur juste : 25 mm (dite par l'opérateur le 2026-11-19).
 2. La correction se range dans un repo de données avec une note qui garde les deux valeurs, 15 (saisie à l'export) et la valeur corrigée, et la raison. Le dossier `0_inbox/data-a-interpreter/` n'est pas modifié.
 3. Pour éviter que cela revienne, la carte des contextes pose la règle : la source de vérité est `feature_of_interest` du JSON ; renommer un dossier ou un fichier casse sa correspondance avec `data.files[*].name`, donc toute correction passe par un fichier qui le dit.
 4. Pas de changement du logiciel : il est cohérent. Un champ « corriger le lift-off après coup » serait une nouvelle fonction, à décider à part.
