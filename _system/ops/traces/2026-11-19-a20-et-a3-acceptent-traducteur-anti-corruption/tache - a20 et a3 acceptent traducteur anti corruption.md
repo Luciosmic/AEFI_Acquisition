@@ -4,6 +4,7 @@ utilise:
   - "[[_system/ops/traces/2026-11-19-a20-et-a3-acceptent-traducteur-anti-corruption/prompt.md]]"
 associee_a: "[[tache - a20 et a3 acceptent traducteur anti corruption^^agent-38a28f88-e392-4d6c-a875-850d5e78a3a5]]"
 debut: 2026-11-19T170209Z
+fin: 2026-11-19T170557Z
 sous_agents:
   - ^: agent-38a28f88-e392-4d6c-a875-850d5e78a3a5
     agent_type: au-solidai-atome
