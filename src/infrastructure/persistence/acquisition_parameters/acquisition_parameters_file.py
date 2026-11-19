@@ -13,7 +13,7 @@ from typing import Any, Dict
 from application.shared.acquisition_parameters.acquisition_conditions_dtos import ExportedFileDTO
 
 # File extension -> format name written in data.files.
-FORMATS = {".csv": "CSV", ".h5": "HDF5", ".log": "text", ".json": "JSON"}
+FORMATS = {".csv": "CSV", ".log": "text", ".json": "JSON"}
 
 
 def file_format(path: Path) -> str:

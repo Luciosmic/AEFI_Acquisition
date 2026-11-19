@@ -1,6 +1,6 @@
 # acquisition_parameters — Intention
 
-> Référence du schéma `acquisition-parameters.json` (version 1.6), écrit à côté de
+> Référence du schéma `acquisition-parameters.json` (version 1.7), écrit à côté de
 > chaque export (scan pas-à-pas, scan en vol, série temporelle). Ce fichier est le contrat :
 > les scripts d'analyse le lisent, les tests garde-fous l'appliquent.
 
@@ -284,7 +284,7 @@ exports :
   contrôleur, même conversion qu'elle ; à ±1 incrément en scan Fly dont les positions sont projetées)
   et `x_increments_read` / `y_increments_read` (ce que le contrôleur rapporte à l'enregistrement du
   point ; vide en scan Fly, les axes bougeant). Vide aussi sans transmission appliquée : jamais une
-  valeur devinée. Un scan s'y rejoue quel que soit le facteur µm/incrément. Le HDF5 n'a pas ces colonnes.
+  valeur devinée. Un scan s'y rejoue quel que soit le facteur µm/incrément.
 - **Pas des moteurs (1.1)** : `components.motors.settings.step_size` est la transmission
   mécanique appliquée au mouvement (µm par incrément), plus la valeur d'un fichier de
   configuration Arcus que plus rien ne tient à jour.
@@ -346,6 +346,7 @@ exports :
   dispersion réelle par point. La dispersion se lit dans les colonnes `std_dev_*`, calculées sur
   `averaging_per_position` échantillons. Les fichiers 1.0 à 1.4 gardent le champ : ne pas le lire comme une mesure.
 - **Fichiers allégés (1.6)** : `<…>_events.jsonl` n'est plus écrit (trop lourd pour ce qu'on en lisait). Le journal et le flux de l'accéléromètre, rarement lus, sont écrits en clair pendant le scan puis remplacés à son arrêt par une archive `.xz` chacun : `<…>_logs.log.xz` et `<…>_accelerometer.csv.xz`. `data.files` les liste sous leur nom d'archive, avec la taille et l'empreinte de l'archive, et les formats `text (xz)` et `CSV (xz)`. `data.columns[...].file` reste `accelerometer`. Si la compression échoue, le fichier en clair reste et est listé tel quel. Version mineure : aucun lecteur connu de ces fichiers (carte des contextes, § 2). Pour lire : `lzma.open`, ou `pandas.read_csv("….csv.xz")`.
+- **Plus de `.h5` dans `data.files` (1.7)** : l'acquisition n'exporte plus que des CSV (source brute unique) ; le `.h5` est un produit du post-traitement, qui le crée dans le dossier de l'acquisition une fois le CSV fermé et hache. `data.files` ne liste donc plus de fichier HDF5 (ni sa note « empreinte avant le post-traitement »), et l'empreinte de chaque fichier listé reste vraie : ces fichiers ne changent plus après l'arrêt. Le `.h5` du post-traitement porte sa provenance : le CSV source, son SHA-256 (comparable à celui de `data.files`) et `provenance.activity.id`. Version mineure : le seul lecteur d'un `.h5` listé est le post-traitement, qui ne lit pas cette entrée (carte des contextes, § 2). Les exports 1.0 à 1.6 gardent l'entrée HDF5 : son empreinte est celle du fichier avant le traitement, elle ne correspond plus.
 - **Section non pertinente vs inconnue** : non pertinente → présente, vide, avec
   `notes` (ex. `auxiliary_probes.uses: []`) ; inconnue → `null` + avertissement.
 - **Langue** : clés et chemins en anglais, messages d'avertissement et `notes`

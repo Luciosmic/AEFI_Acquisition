@@ -133,7 +133,7 @@ class TestCsvScanExportPortMetadata(unittest.TestCase):
 
         data = self._document()
         self.port.stop()
-        self.assertEqual(data["schema"]["version"], "1.6")
+        self.assertEqual(data["schema"]["version"], "1.7")
         self.assertEqual(data["provenance"]["activity"]["status"], "running")
         self.assertEqual(data["procedure"]["step_scan"]["pattern"], "SERPENTINE")
         # Files are listed only once the acquisition has ended; the document lists itself by its real name.
@@ -159,6 +159,9 @@ class TestCsvScanExportPortMetadata(unittest.TestCase):
         self.assertNotIn("logs.log", files)
         self.assertEqual(files["logs.log.xz"]["format"], "text (xz)")
         self.assertEqual(len(files["logs.log.xz"]["sha256"]), 64)
+        # 1.7: the acquisition writes no .h5; the post-processing creates its own, never listed here.
+        self.assertNotIn("HDF5", {f["format"] for f in data["data"]["files"]})
+        self.assertFalse([name for name in files if name.endswith(".h5")])
 
 
 class TestCsvScanExportPortLogs(unittest.TestCase):

@@ -63,12 +63,6 @@ def serialize_scan_acquisition_parameters_v1(
     data = v1.data(
         parameters.files, SCAN_COLUMNS if activity.kind in _SCAN_KINDS else TIME_SERIES_COLUMNS, document_name
     )
-    for listed in data["files"]:
-        if listed["format"] == "HDF5":
-            listed["notes"] = (
-                "empreinte à la fin de l'acquisition, avant le post-traitement "
-                "(qui ajoute ses étapes dans ce fichier)"
-            )
     return {
         "schema": dict(v1.SCHEMA),
         "provenance": provenance,

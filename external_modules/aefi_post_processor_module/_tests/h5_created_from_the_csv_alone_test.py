@@ -35,7 +35,7 @@ def acquisition(tmp_path):
     csv = folder / f"{NAME}_aefi.csv"
     shutil.copy(BATCH / "scan_001_baseline.csv", csv)
     (folder / f"{NAME}_acquisition-parameters.json").write_text(json.dumps({
-        "schema": {"name": "aefi-acquisition-parameters", "version": "1.6"},
+        "schema": {"name": "aefi-acquisition-parameters", "version": "1.7"},
         "provenance": {"activity": {"id": ACTIVITY_ID, "kind": "step_scan", "status": "completed"}},
         "data": {"files": [{"name": csv.name, "format": "CSV", "sha256": _sha256(csv)}]},
     }), encoding="utf-8")
