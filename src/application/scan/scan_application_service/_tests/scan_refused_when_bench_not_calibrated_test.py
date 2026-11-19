@@ -55,7 +55,7 @@ class TestScanRefusedWhenBenchNotCalibrated(unittest.TestCase):
     def test_grid_scan_is_refused_and_nothing_starts(self) -> None:
         dto = Scan2DConfigDTO(
             x_min=0, x_max=1, x_nb_points=2, y_min=0, y_max=1, y_nb_points=2,
-            scan_pattern="RASTER", stabilization_delay_ms=0, averaging_per_position=1, uncertainty_volts=1e-6,
+            scan_pattern="RASTER", stabilization_delay_ms=0, averaging_per_position=1,
         )
 
         self.assertFalse(self.service.execute_scan(dto))

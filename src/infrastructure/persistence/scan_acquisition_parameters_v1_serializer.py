@@ -63,12 +63,6 @@ def serialize_scan_acquisition_parameters_v1(
     data = v1.data(
         parameters.files, SCAN_COLUMNS if activity.kind in _SCAN_KINDS else TIME_SERIES_COLUMNS, document_name
     )
-    for listed in data["files"]:
-        if listed["format"] == "HDF5":
-            listed["notes"] = (
-                "empreinte à la fin de l'acquisition, avant le post-traitement "
-                "(qui ajoute ses étapes dans ce fichier)"
-            )
     return {
         "schema": dict(v1.SCHEMA),
         "provenance": provenance,
@@ -112,7 +106,6 @@ def _step_scan_procedure(procedure: StepScanProcedureDTO) -> Dict[str, Any]:
         **_grid(procedure),
         "stabilization_delay": q(procedure.stabilization_delay_ms, "ms"),
         "averaging_per_position": q(procedure.averaging_per_position, "{sample}"),
-        "measurement_uncertainty": q(procedure.measurement_uncertainty_v, "V"),
         "differential": {"enabled": procedure.differential_mode, "settle_delay": q(procedure.differential_settle_delay_ms, "ms")},
         "estimated_duration": q(procedure.estimated_duration_s, "s"),
     }

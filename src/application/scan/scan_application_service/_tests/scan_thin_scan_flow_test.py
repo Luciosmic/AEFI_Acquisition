@@ -25,7 +25,7 @@ def _dto(nx=2, ny=2) -> Scan2DConfigDTO:
         x_min=0, x_max=1, x_nb_points=nx,
         y_min=0, y_max=1, y_nb_points=ny,
         scan_pattern="RASTER", stabilization_delay_ms=0,
-        averaging_per_position=1, uncertainty_volts=1e-6,
+        averaging_per_position=1,
     )
 
 

@@ -1,3 +1,5 @@
+import hashlib
+
 import numpy as np
 import pytest
 
@@ -35,3 +37,10 @@ class TestCsvScanReader(CsvScanReaderContract):
 
         assert tuple(read.channel_names) == ('voltage_x_in_phase', 'voltage_z_in_phase')
         assert np.array_equal(read.values, np.array([[1.0, 9.0]]))
+
+    def test_the_sha256_of_the_file_read_comes_with_the_points(self):
+        (self.folder / "scan_aefi.csv").write_text("x,y,voltage_x_in_phase\n0.0,0.0,1.0\n", encoding="utf-8")
+
+        read = CsvScanReader().read(self.path_of("scan_aefi.csv"))
+
+        assert read.sha256 == hashlib.sha256((self.folder / "scan_aefi.csv").read_bytes()).hexdigest()

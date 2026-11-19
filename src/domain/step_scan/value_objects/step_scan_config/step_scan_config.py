@@ -17,7 +17,6 @@ from dataclasses import dataclass
 from domain.step_scan.value_objects.scan_zone.scan_zone import ScanZone
 from domain.step_scan.value_objects.scan_pattern.scan_pattern import ScanPattern
 from domain.step_scan.value_objects.scan_axis.scan_axis import ScanAxis
-from domain.shared_kernel.value_objects.measurement_uncertainty.measurement_uncertainty import MeasurementUncertainty
 
 @dataclass(frozen=True)
 class StepScanConfig:
@@ -44,9 +43,6 @@ class StepScanConfig:
 
     # Averaging (scan-level, domain logic)
     averaging_per_position: int  # Number of measurements to average per position
-
-    # Measurement quality requirement
-    measurement_uncertainty: MeasurementUncertainty
 
     # Scan orientation â€” must come after all required fields (dataclass constraint)
     scan_axis: ScanAxis = ScanAxis.Y  # fast axis: Y=columns-first (preferred), X=rows-first (legacy)

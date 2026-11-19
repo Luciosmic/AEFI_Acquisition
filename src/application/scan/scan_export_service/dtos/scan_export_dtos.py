@@ -10,7 +10,7 @@ from typing import Optional
 
 @dataclass(frozen=True)
 class ExportConfigDTO:
-    """Configuration for data export. Every scan is exported to both CSV and HDF5.
+    """Configuration for data export. Every scan is exported to CSV (the HDF5 is created by the post-processing).
 
     The exported names come from the measured object and the lift-off
     (see acquisition_name), never from free text.

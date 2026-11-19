@@ -5,7 +5,6 @@ import os
 from domain.step_scan.value_objects.step_scan_config.step_scan_config import StepScanConfig
 from domain.step_scan.value_objects.scan_zone.scan_zone import ScanZone
 from domain.step_scan.value_objects.scan_pattern.scan_pattern import ScanPattern
-from domain.shared_kernel.value_objects.measurement_uncertainty.measurement_uncertainty import MeasurementUncertainty
 from domain.step_scan.services.scan_trajectory_factory.scan_trajectory_factory import ScanTrajectoryFactory
 
 class TestScanTrajectoryVisual(unittest.TestCase):
@@ -18,7 +17,6 @@ class TestScanTrajectoryVisual(unittest.TestCase):
             scan_pattern=ScanPattern.RASTER,
             stabilization_delay_ms=100,
             averaging_per_position=1,
-            measurement_uncertainty=MeasurementUncertainty(max_uncertainty_volts=1e-6),
         )
 
     def _plot_trajectory(self, trajectory, title):
@@ -72,7 +70,6 @@ class TestScanTrajectoryVisual(unittest.TestCase):
             scan_pattern=ScanPattern.SERPENTINE,
             stabilization_delay_ms=100,
             averaging_per_position=1,
-            measurement_uncertainty=self.base_config.measurement_uncertainty,
         )
         trajectory = ScanTrajectoryFactory.create_trajectory(config)
         self._plot_trajectory(trajectory, "Serpentine Scan")
@@ -86,7 +83,6 @@ class TestScanTrajectoryVisual(unittest.TestCase):
             scan_pattern=ScanPattern.COMB,
             stabilization_delay_ms=100,
             averaging_per_position=1,
-            measurement_uncertainty=self.base_config.measurement_uncertainty,
         )
         trajectory = ScanTrajectoryFactory.create_trajectory(config)
         self._plot_trajectory(trajectory, "Comb Scan")

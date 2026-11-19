@@ -114,7 +114,6 @@ class TestScanApplicationService(DiagramFriendlyTest):
             scan_pattern="RASTER",
             stabilization_delay_ms=0,
             averaging_per_position=1,
-            uncertainty_volts=1e-6
         )
         self.log_interaction("Test", "CREATE", "Scan2DConfigDTO", "Create scan config", {"pattern": scan_dto.scan_pattern})
 
@@ -155,7 +154,6 @@ class TestScanApplicationService(DiagramFriendlyTest):
             scan_pattern="RASTER",
             stabilization_delay_ms=0,
             averaging_per_position=1,
-            uncertainty_volts=1e-6,
         )
         self.assertTrue(self.service.execute_scan(scan_dto))
         self.assertTrue(self._wait_for_scan_completion(timeout=5.0))
@@ -190,7 +188,6 @@ class TestScanApplicationService(DiagramFriendlyTest):
             scan_pattern="RASTER",
             stabilization_delay_ms=0,
             averaging_per_position=1,
-            uncertainty_volts=1e-6
         )
         self.service.execute_scan(scan_dto)
 
@@ -268,7 +265,6 @@ class TestScanApplicationService(DiagramFriendlyTest):
             scan_pattern="RASTER",
             stabilization_delay_ms=0,
             averaging_per_position=1,
-            uncertainty_volts=1e-6,
         )
         self.assertTrue(service.execute_scan(scan_dto))
 
@@ -315,7 +311,6 @@ class TestScanApplicationService(DiagramFriendlyTest):
             scan_pattern="RASTER",
             stabilization_delay_ms=0,
             averaging_per_position=1,
-            uncertainty_volts=1e-6,
         )
         self.assertTrue(service.execute_scan(scan_dto))
 

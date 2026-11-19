@@ -24,7 +24,6 @@ class Scan2DConfigDTO:
     scan_pattern: str  # 'SERPENTINE', 'RASTER', 'COMB'
     stabilization_delay_ms: int
     averaging_per_position: int
-    uncertainty_volts: float
     scan_axis: str = "Y"  # 'Y' (columns-first, default) or 'X' (rows-first)
     motion_speed_mm_s: Optional[float] = None
     differential_mode: bool = False

@@ -24,7 +24,7 @@ def make_step_scan_procedure(**overrides) -> StepScanProcedureDTO:
     fields = dict(
         x_min_mm=435.0, x_max_mm=835.0, y_min_mm=435.0, y_max_mm=835.0, x_nb_points=21, y_nb_points=21,
         total_points=441, pattern="SERPENTINE", fast_axis="Y", stabilization_delay_ms=300.0,
-        averaging_per_position=10, measurement_uncertainty_v=1e-6, differential_mode=False,
+        averaging_per_position=10, differential_mode=False,
         differential_settle_delay_ms=50.0, estimated_duration_s=600.0,
     )
     fields.update(overrides)

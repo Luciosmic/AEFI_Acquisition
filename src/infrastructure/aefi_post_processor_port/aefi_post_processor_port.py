@@ -3,8 +3,8 @@ AEFI Post-Processor Adapter
 
 Responsibility:
 - Implement `IPostProcessingPort` by driving the
-  `external_modules/aefi_post_processor_module` pipeline in-process to fill
-  a scan's HDF5 file with processing steps, then spawning the module's
+  `external_modules/aefi_post_processor_module` pipeline in-process on a
+  scan's CSV to create its HDF5 file (processing steps included), then spawning the module's
   visualization app as a separate OS process (a second QApplication cannot
   run inside this one).
 
@@ -77,14 +77,21 @@ class AefiPostProcessorPort(IPostProcessingPort):
             self._rotation_angles, self._rotation_origin,
         )
 
-    def run(self, csv_path: Path, hdf5_path: Path) -> None:
+    @staticmethod
+    def _hdf5_path(csv_path: Path) -> Path:
+        """The acquisition's HDF5 file, created by the post-processing: `<folder>/<folder name>.h5`, where the
+        module's export folder catalog looks it up."""
+        folder = csv_path.parent
+        return folder / f"{folder.name}.h5"
+
+    def run(self, csv_path: Path) -> None:
         try:
-            self._process(csv_path, hdf5_path)
+            self._process(csv_path, self._hdf5_path(csv_path))
         except Exception as exc:
             logger.error("Post-processing failed for %s: %s", csv_path, exc)
             return
 
-        self._launch_visualizer(hdf5_path.parent)
+        self._launch_visualizer(csv_path.parent)
 
     def _process(self, csv_path: Path, hdf5_path: Path) -> None:
         from aefi_post_processor_module.processing.processing_pipeline import ProcessingPipeline

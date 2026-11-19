@@ -11,6 +11,7 @@ from ...application.field_map_service.i_api_field_map_service import IApiFieldMa
 from ...application.post_processing_service.i_api_post_processing_service import IApiPostProcessingService
 from ...application.post_processing_service.post_processing_service import PostProcessingService
 from ...application.post_processing_service.ports.i_step_writer import IStepWriter
+from ...infrastructure.acquisition_provenance_reader.acquisition_provenance_reader import AcquisitionProvenanceReader
 from ...infrastructure.acquisition_parameters_scan_plan_reader.acquisition_parameters_scan_plan_reader import (
     AcquisitionParametersScanPlanReader,
 )
@@ -23,7 +24,9 @@ from ...infrastructure.hdf5_step_writer.hdf5_step_writer import Hdf5StepWriter
 def build_post_processing_service(acquisition_file: str) -> Tuple[IApiPostProcessingService, IStepWriter]:
     """The service wired to the real readers (scan points, planned grid) and to a writer bound to the steps file of the acquisition, and that writer."""
     step_writer = Hdf5StepWriter(acquisition_file)
-    return PostProcessingService(CsvScanReader(), step_writer, AcquisitionParametersScanPlanReader()), step_writer
+    service = PostProcessingService(
+        CsvScanReader(), step_writer, AcquisitionParametersScanPlanReader(), AcquisitionProvenanceReader())
+    return service, step_writer
 
 
 def build_acquisition_catalog_service() -> IApiAcquisitionCatalogService:

@@ -58,10 +58,6 @@ class MockAefiAcquisitionExecutor(IAefiAcquisitionExecutor):
         self._current_acquisition_id = uuid4()
         logger.info(f"start: Starting continuous acquisition (ID={self._current_acquisition_id}).")
 
-        # Configure port only if uncertainty is provided
-        if config.target_uncertainty:
-             acquisition_port.configure_for_uncertainty(config.target_uncertainty)
-
         self._stop_event.clear()
         self._is_running = True
 

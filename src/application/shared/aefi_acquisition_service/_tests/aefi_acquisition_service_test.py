@@ -87,7 +87,6 @@ class TestAefiAcquisitionService(DiagramFriendlyTest):
 
         config = AefiAcquisitionConfig(
             max_duration_s=0.02,
-            target_uncertainty=None,
         )
 
         self.log_interaction(

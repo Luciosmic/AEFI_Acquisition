@@ -1,3 +1,4 @@
+import inspect
 import shutil
 import tempfile
 import unittest
@@ -39,9 +40,6 @@ from domain.step_scan.value_objects.step_scan_config.step_scan_config import Ste
 from domain.step_scan.value_objects.scan_zone.scan_zone import ScanZone
 from domain.step_scan.value_objects.scan_pattern.scan_pattern import ScanPattern
 from domain.step_scan.value_objects.scan_axis.scan_axis import ScanAxis
-from domain.shared_kernel.value_objects.measurement_uncertainty.measurement_uncertainty import (
-    MeasurementUncertainty,
-)
 from domain.shared_kernel.excitation.value_objects.excitation_mode import ExcitationMode
 from domain.electric_field_probes.electric_field_probe import ElectricFieldProbe
 from domain.electric_field_probes.events.electric_field_probe_connection_changed.electric_field_probe_connection_changed import (
@@ -72,7 +70,6 @@ class FakeExportPort(IScanExportPort):
         self.parameters: List[Any] = []  # acquisition-parameters facts, in write order
         self.field_data_config: Dict[str, Any] = None
         self.field_points: List[Dict[str, Any]] = []
-        self.events: List[Any] = []
         self.started = False
         self.stopped = False
         self._output_path = output_path
@@ -98,42 +95,11 @@ class FakeExportPort(IScanExportPort):
     def write_field_point(self, data):
         self.field_points.append(data)
 
-    def write_event(self, event):
-        self.events.append(event)
-
     def get_output_path(self) -> Optional[Path]:
         return self._output_path
 
     def stop(self) -> None:
         self.stopped = True
-
-
-class StrictExportPort(FakeExportPort):
-    """Refuses to record an event while not open, like CsvScanExportPort, and
-    publishes an event from inside start()/stop() — what another thread (ADC
-    sample, motion event) does on the bench while the export opens or closes."""
-
-    def __init__(self, event_bus, output_path):
-        super().__init__(output_path=output_path)
-        self._event_bus = event_bus
-        self.open = False
-        self.refused = []
-
-    def start(self) -> None:
-        self._event_bus.publish("racingevent", _make_scan_point_acquired_event())
-        super().start()
-        self.open = True
-
-    def stop(self) -> None:
-        self.open = False
-        super().stop()
-        self._event_bus.publish("racingevent", _make_scan_point_acquired_event())
-
-    def write_event(self, event):
-        if not self.open:
-            self.refused.append(event)
-            raise RuntimeError("write_event() on a port that is not open")
-        super().write_event(event)
 
 
 class FakePostProcessingPort(IPostProcessingPort):
@@ -142,8 +108,8 @@ class FakePostProcessingPort(IPostProcessingPort):
     def __init__(self) -> None:
         self.calls: List[Any] = []
 
-    def run(self, csv_path: Path, hdf5_path: Path) -> None:
-        self.calls.append((csv_path, hdf5_path))
+    def run(self, csv_path: Path) -> None:
+        self.calls.append(csv_path)
 
 
 def _make_scan_started_event(fly_scan=False):
@@ -155,7 +121,6 @@ def _make_scan_started_event(fly_scan=False):
         scan_pattern=ScanPattern.SERPENTINE,
         stabilization_delay_ms=300,
         averaging_per_position=10,
-        measurement_uncertainty=MeasurementUncertainty(max_uncertainty_volts=1e-6),
         scan_axis=ScanAxis.Y,
         fly_scan=fly_scan,
     )
@@ -196,7 +161,6 @@ class TestScanExportServiceMetadata(unittest.TestCase):
     def setUp(self) -> None:
         self.event_bus = InMemoryEventBus()
         self.export_port = FakeExportPort(output_path=Path("/fake/scan.csv"))
-        self.hdf5_export_port = FakeExportPort(output_path=Path("/fake/scan.h5"))
         self.post_processing_port = FakePostProcessingPort()
         excitation_service = ExcitationConfigurationService(MockExcitationPort(), self.event_bus)
         excitation_service.set_excitation(
@@ -210,7 +174,6 @@ class TestScanExportServiceMetadata(unittest.TestCase):
         self.service = ScanExportService(
             self.event_bus,
             csv_export_port=self.export_port,
-            hdf5_export_port=self.hdf5_export_port,
             excitation_service=excitation_service,
             conditions_port=self.conditions_port,
             post_processing_port=self.post_processing_port,
@@ -266,7 +229,7 @@ class TestScanExportServiceMetadata(unittest.TestCase):
         activity = parameters.activity
         self.assertEqual((activity.activity_id, activity.kind, activity.status), (str(started.scan_id), STEP_SCAN, "running"))
         self.assertEqual((activity.procedure.pattern, activity.procedure.fast_axis), ("SERPENTINE", "Y"))
-        self.assertEqual(activity.procedure.measurement_uncertainty_v, 1e-6)
+        self.assertFalse(hasattr(activity.procedure, "measurement_uncertainty_v"))
         self.assertEqual((activity.excitation.level_s1_s2_percent, activity.excitation.level_s3_s4_percent), (80.0, 60.0))
         self.assertIsNone(activity.probe)
         self.assertEqual(activity.bench_position_start, BenchPositionDTO(x_mm=435.0, y_mm=435.0))
@@ -299,16 +262,15 @@ class TestScanExportServiceMetadata(unittest.TestCase):
             ("bouteille d'eau, 8 mm", "id-luis", "Luis"),
         )
 
-    def test_both_files_are_named_after_the_measured_object_and_the_lift_off(self) -> None:
+    def test_the_file_is_named_after_the_measured_object_and_the_lift_off(self) -> None:
         self.service.configure_export(ExportConfigDTO(
             enabled=True, output_directory="", measured_object="hexagone metallique", lift_off_mm=15.0,
             comment="scan de fond",
         ))
         self.event_bus.publish("scanstarted", _make_scan_started_event())
 
-        for port in (self.export_port, self.hdf5_export_port):
-            self.assertEqual(port.configured["filename"], "hexagone-metallique_liftoff-15mm")
-            self.assertEqual(port.configured["acquisition_kind"], "stepScan")
+        self.assertEqual(self.export_port.configured["filename"], "hexagone-metallique_liftoff-15mm")
+        self.assertEqual(self.export_port.configured["acquisition_kind"], "stepScan")
 
     def test_the_comment_goes_to_the_parameters_never_to_the_name(self) -> None:
         self.service.configure_export(ExportConfigDTO(
@@ -416,7 +378,9 @@ class TestScanExportServiceMetadata(unittest.TestCase):
         self.assertEqual(self.export_port.field_data_config["probe_info"]["probe_label"], "narda-ep601")
         self.assertEqual(self.export_port.field_data_config["probe_info"]["axis_labels"], ("x", "y", "z"))
 
-    def test_scan_exports_to_both_csv_and_hdf5_simultaneously(self) -> None:
+    def test_scan_exports_the_csv_only(self) -> None:
+        """The acquisition no longer writes an HDF5 file: the CSV is the single raw source; the post-processing
+        creates its own `.h5` (decision of 2026-11-16)."""
         self.event_bus.publish("scanstarted", _make_scan_started_event())
         self.event_bus.publish(
             "scanpointacquired",
@@ -424,22 +388,16 @@ class TestScanExportServiceMetadata(unittest.TestCase):
         )
 
         self.assertTrue(self.export_port.started)
-        self.assertTrue(self.hdf5_export_port.started)
         self.assertEqual(len(self.export_port.points), 1)
-        self.assertEqual(len(self.hdf5_export_port.points), 1)
-        # Both ports must share one acquisition folder — same timestamp.
-        self.assertEqual(
-            self.export_port.configured["timestamp"], self.hdf5_export_port.configured["timestamp"]
-        )
+        self.assertNotIn("hdf5_export_port", inspect.signature(ScanExportService).parameters)
 
-    def test_post_processing_runs_on_scan_completed_with_both_output_paths(self) -> None:
+    def test_post_processing_runs_on_scan_completed_on_the_csv_alone(self) -> None:
         started = _make_scan_started_event()
         self.event_bus.publish("scanstarted", started)
         self.event_bus.publish("scancompleted", ScanCompleted(scan_id=started.scan_id, total_points=1))
 
-        self.assertEqual(self.post_processing_port.calls, [(Path("/fake/scan.csv"), Path("/fake/scan.h5"))])
+        self.assertEqual(self.post_processing_port.calls, [Path("/fake/scan.csv")])
         self.assertTrue(self.export_port.stopped)
-        self.assertTrue(self.hdf5_export_port.stopped)
 
     def test_post_processing_does_not_run_on_scan_cancelled(self) -> None:
         started = _make_scan_started_event()
@@ -493,21 +451,18 @@ class TestScanExportServiceMetadata(unittest.TestCase):
         row = self.export_port.field_points[0]
         self.assertEqual(row["baseline_field_components"], (0.1,))
 
-    def test_only_events_published_during_the_scan_are_exported(self) -> None:
-        probe_event = ElectricFieldProbeConnectionChanged(connected=False, probe=None)
-        self.event_bus.publish("electricfieldprobeconnectionchanged", probe_event)  # before
+    def test_the_export_keeps_no_event_store(self) -> None:
+        """The per-scan event file is gone: the port has no event writer, and a whole scan runs
+        against a port that has none."""
+        self.assertNotIn("write_event", IScanExportPort.__abstractmethods__)
+        self.assertFalse(hasattr(self.export_port, "write_event"))
 
         started = _make_scan_started_event()
-        point = _make_scan_point_acquired_event()
-        completed = ScanCompleted(scan_id=started.scan_id, total_points=1)
         self.event_bus.publish("scanstarted", started)
-        self.event_bus.publish("scanpointacquired", point)
-        self.event_bus.publish("scancompleted", completed)
+        self.event_bus.publish("scanpointacquired", _make_scan_point_acquired_event())
+        self.event_bus.publish("scancompleted", ScanCompleted(scan_id=started.scan_id, total_points=1))
 
-        self.event_bus.publish("electricfieldprobeconnectionchanged", probe_event)  # after
-
-        self.assertEqual(self.export_port.events, [started, point, completed])
-
+        self.assertTrue(self.export_port.stopped)
 
 
 def _publish_reading(bus, n_samples):
@@ -550,7 +505,6 @@ class TestTimeSeriesExport(unittest.TestCase):
         self.assertEqual((first.activity_id, first.kind, first.procedure), (str(acquisition_id), TIME_SERIES, None))
         self.assertEqual((final.status, final.records_written), ("completed", 3))
         self.assertTrue(self.export_port.stopped)
-        self.assertFalse(self.hdf5_export_port.started)
 
     def test_time_series_is_named_like_a_scan_and_keeps_its_comment(self) -> None:
         self.service.configure_time_series_export(ExportConfigDTO(
@@ -576,35 +530,9 @@ class TestTimeSeriesExport(unittest.TestCase):
         self.assertEqual(len(self.export_port.points), 1)
 
 
-class TestScanExportServiceEventRecordingRace(unittest.TestCase):
-    """An event landing while the scan export opens or closes is not written
-    into a port that is not open (it raised and logged an ERROR on the bench)."""
-
-    def test_events_racing_the_export_open_and_close_are_not_written_to_closed_ports(self) -> None:
-        bus = InMemoryEventBus()
-        csv_port = StrictExportPort(bus, Path("/fake/scan.csv"))
-        hdf5_port = StrictExportPort(bus, Path("/fake/scan.h5"))
-        service = ScanExportService(
-            bus,
-            csv_export_port=csv_port,
-            hdf5_export_port=hdf5_port,
-            excitation_service=ExcitationConfigurationService(MockExcitationPort(), bus),
-            task_runner=FakeThreadPoolTaskRunner(),
-        )
-        service.configure_export(ExportConfigDTO(enabled=True, output_directory=""))
-
-        started = _make_scan_started_event()
-        bus.publish("scanstarted", started)
-        bus.publish("scanfailed", ScanFailed(scan_id=started.scan_id, reason="motion error"))
-
-        self.assertEqual(csv_port.refused + hdf5_port.refused, [])
-        self.assertTrue(csv_port.stopped and hdf5_port.stopped)
-        self.assertIsInstance(csv_port.events[-1], ScanFailed)  # finishing event still recorded
-
-
 class TestScanExportServiceZeroPointCleanup(unittest.TestCase):
     """A scan that fails/is cancelled before any point is acquired must not
-    leave an empty acquisition folder (0-row CSV, near-empty HDF5) behind —
+    leave an empty acquisition folder (0-row CSV) behind —
     see _system/ops/tasks.md discussion on export-folder clutter."""
 
     def setUp(self) -> None:
@@ -612,20 +540,16 @@ class TestScanExportServiceZeroPointCleanup(unittest.TestCase):
         self.acquisition_dir = self.tmp_dir / "2024-01-01_000000_stepScan_scan"
         self.acquisition_dir.mkdir(parents=True)
         self.csv_path = self.acquisition_dir / "2024-01-01_000000_stepScan_scan_aefi.csv"
-        self.hdf5_path = self.acquisition_dir / "2024-01-01_000000_stepScan_scan.h5"
         self.csv_path.write_text("")
-        self.hdf5_path.write_bytes(b"")
         (self.acquisition_dir / "2024-01-01_000000_stepScan_scan_acquisition-parameters.json").write_text("{}")
 
         self.event_bus = InMemoryEventBus()
         self.csv_port = FakeExportPort(output_path=self.csv_path)
-        self.hdf5_port = FakeExportPort(output_path=self.hdf5_path)
         excitation_service = ExcitationConfigurationService(MockExcitationPort(), self.event_bus)
 
         self.service = ScanExportService(
             self.event_bus,
             csv_export_port=self.csv_port,
-            hdf5_export_port=self.hdf5_port,
             excitation_service=excitation_service,
         )
         self.service.configure_export(

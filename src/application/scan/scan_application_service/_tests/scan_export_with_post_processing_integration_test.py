@@ -1,11 +1,11 @@
 """
-Integration Test: Scan -> Export (CSV+HDF5) -> Real Post-Processing (Headless)
+Integration Test: Scan -> Export (CSV only) -> Real Post-Processing (Headless)
 
 Responsibility:
-    Verify the full downstream chain with mocked hardware but REAL export
-    ports and a REAL aefi_post_processor_module pipeline:
-    Scan Execution -> ScanCompleted -> CSV+HDF5 written -> post-processing
-    pipeline fills the HDF5 with processing steps.
+    Verify the full downstream chain with mocked hardware but a REAL export
+    port and a REAL aefi_post_processor_module pipeline:
+    Scan Execution -> ScanCompleted -> CSV written (the only raw source) ->
+    the post-processing creates its own HDF5 with the processing steps.
 
     Only the visualization launch (spawns an external GUI process) is
     stubbed out, to keep this test headless.
@@ -32,7 +32,6 @@ from infrastructure.hardware.ads131a04.adapter_i_acquistion_port_ads131a04.fake.
 from infrastructure.mocks.adapter_mock_i_aefi_acquisition_executor import MockAefiAcquisitionExecutor
 from infrastructure.hardware.ad9106.adapter_excitation_configuration_ad9106.fake.fake_adapter_excitation_configuration_ad9106 import MockExcitationPort
 from infrastructure.persistence.csv_scan_export_port import CsvScanExportPort
-from infrastructure.persistence.hdf5_scan_export_port import Hdf5ScanExportPort
 from infrastructure.aefi_post_processor_port.aefi_post_processor_port import AefiPostProcessorPort
 
 from application.shared.aefi_acquisition_service.aefi_acquisition_service import AefiAcquisitionService
@@ -58,6 +57,12 @@ class _RecordingPostProcessorPort(AefiPostProcessorPort):
     def __init__(self, event_bus) -> None:
         super().__init__(event_bus, initial_rotation_angles=(35.3, 45.0, 0.0), initial_rotation_origin="ideal default")
         self.launched_dirs: List[Path] = []
+        self.h5_files_when_run: List[Path] = []
+
+    def run(self, csv_path: Path) -> None:
+        # What the acquisition left in the folder when the post-processing starts.
+        self.h5_files_when_run = list(csv_path.parent.glob("*.h5"))
+        super().run(csv_path)
 
     def _launch_visualizer(self, acquisition_dir: Path) -> None:
         self.launched_dirs.append(acquisition_dir)
@@ -92,7 +97,6 @@ class ScanExportWithPostProcessingIntegrationTest(unittest.TestCase):
         self.export_service = ScanExportService(
             self.event_bus,
             csv_export_port=CsvScanExportPort(),
-            hdf5_export_port=Hdf5ScanExportPort(),
             excitation_service=excitation_service,
             conditions_port=FakeAcquisitionConditionsPort(),
             post_processing_port=self.post_processing_port,
@@ -109,14 +113,13 @@ class ScanExportWithPostProcessingIntegrationTest(unittest.TestCase):
     def tearDown(self) -> None:
         shutil.rmtree(self.output_dir, ignore_errors=True)
 
-    def test_scan_exports_both_formats_and_real_pipeline_fills_the_hdf5(self):
+    def test_scan_exports_the_csv_only_and_the_post_processing_creates_the_hdf5(self):
         config = Scan2DConfigDTO(
             x_min=0, x_max=2, x_nb_points=3,
             y_min=0, y_max=2, y_nb_points=3,
             scan_pattern="RASTER",
             stabilization_delay_ms=0,
             averaging_per_position=1,
-            uncertainty_volts=1e-6,
         )
 
         done = threading.Event()
@@ -137,10 +140,13 @@ class ScanExportWithPostProcessingIntegrationTest(unittest.TestCase):
         with csv_files[0].open(encoding="utf-8") as f:
             self.assertEqual(sum(1 for _ in f) - 1, 9)  # header + 9 points (3x3 grid)
 
+        # The acquisition wrote no HDF5: the file exists only because the post-processing created it.
+        self.assertEqual(self.post_processing_port.h5_files_when_run, [])
+
         with h5py.File(h5_files[0], "r") as f:
-            self.assertEqual(f["scan_data/positions"].shape, (9, 2))
-            # Real pipeline steps, written by the real ProcessingPipeline —
-            # not just the raw export.
+            # The raw points re-read from the CSV, in the file the post-processing created.
+            self.assertEqual(f["raw_scan/positions"].shape, (9, 2))
+            # Real pipeline steps, written by the real ProcessingPipeline.
             for step in ("preprocessed", "phase_calibrated", "amplitude_subtracted", "rotated_frame", "interpolated"):
                 self.assertIn(step, f.keys(), f"missing post-processing step '{step}' in HDF5")
 
@@ -151,9 +157,22 @@ class ScanExportWithPostProcessingIntegrationTest(unittest.TestCase):
         with documents[0].open(encoding="utf-8") as f:
             document = json.load(f)
         self.assertEqual(document["schema"]["version"], SCHEMA["version"])
+        self.assertEqual(document["schema"]["version"], "1.7")
         self.assertEqual(document["provenance"]["activity"]["status"], "completed")
         listed = {f["format"] for f in document["data"]["files"] if "sha256" in f}
-        self.assertTrue({"CSV", "HDF5", "JSON Lines"} <= listed, listed)
+        self.assertTrue({"CSV", "text (xz)"} <= listed, listed)
+        self.assertNotIn("HDF5", listed)
+        self.assertNotIn("JSON Lines", listed)
+
+        # The provenance in the .h5: the CSV it was made from, with the SHA-256 the acquisition recorded in its
+        # parameters file, and the activity that produced it.
+        csv_entry = next(f for f in document["data"]["files"] if f["name"] == csv_files[0].name)
+        with h5py.File(h5_files[0], "r") as f:
+            self.assertEqual(f.attrs["source_csv"], str(csv_files[0]))
+            self.assertEqual(f.attrs["source_sha256"], csv_entry["sha256"])
+            self.assertEqual(f.attrs["source_declared_sha256"], csv_entry["sha256"])
+            self.assertTrue(bool(f.attrs["source_sha256_matches"]))
+            self.assertEqual(f.attrs["source_activity_id"], document["provenance"]["activity"]["id"])
 
         # Visualizer would have been launched on the acquisition folder
         # (stubbed here, so no real GUI process was spawned).

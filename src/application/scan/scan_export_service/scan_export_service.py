@@ -100,7 +100,6 @@ class ScanExportService:
         self,
         event_bus: IDomainEventBus,
         csv_export_port: IScanExportPort,
-        hdf5_export_port: IScanExportPort,
         excitation_service: ExcitationConfigurationService,
         conditions_port: Optional[IAcquisitionConditionsPort] = None,
         post_processing_port: Optional[IPostProcessingPort] = None,
@@ -114,7 +113,6 @@ class ScanExportService:
         the document still gets written and declares them unknown."""
         self._event_bus = event_bus
         self._csv_export_port = csv_export_port
-        self._hdf5_export_port = hdf5_export_port
         # ponytail: direct Application-Service-to-Application-Service call,
         # only to read current excitation params at scan start — no
         # ExcitationChanged domain event exists yet to passively cache
@@ -134,9 +132,9 @@ class ScanExportService:
         self._task_runner = task_runner
         self._active_ports: List[IScanExportPort] = []
         self._open_export: Optional[tuple] = None  # (kind, id) announced as open, until announced closed
-        # Events come from several threads (ADC worker, motion worker, scan
-        # loop): the recorder must never see a port that is not open yet, or
-        # write into one being closed by another thread.
+        # Samples come from several threads (ADC worker, motion worker, inertial probe,
+        # scan loop): none may write into a port that is not open yet, or into one being
+        # closed by another thread. Guards `_active_ports` and the stabilization record.
         self._events_lock = threading.RLock()
 
         self._config: Optional[ExportConfigDTO] = None
@@ -175,8 +173,6 @@ class ScanExportService:
         self._event_bus.subscribe("columnrestmeasured", self._on_event)
         self._event_bus.subscribe("columnsettled", self._on_event)
         self._event_bus.subscribe("inertialprobesampleacquired", self._on_event)
-        # Per-scan event store: every event published while the export is open.
-        self._event_bus.subscribe("*", self._record_event)
 
     # ------------------------------------------------------------------ #
     # Configuration API (called from UI / presenter)
@@ -245,25 +241,6 @@ class ScanExportService:
         except Exception as exc:
             logger.exception("Error handling %s: %s", type(event).__name__, exc)
 
-    def _record_event(self, event: DomainEvent) -> None:
-        """Forward every event published during the scan — not only the
-        scan_id-tagged ones: motion, excitation, probe events are the context
-        needed to replay what happened during the acquisition.
-
-        Relies on the bus dispatching "*" subscribers after typed ones: the
-        export is already open when ScanStarted reaches here, and already
-        closed for the finishing event (written by _close_export). The
-        acquisition that completes the scan (last AefiLineAcquired /
-        AefiPointAcquired) reaches here before ScanCompleted closes the
-        export: the unit of work delivers the ScanCompleted committed by the
-        closure handler only once that acquisition reached every subscriber.
-        `_active_ports` only lists open ports: filled once they are started,
-        emptied before they are closed — an event from another thread landing
-        while a scan export opens or closes is simply not recorded."""
-        with self._events_lock:
-            for port in self._active_ports:
-                port.write_event(event)
-
     def _handle_scan_started(self, event: ScanStarted) -> None:
         logger.info("Handling ScanStarted. scan_id=%s, config present: %s", event.scan_id, self._config is not None)
         self._fly_scan = bool(getattr(event.config, "fly_scan", False))
@@ -278,16 +255,13 @@ class ScanExportService:
             self._field_export_active = False
             return
 
-        # Every scan is exported to both formats simultaneously.
-        ports = [self._csv_export_port, self._hdf5_export_port]
+        # The CSV is the acquisition's single raw export: the post-processing creates its own HDF5 from it.
+        ports = [self._csv_export_port]
 
         directory = self._config.output_directory
         # Name only (measured object + lift-off) — each export port builds its own acquisition
         # folder and per-file names (<timestamp>_<stepScan|flyScan>_<name>_<device>) from it.
         name = acquisition_name(self._config.measured_object, self._config.lift_off_mm)
-        # Shared across both ports so CSV and HDF5 land in the same
-        # acquisition folder (the post-processing trigger needs both files
-        # side by side — see _handle_scan_finished).
         timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
 
         metadata = self._build_metadata(event)
@@ -304,10 +278,10 @@ class ScanExportService:
             port.configure(directory, name, metadata, timestamp=timestamp, acquisition_kind=acquisition_kind)
             port.start()
             port.write_acquisition_parameters(parameters)
-        # Files open; announced before the recorder sees them, so the announcement stays out of the scan's event store.
+        # Files open: announce it.
         self._announce_export_opened(
             "fly_scan" if self._fly_scan else "step_scan", str(event.scan_id), self._config.measured_object)
-        with self._events_lock:  # visible to the event recorder only once open
+        with self._events_lock:  # visible to the sample handlers only once open
             self._active_ports = ports
             # Same instant on the inertial samples' monotonic clock and on the host clock.
             self._stabilization_record = ColumnStabilizationRecord(
@@ -378,7 +352,7 @@ class ScanExportService:
             "Starting time-series export. acquisition_id=%s, dir=%s, name=%s",
             event.acquisition_id, config.output_directory, acquisition_name(config.measured_object, config.lift_off_mm),
         )
-        # CSV only: the HDF5 layout is a position grid, meaningless vs time.
+        # CSV only, as every export.
         port = self._csv_export_port
         port.configure(
             config.output_directory, acquisition_name(config.measured_object, config.lift_off_mm),
@@ -388,7 +362,7 @@ class ScanExportService:
         port.start()
         port.write_acquisition_parameters(self._start_parameters(str(event.acquisition_id), TIME_SERIES, config))
         self._announce_export_opened("time_series", str(event.acquisition_id), config.measured_object)
-        with self._events_lock:  # visible to the event recorder only once open
+        with self._events_lock:  # visible to the sample handlers only once open
             self._active_ports = [port]
         self._time_series_active = True
         self._time_series_t0 = None
@@ -465,10 +439,10 @@ class ScanExportService:
                 self._write_table_row(STABILIZATION_TABLE, STABILIZATION_COLUMNS, row)
 
     def _close_export(self, event: DomainEvent) -> List[Optional[Path]]:
-        """Write the finishing event, close every active port, and drop the
+        """Close every active port, and drop the
         acquisition folder if nothing was written. Returns each active port's
         output path, in `_active_ports` order."""
-        # Hidden from the event recorder before closing: an event from another
+        # Hidden from the sample handlers before closing: a sample from another
         # thread can no longer reach a port being stopped.
         with self._events_lock:
             ports, self._active_ports = self._active_ports, []
@@ -481,7 +455,6 @@ class ScanExportService:
                 finished.activity, column_stabilization=record.summary()))
         try:
             for port in ports:
-                port.write_event(event)  # last event of the export, before its file closes
                 port.stop()
             # Once every file is closed: the final document lists and hashes them.
             if finished is not None:
@@ -496,7 +469,7 @@ class ScanExportService:
 
         if self._points_written == 0:
             # A scan/reading that ended before any point leaves nothing worth
-            # keeping (0-row CSV, near-empty HDF5) — remove the acquisition
+            # keeping (0-row CSV) — remove the acquisition
             # folder instead of littering the exports directory. stop()
             # already closed the file handles, so this is safe on Windows.
             logger.info("No points written; removing empty acquisition folder(s)")
@@ -522,20 +495,20 @@ class ScanExportService:
             return
 
         logger.debug("Stopping scan export after event: %s", type(event).__name__)
-        csv_path, hdf5_path = self._close_export(event)  # scan ports are [csv, hdf5]
+        paths = self._close_export(event)  # a scan has the CSV port only
+        csv_path = paths[0] if paths else None
 
         if (
             isinstance(event, ScanCompleted)
             and self._post_processing_port is not None
             and self._task_runner is not None
             and csv_path is not None
-            and hdf5_path is not None
         ):
             # Fire-and-forget: this service's promise is "exported, and
             # post-processing was triggered" — the pipeline is a downstream
             # consumer of the export, not something this service waits on.
             post_processing_port = self._post_processing_port
-            self._task_runner.submit(lambda: post_processing_port.run(csv_path, hdf5_path))
+            self._task_runner.submit(lambda: post_processing_port.run(csv_path))
 
     # ------------------------------------------------------------------ #
     # Helpers
@@ -577,7 +550,6 @@ class ScanExportService:
             x_nb_points=cfg.x_nb_points, y_nb_points=cfg.y_nb_points, total_points=cfg.total_points(),
             pattern=cfg.scan_pattern.name, fast_axis=cfg.scan_axis.name,
             stabilization_delay_ms=cfg.stabilization_delay_ms, averaging_per_position=cfg.averaging_per_position,
-            measurement_uncertainty_v=cfg.measurement_uncertainty.max_uncertainty_volts,
             differential_mode=cfg.differential_mode, differential_settle_delay_ms=cfg.differential_settle_delay_ms,
             estimated_duration_s=cfg.estimated_duration_seconds(),
         )

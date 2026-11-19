@@ -15,6 +15,8 @@ import os
 import csv
 import json
 import logging
+import lzma
+import shutil
 import threading
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -29,10 +31,9 @@ from application.scan.scan_export_service.dtos.scan_acquisition_parameters_dtos 
 from application.scan.scan_export_service.ports.i_scan_export_port import (
     IScanExportPort,
 )
-from infrastructure.events.event_audit_log import serialize_event
 from infrastructure.persistence.acquisition_parameters.acquisition_parameters_file import (
-    FORMATS,
     describe_file,
+    file_format,
     write_document,
 )
 from infrastructure.persistence.scan_acquisition_parameters_v1_serializer import (
@@ -41,6 +42,30 @@ from infrastructure.persistence.scan_acquisition_parameters_v1_serializer import
 
 
 logger = logging.getLogger(__name__)
+
+# The scan's logs and its accelerometer stream are rarely read and the largest files of the
+# folder: each is written plain while the scan runs (a crash leaves it readable), then
+# replaced by one `.xz` archive when the scan ends. Preset 6 is about 3 MB/s on a CSV: lower
+# it if closing a very long scan takes too long.
+XZ_PRESET = 6
+ARCHIVED_SIDECARS = ("accelerometer",)
+
+
+def _archive_xz(path: Path) -> None:
+    """Replace `path` by `path.xz`. Any failure keeps the plain file: an archive is never half-written."""
+    archive = path.with_name(path.name + ".xz")
+    temporary = archive.with_name(archive.name + ".tmp")
+    try:
+        with open(path, "rb") as source, lzma.open(temporary, "wb", preset=XZ_PRESET) as target:
+            shutil.copyfileobj(source, target)
+        os.replace(temporary, archive)
+        path.unlink()
+    except Exception:
+        logger.warning("Could not archive %s; the plain file is kept", path, exc_info=True)
+        try:
+            temporary.unlink()
+        except OSError:
+            pass
 
 
 @dataclass
@@ -77,7 +102,7 @@ class CsvScanExportPort(IScanExportPort):
     _field_axis_labels: Optional[List[str]] = field(init=False, default=None)
     _scan_name: Optional[str] = field(init=False, default=None)
     _log_handler: Optional[logging.FileHandler] = field(init=False, default=None)
-    _events_file: Optional[TextIO] = field(init=False, default=None)
+    _log_path: Optional[Path] = field(init=False, default=None)
     # Sidecar tables (`<timestamp>_<kind>_<name>_<tag>.csv`), fed from other threads
     # (the accelerometer stream): opened, written and closed under one lock.
     _sidecars: Dict[str, Tuple[TextIO, csv.DictWriter]] = field(init=False, default_factory=dict)
@@ -160,16 +185,13 @@ class CsvScanExportPort(IScanExportPort):
         # not bare print() (goes to stdout) nor post-processing logs (they run
         # after stop()). Move to its own port if either is needed.
         log_path = self._dir_path / f"{self._timestamp}_{self._scan_name}_logs.log"
+        self._log_path = log_path
         self._log_handler = logging.FileHandler(log_path, encoding="utf-8")
         self._log_handler.setFormatter(
             logging.Formatter("%(asctime)s %(threadName)s %(levelname)s %(name)s: %(message)s")
         )
         logging.getLogger().addHandler(self._log_handler)
         logger.info("Scan logs teed to %s", log_path)
-
-        events_path = self._dir_path / f"{self._timestamp}_{self._scan_name}_events.jsonl"
-        self._events_file = events_path.open(mode="w", encoding="utf-8")
-        logger.info("Scan events recorded to %s", events_path)
 
     def write_point(self, data: Dict[str, Any]) -> None:
         """
@@ -272,7 +294,7 @@ class CsvScanExportPort(IScanExportPort):
         path = self._dir_path / f"{self._timestamp}_{self._scan_name}_acquisition-parameters.json"
         if parameters.activity.ended_at is not None:
             produced = sorted(p for p in self._dir_path.iterdir() if p.is_file() and p != path and p.suffix != ".tmp")
-            parameters = replace(parameters, files=tuple(describe_file(p, FORMATS.get(p.suffix, p.suffix)) for p in produced))
+            parameters = replace(parameters, files=tuple(describe_file(p, file_format(p)) for p in produced))
         document = serialize_scan_acquisition_parameters_v1(
             parameters, generated_at=datetime.now().astimezone(), document_name=path.name
         )
@@ -281,21 +303,6 @@ class CsvScanExportPort(IScanExportPort):
             "Acquisition parameters written: %s activity_id=%s status=%s warnings=%d",
             path, parameters.activity.activity_id, parameters.activity.status, len(document["warnings"]),
         )
-
-    def write_event(self, event) -> None:
-        """Append one domain event to `<timestamp>_stepScan_<name>_events.jsonl`,
-        same line format as the app-wide EventAuditLog."""
-        if self._events_file is None:
-            raise RuntimeError("CsvScanExportPort.start() must be called before write_event().")
-        try:
-            line = serialize_event(event)
-        except Exception:
-            # Swallowed on purpose: the service calls this right before stop()
-            # on scan end — raising here would leave the files open.
-            logger.exception("Failed to serialize event %r for scan events file", type(event).__name__)
-            return
-        self._events_file.write(line + "\n")
-        self._events_file.flush()
 
     def open_sidecar(self, tag: str, columns: Sequence[str]) -> None:
         """Open `<timestamp>_<kind>_<name>_<tag>.csv` in the acquisition folder, header
@@ -322,7 +329,8 @@ class CsvScanExportPort(IScanExportPort):
             opened[1].writerow(row)
             return True
 
-    def _close_sidecars(self) -> None:
+    def _close_sidecars(self) -> List[str]:
+        """Close every open sidecar table; returns their tags."""
         with self._sidecar_lock:
             sidecars, self._sidecars = self._sidecars, {}
         for handle, _ in sidecars.values():
@@ -330,6 +338,7 @@ class CsvScanExportPort(IScanExportPort):
                 handle.flush()
             finally:
                 handle.close()
+        return list(sidecars)
 
     def get_output_path(self) -> Optional[Path]:
         """Path to the main `_aefi.csv` file, once configured."""
@@ -362,11 +371,7 @@ class CsvScanExportPort(IScanExportPort):
         self._field_fieldnames = None
         self._field_axis_labels = None
 
-        if self._events_file is not None:
-            self._events_file.close()
-            self._events_file = None
-
-        self._close_sidecars()
+        closed_tags = self._close_sidecars()
 
         # Closed last so the file releases its Windows lock before
         # ScanExportService may rmtree an empty acquisition folder.
@@ -374,5 +379,14 @@ class CsvScanExportPort(IScanExportPort):
             logging.getLogger().removeHandler(self._log_handler)
             self._log_handler.close()
             self._log_handler = None
+
+        # Every file is closed: replace the rarely-read ones by archives. Before the final
+        # acquisition-parameters document, which lists and hashes what is really in the folder.
+        for tag in closed_tags:
+            if tag in ARCHIVED_SIDECARS:
+                _archive_xz(self._dir_path / f"{self._timestamp}_{self._scan_name}_{tag}.csv")
+        if self._log_path is not None:
+            _archive_xz(self._log_path)
+            self._log_path = None
 
 

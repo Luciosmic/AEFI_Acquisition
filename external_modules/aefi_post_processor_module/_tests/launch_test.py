@@ -108,7 +108,7 @@ def test_with_force_the_launch_processes_every_acquisition_before_the_window_sho
     assert "window.shown" in journal, output
     assert f"scan.processed scan={name}" in journal
     with h5py.File(export / name / f"{name}.h5", "r") as steps_file:
-        assert list(steps_file.keys()) == ["amplitude_subtracted", "interpolated", "phase_calibrated", "preprocessed", "rotated_frame"]
+        assert list(steps_file.keys()) == ["amplitude_subtracted", "interpolated", "phase_calibrated", "preprocessed", "raw_scan", "rotated_frame"]
     assert f"acquisition.state scan={name} state=traitée" in journal
 
 

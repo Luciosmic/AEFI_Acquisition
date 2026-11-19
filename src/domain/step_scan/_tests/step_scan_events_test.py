@@ -5,7 +5,6 @@ from domain.step_scan.step_scan import StepScan
 from domain.step_scan.value_objects.step_scan_config.step_scan_config import StepScanConfig
 from domain.step_scan.value_objects.scan_zone.scan_zone import ScanZone
 from domain.step_scan.value_objects.scan_pattern.scan_pattern import ScanPattern
-from domain.shared_kernel.value_objects.measurement_uncertainty.measurement_uncertainty import MeasurementUncertainty
 from domain.step_scan.value_objects.scan_point_result.scan_point_result import ScanPointResult
 from domain.shared_kernel.value_objects.geometric.position_2d import Position2D
 from domain.shared_kernel.value_objects.acquisition.aefi_voltage_measurement import AefiVoltageMeasurement
@@ -26,7 +25,6 @@ class TestStepScanEvents(unittest.TestCase):
             scan_pattern=ScanPattern.RASTER,
             stabilization_delay_ms=100,
             averaging_per_position=1,
-            measurement_uncertainty=MeasurementUncertainty(max_uncertainty_volts=1e-6),
         )
         self.scan = StepScan()
 

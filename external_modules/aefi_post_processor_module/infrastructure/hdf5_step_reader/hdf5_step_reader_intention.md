@@ -13,7 +13,7 @@ Les étapes écrites par le traitement doivent se relire telles que rangées, sa
 
 ## Responsibility
 
-- Implémenter `IStepReader` : lister les groupes d'un fichier (aucun si le fichier manque ou est illisible), lire une étape (tableau et métadonnées), refuser une étape ou un fichier absents.
+- Implémenter `IStepReader` : lister les groupes d'étapes d'un fichier, sans le groupe `raw_scan` des points bruts (aucun si le fichier manque ou est illisible), lire une étape (tableau et métadonnées), refuser une étape ou un fichier absents.
 - Ne rien décoder : noms de canaux et étendue reviennent comme rangés.
 
 ## Design

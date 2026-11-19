@@ -84,7 +84,7 @@ class _StillAccelerometer:
 def _step_dto(**overrides):
     params = dict(x_min=0, x_max=1, x_nb_points=2, y_min=0, y_max=1, y_nb_points=2,
                   scan_pattern="RASTER", stabilization_delay_ms=DELAY_MS,
-                  averaging_per_position=1, uncertainty_volts=1e-6)
+                  averaging_per_position=1)
     params.update(overrides)
     return Scan2DConfigDTO(**params)
 
@@ -168,7 +168,7 @@ class TestFlyScanColumnStabilization(_Stack):
         scan = self._run(Scan2DConfigDTO(
             x_min=600.0, x_max=610.0, x_nb_points=2, y_min=600.0, y_max=630.0, y_nb_points=4,
             scan_pattern="SERPENTINE", scan_axis="Y", stabilization_delay_ms=DELAY_MS,
-            averaging_per_position=1, uncertainty_volts=0.001, fly_scan=True,
+            averaging_per_position=1, fly_scan=True,
         ))
         self.assertEqual(scan.status, ScanStatus.COMPLETED)
         self.assertEqual(len(self.stabilization.rests), 1)
@@ -189,13 +189,12 @@ class TestStabilizationIsExported(_Stack):
         from application.scan.scan_export_service.scan_export_service import ScanExportService
         from infrastructure.hardware.ad9106.adapter_excitation_configuration_ad9106.fake.fake_adapter_excitation_configuration_ad9106 import MockExcitationPort
         from infrastructure.persistence.csv_scan_export_port import CsvScanExportPort
-        from infrastructure.persistence.hdf5_scan_export_port import Hdf5ScanExportPort
 
         self.output_dir = Path(tempfile.mkdtemp())
         self.event_bus = InMemoryEventBus()
         self._service(MockMotionPort(event_bus=self.event_bus, motion_delay_ms=1), ("aefipointacquired",))
         self.export_service = ScanExportService(
-            self.event_bus, csv_export_port=CsvScanExportPort(), hdf5_export_port=Hdf5ScanExportPort(),
+            self.event_bus, csv_export_port=CsvScanExportPort(),
             excitation_service=ExcitationConfigurationService(MockExcitationPort(), self.event_bus),
         )
         self.export_service.configure_export(ExportConfigDTO(
@@ -208,9 +207,14 @@ class TestStabilizationIsExported(_Stack):
     def _files(self):
         import csv
         import json
+        import lzma
         folder = next(self.output_dir.iterdir())
-        tables = {p.name.rsplit("_", 1)[-1]: list(csv.DictReader(p.open(encoding="utf-8")))
-                  for p in folder.glob("*.csv")}
+        # The accelerometer stream is archived at the end of the scan (`.csv.xz`); read either form.
+        tables = {}
+        for p in [*folder.glob("*.csv"), *folder.glob("*.csv.xz")]:
+            opener = lzma.open if p.suffix == ".xz" else open
+            with opener(p, "rt", newline="", encoding="utf-8") as f:
+                tables[p.name.removesuffix(".xz").rsplit("_", 1)[-1]] = list(csv.DictReader(f))
         document = json.loads(next(folder.glob("*_acquisition-parameters.json")).read_text(encoding="utf-8"))
         return tables, document
 
@@ -232,7 +236,12 @@ class TestStabilizationIsExported(_Stack):
         self.assertEqual(stabilization["criterion"]["window"], {"value": 0.1, "unit": "s"})
         self.assertEqual(stabilization["accelerometer_samples"], len(tables["accelerometer.csv"]))
         names = [f["name"] for f in document["data"]["files"]]
-        self.assertTrue(any(n.endswith("_plaque_liftoff-8mm_accelerometer.csv") for n in names), names)
+        self.assertTrue(any(n.endswith("_plaque_liftoff-8mm_accelerometer.csv.xz") for n in names), names)
+        self.assertFalse(any(n.endswith("_accelerometer.csv") for n in names), names)
+        listed = {f["name"].rsplit("_", 1)[-1]: f for f in document["data"]["files"]}
+        self.assertEqual(listed["accelerometer.csv.xz"]["format"], "CSV (xz)")
+        self.assertEqual(listed["logs.log.xz"]["format"], "text (xz)")
+        self.assertNotIn("events.jsonl", listed)
         self.assertEqual(document["data"]["columns"]["acceleration_x"]["unit"], "[g]")
 
     def test_without_accelerometer_only_the_parameters_say_fixed_delay(self):

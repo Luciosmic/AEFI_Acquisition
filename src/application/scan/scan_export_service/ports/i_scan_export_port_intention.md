@@ -8,7 +8,7 @@ code: "[[src/application/scan/scan_export_service/ports/i_scan_export_port.py]]"
 
 ## Rationale
 
-Abstraire le format de persistence des résultats de scan (HDF5, CSV, JSON…) derrière un port. Le service d'export peut ainsi changer de format sans modifier la logique applicative.
+Abstraire le format de persistence des résultats de scan (CSV aujourd'hui) derrière un port. Le service d'export peut ainsi changer de format sans modifier la logique applicative.
 
 ## Responsibility
 
@@ -18,4 +18,4 @@ Abstraire le format de persistence des résultats de scan (HDF5, CSV, JSON…) d
 ## Design
 
 - **Port outbound** placé dans `scan_application_service/` aux côtés du service consommateur.
-- Implémenté par `HDF5ScanExportPort` et `CsvScanExportPort` dans `infrastructure/persistence/`.
+- Implémenté par `CsvScanExportPort` dans `infrastructure/persistence/`.

@@ -50,7 +50,7 @@ def make_dto(**overrides):
         x_min=600.0, x_max=620.0, x_nb_points=3,
         y_min=600.0, y_max=630.0, y_nb_points=4,
         scan_pattern="SERPENTINE", scan_axis="Y",
-        stabilization_delay_ms=0, averaging_per_position=1, uncertainty_volts=0.001,
+        stabilization_delay_ms=0, averaging_per_position=1,
         fly_scan=True,
     )
     params.update(overrides)
@@ -623,11 +623,9 @@ class TestFlyScanExportHoldsOnlyCommittedLines(_FaithfulFlyStack):
         super().setUp()
         excitation_service = ExcitationConfigurationService(MockExcitationPort(), self.event_bus)
         self.csv_port = _RecordingExportPort("csv", [])
-        self.hdf5_port = _RecordingExportPort("hdf5", [])
         export = ScanExportService(
             self.event_bus,
             csv_export_port=self.csv_port,
-            hdf5_export_port=self.hdf5_port,
             excitation_service=excitation_service,
             conditions_port=FakeAcquisitionConditionsPort(),
             software_provenance_port=FakeSoftwareProvenancePort(),
@@ -647,10 +645,10 @@ class TestFlyScanExportHoldsOnlyCommittedLines(_FaithfulFlyStack):
         scan = self._run(make_dto(), until="scancancelled", timeout=90.0)
         time.sleep(0.5)
 
-        for port in (self.csv_port, self.hdf5_port):
-            self.assertEqual(len(port.points), 8)
-            self.assertEqual(self._rows(port), self._committed_positions(scan))
-            self.assertTrue(port.stopped)
+        port = self.csv_port
+        self.assertEqual(len(port.points), 8)
+        self.assertEqual(self._rows(port), self._committed_positions(scan))
+        self.assertTrue(port.stopped)
 
     def test_preview_reaches_the_event_store_but_never_the_measurement_files(self):
         previews = []
@@ -662,26 +660,11 @@ class TestFlyScanExportHoldsOnlyCommittedLines(_FaithfulFlyStack):
         scan = self._run(make_dto(), timeout=90.0)
 
         self.assertGreater(len(previews), 12)  # the abandoned attempt of line 1 previewed too
-        for port in (self.csv_port, self.hdf5_port):
-            # Measurement rows: exactly the 12 committed grid points, none from a preview.
-            self.assertEqual(len(port.points), 12)
-            self.assertEqual(self._rows(port), self._committed_positions(scan))
-            self.assertEqual(sorted(r["point_index"] for r in port.points), list(range(12)))
-        # The event store (CSV port's _events.jsonl) keeps every preview and the abandon (safety net).
-        recorded = [type(e).__name__ for e in self.csv_port.events]
-        self.assertEqual(recorded.count("AefiLinePreviewPointAcquired"), len(previews))
-        self.assertEqual(recorded.count("AefiLineAbandoned"), 1)
-
-    def test_event_journal_holds_every_line_before_scan_completed(self) -> None:
-        self._run(make_dto(), timeout=90.0)
-
-        for port in (self.csv_port, self.hdf5_port):
-            recorded = [type(e).__name__ for e in port.events]
-            lines = [i for i, name in enumerate(recorded) if name == "AefiLineAcquired"]
-            self.assertEqual(len(lines), 3, recorded[-8:])  # the last one used to arrive after the export closed
-            self.assertEqual(recorded[-1], "ScanCompleted")
-            self.assertGreater(len(recorded) - 1, lines[-1])
-            self.assertTrue(port.stopped)
+        port = self.csv_port
+        # Measurement rows: exactly the 12 committed grid points, none from a preview.
+        self.assertEqual(len(port.points), 12)
+        self.assertEqual(self._rows(port), self._committed_positions(scan))
+        self.assertEqual(sorted(r["point_index"] for r in port.points), list(range(12)))
 
     def test_cancel_mid_sweep_exports_no_point_of_the_swept_line(self) -> None:
         self._on_first_preview_of_line(1, self.service.cancel_scan)
@@ -689,9 +672,8 @@ class TestFlyScanExportHoldsOnlyCommittedLines(_FaithfulFlyStack):
         scan = self._run(make_dto(), until="scancancelled", timeout=90.0)
         time.sleep(0.5)
 
-        for port in (self.csv_port, self.hdf5_port):
-            self.assertEqual(len(port.points), 4)
-            self.assertEqual(self._rows(port), self._committed_positions(scan))
+        self.assertEqual(len(self.csv_port.points), 4)
+        self.assertEqual(self._rows(self.csv_port), self._committed_positions(scan))
 
 
 class TestFlyScanFailureModes(_Stack):

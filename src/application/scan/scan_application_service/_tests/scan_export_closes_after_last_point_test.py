@@ -41,7 +41,6 @@ class _RecordingExportPort(IScanExportPort):
         self.name = name
         self.journal = journal
         self.points: List[Dict[str, Any]] = []
-        self.events: List[Any] = []
         self.started = False
         self.stopped = False
 
@@ -64,9 +63,6 @@ class _RecordingExportPort(IScanExportPort):
     def write_field_point(self, data):
         pass
 
-    def write_event(self, event):
-        self.events.append(event)
-
     def get_output_path(self) -> Optional[Path]:
         return Path(f"/fake/{self.name}")
 
@@ -86,11 +82,9 @@ class TestScanExportClosesAfterLastPoint(unittest.TestCase):
             mode=ExcitationMode.X_DIR, level_s1_s2_percent=80.0, level_s3_s4_percent=60.0, frequency=1000.0
         )
         self.csv_port = _RecordingExportPort("csv", self.journal)
-        self.hdf5_port = _RecordingExportPort("hdf5", self.journal)
         self.export_service = ScanExportService(
             self.event_bus,
             csv_export_port=self.csv_port,
-            hdf5_export_port=self.hdf5_port,
             excitation_service=excitation_service,
             conditions_port=FakeAcquisitionConditionsPort(),
             software_provenance_port=FakeSoftwareProvenancePort(),
@@ -120,32 +114,28 @@ class TestScanExportClosesAfterLastPoint(unittest.TestCase):
             x_min=0, x_max=2, x_nb_points=3,
             y_min=0, y_max=1, y_nb_points=1,
             scan_pattern="RASTER", stabilization_delay_ms=0, averaging_per_position=1,
-            uncertainty_volts=1e-6, differential_mode=differential_mode, differential_settle_delay_ms=0,
+            differential_mode=differential_mode, differential_settle_delay_ms=0,
         )
         self.assertTrue(self.service.execute_scan(dto))
         self.assertTrue(self.done.wait(timeout=10.0), "scan did not complete")
 
-    def test_every_point_is_written_to_both_ports_before_scan_completed_closes_the_export(self) -> None:
+    def test_every_point_is_written_to_the_port_before_scan_completed_closes_the_export(self) -> None:
         self._run(differential_mode=False)
 
         self.assertEqual(len(self.csv_port.points), 3)
-        self.assertEqual(len(self.hdf5_port.points), 3)
         last_write = max(i for i, entry in enumerate(self.journal) if entry.startswith("write_point"))
         self.assertLess(last_write, self.journal.index("ScanCompleted"))
         self.assertEqual(self.journal.count("ScanCompleted"), 1)
-        for port in (self.csv_port, self.hdf5_port):
-            self.assertTrue(port.stopped)
-            self.assertEqual(type(port.events[-1]).__name__, "ScanCompleted")
+        self.assertTrue(self.csv_port.stopped)
         self.assertFalse(self.export_service._export_active)
 
     def test_differential_points_reach_the_export_with_their_baseline(self) -> None:
         self._run(differential_mode=True)
 
-        for port in (self.csv_port, self.hdf5_port):
-            self.assertEqual(len(port.points), 3)
-            for row in port.points:
-                self.assertIsNotNone(row["baseline_voltage_x_in_phase"])
-                self.assertIsNotNone(row["baseline_voltage_z_quadrature"])
+        self.assertEqual(len(self.csv_port.points), 3)
+        for row in self.csv_port.points:
+            self.assertIsNotNone(row["baseline_voltage_x_in_phase"])
+            self.assertIsNotNone(row["baseline_voltage_z_quadrature"])
 
 
 if __name__ == "__main__":

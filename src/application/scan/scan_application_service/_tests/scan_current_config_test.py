@@ -38,7 +38,7 @@ class TestScanCurrentConfig(unittest.TestCase):
     def test_step_scan_config_is_reported_with_grid_geometry(self) -> None:
         dto = Scan2DConfigDTO(
             x_min=0, x_max=1, x_nb_points=2, y_min=0, y_max=2, y_nb_points=3,
-            scan_pattern="RASTER", stabilization_delay_ms=7, averaging_per_position=2, uncertainty_volts=1e-6,
+            scan_pattern="RASTER", stabilization_delay_ms=7, averaging_per_position=2,
         )
         self.assertTrue(self.service.execute_scan(dto))
         self.assertTrue(self.completed.wait(10.0))

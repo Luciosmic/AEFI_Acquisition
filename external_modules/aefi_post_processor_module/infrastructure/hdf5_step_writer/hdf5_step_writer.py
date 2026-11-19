@@ -10,6 +10,8 @@ from typing import Any, Dict, List, Optional, Tuple
 import h5py
 import numpy as np
 
+from ...application.post_processing_service.dtos.scan_samples_dto import ScanSamplesDTO
+from ...application.post_processing_service.dtos.source_record_dto import SourceRecordDTO
 from ...application.post_processing_service.ports.i_step_writer import IStepWriter
 from ..hdf5_step_format.hdf5_step_format import (
     DATA_DATASET,
@@ -17,7 +19,15 @@ from ..hdf5_step_format.hdf5_step_format import (
     DATA_SHAPE_ATTR,
     LOAD_TIMESTAMP_ATTR,
     PROCESSING_HISTORY_ATTR,
+    RAW_CHANNEL_NAMES_ATTR,
+    RAW_POSITIONS_DATASET,
+    RAW_SCAN_GROUP,
+    RAW_VALUES_DATASET,
+    SOURCE_ACTIVITY_ID_ATTR,
     SOURCE_CSV_ATTR,
+    SOURCE_DECLARED_SHA256_ATTR,
+    SOURCE_SHA256_ATTR,
+    SOURCE_SHA256_MATCHES_ATTR,
     STEP_NAME_ATTR,
     TIMESTAMP_ATTR,
     processing_store_path,
@@ -35,10 +45,34 @@ class Hdf5StepWriter(IStepWriter):
         if PROCESSING_HISTORY_ATTR in self._file.attrs:
             self._history = list(self._file.attrs[PROCESSING_HISTORY_ATTR])
 
-    def record_source(self, csv_path: str) -> None:
+    def record_source(self, source: SourceRecordDTO) -> None:
         if self._file is not None:
-            self._file.attrs[SOURCE_CSV_ATTR] = str(csv_path)
-            self._file.attrs[LOAD_TIMESTAMP_ATTR] = datetime.now().isoformat()
+            attrs = self._file.attrs
+            attrs[SOURCE_CSV_ATTR] = str(source.csv_path)
+            attrs[LOAD_TIMESTAMP_ATTR] = datetime.now().isoformat()
+            for attr, value in (
+                (SOURCE_SHA256_ATTR, source.sha256),
+                (SOURCE_ACTIVITY_ID_ATTR, source.activity_id),
+                (SOURCE_DECLARED_SHA256_ATTR, source.declared_sha256),
+                (SOURCE_SHA256_MATCHES_ATTR, source.matches_declared),
+            ):
+                if value is not None:
+                    attrs[attr] = value
+                elif attr in attrs:
+                    del attrs[attr]  # a source recorded again does not keep what the previous one said
+
+    def save_raw_scan(self, samples: ScanSamplesDTO) -> None:
+        if self._file is None:
+            raise RuntimeError("HDF5 file not open. Cannot save the raw scan.")
+        if RAW_SCAN_GROUP in self._file:
+            del self._file[RAW_SCAN_GROUP]
+        group = self._file.create_group(RAW_SCAN_GROUP)
+        group.create_dataset(RAW_POSITIONS_DATASET, data=np.column_stack([samples.x, samples.y]),
+                             compression='gzip', compression_opts=4)
+        group.create_dataset(RAW_VALUES_DATASET, data=np.asarray(samples.values, dtype=float),
+                             compression='gzip', compression_opts=4)
+        group.attrs[RAW_CHANNEL_NAMES_ATTR] = json.dumps(list(samples.channel_names))
+        self._file.flush()
 
     def save_step(self, step_name: str, data: np.ndarray, metadata: Optional[Dict[str, Any]] = None) -> None:
         if self._file is None:

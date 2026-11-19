@@ -124,3 +124,17 @@ def test_un_angle_absent_est_refuse_en_le_nommant():
 def test_une_rotation_mal_formee_ne_leve_pas():
     assert describe({"measurement_chain": {"sensor": {"deployment": {"rotation_applied": "?"}}}}).applied_rotation is None
     assert describe(_deployment(theta_x={"value": "x", "unit": "deg"})).applied_rotation is None
+
+
+def test_le_contrat_se_lit_de_la_meme_facon_avant_et_apres_le_retrait_du_h5_de_data_files():
+    """1.6 liste le `.h5` de l'acquisition dans data.files, 1.7 ne le liste plus : le catalogue ne lit pas cette entrée."""
+    ancien = _parameters(version="1.6", kind="fly_scan")
+    ancien["data"] = {"files": [{"name": "a_aefi.csv", "format": "CSV"}, {"name": "a.h5", "format": "HDF5"}]}
+    nouveau = _parameters(version="1.7", kind="fly_scan")
+    nouveau["data"] = {"files": [{"name": "a_aefi.csv", "format": "CSV"}]}
+
+    ancienne_lecture, nouvelle_lecture = describe(ancien), describe(nouveau)
+
+    assert (ancienne_lecture.kind, ancienne_lecture.measured_object, ancienne_lecture.lift_off_mm) == (
+        nouvelle_lecture.kind, nouvelle_lecture.measured_object, nouvelle_lecture.lift_off_mm)
+    assert (ancienne_lecture.schema_version, nouvelle_lecture.schema_version) == ("1.6", "1.7")

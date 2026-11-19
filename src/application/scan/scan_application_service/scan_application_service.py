@@ -39,7 +39,6 @@ from domain.step_scan.value_objects.step_scan_config.step_scan_config import Ste
 from domain.step_scan.value_objects.scan_zone.scan_zone import ScanZone
 from domain.step_scan.value_objects.scan_pattern.scan_pattern import ScanPattern
 from domain.step_scan.value_objects.scan_axis.scan_axis import ScanAxis
-from domain.shared_kernel.value_objects.measurement_uncertainty.measurement_uncertainty import MeasurementUncertainty
 from domain.step_scan.value_objects.scan_status.scan_status import ScanStatus
 from domain.shared_kernel.value_objects.acquisition.aefi_voltage_measurement import AefiVoltageMeasurement
 from domain.step_scan.value_objects.scan_trajectory.scan_trajectory import ScanTrajectory
@@ -1478,10 +1477,6 @@ class ScanApplicationService:
             self._event_bus.publish(event_type, event)
 
     def _to_domain_config(self, dto: Scan2DConfigDTO) -> StepScanConfig:
-        measurement_uncertainty = MeasurementUncertainty(max_uncertainty_volts=dto.uncertainty_volts)
-        for warning in measurement_uncertainty.warnings:
-            logger.warning("ScanApplicationService: uncertainty_volts=%s — %s", dto.uncertainty_volts, warning)
-
         return StepScanConfig(
             scan_zone=ScanZone(x_min=dto.x_min, x_max=dto.x_max, y_min=dto.y_min, y_max=dto.y_max),
             x_nb_points=dto.x_nb_points,
@@ -1489,7 +1484,6 @@ class ScanApplicationService:
             scan_pattern=ScanPattern[dto.scan_pattern],
             stabilization_delay_ms=dto.stabilization_delay_ms,
             averaging_per_position=dto.averaging_per_position,
-            measurement_uncertainty=measurement_uncertainty,
             scan_axis=ScanAxis[dto.scan_axis],
             differential_mode=dto.differential_mode,
             differential_settle_delay_ms=dto.differential_settle_delay_ms,

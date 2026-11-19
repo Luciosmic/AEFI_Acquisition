@@ -1,6 +1,6 @@
 # Post-traitement AEFI
 
-Module de l'acquisition qui calcule, à partir du CSV d'un scan, cinq étapes (`preprocessed`, `phase_calibrated`, `amplitude_subtracted`, `rotated_frame`, `interpolated`), les range dans le fichier `.h5` de l'acquisition et les montre dans une fenêtre à panneaux.
+Module de l'acquisition qui calcule, à partir du CSV d'un scan, cinq étapes (`preprocessed`, `phase_calibrated`, `amplitude_subtracted`, `rotated_frame`, `interpolated`), les range dans un fichier `.h5` qu'il crée dans le dossier de l'acquisition (l'acquisition n'exporte que le CSV), avec les points bruts relus du CSV et leur provenance, et les montre dans une fenêtre à panneaux.
 Même découpage en couches que `src/` : `domain/`, `application/`, `infrastructure/`, `interface/`. L'architecture est décrite dans `Data Processing Architecture.md`.
 
 ## Lancer la fenêtre
