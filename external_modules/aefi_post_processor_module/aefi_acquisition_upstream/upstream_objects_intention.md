@@ -25,6 +25,7 @@ Objets empruntés (tous sans dépendance vers un service, un port ou un adaptate
 | `ModernTaskbar` | `interface/widgets/taskbar/modern_taskbar.py` | la barre de tâches |
 | `TaskbarPresenter` | `interface/presenters/taskbar_presenter.py` | son presenter |
 | `TaskbarPresentationModel` | `interface/presentation/taskbar_model.py` | son modèle de présentation |
+| `RotationConvention` (par `upstream_calibration.py`) | `domain/test_bench_calibration/value_objects/rotation_convention/rotation_convention.py` | refuser une convention de rotation que l'application ne sait pas appliquer, au lieu de tourner les données dans le mauvais sens |
 
 - Seuls l'infrastructure et l'interface du module importent ce paquet. Le domaine et l'application ne l'importent jamais, sinon l'acquisition importerait du code de sa propre interface à travers le post-traitement : `_tests/architecture_test.py` le vérifie, car `solidai verify` ne voit pas ce paquet, hors des quatre couches.
 - `RotationConvention` entre en tranche 2, `BenchReferential` en tranche 3, `ScanVisualizationPanel` en tranche 4.
