@@ -1,3 +1,4 @@
 18:06 | depart | quoi=tranche 2 partie 1 du post-traitement conforme : angles appliques et panneau Parametres d'acquisition | session=f5fe1792-ef1c-4978-ae2a-0e288885f2d8 | etape=etape-2-0
 18:06 | note | sous-agent au-aefi-acquisition ; budget=90min,~180 appels ; code et tests par outils natifs, intentions/constats/plan par le gate ; commits limites au module et a cette trace
 18:20 | decision | route=le catalogue porte les angles appliques (traducteur du depot -> AcquisitionRecord -> AcquisitionStatusDTO) ; le service de traitement decide (angles du fichier > angles demandes) via ProcessScanDTO.applied_rotation_angles ; aucun second lecteur du fichier ; IScanPlanReader inchange
+18:32 | jalon | etape=2.0 faite | V1=170ok+2echecs connus V2=0 erreur (46 verifications) V3=6ok (releves base : pytest-v1-base.log solidai-verify-v2-base.log pytest-v3-base.log) | decoupage-de-la-tranche-2.md ecrit ; plan : etape-2-0 a etape-2-11 ajoutees (diagnostics erreur=0)
