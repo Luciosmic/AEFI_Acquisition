@@ -134,3 +134,56 @@ def test_a_scan_without_description_keeps_the_square_grid():
     grid, metadata = writer.load_step('preprocessed')
     assert grid.shape == (6, 6, 6) and np.isnan(grid[3:, :, :]).all()
     assert 'grid_origin' not in metadata
+
+
+# -- les angles que l'acquisition a appliqués passent avant les angles demandés ----------------------------------
+
+APPLIED = (34.9, 45.7, -5.3)
+IDEAL = (35.3, 45.0, 0.0)
+
+
+def _steps(request, caplog=None):
+    reader, writer = FakeCsvScanReader(), FakeHdf5StepWriter()
+    reader.add_file(CSV, _samples())
+    summary = PostProcessingService(reader, writer).process_scan(request)
+    return writer, summary
+
+
+def test_the_angles_the_acquisition_applied_replace_the_requested_ones():
+    applied, _ = _steps(ProcessScanDTO(CSV, STORE, ProcessingParameters(rotation_angles=IDEAL), applied_rotation_angles=APPLIED))
+    direct, _ = _steps(ProcessScanDTO(CSV, STORE, ProcessingParameters(rotation_angles=APPLIED)))
+    ideal, _ = _steps(ProcessScanDTO(CSV, STORE, ProcessingParameters(rotation_angles=IDEAL)))
+
+    assert applied.load_step('rotated_frame')[1]['rotation_angles'] == APPLIED
+    assert applied.load_step('interpolated')[1]['rotation_angles'] == APPLIED
+    for name in ('rotated_frame', 'interpolated'):
+        assert np.array_equal(applied.load_step(name)[0], direct.load_step(name)[0], equal_nan=True)
+    assert not np.array_equal(applied.load_step('rotated_frame')[0], ideal.load_step('rotated_frame')[0], equal_nan=True)
+
+
+def test_without_applied_angles_the_requested_ones_are_used_as_before():
+    plain, _ = _steps(ProcessScanDTO(CSV, STORE, ProcessingParameters(rotation_angles=IDEAL)))
+    none, _ = _steps(ProcessScanDTO(CSV, STORE, ProcessingParameters(rotation_angles=IDEAL), applied_rotation_angles=None))
+
+    assert plain.load_step('rotated_frame')[1]['rotation_angles'] == IDEAL
+    assert np.array_equal(plain.load_step('rotated_frame')[0], none.load_step('rotated_frame')[0], equal_nan=True)
+
+
+def test_applied_angles_rotate_the_frame_even_when_none_were_requested():
+    writer, summary = _steps(ProcessScanDTO(CSV, STORE, applied_rotation_angles=APPLIED))
+
+    assert 'frame_rotation' in summary.steps_completed
+    assert writer.load_step('rotated_frame')[1]['rotation_angles'] == APPLIED
+
+
+def test_the_journal_says_where_the_angles_come_from(caplog):
+    import logging
+
+    with caplog.at_level(logging.INFO):
+        _steps(ProcessScanDTO(CSV, STORE, ProcessingParameters(rotation_angles=IDEAL), applied_rotation_angles=APPLIED))
+        _steps(ProcessScanDTO(CSV, STORE, ProcessingParameters(rotation_angles=IDEAL)))
+        _steps(ProcessScanDTO(CSV, STORE))
+
+    sources = [r.getMessage() for r in caplog.records if r.getMessage().startswith("pipeline.rotation_source")]
+    assert [s.split(" source=")[1].split(" ")[0] for s in sources] == ["acquisition_parameters", "request", "none"]
+    assert "angles_deg=(34.9, 45.7, -5.3)" in sources[0]

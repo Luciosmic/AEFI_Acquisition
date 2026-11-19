@@ -55,6 +55,8 @@ class _Export(IAcquisitionRepository):
 
     def __init__(self, names_with_steps):
         self.steps_stored = {name: (name in names_with_steps) for name in (OK, OTHER, BROKEN, DONE)}
+        self.rotations = {}  # name -> AppliedRotation the parameters file of that acquisition gives
+        self.rotation_problems = {}  # name -> why the file's rotation cannot be used
 
     def list_acquisitions(self, export_folder):
         records = []
@@ -65,6 +67,7 @@ class _Export(IAcquisitionRepository):
                 name=name, kind=kind, folder=folder, csv_file=f"{folder}/{name}_aefi.csv",
                 acquisition_file=f"{folder}/{name}.h5", csv_modified_at=100.0,
                 steps_modified_at=200.0 if stored else None, steps_hold_preprocessed=stored,
+                applied_rotation=self.rotations.get(name), rotation_problem=self.rotation_problems.get(name),
             ))
         return records
 
@@ -78,6 +81,18 @@ class _Writer(FakeHdf5StepWriter):
         super().close()
         if "preprocessed" in {s.split(" @")[0] for s in self.processing_history()}:
             self._export.steps_stored[self._name] = True
+
+
+class _RecordingService(PostProcessingService):
+    """The real service, which also keeps the request it was given."""
+
+    def __init__(self, reader, writer, requests):
+        super().__init__(reader, writer)
+        self._requests = requests
+
+    def process_scan(self, request):
+        self._requests.append(request)
+        return super().process_scan(request)
 
 
 class _Parts:
@@ -94,7 +109,7 @@ class _Parts:
             self.reader.add_file(f"{EXPORT}/{name}/{name}_aefi.csv", samples)
         self.export = _Export(names_with_steps)
         self.catalog = AcquisitionCatalogService(self.export)
-        self.writers, self.calls = {}, []
+        self.writers, self.calls, self.requests = {}, [], []
         self.view = FakeAcquisitionsView()
         self.parameters = ProcessingParameters(rotation_angles=rotation_angles)
         self.presenter = AcquisitionsPresenter(
@@ -105,7 +120,7 @@ class _Parts:
         name = acquisition_file.rsplit("/", 1)[1][:-3]
         self.calls.append(name)
         writer = self.writers[name] = _Writer(self.export, name)
-        return PostProcessingService(self.reader, writer), writer
+        return _RecordingService(self.reader, writer, self.requests), writer
 
 
 @pytest.fixture
@@ -267,3 +282,55 @@ def test_a_row_names_the_group_date_object_and_lift_off_from_the_parameters():
     row = parts.view.row(OK)
     assert (row.group, row.acquired_at, row.measured_object, row.lift_off) == (
         "WATER", "13/11/2026 20:40", "bouteille_cristalline", "25 mm")
+
+
+def test_an_acquisition_whose_file_gives_angles_is_processed_with_them_and_the_journal_says_so(caplog):
+    from ....domain.acquisition_record.value_objects.applied_rotation.applied_rotation import AppliedRotation
+
+    parts = _Parts(names_with_steps=())
+    parts.export.rotations[OK] = AppliedRotation((34.9, 45.7, -5.3), "extrinsic", "ZYX", "sources_to_sensor", origin="calibrated")
+    parts.presenter.refresh()
+
+    with caplog.at_level(logging.INFO):
+        parts.view.process_pending_requested.emit()
+
+    sent = {request.acquisition_file.rsplit("/", 1)[1][:-3]: request for request in parts.requests}
+    assert sent[OK].applied_rotation_angles == (34.9, 45.7, -5.3)
+    assert sent[OTHER].applied_rotation_angles is None  # no file: the requested (ideal) angles stay
+    assert sent[OTHER].parameters.rotation_angles == (0.0, 0.0, 45.0)
+    messages = [r.getMessage() for r in caplog.records if r.getMessage().startswith("scan.processing")]
+    ok = next(m for m in messages if f"scan={OK} " in m)
+    other = next(m for m in messages if f"scan={OTHER} " in m)
+    assert "rotation_source=acquisition_parameters" in ok and "rotation_origin=calibrated" in ok and "(34.9, 45.7, -5.3)" in ok
+    assert "rotation_source=template" in other and "rotation_origin=ideal_template" in other
+
+
+def test_a_rotation_the_file_describes_but_the_application_refuses_falls_back_on_the_requested_angles_with_a_warning(caplog):
+    parts = _Parts(names_with_steps=())
+    parts.export.rotation_problems[OK] = "convention de rotation non prise en charge (intrinsic, ZYX, sources_to_sensor)"
+    parts.presenter.refresh()
+
+    with caplog.at_level(logging.INFO):
+        parts.view.process_pending_requested.emit()
+
+    request = next(r for r in parts.requests if OK in r.acquisition_file)
+    assert request.applied_rotation_angles is None
+    warnings = [r for r in caplog.records if r.getMessage().startswith("scan.rotation_fallback")]
+    assert len(warnings) == 1 and warnings[0].levelno == logging.WARNING
+    assert f"scan={OK}" in warnings[0].getMessage() and "intrinsic" in warnings[0].getMessage()
+
+
+def test_a_listener_of_the_chosen_status_receives_the_whole_status_and_is_told_when_nothing_is_selected(parts):
+    from ....domain.acquisition_record.value_objects.applied_rotation.applied_rotation import AppliedRotation
+
+    parts.export.rotations[OTHER] = AppliedRotation((1.0, 2.0, 3.0), "extrinsic", "ZYX", "sources_to_sensor")
+    seen, cleared = [], []
+    parts.presenter.when_status_chosen(seen.append, lambda: cleared.append(True))
+    parts.presenter.refresh()
+
+    parts.view.selection_changed.emit([OTHER])
+    parts.view.selection_changed.emit([])
+
+    assert [status.name for status in seen] == [OTHER]
+    assert seen[0].applied_rotation.angles == (1.0, 2.0, 3.0) and seen[0].acquisition_file.endswith(f"{OTHER}.h5")
+    assert cleared == [True]

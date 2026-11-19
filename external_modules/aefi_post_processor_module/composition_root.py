@@ -47,9 +47,10 @@ _DEVICE_CONFIG_PATH = project_root / "config_templates" / "aefi_device_config.js
 
 
 def _ideal_rotation_angles() -> tuple:
-    """Ideal sources -> sensor angles (theta_x, theta_y, theta_z) from the device config template."""
-    # ponytail: batch reprocessing uses the IDEAL angles, not the sensor calibration active when the
-    # scan was acquired (the in-app export uses the active one). Upgrade: read the angles stored with each scan.
+    """Ideal sources -> sensor angles (theta_x, theta_y, theta_z) from the device config template: the fallback angles."""
+    # ponytail: these IDEAL angles are only the fallback, for an acquisition whose parameters file gives no usable
+    # rotation (old export, convention refused): when it does, the angles the acquisition applied take precedence
+    # (post_processing_service). Upgrade: none planned; the fallback is the documented behaviour without a description.
     rotation = json.loads(_DEVICE_CONFIG_PATH.read_text(encoding="utf-8"))["sensor"]["calibration"]["sources_to_sensor_rotation"]
     return (float(rotation["theta_x"]), float(rotation["theta_y"]), float(rotation["theta_z"]))
 

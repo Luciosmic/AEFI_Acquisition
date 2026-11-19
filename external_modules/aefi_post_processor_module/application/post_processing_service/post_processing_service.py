@@ -21,6 +21,7 @@ from ...domain.processing.processing_steps.processing_steps import (
 from .dtos.process_scan_dto import ProcessScanDTO
 from .dtos.processing_summary_dto import ProcessingSummaryDTO
 from .i_api_post_processing_service import IApiPostProcessingService
+from .no_scan_plan_reader import NO_SCAN_PLAN
 from .ports.i_csv_scan_reader import ICsvScanReader
 from .ports.i_scan_plan_reader import IScanPlanReader
 from .ports.i_step_writer import IStepWriter
@@ -33,15 +34,24 @@ class PostProcessingService(IApiPostProcessingService):
         self,
         csv_reader: ICsvScanReader,
         step_writer: IStepWriter,
-        scan_plan_reader: Optional[IScanPlanReader] = None,
+        scan_plan_reader: IScanPlanReader = NO_SCAN_PLAN,
     ):
         self._csv_reader = csv_reader
         self._step_writer = step_writer
-        self._scan_plan_reader = scan_plan_reader  # None: no description is read, every scan gets the square grid
+        self._scan_plan_reader = scan_plan_reader  # NO_SCAN_PLAN: no description is read, every scan gets the square grid
+
+    @staticmethod
+    def _rotation_angles(request: ProcessScanDTO):
+        """The angles the frame is rotated by and where they come from: the acquisition's own, else the requested ones."""
+        if request.applied_rotation_angles is not None:
+            return tuple(request.applied_rotation_angles), 'acquisition_parameters'
+        if request.parameters.rotation_angles is not None:
+            return request.parameters.rotation_angles, 'request'
+        return None, 'none'
 
     def process_scan(self, request: ProcessScanDTO) -> ProcessingSummaryDTO:
         params = request.parameters
-        rotation_angles = params.rotation_angles
+        rotation_angles, rotation_source = self._rotation_angles(request)
         reference_point = params.reference_point
         scan = os.path.splitext(os.path.basename(request.acquisition_file))[0]
         completed: List[str] = []
@@ -50,6 +60,7 @@ class PostProcessingService(IApiPostProcessingService):
             "pipeline.started scan=%s csv=%s rotation_angles_deg=%s reference_point=%s interpolation=%s",
             scan, request.csv_path, rotation_angles, reference_point, not request.skip_interpolation,
         )
+        logger.info("pipeline.rotation_source scan=%s source=%s angles_deg=%s", scan, rotation_source, rotation_angles)
 
         try:
             logger.debug("pipeline.step scan=%s step=%s", scan, step)
@@ -59,7 +70,7 @@ class PostProcessingService(IApiPostProcessingService):
 
             step = 'preprocess'
             logger.debug("pipeline.step scan=%s step=%s", scan, step)
-            planned = self._scan_plan_reader.planned_grid(request.csv_path) if self._scan_plan_reader else None
+            planned = self._scan_plan_reader.planned_grid(request.csv_path)
             preprocessed, metadata, origin = build_scan_grid(
                 samples.x, samples.y, samples.values, samples.channel_names, planned
             )

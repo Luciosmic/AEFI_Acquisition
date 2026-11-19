@@ -1,7 +1,7 @@
 ---
 type: service-applicatif::solidai-hexagonal
 tldr: "Enchaîner les cinq étapes du traitement d'un scan (grille, calibration de phase, soustraction d'amplitude, rotation de repère, interpolation) et les ranger, sans connaître ni pandas ni h5py."
-code: ["[[external_modules/aefi_post_processor_module/application/post_processing_service/post_processing_service.py]]"]
+code: ["[[external_modules/aefi_post_processor_module/application/post_processing_service/post_processing_service.py]]", "[[external_modules/aefi_post_processor_module/application/post_processing_service/no_scan_plan_reader.py]]"]
 cause_de_changement: orchestration
 ports:
   - ^: i-api-post-processing-service
@@ -33,12 +33,13 @@ Le traitement d'un scan vivait dans une classe qui lisait le CSV avec pandas, ap
 
 ## Responsibility
 
-- `process_scan(ProcessScanDTO)` : lire le scan, construire la grille (celle que l'acquisition a prévue quand sa description la donne, sinon la grille carrée), calibrer la phase, soustraire l'amplitude, tourner le repère si des angles sont donnés, interpoler sauf demande contraire, ranger chaque étape.
+- `process_scan(ProcessScanDTO)` : lire le scan, construire la grille (celle que l'acquisition a prévue quand sa description la donne, sinon la grille carrée), calibrer la phase, soustraire l'amplitude, tourner le repère si des angles sont donnés (de préférence ceux que l'acquisition a appliqués), interpoler sauf demande contraire, ranger chaque étape.
 - Rendre un `ProcessingSummaryDTO` : étapes faites, erreurs, succès, fichier, historique.
 - Journaliser chaque étape dans les mêmes événements que l'ancien pipeline (`pipeline.started`, `pipeline.step`, `pipeline.finished`, `pipeline.failed`), et l'origine de la grille (`pipeline.grid`, en avertissement quand un point tombe hors de la grille prévue).
 
 ## Design
 
-- Le lecteur de CSV, l'écrivain d'étapes et le lecteur de la grille prévue arrivent par le constructeur ; sans lecteur de grille prévue, chaque scan reçoit la grille carrée ; les calculs sont ceux du domaine, créés à chaque traitement avec les paramètres de la demande.
+- Le lecteur de CSV, l'écrivain d'étapes et le lecteur de la grille prévue arrivent par le constructeur ; sans lecteur de grille prévue, le service prend `NO_SCAN_PLAN` (`no_scan_plan_reader.py`), un lecteur qui ne connaît aucune grille, et chaque scan reçoit la grille carrée ; les calculs sont ceux du domaine, créés à chaque traitement avec les paramètres de la demande.
 - Un échec d'étape est journalisé puis relancé, comme avant : l'appelant (l'acquisition) l'attrape.
 - Sans angles de rotation, l'étape `rotated_frame` n'est pas écrite, et l'interpolation prend l'étape précédente.
+- Les angles de rotation viennent d'abord de la demande `applied_rotation_angles` (ceux que l'acquisition a appliqués, lus dans son fichier de paramètres par le catalogue), à défaut de `parameters.rotation_angles` (les angles idéaux du gabarit). Le service ne lit pas le fichier : il décide seulement de la priorité, et le journal dit la source (`pipeline.rotation_source … source=acquisition_parameters|request|none`). Sans description de l'acquisition, rien ne change, ce que l'étalon `golden_master_test` prouve.

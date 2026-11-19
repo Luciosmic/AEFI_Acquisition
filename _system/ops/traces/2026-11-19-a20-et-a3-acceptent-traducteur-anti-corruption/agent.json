@@ -1,0 +1,12 @@
+{
+  "pid": 72727,
+  "pgid": 72727,
+  "demarrage": "Thu Nov 19 18:02:09 2026",
+  "session": "agent-38a28f88-e392-4d6c-a875-850d5e78a3a5",
+  "lance_a": "2026-11-19T17:02:09.584Z",
+  "pourquoi": "Le post-traitement de AEFI_Acquisition type correctement une intention `traducteur-anti-corruption` (type de solidai-hexagonal, question 5 de l'index), et `solidai verify` la signale quand même `solidai-intention-non-typee` : la liste `types` du paramètre de la vérification A20 est incomplète. Même défaut déjà corrigé une fois pour `noyau-partage` (commit 9bfddc0). Le module doit passer à 0 erreur.",
+  "quoi": "Dans solidai-atome : A20 (`checks/solidai-intention-non-typee.md`) et, si sa liste `types` omet aussi `traducteur-anti-corruption`, A3 (`solidai-intention-sans-ses-trois-titres`) acceptent le type `traducteur-anti-corruption`. Ce seul nom : les 7 autres types omis restent hors périmètre et vont dans un constat.",
+  "workspace": "/Users/luis/Library/CloudStorage/Dropbox/UTUKI/RECHERCHE-ET-DEVELOPPEMENT/SOLIDSuite/SOLIDAI-PACKAGES/solidai-atome",
+  "agent": "au-solidai-atome",
+  "session_parente": "f5fe1792-ef1c-4978-ae2a-0e288885f2d8"
+}

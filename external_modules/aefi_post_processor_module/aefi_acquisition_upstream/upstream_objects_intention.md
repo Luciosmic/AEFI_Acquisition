@@ -1,7 +1,7 @@
 ---
 type: atome::solidai-atome
 tldr: "Emprunter à l'acquisition les pièces génériques de la fenêtre à panneaux, par un seul paquet, sans recopier ni se mêler aux dossiers de src/."
-code: ["[[external_modules/aefi_post_processor_module/aefi_acquisition_upstream/upstream_objects.py]]", "[[external_modules/aefi_post_processor_module/aefi_acquisition_upstream/__init__.py]]"]
+code: ["[[external_modules/aefi_post_processor_module/aefi_acquisition_upstream/upstream_objects.py]]", "[[external_modules/aefi_post_processor_module/aefi_acquisition_upstream/__init__.py]]", "[[external_modules/aefi_post_processor_module/aefi_acquisition_upstream/upstream_calibration.py]]"]
 ---
 # upstream_objects — Intention
 
@@ -25,8 +25,9 @@ Objets empruntés (tous sans dépendance vers un service, un port ou un adaptate
 | `ModernTaskbar` | `interface/widgets/taskbar/modern_taskbar.py` | la barre de tâches |
 | `TaskbarPresenter` | `interface/presenters/taskbar_presenter.py` | son presenter |
 | `TaskbarPresentationModel` | `interface/presentation/taskbar_model.py` | son modèle de présentation |
+| `RotationConvention` (par `upstream_calibration.py`) | `domain/test_bench_calibration/value_objects/rotation_convention/rotation_convention.py` | refuser une convention de rotation que l'application ne sait pas appliquer, au lieu de tourner les données dans le mauvais sens |
 
 - Seuls l'infrastructure et l'interface du module importent ce paquet. Le domaine et l'application ne l'importent jamais, sinon l'acquisition importerait du code de sa propre interface à travers le post-traitement : `_tests/architecture_test.py` le vérifie, car `solidai verify` ne voit pas ce paquet, hors des quatre couches.
-- `RotationConvention` entre en tranche 2, `BenchReferential` en tranche 3, `ScanVisualizationPanel` en tranche 4.
+- `RotationConvention` est entrée en tranche 2, dans son propre fichier `upstream_calibration.py` : `upstream_objects.py` tire Qt, et les lecteurs du fichier des paramètres (câblage sans Qt) ne doivent pas le charger. `import domain` y résout vers `src/domain` comme `import interface` vers `src/interface`, par la même fonction `settle_sys_path()`. `BenchReferential` entre en tranche 3, `ScanVisualizationPanel` en tranche 4.
 - Un test lance un processus neuf et vérifie que `interface` vient de `src/`.
 - La cause de changement n'est pas déclarée : A15 range la cause `outil` sous `infrastructure/` ou `interface/`, et ce paquet est hors des quatre couches. Il change quand `src/` déplace une pièce empruntée.

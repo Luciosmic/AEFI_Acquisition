@@ -7,6 +7,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
 
+from .value_objects.applied_rotation.applied_rotation import AppliedRotation
+
 NEW = 'new'
 INCOMPLETE = 'incomplete'
 FORCED = 'forced'
@@ -28,6 +30,11 @@ class AcquisitionRecord:
     acquired_at: Optional[datetime] = None
     measured_object: Optional[str] = None
     lift_off_mm: Optional[float] = None
+    # The rotation the acquisition applied, when its parameters file gives one the post-processing can use;
+    # `rotation_problem` says why not when it gives one that cannot be used (None: nothing to say).
+    applied_rotation: Optional[AppliedRotation] = None
+    rotation_problem: Optional[str] = None
+    schema_version: Optional[str] = None
 
     def recalculation_reason(self, forced: bool = False) -> Optional[str]:
         """

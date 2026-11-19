@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Optional, Tuple
 
 from ....domain.processing.processing_steps.processing_steps import ProcessingParameters
 
@@ -11,3 +12,6 @@ class ProcessScanDTO:
     acquisition_file: str
     parameters: ProcessingParameters = ProcessingParameters()
     skip_interpolation: bool = False
+    # The angles (degrees) the acquisition applied, read from its parameters file: they replace
+    # `parameters.rotation_angles`. None: the file does not give any, the requested angles stay.
+    applied_rotation_angles: Optional[Tuple[float, float, float]] = None

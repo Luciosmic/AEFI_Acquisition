@@ -15,10 +15,11 @@ Le lancement de l'ancienne fenêtre calculait avant d'afficher, dans une boucle 
 ## Responsibility
 
 - Montrer chaque acquisition du dossier d'export : son nom, son type (pas à pas, à la volée), l'objet lu dans le nom du dossier tant que la tranche 2 n'est pas faite, son état (traitée, à recalculer, en échec) et le détail (pourquoi à recalculer, ou l'étape et le message de l'échec).
-- Dire aux écouteurs quelle acquisition la sélection désigne, pour que la Carte la montre.
+- Dire aux écouteurs quelle acquisition la sélection désigne, pour que la Carte la montre (`when_acquisition_chosen`), et donner à ceux qui veulent le statut entier (le panneau Paramètres d'acquisition) ce statut, ou l'absence de sélection (`when_status_chosen`).
 - Traiter à la demande : la sélection (même à jour), ou tout ce qui est à recalculer (tout, si forcé). Une acquisition qui échoue ne stoppe pas les suivantes : son échec, avec l'étape fautive, est rapporté au catalogue.
 - Écrire le bilan dans le journal (`sync.finished` : traitées, à jour, en échec, avec l'étape de chaque échec ; avertissement s'il y a un échec), puis réafficher la liste et prévenir les écouteurs.
 - Ouvrir le dossier de l'acquisition sélectionnée, ou celui de l'export.
+- Transmettre au service, pour chaque acquisition, les angles que son fichier de paramètres dit avoir appliqués (le catalogue les a lus) ; le presenter ne décide pas de la priorité, le service le fait. Il journalise la source (`scan.processing … rotation_source=acquisition_parameters|template`) et, quand le fichier décrit une rotation inutilisable, un avertissement `scan.rotation_fallback` avec la raison : le traitement retombe alors sur les angles idéaux.
 
 ## Design
 

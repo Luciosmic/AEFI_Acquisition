@@ -89,6 +89,7 @@ class AcquisitionsPresenter:
         self._selected: List[str] = []
         self._chosen_listeners: List[Callable[[str, str], None]] = []
         self._processed_listeners: List[Callable[[], None]] = []
+        self._status_listeners: List[Tuple[Callable[[AcquisitionStatusDTO], None], Callable[[], None]]] = []
         view.selection_changed.connect(self.on_selection_changed)
         view.process_selection_requested.connect(self.process_selection)
         view.process_pending_requested.connect(self.process_pending)
@@ -97,6 +98,10 @@ class AcquisitionsPresenter:
     def when_acquisition_chosen(self, listener: Callable[[str, str], None]) -> None:
         """`listener(name, acquisition_file)` is called each time the selection names an acquisition."""
         self._chosen_listeners.append(listener)
+
+    def when_status_chosen(self, listener: Callable[[AcquisitionStatusDTO], None], when_none: Callable[[], None]) -> None:
+        """`listener(status)` is called with the whole status of the acquisition the selection names, `when_none()` when it names none."""
+        self._status_listeners.append((listener, when_none))
 
     def when_processed(self, listener: Callable[[], None]) -> None:
         """`listener()` is called after a batch, once the list shows the new states."""
@@ -122,6 +127,11 @@ class AcquisitionsPresenter:
             status = self._statuses[self._selected[0]]
             for listener in self._chosen_listeners:
                 listener(status.name, status.acquisition_file)
+            for listener, _when_none in self._status_listeners:
+                listener(status)
+        else:
+            for _listener, when_none in self._status_listeners:
+                when_none()
 
     def process_pending(self, force: bool = False) -> None:
         """Process every acquisition to recompute (all of them when forced)."""
@@ -167,12 +177,25 @@ class AcquisitionsPresenter:
         writer: Optional[object] = None
         try:
             parameters = self._parameters_provider()
+            applied = status.applied_rotation
+            if applied is not None:
+                angles, origin, source = applied.angles, applied.origin or "unknown", "acquisition_parameters"
+            else:
+                angles, origin, source = getattr(parameters, "rotation_angles", None), self._rotation_origin, "template"
             logger.info(
-                "scan.processing scan=%s reason=%s rotation_angles_deg=%s rotation_origin=%s",
-                status.name, status.reason or status.state, getattr(parameters, "rotation_angles", None), self._rotation_origin,
+                "scan.processing scan=%s reason=%s rotation_angles_deg=%s rotation_origin=%s rotation_source=%s",
+                status.name, status.reason or status.state, angles, origin, source,
             )
+            if status.rotation_problem is not None:
+                logger.warning(
+                    "scan.rotation_fallback scan=%s reason=%s fallback_angles_deg=%s",
+                    status.name, status.rotation_problem, angles,
+                )
             service, writer = self._processor_factory(status.acquisition_file)
-            service.process_scan(ProcessScanDTO(status.csv_file, status.acquisition_file, parameters))
+            service.process_scan(ProcessScanDTO(
+                status.csv_file, status.acquisition_file, parameters,
+                applied_rotation_angles=applied.angles if applied is not None else None,
+            ))
         except Exception as error:
             step = getattr(error, "processing_step", "before_processing")
             batch.failed[status.name] = step

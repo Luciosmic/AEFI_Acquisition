@@ -56,3 +56,48 @@ def test_processing_from_the_panel_then_choosing_a_step_draws_its_map_and_the_ba
     finally:
         root.removeHandler(feedback)
         root.setLevel(previous_level)
+
+
+def _write_parameters(folder, name):
+    import json
+
+    (folder / f"{name}_acquisition-parameters.json").write_text(json.dumps({
+        "schema": {"version": "1.4"},
+        "provenance": {"activity": {"kind": "step_scan", "started_at": "2026-11-12T20:57:00.050+01:00"}},
+        "feature_of_interest": {"description": "bouteille_cristalline"},
+        "measurement_chain": {"sensor": {"deployment": {"rotation_applied": {
+            "theta_x": {"value": 34.9, "unit": "deg"}, "theta_y": {"value": 45.7, "unit": "deg"},
+            "theta_z": {"value": -5.3, "unit": "deg"},
+            "convention": {"type": "extrinsic", "order": "ZYX", "direction": "sources_to_sensor"},
+            "origin": "calibrated", "applies_to_data": False}}}},
+    }), encoding="utf-8")
+
+
+def test_choosing_an_acquisition_fills_the_parameters_panel_and_changes_no_file(qtbot, tmp_path):
+    from PySide6.QtWidgets import QLabel
+
+    export = tmp_path / "export"
+    (export / NAME).mkdir(parents=True)
+    shutil.copy(BATCH / "scan_001_baseline.csv", export / NAME / f"{NAME}_aefi.csv")
+    _write_parameters(export / NAME, NAME)
+    before = sorted((str(p), p.stat().st_mtime) for p in export.rglob("*"))
+    feedback = FeedbackLogHandler(logging.INFO)
+    shell = build_shell(
+        feedback, str(tmp_path / "post_processor.log"), str(tmp_path / "layout.dat"), str(export),
+        lambda: ProcessingParameters(rotation_angles=(0.0, 0.0, 45.0)), "test",
+    )
+    qtbot.addWidget(shell.window)
+    assert set(shell.window.carrier_view._panels) == {"acquisitions", "acquisition_parameters", "field_map", "logs"}
+    acquisitions = shell.window.carrier_view._panels["acquisitions"].widget()
+    parameters = shell.window.carrier_view._panels["acquisition_parameters"].widget()
+    shell.acquisitions_presenter.refresh()
+
+    acquisitions.table.selectRow(0)
+
+    texts = [label.text() for label in parameters.findChildren(QLabel)]
+    assert NAME in texts and "bouteille_cristalline" in texts and "34.9 °" in texts and "45.7 °" in texts and "-5.3 °" in texts
+    assert "extrinsic · ZYX · sources_to_sensor" in texts and "1.4" in texts and "ceux de l'acquisition" in texts
+    assert sorted((str(p), p.stat().st_mtime) for p in export.rglob("*")) == before
+
+    acquisitions.table.clearSelection()
+    assert "Aucune acquisition sélectionnée" in [label.text() for label in parameters.findChildren(QLabel)]

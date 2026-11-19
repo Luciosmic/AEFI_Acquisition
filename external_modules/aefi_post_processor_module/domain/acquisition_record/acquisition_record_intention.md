@@ -20,6 +20,7 @@ Un traitement qui échoue avant d'avoir rangé sa première étape laisse un fic
 
 - Porter une acquisition de l'export : son nom (le dossier), son genre (`stepScan` ou `flyScan`), les chemins de son scan et de son fichier `.h5`, désignés par des chaînes, et les dates du scan et des étapes.
 - Porter ce que l'acquisition dit d'elle-même dans son fichier de paramètres, pour la reconnaître : date de début, objet mesuré, lift-off (absents quand le fichier ne le dit pas), et le dossier où l'opérateur l'a rangée (`group`, chemin relatif à l'export, vide à sa racine).
+- Porter la rotation que l'acquisition a appliquée (`applied_rotation`, un value object), la raison pour laquelle une rotation décrite n'est pas utilisable (`rotation_problem`) et la version du schéma de son fichier de paramètres (`schema_version`).
 - Décider si ses étapes sont à recalculer, et pourquoi : `new`, `incomplete`, `forced` ou `source_newer`.
 - Aucune méthode n'écrit dans l'export : l'agrégat est en lecture seule.
 
@@ -27,4 +28,4 @@ Un traitement qui échoue avant d'avoir rangé sa première étape laisse un fic
 
 - Une `@dataclass` ; la règle est `recalculation_reason(forced)`, dans l'ordre : fichier d'étapes absent, fichier d'étapes sans l'étape `preprocessed` (`incomplete`, même plus récent que le scan et même forcé), recalcul forcé, scan aussi récent que les étapes. Le dépôt dit si le fichier contient `preprocessed` (`steps_hold_preprocessed`). Un traitement qui échoue après avoir rangé `preprocessed` laisse des étapes partielles que cette règle ne voit pas : elle ne garde que le cas du fichier vide.
 - Le dépôt `IAcquisitionRepository` est un port sortant en lecture : le domaine ne connaît ni dossiers ni dates système.
-- Le refus d'une convention de rotation non appliquée (écart 7 de l'avis) attend la tranche 2, qui apporte la convention.
+- Le refus d'une convention de rotation que l'application ne sait pas appliquer (écart 7 de l'avis) se décide dans le traducteur de l'infrastructure, qui emprunte la convention : le record ne reçoit que `applied_rotation` ou `rotation_problem`, jamais les deux.

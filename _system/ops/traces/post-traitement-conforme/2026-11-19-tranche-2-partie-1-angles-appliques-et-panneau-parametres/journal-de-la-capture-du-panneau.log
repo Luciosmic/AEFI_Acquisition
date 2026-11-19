@@ -1,0 +1,23 @@
+INFO catalog.kind_from_name scan=2026-11-11_101000_stepScan_scan_001_baseline kind=stepScan schema=None
+WARNING catalog.rotation_refused scan=2026-11-13_103000_stepScan_scan_002_phase_offset reason=convention de rotation non prise en charge (intrinsic, ZYX, sources_to_sensor)
+INFO catalog.listed export=/private/tmp/claude-501/-Users-luis-Library-CloudStorage-Dropbox-Luis-1-PROJETS-1---THESE-EXPERIMENTAL-AEFI-Acquisition/f5fe1792-ef1c-4978-ae2a-0e288885f2d8/scratchpad/exports-demo-parametres acquisitions=3 to_recompute=3 failed=0
+INFO acquisition.state scan=2026-11-12_102000_stepScan_scan_004_rotation_z45 state=à recalculer detail=jamais traitée
+INFO window.shown panels=['acquisitions', 'acquisition_parameters', 'field_map', 'logs'] layout_file=/private/tmp/claude-501/-Users-luis-Library-CloudStorage-Dropbox-Luis-1-PROJETS-1---THESE-EXPERIMENTAL-AEFI-Acquisition/f5fe1792-ef1c-4978-ae2a-0e288885f2d8/sc
+INFO scan.selected scan=2026-11-12_102000_stepScan_scan_004_rotation_z45
+WARNING scan.file_missing path=/private/tmp/claude-501/-Users-luis-Library-CloudStorage-Dropbox-Luis-1-PROJETS-1---THESE-EXPERIMENTAL-AEFI-Acquisition/f5fe1792-ef1c-4978-ae2a-0e288885f2d8/scratchpad/exports-demo-parametres/2026-11-12_102000_stepScan_scan_004_r
+WARNING scan.no_steps scan=2026-11-12_102000_stepScan_scan_004_rotation_z45
+INFO scan.selected scan=2026-11-12_102000_stepScan_scan_004_rotation_z45
+WARNING scan.file_missing path=/private/tmp/claude-501/-Users-luis-Library-CloudStorage-Dropbox-Luis-1-PROJETS-1---THESE-EXPERIMENTAL-AEFI-Acquisition/f5fe1792-ef1c-4978-ae2a-0e288885f2d8/scratchpad/exports-demo-parametres/2026-11-12_102000_stepScan_scan_004_r
+WARNING scan.no_steps scan=2026-11-12_102000_stepScan_scan_004_rotation_z45
+INFO scan.processing scan=2026-11-12_102000_stepScan_scan_004_rotation_z45 reason=new rotation_angles_deg=(34.9, 45.7, -5.3) rotation_origin=calibrated rotation_source=acquisition_parameters
+INFO pipeline.started scan=2026-11-12_102000_stepScan_scan_004_rotation_z45 csv=/private/tmp/claude-501/-Users-luis-Library-CloudStorage-Dropbox-Luis-1-PROJETS-1---THESE-EXPERIMENTAL-AEFI-Acquisition/f5fe1792-ef1c-4978-ae2a-0e288885f2d8/scratchpad/exports-demo
+INFO pipeline.rotation_source scan=2026-11-12_102000_stepScan_scan_004_rotation_z45 source=acquisition_parameters angles_deg=(34.9, 45.7, -5.3)
+WARNING scan_plan.incomplete parameters=/private/tmp/claude-501/-Users-luis-Library-CloudStorage-Dropbox-Luis-1-PROJETS-1---THESE-EXPERIMENTAL-AEFI-Acquisition/f5fe1792-ef1c-4978-ae2a-0e288885f2d8/scratchpad/exports-demo-parametres/2026-11-12_102000_stepScan_s
+INFO pipeline.grid scan=2026-11-12_102000_stepScan_scan_004_rotation_z45 origin=no_plan shape=(50, 50)
+INFO pipeline.finished scan=2026-11-12_102000_stepScan_scan_004_rotation_z45 steps=['load_csv', 'preprocess', 'phase_calibration', 'amplitude_subtraction', 'frame_rotation', 'interpolation'] output=/private/tmp/claude-501/-Users-luis-Library-CloudStorage-Dropb
+INFO scan.processed scan=2026-11-12_102000_stepScan_scan_004_rotation_z45 elapsed_s=0.1
+INFO catalog.kind_from_name scan=2026-11-11_101000_stepScan_scan_001_baseline kind=stepScan schema=None
+WARNING catalog.rotation_refused scan=2026-11-13_103000_stepScan_scan_002_phase_offset reason=convention de rotation non prise en charge (intrinsic, ZYX, sources_to_sensor)
+INFO catalog.listed export=/private/tmp/claude-501/-Users-luis-Library-CloudStorage-Dropbox-Luis-1-PROJETS-1---THESE-EXPERIMENTAL-AEFI-Acquisition/f5fe1792-ef1c-4978-ae2a-0e288885f2d8/scratchpad/exports-demo-parametres acquisitions=3 to_recompute=2 failed=0
+INFO acquisition.state scan=2026-11-12_102000_stepScan_scan_004_rotation_z45 state=traitée detail=
+INFO scan.steps_loaded scan=2026-11-12_102000_stepScan_scan_004_rotation_z45 steps=['preprocessed', 'phase_calibrated', 'amplitude_subtracted', 'rotated_frame', 'interpolated']

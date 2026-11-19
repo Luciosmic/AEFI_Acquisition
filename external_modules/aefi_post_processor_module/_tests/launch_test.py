@@ -110,3 +110,13 @@ def test_with_force_the_launch_processes_every_acquisition_before_the_window_sho
     with h5py.File(export / name / f"{name}.h5", "r") as steps_file:
         assert list(steps_file.keys()) == ["amplitude_subtracted", "interpolated", "phase_calibrated", "preprocessed", "rotated_frame"]
     assert f"acquisition.state scan={name} state=traitée" in journal
+
+
+def test_the_window_shows_the_acquisition_parameters_panel_among_its_panels(tmp_path):
+    make_export(tmp_path)
+
+    journal, output = launch(tmp_path)
+
+    assert "window.shown" in journal, output
+    shown = next(line for line in journal.splitlines() if "window.shown" in line)
+    assert "'acquisition_parameters'" in shown

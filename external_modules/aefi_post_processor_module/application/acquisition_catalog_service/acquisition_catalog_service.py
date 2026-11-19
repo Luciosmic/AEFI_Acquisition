@@ -3,15 +3,27 @@ Acquisition catalog service — the acquisitions of an export and their state (s
 """
 
 import logging
-from typing import Dict, Tuple
+from typing import Dict, Optional, Tuple
 
 from ...domain.acquisition_record.repositories.i_acquisition_repository import IAcquisitionRepository
+from .dtos.applied_rotation_dto import AppliedRotationDTO
 from .dtos.acquisition_outcome_dto import AcquisitionOutcomeDTO
 from .dtos.acquisition_status_dto import FAILED, PROCESSED, TO_RECOMPUTE, AcquisitionStatusDTO
 from .dtos.list_acquisitions_dto import ListAcquisitionsDTO
 from .i_api_acquisition_catalog_service import IApiAcquisitionCatalogService
 
 logger = logging.getLogger(__name__)
+
+
+def _rotation_dto(record) -> Optional[AppliedRotationDTO]:
+    rotation = record.applied_rotation
+    if rotation is None:
+        return None
+    return AppliedRotationDTO(
+        angles=tuple(rotation.angles), convention_type=rotation.convention_type,
+        convention_order=rotation.convention_order, convention_direction=rotation.convention_direction,
+        origin=rotation.origin, calibration_id=rotation.calibration_id,
+    )
 
 
 class AcquisitionCatalogService(IApiAcquisitionCatalogService):
@@ -36,6 +48,8 @@ class AcquisitionCatalogService(IApiAcquisitionCatalogService):
                 reason=reason if state == TO_RECOMPUTE else None, failure_message=failure,
                 group=record.group, acquired_at=record.acquired_at,
                 measured_object=record.measured_object, lift_off_mm=record.lift_off_mm,
+                applied_rotation=_rotation_dto(record), rotation_problem=record.rotation_problem,
+                schema_version=record.schema_version,
             ))
         logger.info(
             "catalog.listed export=%s acquisitions=%d to_recompute=%d failed=%d",

@@ -1,0 +1,10 @@
+01:50 | depart | quoi=entretenir les traces du repo AEFI_Acquisition (audit, notes de tache manquantes, regroupements apres accord) | session=5cacfca5-0b02-4e1e-8151-bd3d7ed876f2
+01:50 | jalon | audit=10 constats molecule-candidate=2 tache-sans-fin=2 note-de-tache-manquante=3 plan=1 soumis-a-l-humain=2 | diagnostics_avant=7 (4 error, 1 warning, 1 drift, 1 hint)
+01:55 | jalon | notes de tache generees=3 (8097e9cd, 62ceb0ad, 840541f5) | diagnostics_apres=7 inchanges, aucun diagnostic neuf
+01:55 | attente | decision humaine=regrouper 2 molecules (reduire-la-dette x6, tranche-1-etapes x3) ; supprimer 2 documents to_validate ; signale seulement=2 taches sans fin, plan sans Prochaine action
+02:10 | blocage | gate rename refuse un dossier (mutate.rs rename_precheck exige is_file) ; 357 fichiers a deplacer ; decision humaine=corriger le moteur
+02:12 | delegation | session VS Code ouverte dans ~/arsumbris/au-engine avec prompt de correction ; regroupements en molecule suspendus jusqu'au binaire corrige
+18:12 | jalon | moteur corrige par la session au-engine-48 (rename d'un dossier, commits au-engine 9e59bd6, au-mcp-core cec38e1) ; demon et passerelle redemarres, ready=true
+18:15 | jalon | 9 dossiers deplaces par le gate, 1 commit chacun : 6 vers reduire-la-dette/ (304 fichiers), 3 vers post-traitement-conforme/tranche-1-etapes/ (53 fichiers) ; 357 fichiers retrouves
+18:16 | jalon | diagnostics_apres=8 : 1 avertissement neuf reference-target-missing, venu de la tache en cours tranche-2-partie-1 (autre session, sa note de tache pas encore generee), pas du deplacement
+18:16 | fin | resultat=atteint : 3 notes de tache generees, 2 molecules formees ; reste signale=2 taches sans fin, plan post-traitement conforme sans Prochaine action, 2 documents to_validate (attente de confirmation humaine)

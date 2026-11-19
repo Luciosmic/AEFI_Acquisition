@@ -1,0 +1,26 @@
+sans selection : ('Aucune acquisition sélectionnée', [])
+
+[2026-11-11_101000_stepScan_scan_001_baseline]
+  Objet mesuré                     non renseigné
+  Version du schéma                non renseigné
+  Angles appliqués                 non renseignés
+  Angles utilisés au traitement    angles idéaux du gabarit
+
+[2026-11-12_102000_stepScan_scan_004_rotation_z45]
+  Objet mesuré                     bouteille_cristalline
+  Version du schéma                1.4
+  Angle θx appliqué                34.9 °
+  Angle θy appliqué                45.7 °
+  Angle θz appliqué                -5.3 °
+  Convention de rotation           extrinsic · ZYX · sources_to_sensor
+  Origine des angles               calibrated
+  Calibration appliquée            cal-2026-11-13
+  Angles utilisés au traitement    ceux de l'acquisition
+
+[2026-11-13_103000_stepScan_scan_002_phase_offset]
+  Objet mesuré                     cylindre_metallique
+  Version du schéma                1.4
+  Rotation inutilisable            convention de rotation non prise en charge (intrinsic, ZYX, sources_to_sensor)
+  Angles utilisés au traitement    angles idéaux du gabarit (repli)
+
+rotated_frame.rotation_angles apres traitement : [34.9 45.7 -5.3]
