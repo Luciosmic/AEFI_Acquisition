@@ -30,3 +30,4 @@ Sans traducteur, le dépôt des acquisitions lirait directement la forme JSON du
 - Fonction pure sur un `dict` : le dépôt lit le fichier, le traducteur ne fait aucune entrée-sortie.
 - Le lift-off se reconnaît par son alias, pas par le nom long de la grandeur, et doit être en `mm`.
 - Seul `export_folder_repository` l'appelle.
+- Il importe `RotationConvention` par `aefi_acquisition_upstream/upstream_calibration.py` : la convention a une seule définition, celle de l'acquisition, et le refus d'une convention inconnue est celui de l'acquisition. Le domaine n'en reçoit que trois chaînes. Un test charge le traducteur dans un processus neuf et vérifie que PySide6 n'est pas importé.
