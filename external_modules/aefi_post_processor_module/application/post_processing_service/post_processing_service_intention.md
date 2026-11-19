@@ -33,7 +33,7 @@ Le traitement d'un scan vivait dans une classe qui lisait le CSV avec pandas, ap
 
 ## Responsibility
 
-- `process_scan(ProcessScanDTO)` : lire le scan, construire la grille (celle que l'acquisition a prévue quand sa description la donne, sinon la grille carrée), calibrer la phase, soustraire l'amplitude, tourner le repère si des angles sont donnés, interpoler sauf demande contraire, ranger chaque étape.
+- `process_scan(ProcessScanDTO)` : lire le scan, construire la grille (celle que l'acquisition a prévue quand sa description la donne, sinon la grille carrée), calibrer la phase, soustraire l'amplitude, tourner le repère si des angles sont donnés (de préférence ceux que l'acquisition a appliqués), interpoler sauf demande contraire, ranger chaque étape.
 - Rendre un `ProcessingSummaryDTO` : étapes faites, erreurs, succès, fichier, historique.
 - Journaliser chaque étape dans les mêmes événements que l'ancien pipeline (`pipeline.started`, `pipeline.step`, `pipeline.finished`, `pipeline.failed`), et l'origine de la grille (`pipeline.grid`, en avertissement quand un point tombe hors de la grille prévue).
 
