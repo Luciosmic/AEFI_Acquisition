@@ -8,3 +8,4 @@
 18:15 | jalon | 9 dossiers deplaces par le gate, 1 commit chacun : 6 vers reduire-la-dette/ (304 fichiers), 3 vers post-traitement-conforme/tranche-1-etapes/ (53 fichiers) ; 357 fichiers retrouves
 18:16 | jalon | diagnostics_apres=8 : 1 avertissement neuf reference-target-missing, venu de la tache en cours tranche-2-partie-1 (autre session, sa note de tache pas encore generee), pas du deplacement
 18:16 | fin | resultat=atteint : 3 notes de tache generees, 2 molecules formees ; reste signale=2 taches sans fin, plan post-traitement conforme sans Prochaine action, 2 documents to_validate (attente de confirmation humaine)
+18:22 | fin | resultat=Deux tâches closes par une ligne fin ; installer-la-garde archivée ; concevoir-l-architecture laissée en fichier (2 documents to_validate). Arrêt demandé par l'humain., entree=Clore et archiver deux traces AEFI_Acquisition, session=5cacfca5
