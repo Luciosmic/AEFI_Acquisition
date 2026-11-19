@@ -46,7 +46,7 @@ Le sens des dépendances : l'interface et l'infrastructure importent l'applicati
 | `preprocessed` | `grid_builder` | CSV d'un scan, même incomplet, en grille carrée complétée de NaN, avec l'étendue |
 | `phase_calibrated` | `phase_calibrator` | angle moyen θ = mean(atan2(Q, I)) sur le bord, rotation de −θ de toute l'image |
 | `amplitude_subtracted` | `amplitude_subtractor` | moyenne du bord (NaN ignorés) retranchée à tous les pixels |
-| `rotated_frame` | `frame_rotator` | rotation par quaternion du repère du capteur au repère des sources, angles de montage P = Rx·Ry·Rz |
+| `rotated_frame` | `frame_rotator` | rotation par quaternion du repère du capteur au repère des sources, angles de montage P = Rx·Ry·Rz ; les angles sont ceux que l'acquisition a appliqués (fichier des paramètres), à défaut les angles idéaux du gabarit |
 | `interpolated` | `interpolator` | grille plus fine, `linear`, `cubic` ou `nearest`, NaN respectés |
 
 Les noms et l'ordre sont fermés dans `processing_steps` ; les paramètres (largeur du bord, méthode, taille de grille, point de référence, angles) y sont gelés.

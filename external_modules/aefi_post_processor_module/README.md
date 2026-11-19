@@ -19,7 +19,9 @@ Le traitement part du bouton « Traiter » du panneau Acquisitions (la sélectio
 | `--log-file <fichier>` | fichier du journal de cette exécution (défaut : `.aefi_acquisition/logs/post_processor.log`) |
 | `--layout-file <fichier>` | disposition des panneaux (défaut : `~/.aefi_post_processor_layout.dat`, jamais celle de l'acquisition) |
 
-Les trois panneaux : Acquisitions (liste, état, bouton « Traiter », ouverture du dossier), Carte (tracé d'une étape d'une acquisition), Logs (journal).
+Les quatre panneaux : Acquisitions (liste, état, bouton « Traiter », ouverture du dossier), Paramètres d'acquisition (objet mesuré, angles de rotation appliqués, convention, version du schéma de l'acquisition choisie ; lecture seule), Carte (tracé d'une étape d'une acquisition), Logs (journal).
+
+Les angles de rotation du repère sont ceux que l'acquisition a réellement appliqués, lus dans son fichier `<acquisition>_acquisition-parameters.json` (`measurement_chain.sensor.deployment.rotation_applied`), jamais les angles idéaux du gabarit tant que le fichier les donne. Une acquisition sans description (ancien export, scans de l'étalon), ou dont la rotation est refusée (convention que l'application ne sait pas appliquer, valeurs déjà tournées, angle absent ou hors degré), retombe sur les angles idéaux du gabarit ; le panneau et le journal (`scan.rotation_fallback`, `pipeline.rotation_source`) le disent.
 Le bouton « Traiter » calcule sur le fil de la fenêtre : elle ne répond plus pendant le calcul.
 
 ## Ce que fait l'acquisition de son côté

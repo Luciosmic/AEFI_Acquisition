@@ -5,7 +5,7 @@ It reads nothing, writes nothing and has no control. Its behaviour lives in acqu
 """
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QFormLayout, QLabel, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QFormLayout, QFrame, QLabel, QScrollArea, QVBoxLayout, QWidget
 
 
 class AcquisitionParametersPanel(QWidget):
@@ -16,9 +16,14 @@ class AcquisitionParametersPanel(QWidget):
         self.title.setStyleSheet("font-weight: bold;")
         self.title.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         layout.addWidget(self.title)
-        self.form = QFormLayout()
-        layout.addLayout(self.form)
-        layout.addStretch()
+        # The rows scroll when the dock is too small to hold them all, instead of being clipped.
+        content = QWidget()
+        self.form = QFormLayout(content)
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        scroll.setWidget(content)
+        layout.addWidget(scroll, 1)
 
     def set_title(self, text: str) -> None:
         self.title.setText(text)
