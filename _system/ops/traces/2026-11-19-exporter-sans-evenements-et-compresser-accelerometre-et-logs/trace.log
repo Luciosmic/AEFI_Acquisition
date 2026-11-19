@@ -7,3 +7,4 @@
 19:05 | jalon | vert : port CSV, service d'export, stabilisation, intégration post-traitement adaptés ; reste : intention.md, contrat 1.6, suite complète
 19:15 | jalon | docs à jour (intentions du service, du port, du contrat 1.6, carte des contextes) ; lancement de la suite complète | log=run-pytest-suite-complete.log
 19:30 | jalon | suite complète : 2131 verts, 17 échecs tous dans des fichiers déjà en échec (aucun nouveau) | log=run-pytest-suite-complete.log
+18:06 | fin | resultat=Export sans events, logs et accéléromètre en .xz, schéma 1.6 : commit 36f632db (dev_post_processor). Trace : _system/ops/traces/2026-11-19-exporter-sans-evenements-et-compresser-accelerometre-et-logs/, entree=Export sans événements, archives xz, session=5ccf4703
