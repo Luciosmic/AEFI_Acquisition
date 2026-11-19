@@ -100,7 +100,6 @@ class ScanExportService:
         self,
         event_bus: IDomainEventBus,
         csv_export_port: IScanExportPort,
-        hdf5_export_port: IScanExportPort,
         excitation_service: ExcitationConfigurationService,
         conditions_port: Optional[IAcquisitionConditionsPort] = None,
         post_processing_port: Optional[IPostProcessingPort] = None,
@@ -114,7 +113,6 @@ class ScanExportService:
         the document still gets written and declares them unknown."""
         self._event_bus = event_bus
         self._csv_export_port = csv_export_port
-        self._hdf5_export_port = hdf5_export_port
         # ponytail: direct Application-Service-to-Application-Service call,
         # only to read current excitation params at scan start — no
         # ExcitationChanged domain event exists yet to passively cache
@@ -257,16 +255,13 @@ class ScanExportService:
             self._field_export_active = False
             return
 
-        # Every scan is exported to both formats simultaneously.
-        ports = [self._csv_export_port, self._hdf5_export_port]
+        # The CSV is the acquisition's single raw export: the post-processing creates its own HDF5 from it.
+        ports = [self._csv_export_port]
 
         directory = self._config.output_directory
         # Name only (measured object + lift-off) — each export port builds its own acquisition
         # folder and per-file names (<timestamp>_<stepScan|flyScan>_<name>_<device>) from it.
         name = acquisition_name(self._config.measured_object, self._config.lift_off_mm)
-        # Shared across both ports so CSV and HDF5 land in the same
-        # acquisition folder (the post-processing trigger needs both files
-        # side by side — see _handle_scan_finished).
         timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
 
         metadata = self._build_metadata(event)
@@ -357,7 +352,7 @@ class ScanExportService:
             "Starting time-series export. acquisition_id=%s, dir=%s, name=%s",
             event.acquisition_id, config.output_directory, acquisition_name(config.measured_object, config.lift_off_mm),
         )
-        # CSV only: the HDF5 layout is a position grid, meaningless vs time.
+        # CSV only, as every export.
         port = self._csv_export_port
         port.configure(
             config.output_directory, acquisition_name(config.measured_object, config.lift_off_mm),
@@ -474,7 +469,7 @@ class ScanExportService:
 
         if self._points_written == 0:
             # A scan/reading that ended before any point leaves nothing worth
-            # keeping (0-row CSV, near-empty HDF5) — remove the acquisition
+            # keeping (0-row CSV) — remove the acquisition
             # folder instead of littering the exports directory. stop()
             # already closed the file handles, so this is safe on Windows.
             logger.info("No points written; removing empty acquisition folder(s)")
@@ -500,20 +495,20 @@ class ScanExportService:
             return
 
         logger.debug("Stopping scan export after event: %s", type(event).__name__)
-        csv_path, hdf5_path = self._close_export(event)  # scan ports are [csv, hdf5]
+        paths = self._close_export(event)  # a scan has the CSV port only
+        csv_path = paths[0] if paths else None
 
         if (
             isinstance(event, ScanCompleted)
             and self._post_processing_port is not None
             and self._task_runner is not None
             and csv_path is not None
-            and hdf5_path is not None
         ):
             # Fire-and-forget: this service's promise is "exported, and
             # post-processing was triggered" — the pipeline is a downstream
             # consumer of the export, not something this service waits on.
             post_processing_port = self._post_processing_port
-            self._task_runner.submit(lambda: post_processing_port.run(csv_path, hdf5_path))
+            self._task_runner.submit(lambda: post_processing_port.run(csv_path))
 
     # ------------------------------------------------------------------ #
     # Helpers

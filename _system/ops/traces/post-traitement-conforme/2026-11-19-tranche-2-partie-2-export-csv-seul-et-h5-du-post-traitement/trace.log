@@ -1,0 +1,8 @@
+18:20 | depart | quoi=tranche 2 partie 2 du post-traitement conforme : export CSV seul et .h5 cree par le post-traitement | session=f5fe1792-ef1c-4978-ae2a-0e288885f2d8 | etape=etape-2-8
+18:20 | note | sous-agent au-aefi-acquisition ; budget=120min,~220 appels ; worktree AEFI_Acquisition_dev_post_processor ; code, tests et ecritures de trace/plan par outils natifs : le gate au-aefi-acquisition de ma session sert le checkout principal, pas ce worktree (ecriture par lui interdite)
+18:21 | jalon | git merge develop dans dev_post_processor : fusion sans conflit (49734223), 36f632db conserve
+18:22 | annonce | base complete (pytest -q sur toute la suite, ~5-10 min) -> pytest-suite-complete-base.log ; en fond
+18:27 | jalon | base suite complete relevee dans le worktree fusionne : 17 echecs, 2169 reussis, 3 ignores (pytest-suite-complete-base.log ; liste echecs-de-la-suite-complete-base.txt). V1/V2/V3 de base a relever aussi
+18:30 | annonce | solidai verify --target . (base, ~2-4 min) -> solidai-verify-racine-base.log
+18:40 | annonce | etape 2.8 : verifier.sh 2.8 (V1,V2,V3, ~2 min) puis suite des tests de src ciblee
+18:47 | jalon | etape=2.8 pret a commiter | V1=208ok+2echecs connus V2=0 erreur V3=8ok (6 de base + 2 nouveaux) ; src ciblee (scan, persistence, _tests) : 4 echecs config_persistence deja dans la base, aucun nouveau

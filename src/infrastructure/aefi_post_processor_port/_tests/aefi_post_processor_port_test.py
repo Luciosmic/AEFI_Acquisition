@@ -63,9 +63,11 @@ def test_rotation_origin_ideal_default():
 
 class _FakePipeline:
     calls = []
+    outputs = []
 
     def __init__(self, output_path):
         self.output_path = output_path
+        _FakePipeline.outputs.append(output_path)
 
     def __enter__(self):
         return self
@@ -84,7 +86,39 @@ def test_process_passes_the_active_angles_to_the_pipeline():
     with patch(
         "aefi_post_processor_module.processing.processing_pipeline.ProcessingPipeline", _FakePipeline
     ):
-        port._process(Path("scan.csv"), Path("scan.h5"))
+        port._process(Path("scan_aefi.csv"), Path("scan.h5"))
 
     assert len(_FakePipeline.calls) == 1
     assert _FakePipeline.calls[0]["rotation_angles"] == (35.3, 45.0, 0.0)
+
+
+def test_run_creates_the_h5_next_to_the_csv_under_the_name_of_the_acquisition_folder():
+    """The acquisition exports the CSV only: the `.h5` is the post-processing's, at the path the catalog looks it up."""
+    port = _make_port(InMemoryEventBus())
+    launched = []
+    port._launch_visualizer = launched.append
+    _FakePipeline.calls, _FakePipeline.outputs = [], []
+    folder = Path("exports/2026-11-19_101500_stepScan_plaque")
+
+    with patch(
+        "aefi_post_processor_module.processing.processing_pipeline.ProcessingPipeline", _FakePipeline
+    ):
+        port.run(folder / "2026-11-19_101500_stepScan_plaque_aefi.csv")
+
+    assert _FakePipeline.outputs == [folder / "2026-11-19_101500_stepScan_plaque.h5"]
+    assert launched == [folder]
+
+
+def test_a_failed_post_processing_does_not_open_the_visualizer():
+    port = _make_port(InMemoryEventBus())
+    launched = []
+    port._launch_visualizer = launched.append
+
+    class _Failing(_FakePipeline):
+        def run_full_pipeline(self, csv_path, **kwargs):
+            raise RuntimeError("boom")
+
+    with patch("aefi_post_processor_module.processing.processing_pipeline.ProcessingPipeline", _Failing):
+        port.run(Path("exports/a/a_aefi.csv"))
+
+    assert launched == []

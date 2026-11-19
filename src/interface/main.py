@@ -156,7 +156,6 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
     from infrastructure.execution.thread_pool_task_runner import ThreadPoolTaskRunner
     from infrastructure.event_bus_motion_synchronizer.event_bus_motion_synchronizer import EventBusMotionSynchronizer
     from infrastructure.persistence.csv_scan_export_port import CsvScanExportPort
-    from infrastructure.persistence.hdf5_scan_export_port import Hdf5ScanExportPort
     from infrastructure.persistence.acquisition_snapshot_reader import AcquisitionSnapshotReader
     from infrastructure.persistence.calibration.hardware_signature_reader import HardwareSignatureReader
     from infrastructure.persistence.calibration.geometric_configuration_reader import GeometricConfigurationReader
@@ -452,7 +451,6 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
 
     # Scan Export Service
     csv_export_port = CsvScanExportPort()
-    hdf5_export_port = Hdf5ScanExportPort()
     acquisition_snapshot_port = AcquisitionSnapshotReader(
         hardware_component_repository=hardware_component_repository,
         sensor_calibration_repository=sensor_calibration_repository,
@@ -490,7 +488,7 @@ def _compose_and_start(hardware_config, app, startup_view, lifecycle_presenter, 
         ),
     )
     scan_export_service = ScanExportService(
-        event_bus, csv_export_port, hdf5_export_port,
+        event_bus, csv_export_port,
         excitation_service=excitation_service,
         conditions_port=acquisition_conditions,
         post_processing_port=post_processing_port,

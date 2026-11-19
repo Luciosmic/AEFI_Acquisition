@@ -189,13 +189,12 @@ class TestStabilizationIsExported(_Stack):
         from application.scan.scan_export_service.scan_export_service import ScanExportService
         from infrastructure.hardware.ad9106.adapter_excitation_configuration_ad9106.fake.fake_adapter_excitation_configuration_ad9106 import MockExcitationPort
         from infrastructure.persistence.csv_scan_export_port import CsvScanExportPort
-        from infrastructure.persistence.hdf5_scan_export_port import Hdf5ScanExportPort
 
         self.output_dir = Path(tempfile.mkdtemp())
         self.event_bus = InMemoryEventBus()
         self._service(MockMotionPort(event_bus=self.event_bus, motion_delay_ms=1), ("aefipointacquired",))
         self.export_service = ScanExportService(
-            self.event_bus, csv_export_port=CsvScanExportPort(), hdf5_export_port=Hdf5ScanExportPort(),
+            self.event_bus, csv_export_port=CsvScanExportPort(),
             excitation_service=ExcitationConfigurationService(MockExcitationPort(), self.event_bus),
         )
         self.export_service.configure_export(ExportConfigDTO(

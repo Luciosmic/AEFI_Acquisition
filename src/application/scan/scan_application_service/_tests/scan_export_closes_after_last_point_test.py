@@ -82,11 +82,9 @@ class TestScanExportClosesAfterLastPoint(unittest.TestCase):
             mode=ExcitationMode.X_DIR, level_s1_s2_percent=80.0, level_s3_s4_percent=60.0, frequency=1000.0
         )
         self.csv_port = _RecordingExportPort("csv", self.journal)
-        self.hdf5_port = _RecordingExportPort("hdf5", self.journal)
         self.export_service = ScanExportService(
             self.event_bus,
             csv_export_port=self.csv_port,
-            hdf5_export_port=self.hdf5_port,
             excitation_service=excitation_service,
             conditions_port=FakeAcquisitionConditionsPort(),
             software_provenance_port=FakeSoftwareProvenancePort(),
@@ -121,26 +119,23 @@ class TestScanExportClosesAfterLastPoint(unittest.TestCase):
         self.assertTrue(self.service.execute_scan(dto))
         self.assertTrue(self.done.wait(timeout=10.0), "scan did not complete")
 
-    def test_every_point_is_written_to_both_ports_before_scan_completed_closes_the_export(self) -> None:
+    def test_every_point_is_written_to_the_port_before_scan_completed_closes_the_export(self) -> None:
         self._run(differential_mode=False)
 
         self.assertEqual(len(self.csv_port.points), 3)
-        self.assertEqual(len(self.hdf5_port.points), 3)
         last_write = max(i for i, entry in enumerate(self.journal) if entry.startswith("write_point"))
         self.assertLess(last_write, self.journal.index("ScanCompleted"))
         self.assertEqual(self.journal.count("ScanCompleted"), 1)
-        for port in (self.csv_port, self.hdf5_port):
-            self.assertTrue(port.stopped)
+        self.assertTrue(self.csv_port.stopped)
         self.assertFalse(self.export_service._export_active)
 
     def test_differential_points_reach_the_export_with_their_baseline(self) -> None:
         self._run(differential_mode=True)
 
-        for port in (self.csv_port, self.hdf5_port):
-            self.assertEqual(len(port.points), 3)
-            for row in port.points:
-                self.assertIsNotNone(row["baseline_voltage_x_in_phase"])
-                self.assertIsNotNone(row["baseline_voltage_z_quadrature"])
+        self.assertEqual(len(self.csv_port.points), 3)
+        for row in self.csv_port.points:
+            self.assertIsNotNone(row["baseline_voltage_x_in_phase"])
+            self.assertIsNotNone(row["baseline_voltage_z_quadrature"])
 
 
 if __name__ == "__main__":

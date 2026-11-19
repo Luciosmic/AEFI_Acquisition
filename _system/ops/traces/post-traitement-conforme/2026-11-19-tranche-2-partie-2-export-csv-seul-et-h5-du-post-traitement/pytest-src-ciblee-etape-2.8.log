@@ -1,0 +1,97 @@
+warning: `VIRTUAL_ENV=/Users/luis/Library/CloudStorage/Dropbox/Luis/1 PROJETS/1 - THESE/EXPERIMENTAL/AEFI_Acquisition/.venv` does not match the project environment path `/Users/luis/.venvs/AEFI_Acquisition_dev_post_processor` and will be ignored; use `--active` to target the active environment instead
+..........................................ss............................ [ 20%]
+........................................................................ [ 40%]
+............................................................................................. [ 66%]
+.......................................................................................... [ 92%]
+......FFFF.................                                              [100%]
+=================================== FAILURES ===================================
+_ TestConfigPersistence.test_apply_4v_reference_reaches_chip_and_conversion_together _
+
+self = <src._tests.config_persistence_test.TestConfigPersistence testMethod=test_apply_4v_reference_reaches_chip_and_conversion_together>
+
+    def setUp(self):
+        # Paths — configs live in .aefi_acquisition/configs/ (seeded from config_templates/)
+        self.default_config_path = os.path.join(".aefi_acquisition", "configs", "ads131a04_default_config.json")
+        self.last_config_path = os.path.join(".aefi_acquisition", "configs", "ads131a04_last_config.json")
+    
+        # Backup existing files to restore later
+        self.backup_last_config = None
+        if os.path.exists(self.last_config_path):
+            with open(self.last_config_path, 'r') as f:
+                self.backup_last_config = f.read()
+    
+        # Read default config content for verification
+>       with open(self.default_config_path, 'r') as f:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '.aefi_acquisition/configs/ads131a04_default_config.json'
+
+src/_tests/config_persistence_test.py:26: FileNotFoundError
+_______ TestConfigPersistence.test_apply_config_updates_last_config_only _______
+
+self = <src._tests.config_persistence_test.TestConfigPersistence testMethod=test_apply_config_updates_last_config_only>
+
+    def setUp(self):
+        # Paths — configs live in .aefi_acquisition/configs/ (seeded from config_templates/)
+        self.default_config_path = os.path.join(".aefi_acquisition", "configs", "ads131a04_default_config.json")
+        self.last_config_path = os.path.join(".aefi_acquisition", "configs", "ads131a04_last_config.json")
+    
+        # Backup existing files to restore later
+        self.backup_last_config = None
+        if os.path.exists(self.last_config_path):
+            with open(self.last_config_path, 'r') as f:
+                self.backup_last_config = f.read()
+    
+        # Read default config content for verification
+>       with open(self.default_config_path, 'r') as f:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '.aefi_acquisition/configs/ads131a04_default_config.json'
+
+src/_tests/config_persistence_test.py:26: FileNotFoundError
+______ TestConfigPersistence.test_apply_writes_oversampling_ratio_to_chip ______
+
+self = <src._tests.config_persistence_test.TestConfigPersistence testMethod=test_apply_writes_oversampling_ratio_to_chip>
+
+    def setUp(self):
+        # Paths — configs live in .aefi_acquisition/configs/ (seeded from config_templates/)
+        self.default_config_path = os.path.join(".aefi_acquisition", "configs", "ads131a04_default_config.json")
+        self.last_config_path = os.path.join(".aefi_acquisition", "configs", "ads131a04_last_config.json")
+    
+        # Backup existing files to restore later
+        self.backup_last_config = None
+        if os.path.exists(self.last_config_path):
+            with open(self.last_config_path, 'r') as f:
+                self.backup_last_config = f.read()
+    
+        # Read default config content for verification
+>       with open(self.default_config_path, 'r') as f:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '.aefi_acquisition/configs/ads131a04_default_config.json'
+
+src/_tests/config_persistence_test.py:26: FileNotFoundError
+__ TestConfigPersistence.test_saved_config_uses_one_physical_name_per_setting __
+
+self = <src._tests.config_persistence_test.TestConfigPersistence testMethod=test_saved_config_uses_one_physical_name_per_setting>
+
+    def setUp(self):
+        # Paths — configs live in .aefi_acquisition/configs/ (seeded from config_templates/)
+        self.default_config_path = os.path.join(".aefi_acquisition", "configs", "ads131a04_default_config.json")
+        self.last_config_path = os.path.join(".aefi_acquisition", "configs", "ads131a04_last_config.json")
+    
+        # Backup existing files to restore later
+        self.backup_last_config = None
+        if os.path.exists(self.last_config_path):
+            with open(self.last_config_path, 'r') as f:
+                self.backup_last_config = f.read()
+    
+        # Read default config content for verification
+>       with open(self.default_config_path, 'r') as f:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '.aefi_acquisition/configs/ads131a04_default_config.json'
+
+src/_tests/config_persistence_test.py:26: FileNotFoundError
+=========================== short test summary info ============================
+FAILED src/_tests/config_persistence_test.py::TestConfigPersistence::test_apply_4v_reference_reaches_chip_and_conversion_together
+FAILED src/_tests/config_persistence_test.py::TestConfigPersistence::test_apply_config_updates_last_config_only
+FAILED src/_tests/config_persistence_test.py::TestConfigPersistence::test_apply_writes_oversampling_ratio_to_chip
+FAILED src/_tests/config_persistence_test.py::TestConfigPersistence::test_saved_config_uses_one_physical_name_per_setting
+4 failed, 348 passed, 2 skipped, 249 subtests passed in 120.87s (0:02:00)

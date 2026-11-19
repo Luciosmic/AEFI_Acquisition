@@ -23,11 +23,11 @@ class IScanExportPort(ABC):
         - Servir de contrat entre `ScanExportService` et les adaptateurs de persistence.
 
     Rationale:
-        Abstraire le format de persistence des résultats de scan (HDF5, CSV, JSON…) derrière un port. Le service d'export peut ainsi changer de format sans modifier la logique applicative.
+        Abstraire le format de persistence des résultats de scan (CSV aujourd'hui) derrière un port. Le service d'export peut ainsi changer de format sans modifier la logique applicative.
 
     Design:
         - **Port outbound** placé dans `scan_application_service/` aux côtés du service consommateur.
-        - Implémenté par `HDF5ScanExportPort` et `CsvScanExportPort` dans `infrastructure/persistence/`.
+        - Implémenté par `CsvScanExportPort` dans `infrastructure/persistence/`.
     """
 
     @abstractmethod
@@ -42,9 +42,7 @@ class IScanExportPort(ABC):
         """Configure the export destination and metadata.
 
         `timestamp`: shared acquisition-folder timestamp (`YYYY-MM-DD_HHMMSS`).
-        Pass the same value to every port driven for one scan so CSV and
-        HDF5 land in the same acquisition folder; omit to self-generate
-        (single-port callers, tests).
+        Omit to self-generate (single-port callers, tests).
         `acquisition_kind`: folder/file name tag — `stepScan` for a 2D scan,
         `flyScan` for a fly-scan exploration map, `timeSeries` for a
         continuous reading exported vs time.

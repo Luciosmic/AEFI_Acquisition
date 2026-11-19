@@ -9,7 +9,7 @@ implements: ["[[src/application/scan/scan_export_service/ports/i_scan_export_por
 
 ## Rationale
 
-Implémentation CSV de `IScanExportPort` comme alternative légère au format HDF5 pour l'interopérabilité avec des outils tiers (Excel, MATLAB, Python basique). Le CSV est moins performant mais universellement lisible.
+Implémentation CSV de `IScanExportPort` : la source brute unique de l'acquisition, lisible par des outils tiers (Excel, MATLAB, Python basique) et par le post-traitement, qui en tire son propre HDF5.
 
 ## Responsibility
 
@@ -19,5 +19,5 @@ Implémentation CSV de `IScanExportPort` comme alternative légère au format HD
 
 ## Design
 
-- Implémente `IScanExportPort` — interchangeable avec `HDF5ScanExportPort` via injection.
+- Implémente `IScanExportPort`, le seul port d'export de l'acquisition.
 - Utilise le module `csv` standard Python, sans dépendance externe.
