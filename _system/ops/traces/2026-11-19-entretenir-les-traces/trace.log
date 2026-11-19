@@ -1,0 +1,2 @@
+01:50 | depart | quoi=entretenir les traces du repo AEFI_Acquisition (audit, notes de tache manquantes, regroupements apres accord) | session=5cacfca5-0b02-4e1e-8151-bd3d7ed876f2
+01:50 | jalon | audit=10 constats molecule-candidate=2 tache-sans-fin=2 note-de-tache-manquante=3 plan=1 soumis-a-l-humain=2 | diagnostics_avant=7 (4 error, 1 warning, 1 drift, 1 hint)
