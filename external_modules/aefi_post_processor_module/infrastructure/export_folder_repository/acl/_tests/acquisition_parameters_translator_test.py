@@ -49,3 +49,78 @@ def test_un_fichier_sans_ces_champs_ne_leve_pas_et_rend_des_inconnus():
     assert (description.kind, description.acquired_at, description.measured_object,
             description.lift_off_mm, description.schema_version) == (None, None, None, None, None)
     assert describe({"provenance": {"activity": {"started_at": "pas une date"}}, "feature_of_interest": None}).acquired_at is None
+
+
+# -- la rotation appliquée (rotation_applied), contrat client-fournisseur --------------------------------------
+
+STANDARD = {"type": "extrinsic", "order": "ZYX", "direction": "sources_to_sensor"}
+
+
+def _deployment(**overrides):
+    rotation = {
+        "theta_x": {"value": 34.9, "unit": "deg"},
+        "theta_y": {"value": 45.7, "unit": "deg"},
+        "theta_z": {"value": -5.3, "unit": "deg"},
+        "convention": dict(STANDARD),
+        "origin": "calibrated",
+        "calibration_id": "cal-2026-11-13",
+        "applies_to_data": False,
+        "notes": "",
+    }
+    rotation.update(overrides)
+    return {"measurement_chain": {"sensor": {"deployment": {"id": "m1", "rotation_applied": rotation}}}}
+
+
+def test_la_rotation_appliquee_donne_les_angles_la_convention_et_leur_origine():
+    rotation = describe(_deployment()).applied_rotation
+
+    assert rotation.angles == (34.9, 45.7, -5.3)
+    assert (rotation.convention_type, rotation.convention_order, rotation.convention_direction) == (
+        "extrinsic", "ZYX", "sources_to_sensor",
+    )
+    assert (rotation.origin, rotation.calibration_id) == ("calibrated", "cal-2026-11-13")
+    assert describe(_deployment()).rotation_problem is None
+
+
+def test_sans_montage_du_capteur_aucune_rotation_et_aucun_probleme():
+    for parameters in ({}, {"measurement_chain": {"sensor": {"deployment": None}}}, _parameters()):
+        description = describe(parameters)
+        assert description.applied_rotation is None and description.rotation_problem is None
+
+
+def test_une_convention_que_l_application_ne_sait_pas_appliquer_est_refusee():
+    description = describe(_deployment(convention={"type": "intrinsic", "order": "ZYX", "direction": "sources_to_sensor"}))
+
+    assert description.applied_rotation is None
+    assert "convention" in description.rotation_problem and "intrinsic" in description.rotation_problem
+
+
+def test_une_convention_absente_est_refusee():
+    description = describe(_deployment(convention=None))
+
+    assert description.applied_rotation is None and "convention" in description.rotation_problem
+
+
+def test_des_valeurs_deja_tournees_ne_sont_pas_tournees_une_seconde_fois():
+    description = describe(_deployment(applies_to_data=True))
+
+    assert description.applied_rotation is None
+    assert "déjà tournées" in description.rotation_problem
+
+
+def test_un_angle_dans_une_autre_unite_que_le_degre_est_refuse():
+    description = describe(_deployment(theta_y={"value": 0.8, "unit": "rad"}))
+
+    assert description.applied_rotation is None
+    assert "theta_y" in description.rotation_problem and "rad" in description.rotation_problem
+
+
+def test_un_angle_absent_est_refuse_en_le_nommant():
+    description = describe(_deployment(theta_z=None))
+
+    assert description.applied_rotation is None and "theta_z" in description.rotation_problem
+
+
+def test_une_rotation_mal_formee_ne_leve_pas():
+    assert describe({"measurement_chain": {"sensor": {"deployment": {"rotation_applied": "?"}}}}).applied_rotation is None
+    assert describe(_deployment(theta_x={"value": "x", "unit": "deg"})).applied_rotation is None
