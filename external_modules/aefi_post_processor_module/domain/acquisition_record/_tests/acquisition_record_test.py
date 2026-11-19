@@ -54,3 +54,19 @@ def test_an_incomplete_steps_file_stays_incomplete_when_forced():
 
 def test_a_missing_steps_file_is_new_not_incomplete():
     assert _record(steps_modified_at=None, steps_hold_preprocessed=False).recalculation_reason() == NEW
+
+
+def test_an_acquisition_says_nothing_of_its_rotation_until_its_parameters_file_does():
+    record = _record()
+
+    assert record.applied_rotation is None and record.rotation_problem is None and record.schema_version is None
+
+
+def test_an_acquisition_carries_the_rotation_it_applied_and_the_schema_of_its_file():
+    from ..value_objects.applied_rotation.applied_rotation import AppliedRotation
+
+    rotation = AppliedRotation((34.9, 45.7, -5.3), "extrinsic", "ZYX", "sources_to_sensor", origin="calibrated")
+    record = _record()
+    record.applied_rotation, record.schema_version = rotation, "1.4"
+
+    assert record.applied_rotation == rotation and record.schema_version == "1.4"
