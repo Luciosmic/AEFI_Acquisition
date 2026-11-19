@@ -20,6 +20,7 @@ Le lancement de l'ancienne fenêtre calculait avant d'afficher : pour savoir que
 
 - `list_acquisitions(ListAcquisitionsDTO)` : chaque acquisition du dossier d'export avec son état `processed`, `to_recompute` (et pourquoi : `new`, `incomplete`, `forced`, `source_newer`) ou `failed` (et son message).
   Chaque état porte aussi ce qui reconnaît l'acquisition : le dossier où elle est rangée, sa date de début, l'objet mesuré et le lift-off, tels que les donne le dépôt.
+  Il porte aussi la version du schéma du fichier de paramètres, la rotation que l'acquisition a appliquée (`AppliedRotationDTO` : angles en degrés, convention en trois chaînes, origine) ou la raison pour laquelle le fichier en décrit une qu'on ne peut pas utiliser. Le catalogue ne décide rien de ces angles : il les donne à qui traite ou affiche.
 - `report_outcome(AcquisitionOutcomeDTO)` : retenir l'échec d'un traitement avec son message, ou l'oublier après un succès.
 - Ne créer ni modifier aucun fichier.
 
