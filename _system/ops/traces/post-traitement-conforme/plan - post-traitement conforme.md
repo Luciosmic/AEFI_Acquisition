@@ -30,6 +30,42 @@ etapes:
   - ^: etape-1-9
     titre: "Documents, vérification d'ensemble, fusion dans develop (tranche 1)"
     precedee_par: "[[plan - post-traitement conforme^^etape-1-8]]"
+  - ^: etape-2-0
+    titre: "Préparation : relevés V1, V2, V3 et découpage (tranche 2, partie 1)"
+    precedee_par: "[[plan - post-traitement conforme^^etape-1-9]]"
+  - ^: etape-2-1
+    titre: "Le domaine : la rotation appliquée et les champs de l'acquisition (tranche 2, partie 1)"
+    precedee_par: "[[plan - post-traitement conforme^^etape-2-0]]"
+  - ^: etape-2-2
+    titre: "Le traducteur lit rotation_applied et emprunte RotationConvention (tranche 2, partie 1)"
+    precedee_par: "[[plan - post-traitement conforme^^etape-2-1]]"
+  - ^: etape-2-3
+    titre: "Le catalogue porte la rotation, la version et le refus (tranche 2, partie 1)"
+    precedee_par: "[[plan - post-traitement conforme^^etape-2-2]]"
+  - ^: etape-2-4
+    titre: "Le retraitement utilise les angles appliqués (tranche 2, partie 1)"
+    precedee_par: "[[plan - post-traitement conforme^^etape-2-3]]"
+  - ^: etape-2-5
+    titre: "Le panneau Paramètres d'acquisition : presenter et vue humble (tranche 2, partie 1)"
+    precedee_par: "[[plan - post-traitement conforme^^etape-2-4]]"
+  - ^: etape-2-6
+    titre: "Le panneau dans la fenêtre à panneaux (tranche 2, partie 1)"
+    precedee_par: "[[plan - post-traitement conforme^^etape-2-5]]"
+  - ^: etape-2-7
+    titre: "Documents, vérification d'ensemble et capture du panneau (tranche 2, partie 1)"
+    precedee_par: "[[plan - post-traitement conforme^^etape-2-6]]"
+  - ^: etape-2-8
+    titre: "Retirer Hdf5ScanExportPort de l'export de l'acquisition (tranche 2, partie 2)"
+    precedee_par: "[[plan - post-traitement conforme^^etape-2-7]]"
+  - ^: etape-2-9
+    titre: "Le post-traitement crée le .h5 : données brutes, cinq étapes, provenance (tranche 2, partie 2)"
+    precedee_par: "[[plan - post-traitement conforme^^etape-2-8]]"
+  - ^: etape-2-10
+    titre: "Relever la version mineure du schéma des paramètres (tranche 2, partie 2)"
+    precedee_par: "[[plan - post-traitement conforme^^etape-2-9]]"
+  - ^: etape-2-11
+    titre: "Documents et vérification d'ensemble de la tranche 2 (tranche 2, partie 2)"
+    precedee_par: "[[plan - post-traitement conforme^^etape-2-10]]"
 ---
 
 # Plan — Post-traitement conforme à l'acquisition
