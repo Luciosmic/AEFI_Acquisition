@@ -19,9 +19,12 @@ from ...domain.processing.processing_steps.processing_steps import (
     ROTATED_FRAME,
 )
 from .dtos.process_scan_dto import ProcessScanDTO
+from .dtos.source_record_dto import SourceRecordDTO
 from .dtos.processing_summary_dto import ProcessingSummaryDTO
 from .i_api_post_processing_service import IApiPostProcessingService
+from .no_acquisition_provenance_reader import NO_ACQUISITION_PROVENANCE
 from .no_scan_plan_reader import NO_SCAN_PLAN
+from .ports.i_acquisition_provenance_reader import IAcquisitionProvenanceReader
 from .ports.i_csv_scan_reader import ICsvScanReader
 from .ports.i_scan_plan_reader import IScanPlanReader
 from .ports.i_step_writer import IStepWriter
@@ -35,10 +38,12 @@ class PostProcessingService(IApiPostProcessingService):
         csv_reader: ICsvScanReader,
         step_writer: IStepWriter,
         scan_plan_reader: IScanPlanReader = NO_SCAN_PLAN,
+        acquisition_provenance_reader: IAcquisitionProvenanceReader = NO_ACQUISITION_PROVENANCE,
     ):
         self._csv_reader = csv_reader
         self._step_writer = step_writer
         self._scan_plan_reader = scan_plan_reader  # NO_SCAN_PLAN: no description is read, every scan gets the square grid
+        self._provenance_reader = acquisition_provenance_reader  # NO_ACQUISITION_PROVENANCE: the source is recorded by its hash alone
 
     @staticmethod
     def _rotation_angles(request: ProcessScanDTO):
@@ -65,7 +70,23 @@ class PostProcessingService(IApiPostProcessingService):
         try:
             logger.debug("pipeline.step scan=%s step=%s", scan, step)
             samples = self._csv_reader.read(request.csv_path)
-            self._step_writer.record_source(request.csv_path)
+            provenance = self._provenance_reader.read(request.csv_path)
+            source = SourceRecordDTO(
+                csv_path=request.csv_path, sha256=samples.sha256,
+                activity_id=provenance.activity_id if provenance else None,
+                declared_sha256=provenance.declared_csv_sha256 if provenance else None,
+            )
+            self._step_writer.record_source(source)
+            logger.info(
+                "pipeline.source scan=%s csv=%s sha256=%s activity_id=%s declared_sha256=%s matches_declared=%s",
+                scan, request.csv_path, source.sha256, source.activity_id, source.declared_sha256, source.matches_declared,
+            )
+            if source.matches_declared is False:
+                logger.warning(
+                    "pipeline.source_changed scan=%s csv=%s sha256=%s declared_sha256=%s "
+                    "reason=the csv is not the file the acquisition hashed when it closed",
+                    scan, request.csv_path, source.sha256, source.declared_sha256,
+                )
             completed.append('load_csv')
 
             step = 'preprocess'
@@ -82,6 +103,7 @@ class PostProcessingService(IApiPostProcessingService):
                 )
             else:
                 logger.info("pipeline.grid scan=%s origin=%s shape=%s", scan, origin.value, preprocessed.shape[:2])
+            self._step_writer.save_raw_scan(samples)  # once the points made a grid: a file that is not a scan leaves no raw group
             self._step_writer.save_step(PREPROCESSED, preprocessed, metadata)
             completed.append('preprocess')
 

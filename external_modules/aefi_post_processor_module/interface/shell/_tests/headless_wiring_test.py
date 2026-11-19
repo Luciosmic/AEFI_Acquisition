@@ -30,5 +30,5 @@ def test_the_wired_service_writes_the_five_steps_in_the_acquisition_file(tmp_pat
 
     assert summary.success is True
     with h5py.File(acquisition, "r") as h5:
-        assert sorted(h5.keys()) == sorted(STEP_NAMES)
+        assert sorted(h5.keys()) == sorted([*STEP_NAMES, "raw_scan"])  # the steps, and the points re-read from the CSV
         assert np.asarray(h5["interpolated"]["data"]).shape[:2] == (200, 200)

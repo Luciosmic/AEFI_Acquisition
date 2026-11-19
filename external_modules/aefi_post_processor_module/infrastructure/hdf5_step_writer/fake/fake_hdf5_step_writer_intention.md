@@ -14,7 +14,7 @@ L'adaptateur réel crée un fichier HDF5. Sans double en mémoire, chaque test d
 
 ## Responsibility
 
-- Garder les étapes et l'historique en mémoire, refuser une étape jamais rangée comme le réel.
+- Garder les étapes, l'historique, la source consignée et les points bruts en mémoire, refuser une étape jamais rangée comme le réel.
 
 ## Design
 

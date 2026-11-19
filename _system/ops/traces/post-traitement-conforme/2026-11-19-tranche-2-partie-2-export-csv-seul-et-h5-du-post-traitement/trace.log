@@ -5,4 +5,6 @@
 18:27 | jalon | base suite complete relevee dans le worktree fusionne : 17 echecs, 2169 reussis, 3 ignores (pytest-suite-complete-base.log ; liste echecs-de-la-suite-complete-base.txt). V1/V2/V3 de base a relever aussi
 18:30 | annonce | solidai verify --target . (base, ~2-4 min) -> solidai-verify-racine-base.log
 18:40 | annonce | etape 2.8 : verifier.sh 2.8 (V1,V2,V3, ~2 min) puis suite des tests de src ciblee
-18:47 | jalon | etape=2.8 pret a commiter | V1=208ok+2echecs connus V2=0 erreur V3=8ok (6 de base + 2 nouveaux) ; src ciblee (scan, persistence, _tests) : 4 echecs config_persistence deja dans la base, aucun nouveau
+18:47 | jalon | etape=2.8 commite | hash=fa9512d1 | V1=208ok+2echecs connus V2=0 erreur V3=8ok (6 de base + 2 nouveaux) ; src ciblee (scan, persistence, _tests) : 4 echecs config_persistence deja dans la base, aucun nouveau
+18:58 | annonce | etape 2.9 : verifier.sh 2.9 (~2 min)
+19:03 | jalon | etape=2.9 pret a commiter | V1=232ok+2echecs connus (208 de base + 24 nouveaux ; etalon golden vert, _tests/golden intact) V2=0 erreur (46 verifications) V3=8ok | cree : port IAcquisitionProvenanceReader (+adaptateur, fake, intentions), SourceRecordDTO, groupe raw_scan, attributs source_*

@@ -13,7 +13,7 @@ Le CSV d'un scan est le format d'export de l'acquisition. Sans lecteur dédié, 
 
 ## Responsibility
 
-- Implémenter `ICsvScanReader` : refuser un fichier absent, garder les colonnes de tension présentes dans l'ordre x, y, z, en phase puis en quadrature.
+- Implémenter `ICsvScanReader` : refuser un fichier absent, rendre avec les points le SHA-256 des octets lus (le même fichier que celui dont l'acquisition a consigné l'empreinte), garder les colonnes de tension présentes dans l'ordre x, y, z, en phase puis en quadrature.
 
 ## Design
 

@@ -144,6 +144,8 @@ class ScanExportWithPostProcessingIntegrationTest(unittest.TestCase):
         self.assertEqual(self.post_processing_port.h5_files_when_run, [])
 
         with h5py.File(h5_files[0], "r") as f:
+            # The raw points re-read from the CSV, in the file the post-processing created.
+            self.assertEqual(f["raw_scan/positions"].shape, (9, 2))
             # Real pipeline steps, written by the real ProcessingPipeline.
             for step in ("preprocessed", "phase_calibrated", "amplitude_subtracted", "rotated_frame", "interpolated"):
                 self.assertIn(step, f.keys(), f"missing post-processing step '{step}' in HDF5")
@@ -160,6 +162,16 @@ class ScanExportWithPostProcessingIntegrationTest(unittest.TestCase):
         self.assertTrue({"CSV", "text (xz)"} <= listed, listed)
         self.assertNotIn("HDF5", listed)
         self.assertNotIn("JSON Lines", listed)
+
+        # The provenance in the .h5: the CSV it was made from, with the SHA-256 the acquisition recorded in its
+        # parameters file, and the activity that produced it.
+        csv_entry = next(f for f in document["data"]["files"] if f["name"] == csv_files[0].name)
+        with h5py.File(h5_files[0], "r") as f:
+            self.assertEqual(f.attrs["source_csv"], str(csv_files[0]))
+            self.assertEqual(f.attrs["source_sha256"], csv_entry["sha256"])
+            self.assertEqual(f.attrs["source_declared_sha256"], csv_entry["sha256"])
+            self.assertTrue(bool(f.attrs["source_sha256_matches"]))
+            self.assertEqual(f.attrs["source_activity_id"], document["provenance"]["activity"]["id"])
 
         # Visualizer would have been launched on the acquisition folder
         # (stubbed here, so no real GUI process was spawned).

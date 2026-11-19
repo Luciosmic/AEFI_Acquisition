@@ -3,6 +3,9 @@ from typing import Any, Dict, List, Tuple
 
 import numpy as np
 
+from ..dtos.scan_samples_dto import ScanSamplesDTO
+from ..dtos.source_record_dto import SourceRecordDTO
+
 
 class IStepWriter(ABC):
     """
@@ -14,13 +17,18 @@ class IStepWriter(ABC):
     - Writing a step then reading it back must give the same values, whatever the storage.
 
     Design:
-    - Outbound port, pure ABC, bound to one acquisition when built. Saving a step replaces the previous one of the same name.
+    - Outbound port, pure ABC, bound to one acquisition when built; it creates the storage when the acquisition has none (the acquisition exports the CSV only). Saving a step replaces the previous one of the same name.
     - load_step is the read-back that proves the write; an unknown step raises KeyError.
     """
 
     @abstractmethod
-    def record_source(self, csv_path: str) -> None:
-        """Remember which scan file the steps come from, and when it was read."""
+    def record_source(self, source: SourceRecordDTO) -> None:
+        """Remember which scan file the steps come from, the hash of what was read, what the acquisition recorded about
+        it, and when it was read."""
+
+    @abstractmethod
+    def save_raw_scan(self, samples: ScanSamplesDTO) -> None:
+        """Store the points as read from the scan file, next to the steps: the file holds its own raw data."""
 
     @abstractmethod
     def save_step(self, step_name: str, data: np.ndarray, metadata: Dict[str, Any]) -> None:
