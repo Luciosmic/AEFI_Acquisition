@@ -121,3 +121,40 @@ class TestExportFolderRepositoryReadsTheContract:
         record = self._listed()["2026-11-14_120000_stepScan_y"]
 
         assert (record.kind, record.measured_object, record.acquired_at) == ("stepScan", None, None)
+
+    def test_the_rotation_the_acquisition_applied_and_the_schema_come_from_its_parameters_file(self):
+        self._acquisition("WATER/2026-11-13_103000_stepScan_bouteille", {
+            "schema": {"version": "1.4"}, "provenance": {"activity": {"kind": "step_scan"}},
+            "measurement_chain": {"sensor": {"deployment": {"rotation_applied": {
+                "theta_x": {"value": 34.9, "unit": "deg"}, "theta_y": {"value": 45.7, "unit": "deg"},
+                "theta_z": {"value": -5.3, "unit": "deg"},
+                "convention": {"type": "extrinsic", "order": "ZYX", "direction": "sources_to_sensor"},
+                "origin": "calibrated", "calibration_id": "cal-1", "applies_to_data": False}}}},
+        })
+
+        record = self._listed()["2026-11-13_103000_stepScan_bouteille"]
+
+        assert record.applied_rotation.angles == (34.9, 45.7, -5.3) and record.applied_rotation.origin == "calibrated"
+        assert record.rotation_problem is None and record.schema_version == "1.4"
+
+    def test_a_rotation_that_cannot_be_used_is_kept_with_its_reason_and_logged(self, caplog):
+        self._acquisition("2026-11-13_104000_stepScan_refusee", {
+            "schema": {"version": "1.4"}, "provenance": {"activity": {"kind": "step_scan"}},
+            "measurement_chain": {"sensor": {"deployment": {"rotation_applied": {
+                "theta_x": {"value": 1.0, "unit": "deg"}, "theta_y": {"value": 2.0, "unit": "deg"},
+                "theta_z": {"value": 3.0, "unit": "deg"},
+                "convention": {"type": "intrinsic", "order": "ZYX", "direction": "sources_to_sensor"}}}}},
+        })
+
+        with caplog.at_level("WARNING"):
+            record = self._listed()["2026-11-13_104000_stepScan_refusee"]
+
+        assert record.applied_rotation is None and "intrinsic" in record.rotation_problem
+        assert any("catalog.rotation_refused" in m and "2026-11-13_104000_stepScan_refusee" in m for m in caplog.messages)
+
+    def test_without_parameters_the_acquisition_says_nothing_of_its_rotation(self):
+        self._acquisition("2026-07-29_175721_stepScan_ancienne")
+
+        record = self._listed()["2026-07-29_175721_stepScan_ancienne"]
+
+        assert (record.applied_rotation, record.rotation_problem, record.schema_version) == (None, None, None)

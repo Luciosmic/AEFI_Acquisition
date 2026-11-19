@@ -2,6 +2,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
 
+from .applied_rotation_dto import AppliedRotationDTO
+
 PROCESSED = 'processed'
 TO_RECOMPUTE = 'to_recompute'
 FAILED = 'failed'
@@ -24,3 +26,7 @@ class AcquisitionStatusDTO:
     acquired_at: Optional[datetime] = None
     measured_object: Optional[str] = None
     lift_off_mm: Optional[float] = None
+    # What the parameters file says of the rotation: the one the acquisition applied, or why it cannot be used.
+    applied_rotation: Optional[AppliedRotationDTO] = None
+    rotation_problem: Optional[str] = None
+    schema_version: Optional[str] = None

@@ -88,5 +88,10 @@ class ExportFolderRepository(IAcquisitionRepository):
                 acquired_at=description.acquired_at,
                 measured_object=description.measured_object,
                 lift_off_mm=description.lift_off_mm,
+                applied_rotation=description.applied_rotation,
+                rotation_problem=description.rotation_problem,
+                schema_version=description.schema_version,
             ))
+            if description.rotation_problem is not None:
+                logger.warning("catalog.rotation_refused scan=%s reason=%s", name, description.rotation_problem)
         return sorted(records, key=lambda record: record.name)

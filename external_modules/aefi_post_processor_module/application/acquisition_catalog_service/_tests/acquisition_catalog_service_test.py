@@ -88,3 +88,29 @@ def test_each_status_carries_what_identifies_the_acquisition_its_group_date_obje
 
     assert (status.group, status.acquired_at, status.measured_object, status.lift_off_mm) == (
         "WATER", started, "bouteille", 25.0)
+
+
+def test_a_status_carries_the_rotation_the_acquisition_applied_the_problem_and_the_schema():
+    from ....domain.acquisition_record.value_objects.applied_rotation.applied_rotation import AppliedRotation
+
+    repository = FakeExportFolderRepository()
+    described = _record("20261113_stepScan_described", 100.0, 200.0)
+    described.applied_rotation = AppliedRotation((34.9, 45.7, -5.3), "extrinsic", "ZYX", "sources_to_sensor", "calibrated", "cal-1")
+    described.schema_version = "1.4"
+    refused = _record("20261114_stepScan_refused", 100.0, 200.0)
+    refused.rotation_problem = "convention de rotation non prise en charge"
+    repository.add(EXPORT, described)
+    repository.add(EXPORT, refused)
+    repository.add(EXPORT, _record("20261115_stepScan_silent", 100.0, 200.0))
+
+    statuses = _states(AcquisitionCatalogService(repository))
+
+    rotation = statuses["20261113_stepScan_described"].applied_rotation
+    assert rotation.angles == (34.9, 45.7, -5.3)
+    assert (rotation.convention_type, rotation.convention_order, rotation.convention_direction) == ("extrinsic", "ZYX", "sources_to_sensor")
+    assert (rotation.origin, rotation.calibration_id) == ("calibrated", "cal-1")
+    assert statuses["20261113_stepScan_described"].schema_version == "1.4"
+    assert statuses["20261114_stepScan_refused"].applied_rotation is None
+    assert statuses["20261114_stepScan_refused"].rotation_problem == "convention de rotation non prise en charge"
+    silent = statuses["20261115_stepScan_silent"]
+    assert (silent.applied_rotation, silent.rotation_problem, silent.schema_version) == (None, None, None)
