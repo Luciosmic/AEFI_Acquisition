@@ -20,7 +20,9 @@ Sans traducteur, le dépôt des acquisitions lirait directement la forme JSON du
   - `acquired_at` : le début de l'activité (`provenance.activity.started_at`), avec son fuseau ;
   - `measured_object` : la description de l'objet mesuré (`feature_of_interest.description`) ;
   - `lift_off_mm` : la grandeur de `feature_of_interest` dont l'alias est `lift_off`, en millimètres ;
-  - `schema_version`.
+  - `schema_version` ;
+  - `applied_rotation` : la rotation que l'acquisition a réellement appliquée (`measurement_chain.sensor.deployment.rotation_applied` : trois angles `theta_x|y|z` en degrés, convention, origine, identifiant de calibration), en `AppliedRotation` ;
+  - `rotation_problem` : pourquoi une rotation décrite n'est pas utilisable, en une phrase. Sont refusés : une convention que `RotationConvention` (empruntée à l'acquisition) ne prend pas en charge ou absente, des valeurs déjà tournées (`applies_to_data: true` : les tourner encore serait faux), un angle absent, illisible ou dans une autre unité que le degré. Un fichier sans montage du capteur ne donne ni rotation ni problème.
 - Un champ absent ou mal formé donne `None`, jamais une exception : un export ancien reste listé.
 
 ## Design
