@@ -16,6 +16,7 @@ Les acquisitions vivent dans des dossiers de l'export, avec leur `*_aefi.csv` et
 - Implémenter `IAcquisitionRepository` : trouver à toute profondeur chaque dossier qui tient un `*_aefi.csv`, trier par nom de dossier, rendre un `AcquisitionRecord` par scan avec la date du CSV, celle du fichier d'étapes (absente s'il n'existe pas), si ce fichier contient l'étape `preprocessed`, le dossier parent relatif à l'export (`group`), et ce que dit le fichier de paramètres (type, date de début, objet mesuré, lift-off, version du schéma, rotation appliquée ou raison de son refus), par le traducteur `acl/acquisition_parameters_translator`.
 - Le type vient du contrat. Repli sur le nom du dossier (`_stepScan_`, `_flyScan_`), logué `catalog.kind_from_name`, dans deux cas seulement : pas de fichier de paramètres lisible, ou un `step_scan` déclaré avant le schéma 1.4, où un scan au vol était aussi déclaré `step_scan`.
 - Ne pas lister une activité que le contrat ne déclare pas comme scan (série temporelle, balayage en fréquence), ni un dossier dont ni le contrat ni le nom ne disent le type.
+- Journaliser en avertissement une rotation que le contrat décrit mais que le traducteur refuse (`catalog.rotation_refused scan=… reason=…`) : l'acquisition reste listée, sans angles appliqués.
 - Ne rien créer ni modifier.
 
 ## Design
