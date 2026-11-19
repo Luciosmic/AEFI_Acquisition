@@ -5,3 +5,4 @@
 00:52 | jalon | erreur=service-depend-hors-de-ses-ports | V1=170 passes + 2 echecs connus ; verify 2->1 erreur ; commit afe16434
 00:53 | jalon | erreur=intention-non-typee | decision=pas de correction dans le module : la cause est la liste de types de A20 dans solidai-atome (hors perimetre) ; retypage en atome ecarte (perd part_of)
 00:54 | fin | verdict=non atteint (1 erreur sur 2 corrigee, 1 bloquee hors du module) | V1=170+2 | V2=1 erreur | V3=6 passes | commit=afe16434
+18:40 | fin | resultat=A20/A3 acceptent traducteur-anti-corruption ; tranche 2 faite (partie 1 sur develop, partie 2 sur dev_post_processor), non fusionnée ni poussée, attend le labo., entree=A20 traducteur puis tranche 2 post-traitement, session=f5fe1792
