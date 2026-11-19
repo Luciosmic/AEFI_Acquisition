@@ -12,8 +12,8 @@ Le point d'entrée `composition_root.py` doit rester mince : lire les arguments,
 
 ## Responsibility
 
-- Construire chaque panneau et son presenter (Acquisitions, Carte, Logs), les passer à la fenêtre avec leur groupe de barre de tâches : Données, Visualisation, Système.
-- Brancher les presenters entre eux : choisir une acquisition fait montrer ses étapes par la Carte, et la fin d'un traitement la fait relire.
+- Construire chaque panneau et son presenter (Acquisitions, Paramètres d'acquisition, Carte, Logs), les passer à la fenêtre avec leur groupe de barre de tâches : Données, Visualisation, Système.
+- Brancher les presenters entre eux : choisir une acquisition fait montrer ses étapes par la Carte et ses paramètres (objet, angles appliqués, convention, version du schéma) par le panneau Paramètres d'acquisition, qui se vide sans sélection ; la fin d'un traitement relit la Carte.
 - Attacher le puits du journal au presenter des Logs, pour que les messages émis avant l'ouverture s'y rejouent.
 - Rendre la fenêtre et les presenters : l'appelant les garde en vie.
 
