@@ -1,7 +1,7 @@
 ---
 type: atome::solidai-atome
 tldr: "Emprunter à l'acquisition les pièces génériques de la fenêtre à panneaux, par un seul paquet, sans recopier ni se mêler aux dossiers de src/."
-code: ["[[external_modules/aefi_post_processor_module/aefi_acquisition_upstream/upstream_objects.py]]", "[[external_modules/aefi_post_processor_module/aefi_acquisition_upstream/__init__.py]]"]
+code: ["[[external_modules/aefi_post_processor_module/aefi_acquisition_upstream/upstream_objects.py]]", "[[external_modules/aefi_post_processor_module/aefi_acquisition_upstream/__init__.py]]", "[[external_modules/aefi_post_processor_module/aefi_acquisition_upstream/upstream_calibration.py]]"]
 ---
 # upstream_objects — Intention
 
