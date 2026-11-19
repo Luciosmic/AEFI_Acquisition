@@ -105,7 +105,7 @@ Le fichier des paramètres n'est pas lu que par le post-traitement. Le graphe de
 
 | Lecteur | Ce qu'il reprenait | Ce qui a été décidé |
 |---|---|---|
-| type `scan` de GRAPHE-THESE (`_system/self/type/scan.type.yaml`) | `measurement_uncertainty_max_V`, champ obligatoire, traduit tel quel du champ du logiciel sans demander s'il était mesuré | retrait du type décidé le 2026-11-19 (option A) |
+| type `scan` de GRAPHE-THESE (`_system/self/type/scan.type.yaml`) | `measurement_uncertainty_max_V`, champ obligatoire, traduit tel quel du champ du logiciel sans demander s'il était mesuré | champ retiré du type le 2026-11-19 (option A) ; aucune configuration typée `scan` n'existait |
 | JSON déjà publiés en 1.4 (par exemple dans `AEFI-THESIS-DATA-EXPERIMENTAL/acquisitions/`) | `measurement_uncertainty` = 0,001 V | non modifiés ; les fichiers 1.0 à 1.4 ne se lisent pas comme une mesure |
 
 C'est un lien du fournisseur (l'acquisition) vers la couche de données, que la carte ne montrait pas. Un champ ajouté ou retiré du fichier se vérifie donc aussi contre ces lecteurs.
