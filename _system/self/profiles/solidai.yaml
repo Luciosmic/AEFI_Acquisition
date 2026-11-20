@@ -5,9 +5,9 @@
 # solidknowledge.yaml reste, pour une session de connaissance.
 #
 # Écarts voulus avec la référence, propres à la thèse :
-#   1. l'inject orient-work::GRAPHE-THESE, qui fait lire le registre des travaux de la thèse à l'ouverture ;
-#   2. le hook registre-obligatoire pointe vers le registre de PILOTAGE, et non vers un registre local,
-#      car toutes les sessions de la thèse s'inscrivent dans ce registre unique.
+#   1. l'inject orient-work::sh-agent-os, qui fait lire à l'ouverture les règles du registre des travaux ;
+#   2. le hook registre-obligatoire : le serveur et le hook trouvent le registre seuls en remontant les
+#      dossiers ; le champ registre n'est qu'un repli exigé par le type.
 type: agent-profile::au-mcp-sdk
 inject:
   # Socle, voix en français
