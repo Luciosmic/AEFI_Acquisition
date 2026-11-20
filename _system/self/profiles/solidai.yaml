@@ -28,7 +28,7 @@ inject:
   - "[[solidai-ddd-choisir-le-type::solidai-ddd]]"
 # Refuse la première mutation d'une session non inscrite au registre des travaux
 # (chemin relatif à la racine du workspace servi).
-# Écart de thèse 2 : le registre est celui de PILOTAGE, partagé par tous les repos de la thèse.
+# Écart de thèse 2 : le registre se trouve en remontant les dossiers ; le champ n'est qu'un repli.
 hookConfig:
   - type: mcp.hook.registre-obligatoire::sh-agent-os
     registre: _system/ops/registre-des-travaux.md
