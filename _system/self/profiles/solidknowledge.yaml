@@ -12,7 +12,7 @@ inject:
   - "[[core-profile::au-rules]]"
   - "[[capture-correction::au-govern]]"
   # Contributions de l'humain
-  - "[[orient-work::GRAPHE-THESE]]"
+  - "[[orient-work::sh-agent-os]]"
   # Ce repo : lancement, données, branches et worktrees (remplace l'ancien CLAUDE.md, 2026-11-16)
   - "[[contexte-du-repo-aefi-acquisition]]"
 # Refuse la première mutation d'une session non inscrite au registre des travaux (chemin relatif à
