@@ -19,4 +19,4 @@ inject:
 # la racine du workspace servi).
 hookConfig:
   - type: mcp.hook.registre-obligatoire::sh-agent-os
-    registre: ../../PILOTAGE/_system/ops/registre-des-travaux.md
+    registre: _system/ops/registre-des-travaux.md
