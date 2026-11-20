@@ -31,4 +31,4 @@ inject:
 # Écart de thèse 2 : le registre est celui de PILOTAGE, partagé par tous les repos de la thèse.
 hookConfig:
   - type: mcp.hook.registre-obligatoire::sh-agent-os
-    registre: ../../PILOTAGE/_system/ops/registre-des-travaux.md
+    registre: _system/ops/registre-des-travaux.md
