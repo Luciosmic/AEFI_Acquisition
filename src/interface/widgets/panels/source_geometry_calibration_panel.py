@@ -69,6 +69,15 @@ class SourceGeometryCalibrationPanel(QWidget):
             l_distances.addRow(f"{label} (mm):", self.spin_distances[label])
         form.addWidget(grp_distances)
 
+        # Each reading is a uniform law value ± half-width: u = half-width / sqrt(3).
+        grp_uncertainty = QGroupBox("Incertitude (loi uniforme, ± demi-largeur)")
+        l_uncertainty = QFormLayout(grp_uncertainty)
+        self.spin_distance_half_width = self._create_half_width_spinbox()
+        self.spin_diameter_half_width = self._create_half_width_spinbox()
+        l_uncertainty.addRow("Demi-largeur des distances (mm):", self.spin_distance_half_width)
+        l_uncertainty.addRow("Demi-largeur des diamètres (mm):", self.spin_diameter_half_width)
+        form.addWidget(grp_uncertainty)
+
         self.btn_save = QPushButton("Enregistrer calibration")
         self.btn_save.clicked.connect(self._on_save_clicked)
         form.addWidget(self.btn_save)
