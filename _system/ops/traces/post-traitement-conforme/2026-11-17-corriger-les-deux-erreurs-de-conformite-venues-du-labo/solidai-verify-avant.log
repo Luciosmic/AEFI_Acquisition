@@ -1,0 +1,11 @@
+# solidai verify /Users/luis/Library/CloudStorage/Dropbox/Luis/1 PROJETS/1 - THESE/EXPERIMENTAL/AEFI_Acquisition/external_modules/aefi_post_processor_module
+
+- 2 error(s), 0 warning(s), 46 checks played, 0 not played
+
+| severity | code | count |
+|---|---|---|
+| | `solidai-intention-non-typee` | 1 |
+| | `solidai-service-depend-hors-de-ses-ports` | 1 |
+
+- error `solidai-intention-non-typee` `infrastructure/export_folder_repository/acl/acquisition_parameters_translator_intention.md` : acquisition_parameters_translator_intention.md claims no SolidAI type: the checks do not see it
+- error `solidai-service-depend-hors-de-ses-ports` `application/post_processing_service/post_processing_service.py:32` : PostProcessingService receives scan_plan_reader: Optional[IScanPlanReader], not a port of its folder or of the domain

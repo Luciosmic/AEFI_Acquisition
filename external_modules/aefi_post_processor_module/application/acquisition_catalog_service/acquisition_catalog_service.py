@@ -34,6 +34,8 @@ class AcquisitionCatalogService(IApiAcquisitionCatalogService):
                 name=record.name, kind=record.kind, folder=record.folder, csv_file=record.csv_file,
                 acquisition_file=record.acquisition_file, state=state,
                 reason=reason if state == TO_RECOMPUTE else None, failure_message=failure,
+                group=record.group, acquired_at=record.acquired_at,
+                measured_object=record.measured_object, lift_off_mm=record.lift_off_mm,
             ))
         logger.info(
             "catalog.listed export=%s acquisitions=%d to_recompute=%d failed=%d",

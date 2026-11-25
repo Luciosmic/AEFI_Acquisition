@@ -5,13 +5,14 @@
 type: agent-profile::au-mcp-sdk
 inject:
   # Arscontexta
+  # sh-agent-os d'abord : le socle, puis le domaine (creer-un-workspace)
+  - "[[core-profile::sh-agent-os]]"
   - "[[co-inhabitant::GRAPHE-THESE]]"
   - "[[core-profile::au-writing-style]]"
   - "[[core-profile::au-rules]]"
   - "[[capture-correction::au-govern]]"
   # Contributions de l'humain
   - "[[orient-work::GRAPHE-THESE]]"
-  - "[[core-profile::sh-agent-os]]"
   # Ce repo : lancement, données, branches et worktrees (remplace l'ancien CLAUDE.md, 2026-11-16)
   - "[[contexte-du-repo-aefi-acquisition]]"
 # Refuse la première mutation d'une session non inscrite au registre des travaux (chemin relatif à

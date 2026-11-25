@@ -64,3 +64,14 @@ class AcquisitionRepositoryContract:
         records = repository.list_acquisitions(self.export_folder)
 
         assert [r.steps_hold_preprocessed for r in records] == [True, False, False]
+
+    def test_an_acquisition_filed_in_a_sub_folder_is_listed_with_that_folder_as_its_group(self):
+        repository = self.repository_holding([
+            ("WATER/20261113_stepScan_bouteille", "stepScan", 1.0, None, False),
+            ("20261112_flyScan_a", "flyScan", 1.0, None, False),
+        ])
+
+        records = {r.name: r for r in repository.list_acquisitions(self.export_folder)}
+
+        assert records["20261113_stepScan_bouteille"].group == "WATER"
+        assert records["20261112_flyScan_a"].group == ""

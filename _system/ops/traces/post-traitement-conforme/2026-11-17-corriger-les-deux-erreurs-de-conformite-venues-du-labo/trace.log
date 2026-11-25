@@ -1,0 +1,7 @@
+00:48 | depart | quoi=corriger les deux erreurs solidai verify du post-traitement venues du labo | session=f5fe1792-ef1c-4978-ae2a-0e288885f2d8 | etape=etape-1-9
+00:49 | jalon | erreur=intention-non-typee | constat=l'intention porte deja type traducteur-anti-corruption::solidai-hexagonal et le moteur la dit typee (au_typed) ; la verification A20 compare a une liste de types en param qui ne contient pas ce type
+00:50 | jalon | erreur=service-depend-hors-de-ses-ports | constat=le port est bien range dans ports/ ; H10 exige que l'annotation soit exactement le nom du port, Optional[...] est refuse
+00:51 | decision | erreur=service-depend-hors-de-ses-ports | choix=port obligatoire, defaut NO_SCAN_PLAN (lecteur nul dans le dossier du service), tests du labo inchanges
+00:52 | jalon | erreur=service-depend-hors-de-ses-ports | V1=170 passes + 2 echecs connus ; verify 2->1 erreur ; commit afe16434
+00:53 | jalon | erreur=intention-non-typee | decision=pas de correction dans le module : la cause est la liste de types de A20 dans solidai-atome (hors perimetre) ; retypage en atome ecarte (perd part_of)
+00:54 | fin | verdict=non atteint (1 erreur sur 2 corrigee, 1 bloquee hors du module) | V1=170+2 | V2=1 erreur | V3=6 passes | commit=afe16434

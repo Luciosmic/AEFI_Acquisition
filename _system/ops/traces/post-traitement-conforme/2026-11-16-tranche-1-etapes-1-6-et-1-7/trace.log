@@ -1,4 +1,4 @@
-02:09 | depart | quoi=tranche 1 etapes 1.6 et 1.7 du post-traitement conforme (worktree dev_post_processor) | session=sous-agent au-aefi-acquisition
+02:09 | depart | quoi=tranche 1 etapes 1.6 et 1.7 du post-traitement conforme (worktree dev_post_processor) | session=sous-agent au-aefi-acquisition | etape=etape-1-6
 02:13 | annonce | commande=pytest interface (Qt hors ecran) duree<30s arret=60s | log=pytest-interface-1-6.log
 02:14 | annonce | commande=V1 complet + V2 + V3 (fin 1.6) duree<120s arret=240s | logs=pytest-v1-fin-de-1-6.log solidai-verify-v2-fin-de-1-6.log pytest-v3-fin-de-1-6.log
 02:15 | jalon | etape=1.6 commite | hash=40655691 | V1=100ok+2echecs connus (180 deg x et y) V2=0 erreur V3=8ok | test lancement sous-processus window.shown rouge sans le raccord sys.path puis vert | decisions=ecriture par outils natifs (gate au de la session parente non utilise) ; cause outil non declaree sur l'intention du paquet upstream (A15 hors couches) ; composition_root ouvre la nouvelle fenetre des 1.6, ancienne fenetre accessible par visualisation/composition_root_visualisation.py ; options --log-file et --layout-file ajoutees

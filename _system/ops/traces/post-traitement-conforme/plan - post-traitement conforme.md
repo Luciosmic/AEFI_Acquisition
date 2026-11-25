@@ -1,3 +1,37 @@
+---
+type: plan-de-travail::sh-agent-os
+etapes:
+  - ^: etape-1-0
+    titre: "Préparation : worktree et relevés V1, V2, V3 (tranche 1)"
+  - ^: etape-1-1
+    titre: "Étalon de non-régression, ou golden master (tranche 1)"
+    precedee_par: "[[plan - post-traitement conforme^^etape-1-0]]"
+  - ^: etape-1-2
+    titre: "Rangement hors des couches (tranche 1)"
+    precedee_par: "[[plan - post-traitement conforme^^etape-1-1]]"
+  - ^: etape-1-3
+    titre: "Le domaine (tranche 1)"
+    precedee_par: "[[plan - post-traitement conforme^^etape-1-2]]"
+  - ^: etape-1-4
+    titre: "Le service de traitement, son lecteur de CSV et son écrivain d'étapes (tranche 1)"
+    precedee_par: "[[plan - post-traitement conforme^^etape-1-3]]"
+  - ^: etape-1-5
+    titre: "Le catalogue des acquisitions et la lecture d'une carte (tranche 1)"
+    precedee_par: "[[plan - post-traitement conforme^^etape-1-4]]"
+  - ^: etape-1-6
+    titre: "La coquille : emprunt, fenêtre à panneaux, journal (tranche 1)"
+    precedee_par: "[[plan - post-traitement conforme^^etape-1-5]]"
+  - ^: etape-1-7
+    titre: "Panneaux Acquisitions et Carte, retrait de l'ancienne fenêtre (tranche 1)"
+    precedee_par: "[[plan - post-traitement conforme^^etape-1-6]]"
+  - ^: etape-1-8
+    titre: "Le lancement ne calcule plus (tranche 1)"
+    precedee_par: "[[plan - post-traitement conforme^^etape-1-7]]"
+  - ^: etape-1-9
+    titre: "Documents, vérification d'ensemble, fusion dans develop (tranche 1)"
+    precedee_par: "[[plan - post-traitement conforme^^etape-1-8]]"
+---
+
 # Plan — Post-traitement conforme à l'acquisition
 
 **État :** tranche 1 (conformité de base) faite et fusionnée dans `develop` le 2026-11-16 (`c25ef87c`, `dev_post_processor` conservée) : couches DDD, fenêtre à panneaux Acquisitions, Carte et Logs, lancement qui ne calcule plus, étalon `golden_master_test` inchangé. Vérifiée : V1 = 132 réussis et les 2 échecs connus (180° sur x et y), V2 = 0 erreur, V3 = 8 réussis. À confirmer sur le PC du laboratoire : l'ouverture sur les vraies acquisitions, sans qu'aucun fichier ne change, et un « Traiter » (l'humain n'a vu la fenêtre que sur une copie de données synthétiques).

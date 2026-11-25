@@ -1,0 +1,8 @@
+17:05 | depart | quoi=le catalogue du post-traitement trouve les acquisitions dans les sous-dossiers, affiche le dossier parent, et lit date, type, objet mesuré et lift-off dans le fichier des paramètres d'acquisition (le contrat), pas dans le nom du dossier | session=9a983c80-8b73-4b18-90dc-ca00ad80d685 | repo=aefi-acquisition | worktree=C:\Users\manip\AEFI_Acquisition_dev_catalogue | branche=feature/catalogue-sous-dossiers
+17:05 | jalon | decision=repli sur le nom | seulement sans fichier de paramètres, ou pour un scan déclaré step_scan avant le schéma 1.4 (un scan au vol n'y était pas distingué, intention acquisition_parameters l. 320) ; logué
+17:05 | jalon | decision=colonnes | Dossier, Date, Type, Objet mesuré, Lift-off, État, Détail ; le nom complet du dossier en infobulle
+17:05 | jalon | hors périmètre noté=recherche sur les paramètres (demande de l'humain, à terme)
+17:37 | jalon | pas=traducteur du fichier de paramètres, dépôt à toute profondeur, service, présentateur et panneau | verdict=VERT
+17:37 | jalon | constat=test de lancement forcé bloqué : sortie du processus lue par un tube vidé seulement à la fin, rempli par deux lignes de journal en plus ; le test écrit maintenant la sortie dans un fichier
+17:37 | jalon | tests=module du post-traitement 166 verts avant correction du test de lancement, puis 4/4 au lancement ; 5 rouges déjà présents sur develop sans ce changement (étalon golden_master x3, soustraction d'amplitude, calibration de phase)
+17:37 | fin | resultat=VERT

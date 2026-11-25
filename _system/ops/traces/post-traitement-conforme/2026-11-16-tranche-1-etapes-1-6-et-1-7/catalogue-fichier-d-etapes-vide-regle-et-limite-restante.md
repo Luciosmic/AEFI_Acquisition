@@ -1,5 +1,7 @@
 ---
 doc_type: constat
+type: constat::sh-agent-os
+genere_par: "[[tache - tranche 1 etapes 1 6 et 1 7]]"
 ---
 
 # Catalogue : un fichier d'étapes sans l'étape `preprocessed` compte « à recalculer »

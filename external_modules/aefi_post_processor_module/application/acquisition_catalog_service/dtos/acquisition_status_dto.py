@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Optional
 
 PROCESSED = 'processed'
@@ -18,3 +19,8 @@ class AcquisitionStatusDTO:
     state: str
     reason: Optional[str] = None  # why it is to recompute: new, forced or source_newer
     failure_message: Optional[str] = None  # the message of the failure remembered for this session
+    # What identifies the acquisition, from its parameters file (None: not said) and where it is filed.
+    group: str = ""
+    acquired_at: Optional[datetime] = None
+    measured_object: Optional[str] = None
+    lift_off_mm: Optional[float] = None

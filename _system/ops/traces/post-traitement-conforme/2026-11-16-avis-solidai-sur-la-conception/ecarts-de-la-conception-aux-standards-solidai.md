@@ -1,5 +1,7 @@
 ---
 doc_type: avis-solidai
+type: constat::sh-agent-os
+genere_par: "[[tache - avis solidai sur la conception]]"
 ---
 
 # Écarts de la conception aux standards SolidAI

@@ -1,0 +1,12 @@
+13:46 | depart | quoi=typer les constats et generer les notes de tache du post-traitement conforme | session=f5fe1792-ef1c-4978-ae2a-0e288885f2d8
+13:46 | note | ecriture=gate au-aefi-acquisition (edit_file, write_file) ; budget=30min,~80 appels
+13:47 | jalon | constats=10 types constat::sh-agent-os (3 avis, 4 de 1.0-1.3, 2 de 1.6-1.7, 1 de 1.8-1.9) ; conception et recits non types
+13:47 | jalon | plan=type plan-de-travail::sh-agent-os apres au_validate valide (aucun champ requis)
+13:47 | jalon | notes=5 generees et commitees (concevoir, avis, 1.0-1.3, 1.6-1.7, 1.8-1.9) ; alerte etape 1.5 absente du plan, voir constat
+13:48 | jalon | au_diagnostics erreurs=0 warnings=0 sur le dossier post-traitement-conforme ; premieres lignes de trace non modifiees, voir constat sur les sessions
+13:48 | fin | resultat=atteint ; reste=note de cette tache a generer
+14:00 | reprise | quoi=declarer les etapes 1.0 a 1.9 du plan en etapes inline et relier les notes de tache | demande=coordinateur | budget=20min,~50 appels
+14:02 | jalon | plan=10 etapes etape-1-0 a etape-1-9 (titres du decoupage, precedee_par en chaine) ; au_validate valide ; au_diagnostics warnings=0
+14:03 | jalon | liaison=etape= ajoute au depart de 3 traces (1.0-1.3, 1.6-1.7, 1.8-1.9) ; le generateur lit le premier etape= des lignes depart
+14:05 | jalon | notes regenerees (5 dossiers), plus d'alerte etape absente ; constat sur l'alerte supprime, constat sur la liaison a la premiere etape ajoute
+14:06 | fin | resultat=atteint

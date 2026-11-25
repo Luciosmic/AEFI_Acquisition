@@ -1,4 +1,4 @@
-01:44 | depart | quoi=tranche 1 etapes 1.0 a 1.3 du post-traitement conforme (worktree dev_post_processor) | budget=90min,~120 appels | session=sous-agent au-aefi-acquisition
+01:44 | depart | quoi=tranche 1 etapes 1.0 a 1.3 du post-traitement conforme (worktree dev_post_processor) | budget=90min,~120 appels | session=sous-agent au-aefi-acquisition | etape=etape-1-0
 01:44 | note | ecriture=outils natifs (gate au indisponible, AU_MCP_SESSION absent) ; typage constat::sh-agent-os non fait, a la charge de la session
 01:48 | reprise | etat=worktree propre, aucun commit, V1/V3 releves, V2 bloque (demon au-engine du worktree absent ; 'au daemon start' tue a 120 s) ; budget 90 min recompte d'ici
 01:49 | jalon | etape=1.0 | V1=8ok+2echecs connus V2=1 erreur (intention logging non typee) V3=8ok | worktree=dev_post_processor | venv=~/.venvs/AEFI_Acquisition_dev_post_processor | demon au-engine du worktree demarre par script sh-agent-os

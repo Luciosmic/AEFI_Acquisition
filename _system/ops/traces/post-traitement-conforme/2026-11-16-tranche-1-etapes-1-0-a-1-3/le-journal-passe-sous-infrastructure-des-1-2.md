@@ -1,5 +1,7 @@
 ---
 doc_type: constat
+type: constat::sh-agent-os
+genere_par: "[[tache - tranche 1 etapes 1 0 a 1 3]]"
 ---
 
 # Le journal passe sous `infrastructure/logging/` dès 1.2, pas en 1.6

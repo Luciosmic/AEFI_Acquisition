@@ -1,4 +1,4 @@
-02:27 | depart | quoi=tranche 1 etapes 1.8 et 1.9 du post-traitement conforme, puis fusion dans develop | session=sous-agent au-aefi-acquisition
+02:27 | depart | quoi=tranche 1 etapes 1.8 et 1.9 du post-traitement conforme, puis fusion dans develop | session=sous-agent au-aefi-acquisition | etape=etape-1-8
 02:27 | note | ecriture=outils natifs (gate au non utilise) ; typage constat::sh-agent-os non fait, a la charge de la session ; budget=120min,~150 appels ; depart reel 02:26
 02:27 | jalon | etape=1.8 tests ecrits et rouges (3 echecs : etat dans le journal x2, --force)
 02:28 | annonce | commande=V1+V3+V2+golden (fin 1.8) duree<120s arret=300s | logs=pytest-v1-fin-de-1-8.log pytest-v3-fin-de-1-8.log solidai-verify-v2-fin-de-1-8.log

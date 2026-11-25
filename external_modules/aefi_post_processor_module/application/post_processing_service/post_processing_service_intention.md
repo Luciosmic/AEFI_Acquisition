@@ -1,7 +1,7 @@
 ---
 type: service-applicatif::solidai-hexagonal
 tldr: "Enchaîner les cinq étapes du traitement d'un scan (grille, calibration de phase, soustraction d'amplitude, rotation de repère, interpolation) et les ranger, sans connaître ni pandas ni h5py."
-code: ["[[external_modules/aefi_post_processor_module/application/post_processing_service/post_processing_service.py]]"]
+code: ["[[external_modules/aefi_post_processor_module/application/post_processing_service/post_processing_service.py]]", "[[external_modules/aefi_post_processor_module/application/post_processing_service/no_scan_plan_reader.py]]"]
 cause_de_changement: orchestration
 ports:
   - ^: i-api-post-processing-service
@@ -39,6 +39,6 @@ Le traitement d'un scan vivait dans une classe qui lisait le CSV avec pandas, ap
 
 ## Design
 
-- Le lecteur de CSV, l'écrivain d'étapes et le lecteur de la grille prévue arrivent par le constructeur ; sans lecteur de grille prévue, chaque scan reçoit la grille carrée ; les calculs sont ceux du domaine, créés à chaque traitement avec les paramètres de la demande.
+- Le lecteur de CSV, l'écrivain d'étapes et le lecteur de la grille prévue arrivent par le constructeur ; sans lecteur de grille prévue, le service prend `NO_SCAN_PLAN` (`no_scan_plan_reader.py`), un lecteur qui ne connaît aucune grille, et chaque scan reçoit la grille carrée ; les calculs sont ceux du domaine, créés à chaque traitement avec les paramètres de la demande.
 - Un échec d'étape est journalisé puis relancé, comme avant : l'appelant (l'acquisition) l'attrape.
 - Sans angles de rotation, l'étape `rotated_frame` n'est pas écrite, et l'interpolation prend l'étape précédente.
