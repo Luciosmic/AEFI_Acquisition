@@ -28,8 +28,8 @@ other panel in this codebase — mirrors `SensorCalibrationPresenter`.
 
 - `QObject`, signals `latest_calibration_updated = Signal(object)` (DTO or
   `None`) and `status_message = Signal(str)`.
-- `on_save_calibration_requested` is `@Slot(list, list)` — the panel emits
-  plain Python lists of 4 and 6 floats (mm already converted to meters),
-  not 10 separate float arguments.
+- `on_save_calibration_requested` is `@Slot(list, list, float, float)` — the
+  panel emits plain Python lists of 4 and 6 floats (mm already converted to
+  meters), not 10 separate float arguments, then the two half-widths (meters).
 - No domain logic in the `@Slot` — pure forwarding + try/except, same shape
   as `SensorCalibrationPresenter.on_save_calibration_requested`.
