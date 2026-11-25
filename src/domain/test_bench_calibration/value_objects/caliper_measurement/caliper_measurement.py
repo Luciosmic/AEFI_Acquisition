@@ -43,6 +43,34 @@ class CaliperMeasurement:
             )
         if not math.isfinite(self.k) or self.k <= 0:
             raise ValueError(f"k must be finite and positive, got {self.k}")
+        if self.uniform_half_width_m is not None:
+            a = self.uniform_half_width_m
+            if not math.isfinite(a) or a < 0:
+                raise ValueError(f"uniform_half_width_m must be finite and non-negative, got {a}")
+            if not math.isclose(self.uncertainty_expanded_m, self.k * a / math.sqrt(3), rel_tol=1e-9, abs_tol=1e-15):
+                raise ValueError(
+                    f"uncertainty_expanded_m={self.uncertainty_expanded_m} is not k*a/sqrt(3) "
+                    f"for k={self.k}, uniform_half_width_m={a}"
+                )
+
+    @staticmethod
+    def from_uniform_half_width(
+        value_m: float, half_width_m: float = DEFAULT_UNIFORM_HALF_WIDTH_M, k: float = 2.0
+    ) -> "CaliperMeasurement":
+        """
+        Build a measurement whose reading is known only to lie within
+        `value_m ± half_width_m`, every value equally likely (uniform law):
+        u_c = half_width_m / sqrt(3), expanded = k * u_c.
+
+        The default half-width (0.01 mm, half the vernier graduation) gives
+        the same standard uncertainty as `from_resolution`'s default.
+        """
+        return CaliperMeasurement(
+            value_m=value_m,
+            uncertainty_expanded_m=k * half_width_m / math.sqrt(3),
+            k=k,
+            uniform_half_width_m=half_width_m,
+        )
 
     @staticmethod
     def from_resolution(value_m: float, resolution_m: float = 0.00002, k: float = 2.0) -> "CaliperMeasurement":
