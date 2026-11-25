@@ -1,2 +1,13 @@
 17:08 | depart | quoi=demi-largeurs distances et diametres dans la calibration de la geometrie des sources | session=6c51a453-52f9-4b54-a029-4e253e8039da
 17:09 | decision | registre=le hook lit PILOTAGE/_system/ops/registre-des-travaux.md, ou la session n'avait pas d'entree ; inscrite par le gate au-aefi-acquisition
+17:12 | jalon | base=227 tests verts (calibration, persistance, panneau, presenter) avant modification
+17:15 | decision | domaine=CaliperMeasurement gagne uniform_half_width_m (Optional, invariant U=k*a/sqrt3), from_uniform_half_width (defaut 0.01mm) et from_uniform_expanded_uncertainty (relecture d'un ancien fichier) ; from_resolution garde son calcul et pose a=resolution/2
+17:18 | jalon | persistance=uniform_half_width_m ecrit par mesure ; ancien fichier sans la cle relu avec U inchange et a=sqrt3*U/k (0.01mm)
+17:22 | decision | perimetre=service applicatif, i_api, DTO et presenter sont sur le chemin panneau->domaine : parametres diameter_half_width_m / distance_half_width_m (None = from_resolution, comportement d'avant) ; le DTO porte les deux demi-largeurs pour que le panneau les recharge
+17:24 | constat | propagation=aucun code ne propage l'incertitude des mesures (apercu, centres, cote) : SourceFrameSolver n'utilise que value_m ; point 4 sans objet
+17:27 | jalon | panneau=groupe Incertitude (loi uniforme), deux demi-largeurs, defaut 0.01mm, emises a l'enregistrement et rechargees avec la derniere calibration ; test bout a bout hors ecran panneau->presenter->service->JSON avec les valeurs du 2026-11-24
+17:30 | jalon | tests=660 verts sur domaine, application, persistance, panneaux, presenters ; intentions mises a jour (caliper, depot, panneau, presenter, service, i_api, DTO)
+17:35 | jalon | suite-complete=2217 passed, 3 skipped, 2 failed preexistants (external_modules/aefi_post_processor_module : test_offset_removal, test_phase_recovery, AttributeError extract_border_pixels, module inchange depuis 6 jours)
+17:36 | constat | hors-perimetre=diagnostic preexistant peer-type-not-found 'widget' sur measured_object_registry_panel_intention.md, non touche ; regle H8 (cas d'usage par DTO) deja enfreinte par record_calibration, non corrigee
+17:36 | constat | commits=le gate commite chaque ecriture avec son propre message (edit_file <chemin>), pas au format [quoi] — [pourquoi] ; rien commite a la main, rien pousse
+17:37 | fin | resultat=demi-largeurs saisies, enregistrees, relues ; 0.25mm distances et 0.01mm diametres verifies par test bout a bout
