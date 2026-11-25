@@ -54,21 +54,28 @@ class SourceGeometryCalibrationService(IApiSourceGeometryCalibrationService):
         pairwise_distances_ext_m: List[float],
         resolution_m: float = 0.00002,
         k: float = 2.0,
+        diameter_half_width_m: Optional[float] = None,
+        distance_half_width_m: Optional[float] = None,
     ) -> None:
         logger.info(
             "SourceGeometryCalibrationService: Command record_calibration "
-            "sphere_diameters_m=%s pairwise_distances_ext_m=%s resolution_m=%s k=%s",
+            "sphere_diameters_m=%s pairwise_distances_ext_m=%s resolution_m=%s k=%s "
+            "diameter_half_width_m=%s distance_half_width_m=%s",
             sphere_diameters_m,
             pairwise_distances_ext_m,
             resolution_m,
             k,
+            diameter_half_width_m,
+            distance_half_width_m,
         )
-        sphere_diameters = tuple(
-            CaliperMeasurement.from_resolution(v, resolution_m, k) for v in sphere_diameters_m
-        )
-        pairwise_distances_ext = tuple(
-            CaliperMeasurement.from_resolution(v, resolution_m, k) for v in pairwise_distances_ext_m
-        )
+
+        def measure(value_m: float, half_width_m: Optional[float]) -> CaliperMeasurement:
+            if half_width_m is None:
+                return CaliperMeasurement.from_resolution(value_m, resolution_m, k)
+            return CaliperMeasurement.from_uniform_half_width(value_m, half_width_m, k)
+
+        sphere_diameters = tuple(measure(v, diameter_half_width_m) for v in sphere_diameters_m)
+        pairwise_distances_ext = tuple(measure(v, distance_half_width_m) for v in pairwise_distances_ext_m)
         calibration = Calibration()
         entry = calibration.record_source_geometry_calibration_entry(
             sphere_diameters, pairwise_distances_ext
