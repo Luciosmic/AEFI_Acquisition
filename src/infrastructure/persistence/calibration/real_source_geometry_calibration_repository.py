@@ -75,12 +75,22 @@ class RealSourceGeometryCalibrationRepository(ISourceGeometryCalibrationReposito
             "value_m": measurement.value_m,
             "uncertainty_expanded_m": measurement.uncertainty_expanded_m,
             "k": measurement.k,
+            "uniform_half_width_m": measurement.uniform_half_width_m,
         }
 
     @staticmethod
     def _deserialize_measurement(raw: Dict[str, Any]) -> CaliperMeasurement:
+        if "uniform_half_width_m" not in raw:
+            # Entry written before the half-widths were kept: every reading
+            # then came from the vernier resolution, a uniform law.
+            return CaliperMeasurement.from_uniform_expanded_uncertainty(
+                value_m=raw["value_m"], uncertainty_expanded_m=raw["uncertainty_expanded_m"], k=raw["k"]
+            )
         return CaliperMeasurement(
-            value_m=raw["value_m"], uncertainty_expanded_m=raw["uncertainty_expanded_m"], k=raw["k"]
+            value_m=raw["value_m"],
+            uncertainty_expanded_m=raw["uncertainty_expanded_m"],
+            k=raw["k"],
+            uniform_half_width_m=raw["uniform_half_width_m"],
         )
 
     @classmethod
