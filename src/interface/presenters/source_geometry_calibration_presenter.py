@@ -60,12 +60,21 @@ class SourceGeometryCalibrationPresenter(QObject):
         else:
             self.source_frame_preview_rejected.emit(result.error.reason)
 
-    @Slot(list, list)
+    @Slot(list, list, float, float)
     def on_save_calibration_requested(
-        self, sphere_diameters_m: List[float], pairwise_distances_ext_m: List[float]
+        self,
+        sphere_diameters_m: List[float],
+        pairwise_distances_ext_m: List[float],
+        diameter_half_width_m: float = 0.00001,
+        distance_half_width_m: float = 0.00001,
     ) -> None:
         try:
-            self._service.record_calibration(sphere_diameters_m, pairwise_distances_ext_m)
+            self._service.record_calibration(
+                sphere_diameters_m,
+                pairwise_distances_ext_m,
+                diameter_half_width_m=diameter_half_width_m,
+                distance_half_width_m=distance_half_width_m,
+            )
             message = "Calibration enregistrée"
             logger.info(message)
             self.status_message.emit(message)
