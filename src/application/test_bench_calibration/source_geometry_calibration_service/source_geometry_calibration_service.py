@@ -97,6 +97,8 @@ class SourceGeometryCalibrationService(IApiSourceGeometryCalibrationService):
             ),
             k=latest.sphere_diameters[0].k,
             recorded_at=latest.recorded_at,
+            diameter_half_width_m=latest.sphere_diameters[0].uniform_half_width_m,
+            distance_half_width_m=latest.pairwise_distances_ext[0].uniform_half_width_m,
         )
 
     def preview_source_frame(
