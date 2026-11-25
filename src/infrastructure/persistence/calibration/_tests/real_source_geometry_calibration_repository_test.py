@@ -80,8 +80,56 @@ def test_storage_file_shape_matches_documented_contract(tmp_path):
         "value_m": entry.sphere_diameters[0].value_m,
         "uncertainty_expanded_m": entry.sphere_diameters[0].uncertainty_expanded_m,
         "k": entry.sphere_diameters[0].k,
+        "uniform_half_width_m": entry.sphere_diameters[0].uniform_half_width_m,
     }
     assert stored_entry["recorded_at"] == entry.recorded_at.isoformat()
+
+
+def test_half_widths_round_trip_with_their_standard_uncertainty(tmp_path):
+    """±0.25 mm on the distances, ±0.01 mm on the diameters, uniform law."""
+    repository = _make_repository(tmp_path)
+    entry = SourceGeometryCalibrationEntry.single(
+        sphere_diameters=tuple(
+            CaliperMeasurement.from_uniform_half_width(v, half_width_m=0.00001) for v in _DIAMETERS_M
+        ),
+        pairwise_distances_ext=tuple(
+            CaliperMeasurement.from_uniform_half_width(v, half_width_m=0.00025) for v in _DISTANCES_M
+        ),
+    )
+
+    repository.add(entry)
+    (found,) = repository.find_all()
+
+    assert found.pairwise_distances_ext == entry.pairwise_distances_ext
+    assert found.sphere_diameters == entry.sphere_diameters
+    for m in found.pairwise_distances_ext:
+        assert m.uniform_half_width_m == 0.00025
+        assert m.uncertainty_expanded_m / m.k == pytest.approx(0.00025 / 3 ** 0.5, rel=1e-12)
+    for m in found.sphere_diameters:
+        assert m.uniform_half_width_m == 0.00001
+        assert m.uncertainty_expanded_m / m.k == pytest.approx(0.00001 / 3 ** 0.5, rel=1e-12)
+
+
+def test_legacy_file_without_half_widths_reads_back_unchanged_at_0_01_mm(tmp_path):
+    """A registry written before the half-widths existed: same values, same
+    uncertainty, read as the default 0.01 mm half-width — no error."""
+    legacy_u = 2.0 * 0.00002 / (2 * 3 ** 0.5)
+    legacy = lambda v: {"value_m": v, "uncertainty_expanded_m": legacy_u, "k": 2.0}
+    storage_path = tmp_path / "source_geometry_calibration.json"
+    storage_path.write_text(json.dumps({"entries": [{
+        "entry_id": "6f1c1d2e-0000-4000-8000-000000000001",
+        "sphere_diameters": [legacy(v) for v in _DIAMETERS_M],
+        "pairwise_distances_ext": [legacy(v) for v in _DISTANCES_M],
+        "recorded_at": "2026-11-20T10:00:00+00:00",
+    }]}), encoding="utf-8")
+
+    (found,) = RealSourceGeometryCalibrationRepository(storage_path=storage_path).find_all()
+
+    for m, v in zip((*found.sphere_diameters, *found.pairwise_distances_ext), (*_DIAMETERS_M, *_DISTANCES_M)):
+        assert m.value_m == v
+        assert m.uncertainty_expanded_m == legacy_u
+        assert m.k == 2.0
+        assert m.uniform_half_width_m == pytest.approx(0.00001, rel=1e-12)
 
 
 def test_add_handles_missing_parent_directory(tmp_path):
