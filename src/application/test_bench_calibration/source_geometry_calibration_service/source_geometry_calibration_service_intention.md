@@ -21,9 +21,11 @@ values.
 
 ## Responsibility
 
-- `record_calibration(sphere_diameters_m, pairwise_distances_ext_m, resolution_m, k)`:
-  build 10 `CaliperMeasurement.from_resolution(...)` (GUM uncertainty
-  computed automatically), call
+- `record_calibration(sphere_diameters_m, pairwise_distances_ext_m, resolution_m, k,
+  diameter_half_width_m=None, distance_half_width_m=None)`:
+  build 10 `CaliperMeasurement` (GUM uncertainty computed automatically):
+  `from_uniform_half_width(...)` for a kind of reading whose half-width is
+  given, `from_resolution(...)` otherwise; call
   `Calibration.record_source_geometry_calibration_entry(...)`, persist the
   minted entry, publish the resulting domain event(s). Used both by the UI
   ("Enregistrer calibration" button) and, once, by the composition root to
