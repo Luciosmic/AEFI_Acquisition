@@ -35,8 +35,12 @@ persistence style and keeps the file human-inspectable for diagnostics.
 - Entry serialization:
   - `entry_id` -> `str(uuid)`
   - `sphere_diameters` / `pairwise_distances_ext` -> list of
-    `{"value_m", "uncertainty_expanded_m", "k"}` (one `CaliperMeasurement`
-    per raw reading)
+    `{"value_m", "uncertainty_expanded_m", "k", "uniform_half_width_m"}` (one
+    `CaliperMeasurement` per raw reading). A reading written before
+    `uniform_half_width_m` existed is read back with its stored uncertainty
+    unchanged and its half-width recovered by
+    `CaliperMeasurement.from_uniform_expanded_uncertainty` (0.01 mm for the
+    vernier default) — no migration, no error.
   - `recorded_at` -> `.isoformat()`
 - `json.dump(..., indent=4)` for human-readability, matching the rest of the
   repo's JSON config files.
