@@ -38,3 +38,16 @@ hand again for every future re-measurement.
   `aefi_device_config.json`'s `_note` fields), `uncertainty_expanded_m = k * u_c`.
   Defaults (0.02mm vernier, k=2) reproduce the values already hand-written
   throughout the existing JSON (`1.15e-5` m expanded uncertainty).
+- `uniform_half_width_m: Optional[float] = None`: the half-width `a` of the
+  uniform law behind the uncertainty, or None when the uncertainty was given
+  directly. When set, `__post_init__` requires `U = k*a/sqrt(3)`.
+  Why: on 2026-11-24 the six distances of the compression mount disagreed by
+  up to 250 µm, so a distance is no longer known to the vernier resolution;
+  the operator states the half-width (±0.25 mm for distances, ±0.01 mm for
+  diameters) and the calibration must carry it.
+- `from_uniform_half_width(value_m, half_width_m=0.01mm, k=2.0)`: `u_c = a/sqrt(3)`.
+  The default equals `from_resolution`'s default (`0.02mm/(2*sqrt(3))`), so
+  past calibrations keep their uncertainty. `from_resolution` records
+  `a = resolution/2`.
+- `from_uniform_expanded_uncertainty(value_m, U, k)`: keeps `U` and recovers
+  `a = sqrt(3)*U/k` — how a reading stored before the half-width existed is read back.
