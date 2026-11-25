@@ -136,7 +136,7 @@ class SourceGeometryCalibrationPanel(QWidget):
         self.measurements_edited.emit(*self._measurements_m())
 
     def _on_save_clicked(self):
-        self.save_calibration_requested.emit(*self._measurements_m())
+        self.save_calibration_requested.emit(*self._measurements_m(), *self._half_widths_m())
 
     def on_latest_calibration_updated(self, dto: Optional[object]) -> None:
         if dto is None:
