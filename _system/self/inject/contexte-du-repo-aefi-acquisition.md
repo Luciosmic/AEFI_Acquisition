@@ -44,3 +44,23 @@ Commits au format conventionnel : `feat:`, `fix:`, `refactor:`, `chore:`, `docs:
 
 Une note qui documente un run, une mesure, une acquisition ou une décision technique dans ce repo est une note hors graphe `data-note::sk-data`, rangée à côté de ce qu'elle décrit.
 Ses règles sont dans [[configurations-et-runs::sk-data]].
+
+## Règles apprises au banc
+
+Corrections de l'humain, reprises le 2026-11-16 de la mémoire native de Claude du PC du labo.
+
+1. **Tests hors du checkout réel.** Jamais de `pytest` dans `C:\Users\manip\AEFI_Acquisition` : les tests y réécrivent `.aefi_acquisition/configs/`, que git ne restaure pas. On vérifie ce qui part sur `main` dans une copie jetable, avant le push.
+2. **Mise à jour du checkout réel.** Fermer l'application et le post-processeur avant. Après, comparer la casse des dossiers de `git ls-files` à celle du disque : Windows ne renomme pas un dossier dont seule la casse change, et Python échoue à l'import. Corriger par un renommage en deux temps.
+3. **Tests localisés.** Lancer les tests des modules modifiés et de leurs importeurs directs ; la suite complète seulement avant `main`, quand l'écart est large. Cette ligne tient jusqu'à l'installation du standard des tests localisés.
+4. **Parcours de l'opérateur.** Une fonction d'interface marche quand le clic atteint le service dans la composition de `main.py`, après `gc.collect()`. Un presenter est gardé vivant par un parent Qt, jamais par son service.
+5. **Tranche testable d'abord.** Le premier livrable se lance au banc, puis un point, un commit, un retour de l'humain.
+6. **Délégation suivie.** Un sous-agent fait au plus un commit ou un petit lot borné, puis rend compte. La session résume et attend l'accord avant le point suivant, et suit le `trace.log` du sous-agent en direct.
+7. **Prompt d'un sous-agent.** Il nomme le mécanisme existant à réutiliser (`ExclusiveControl` / `take_all` pour l'exclusion, les actions de l'application comme « to-center » pour le mouvement) et les standards qui s'appliquent, même pour un outil de banc. « Minimal » borne le périmètre, jamais la structure.
+8. **Pas d'automatisme caché.** Le labo change souvent de personnes : un état visible et une action que l'humain déclenche, avec confirmation.
+9. **Un nom par concept.** Une seule clé par grandeur dans les configs, l'interface et le code, en unité physique. Un code de registre n'existe que dans l'adaptateur qui écrit le registre.
+10. **Code présent n'est pas fonction validée.** Demander à l'humain avant de marquer une fonction matérielle comme faite dans `goals.md` ou `tasks.md`.
+11. **Sigles développés.** Chaque sigle est développé à sa première occurrence : intention, commentaire, commit, réponse.
+12. **Vue en direct au banc.** Un script qui pilote le matériel montre en direct sa phase, ses signaux, ses résultats et un bouton d'arrêt, jamais un journal seul.
+13. **Sorties de caractérisation.** Elles vont dans `C:\Users\manip\Desktop\AEFI_Acquisition_Exports\HARDWARE-CHARACTERIZATION\` seulement. Rien n'est copié dans `0_inbox/data-a-interpreter/` du vault : l'humain décide. Un dossier temporaire créé dans le repo est retiré avant de rendre la main.
+14. **Repos de thèse sur ce PC.** On travaille dans les clones de `C:\Users\manip\Desktop\THESE-LUIS-EXPERIMENTAL\`, poussés sur GitHub. Les repos Dropbox sont en lecture seule pour git, et le hook `refuser-git-dans-dropbox` le garantit. Si uv bute sur un lien Dropbox, `UV_LINK_MODE=copy`.
+15. **Compte rendu de mesure.** Une phrase de verdict, un tableau court attendu contre mesuré, une ou deux phrases d'interprétation ; les branchements en petit tableau. Pas de tableaux empilés sans phrase entre eux.

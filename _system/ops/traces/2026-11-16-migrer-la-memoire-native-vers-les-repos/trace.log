@@ -1,0 +1,10 @@
+17:40 | depart | quoi=migrer les 34 fichiers de memoire native de Claude Code de ce PC vers les repos qui portent leur sujet, puis couper la memoire native | session=50c9fa69-2645-41bb-9d93-2caa53eec772
+17:40 | jalon | inventaire=3 dossiers de memoire non vides (AEFI_Acquisition_dev 31 fichiers, Hardware-Caracterisation 2, GRAPHE-THESE 3) ; 3 dossiers vides
+17:41 | jalon | recouvrements lus=tasks.md, event_store.md, goals.md, plan standard-tests-localises, CLAUDE.md Banc-test-II, CLAUDE.md et notes du pilote LIDAR, README windows d'arsumbris
+17:42 | decision | proposer la destination de chaque memoire avant toute ecriture hors de ce repo
+18:05 | decision | humain=« vas y pour les memoires » ; proposition appliquee, puis retiree (le bilan la remplace)
+18:08 | jalon | AEFI=tasks.md (ed4cc9c7, ecrit par script : fins de ligne CRLF que edit_file du gate ne trouve pas sur plusieurs lignes) + inject section « Regles apprises au banc » (6040a260)
+18:09 | jalon | Hardware-Caracterisation=5b92262 (inject compte-rendu-de-mesure + profil + COM11), local, sans push
+18:10 | jalon | arsumbris=efae817 sur windows-port (python3 et Microsoft Store), local, sans push
+18:12 | jalon | settings=autoMemoryEnabled false dans ~/.claude/settings.json ; fichiers de memoire laisses sur le disque
+18:13 | fin | resultat=memoire native coupee, contenu reparti dans 3 repos | constats=bilan, plan de synchro git a porter dans sh-agent-os
