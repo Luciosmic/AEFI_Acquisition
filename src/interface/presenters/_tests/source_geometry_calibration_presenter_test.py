@@ -40,8 +40,11 @@ class FakeSourceGeometryCalibrationService(IApiSourceGeometryCalibrationService)
         pairwise_distances_ext_m: List[float],
         resolution_m: float = 0.00002,
         k: float = 2.0,
+        diameter_half_width_m=None,
+        distance_half_width_m=None,
     ) -> None:
         self.record_calibration_calls.append((sphere_diameters_m, pairwise_distances_ext_m))
+        self.record_calibration_half_widths = (diameter_half_width_m, distance_half_width_m)
         if self.record_calibration_error is not None:
             raise self.record_calibration_error
         self.latest = SourceGeometryCalibrationDTO(
