@@ -32,6 +32,7 @@ _DISTANCE_LABELS = ("D_S1_S2", "D_S3_S4", "D_S1_S3", "D_S1_S4", "D_S2_S3", "D_S2
 # S1<->S2 and S3<->S4 are the diagonals: S1, S3, S2, S4 walks the perimeter
 _PERIMETER = (0, 2, 1, 3)
 _CALIPER_RESOLUTION_MM = 0.02
+_DEFAULT_HALF_WIDTH_MM = 0.01  # half a vernier graduation: same u as the 0.02 mm resolution
 _FG = "#DDDDDD"
 
 
