@@ -35,7 +35,12 @@ class IApiSourceGeometryCalibrationService(ABC):
         pairwise_distances_ext_m: List[float],
         resolution_m: float = 0.00002,
         k: float = 2.0,
-    ) -> None: ...
+        diameter_half_width_m: Optional[float] = None,
+        distance_half_width_m: Optional[float] = None,
+    ) -> None:
+        """Record the 10 caliper readings. A given half-width makes every
+        diameter (or every distance) a uniform law of that half-width,
+        u = a/sqrt(3); left None, the reading keeps the vernier resolution."""
 
     @abstractmethod
     def get_latest_calibration(self) -> Optional[SourceGeometryCalibrationDTO]: ...
