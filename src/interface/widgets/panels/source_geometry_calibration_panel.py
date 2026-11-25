@@ -109,6 +109,22 @@ class SourceGeometryCalibrationPanel(QWidget):
         sb.setSuffix(" mm")
         return sb
 
+    @staticmethod
+    def _create_half_width_spinbox() -> QDoubleSpinBox:
+        sb = QDoubleSpinBox()
+        sb.setRange(0.0, 5.0)
+        sb.setSingleStep(0.01)
+        sb.setDecimals(3)
+        sb.setSuffix(" mm")
+        sb.setValue(_DEFAULT_HALF_WIDTH_MM)
+        return sb
+
+    def _half_widths_m(self):
+        return (
+            self.spin_diameter_half_width.value() / 1000.0,
+            self.spin_distance_half_width.value() / 1000.0,
+        )
+
     def _measurements_m(self):
         sphere_diameters_m = [self.spin_diameters[label].value() / 1000.0 for label in _SPHERE_LABELS]
         pairwise_distances_ext_m = [
