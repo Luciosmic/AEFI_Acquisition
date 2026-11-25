@@ -73,6 +73,23 @@ class CaliperMeasurement:
         )
 
     @staticmethod
+    def from_uniform_expanded_uncertainty(
+        value_m: float, uncertainty_expanded_m: float, k: float
+    ) -> "CaliperMeasurement":
+        """
+        Rebuild a measurement whose expanded uncertainty is known to come
+        from a uniform law, keeping that uncertainty as is and recovering
+        its half-width: a = sqrt(3) * U / k. A reading recorded before the
+        half-width was kept (vernier resolution 0.02 mm) comes back as 0.01 mm.
+        """
+        return CaliperMeasurement(
+            value_m=value_m,
+            uncertainty_expanded_m=uncertainty_expanded_m,
+            k=k,
+            uniform_half_width_m=math.sqrt(3) * uncertainty_expanded_m / k,
+        )
+
+    @staticmethod
     def from_resolution(value_m: float, resolution_m: float = 0.00002, k: float = 2.0) -> "CaliperMeasurement":
         """
         Build a measurement from a raw reading plus the instrument's
