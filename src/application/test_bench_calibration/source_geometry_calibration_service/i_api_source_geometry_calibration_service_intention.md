@@ -28,3 +28,6 @@ independent of the concrete service implementation.
   already used throughout `aefi_device_config.json` — exposed as parameters
   rather than hardcoded so a future different instrument doesn't require a
   new method, but the panel v1 never overrides them (YAGNI until needed).
+- `diameter_half_width_m` / `distance_half_width_m` (None by default): the
+  panel passes the operator's uniform half-widths, one per kind of reading,
+  since the distances proved far less certain than the vernier resolution.
