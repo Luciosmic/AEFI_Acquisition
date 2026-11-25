@@ -26,5 +26,8 @@ factor `k`, plus the timestamp of the latest recorded entry.
 - `k` is a single shared field (not per-value) because every entry is built
   via `CaliperMeasurement.from_resolution(...)` with one shared `k` for the
   whole 10-value reading — see `source_geometry_calibration_service.py`.
+- `diameter_half_width_m` / `distance_half_width_m` (Optional, default None):
+  the uniform half-width shared by every diameter / every distance, so the
+  panel reloads what was recorded instead of resetting to 0.01 mm.
 - Built by `SourceGeometryCalibrationService.get_latest_calibration()`, which
   returns `None` instead of a DTO when the registry is empty.
