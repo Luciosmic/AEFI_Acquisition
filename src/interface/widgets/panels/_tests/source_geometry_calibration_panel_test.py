@@ -26,12 +26,29 @@ def test_latest_calibration_loads_the_form_and_asks_for_one_preview():
     panel.on_latest_calibration_updated(SimpleNamespace(
         sphere_diameters_m=_DIAMETERS_M, pairwise_distances_ext_m=_DISTANCES_M,
         sphere_diameters_uncertainty_m=(1.15e-5,) * 4, k=2.0, recorded_at=datetime.now(timezone.utc),
+        pairwise_distances_ext_uncertainty_m=(2.89e-4,) * 6,
+        diameter_half_width_m=0.00001, distance_half_width_m=0.00025,
     ))
 
     assert len(edits) == 1
     diameters, distances = edits[0]
     assert [round(v, 6) for v in diameters] == list(_DIAMETERS_M)
     assert [round(v, 6) for v in distances] == list(_DISTANCES_M)
+    assert panel.spin_distance_half_width.value() == 0.25
+    assert panel.spin_diameter_half_width.value() == 0.01
+
+
+def test_half_widths_default_to_0_01_mm_and_ride_with_the_save():
+    panel, _ = _panel()
+    saves = []
+    panel.save_calibration_requested.connect(lambda *args: saves.append(args))
+
+    panel.btn_save.click()
+    panel.spin_distance_half_width.setValue(0.25)
+    panel.btn_save.click()
+
+    assert saves[0][2:] == (0.00001, 0.00001)
+    assert saves[1][2:] == (0.00001, 0.00025)
 
 
 def test_editing_one_reading_asks_for_a_preview():
