@@ -9,6 +9,7 @@ Responsibility:
 
 import math
 from dataclasses import dataclass
+from typing import ClassVar, Optional
 
 
 @dataclass(frozen=True)
@@ -19,11 +20,19 @@ class CaliperMeasurement:
 
     `uncertainty_expanded_m` is `U = k * u_c`, the same convention already
     hand-written in `aefi_device_config.json` (`uncertainty.expanded`, `k`).
+
+    `uniform_half_width_m` is the half-width `a` of the uniform law the
+    uncertainty was derived from (`u_c = a / sqrt(3)`), or None when the
+    uncertainty was given directly.
     """
+
+    # Half of the 0.02 mm vernier graduation: u_c = a/sqrt(3) = 0.02mm/(2*sqrt(3))
+    DEFAULT_UNIFORM_HALF_WIDTH_M: ClassVar[float] = 0.00001
 
     value_m: float
     uncertainty_expanded_m: float
     k: float
+    uniform_half_width_m: Optional[float] = None
 
     def __post_init__(self):
         if not math.isfinite(self.value_m) or self.value_m <= 0:
