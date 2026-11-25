@@ -90,6 +90,16 @@ class TestCaliperMeasurement(unittest.TestCase):
         with self.assertRaises(ValueError):
             CaliperMeasurement(value_m=0.05, uncertainty_expanded_m=1.15e-5, k=2.0, uniform_half_width_m=0.00025)
 
+    def test_from_uniform_expanded_uncertainty_keeps_the_uncertainty_and_recovers_the_half_width(self):
+        legacy = CaliperMeasurement.from_resolution(value_m=0.0196)
+
+        rebuilt = CaliperMeasurement.from_uniform_expanded_uncertainty(
+            value_m=0.0196, uncertainty_expanded_m=legacy.uncertainty_expanded_m, k=2.0
+        )
+
+        self.assertEqual(rebuilt.uncertainty_expanded_m, legacy.uncertainty_expanded_m)
+        self.assertAlmostEqual(rebuilt.uniform_half_width_m, 0.00001, delta=1e-15)
+
     def test_half_width_is_optional_for_a_directly_given_uncertainty(self):
         measurement = CaliperMeasurement(value_m=0.0196, uncertainty_expanded_m=1.15e-5, k=2.0)
 
