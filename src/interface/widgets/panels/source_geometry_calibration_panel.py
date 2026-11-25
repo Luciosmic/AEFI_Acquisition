@@ -144,6 +144,13 @@ class SourceGeometryCalibrationPanel(QWidget):
             self.lbl_last_calibration.setText("Aucune calibration enregistrée")
             return
         self._load_measurements(dto.sphere_diameters_m, dto.pairwise_distances_ext_m)
+        # Re-saving starts from the recorded half-widths, not the default.
+        for spin, half_width_m in (
+            (self.spin_diameter_half_width, dto.diameter_half_width_m),
+            (self.spin_distance_half_width, dto.distance_half_width_m),
+        ):
+            if half_width_m is not None:
+                spin.setValue(half_width_m * 1000.0)
         recorded_at = dto.recorded_at.strftime("%Y-%m-%d %H:%M")
         diameters_str = "  ".join(
             f"{label}={v * 1000:.3f}mm" for label, v in zip(_SPHERE_LABELS, dto.sphere_diameters_m)
