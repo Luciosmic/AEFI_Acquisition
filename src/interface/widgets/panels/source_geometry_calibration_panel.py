@@ -40,7 +40,8 @@ class SourceGeometryCalibrationPanel(QWidget):
     preview the reconstructed sphere positions live, and display the last
     one recorded."""
 
-    save_calibration_requested = Signal(list, list)  # sphere_diameters_m, pairwise_distances_ext_m
+    # sphere_diameters_m, pairwise_distances_ext_m, diameter_half_width_m, distance_half_width_m
+    save_calibration_requested = Signal(list, list, float, float)
     measurements_edited = Signal(list, list)  # sphere_diameters_m, pairwise_distances_ext_m
 
     def __init__(self, parent=None):
