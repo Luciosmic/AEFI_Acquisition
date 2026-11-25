@@ -8,7 +8,8 @@ other panel in this codebase — mirrors `SensorCalibrationPresenter`.
 
 ## Responsibility
 
-- `on_save_calibration_requested(sphere_diameters_m, pairwise_distances_ext_m)`:
+- `on_save_calibration_requested(sphere_diameters_m, pairwise_distances_ext_m,
+  diameter_half_width_m=0.01mm, distance_half_width_m=0.01mm)`:
   forward to `service.record_calibration(...)`, catch and report any error
   as a status message.
 - `refresh_state()`: push `service.get_latest_calibration()` (DTO or `None`)
