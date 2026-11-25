@@ -35,7 +35,8 @@ calibration in one place rather than one dock per calibration type).
   as a tab inside `CalibrationPanel` (see `calibration_panel.py`).
 - Entry in **millimeters** (`QDoubleSpinBox`, step 0.02mm = vernier
   resolution, decimals=3), converted to meters (`/1000`) only when emitting
-  `save_calibration_requested = Signal(list, list)` — the service and every
+  `save_calibration_requested = Signal(list, list, float, float)` (diameters,
+  distances, diameter half-width, distance half-width) — the service and every
   other domain/application layer works in meters, matching this codebase's
   existing unit convention; only the UI surfaces mm for operator usability.
 - Field order matches `GeometricConfigurationSignature`
