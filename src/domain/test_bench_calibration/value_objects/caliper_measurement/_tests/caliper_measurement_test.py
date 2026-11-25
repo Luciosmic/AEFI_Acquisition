@@ -64,6 +64,37 @@ class TestCaliperMeasurement(unittest.TestCase):
 
         self.assertEqual(measurement.uncertainty_expanded_m, 0.0)
 
+    # -- from_uniform_half_width: u = a / sqrt(3) ---------------------------------
+
+    def test_from_uniform_half_width_uses_a_over_sqrt3(self):
+        measurement = CaliperMeasurement.from_uniform_half_width(value_m=0.103, half_width_m=0.00025, k=2.0)
+
+        self.assertAlmostEqual(measurement.uncertainty_expanded_m / measurement.k, 0.00025 / 3 ** 0.5, delta=1e-15)
+        self.assertEqual(measurement.uniform_half_width_m, 0.00025)
+
+    def test_default_half_width_gives_the_same_standard_uncertainty_as_the_vernier_resolution(self):
+        """0.01 mm half-width = 0.02 mm resolution / 2: past calibrations keep their uncertainty."""
+        from_half_width = CaliperMeasurement.from_uniform_half_width(value_m=0.0196)
+        from_resolution = CaliperMeasurement.from_resolution(value_m=0.0196)
+
+        self.assertEqual(CaliperMeasurement.DEFAULT_UNIFORM_HALF_WIDTH_M, 0.00001)
+        self.assertAlmostEqual(from_half_width.uncertainty_expanded_m, 2.0 * 0.00002 / (2 * 3 ** 0.5), delta=1e-15)
+        self.assertAlmostEqual(from_half_width.uncertainty_expanded_m, from_resolution.uncertainty_expanded_m, delta=1e-15)
+        self.assertAlmostEqual(from_resolution.uniform_half_width_m, 0.00001, delta=1e-15)
+
+    def test_rejects_negative_half_width(self):
+        with self.assertRaises(ValueError):
+            CaliperMeasurement.from_uniform_half_width(value_m=0.05, half_width_m=-0.00001)
+
+    def test_rejects_a_half_width_inconsistent_with_the_uncertainty(self):
+        with self.assertRaises(ValueError):
+            CaliperMeasurement(value_m=0.05, uncertainty_expanded_m=1.15e-5, k=2.0, uniform_half_width_m=0.00025)
+
+    def test_half_width_is_optional_for_a_directly_given_uncertainty(self):
+        measurement = CaliperMeasurement(value_m=0.0196, uncertainty_expanded_m=1.15e-5, k=2.0)
+
+        self.assertIsNone(measurement.uniform_half_width_m)
+
 
 if __name__ == "__main__":
     unittest.main()
