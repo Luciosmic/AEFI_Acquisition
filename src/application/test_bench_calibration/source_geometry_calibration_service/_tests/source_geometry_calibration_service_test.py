@@ -82,6 +82,27 @@ class TestSourceGeometryCalibrationService(DiagramFriendlyTest):
         self.assertAlmostEqual(entry.sphere_diameters[0].uncertainty_expanded_m, 3.0 * expected_u_c)
         self.assertEqual(entry.sphere_diameters[0].k, 3.0)
 
+    def test_record_calibration_uses_one_uniform_half_width_per_kind_of_reading(self) -> None:
+        self.service.record_calibration(
+            sphere_diameters_m=_DIAMETERS_M,
+            pairwise_distances_ext_m=_DISTANCES_M,
+            diameter_half_width_m=0.00001,
+            distance_half_width_m=0.00025,
+        )
+
+        entry = self.repository.find_all()[0]
+        for m in entry.pairwise_distances_ext:
+            self.assertEqual(m.uniform_half_width_m, 0.00025)
+            self.assertAlmostEqual(m.uncertainty_expanded_m, 2.0 * 0.00025 / 3 ** 0.5, delta=1e-15)
+        for m in entry.sphere_diameters:
+            self.assertEqual(m.uniform_half_width_m, 0.00001)
+            self.assertAlmostEqual(m.uncertainty_expanded_m, 2.0 * 0.00001 / 3 ** 0.5, delta=1e-15)
+
+        dto = self.service.get_latest_calibration()
+        self.assertEqual(dto.distance_half_width_m, 0.00025)
+        self.assertEqual(dto.diameter_half_width_m, 0.00001)
+        self.assertAlmostEqual(dto.pairwise_distances_ext_uncertainty_m[0], 2.0 * 0.00025 / 3 ** 0.5, delta=1e-15)
+
     # -- get_latest_calibration ---------------------------------------------------
 
     def test_get_latest_calibration_returns_none_when_nothing_recorded(self) -> None:
