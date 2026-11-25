@@ -20,10 +20,12 @@ calibration in one place rather than one dock per calibration type).
   values being typed (source frame, quadrant-labeled), the best-fit square,
   the per-sphere deviation and per-distance residuals — so the operator sees
   the impact of each reading — or the reason the geometry is impossible.
-- No uncertainty/resolution input in v1 — the service defaults (0.02mm
-  vernier, k=2) match every value already hand-written in
-  `aefi_device_config.json`; exposing them in the UI is deferred until a
-  different instrument is actually used (YAGNI).
+- Take two uncertainty inputs, "Demi-largeur des distances" and "Demi-largeur
+  des diamètres" (mm, uniform law, 0.01 mm by default), recorded with the
+  entry and reloaded with it. Why: on 2026-11-24 the six distances disagreed
+  by up to 250 µm, so the vernier resolution understated their uncertainty
+  about 40 times; the default keeps the former uncertainty (0.02mm/(2*sqrt(3))).
+  `k` stays the service default (2).
 
 ## Design
 
