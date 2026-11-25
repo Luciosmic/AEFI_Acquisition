@@ -106,6 +106,16 @@ class TestSourceGeometryCalibrationPresenter(unittest.TestCase):
         self.assertEqual(self.service.record_calibration_calls, [(_DIAMETERS_M, _DISTANCES_M)])
         self.assertEqual(self.received_status_messages, ["Calibration enregistrée"])
 
+    def test_on_save_calibration_requested_forwards_both_half_widths(self):
+        self.presenter.on_save_calibration_requested(_DIAMETERS_M, _DISTANCES_M, 0.00001, 0.00025)
+
+        self.assertEqual(self.service.record_calibration_half_widths, (0.00001, 0.00025))
+
+    def test_on_save_calibration_requested_defaults_both_half_widths_to_0_01_mm(self):
+        self.presenter.on_save_calibration_requested(_DIAMETERS_M, _DISTANCES_M)
+
+        self.assertEqual(self.service.record_calibration_half_widths, (0.00001, 0.00001))
+
     def test_on_save_calibration_requested_auto_refreshes_via_entry_added_event(self):
         self.presenter.on_save_calibration_requested(_DIAMETERS_M, _DISTANCES_M)
 
