@@ -84,4 +84,6 @@ class CaliperMeasurement:
         hand-computed throughout `aefi_device_config.json`.
         """
         u_c = resolution_m / (2 * math.sqrt(3))
-        return CaliperMeasurement(value_m=value_m, uncertainty_expanded_m=k * u_c, k=k)
+        return CaliperMeasurement(
+            value_m=value_m, uncertainty_expanded_m=k * u_c, k=k, uniform_half_width_m=resolution_m / 2
+        )
