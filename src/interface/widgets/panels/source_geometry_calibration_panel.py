@@ -158,10 +158,12 @@ class SourceGeometryCalibrationPanel(QWidget):
         distances_str = "  ".join(
             f"{label}={v * 1000:.3f}mm" for label, v in zip(_DISTANCE_LABELS, dto.pairwise_distances_ext_m)
         )
-        uncertainty_mm = dto.sphere_diameters_uncertainty_m[0] * 1000
+        diameter_u_mm = dto.sphere_diameters_uncertainty_m[0] * 1000
+        distance_u_mm = dto.pairwise_distances_ext_uncertainty_m[0] * 1000
         self.lbl_last_calibration.setText(
             f"{diameters_str}\n{distances_str}\n"
-            f"— calibré le {recorded_at} (±{uncertainty_mm:.4f}mm, k={dto.k:g})"
+            f"— calibré le {recorded_at} (U diamètres ±{diameter_u_mm:.4f}mm, "
+            f"U distances ±{distance_u_mm:.4f}mm, k={dto.k:g})"
         )
 
     def _load_measurements(self, sphere_diameters_m, pairwise_distances_ext_m) -> None:
