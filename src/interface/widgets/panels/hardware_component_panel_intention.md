@@ -30,4 +30,4 @@ accepted) rather than in fixed-decimal spin boxes.
 ## Design
 
 - Built from a `HardwareComponentKindDTO`; one instance per kind, added to
-  `CalibrationPanel` by `add_hardware_component_tab`. No domain import.
+  `BenchConfigurationPanel` by `add_hardware_component_tab`. No domain import.
