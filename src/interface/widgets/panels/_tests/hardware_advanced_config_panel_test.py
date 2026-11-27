@@ -29,6 +29,32 @@ def _make_panel() -> HardwareAdvancedConfigPanel:
     return panel
 
 
+def test_display_field_follows_its_source_and_stays_out_of_the_config():
+    from domain.shared_kernel.value_objects.hardware_configuration.hardware_advanced_parameter_schema import (
+        DisplayParameterSchema, EnumParameterSchema,
+    )
+    QApplication.instance() or QApplication([])
+    panel = HardwareAdvancedConfigPanel()
+    panel.set_parameter_specs("ads131a04", [
+        EnumParameterSchema(key="oversampling_ratio", display_name="OSR", default_value="4096",
+                            choices=("4096", "32"), group="Global"),
+        DisplayParameterSchema(key="output_data_rate", display_name="Output Data Rate", default_value="",
+                               source_key="oversampling_ratio",
+                               text_by_source_value=(("4096", "1000 Hz"), ("32", "128000 Hz")), group="Global"),
+        DisplayParameterSchema(key="modulator_frequency", display_name="Modulator Frequency",
+                               default_value="4.096 MHz", group="Global"),
+    ])
+    applied = []
+    panel.apply_requested.connect(applied.append)
+
+    assert panel._widgets["output_data_rate"].text() == "1000 Hz"
+    assert panel._widgets["modulator_frequency"].text() == "4.096 MHz"
+
+    panel._widgets["oversampling_ratio"].setCurrentText("32")
+    assert panel._widgets["output_data_rate"].text() == "128000 Hz"
+    assert applied[-1] == {"oversampling_ratio": "32"}
+
+
 def test_physical_units_display_converts_but_emits_raw_registers():
     panel = _make_panel()
     panel._physical_units_checkbox.setChecked(True)
