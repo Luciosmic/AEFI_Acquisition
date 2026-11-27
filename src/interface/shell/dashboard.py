@@ -117,6 +117,7 @@ class Dashboard(QWidget):
             "motion": ("Motion Control", "Hardware"),
             "excitation": ("Excitation & Lock-In Detection", "Hardware"),
             "hardware_config": ("Hardware Advanced Config", "Hardware"),
+            "bench_configuration": ("Configuration du banc", "Hardware"),
             "calibration": ("Calibration", "Hardware"),
             "external_modules": ("External Modules", "Système"),
             "logs": ("Logs", "Système"),
