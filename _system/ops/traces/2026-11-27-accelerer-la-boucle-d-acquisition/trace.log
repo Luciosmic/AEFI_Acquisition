@@ -1,0 +1,9 @@
+18:20 | depart | quoi=réduire le coût logiciel par point de la boucle d'acquisition (écart de ~4 ms entre l'application, 7,6 ms, et un script nu, 3,4 ms) | session=ba41e867-56a6-41db-bf6f-2257fc382482
+18:25 | constat | chaine=un seul fil : acquire_sample (relit mcu_last_config.json) -> publish aefivoltagesampleacquired -> correction du signal (2 événements de plus) -> abonnés "*" (journal d'audit, tampon circulaire), tout synchrone avant la mesure suivante
+18:30 | mesure | simulation, MCU instantané, 2000 points : relecture n_avg 0,22 ms ; journal d'audit 1,63 ms (3 ouvertures de fichier par point) ; correction + tampon 0,06 ms ; total ~1,9 ms par point
+18:35 | decision | journal d'audit : fil écrivain unique, fichier tenu ouvert, flush par lot ; garde tous les événements (piste déjà notée dans son intention)
+18:36 | decision | n_avg : relu seulement si (mtime, taille) du fichier change ; relu à chaque point tant que le fichier a moins de 1 s (mtime grossier)
+19:10 | mesure | après : relecture n_avg 0,07 ms ; journal d'audit 0,04 ms ; total logiciel ~0,17 ms par point (contre ~1,9 ms)
+19:10 | verification | 71 tests passés (ads131a04, events, bus, micro_controller)
+19:12 | reste | ~2 ms non expliqués, à mesurer au banc (occupé) : lecture série octet par octet de pyserial (readline) et abonnés du scan
+19:12 | fin | tranche 1 livrée, à mesurer au banc par la caractérisation de débit de l'application
