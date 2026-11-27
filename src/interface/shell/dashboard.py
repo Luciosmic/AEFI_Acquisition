@@ -20,6 +20,7 @@ from interface.widgets.panels.aefi_continuous_reading_panel import AefiContinuou
 from interface.widgets.panels.electric_field_probe_panel import ElectricFieldProbePanel
 from interface.widgets.panels.inertial_probe_panel import InertialProbePanel
 from interface.widgets.panels.hardware_advanced_config_panel import HardwareAdvancedConfigPanel
+from interface.widgets.panels.bench_configuration_panel import BenchConfigurationPanel
 from interface.widgets.panels.calibration_panel import CalibrationPanel
 from interface.widgets.panels.frequency_sweep_panel import FrequencySweepPanel
 from interface.widgets.panels.external_modules_panel import ExternalModulesPanel
