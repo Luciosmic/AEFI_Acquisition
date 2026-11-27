@@ -349,8 +349,17 @@ class HardwareAdvancedConfigPanel(QWidget):
         if hardware_id:
             self.hardware_selected.emit(hardware_id)
     
+    def _refresh_display_values(self) -> None:
+        """Show, in each read-only field that follows a parameter, the text
+        the hardware adapter gave for that parameter's current value."""
+        config = self._get_current_config()
+        for spec in self._specs:
+            if isinstance(spec, DisplayParameterSchema) and spec.source_key and spec.key in self._widgets:
+                self._widgets[spec.key].setText(spec.text_for(config.get(spec.source_key, "")))
+
     def _on_parameter_changed(self):
         """Handle parameter value change."""
+        self._refresh_display_values()
         config = self._get_current_config()
         self.config_changed.emit(config)
     
