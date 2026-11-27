@@ -24,12 +24,40 @@ AEFI_Acquisition et les scripts de caractérisation l'installent au lieu de reco
 
 - [x] Arcus Performax 4EX : paquet `arcus_performax_4ex` v0.1.0, caractérisation migrée,
   AEFI migré et fusionné dans `develop` (b97fa15f). Validé au banc le 2026-11-27.
-- [ ] LIDAR VL53L0X sur ESP32 (repo `driver-lidar-vl53l0x-esp32`).
-- [ ] LSM9DS1 (repo `driver-lsm9ds1`).
-- [ ] Oscilloscope DSO-X 2014A (dossier non versionné ; le skill global l'importe en place).
-- [ ] Narda EP-601 (dossier non versionné).
+- [x] LIDAR VL53L0X sur ESP32 : paquet `lidar_vl53l0x_esp32` v0.1.0 (repo
+  `driver-lidar-vl53l0x-esp32`), banc II migré (FakeClock désormais propre au banc II),
+  AEFI sur `feature/drivers-publies` (eb3d6a35, poussée). 516 tests verts, comme avant.
+  Reste : essai au banc (canal LIDAR de la sonde inertielle, stabilisation de colonne d'un
+  scan), puis fusion dans `develop`.
+- [ ] LSM9DS1 — **décision de l'humain.** L'API a divergé, pas seulement les chemins : AEFI a
+  renommé les voies (`"acc"` → `"accelerometer"`…) et les constantes (`ACC_FS_G` →
+  `ACCELEROMETER_FULL_SCALE_G`, règle 9), retiré `lidar_raw_to_mm`, et rendu port et débit
+  obligatoires dans le pilote de flux. Le repo LSM9DS1 a ses propres consommateurs sur les
+  anciens noms (services d'analyse IMU, interface terminal, scripts, pont du banc II).
+  Question : adopter les noms d'AEFI et migrer ces consommateurs ?
+- [ ] Oscilloscope DSO-X 2014A — **décision de l'humain.** AEFI n'a pas de copie du pilote :
+  son adaptateur de capture DRDY parle pyvisa directement. Le pilote partagé n'est versionné
+  nulle part (ni Desktop ni Dropbox) et le skill global l'importe à plat par `sys.path`.
+  Question : créer un repo GitHub `driver-oscilloscope-dsox2014`, en gardant le module racine
+  pour le skill ?
+- [ ] Narda EP-601 — **décision de l'humain.** Le pilote d'AEFI est un sur-ensemble de celui du
+  dossier (journalisation, estimation de la pile) : c'est lui à publier ; l'adaptateur et le
+  fake d'AEFI restent (port `IElectricFieldProbePort`). Le repo git de Narda est la copie
+  Dropbox, écrite par le Mac, sans remote ; le Desktop n'en a qu'une copie non versionnée.
+  Question : pousser ce repo sur GitHub depuis le Mac, puis le cloner ici ?
 - [ ] AD9106, ADS131A04 et microcontrôleur : reporté, `mcu_serial_communicator.py` est un
-  chemin à éviter de la session « Accélérer la boucle d'acquisition logicielle ».
+  chemin à éviter de la session « Accélérer la boucle d'acquisition logicielle ». Le dossier
+  `AD9106_ADS131A04` n'est pas versionné non plus.
+- Hors périmètre : Kapteos et impédancemètre ADS941, sans adaptateur dans AEFI.
+
+## Notes
+
+- Le worktree `AEFI_Acquisition_dev_drivers` a reçu une copie de `.aefi_acquisition/configs/`
+  de `AEFI_Acquisition_dev` pour l'essai au banc ; ses `calibrations/` ont été semées par
+  l'application (transmission 20,62 µm/impulsion, comme `AEFI_Acquisition_dev`).
+- Outil de génération des modules de renvoi : écrit à la volée dans `%TEMP%`, non versionné ;
+  la forme d'un module de renvoi est visible dans
+  `src/infrastructure/hardware/arcus_performax_4ex/driver_arcus_performax4ex.py`.
 
 ## Règles de travail
 
@@ -41,4 +69,5 @@ AEFI_Acquisition et les scripts de caractérisation l'installent au lieu de reco
 
 ## Prochaine action
 
-LIDAR ESP32 : comparer le repo publié et la copie d'AEFI, puis passer le repo en paquet.
+Humain : essai au banc du LIDAR depuis `AEFI_Acquisition_dev_drivers`, puis trancher les trois
+questions LSM9DS1, DSO-X 2014A et Narda ci-dessus.
