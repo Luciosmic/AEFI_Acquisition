@@ -302,7 +302,7 @@ def wire_dashboard(
     acquisition_throughput_presenter.request_defaults.connect(throughput_widget.set_request_defaults)
     acquisition_throughput_presenter.refresh_state()
 
-    # ADC output data rate measured on DRDY, in the ADC tab
+    # ADC output data rate measured on DRDY (Calibration), prefilling the ADC form (Configuration)
     odr_widget = calibration_panel.adc_output_rate_widget
     odr_widget.start_requested.connect(adc_output_rate_presenter.on_start_requested)
     adc_output_rate_presenter.running_changed.connect(odr_widget.set_running)
