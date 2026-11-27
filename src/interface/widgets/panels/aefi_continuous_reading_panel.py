@@ -22,7 +22,7 @@ from interface.widgets.operator_selector.operator_selector import OperatorSelect
 from interface.widgets.measured_object_selector.measured_object_selector import MeasuredObjectSelector
 from interface.widgets.lift_off_input.lift_off_input import LIFT_OFF_LABEL, LIFT_OFF_TOOLTIP, LiftOffInput
 from interface.widgets.export_comment_input.export_comment_input import ExportCommentInput
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, Signal, QTimer
 import pyqtgraph as pg  # type: ignore[import]
 
 from interface.widgets.scope.scope_window_control import ScopeWindowControl
