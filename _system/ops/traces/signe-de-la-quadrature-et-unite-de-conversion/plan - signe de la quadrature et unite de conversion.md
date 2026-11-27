@@ -1,6 +1,8 @@
 # Plan : signe de la quadrature et unité de conversion
 
-**Prochaine action :** l'humain essaie la tranche 1 dans l'application (Calibration > Électronique) et y déclare −1 pour la carte de conditionnement montée ; puis tranche 2, appliquer le signe à la lecture de l'ADC.
+**Prochaine action :** l'humain essaie les tranches 1 et 1 bis dans l'application (panneau « Configuration du banc » > Électronique) et y déclare −1 pour la carte de conditionnement montée ; puis tranche 2, appliquer le signe à la lecture de l'ADC.
+
+**Fait (2026-11-27, tranche 1 bis) :** deux panneaux. « Configuration du banc » (`bench_configuration`) tient le catalogue et le montage, groupés en Capteur, Électronique (dont l'unité de conversion) et Mouvement ; « Calibration » tient la calibration du capteur, la géométrie des sources, la transmission et les deux mesures de l'unité de conversion (débit d'acquisition du microcontrôleur, cadence de sortie de l'ADC), qui pré-remplissent les formulaires du catalogue. Tests de l'interface verts (210), tableau de bord construit.
 
 **Fait (2026-11-27) :** tranche 1 codée, tests localisés verts (260). Le DDS, l'ADC et le microcontrôleur forment l'assemblage `digital_analog_signals_processing_unit` du domaine, montré sous un onglet « Unité de conversion entre signaux numériques et analogiques » dans « Électronique ». La carte de conditionnement porte la grandeur `quadrature_output_sign` (−1 ou +1, sinon non renseignée), exportée sans dimension. `solidai verify` ne se construit pas sur le PC du labo (paquet `solid-verify-core` absent) : non joué.
 
