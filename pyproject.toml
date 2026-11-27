@@ -10,6 +10,7 @@ dependencies = [
     "matplotlib>=3.5.0",
     "pylablib>=1.4.2",
     "arcus-performax-4ex",
+    "lidar-vl53l0x-esp32",
     "h5py>=3.8.0",
     "pyvista>=0.42.3",
     "scipy~=1.14",
@@ -39,9 +40,11 @@ required-environments = [
 ]
 
 [tool.uv.sources]
-# Pilote Arcus : paquet publié, source unique partagée avec les scripts de caractérisation.
-# Une correction se fait dans le repo du pilote ; AEFI monte ici le tag.
+# Pilotes publiés (un repo par instrument, Desktop\THESE-LUIS-EXPERIMENTAL\Hardware - Drivers) :
+# source unique partagée avec les scripts de caractérisation. Une correction se fait dans le
+# repo du pilote ; AEFI monte ici son tag.
 arcus-performax-4ex = { git = "https://github.com/Luciosmic/driver-arcus-performax-4ex.git", tag = "v0.1.0" }
+lidar-vl53l0x-esp32 = { git = "https://github.com/Luciosmic/driver-lidar-vl53l0x-esp32.git", tag = "v0.1.0" }
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]

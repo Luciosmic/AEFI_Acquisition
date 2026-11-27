@@ -1,6 +1,6 @@
 ---
 type: atome::solidai-atome
-tldr: "Erreur `lidar_stream_error` : `LidarStreamBusyError` : le flux a déjà un propriétaire (panneau du capteur)."
+tldr: "Erreurs déclarées par ILidarDistancePort, publiées par le paquet lidar_vl53l0x_esp32 et réexportées ici."
 code: ["[[src/application/inertial_probe/lidar_distance/ports/lidar_stream_error.py]]"]
 cause_de_changement: orchestration
 ---
@@ -8,17 +8,17 @@ cause_de_changement: orchestration
 
 ## Rationale
 
-« Le panneau diffuse déjà le flux » et « la carte ne répond pas » appellent deux
-gestes différents de l'opérateur (arrêter le panneau / vérifier la carte). Sans
-erreurs déclarées par le port, le service devrait reconnaître des exceptions série.
+Le pilote vivait en deux copies, ici et dans le repo LIDAR-VL53L0C-ESP32, qui divergeaient.
+Depuis le 2026-11-27, la source unique est le paquet `lidar_vl53l0x_esp32` (github.com/Luciosmic/driver-lidar-vl53l0x-esp32),
+dont AEFI dépend par `pyproject.toml` (tag git).
 
 ## Responsibility
 
-- `LidarStreamBusyError` : le flux a déjà un propriétaire (panneau du capteur).
-- `LidarUnavailableError` : ouverture ou lecture du flux impossible.
+- Garder le chemin d'import AEFI de `lidar_vl53l0x_esp32.ports.lidar_stream_error` : réexporter ses noms, sans code
+  propre.
 
 ## Design
 
-- Exceptions nommées levées par l'adaptateur et par le Fake, traduites par le
-  service en erreurs de cas d'usage. `LidarStreamBusyError` hérite de
-  `LidarUnavailableError` : un appelant qui ne distingue pas reste correct.
+- Toute correction se fait dans le repo LIDAR-VL53L0C-ESP32, puis AEFI monte le tag dans
+  `pyproject.toml`.
+- Documentation, tests et intention complète : à côté du module, dans le paquet.

@@ -1,20 +1,11 @@
 """
-LIDAR Distance DTOs
+LIDAR distance DTOs: re-export of the published driver package.
 
-See lidar_distance_dtos_intention.md.
-
-Units: distances in mm (UCUM `mm`), timestamps in s (UCUM `s`).
+The code lives in lidar_vl53l0x_esp32.ports.lidar_distance_dtos (LIDAR-VL53L0C-ESP32 repo, installed as a uv dependency
+pinned to a tag). This module keeps its AEFI path so that existing imports keep
+working. See lidar_distance_dtos_intention.md.
 """
 
-from dataclasses import dataclass
-
-from domain.lidar.lidar_distance.lidar_distance import LidarDistance
-
-
-@dataclass(frozen=True)
-class LidarDistanceReading:
-    """One LIDAR sample (a valid return or no return, see LidarDistance),
-    timestamped at its reception on the PC (s, same clock as the service)."""
-
-    timestamp_s: float
-    distance: LidarDistance
+from lidar_vl53l0x_esp32.ports.lidar_distance_dtos import (  # noqa: F401 — re-exported
+    LidarDistanceReading as LidarDistanceReading,
+)

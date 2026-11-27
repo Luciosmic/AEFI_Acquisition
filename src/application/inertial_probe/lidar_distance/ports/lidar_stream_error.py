@@ -1,19 +1,12 @@
 """
-LIDAR Stream Errors
+LIDAR stream errors: re-export of the published driver package.
 
-Responsibility:
-- The errors ILidarDistancePort declares: the stream is owned by someone else
-  (LidarStreamBusyError), or the link failed (LidarUnavailableError).
-
-Design:
-- Raised by the adapter in place of serial/driver exceptions; translated by
-  the consuming application service into its use-case error union.
+The code lives in lidar_vl53l0x_esp32.ports.lidar_stream_error (LIDAR-VL53L0C-ESP32 repo, installed as a uv dependency
+pinned to a tag). This module keeps its AEFI path so that existing imports keep
+working. See lidar_stream_error_intention.md.
 """
 
-
-class LidarUnavailableError(RuntimeError):
-    """The LIDAR stream could not be opened or read."""
-
-
-class LidarStreamBusyError(LidarUnavailableError):
-    """Another owner (the inertial probe panel) already streams the board."""
+from lidar_vl53l0x_esp32.ports.lidar_stream_error import (  # noqa: F401 — re-exported
+    LidarStreamBusyError as LidarStreamBusyError,
+    LidarUnavailableError as LidarUnavailableError,
+)

@@ -1,24 +1,24 @@
 ---
 type: atome::solidai-atome
-tldr: "DTO `lidar_distance_dtos` : `LidarDistanceReading` : une distance horodatée à sa réception (sortie du port LIDAR)."
+tldr: "LidarDistanceReading, sortie du port LIDAR, publiée par le paquet lidar_vl53l0x_esp32 et réexportée ici."
 code: ["[[src/application/inertial_probe/lidar_distance/dtos/lidar_distance_dtos.py]]"]
 cause_de_changement: orchestration
 ---
 # lidar_distance_dtos — Intention
 
-> Extrait des DTO de la calibration par barre (abandonnée le 2026-10-30) : seul
-> `LidarDistanceReading`, la sortie du port LIDAR, est repris ici.
-
 ## Rationale
 
-Sans DTO, le port LIDAR rendrait un tuple dont le sens (secondes ? millimètres ?
-heure de réception ou de lecture ?) ne serait porté que par la position.
+Le pilote vivait en deux copies, ici et dans le repo LIDAR-VL53L0C-ESP32, qui divergeaient.
+Depuis le 2026-11-27, la source unique est le paquet `lidar_vl53l0x_esp32` (github.com/Luciosmic/driver-lidar-vl53l0x-esp32),
+dont AEFI dépend par `pyproject.toml` (tag git).
 
 ## Responsibility
 
-- `LidarDistanceReading` : une distance horodatée à sa réception (sortie du port LIDAR).
+- Garder le chemin d'import AEFI de `lidar_vl53l0x_esp32.ports.lidar_distance_dtos` : réexporter ses noms, sans code
+  propre.
 
 ## Design
 
-- `@dataclass(frozen=True)` ; unités dans les noms de champs et dans l'en-tête du
-  module (mm, s).
+- Toute correction se fait dans le repo LIDAR-VL53L0C-ESP32, puis AEFI monte le tag dans
+  `pyproject.toml`.
+- Documentation, tests et intention complète : à côté du module, dans le paquet.
