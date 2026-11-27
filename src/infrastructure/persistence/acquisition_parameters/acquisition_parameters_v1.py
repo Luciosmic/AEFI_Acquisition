@@ -50,6 +50,7 @@ _UCUM_BY_CATALOG_UNIT = {
     "µm/pas": "um/{step}",
     "mm/s": "mm/s",
     "mm/s²": "mm/s2",
+    "±1": "1",  # a sign: the conditioning board's quadrature output sign
 }
 _UCUM_BY_CURVE_X_LABEL = {"n_avg": "{sample}"}
 
