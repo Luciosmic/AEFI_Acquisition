@@ -35,6 +35,11 @@ class TestAcquisitionParametersV1(unittest.TestCase):
         undeclared = {unit for section in sections for unit in _units(section)} - v1.UCUM_UNITS
         self.assertEqual(undeclared, set())
 
+    def test_a_sign_of_the_catalog_is_written_dimensionless(self):
+        # The conditioning board's quadrature output sign (-1 or +1).
+        self.assertEqual(v1.ucum("±1", "components.conditioning_electronics_board", self.warn), "1")
+        self.assertEqual(self.warnings, [])
+
     def test_a_present_but_undescribed_object_is_a_warning(self):
         v1.feature_of_interest(present=True, description=None, notes=None, warn=self.warn, lift_off_mm=8.0)
         self.assertEqual([w["path"] for w in self.warnings], ["feature_of_interest.description"])
