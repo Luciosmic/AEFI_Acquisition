@@ -10,36 +10,30 @@ possible without touching either sub-panel's internals: each stays a fully
 self-contained, independently testable widget, and this wrapper just tabs
 them together.
 
+The component catalog later grew inside this panel, mixing the bench
+configuration (what is mounted) with its calibration (what was measured).
+On 2026-11-27 the human asked to stop mixing the two contexts: the catalog
+moved to `BenchConfigurationPanel`, and this panel keeps only what belongs
+to `test_bench_calibration`.
+
 ## Responsibility
 
-- Host one `QTabWidget` with one tab per calibration type.
-- Expose each sub-panel as a public attribute (`sensor_calibration_panel`,
-  `source_geometry_panel`, and `hardware_component_panels[kind_key]`) so
-  `dashboard_wiring.py` connects directly to their signals/slots — exactly as
-  if each were still its own dock. No signal relaying, no logic of its own.
-- `add_hardware_component_tab(kind_dto)`: one generic `HardwareComponentPanel`
-  tab per hardware component kind (boards, signal generation chip, ADC,
-  microcontroller, motors), added by the wiring since the kinds are listed by
-  the application layer.
-- Group the tabs by what the operator works on, not by component kind: «
-  Mouvement » (moteurs, driver pas à pas, puis Transmission — the chain that
-  turns pulses into micrometres) and « Électronique » (cartes de conditionnement
-  et d'excitation, chip de génération, ADC, microcontrôleur) are each a nested
-  `QTabWidget`; « Calibration capteur » and « Géométrie source » stay top-level.
-  The group is chosen from the kind key in `add_hardware_component_tab`.
-- `adc_output_rate_widget`: the ADC output data rate measured on DRDY at the
-  oscilloscope (current OSR or OSR sweep), inserted into the ADC tab.
-- `acquisition_throughput_widget`: the throughput / noise vs n_avg
-  measurement, inserted into the microcontroller tab (the component it
-  characterizes, where its result is recorded) via
-  `HardwareComponentPanel.add_tool()`.
+- Host one `QTabWidget`: « Calibration capteur », « Géométrie source »,
+  « Transmission », and « Unité de conversion entre signaux numériques et
+  analogiques », which groups the measurements of that unit:
+  « Microcontrôleur : débit d'acquisition » (`acquisition_throughput_widget`)
+  and « ADC : cadence de sortie » (`adc_output_rate_widget`, ODR measured on
+  DRDY at the oscilloscope).
+- Expose each sub-panel as a public attribute so `dashboard_wiring.py`
+  connects directly to its signals and slots. No signal relaying, no logic
+  of its own.
+- Hold no component catalog: the measured values prefill the microcontroller
+  and ADC forms of the configuration panel, where the operator records them.
 - Adding a future calibration type means adding one more sub-panel instance
-  + one more `tabs.addTab(...)` line here — the sub-panel itself is built
-  exactly like the first two, unaware it lives inside a tab.
+  and one more `addTab(...)` line here.
 
 ## Design
 
 - `QWidget` wrapping a `QTabWidget`. Zero business logic, zero Qt signals
   defined on `CalibrationPanel` itself.
-- Registered in `Dashboard.panels["calibration"]` (replacing the earlier
-  standalone `"sensor_calibration"` dock entry) — see `dashboard.py`.
+- Registered in `Dashboard.panels["calibration"]` — see `dashboard.py`.
