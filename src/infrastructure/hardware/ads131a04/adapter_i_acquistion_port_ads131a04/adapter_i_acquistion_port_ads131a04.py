@@ -164,6 +164,17 @@ class ADS131A04Adapter(IAcquisitionPort):
         between sees an empty file — keep the last value read, not 1, or that
         sample is silently acquired with n_avg=1 (seen 2026-10-02)."""
         mcu_config_path = os.path.join(".aefi_acquisition", "configs", "mcu_last_config.json")
+        # Re-read only when the file changed: one open + json per point cost
+        # ~0.22 ms (2026-11-27). A file younger than _N_AVG_FILE_SETTLE_S is
+        # re-read every time, since mtime ticks can be coarse and two writes
+        # in one tick would otherwise look like one.
+        try:
+            stat = os.stat(mcu_config_path)
+        except OSError:
+            return self._last_n_avg
+        file_key = (stat.st_mtime_ns, stat.st_size)
+        if file_key == self._n_avg_file_key and time.time() - stat.st_mtime > self._N_AVG_FILE_SETTLE_S:
+            return self._last_n_avg
         try:
             if os.path.exists(mcu_config_path):
                 with open(mcu_config_path, 'r') as f:
