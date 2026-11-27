@@ -22,6 +22,11 @@ class HardwareComponentKindDTO:
     key: str
     label: str
     quantities: Tuple[QuantitySpecDTO, ...]
+    # The assembly the kind is part of (thesis graph), or None if it stands
+    # alone: the DDS, the ADC and the microcontroller form the
+    # digital_analog_signals_processing_unit, grouped under one tab by the UI.
+    assembly_key: Optional[str] = None
+    assembly_label: Optional[str] = None
 
 
 @dataclass(frozen=True)
