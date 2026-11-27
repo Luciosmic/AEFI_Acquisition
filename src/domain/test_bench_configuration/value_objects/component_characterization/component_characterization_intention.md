@@ -1,6 +1,6 @@
 ---
 type: value-object::solidai-ddd
-tldr: "Hold one value per quantity of the kind: scalar > 0, curve of (x, y) points with x, y > 0, or `None` = not characterized."
+tldr: "Hold one value per quantity of the kind: scalar > 0, one of the quantity's allowed values (a sign: -1 or +1), curve of (x, y) points with x, y > 0, or `None` = not characterized."
 code: ["[[src/domain/test_bench_configuration/value_objects/component_characterization/component_characterization.py]]"]
 cause_de_changement: regle-metier
 part_of: "[[src/domain/test_bench_configuration/bench_configuration_intention]]"
@@ -19,6 +19,8 @@ be persisted silently.
 
 - Hold one value per quantity of the kind: scalar > 0, curve of (x, y)
   points with x, y > 0, or `None` = not characterized.
+- A scalar whose spec declares `allowed_values` must be one of them: the
+  conditioning board's quadrature output sign is -1 or +1, never 0.5.
 - Refuse missing/unknown keys and non-physical values.
 - `uncharacterized()`: the keys still to measure — the debt shown in the UI,
   logs and export.
