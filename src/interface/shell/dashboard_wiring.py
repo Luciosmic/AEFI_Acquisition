@@ -310,7 +310,7 @@ def wire_dashboard(
     adc_output_rate_presenter.point_measured.connect(odr_widget.add_point)
     adc_output_rate_presenter.characterization_succeeded.connect(odr_widget.show_result)
     adc_output_rate_presenter.request_defaults.connect(odr_widget.set_request_defaults)
-    adc_panel = calibration_panel.hardware_component_panels.get("adc")
+    adc_panel = bench_configuration_panel.hardware_component_panels.get("adc")
     if adc_panel is not None:
         adc_output_rate_presenter.component_values_measured.connect(adc_panel.prefill_values)
     adc_output_rate_presenter.refresh_state()
