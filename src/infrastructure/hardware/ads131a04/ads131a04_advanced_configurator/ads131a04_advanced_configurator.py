@@ -6,7 +6,8 @@ from dataclasses import replace
 
 from application.shared.hardware_configuration_service.ports.i_hardware_advanced_configurator import IHardwareAdvancedConfigurator
 from domain.shared_kernel.value_objects.hardware_configuration.hardware_advanced_parameter_schema import (
-    HardwareAdvancedParameterSchema, NumberParameterSchema, EnumParameterSchema, BooleanParameterSchema
+    HardwareAdvancedParameterSchema, NumberParameterSchema, EnumParameterSchema, BooleanParameterSchema,
+    DisplayParameterSchema,
 )
 from infrastructure.hardware.ads131a04.adapter_i_acquistion_port_ads131a04.adapter_i_acquistion_port_ads131a04 import ADS131A04Adapter
 
