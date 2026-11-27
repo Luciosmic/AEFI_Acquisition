@@ -120,6 +120,44 @@ class ADS131A04AdvancedConfigurator(IHardwareAdvancedConfigurator):
             group="Global"
         ))
 
+        # Read-only: what the chosen OSR gives, and the fixed modulator clock behind it
+        specs.append(DisplayParameterSchema(
+            key="output_data_rate",
+            display_name="Output Data Rate",
+            description=(
+                "Débit de sortie de l'ADC (Analog-to-Digital Converter, convertisseur analogique-numérique) : "
+                "nombre d'échantillons qu'il fournit par seconde, sur chaque voie.\n\n"
+                "Débit de sortie = f_MOD / OSR\n\n"
+                "- f_MOD, fréquence du modulateur sigma-delta : cadence à laquelle le modulateur échantillonne "
+                f"l'entrée, fixe ici à {ADS131A04AdvancedConfigurator.MODULATOR_FREQUENCY_HZ / 1e6:g} MHz "
+                "(f_CLKIN / (CLK_DIV × ICLK_DIV), diviseurs fixés à 2 et 2).\n"
+                "- OSR (Oversampling Ratio, taux de suréchantillonnage) : nombre d'échantillons du modulateur "
+                "que le filtre de décimation combine en un seul échantillon de sortie.\n\n"
+                "Un OSR plus grand donne moins de bruit mais un débit plus bas : "
+                f"OSR 4096 → {ADS131A04AdvancedConfigurator.output_data_rate_text(4096)}, "
+                f"OSR 32 → {ADS131A04AdvancedConfigurator.output_data_rate_text(32)}."
+            ),
+            default_value="",
+            source_key="oversampling_ratio",
+            text_by_source_value=tuple(
+                (str(osr), ADS131A04AdvancedConfigurator.output_data_rate_text(osr))
+                for osr in ADS131A04AdvancedConfigurator.AVAILABLE_OSR
+            ),
+            group="Global"
+        ))
+
+        specs.append(DisplayParameterSchema(
+            key="modulator_frequency",
+            display_name="Modulator Frequency",
+            description=(
+                "Fréquence du modulateur sigma-delta de l'ADC (f_MOD), fixe : "
+                "f_CLKIN / (CLK_DIV × ICLK_DIV), diviseurs fixés à 2 et 2. "
+                "Le débit de sortie vaut f_MOD / OSR (Oversampling Ratio, taux de suréchantillonnage)."
+            ),
+            default_value=f"{ADS131A04AdvancedConfigurator.MODULATOR_FREQUENCY_HZ / 1e6:g} MHz",
+            group="Global"
+        ))
+
         # Channel Settings
         # System has 2 ADS131A04 ADCs (4 channels each = 8 total)
         # Gains are configured per register (1-4), which affects the corresponding channel on BOTH ADCs.
