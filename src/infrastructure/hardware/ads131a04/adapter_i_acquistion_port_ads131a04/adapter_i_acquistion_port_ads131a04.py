@@ -22,6 +22,7 @@ from dataclasses import dataclass
 from typing import Callable, Dict, Optional, Any, List
 import logging
 import math
+import time
 
 from application.shared.ports.i_acquisition_port import IAcquisitionPort
 from domain.shared_kernel.value_objects.acquisition.aefi_voltage_measurement import AefiVoltageMeasurement
