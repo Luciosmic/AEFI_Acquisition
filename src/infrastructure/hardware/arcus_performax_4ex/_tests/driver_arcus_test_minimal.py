@@ -3,8 +3,9 @@ import os
 from pylablib.devices import Arcus
 import pylablib as pll
 
-# Chemin DLL comme legacy
-DEFAULT_DLL_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "DLL64"))
+# DLL du fabricant, livrées avec le paquet arcus_performax_4ex
+from arcus_performax_4ex import DLL_DIR
+DEFAULT_DLL_PATH = str(DLL_DIR)
 
 if not os.path.isdir(DEFAULT_DLL_PATH):
     print(f"ERROR: DLL path not found: {DEFAULT_DLL_PATH}")

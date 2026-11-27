@@ -40,9 +40,9 @@ class TestArcusLifecycleInitialization(DiagramFriendlyTest):
         """Setup test environment."""
         super().setUp()
         
-        # Find DLL path (relative to adapter file)
-        adapter_dir = Path(__file__).parent.parent
-        self.dll_path = adapter_dir / "DLL64"
+        # Vendor DLLs ship with the arcus_performax_4ex package
+        from arcus_performax_4ex import DLL_DIR
+        self.dll_path = DLL_DIR
         
         # Port detection (None = auto-detect)
         self.port = None

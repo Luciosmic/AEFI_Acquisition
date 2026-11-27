@@ -43,8 +43,9 @@ def test_connection():
     """Test 1: Connection to Arcus via Adapter"""
     print("\n=== Test 1: Connection ===")
     
-    # DLL path (relative to this file)
-    dll_path = Path(__file__).parent / "DLL64"
+    # Vendor DLLs ship with the arcus_performax_4ex package
+    from arcus_performax_4ex import DLL_DIR
+    dll_path = DLL_DIR
     print(f"  DLL path: {dll_path}")
     
     # Auto-detect port
