@@ -28,6 +28,15 @@ class TestHardwareComponentService(unittest.TestCase):
         curve = {q.key: q for q in kinds[MCU].quantities}["optimal_acquisition_rate_per_s"]
         self.assertEqual(curve.curve_x_label, "n_avg")
 
+    def test_list_kinds_names_the_assembly_each_kind_belongs_to(self) -> None:
+        kinds = {k.key: k for k in self.service.list_kinds()}
+
+        for key in ("signal_generation_chip", "adc", MCU):
+            self.assertEqual(kinds[key].assembly_key, "digital_analog_signals_processing_unit")
+            self.assertEqual(kinds[key].assembly_label, "Unité de conversion entre signaux numériques et analogiques")
+        self.assertIsNone(kinds["conditioning_electronics_board"].assembly_key)
+        self.assertIsNone(kinds["conditioning_electronics_board"].assembly_label)
+
     def test_every_quantity_may_be_left_uncharacterized(self) -> None:
         received = []
         self.event_bus.subscribe(HARDWARE_COMPONENT_CHARACTERIZED_TOPIC, received.append)
