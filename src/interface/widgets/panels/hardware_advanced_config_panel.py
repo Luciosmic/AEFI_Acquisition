@@ -325,6 +325,12 @@ class HardwareAdvancedConfigPanel(QWidget):
             # A combo selection is itself a complete, discrete commit.
             widget.currentTextChanged.connect(lambda _: self._auto_apply())
 
+        elif isinstance(spec, DisplayParameterSchema):
+            # Read-only text, refreshed from its source parameter by
+            # _refresh_display_values; a QLabel is never read into the config.
+            widget = QLabel(str(spec.default_value))
+            widget.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+
         elif isinstance(spec, BooleanParameterSchema):
             widget = QCheckBox()
             widget.setChecked(bool(spec.default_value))
