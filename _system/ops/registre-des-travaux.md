@@ -10,8 +10,7 @@ Le serveur du registre est le seul écrivain : ne l'édite pas à la main une fo
   Éviter : `src/interface/widgets/panels/aefi_continuous_reading_panel.py`, `src/infrastructure/hardware/micro_controller/mcu_serial_communicator.py`.
 
 - **2026-11-27 19:12 — Signe quadrature et unité de conversion.** Repos : aefi-acquisition. Trace : `AEFI_Acquisition_dev\_system\ops\traces\signe-de-la-quadrature-et-unite-de-conversion/`. Session : `e782ef82-a9e2-43a8-8b9b-7e6db3577e17`.
-  État : Tranche 1 faite. En cours : séparer « Configuration du banc » (catalogue, montage) et « Calibration » en deux panneaux. Puis tranche 2 (appliquer le signe à la lecture de l'ADC).
-  Éviter : `src/interface/widgets/panels/calibration_panel.py`, `src/interface/widgets/panels/bench_configuration_panel.py`, `src/interface/shell/dashboard.py`, `src/interface/shell/dashboard_wiring.py`.
+  État : Tranches 1 et 1 bis faites (unité de conversion, signe déclaré, panneaux « Configuration du banc » et « Calibration » séparés). Attente : essai de l'humain dans l'application, puis tranche 2 (appliquer le signe à la lecture de l'ADC).
 
 - **2026-11-27 19:53 — Publier les drivers avec adaptateurs.** Repos : aefi-acquisition. Plan : `AEFI_Acquisition_dev\_system\ops\traces\2026-11-27-publier-les-drivers-avec-leurs-adaptateurs\plan - publier les drivers avec leurs adaptateurs.md`. Session : `a7fa5e17-d792-4063-824c-dc3e04fc4861`.
   État : Arcus fait et fusionné dans develop (validé au banc). En cours : LIDAR ESP32, puis LSM9DS1, DSO-X 2014A, Narda. AD9106/ADS131A04/MCU reportés (mcu_serial_communicator évité). Travail AEFI dans le worktree AEFI_Acquisition_dev_drivers.
