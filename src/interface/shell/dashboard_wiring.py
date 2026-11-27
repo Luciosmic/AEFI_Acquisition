@@ -296,7 +296,7 @@ def wire_dashboard(
     acquisition_throughput_presenter.status_message.connect(throughput_widget.set_status_message)
     acquisition_throughput_presenter.point_measured.connect(throughput_widget.add_point)
     acquisition_throughput_presenter.characterization_succeeded.connect(throughput_widget.show_result)
-    microcontroller_panel = calibration_panel.hardware_component_panels.get("microcontroller")
+    microcontroller_panel = bench_configuration_panel.hardware_component_panels.get("microcontroller")
     if microcontroller_panel is not None:
         acquisition_throughput_presenter.component_values_measured.connect(microcontroller_panel.prefill_values)
     acquisition_throughput_presenter.request_defaults.connect(throughput_widget.set_request_defaults)
