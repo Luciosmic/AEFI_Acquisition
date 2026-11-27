@@ -77,6 +77,14 @@ class AefiContinuousReadingPanel(QWidget):
         self.times: List[float] = []
         self.values: Dict[str, List[float]] = {ch["name"]: [] for ch in self.CHANNELS}
         self._t0: float | None = None
+        # Points arrive at the acquisition rate (~200/s at n_avg = 1); the plot
+        # is redrawn at most every PLOT_INTERVAL_MS. Redrawing 6 curves at
+        # every point kept the UI thread's Python busy, and through the GIL it
+        # slowed the acquisition thread: UI and acquisition must stay decoupled.
+        self._plot_timer = QTimer(self)
+        self._plot_timer.setSingleShot(True)
+        self._plot_timer.setInterval(self.PLOT_INTERVAL_MS)
+        self._plot_timer.timeout.connect(self._update_plot)
         
         # Main layout
         vlayout = QVBoxLayout(self)
