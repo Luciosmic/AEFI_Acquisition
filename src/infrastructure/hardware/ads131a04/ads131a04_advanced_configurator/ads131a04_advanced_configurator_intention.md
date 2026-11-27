@@ -33,4 +33,8 @@ Implémentation de `IHardwareAdvancedConfigurator` pour l'ADS131A04. Expose les 
 ## Design
 
 - `hardware_id = "ads131a04"`.
+- Deux champs en lecture seule (`DisplayParameterSchema`) dans le groupe Global, jamais appliqués :
+  `output_data_rate`, le débit de sortie f_MOD / OSR calculé ici pour chaque OSR proposé (le panneau
+  ne fait que lire la table), et `modulator_frequency`, f_MOD fixe (`MODULATOR_FREQUENCY_HZ`, 4,096 MHz,
+  diviseurs CLK_DIV et ICLK_DIV fixés à 2). Leur infobulle explique le lien entre les trois grandeurs.
 - Implémente `IHardwareAdvancedConfigurator`.
