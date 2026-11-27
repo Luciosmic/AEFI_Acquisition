@@ -23,5 +23,6 @@ L'humain demande aussi de regrouper dans l'application, avec le langage du graph
 ## Tranches
 
 1. Regroupement « Unité de conversion » et déclaration du signe dans le catalogue.
+1 bis. Séparer la configuration et la calibration en deux panneaux (demande de l'humain du 2026-11-27 : « ne plus mélanger les contextes »). « Configuration du banc » tient le catalogue des composants et leur montage (contexte `test_bench_configuration`) ; « Calibration » tient la calibration du capteur, la géométrie des sources, la transmission et les mesures de caractérisation de l'unité de conversion (contexte `test_bench_calibration`).
 2. Application du signe à la lecture de l'ADC, avertissement si non renseigné, signe dans l'export.
 3. Post-traitement : corriger les fichiers anciens (worktree `dev_post_processor`).
