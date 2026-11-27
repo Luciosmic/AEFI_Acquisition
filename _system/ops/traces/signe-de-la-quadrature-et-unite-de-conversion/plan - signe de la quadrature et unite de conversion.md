@@ -1,6 +1,8 @@
 # Plan : signe de la quadrature et unité de conversion
 
-**Prochaine action :** tranche 1, grouper le DDS, l'ADC et le microcontrôleur sous « Unité de conversion » dans le panneau Calibration, et déclarer le signe de la voie en quadrature de la carte de conditionnement.
+**Prochaine action :** l'humain essaie la tranche 1 dans l'application (Calibration > Électronique) et y déclare −1 pour la carte de conditionnement montée ; puis tranche 2, appliquer le signe à la lecture de l'ADC.
+
+**Fait (2026-11-27) :** tranche 1 codée, tests localisés verts (260). Le DDS, l'ADC et le microcontrôleur forment l'assemblage `digital_analog_signals_processing_unit` du domaine, montré sous un onglet « Unité de conversion entre signaux numériques et analogiques » dans « Électronique ». La carte de conditionnement porte la grandeur `quadrature_output_sign` (−1 ou +1, sinon non renseignée), exportée sans dimension. `solidai verify` ne se construit pas sur le PC du labo (paquet `solid-verify-core` absent) : non joué.
 
 ## Pourquoi
 
