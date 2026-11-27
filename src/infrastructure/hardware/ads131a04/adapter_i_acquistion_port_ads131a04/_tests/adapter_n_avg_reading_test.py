@@ -3,6 +3,7 @@
 import json
 import os
 import tempfile
+import time
 import unittest
 
 from infrastructure.hardware.ads131a04.adapter_i_acquistion_port_ads131a04.adapter_i_acquistion_port_ads131a04 import ADS131A04Adapter
