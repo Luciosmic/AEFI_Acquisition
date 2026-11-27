@@ -9,6 +9,7 @@ from domain.test_bench_configuration.value_objects.hardware_component_kind.hardw
 
 MCU = HardwareComponentKind.MICROCONTROLLER
 BOARD = HardwareComponentKind.EXCITATION_ELECTRONICS_BOARD
+CONDITIONING = HardwareComponentKind.CONDITIONING_ELECTRONICS_BOARD
 
 
 class TestComponentCharacterization(unittest.TestCase):
@@ -33,6 +34,14 @@ class TestComponentCharacterization(unittest.TestCase):
             ComponentCharacterization.of(MCU, {"optimal_acquisition_rate_per_s": [(0, 5)]})
         with self.assertRaises(ValueError):
             ComponentCharacterization.of(BOARD, {"gian": 2.0})
+
+    def test_quadrature_output_sign_is_minus_one_or_plus_one(self):
+        for sign in (-1.0, 1.0):
+            characterization = ComponentCharacterization.of(CONDITIONING, {"quadrature_output_sign": sign})
+            self.assertEqual(characterization.values["quadrature_output_sign"], sign)
+        for wrong in (0.0, 2.0, -0.5):
+            with self.assertRaises(ValueError):
+                ComponentCharacterization.of(CONDITIONING, {"quadrature_output_sign": wrong})
 
 
 if __name__ == "__main__":
