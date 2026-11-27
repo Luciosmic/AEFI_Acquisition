@@ -9,6 +9,7 @@ from interface.widgets.panels.acquisition_throughput_characterization_widget imp
     AcquisitionThroughputCharacterizationWidget,
 )
 from interface.widgets.panels.calibration_panel import CalibrationPanel
+from interface.widgets.panels.hardware_component_panel import HardwareComponentPanel
 
 # Top-level test widgets are kept alive: a widget collected by Python while Qt
 # still lays it out (next test) makes the matplotlib canvas' sizeHint fail.
@@ -107,12 +108,16 @@ def test_hidden_widget_plots_the_latest_state_at_first_show():
     widget.canvas.draw()
 
 
-def test_the_widget_lives_in_the_microcontroller_tab_and_prefills_its_form():
+def test_the_widget_lives_in_the_calibration_panel():
     QApplication.instance() or QApplication([])
     calibration = _keep(CalibrationPanel())
-    panel = calibration.add_hardware_component_tab(_microcontroller_kind())
+    assert calibration.isAncestorOf(calibration.acquisition_throughput_widget)
 
-    assert calibration.acquisition_throughput_widget.parent() is panel
+
+def test_measured_values_prefill_the_microcontroller_form_of_the_configuration():
+    QApplication.instance() or QApplication([])
+    panel = _keep(HardwareComponentPanel(_microcontroller_kind()))
+
     panel.prefill_values({"max_acquisition_rate_per_s": 90.9, "optimal_acquisition_rate_per_s": ((1, 90.9), (8, 55.6))})
 
     edit, unknown = panel._fields["optimal_acquisition_rate_per_s"]
