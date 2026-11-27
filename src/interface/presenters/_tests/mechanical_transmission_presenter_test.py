@@ -171,3 +171,37 @@ def test_components_are_grouped_under_mouvement_and_electronique():
     electronics = panel._tabs.widget(top.index("Électronique"))
     assert labels(motion) == ["Moteurs", "Driver pas à pas", "Transmission"]
     assert labels(electronics) == ["Carte de conditionnement", "ADC"]
+
+
+def test_dds_adc_and_microcontroller_are_grouped_under_their_conversion_unit():
+    from types import SimpleNamespace
+
+    from interface.widgets.panels.calibration_panel import CalibrationPanel
+
+    QApplication.instance() or QApplication([])
+    panel = CalibrationPanel()
+    unit_key = "digital_analog_signals_processing_unit"
+    unit_label = "Unité de conversion entre signaux numériques et analogiques"
+
+    for key, label, assembly_key, assembly_label in (
+        ("conditioning_electronics_board", "Carte de conditionnement", None, None),
+        ("excitation_electronics_board", "Amplification de l'excitation", None, None),
+        ("signal_generation_chip", "DDS", unit_key, unit_label),
+        ("adc", "ADC", unit_key, unit_label),
+        ("microcontroller", "Microcontrôleur", unit_key, unit_label),
+    ):
+        panel.add_hardware_component_tab(
+            SimpleNamespace(
+                key=key, label=label, quantities=(), assembly_key=assembly_key, assembly_label=assembly_label
+            )
+        )
+
+    def labels(tabs):
+        return [tabs.tabText(i) for i in range(tabs.count())]
+
+    top = labels(panel._tabs)
+    electronics = panel._tabs.widget(top.index("Électronique"))
+    assert labels(electronics) == ["Carte de conditionnement", "Amplification de l'excitation", unit_label]
+    unit = electronics.widget(labels(electronics).index(unit_label))
+    assert labels(unit) == ["DDS", "ADC", "Microcontrôleur"]
+    assert unit.widget(1) is panel.hardware_component_panels["adc"]
