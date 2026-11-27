@@ -21,7 +21,8 @@ QuantityValue = Optional[Union[float, CurvePoints]]
 class ComponentCharacterization:
     """
     `values` has exactly one entry per quantity of `kind`. A scalar is a
-    float > 0, a curve a non-empty tuple of (x, y) points with x, y > 0;
+    float > 0, or one of its spec's `allowed_values` when it has some (a
+    sign: -1 or +1); a curve a non-empty tuple of (x, y) points with x, y > 0;
     `None` means "not characterized yet" — an explicit, recorded debt.
     """
 
@@ -39,6 +40,9 @@ class ComponentCharacterization:
             if spec.is_curve:
                 if not value or any(len(p) != 2 or p[0] <= 0 or p[1] <= 0 for p in value):
                     raise ValueError(f"{spec.key} must be non-empty (x, y) points with x, y > 0, got {value}")
+            elif spec.allowed_values is not None:
+                if value not in spec.allowed_values:
+                    raise ValueError(f"{spec.key} must be one of {list(spec.allowed_values)}, got {value}")
             elif value <= 0:
                 raise ValueError(f"{spec.key} must be > 0, got {value}")
 
