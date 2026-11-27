@@ -3,3 +3,4 @@
 18:05 | decision | conception=nouveau DisplayParameterSchema (lecture seule, hors config appliquée) ; le configurateur garde la formule et donne une table OSR -> texte, le panneau ne fait que la lire
 18:20 | verification | tests=13 passés (panneau + presenter) ; capture du panneau conforme (OSR 4096 -> 1000 Hz, 4.096 MHz)
 18:22 | fin | fichiers=hardware_advanced_parameter_schema.py, ads131a04_advanced_configurator.py + intention, hardware_advanced_config_panel.py + test
+17:56 | fin | resultat=Débit de sortie (f_MOD / OSR) et fréquence du modulateur affichés en lecture seule dans le groupe Global du panneau ADS131A04, avec infobulle ; 13 tests passés., entree=Afficher le débit de sortie ADC, session=ba41e867
