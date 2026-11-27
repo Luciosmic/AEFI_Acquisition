@@ -468,6 +468,11 @@ class AefiContinuousReadingPanel(QWidget):
         for curve in self.curves.values():
             curve.setData([], [])
 
+    def _schedule_plot(self):
+        """Redraw within PLOT_INTERVAL_MS; points arriving meanwhile join that one redraw."""
+        if not self._plot_timer.isActive():
+            self._plot_timer.start()
+
     def _update_plot(self):
         """Refresh the plot based on display window settings."""
         if not self.times:
