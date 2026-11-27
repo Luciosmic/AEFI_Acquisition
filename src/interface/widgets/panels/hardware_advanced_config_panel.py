@@ -28,6 +28,7 @@ from domain.shared_kernel.value_objects.hardware_configuration.hardware_advanced
     NumberParameterSchema,
     EnumParameterSchema,
     BooleanParameterSchema,
+    DisplayParameterSchema,
 )
 
 # AD9106 scales used only for the optional display conversion
