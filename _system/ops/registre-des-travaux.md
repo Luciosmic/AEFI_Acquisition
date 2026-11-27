@@ -10,7 +10,7 @@ Le serveur du registre est le seul écrivain : ne l'édite pas à la main une fo
   Éviter : `src/interface/widgets/panels/aefi_continuous_reading_panel.py`, `src/infrastructure/hardware/micro_controller/mcu_serial_communicator.py`.
 
 - **2026-11-27 19:12 — Signe quadrature et unité de conversion.** Repos : aefi-acquisition. Trace : `AEFI_Acquisition_dev\_system\ops\traces\signe-de-la-quadrature-et-unite-de-conversion/`. Session : `e782ef82-a9e2-43a8-8b9b-7e6db3577e17`.
-  État : Tranche 1 codée et testée (regroupement « Unité de conversion » dans Calibration > Électronique, signe de la quadrature déclaré sur la carte de conditionnement, unité « 1 » à l'export). Reste : essai par l'humain, puis tranche 2 (appliquer le signe à la lecture de l'ADC).
-  Éviter : `src/domain/test_bench_configuration/value_objects/hardware_component_kind/`, `src/interface/widgets/panels/calibration_panel.py`.
+  État : Tranche 1 faite. En cours : séparer « Configuration du banc » (catalogue, montage) et « Calibration » en deux panneaux. Puis tranche 2 (appliquer le signe à la lecture de l'ADC).
+  Éviter : `src/interface/widgets/panels/calibration_panel.py`, `src/interface/widgets/panels/bench_configuration_panel.py`, `src/interface/shell/dashboard.py`, `src/interface/shell/dashboard_wiring.py`.
 
 ## En attente
