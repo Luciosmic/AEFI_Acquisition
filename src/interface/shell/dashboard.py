@@ -66,6 +66,8 @@ class Dashboard(QWidget):
             "motion": MotionPanelCompact(),
             "excitation": ExcitationPanel(),
             "hardware_config": HardwareAdvancedConfigPanel(),
+            # Catalog and mountings (test_bench_configuration) apart from calibrations (test_bench_calibration).
+            "bench_configuration": BenchConfigurationPanel(),
             "calibration": CalibrationPanel(
                 sensor_orientation_view=SensorOrientationView()
             ),
