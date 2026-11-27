@@ -115,6 +115,8 @@ class HardwareComponentService(IApiHardwareComponentService):
                 key=kind.value,
                 label=kind.label,
                 quantities=tuple(QuantitySpecDTO(q.key, q.label, q.unit, q.curve_x_label) for q in kind.quantities),
+                assembly_key=kind.assembly.value if kind.assembly else None,
+                assembly_label=kind.assembly.label if kind.assembly else None,
             )
             for kind in HardwareComponentKind
         ]
