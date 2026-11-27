@@ -51,12 +51,11 @@ def test_points_and_result_are_shown():
     assert "OSR remis à 4096" in widget.lbl_result.text()
 
 
-def test_the_widget_lives_in_the_adc_tab():
+def test_the_widget_lives_in_the_calibration_panel():
+    # Measured in "Calibration"; its values prefill the ADC form of "Configuration du banc".
     QApplication.instance() or QApplication([])
     calibration = _keep(CalibrationPanel())
-    kind = SimpleNamespace(key="adc", label="ADC", quantities=())
-    panel = calibration.add_hardware_component_tab(kind)
-    assert calibration.adc_output_rate_widget.parent() is panel
+    assert calibration.isAncestorOf(calibration.adc_output_rate_widget)
 
 
 def test_hidden_widget_plots_at_first_show_and_empty_plot_draws():
