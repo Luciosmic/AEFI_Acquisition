@@ -54,6 +54,8 @@ class AefiContinuousReadingPanel(QWidget):
     acquisition_start_requested = Signal(dict)  # parameters
     acquisition_stop_requested = Signal()
 
+    PLOT_INTERVAL_MS = 40  # at most 25 redraws per second, whatever the acquisition rate
+
     CHANNELS = [
         # X Axis
         dict(name="Ux In-Phase", label="X In-Phase", color="#4A90E2", style=Qt.PenStyle.SolidLine),
