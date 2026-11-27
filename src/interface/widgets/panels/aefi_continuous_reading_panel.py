@@ -458,7 +458,7 @@ class AefiContinuousReadingPanel(QWidget):
             val = float(meas.get(name, 0.0))
             self.values[name].append(val)
 
-        self._update_plot()
+        self._schedule_plot()
 
     def _reset_buffers(self):
         """Clear data buffers."""
@@ -504,7 +504,7 @@ class AefiContinuousReadingPanel(QWidget):
 
         self.plot.setLabel("left", f"Voltage ({unit})")
         self.cursors.set_y_unit(f" {unit}")
-        self._update_plot()
+        self._schedule_plot()
         self._apply_view_mode()
 
     def _on_mode_changed(self, mode_text: str):
