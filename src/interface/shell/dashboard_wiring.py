@@ -273,7 +273,7 @@ def wire_dashboard(
 
     # One tab per hardware component kind (boards, signal generation chip, ADC, microcontroller, motors)
     for presenter in hardware_component_presenters:
-        component_panel = calibration_panel.add_hardware_component_tab(presenter.kind)
+        component_panel = bench_configuration_panel.add_hardware_component_tab(presenter.kind)
         component_panel.save_requested.connect(presenter.on_save_requested)
         component_panel.mount_requested.connect(presenter.on_mount_requested)
         presenter.components_listed.connect(component_panel.on_components_listed)
