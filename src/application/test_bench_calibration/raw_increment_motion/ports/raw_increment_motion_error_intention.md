@@ -1,6 +1,6 @@
 ---
 type: atome::solidai-atome
-tldr: "Erreur `raw_increment_motion_error` : Seule erreur levée par `IRawIncrementMotionPort` : contrôleur ou liaison en échec, ou attente d'arrêt dépassée."
+tldr: "Erreur déclarée par IRawIncrementMotionPort, publiée par le paquet arcus_performax_4ex et réexportée ici."
 code: ["[[src/application/test_bench_calibration/raw_increment_motion/ports/raw_increment_motion_error.py]]"]
 cause_de_changement: orchestration
 ---
@@ -8,16 +8,17 @@ cause_de_changement: orchestration
 
 ## Rationale
 
-Sans erreur déclarée par le port, le service de calibration devrait attraper les
-exceptions du driver Arcus (pylablib, port série) : il dépendrait de
-l'infrastructure, et un Fake ne pourrait pas reproduire la même défaillance.
+Le pilote Arcus vivait en deux copies, ici et dans le repo Arcus-Performax-4EX,
+qui divergeaient. Depuis le 2026-11-27, la source unique est le paquet `arcus_performax_4ex` (repo Arcus-Performax-4EX, github.com/Luciosmic/driver-arcus-performax-4ex),
+dont AEFI dépend par `pyproject.toml` (tag git).
 
 ## Responsibility
 
-- Seule erreur levée par `IRawIncrementMotionPort` : contrôleur ou liaison en échec,
-  ou attente d'arrêt dépassée.
+- Garder le chemin d'import AEFI de `arcus_performax_4ex.ports.raw_increment_motion_error` : réexporter ses noms, sans code
+  propre.
 
 ## Design
 
-- `RuntimeError` nommée, levée par l'adaptateur Arcus et par le Fake ; traduite en
-  erreur de cas d'usage par le service applicatif qui consomme le port.
+- Toute correction se fait dans le repo Arcus-Performax-4EX, puis AEFI monte le tag
+  dans `pyproject.toml`.
+- Documentation, tests et intention complète : à côté du module, dans le paquet.

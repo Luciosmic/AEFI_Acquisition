@@ -1,6 +1,6 @@
 ---
 type: atome::solidai-atome
-tldr: "Wrapper bas-niveau autour de la DLL Arcus Performax 4EX."
+tldr: "Réexporte le pilote bas niveau Arcus Performax 4EX du paquet arcus_performax_4ex."
 code: ["[[src/infrastructure/hardware/arcus_performax_4ex/adapter_arcus_speed_config.py]]", "[[src/infrastructure/hardware/arcus_performax_4ex/adapter_lifecycle_arcus_performax4ex/adapter_lifecycle_arcus_performax4ex.py]]", "[[src/infrastructure/hardware/arcus_performax_4ex/adapter_motion_port_arcus_performax4ex/adapter_motion_port_arcus_performax4ex.py]]", "[[src/infrastructure/hardware/arcus_performax_4ex/arcus_advanced_configuration/arcus_advanced_configuration.py]]", "[[src/infrastructure/hardware/arcus_performax_4ex/composition_root_arcus.py]]", "[[src/infrastructure/hardware/arcus_performax_4ex/driver_arcus_performax4ex.py]]"]
 cause_de_changement: outil
 ---
@@ -8,15 +8,17 @@ cause_de_changement: outil
 
 ## Rationale
 
-Wrapper bas-niveau autour de la DLL Arcus Performax 4EX. Isole les appels ctypes/DLL dans une seule classe pour que les adaptateurs au-dessus puissent utiliser une API Python propre sans manipuler directement les types C.
+Le pilote Arcus vivait en deux copies, ici et dans le repo Arcus-Performax-4EX,
+qui divergeaient. Depuis le 2026-11-27, la source unique est le paquet `arcus_performax_4ex` (repo Arcus-Performax-4EX, github.com/Luciosmic/driver-arcus-performax-4ex),
+dont AEFI dépend par `pyproject.toml` (tag git).
 
 ## Responsibility
 
-- Charger la DLL depuis `DLL64/`.
-- Exposer les commandes Arcus (move, stop, home, get_position, set_reference) comme méthodes Python.
-- Gérer les codes retour de la DLL et lever des exceptions Python claires.
+- Garder le chemin d'import AEFI de `arcus_performax_4ex.driver_arcus_performax4ex` : réexporter ses noms, sans code
+  propre.
 
 ## Design
 
-- **Couche driver pure** : pas de logique domain, pas de publication d'événements.
-- Utilisé exclusivement par les adaptateurs motion et lifecycle Arcus.
+- Toute correction se fait dans le repo Arcus-Performax-4EX, puis AEFI monte le tag
+  dans `pyproject.toml`.
+- Documentation, tests et intention complète : à côté du module, dans le paquet.

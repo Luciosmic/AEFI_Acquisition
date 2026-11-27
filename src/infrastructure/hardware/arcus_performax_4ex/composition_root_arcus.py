@@ -14,6 +14,8 @@ import logging
 from typing import Optional
 from pathlib import Path
 
+from arcus_performax_4ex import DLL_DIR
+
 from application.test_bench_calibration.motion_control_service.ports.i_motion_port import IMotionPort
 from application.shared.system_lifecycle_service.ports.i_hardware_initialization_port import IHardwareInitializationPort
 from application.shared.hardware_configuration_service.ports.i_hardware_advanced_configurator import IHardwareAdvancedConfigurator
@@ -61,8 +63,8 @@ class ArcusCompositionRoot:
         else:
             # If dll_path is not provided, try to find it relative to this file
             if not dll_path:
-                # Assuming DLL64 is in the same directory as this file
-                dll_path = str(Path(__file__).parent / "DLL64")
+                # Vendor DLLs ship with the arcus_performax_4ex package
+                dll_path = str(DLL_DIR)
 
             self._driver = ArcusPerformax4EXController(dll_path=dll_path)
             logger.info("Arcus composition root wired with real ArcusPerformax4EXController (port=%s, dll_path=%s)", port, dll_path)

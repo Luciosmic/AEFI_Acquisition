@@ -19,6 +19,8 @@ import json
 import logging
 import os
 
+from arcus_performax_4ex import DLL_DIR
+
 from domain.shared_kernel.value_objects.hardware_configuration.hardware_advanced_parameter_schema import (
     HardwareAdvancedParameterSchema,
     NumberParameterSchema,
@@ -289,7 +291,7 @@ class ArcusPerformax4EXAdvancedConfigurator(IHardwareAdvancedConfigurator):
             controller = self._controller
             owns_controller = False
         else:
-            dll_path = Path(__file__).parent / "DLL64"
+            dll_path = DLL_DIR
             controller = ArcusPerformax4EXController(dll_path=str(dll_path))
             owns_controller = True
 

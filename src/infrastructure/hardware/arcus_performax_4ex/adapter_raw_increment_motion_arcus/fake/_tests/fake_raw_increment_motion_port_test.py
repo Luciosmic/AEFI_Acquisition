@@ -12,7 +12,8 @@ from infrastructure.hardware.arcus_performax_4ex.adapter_raw_increment_motion_ar
 class FakeRawIncrementMotionPortTest(unittest.TestCase):
     def setUp(self):
         self.clock = FakeClock()
-        self.port = FakeRawIncrementMotionPort(clock=self.clock, plus_limit_increments=8000)
+        # Kinematics alone: status requests without their serial duration.
+        self.port = FakeRawIncrementMotionPort(clock=self.clock, plus_limit_increments=8000, position_request_s=0.0)
         self.port.home("X")
 
     def test_moves_linearly_in_time_at_the_set_speed(self):
