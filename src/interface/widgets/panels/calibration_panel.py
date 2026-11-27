@@ -60,6 +60,9 @@ class CalibrationPanel(QWidget):
         self._tabs.addTab(self._motion_tabs, _MOTION_GROUP_LABEL)
         # Created with the first electronics component tab (the kinds come from the wiring).
         self._electronics_tabs = None
+        # assembly key -> its tab inside "Électronique" (the DDS, the ADC and
+        # the microcontroller form the digital-analog-signals-processing-unit).
+        self._assembly_tabs: Dict[str, QTabWidget] = {}
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -67,7 +70,8 @@ class CalibrationPanel(QWidget):
 
     def add_hardware_component_tab(self, kind) -> HardwareComponentPanel:
         """One tab per hardware component kind (`HardwareComponentKindDTO`),
-        added at wiring time since the kinds come from the application layer."""
+        added at wiring time since the kinds come from the application layer.
+        A kind that belongs to an assembly goes under that assembly's tab."""
         panel = HardwareComponentPanel(kind)
         if kind.key == _MICROCONTROLLER_KEY:
             panel.add_tool(self.acquisition_throughput_widget)
@@ -80,10 +84,21 @@ class CalibrationPanel(QWidget):
                 self._motion_tabs.indexOf(self.mechanical_transmission_panel), panel, kind.label
             )
         elif kind.key in _ELECTRONICS_KEYS:
-            self._electronics_group().addTab(panel, kind.label)
+            self._electronics_parent(kind).addTab(panel, kind.label)
         else:
             self._tabs.addTab(panel, kind.label)
         return panel
+
+    def _electronics_parent(self, kind) -> QTabWidget:
+        assembly_key = getattr(kind, "assembly_key", None)
+        if assembly_key is None:
+            return self._electronics_group()
+        if assembly_key not in self._assembly_tabs:
+            tabs = QTabWidget()
+            tabs.setUsesScrollButtons(True)
+            self._electronics_group().addTab(tabs, kind.assembly_label)
+            self._assembly_tabs[assembly_key] = tabs
+        return self._assembly_tabs[assembly_key]
 
     def _electronics_group(self) -> QTabWidget:
         if self._electronics_tabs is None:
