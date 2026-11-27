@@ -72,6 +72,7 @@ def test_reads_legacy_signature_tagged_conditioning_entry(tmp_path):
     assert entry.component_name == "Final_v4_ASSOCE"
     assert entry.characterization.values == {
         "gain": 9.821, "bandwidth_hz": 800000.0, "noise_density_v_per_sqrt_hz": None,
+        "quadrature_output_sign": None,  # recorded before the sign existed: not characterized
     }
     assert repository.find_selections(CONDITIONING)[0].component_name == "Final_v4_ASSOCE"
 
