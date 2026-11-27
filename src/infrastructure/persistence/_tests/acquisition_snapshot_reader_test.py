@@ -87,7 +87,8 @@ class TestAcquisitionSnapshotReader(unittest.TestCase):
         board = hardware[CONDITIONING.value]
         self.assertEqual(board["component_name"], "Final_v4")
         self.assertEqual(
-            board["characterization"], {"gain": 9.8, "bandwidth_hz": 8e5, "noise_density_v_per_sqrt_hz": None}
+            board["characterization"],
+            {"gain": 9.8, "bandwidth_hz": 8e5, "noise_density_v_per_sqrt_hz": None, "quadrature_output_sign": None},
         )
         self.assertEqual(board["units"]["noise_density_v_per_sqrt_hz"], "V/√Hz")
         self.assertIn(
