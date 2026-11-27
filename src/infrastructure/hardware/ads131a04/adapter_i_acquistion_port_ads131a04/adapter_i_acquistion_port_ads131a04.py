@@ -179,6 +179,7 @@ class ADS131A04Adapter(IAcquisitionPort):
             if os.path.exists(mcu_config_path):
                 with open(mcu_config_path, 'r') as f:
                     self._last_n_avg = int(json.load(f).get("n_avg", 1))
+                    self._n_avg_file_key = file_key
         except (OSError, ValueError) as error:
             logger.warning(
                 "MCU config unreadable (%s: %s), keeping last n_avg=%d", type(error).__name__, error, self._last_n_avg
