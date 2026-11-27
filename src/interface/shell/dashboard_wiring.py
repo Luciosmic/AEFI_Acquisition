@@ -289,7 +289,7 @@ def wire_dashboard(
     mechanical_transmission_presenter.scan_running_changed.connect(transmission_panel.set_scan_running)
     mechanical_transmission_presenter.refresh_state()
 
-    # Throughput / noise vs n_avg measurement, in the microcontroller tab
+    # Throughput / noise vs n_avg measurement (Calibration), prefilling the microcontroller form (Configuration)
     throughput_widget = calibration_panel.acquisition_throughput_widget
     throughput_widget.start_requested.connect(acquisition_throughput_presenter.on_start_requested)
     acquisition_throughput_presenter.running_changed.connect(throughput_widget.set_running)
