@@ -52,6 +52,16 @@ class ADS131A04AdvancedConfigurator(IHardwareAdvancedConfigurator):
     # Values from datasheet Table 30 (ordered by OSR code 0000 to 1111):
     AVAILABLE_OSR = [4096, 2048, 1024, 800, 768, 512, 400, 384, 256, 200, 192, 128, 96, 64, 48, 32]
 
+    # Modulator clock f_MOD = f_CLKIN / (CLK_DIV * ICLK_DIV), both dividers fixed at 2
+    # (_to_persisted_config). Same value as the ODR characterization's starting estimate.
+    MODULATOR_FREQUENCY_HZ = 4.096e6
+
+    @staticmethod
+    def output_data_rate_text(oversampling_ratio: int) -> str:
+        """Output data rate f_MOD / OSR, e.g. "1000 Hz", "5333.33 Hz"."""
+        rate = ADS131A04AdvancedConfigurator.MODULATOR_FREQUENCY_HZ / oversampling_ratio
+        return f"{rate:.2f}".rstrip("0").rstrip(".") + " Hz"
+
     # CLK_DIV and ICLK_DIV divider ratios (from datasheet register maps)
     # CLK_DIV[2:0] (bits 3:1 of CLKIN register): 2, 4, 6, 8, 10, 12, 14
     # ICLK_DIV[2:0] (bits 7:5 of MODE register): 2, 4, 6, 8, 10, 12, 14
