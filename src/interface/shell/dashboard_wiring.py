@@ -224,7 +224,10 @@ def wire_dashboard(
     inertial_probe_presenter.reading_updated.connect(inertial_probe_panel.on_reading_updated)
     logger.debug("Inertial probe panel wired")
 
-    # Calibration Panel (capteur, géométrie source, carte de conditionnement — un seul dock à onglets)
+    # Two docks, two contexts: "Configuration du banc" holds the component catalog and its
+    # mountings (test_bench_configuration); "Calibration" holds the calibrations and the
+    # characterization measurements (test_bench_calibration), whose values prefill the catalog forms.
+    bench_configuration_panel = dashboard.panels["bench_configuration"]
     calibration_panel = dashboard.panels["calibration"]
 
     calibration_panel.sensor_calibration_panel.save_calibration_requested.connect(
