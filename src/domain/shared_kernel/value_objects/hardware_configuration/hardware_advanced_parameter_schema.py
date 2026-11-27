@@ -6,6 +6,7 @@ class ParameterType(Enum):
     NUMBER = "number"   # Float or Int with range
     ENUM = "enum"       # Discrete choices
     BOOLEAN = "bool"    # True/False
+    DISPLAY = "display" # Read-only value, never part of the applied config
 
 @dataclass(frozen=True)
 class HardwareAdvancedParameterSchema:
