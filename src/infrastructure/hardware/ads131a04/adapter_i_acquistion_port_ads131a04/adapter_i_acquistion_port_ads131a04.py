@@ -57,6 +57,7 @@ class ADS131A04Adapter(IAcquisitionPort):
     # OSR values from datasheet Table 30. Data Rate Settings
     AVAILABLE_OSR = [4096, 2048, 1024, 800, 768, 512, 400, 384, 256, 200, 192, 128, 96, 64, 48, 32]
     MAX_DATA_RATE_HZ = 128000  # Maximum output data rate
+    _N_AVG_FILE_SETTLE_S = 1.0  # mcu_last_config.json younger than this is re-read at every sample
     
     def __init__(self, serial_communicator, n_avg_reader: Optional[Callable[[], int]] = None):
         """
