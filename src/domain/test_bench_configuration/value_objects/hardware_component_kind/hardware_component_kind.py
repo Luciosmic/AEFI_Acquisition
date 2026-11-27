@@ -4,6 +4,8 @@ Hardware Component Kind Value Object
 Responsibility:
 - Name every kind of hardware component the bench is built from, and state,
   for each kind, the essential physical quantities that characterize it.
+- State which kinds together form one hardware assembly of the bench, in the
+  language of the thesis graph (the digital-analog-signals-processing-unit).
 """
 
 from dataclasses import dataclass
@@ -14,16 +16,38 @@ from typing import Optional, Tuple
 @dataclass(frozen=True)
 class QuantitySpec:
     """One characterizing quantity: a scalar, or — when `curve_x_label` is
-    set — a curve y(x) given as (x, y) points (e.g. rate vs n_avg)."""
+    set — a curve y(x) given as (x, y) points (e.g. rate vs n_avg).
+    `allowed_values` set = the scalar may only take one of these values
+    (e.g. a sign, -1 or +1); unset = any scalar > 0."""
 
     key: str
     label: str
     unit: str
     curve_x_label: Optional[str] = None
+    allowed_values: Optional[Tuple[float, ...]] = None
 
     @property
     def is_curve(self) -> bool:
         return self.curve_x_label is not None
+
+
+class HardwareAssembly(Enum):
+    """A part of the bench made of several component kinds. Names follow the
+    thesis graph: `digital-analog-signals-processing-unit` is its reference
+    key, "unité de conversion entre signaux numériques et analogiques" its
+    French name — the ADC, the DDS and the microcontroller of a detection,
+    whose other part is the conditioning board."""
+
+    DIGITAL_ANALOG_SIGNALS_PROCESSING_UNIT = "digital_analog_signals_processing_unit"
+
+    @property
+    def label(self) -> str:
+        return _ASSEMBLY_LABELS[self]
+
+
+_ASSEMBLY_LABELS = {
+    HardwareAssembly.DIGITAL_ANALOG_SIGNALS_PROCESSING_UNIT: "Unité de conversion entre signaux numériques et analogiques",
+}
 
 
 class HardwareComponentKind(Enum):
@@ -44,6 +68,11 @@ class HardwareComponentKind(Enum):
     def quantities(self) -> Tuple[QuantitySpec, ...]:
         return _QUANTITIES[self]
 
+    @property
+    def assembly(self) -> Optional[HardwareAssembly]:
+        """The assembly this kind is part of, or None if it stands alone."""
+        return _ASSEMBLIES.get(self)
+
 
 _LABELS = {
     HardwareComponentKind.SENSOR: "Capteur",
@@ -56,6 +85,14 @@ _LABELS = {
     HardwareComponentKind.STEPPER_DRIVER: "Driver pas à pas",
 }
 
+# Thesis graph: the unit groups the ADC, the DDS (signal generation chip) and
+# the microcontroller; the conditioning board is the other part of a detection.
+_ASSEMBLIES = {
+    HardwareComponentKind.SIGNAL_GENERATION_CHIP: HardwareAssembly.DIGITAL_ANALOG_SIGNALS_PROCESSING_UNIT,
+    HardwareComponentKind.ADC: HardwareAssembly.DIGITAL_ANALOG_SIGNALS_PROCESSING_UNIT,
+    HardwareComponentKind.MICROCONTROLLER: HardwareAssembly.DIGITAL_ANALOG_SIGNALS_PROCESSING_UNIT,
+}
+
 # The essential physical quantities per kind — edit here to add/remove one.
 # Keys are persisted: renaming a key orphans already-recorded values.
 _QUANTITIES = {
@@ -66,6 +103,14 @@ _QUANTITIES = {
         QuantitySpec("gain", "Gain", "V/V"),
         QuantitySpec("bandwidth_hz", "Bande passante (-3 dB)", "Hz"),
         QuantitySpec("noise_density_v_per_sqrt_hz", "Niveau de bruit", "V/√Hz"),
+        # -1: the board outputs its quadrature channels with P and N swapped
+        # (routing without crossing), so the ADC reads -Q (found 2026-11-27).
+        QuantitySpec(
+            "quadrature_output_sign",
+            "Signe de la voie en quadrature (+1 ou -1)",
+            "±1",
+            allowed_values=(-1.0, 1.0),
+        ),
     ),
     HardwareComponentKind.EXCITATION_ELECTRONICS_BOARD: (
         QuantitySpec("gain", "Gain", "V/V"),
