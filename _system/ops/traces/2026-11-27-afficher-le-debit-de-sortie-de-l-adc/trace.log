@@ -1,0 +1,5 @@
+17:45 | depart | quoi=afficher dans le panneau ADS131A04 le débit de sortie calculé (f_MOD / OSR) et la fréquence du modulateur fixe, avec infobulle | session=ba41e867-56a6-41db-bf6f-2257fc382482
+17:46 | decision | registre=créé vide (_system/ops/registre-des-travaux.md manquait, le hook registre-obligatoire refusait toute écriture)
+18:05 | decision | conception=nouveau DisplayParameterSchema (lecture seule, hors config appliquée) ; le configurateur garde la formule et donne une table OSR -> texte, le panneau ne fait que la lire
+18:20 | verification | tests=13 passés (panneau + presenter) ; capture du panneau conforme (OSR 4096 -> 1000 Hz, 4.096 MHz)
+18:22 | fin | fichiers=hardware_advanced_parameter_schema.py, ads131a04_advanced_configurator.py + intention, hardware_advanced_config_panel.py + test
