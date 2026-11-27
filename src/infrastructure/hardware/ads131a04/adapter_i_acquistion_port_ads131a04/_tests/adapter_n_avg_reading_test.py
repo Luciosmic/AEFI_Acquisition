@@ -60,6 +60,48 @@ class TestAdapterNAvgReading(unittest.TestCase):
 
         self.assertEqual(self.communicator.commands, ["m32", "m32"])
 
+    def _age(self, seconds):
+        """Backdate the config file, as if written `seconds` ago."""
+        past = time.time() - seconds
+        os.utime(CONFIG_PATH, (past, past))
+
+    def test_unchanged_settled_file_is_not_read_again(self):
+        """One open + json per point cost ~0.22 ms: a settled, unchanged file
+        is served from memory."""
+        self._write(json.dumps({"n_avg": 32}))
+        self._age(10)
+        self.adapter.acquire_sample()
+        mtime = os.stat(CONFIG_PATH).st_mtime
+        self._write(json.dumps({"n_avg": 64}))  # same size, mtime put back: looks unchanged
+        os.utime(CONFIG_PATH, (mtime, mtime))
+
+        self.adapter.acquire_sample()
+
+        self.assertEqual(self.communicator.commands, ["m32", "m32"])
+
+    def test_a_change_of_the_file_is_seen_at_the_next_sample(self):
+        self._write(json.dumps({"n_avg": 32}))
+        self._age(10)
+        self.adapter.acquire_sample()
+        self._write(json.dumps({"n_avg": 64}))
+
+        self.adapter.acquire_sample()
+
+        self.assertEqual(self.communicator.commands, ["m32", "m64"])
+
+    def test_a_fresh_file_is_read_again_even_with_the_same_mtime(self):
+        """Two writes in one coarse mtime tick look like one: a file younger
+        than the settle delay is re-read at every sample."""
+        self._write(json.dumps({"n_avg": 32}))
+        self.adapter.acquire_sample()
+        mtime_ns = os.stat(CONFIG_PATH).st_mtime_ns
+        self._write(json.dumps({"n_avg": 64}))
+        os.utime(CONFIG_PATH, ns=(mtime_ns, mtime_ns))
+
+        self.adapter.acquire_sample()
+
+        self.assertEqual(self.communicator.commands, ["m32", "m64"])
+
     def test_injected_reader_replaces_the_file(self):
         adapter = ADS131A04Adapter(self.communicator, n_avg_reader=lambda: 7)
         adapter.load_config(ADC_CONFIG)
