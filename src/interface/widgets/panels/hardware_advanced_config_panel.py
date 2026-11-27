@@ -227,6 +227,7 @@ class HardwareAdvancedConfigPanel(QWidget):
             self._content_layout.addWidget(group_box)
         
         self._content_layout.addStretch()
+        self._refresh_display_values()
         self._save_default_btn.setEnabled(True)
         self._reset_default_btn.setEnabled(True)
         self._update_synchronous_detection_controls_visibility()
