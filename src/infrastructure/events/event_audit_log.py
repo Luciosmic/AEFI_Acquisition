@@ -108,6 +108,6 @@ class EventAuditLog:
                     self._file = self._path.open("a", encoding="utf-8")
                 self._file.writelines(lines)
                 self._file.flush()
-            except OSError:
+            except Exception:  # the writer must survive, or flush() would wait forever
                 logger.exception("EventAuditLog: failed to write %d event(s) to %s", len(lines), self._path)
         return stop
