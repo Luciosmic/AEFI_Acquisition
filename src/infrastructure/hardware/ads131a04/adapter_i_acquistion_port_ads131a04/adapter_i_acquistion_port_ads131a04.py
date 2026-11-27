@@ -70,6 +70,7 @@ class ADS131A04Adapter(IAcquisitionPort):
         self._serial = serial_communicator
         self._current_config: Optional[ADCHardwareConfig] = None
         self._last_n_avg = 1  # last value read successfully from the config file
+        self._n_avg_file_key = None  # (mtime_ns, size) of the file _last_n_avg was read from
         self._read_n_avg = n_avg_reader or self._read_n_avg_from_config_file
     
     def load_config(self, config_dict: dict) -> None:
